@@ -1,1 +1,300 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ERSİN BİNAL - Terminal CV</title>
+    <style>
+        :root {
+            --main-bg: #000;
+            --terminal-green: #00ff00;
+            --terminal-dim: #007700;
+            --scan-line-color: rgba(0, 255, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            color: var(--terminal-green);
+        }
+
+        body {
+            background: var(--main-bg);
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Scan line animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                var(--scan-line-color) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 2px solid var(--terminal-green);
+            box-shadow: 0 0 20px var(--terminal-dim);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--terminal-green);
+            padding-bottom: 20px;
+        }
+
+        .section-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.2em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-button::before {
+            content: '> ';
+        }
+
+        .section-button:hover {
+            background: var(--terminal-dim);
+        }
+
+        .section-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: var(--terminal-green);
+            animation: scan-line 2s linear infinite;
+        }
+
+        @keyframes scan-line {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .content {
+            display: none;
+            padding: 20px;
+            border: 1px solid var(--terminal-dim);
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        .content.active {
+            display: block;
+            animation: typewriter 0.5s steps(40);
+        }
+
+        @keyframes typewriter {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .contact-info {
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid var(--terminal-green);
+        }
+
+        .experience-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    .container {
+        max-width: 90%;
+        padding: 10px;
+    }
+
+    .section-button {
+        font-size: 1em;
+        padding: 10px;
+    }
+
+    .content {
+        padding: 15px;
+    }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ERSİN BİNAL<span class="blink">_</span></h1>
+            <p>Dijital Proje Yöneticisi</p>
+        </div>
+
+        <button class="section-button" onclick="toggleSection('about')">Özetle</button>
+        <div id="about" class="content">
+           <p>1982 yılında İstanbul’da doğdum ve Beşiktaş, Ulus’ta büyüdüm. Dijital dünyaya olan ilgim, çocukluğumdan bu yanasüregelen oyun tutkum kadar derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda, ailemle birlikte seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri deneyimlemeyi seviyorum. Boş anlarımda ise kitaplara dalmayı ihmal etmiyorum; her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum. </p>
+         
+           <p>İşim; Pazarlama, performans ve dijital dönüşüm alanlarında proje yönetimi.</p>
+        </div>
+
+        <button class="section-button" onclick="toggleSection('education')">EĞİTİM</button>
+        <div id="education" class="content">
+            <div class="experience-item">
+                > Beykent Üniversitesi (2016)<br>
+                > Bilgisayar Teknolojisi ve Programlama
+            </div>
+        </div>
+
+        <button class="section-button" onclick="toggleSection('experience')">İŞ DENEYİMİ</button>
+        <div id="experience" class="content">
+            <div class="experience-item">
+                > Full Supplement<br>
+                > Etcaret Müdürü<br>
+            </div>
+            <div class="experience-item">
+                > Daniel Klein Group<br>
+                > E-Ticaret Direktörü<br>            </div>
+            <div class="experience-item">
+                > Gezer Ayakkabı<br>
+                > E-Ticaret Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Spor Dünyası<br>
+                > E-Ticaret Müdürü<br>
+            </div>
+            <div class="experience-item">
+                > Süvari<br>
+                > Online Satış Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Binal Elektronik<br>
+                > Kurucu<br>
+            </div>
+            <div class="experience-item">
+                > Turkcell Superonline<br>
+                > Metronet Marmara Bölge Satış Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Trio Araştırma ve Tanıtım Hizmetleri<br>
+                > Bilgi İşlem Uzmanı<br>
+            </div>
+            <div class="experience-item">
+                > Meta Bilişim<br>
+                > Kurucu Ortak<br>
+            </div>
+            <div class="experience-item">
+                > Bürsan Bilgi İşlem<br>
+                > Kurumsal Satış Danışmanı<br>
+            </div>
+            <div class="experience-item">
+                > Proje Bazlı Hizmet Sağladığım Markalar<br>
+                   _Nettree Market<br>
+                   _Yazıcı Ayakkabı<br>
+                   _Venüs Ayakkabı<br>
+                   _Macfit<br>
+                   _Şen Piliç<br>
+                   _Ak Sigorta<br>
+                   _Upon Insight<br>
+                   _Ulus Copy Center<br>
+                   _MEF Üniversitesi<br>
+                   
+
+            </div>
+            <!-- Additional experience items -->
+        </div>
+
+        <div class="contact-info">
+            <p>> TEL: 0 507 740 02 85</p>
+            <p>> EMAIL: ersnbnal@cloud.com</p>
+            <p>> LOKASYON: Küçükçekmece / İSTANBUL</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const allContents = document.getElementsByClassName('content');
+            
+            // Add terminal boot-up sound effect
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 0.05); // Reduced from 0.1s to 0.05s
+
+            // Toggle sections with animation
+            Array.from(allContents).forEach(elem => {
+                if (elem !== content) {
+                    elem.classList.remove('active');
+                }
+            });
+            
+            content.classList.toggle('active');
+            
+            // Add typing sound effect when opening
+            if (content.classList.contains('deactive')) {
+                const letters = content.textContent.length;
+                const totalDuration = 1000; // 3 seconds max
+                const intervalBetweenSounds = totalDuration / letters;
+                
+                for (let i = 0; i < letters; i++) {
+                    setTimeout(() => {
+                        const typeOscillator = audioContext.createOscillator();
+                        const typeGain = audioContext.createGain();
+                        
+                        typeOscillator.connect(typeGain);
+                        typeGain.connect(audioContext.destination);
+                        
+                        typeOscillator.type = 'square';
+                        typeOscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                        typeGain.gain.setValueAtTime(0.01, audioContext.currentTime);
+                        
+                        typeOscillator.start();
+                        typeOscillator.stop(audioContext.currentTime + 0.01); // Reduced from 0.02s to 0.01s
+                    }, i * intervalBetweenSounds);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
 
