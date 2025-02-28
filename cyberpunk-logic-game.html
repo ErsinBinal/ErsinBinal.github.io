@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberpunk Logic Terminal</title>
+    <style>
+        :root {
+            --neon-text-color: #f40;
+            --neon-border-color: #08f;
+            --background-color: #000;
+            --terminal-green: #0f8;
+            --terminal-red: #f00;
+            --terminal-blue: #08f;
+        }
+        
+        @font-face {
+            font-family: 'VT323';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/webfonts/fa-brands-400.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+    background-color: #000;
+    color: var(--terminal-green);
+    height: 100vh;
+    overflow: auto; /* Mobilde kaydırmayı etkinleştir */
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* İçeriği dikeyde ortalar */
+    align-items: center;
+        }
+        
+        #terminal {
+    border: 2px solid var(--neon-border-color);
+    border-radius: 5px;
+    padding: 15px; /* Mobilde daha dar padding */
+    flex-grow: 1;
+    max-width: 800px; /* Büyük ekranlar için maksimum genişlik */
+    width: 80%; /* Mobilde daha küçük olması için */
+    box-shadow: 0 0 15px var(--neon-border-color);
+    text-shadow: 0 0 5px rgba(0, 255, 200, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+        
+        #intro-animation {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #loading-bar-container {
+            width: 80%;
+            height: 30px;
+            border: 1px solid var(--neon-border-color);
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #loading-bar {
+            height: 100%;
+            width: 0%;
+            background-color: var(--terminal-green);
+            position: relative;
+            transition: width 0.2s ease;
+        }
+        
+        .loading-text {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        
+        #question-container {
+            display: none;
+            height: 100%;
+        }
+        
+        #timer {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: var(--neon-text-color);
+        }
+        
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+        
+        #question {
+            font-size: 24px;
+            margin-bottom: 30px;
+            margin-top: 60px;
+        }
+        
+        #options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.option {
+    padding: 12px 20px;
+    font-size: 16px;
+    width: 90%;
+    max-width: 400px; /* Büyük ekranlarda aşırı genişlemeyi önler */
+    background-color: rgba(0, 100, 100, 0.3);
+    border: 1px solid var(--neon-border-color);
+    color: var(--terminal-green);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    #options {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .option {
+        width: 45%;
+    }
+}
+        
+        .option:hover {
+            background-color: rgba(0, 150, 150, 0.4);
+            box-shadow: 0 0 10px var(--neon-border-color);
+        }
+        
+        #results {
+            display: none;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        #final-score {
+            font-size: 72px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes glitch {
+            0% {
+                clip-path: inset(40% 0 61% 0);
+                transform: translate(-20px, -10px);
+            }
+            20% {
+                clip-path: inset(92% 0 1% 0);
+                transform: translate(20px, 10px);
+            }
+            40% {
+                clip-path: inset(43% 0 1% 0);
+                transform: translate(-20px, -10px);
+            }
+            60% {
+                clip-path: inset(25% 0 58% 0);
+                transform: translate(20px, 10px);
+            }
+            80% {
+                clip-path: inset(54% 0 7% 0);
+                transform: translate(-20px, -10px);
+            }
+            100% {
+                clip-path: inset(58% 0 43% 0);
+                transform: translate(20px, 10px);
+            }
+        }
+        
+        .glitching {
+            position: relative;
+        }
+        
+        .glitching::before, .glitching::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background-color);
+        }
+        
+        .glitching::before {
+            color: #f0f;
+            animation: glitch 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+        }
+        
+        .glitching::after {
+            color: #0ff;
+            animation: glitch 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+        }
+        
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: rgba(0, 255, 200, 0.3);
+            opacity: 0.5;
+            animation: scan 5s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .correct {
+            background-color: rgba(0, 255, 0, 0.3) !important;
+        }
+        
+        .incorrect {
+            background-color: rgba(255, 0, 0, 0.3) !important;
+        }
+        
+        .skip {
+            background-color: rgba(0, 100, 255, 0.3) !important;
+        }
+        @media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    #terminal {
+        width: 95%;
+        padding: 10px;
+        border-width: 1px;
+        box-shadow: 0 0 10px var(--neon-border-color);
+    }
+
+    #score, #timer {
+        font-size: 18px;
+    }
+
+    #question {
+        font-size: 18px;
+    }
+
+    .option {
+        font-size: 16px;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 500px) {
+    #terminal {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    #score, #timer {
+        font-size: 14px;
+    }
+
+    #question {
+        font-size: 16px;
+    }
+
+    .option {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+@keyframes blinkEffect {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; } /* Ani kaybolma yerine hafif bir solma */
+    100% { opacity: 1; }
+}
+    </style>
+</head>
+<body>
+    <div id="terminal">
+        <div class="scan-line"></div>
+        
+        <div id="score">PUAN: 0</div>
+        <div id="timer">SÜRE: 10:00</div>
+        
+        <div id="intro-animation">
+            <h1>SİSTEM BAŞLATILIYOR...</h1>
+            <div id="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+            <div id="loading-text-container"></div>
+        </div>
+        
+        <div id="question-container">
+            <div id="question"></div>
+            <div id="options"></div>
+        </div>
+        
+        <div id="results">
+            <h1>TEST TAMAMLANDI</h1>
+            <h2>TOPLAM PUANINIZ:</h2>
+            <div id="final-score">0</div>
+        </div>
+    </div>
+    
+    <script>
+        // Store game state
+        const gameState = {
+            currentQuestion: 0,
+            score: 0,
+            timeRemaining: 600, // 10 minutes in seconds
+            timer: null,
+            answerTime: 0, // When the answer was submitted
+            questions: [
+                {
+                    question: "8 tane bilardo topunuz var; bu toplardan biri diğerlerinden daha ağır. Elinizde sadece bir eşit kollu terazi (ağırlık terazisi) olduğunu düşünün. Ağır olan topu kesin olarak bulmak için en az kaç tartım yapmanız gerekir?",
+                    options: [
+                        { text: "A) 2 denemede", correct: true },
+                        { text: "B) 3 denemede", correct: false },
+                        { text: "C) 4 denemede", correct: false },
+                        { text: "D) 5 denemede", correct: false },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Aşağıdaki sayı dizisini devam ettirdiğimizde bir sonraki sayı ne olur? 2, 3, 5, 8, 13, 21, ...",
+                    options: [
+                        { text: "A) 26", correct: false },
+                        { text: "B) 29", correct: false },
+                        { text: "C) 34", correct: true },
+                        { text: "D) 36", correct: false },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "127 oyuncunun katılacağı bir tenis turnuvasında 63 maçta karşılaşacak olan 126 oyuncu ve maç yapmadan tur atlayacak tek bir oyuncu var. Bir sonraki turda 64 oyuncu 32 tur yapacak şampiyonu belirlemek için toplam kaç tane maç yapılmalı?",
+                    options: [
+                        { text: "A) 126", correct: true },
+                        { text: "B) 127", correct: false },
+                        { text: "C) 63", correct: false },
+                        { text: "D) 64", correct: false },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Size dönük bir silah var ve içinde 6 ihtimalde 4 boş 2 dolu mermi var. Birkez tetik çekildi ve silah patlamadı. İkinci kez tetik çekilmeden önce mermilerin yerlerinin değişmesi için çevrilmesinimi seçersini yoksa düzen değişmeden yeniden tetiğe basılmasınımı istersiniz? ",
+                    options: [
+                        { text: "A) Yeniden Çevir", correct: true },
+                        { text: "B) Çevirmeden tetiğe bas", correct: false },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Etkisi en az olacak şıkkı seçin?",
+                    options: [
+                        { text: "A) 1 Ton", correct: false },
+                        { text: "B) 3 G-Kuvvet", correct: false },
+                        { text: "C) 1618", correct: false },
+                        { text: "D) 0", correct: false },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                
+            ]
+            
+        };
+        
+        // DOM elements
+        const introAnimation = document.getElementById('intro-animation');
+        const loadingBar = document.getElementById('loading-bar');
+        const questionContainer = document.getElementById('question-container');
+        const questionElement = document.getElementById('question');
+        const optionsElement = document.getElementById('options');
+        const timerElement = document.getElementById('timer');
+        const scoreElement = document.getElementById('score');
+        const resultsElement = document.getElementById('results');
+        const finalScoreElement = document.getElementById('final-score');
+        // Yükleme sırasında sırayla gösterilecek metinler
+        const loadingMessages = [
+    "Mantık protokolleri yükleniyor...",
+    "Ölçüm parametreleri ayarlanıyor...",
+    "Bulmaca algoritmaları hazırlanıyor...",
+    "Terminal arayüzü aktif ediliyor..."
+];
+
+let currentMessageIndex = 0;
+
+function showNextLoadingMessage() {
+    if (currentMessageIndex < loadingMessages.length) {
+        const messageContainer = document.getElementById("loading-text-container");
+        
+        // Yeni bir <div> öğesi oluştur ve içine metni yaz
+        const newMessage = document.createElement("div");
+        newMessage.classList.add("loading-text");
+        newMessage.textContent = loadingMessages[currentMessageIndex];
+        messageContainer.appendChild(newMessage);
+        
+        currentMessageIndex++;
+
+        // Bir sonraki mesajı 2 saniye sonra ekrana yazdır
+        setTimeout(showNextLoadingMessage, 2000);
+    }
+}
+        // Start loading animation
+        function startIntro() {
+    let progress = 0;
+    showNextLoadingMessage(); // 🔥 Yükleme mesajlarını sırayla göstermek için fonksiyonu başlat
+
+    const interval = setInterval(() => {
+        progress += 1;
+        loadingBar.style.width = `${progress}%`;
+
+        if (progress >= 100) {
+    clearInterval(interval);
+    setTimeout(() => {
+        // Yükleme ekranı kaybolmadan önce buton eklenecek
+        const startButton = document.createElement("button");
+        startButton.textContent = "▶ Hazırsanız Başlayalım";
+        startButton.id = "startButton";
+        
+        // Butonun CSS özellikleri
+        startButton.style.padding = "15px 30px";
+        startButton.style.fontSize = "18px";
+        startButton.style.border = "2px solid var(--terminal-green)";
+        startButton.style.backgroundColor = "black";
+        startButton.style.color = "var(--terminal-green)";
+        startButton.style.cursor = "pointer";
+        startButton.style.display = "block";
+        startButton.style.margin = "20px auto";
+        startButton.style.textAlign = "center";
+        startButton.style.animation = "blinkEffect 1s infinite"; // Yanıp sönme animasyonu
+
+        // Butonu intro-animation içine ekliyoruz
+        document.getElementById("intro-animation").appendChild(startButton);
+
+        // Kullanıcı tıkladığında buton kaybolacak ve sorular başlayacak
+        startButton.addEventListener("click", () => {
+            startButton.remove(); // Butonu kaldır
+            introAnimation.style.display = 'none'; // Yükleme ekranını kaldır
+            questionContainer.style.display = 'block'; // Soruları göster
+            startGame(); // Oyunu başlat
+        });
+
+    }, 1000);
+}
+    }, 100); // 10 seconds total
+}
+        
+        // Format time from seconds to MM:SS
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Update the timer display
+        function updateTimer() {
+            timerElement.textContent = `SÜRE: ${formatTime(gameState.timeRemaining)}`;
+            
+            if (gameState.timeRemaining <= 0) {
+                clearInterval(gameState.timer);
+                // Add glitching effect when time runs out
+                document.getElementById('terminal').classList.add('glitching');
+                document.getElementById('terminal').setAttribute('data-text', document.getElementById('terminal').innerText);
+                
+                setTimeout(() => {
+                    document.getElementById('terminal').classList.remove('glitching');
+                    nextQuestion();
+                }, 1000);
+            }
+            
+            gameState.timeRemaining--;
+        }
+        
+        // Update score display
+        function updateScore() {
+            scoreElement.textContent = `PUAN: ${gameState.score}`;
+        }
+        
+        // Show the current question
+        function showQuestion() {
+            if (gameState.currentQuestion >= gameState.questions.length) {
+                showResults();
+                return;
+            }
+            
+            const question = gameState.questions[gameState.currentQuestion];
+            questionElement.textContent = question.question;
+            
+            // Clear previous options
+            optionsElement.innerHTML = '';
+            
+            // Add options
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('option');
+                optionElement.textContent = option.text;
+                optionElement.addEventListener('click', () => selectOption(index));
+                optionsElement.appendChild(optionElement);
+            });
+            
+            // Reset and start timer
+            gameState.timeRemaining = 600; // 10 minutes
+            updateTimer();
+            clearInterval(gameState.timer);
+            gameState.timer = setInterval(updateTimer, 1000);
+            
+            // Record start time for point calculation
+            gameState.answerTime = Date.now();
+        }
+        
+        // Handle option selection
+        function selectOption(index) {
+            const question = gameState.questions[gameState.currentQuestion];
+            const option = question.options[index];
+            const optionElements = document.querySelectorAll('.option');
+            
+            // Disable all options
+            optionElements.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            
+            // Calculate elapsed time in minutes
+            const elapsedTime = (Date.now() - gameState.answerTime) / 1000 / 60;
+            
+// Eğer "Etkisi en az olacak şıkkı seçin?" sorusundaysak
+const currentQuestion = gameState.questions[gameState.currentQuestion];
+
+if (option.text === "Bu soruyu geç" && currentQuestion.question === "Etkisi en az olacak şıkkı seçin?") {
+    optionElements[index].classList.add('correct'); // Doğru olarak işaretle
+    
+    // Zamana göre puan hesaplama
+    const elapsedTime = (Date.now() - gameState.answerTime) / 1000 / 60;
+    let pointsEarned = 0;
+
+    if (elapsedTime <= 2) {
+        pointsEarned = 10; // 2 dakika içinde cevaplandıysa
+    } else if (elapsedTime <= 5) {
+        pointsEarned = 8; // 2-5 dakika arasında cevaplandıysa
+    } else {
+        pointsEarned = 5; // 5 dakika sonrasında cevaplandıysa
+    }
+
+    gameState.score += pointsEarned; // Puan ekle
+    updateScore();
+    setTimeout(nextQuestion, 1000);
+    return;
+}
+
+// Eğer bu özel soru değilse, eski mantıkla devam et
+if (option.skip) {
+    optionElements[index].classList.add('skip');
+    setTimeout(nextQuestion, 1000);
+    return;
+}
+            
+            // Handle correct/incorrect
+            if (option.correct) {
+                optionElements[index].classList.add('correct');
+                
+                // Point calculation based on time
+                let pointsEarned = 0;
+                if (elapsedTime <= 2) {
+                    pointsEarned = 10; // Full points if answered within 2 minutes
+                } else if (elapsedTime <= 5) {
+                    pointsEarned = 8; // 8 points if answered between 2-5 minutes
+                } else {
+                    pointsEarned = 5; // 5 points if answered after 5 minutes
+                }
+                
+                gameState.score += pointsEarned;
+            } else {
+                optionElements[index].classList.add('incorrect');
+                gameState.score -= 2; // Penalty for wrong answer
+            }
+            
+            updateScore();
+            setTimeout(nextQuestion, 1000);
+        }
+        
+        // Move to the next question
+        function nextQuestion() {
+            gameState.currentQuestion++;
+            clearInterval(gameState.timer);
+            showQuestion();
+        }
+        
+        // Show final results
+        function showResults() {
+            questionContainer.style.display = 'none';
+            resultsElement.style.display = 'flex';
+            finalScoreElement.textContent = gameState.score;
+            clearInterval(gameState.timer);
+        }
+        
+        // Start the game
+        function startGame() {
+            updateScore();
+            showQuestion();
+        }
+        
+        // Initialize on load
+        window.onload = startIntro;
+    </script>
+</body>
+</html>
