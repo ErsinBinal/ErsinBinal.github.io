@@ -1,280 +1,107 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <title>ERSİN BİNAL - Terminal CV</title>
-    <style>
-        :root {
-            --main-bg: #000;
-            --terminal-green: #00ff00;
-            --terminal-dim: #007700;
-            --scan-line-color: rgba(0, 255, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-            color: var(--terminal-green);
-        }
-
-        body {
-            background: var(--main-bg);
-            padding: 20px;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        /* Scan line animation */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                transparent 50%,
-                var(--scan-line-color) 50%
-            );
-            background-size: 100% 4px;
-            pointer-events: none;
-            animation: scan 8s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(20px); }
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 2px solid var(--terminal-green);
-            box-shadow: 0 0 20px var(--terminal-dim);
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--terminal-green);
-            padding-bottom: 20px;
-        }
-
-        .section-button {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
-            background: transparent;
-            border: 1px solid var(--terminal-green);
-            cursor: pointer;
-            text-align: left;
-            font-size: 1.2em;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .section-button::before {
-            content: '> ';
-        }
-
-        .section-button:hover {
-            background: var(--terminal-dim);
-        }
-
-        .section-button::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 2px;
-            background: var(--terminal-green);
-            animation: scan-line 2s linear infinite;
-        }
-
-        @keyframes scan-line {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .content {
-            display: none;
-            padding: 20px;
-            border: 1px solid var(--terminal-dim);
-            margin-top: -10px;
-            margin-bottom: 10px;
-        }
-
-        .content.active {
-            display: block;
-            animation: typewriter 0.5s steps(40);
-        }
-
-        @keyframes typewriter {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .contact-info {
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 1px solid var(--terminal-green);
-        }
-
-        .experience-item {
-            margin-bottom: 15px;
-            padding-left: 20px;
-        }
-
-        .blink {
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>ERSİN BİNAL - Ana Sayfa</title>
+  <style>
+    /* Temel retro terminal stilleri */
+    body {
+      background: #000;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      width: 90%;
+      margin: 50px auto;
+      padding: 20px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 20px #007700;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    /* Blinking cursor efekti */
+    .blink {
+      animation: blink 1s step-start 0s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    /* Gumroad esintili navigasyon butonları */
+    .nav-button {
+      display: inline-block;
+      padding: 12px 25px;
+      margin: 10px;
+      border: 1px solid #00ff00;
+      border-radius: 4px;
+      background-color: transparent;
+      color: #00ff00;
+      text-decoration: none;
+      font-size: 1em;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
+    }
+    .nav-button:hover {
+      background-color: #00ff00;
+      color: #000;
+      box-shadow: 0 0 10px #00ff00;
+    }
+    /* Responsive düzenlemeler */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+      p {
+        font-size: 1em;
+      }
+      .nav-button {
+        font-size: 0.9em;
+        padding: 10px 20px;
+        margin: 8px;
+      }
+    }
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.8em;
+      }
+      p {
+        font-size: 0.9em;
+      }
+      .nav-button {
+        font-size: 0.8em;
+        padding: 8px 16px;
+        margin: 6px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>ERSİN BİNAL<span class="blink">_</span></h1>
-            <p>E-TİCARET İNOVATÖRÜ - Proje Yönetimi</p>
-        </div>
-
-        <button class="section-button" onclick="toggleSection('about')">HAKKIMDA</button>
-        <div id="about" class="content">
-            İşim; dijital dünyanın karmaşasını düzene çevirmek. Pazarlama, performans ve dijital dönüşüm, benim oyun alanlarım. Başarılarım kadar başarısızlıklarım da var; çünkü denemekten hiç korkmuyorum. Bir problem çözmek benim için yalnızca "yapılacak işler" listesinde bir madde değil, zihinsel bir meydan okumadır.
-        </div>
-
-        <button class="section-button" onclick="toggleSection('education')">EĞİTİM</button>
-        <div id="education" class="content">
-            <div class="experience-item">
-                > Beykent Üniversitesi (2016)<br>
-                > Bilgisayar Teknolojisi ve Programlama
-            </div>
-        </div>
-
-        <button class="section-button" onclick="toggleSection('experience')">İŞ DENEYİMİ</button>
-        <div id="experience" class="content">
-            <div class="experience-item">
-                > Full Supplement<br>
-                > Etcaret Müdürü<br>
-                > Nisan 2024 – Eylül 2024 (6 Ay)
-            </div>
-            <div class="experience-item">
-                > Daniel Klein Group<br>
-                > E-Ticaret Direktörü<br>
-                > Şubat 2021 – Eylül 2022 (1 Yıl 8 Ay)
-            </div>
-            <div class="experience-item">
-                > Gezer Ayakkabı<br>
-                > E-Ticaret Yöneticisi<br>
-                > Şubat 2016 – Kasım 2019 (3 Yıl 10 Ay)
-            </div>
-            <div class="experience-item">
-                > Spor Dünyası<br>
-                > E-Ticaret Müdürü<br>
-                > Nisan 2015 - Kasım 2015 (8 ay)
-            </div>
-            <div class="experience-item">
-                > Süvari<br>
-                > Online Satış Yöneticisi<br>
-                > Nisan 2012 - Ağustos 2014 (2 yıl 5 ay)
-            </div>
-            <div class="experience-item">
-                > Binal Elektronik<br>
-                > Kurucu<br>
-                > Kasım 2011 - Nisan 2012 (6 ay)
-            </div>
-            <div class="experience-item">
-                > Doldur<br>
-                > E-Ticaret Yöneticisi<br>
-                > Şubat 2016 – Kasım 2019 (3 Yıl 10 Ay)
-            </div>
-            <div class="experience-item">
-                > Doldur<br>
-                > E-Ticaret Yöneticisi<br>
-                > Şubat 2016 – Kasım 2019 (3 Yıl 10 Ay)
-            </div>
-            <div class="experience-item">
-                > Doldur<br>
-                > E-Ticaret Yöneticisi<br>
-                > Şubat 2016 – Kasım 2019 (3 Yıl 10 Ay)
-            </div>
-            <div class="experience-item">
-                > Doldur<br>
-                > E-Ticaret Yöneticisi<br>
-                > Şubat 2016 – Kasım 2019 (3 Yıl 10 Ay)
-            </div>
-            <!-- Additional experience items -->
-        </div>
-
-        <div class="contact-info">
-            <p>> TEL: 0 507 740 02 85</p>
-            <p>> EMAIL: ersnbnal@cloud.com</p>
-            <p>> LOKASYON: Küçükçekmece / İstanbul</p>
-        </div>
-    </div>
-
-    <script>
-        function toggleSection(sectionId) {
-            const content = document.getElementById(sectionId);
-            const allContents = document.getElementsByClassName('content');
-            
-            // Add terminal boot-up sound effect
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.05); // Reduced from 0.1s to 0.05s
-
-            // Toggle sections with animation
-            Array.from(allContents).forEach(elem => {
-                if (elem !== content) {
-                    elem.classList.remove('active');
-                }
-            });
-            
-            content.classList.toggle('active');
-            
-            // Add typing sound effect when opening
-            if (content.classList.contains('deactive')) {
-                const letters = content.textContent.length;
-                const totalDuration = 1000; // 3 seconds max
-                const intervalBetweenSounds = totalDuration / letters;
-                
-                for (let i = 0; i < letters; i++) {
-                    setTimeout(() => {
-                        const typeOscillator = audioContext.createOscillator();
-                        const typeGain = audioContext.createGain();
-                        
-                        typeOscillator.connect(typeGain);
-                        typeGain.connect(audioContext.destination);
-                        
-                        typeOscillator.type = 'square';
-                        typeOscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-                        typeGain.gain.setValueAtTime(0.01, audioContext.currentTime);
-                        
-                        typeOscillator.start();
-                        typeOscillator.stop(audioContext.currentTime + 0.01); // Reduced from 0.02s to 0.01s
-                    }, i * intervalBetweenSounds);
-                }
-            }
-        }
-    </script>
+  <div class="container">
+    <h1>Convivium<span class="blink">_</span></h1>
+    <p>
+      Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
+    </p>
+    <p>
+        Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
+</p>
+    <nav>
+      <a href="makaleler.html" class="nav-button">Makaleler</a>
+      <a href="cyberpunk-logic-game.html" class="nav-button">Cyberpunk Logic Game</a>
+      <a href="ozgecmisim.html" class="nav-button">Kariyerim</a>
+    </nav>
+  </div>
 </body>
 </html>
