@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ERSİN BİNAL - Terminal Blog</title>
+    <style>
+        /* Terminal Tema */
+        :root {
+            --main-bg: #000;
+            --terminal-green: #00ff00;
+            --terminal-dim: #007700;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            color: var(--terminal-green);
+        }
+        body {
+            background: var(--main-bg);
+            padding: 20px;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 2px solid var(--terminal-green);
+            box-shadow: 0 0 20px var(--terminal-dim);
+        }
+        .nav-button {
+            display: block;
+            padding: 10px;
+            margin: 10px auto;
+            width: 80%;
+            border: 1px solid var(--terminal-green);
+            background: transparent;
+            text-decoration: none;
+            text-align: left;
+            transition: 0.3s ease;
+            font-size: 1.1em;
+        }
+        .nav-button:hover {
+            background: var(--terminal-green);
+            color: #000;
+        }
+        .content {
+            display: none;
+            padding: 20px;
+            border-top: 1px dashed var(--terminal-green);
+            text-align: left;
+        }
+        .content.active {
+            display: block;
+        }
+        .blink {
+            animation: blink 1s step-start infinite;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+        .folder {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+        .folder::before {
+            content: "[+] ";
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Blog Başlığı -->
+    <div class="container">
+        <h1>ERSİN BİNAL - BLOG<span class="blink">_</span></h1>
+        <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
+    </div>
+
+    <!-- Klasör Yapısı (Makaleler Tarihlere Göre) -->
+    <div class="container">
+        <h2>📂 Makaleler</h2>
+        
+        <div class="folder">
+            <button class="nav-button" onclick="showContent('post1')">📄 2025-03-02 - Abonelik Modelinin Yükselişi</button>
+        </div>
+        <div class="folder">
+            <button class="nav-button" onclick="showContent('post2')">📄 2025-02-15 - Dijital Dönüşümde Yapay Zeka</button>
+        </div>
+        <div class="folder">
+            <button class="nav-button" onclick="showContent('post3')">📄 2025-01-28 - Gelir Modelleri Nasıl Evrimleşti?</button>
+        </div>
+    </div>
+
+    <!-- Makale İçeriği -->
+    <div class="container">
+        <div id="post1" class="content">
+            <h2>Abonelik Modelinin Yükselişi</h2>
+            <p><strong>Tarih:</strong> 2025-03-02</p>
+            <p>Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.</p>
+        </div>
+        <div id="post2" class="content">
+            <h2>Dijital Dönüşümde Yapay Zeka</h2>
+            <p><strong>Tarih:</strong> 2025-02-15</p>
+            <p>Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?</p>
+        </div>
+        <div id="post3" class="content">
+            <h2>Gelir Modelleri Nasıl Evrimleşti?</h2>
+            <p><strong>Tarih:</strong> 2025-01-28</p>
+            <p>Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?</p>
+        </div>
+    </div>
+
+    <script>
+        function showContent(id) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+
+</body>
+</html>
