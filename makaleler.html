@@ -68,6 +68,66 @@
         .folder::before {
             content: "[+] ";
         }
+        .retro-image {
+    max-width: 600px; /* Görselin maksimum genişliği */
+    width: 100%; /* Küçük ekranlarda tam uyumlu olacak */
+    height: auto; /* Oranları koruyarak ölçeklendirme */
+    border: 1px solid #00ff00;
+    filter: contrast(200%) brightness(80%) grayscale(100%);
+    image-rendering: pixelated; /* Keskin pikselleşme efekti */
+    cursor: pointer; /* Tıklanabilir olduğunu göster */
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Tam ekran moduna geçildiğinde */
+.fullscreen {
+    max-width: 100%;
+    max-height: 100vh;
+    width: auto;
+    height: auto;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.9);
+    border: none;
+}
+
+/* Sayfa kararması efekti (tam ekran modunda) */
+.fullscreen-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 999;
+}
+        .retro-image {
+    width: 100%;
+    border: 1px solid #00ff00;
+    filter: contrast(200%) brightness(80%) grayscale(100%);
+    image-rendering: pixelated; /* Keskin pikselleşme efekti */
+}
+
+.crt {
+    position: relative;
+}
+
+.crt::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        transparent 1px,
+        rgba(0, 255, 0, 0.2) 2px
+    );
+    pointer-events: none;
+}
     </style>
 </head>
 <body>
@@ -91,6 +151,9 @@
         <div class="folder">
             <button class="nav-button" onclick="showContent('post3')">📄 2025-01-28 - Gelir Modelleri Nasıl Evrimleşti?</button>
         </div>
+        <div class="folder">
+            <button class="nav-button" onclick="showContent('post4')">📄 2025-03-05 - Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</button>
+        </div>
     </div>
 
     <!-- Makale İçeriği -->
@@ -99,6 +162,7 @@
             <h2>Abonelik Modelinin Yükselişi</h2>
             <p><strong>Tarih:</strong> 2025-03-02</p>
             <p>Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.</p>
+            <img src="https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png" class="retro-image" alt="Netflix Abonelik Modeli">
         </div>
         <div id="post2" class="content">
             <h2>Dijital Dönüşümde Yapay Zeka</h2>
@@ -109,6 +173,32 @@
             <h2>Gelir Modelleri Nasıl Evrimleşti?</h2>
             <p><strong>Tarih:</strong> 2025-01-28</p>
             <p>Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?</p>
+        </div>
+        <div id="post4" class="content">
+            <h2>Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</h2>
+            <p><strong>Tarih:</strong> 2025-03-05</p>
+            <p>
+                **Veri Temelli Fiyatlandırma** <br>
+                Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.  
+                Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.
+            </p>
+            <p>
+                **Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.  
+                **Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.
+            </p>
+            <p>
+                Bu strateji, **veriye dayalı analizlerle müşteri tercihlerini anlamayı** ve buna göre fiyatlandırmayı optimize etmeyi kapsar.  
+                Örneğin, kullanıcı verilerine göre farklı müşteri gruplarına kişiselleştirilmiş teklifler sunulabilir veya fiyatlar dinamik olarak belirlenebilir.
+            </p>
+            <p>
+                **Freemium Model vs. Çift Taraflı Gelir Modeli**  
+                - **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.  
+                - **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.  
+                Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.
+            </p>
+            <p>
+                <img src="uploads/veri-temelli-model.png" class="retro-image" alt="Veri Temelli Gelir Modeli">
+            </p>
         </div>
     </div>
 
