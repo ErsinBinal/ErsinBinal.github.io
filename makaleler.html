@@ -256,6 +256,23 @@
     };
 })();
 </script>
-
+<div class="container">
+  <h2>📝 Eklenen Makaleler</h2>
+  <div id="eklenenMakaleler"></div>
+</div>
+<script>
+(function() {
+  let arr = JSON.parse(localStorage.getItem("articles") || "[]");
+  let html = "";
+  arr.slice().reverse().forEach((a, i) => {
+    html += `<div style="margin-bottom:18px;">
+      <b>${a.title}</b> <span style="opacity:.7;">(${a.date})</span><br>
+      <div style="margin-top:4px;padding-left:6px;">${a.content.replace(/\n/g,"<br>")}</div>
+      <hr style="border-color:#222;">
+    </div>`;
+  });
+  document.getElementById("eklenenMakaleler").innerHTML = html || "<em>Henüz eklenmiş makale yok.</em>";
+})();
+</script>
 </body>
 </html>
