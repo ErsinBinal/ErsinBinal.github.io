@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>ERSİN BİNAL - Terminal Blog</title>
     <style>
-        /* Terminal Tema */
         :root {
             --main-bg: #000;
             --terminal-green: #00ff00;
@@ -69,65 +68,53 @@
             content: "[+] ";
         }
         .retro-image {
-    max-width: 600px; /* Görselin maksimum genişliği */
-    width: 100%; /* Küçük ekranlarda tam uyumlu olacak */
-    height: auto; /* Oranları koruyarak ölçeklendirme */
-    border: 1px solid #00ff00;
-    filter: contrast(200%) brightness(80%) grayscale(100%);
-    image-rendering: pixelated; /* Keskin pikselleşme efekti */
-    cursor: pointer; /* Tıklanabilir olduğunu göster */
-    transition: transform 0.3s ease-in-out;
-}
-
-/* Tam ekran moduna geçildiğinde */
-.fullscreen {
-    max-width: 100%;
-    max-height: 100vh;
-    width: auto;
-    height: auto;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1000;
-    background: rgba(0, 0, 0, 0.9);
-    border: none;
-}
-
-/* Sayfa kararması efekti (tam ekran modunda) */
-.fullscreen-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 999;
-}
-        .retro-image {
-    width: 100%;
-    border: 1px solid #00ff00;
-    filter: contrast(200%) brightness(80%) grayscale(100%);
-    image-rendering: pixelated; /* Keskin pikselleşme efekti */
-}
-
-.crt {
-    position: relative;
-}
-
-.crt::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        transparent 1px,
-        rgba(0, 255, 0, 0.2) 2px
-    );
-    pointer-events: none;
-}
+            max-width: 600px;
+            width: 100%;
+            height: auto;
+            border: 1px solid #00ff00;
+            filter: contrast(200%) brightness(80%) grayscale(100%);
+            image-rendering: pixelated;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+        }
+        .fullscreen {
+            max-width: 100%;
+            max-height: 100vh;
+            width: auto;
+            height: auto;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.9);
+            border: none;
+        }
+        .fullscreen-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 999;
+        }
+        .crt {
+            position: relative;
+        }
+        .crt::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                transparent 1px,
+                rgba(0, 255, 0, 0.2) 2px
+            );
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -138,26 +125,29 @@
         <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
     </div>
 
-    <!-- Klasör Yapısı (Makaleler Tarihlere Göre) -->
+    <!-- Makaleler Listesi -->
     <div class="container">
         <h2>📂 Makaleler</h2>
-        
-        <div class="folder">
-            <button class="nav-button" onclick="showContent('post1')">📄 2025-03-02 - Abonelik Modelinin Yükselişi</button>
+        <div id="staticArticles">
+            <div class="folder">
+                <button class="nav-button" onclick="showContent('post1')">📄 2025-03-02 - Abonelik Modelinin Yükselişi</button>
+            </div>
+            <div class="folder">
+                <button class="nav-button" onclick="showContent('post2')">📄 2025-02-15 - Dijital Dönüşümde Yapay Zeka</button>
+            </div>
+            <div class="folder">
+                <button class="nav-button" onclick="showContent('post3')">📄 2025-01-28 - Gelir Modelleri Nasıl Evrimleşti?</button>
+            </div>
+            <div class="folder">
+                <button class="nav-button" onclick="showContent('post4')">📄 2025-03-05 - Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</button>
+            </div>
         </div>
-        <div class="folder">
-            <button class="nav-button" onclick="showContent('post2')">📄 2025-02-15 - Dijital Dönüşümde Yapay Zeka</button>
-        </div>
-        <div class="folder">
-            <button class="nav-button" onclick="showContent('post3')">📄 2025-01-28 - Gelir Modelleri Nasıl Evrimleşti?</button>
-        </div>
-        <div class="folder">
-            <button class="nav-button" onclick="showContent('post4')">📄 2025-03-05 - Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</button>
-        </div>
+        <!-- Buraya yeni makale butonları otomatik eklenecek -->
+        <div id="dynamicButtons"></div>
     </div>
 
-    <!-- Makale İçeriği -->
-    <div class="container">
+    <!-- Makale İçeriği Kutuları -->
+    <div class="container" id="articleContents">
         <div id="post1" class="content">
             <h2>Abonelik Modelinin Yükselişi</h2>
             <p><strong>Tarih:</strong> 2025-03-02</p>
@@ -200,79 +190,96 @@
                 <img src="uploads/veri-temelli-model.png" class="retro-image" alt="Veri Temelli Gelir Modeli">
             </p>
         </div>
+        <!-- Yeni makale içerikleri buraya eklenecek -->
     </div>
 
+    <!-- showContent fonksiyonu -->
     <script>
         function showContent(id) {
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            var elem = document.getElementById(id);
+            if(elem) elem.classList.add('active');
         }
     </script>
-<!-- GİZLİ MAKALE EKLE KUTUSU -->
-<div id="hiddenAddBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:2px solid #00ff00;padding:24px;z-index:9999;border-radius:10px;max-width:90vw;min-width:300px;">
-    <h2 style="margin-bottom:10px;">✍️ Makale Ekle</h2>
-    <form id="hiddenAddForm">
-        <input id="mBaslik" required placeholder="Başlık" style="width:100%;margin-bottom:8px;padding:8px;">
-        <input id="mTarih" required type="date" style="width:100%;margin-bottom:8px;padding:8px;">
-        <textarea id="mIcerik" required rows="6" placeholder="İçerik..." style="width:100%;margin-bottom:8px;padding:8px;"></textarea>
-        <button type="submit" style="background:#00ff00;color:#111;padding:8px 18px;font-weight:bold;border:none;border-radius:6px;margin-right:8px;">Ekle</button>
-        <button id="hideBoxBtn" type="button" style="background:#222;color:#00ff00;padding:8px 18px;font-weight:bold;border:1px solid #00ff00;border-radius:6px;">Vazgeç</button>
-    </form>
-</div>
-<script>
-(function() {
-    let mouseTimer, isDown = false;
-    document.addEventListener('mousedown', function(e) {
-        if(e.button !== 0) return; // Sadece sol tık
-        isDown = true;
-        mouseTimer = setTimeout(() => {
-            if(isDown) {
-                document.getElementById('hiddenAddBox').style.display = 'block';
-            }
-        }, 5000); // 5 sn
-    });
-    document.addEventListener('mouseup', function() {
-        isDown = false;
-        clearTimeout(mouseTimer);
-    });
 
-    document.getElementById('hideBoxBtn').onclick = function() {
-        document.getElementById('hiddenAddBox').style.display = 'none';
-    };
+    <!-- GİZLİ MAKALE EKLE KUTUSU -->
+    <div id="hiddenAddBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:2px solid #00ff00;padding:24px;z-index:9999;border-radius:10px;max-width:90vw;min-width:300px;">
+        <h2 style="margin-bottom:10px;">✍️ Makale Ekle</h2>
+        <form id="hiddenAddForm">
+            <input id="mBaslik" required placeholder="Başlık" style="width:100%;margin-bottom:8px;padding:8px;">
+            <input id="mTarih" required type="date" style="width:100%;margin-bottom:8px;padding:8px;">
+            <textarea id="mIcerik" required rows="6" placeholder="İçerik..." style="width:100%;margin-bottom:8px;padding:8px;"></textarea>
+            <button type="submit" style="background:#00ff00;color:#111;padding:8px 18px;font-weight:bold;border:none;border-radius:6px;margin-right:8px;">Ekle</button>
+            <button id="hideBoxBtn" type="button" style="background:#222;color:#00ff00;padding:8px 18px;font-weight:bold;border:1px solid #00ff00;border-radius:6px;">Vazgeç</button>
+        </form>
+    </div>
+    <script>
+    // 5 saniye mouse basılı tutunca açılan gizli makale ekleme fonksiyonu
+    (function() {
+        let mouseTimer, isDown = false;
+        document.addEventListener('mousedown', function(e) {
+            if(e.button !== 0) return; // Sadece sol tık
+            isDown = true;
+            mouseTimer = setTimeout(() => {
+                if(isDown) {
+                    document.getElementById('hiddenAddBox').style.display = 'block';
+                }
+            }, 5000); // 5 sn
+        });
+        document.addEventListener('mouseup', function() {
+            isDown = false;
+            clearTimeout(mouseTimer);
+        });
 
-    document.getElementById('hiddenAddForm').onsubmit = function(e) {
-        e.preventDefault();
-        let baslik = document.getElementById('mBaslik').value.trim();
-        let tarih = document.getElementById('mTarih').value;
-        let icerik = document.getElementById('mIcerik').value.trim();
-        if(baslik && tarih && icerik) {
-            // Kendi localStorage'ına ekle
-            let arr = JSON.parse(localStorage.getItem("articles") || "[]");
-            arr.push({ title: baslik, date: tarih, content: icerik });
-            localStorage.setItem("articles", JSON.stringify(arr));
+        document.getElementById('hideBoxBtn').onclick = function() {
             document.getElementById('hiddenAddBox').style.display = 'none';
-            location.reload(); // Listeyi güncelle
-        }
-    };
-})();
-</script>
-<div class="container">
-  <h2>📝 Eklenen Makaleler</h2>
-  <div id="eklenenMakaleler"></div>
-</div>
-<script>
-(function() {
-  let arr = JSON.parse(localStorage.getItem("articles") || "[]");
-  let html = "";
-  arr.slice().reverse().forEach((a, i) => {
-    html += `<div style="margin-bottom:18px;">
-      <b>${a.title}</b> <span style="opacity:.7;">(${a.date})</span><br>
-      <div style="margin-top:4px;padding-left:6px;">${a.content.replace(/\n/g,"<br>")}</div>
-      <hr style="border-color:#222;">
-    </div>`;
-  });
-  document.getElementById("eklenenMakaleler").innerHTML = html || "<em>Henüz eklenmiş makale yok.</em>";
-})();
-</script>
+        };
+
+        document.getElementById('hiddenAddForm').onsubmit = function(e) {
+            e.preventDefault();
+            let baslik = document.getElementById('mBaslik').value.trim();
+            let tarih = document.getElementById('mTarih').value;
+            let icerik = document.getElementById('mIcerik').value.trim();
+            if(baslik && tarih && icerik) {
+                let arr = JSON.parse(localStorage.getItem("articles") || "[]");
+                arr.push({ title: baslik, date: tarih, content: icerik });
+                localStorage.setItem("articles", JSON.stringify(arr));
+                document.getElementById('hiddenAddBox').style.display = 'none';
+                location.reload();
+            }
+        };
+    })();
+    </script>
+
+    <!-- Dinamik olarak eklenen makaleleri listele -->
+    <script>
+    (function() {
+        let arr = JSON.parse(localStorage.getItem("articles") || "[]");
+        let dynamicButtons = "";
+        let dynamicContents = "";
+
+        arr.forEach((a, i) => {
+            // id: dynpostX (X = i)
+            let postId = "dynpost" + i;
+            dynamicButtons += `
+            <div class="folder">
+                <button class="nav-button" onclick="showContent('${postId}')">📄 ${a.date} - ${a.title}</button>
+            </div>`;
+            dynamicContents += `
+            <div id="${postId}" class="content">
+                <h2>${a.title}</h2>
+                <p><strong>Tarih:</strong> ${a.date}</p>
+                <div>${a.content.replace(/\n/g,"<br>")}</div>
+            </div>`;
+        });
+
+        // Butonları makale listesinin altına ekle
+        document.getElementById("dynamicButtons").innerHTML = dynamicButtons;
+
+        // İçerikleri articleContents kutusunun sonuna ekle
+        document.getElementById("articleContents").insertAdjacentHTML('beforeend', dynamicContents);
+    })();
+    </script>
+
 </body>
 </html>
