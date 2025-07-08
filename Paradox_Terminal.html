@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>PARADOX TERMINAL</title>
+  <style>
+    body {
+      background: #000;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 800px;
+      width: 90%;
+      margin: 40px auto;
+      padding: 18px 18px 60px 18px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 18px #007700;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background: #000;
+    }
+    .matrix {
+      font-size: 1.15em;
+      font-family: monospace;
+      color: #00ff00;
+      letter-spacing: 2px;
+      line-height: 1.15;
+      height: 130px;
+      overflow: hidden;
+      width: 100%;
+      background: #010a03;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #007700;
+      position: relative;
+    }
+    .matrix-rain {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    .paradox-loader {
+      margin: 24px 0 12px 0;
+      color: #00ff00;
+      font-size: 1.1em;
+      font-family: inherit;
+      letter-spacing: 1.5px;
+    }
+    .paradox-words {
+      margin: 0 auto 14px auto;
+      font-size: 1.05em;
+      color: #0ff;
+      min-height: 18px;
+      height: 22px;
+      overflow: hidden;
+      letter-spacing: 1px;
+      animation: flicker 2.5s infinite;
+    }
+    @keyframes flicker {
+      0%,100% { opacity: 1; }
+      40% { opacity: 0.65; }
+      50% { opacity: 0.4; }
+      60% { opacity: 0.7; }
+      70% { opacity: 0.9; }
+    }
+    .arcade-title {
+      font-size: 2.1em;
+      font-family: inherit;
+      color: #00ff00;
+      margin-bottom: 0.5em;
+      letter-spacing: 3px;
+      text-shadow: 0 0 6px #0f0, 0 0 18px #00f2;
+      border-bottom: 2px dashed #00ff00;
+      padding-bottom: 10px;
+    }
+    .arcade-meta {
+      font-size: 1em;
+      margin-bottom: 1.5em;
+      color: #0ff;
+      font-family: inherit;
+      letter-spacing: 1.5px;
+    }
+    .paradox-desc {
+      background: rgba(0,30,20,0.3);
+      border-left: 3px solid #007700;
+      margin: 14px auto 30px auto;
+      color: #88ffbb;
+      font-size: 1em;
+      padding: 15px 10px;
+      width: 100%;
+      max-width: 700px;
+      text-align: left;
+      border-radius: 8px;
+      box-shadow: 0 0 8px #001a00;
+    }
+    .cycle-metaphors {
+      font-size: 1.05em;
+      margin: 10px auto 14px auto;
+      color: #00ffaa;
+      min-height: 22px;
+      font-family: inherit;
+      letter-spacing: 1.3px;
+      animation: flicker 2.2s infinite;
+    }
+    .blink {
+      animation: blink 1s step-start 0s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    .btn-next {
+      padding: 10px 28px;
+      font-size: 1em;
+      border: 1px solid #00ff00;
+      background: #000;
+      color: #00ff00;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 15px 6px 0 6px;
+      transition: background .18s, color .18s;
+    }
+    .btn-next:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 10px #00ff00;
+    }
+    @media (max-width: 700px) {
+      .container { padding: 5vw 2vw 16vw 2vw; }
+      .arcade-title { font-size: 1.4em; }
+      .paradox-words { font-size: 0.95em; }
+      .cycle-metaphors { font-size: 0.93em; }
+      .paradox-desc { font-size: 0.95em; padding: 12px 5px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="matrix">
+      <canvas id="matrix-rain" class="matrix-rain"></canvas>
+      <div class="paradox-loader" id="paradox-loader"></div>
+    </div>
+    <div class="arcade-title" id="paradox-title"></div>
+    <div class="arcade-meta" id="paradox-meta"></div>
+    <div class="cycle-metaphors" id="cycle-metaphors"></div>
+    <div class="paradox-desc" id="paradox-desc"></div>
+    <button class="btn-next" id="btn-next">Sonraki Paradox</button>
+  </div>
+  <script>
+    // Matrix Yağmur Efekti
+    const canvas = document.getElementById('matrix-rain');
+    const ctx = canvas.getContext('2d');
+    let width = canvas.width = canvas.offsetWidth = document.querySelector('.matrix').clientWidth;
+    let height = canvas.height = canvas.offsetHeight = document.querySelector('.matrix').clientHeight;
+    const fontSize = 16;
+    const columns = Math.floor(width / fontSize);
+    const drops = Array(columns).fill(1);
+    function drawMatrixRain() {
+      ctx.fillStyle = 'rgba(0, 15, 0, 0.16)';
+      ctx.fillRect(0, 0, width, height);
+      ctx.font = fontSize + 'px Courier New, monospace';
+      ctx.fillStyle = '#00FF00';
+      for(let i = 0; i < drops.length; i++){
+        const char = String.fromCharCode(0x30A0 + Math.random() * 96);
+        ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+        if(drops[i] * fontSize > height && Math.random() > 0.955){
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+    setInterval(drawMatrixRain, 38);
+    window.addEventListener('resize', ()=>{
+      width = canvas.width = canvas.offsetWidth = document.querySelector('.matrix').clientWidth;
+      height = canvas.height = canvas.offsetHeight = document.querySelector('.matrix').clientHeight;
+    });
+
+    // Paradox veri tabanı
+    const paradoxes = [
+      {
+        title: 'Zeno’nun İkilik Paradoksu',
+        meta: 'Her adımda mesafenin yarısı kadar yaklaşır, hedefe varamaz mıyız?',
+        loader: [
+          'Paradox protokolü yükleniyor...',
+          'Adımlar hesaplanıyor...',
+          'Limit fonksiyonu çağrılıyor...',
+          'Sonsuz adım simüle ediliyor...'
+        ],
+        desc: 'Bir adam, her adımında kalan mesafenin yarısını kat ederek hedefe yaklaşır. Mantıken hiçbir zaman tam hedefe ulaşamaması gerekir. Fakat matematikte, bu sonsuz küçük adımların toplamı sonlu bir mesafeye ulaşır. Sonsuzluk ile gerçeklik arasındaki ince çizgi...'
+        ,metaphors: ['Her zaman bir adım daha yakın...', 'Yarısına geldin, yolun bitmiyor.', 'Sonsuz küçük adımların toplamı: Sınırda yaşamak.', 'Matematikte limit, hayatta sabır!']
+      },
+      {
+        title: 'Aşil ve Kaplumbağa',
+        meta: 'En hızlı koşucu bile yavaş bir kaplumbağaya nasıl yetişemez?',
+        loader: [
+          'Aşil başlatılıyor...',
+          'Kaplumbağa mesafesi belirleniyor...',
+          'İlerleme analiz ediliyor...',
+          'Çarpık mantık devreye alınıyor...'
+        ],
+        desc: 'Aşil kaplumbağadan çok daha hızlı olsa da, kaplumbağa her seferinde biraz daha öne geçer. Sonsuz küçük farklar birikince, Aşil asla yetişemez gibi görünür. Oysa ki toplam mesafe yine sonludur, gerçek dünyada Aşil yetişir. Felsefe: 1, Zeno: 0',
+        metaphors: ['Hızlıysan da yetmez!', 'Öne geçen hep az farkla ileride.', 'Kaplumbağa için küçük adımlar, Aşil için sonsuz döngü.', 'Hayat, sonsuz kovalamaca!']
+      },
+      {
+        title: 'Ok Paradoksu',
+        meta: 'Havada duran ok gerçekten hareket ediyor mu?',
+        loader: [
+          'Ok havaya fırlatılıyor...',
+          'Zaman parçalara ayrılıyor...',
+          'Her anda ok duruyor...',
+          'Hareket ilüzyonu analiz ediliyor...'
+        ],
+        desc: 'Bir ok havadayken, her anda belli bir yerde duruyorsa nasıl hareket eder? Zeno’ya göre, zaman sonsuz küçük anlara bölündüğünde hareket imkansızdır. Modern fizik ve kalkülüs ise hareketi “anlık hız” kavramıyla açıklar. Göründüğü kadar durgun değil!',
+        metaphors: ['Hareket bir ilüzyon mu?', 'Duran ok, geçen zaman.', 'Her an, yeni bir başlangıç.', 'Okun rotası: Zamanın içinde donmak.']
+      },
+      {
+        title: 'Epimenides’in Yalancısı',
+        meta: '“Bu cümle yalandır.” Doğruysa yanlış, yanlışsa doğru?',
+        loader: [
+          'Mantık döngüsü başlatılıyor...',
+          'Çelişkiler analiz ediliyor...',
+          'Kendi kuyruğunu yiyen yılan modeli kuruluyor...',
+          'Paradoks alarmı aktif!'
+        ],
+        desc: 'Giritli Epimenides’in iddiası: “Tüm Giritliler yalancıdır.” Peki ya bu doğruysa, kendisi de yalancıysa? Klasik kendine referans veren paradokslar, mantık ve yapay zekâ araştırmalarının başını ağrıtan tatlı bir baş belası!',
+        metaphors: ['Kendi kendini çürüten cümle.', 'Döngüsel doğrular, paradoksal sonuçlar.', 'Her şey yalan, peki ya bu da mı?', 'Zihin: “Hata veriyorum!”']
+      }
+    ];
+    let paradoxIndex = 0;
+    const titleEl = document.getElementById('paradox-title');
+    const metaEl = document.getElementById('paradox-meta');
+    const descEl = document.getElementById('paradox-desc');
+    const metaphorsEl = document.getElementById('cycle-metaphors');
+    const loaderEl = document.getElementById('paradox-loader');
+    const btnNext = document.getElementById('btn-next');
+    // Döngüyle metaforlar
+    let metaTimer = null;
+    function cycleMetaphors(list) {
+      let i = 0;
+      metaphorsEl.textContent = list[0];
+      clearInterval(metaTimer);
+      metaTimer = setInterval(() => {
+        i = (i+1)%list.length;
+        metaphorsEl.textContent = list[i];
+      }, 3200);
+    }
+    // Matrix loader ve içerik gösterimi
+    function showParadox(idx) {
+      let px = paradoxes[idx];
+      titleEl.textContent = px.title + ' '; // Arcade başlık
+      metaEl.textContent = px.meta;
+      descEl.textContent = '';
+      loaderEl.textContent = '';
+      metaphorsEl.textContent = '';
+      btnNext.disabled = true;
+      // Loader efekt
+      let loadIdx = 0;
+      function stepLoader() {
+        if (loadIdx < px.loader.length) {
+          loaderEl.textContent = px.loader.slice(0, loadIdx+1).join('\n');
+          loadIdx++;
+          setTimeout(stepLoader, 1350);
+        } else {
+          loaderEl.textContent = '';
+          // Asıl içerik gelsin
+          descEl.textContent = px.desc;
+          cycleMetaphors(px.metaphors);
+          btnNext.disabled = false;
+        }
+      }
+      stepLoader();
+    }
+    btnNext.addEventListener('click',()=>{
+      paradoxIndex = (paradoxIndex+1)%paradoxes.length;
+      showParadox(paradoxIndex);
+    });
+    // İlk yüklemede
+    showParadox(0);
+  </script>
+</body>
+</html>
