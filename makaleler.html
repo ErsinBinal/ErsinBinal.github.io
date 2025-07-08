@@ -208,6 +208,54 @@
             document.getElementById(id).classList.add('active');
         }
     </script>
+<!-- GİZLİ MAKALE EKLE KUTUSU -->
+<div id="hiddenAddBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:2px solid #00ff00;padding:24px;z-index:9999;border-radius:10px;max-width:90vw;min-width:300px;">
+    <h2 style="margin-bottom:10px;">✍️ Makale Ekle</h2>
+    <form id="hiddenAddForm">
+        <input id="mBaslik" required placeholder="Başlık" style="width:100%;margin-bottom:8px;padding:8px;">
+        <input id="mTarih" required type="date" style="width:100%;margin-bottom:8px;padding:8px;">
+        <textarea id="mIcerik" required rows="6" placeholder="İçerik..." style="width:100%;margin-bottom:8px;padding:8px;"></textarea>
+        <button type="submit" style="background:#00ff00;color:#111;padding:8px 18px;font-weight:bold;border:none;border-radius:6px;margin-right:8px;">Ekle</button>
+        <button id="hideBoxBtn" type="button" style="background:#222;color:#00ff00;padding:8px 18px;font-weight:bold;border:1px solid #00ff00;border-radius:6px;">Vazgeç</button>
+    </form>
+</div>
+<script>
+(function() {
+    let mouseTimer, isDown = false;
+    document.addEventListener('mousedown', function(e) {
+        if(e.button !== 0) return; // Sadece sol tık
+        isDown = true;
+        mouseTimer = setTimeout(() => {
+            if(isDown) {
+                document.getElementById('hiddenAddBox').style.display = 'block';
+            }
+        }, 5000); // 5 sn
+    });
+    document.addEventListener('mouseup', function() {
+        isDown = false;
+        clearTimeout(mouseTimer);
+    });
+
+    document.getElementById('hideBoxBtn').onclick = function() {
+        document.getElementById('hiddenAddBox').style.display = 'none';
+    };
+
+    document.getElementById('hiddenAddForm').onsubmit = function(e) {
+        e.preventDefault();
+        let baslik = document.getElementById('mBaslik').value.trim();
+        let tarih = document.getElementById('mTarih').value;
+        let icerik = document.getElementById('mIcerik').value.trim();
+        if(baslik && tarih && icerik) {
+            // Kendi localStorage'ına ekle
+            let arr = JSON.parse(localStorage.getItem("articles") || "[]");
+            arr.push({ title: baslik, date: tarih, content: icerik });
+            localStorage.setItem("articles", JSON.stringify(arr));
+            document.getElementById('hiddenAddBox').style.display = 'none';
+            location.reload(); // Listeyi güncelle
+        }
+    };
+})();
+</script>
 
 </body>
 </html>
