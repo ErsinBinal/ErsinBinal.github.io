@@ -297,6 +297,47 @@
     50% { opacity: 0.5; } /* Ani kaybolma yerine hafif bir solma */
     100% { opacity: 1; }
 }
+        /* Magic guard actor styles */
+        #magic-guard { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.95); z-index:60; align-items:center; justify-content:center; }
+        .magic-inner { text-align:center; color:#fff; display:flex; flex-direction:column; align-items:center; gap:16px; }
+        .magic-title { font-size:48px; color:#f0f; }
+        .magic-sub { font-size:20px; color:#0ff; }
+    .magic-gif { width:260px; height:auto; border:4px solid rgba(8,143,255,0.6); border-radius:8px; box-shadow:0 0 30px rgba(8,143,255,0.15); }
+        /* Daha gerçekçi hareket için parça parça animasyonlar */
+        .shoulder { transform-origin: 30% 40%; animation: shoulderMove 1.2s ease-in-out infinite; }
+        .elbow { transform-origin: 70% 20%; animation: elbowBend 1.2s ease-in-out infinite; }
+        .wrist { transform-origin: 90% 10%; animation: wristTwist 1.2s ease-in-out infinite; }
+        .finger { transform-origin: 96% 5%; animation: fingerWag 0.9s ease-in-out infinite; }
+
+        @keyframes shoulderMove {
+            0% { transform: rotate(0deg); }
+            20% { transform: rotate(8deg); }
+            40% { transform: rotate(2deg); }
+            60% { transform: rotate(-6deg); }
+            80% { transform: rotate(-2deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes elbowBend {
+            0% { transform: rotate(0deg); }
+            30% { transform: rotate(14deg); }
+            50% { transform: rotate(8deg); }
+            70% { transform: rotate(-6deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes wristTwist {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(22deg); }
+            50% { transform: rotate(8deg); }
+            75% { transform: rotate(-10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes fingerWag {
+            0% { transform: rotate(0deg); }
+            30% { transform: rotate(30deg); }
+            55% { transform: rotate(10deg); }
+            80% { transform: rotate(-8deg); }
+            100% { transform: rotate(0deg); }
+        }
     </style>
 </head>
 <body>
@@ -327,6 +368,15 @@
                 <label for="player-initials" style="font-size:1.2em;">3 Harfli İsminizi Girin:</label><br>
                 <input id="player-initials" maxlength="3" style="text-transform:uppercase; font-size:2em; width:80px; text-align:center; background:#000; color:#0f8; border:2px solid #08f; margin:12px 0;" autofocus>
                 <button id="submit-score" style="padding:8px 18px; font-size:1.1em; background:#111; color:#0f8; border:2px solid #08f; border-radius:6px; cursor:pointer;">Kaydet</button>
+            </div>
+            <!-- Magic word guard (görsel uyarı) -->
+            <div id="magic-guard"> 
+                <div class="magic-inner">
+                    <!-- Kullanıcının istediği Tenor GIF'i -->
+                    <img class="magic-gif" src="https://tenor.com/view/dennis-nedry-jurassic-park-gif-10352808620694624092" alt="Dennis Nedry - You didn't say the magic word" />
+                    <div class="magic-title">Ah ah ah!</div>
+                    <div class="magic-sub">You didn't say the magic word!</div>
+                </div>
             </div>
             <div id="scoreboard" style="margin-top:40px; display:none;">
                 <h2 style="font-family:'Courier New',monospace;color:#08f;">SCOREBOARD</h2>
@@ -645,14 +695,59 @@ if (option.skip) {
             document.getElementById('player-initials').focus();
         }
 
-        // Skor kaydetme ve tabloyu gösterme
+        // Skor kaydetme ve tabloyu gösterme (gelişmiş kötü amaçlı isim filtresi içerir)
         document.getElementById('submit-score').onclick = function() {
-            let initials = document.getElementById('player-initials').value.trim().toUpperCase().slice(0,3);
-            if(initials.length !== 3) {
-                document.getElementById('player-initials').style.borderColor = '#f00';
+            let initialsInput = document.getElementById('player-initials');
+            let raw = initialsInput.value || '';
+
+            // Normalize function: uppercase, map leet, replace Turkish chars to ASCII, remove non-letters
+            function normalize(str) {
+                const leet = { '4':'A','@':'A','0':'O','1':'I','!':'I','3':'E','5':'S','$':'S','7':'T' };
+                str = str.toUpperCase();
+                // replace leet
+                str = str.split('').map(ch => leet[ch] || ch).join('');
+                // replace Turkish diacritics to base letters
+                str = str.replace(/[Ğg]/gi,'G').replace(/[Üu]/gi,'U').replace(/[Şs]/gi,'S').replace(/[İIıi]/gi,'I').replace(/[Öo]/gi,'O').replace(/[Çc]/gi,'C');
+                // keep only A-Z
+                str = str.replace(/[^A-Z]/g,'');
+                // collapse repeated letters (e.g., PIIIC -> PIC)
+                str = str.replace(/(.)\1+/g,'$1');
+                return str;
+            }
+
+            const initials = normalize(raw).slice(0,3);
+
+            // Genişletilmiş blacklist (ASCII normalize edilmiş kökler)
+            const blacklist = [
+                'AMK','AMQ','AQ','AM','SIK','SIQ','S1K','S!K',
+                'OROSP','OROSPU','OROS','ORO','OC','OCU',
+                'GOT','GOTU','GÖT','GOTU','PIC','PIÇ','PIQ','PIK',
+                'GOT','GOTU','GÖT','PIÇ','PIQ','PIC',
+                // kullanıcı tarafından istenen ek kelimeler
+                'GOT','GOTU','GÖT','PIÇ','PIK','PIQ','NAH','NAHK','NAQ','BOK','B0K','ÇÜK','CUK','IT','YRK','YRK'
+            ].map(s => normalize(s));
+
+            // Final check: if normalized initials contains or equals any black token
+            const isProfane = blacklist.some(b => b && (initials.includes(b) || b.includes(initials) || initials === b));
+
+            if(isProfane) {
+                // show overlay with actor
+                const guard = document.getElementById('magic-guard');
+                guard.style.display = 'flex';
+                // 3s sonra gizle, temizle, odakla
+                setTimeout(() => {
+                    guard.style.display = 'none';
+                    initialsInput.value = '';
+                    initialsInput.focus();
+                }, 3000);
                 return;
             }
-            document.getElementById('player-initials').style.borderColor = '#08f';
+
+            if(initials.length !== 3) {
+                initialsInput.style.borderColor = '#f00';
+                return;
+            }
+            initialsInput.style.borderColor = '#08f';
             // Skoru localStorage'a ekle
             let scores = [];
             try {
