@@ -29,29 +29,58 @@
             border: 2px solid var(--terminal-green);
             box-shadow: 0 0 20px var(--terminal-dim);
         }
-        .nav-button {
-            display: block;
-            padding: 10px;
-            margin: 10px auto;
-            width: 80%;
-            border: 1px solid var(--terminal-green);
-            background: transparent;
-            text-decoration: none;
-            text-align: left;
-            transition: 0.3s ease;
-            font-size: 1.1em;
+        .article-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            margin-top: 24px;
         }
-        .nav-button:hover {
+        .article-card {
+            background: #111;
+            border: 2px solid var(--terminal-green);
+            box-shadow: 0 0 12px var(--terminal-dim);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: left;
+            position: relative;
+            transition: box-shadow 0.2s;
+        }
+        .article-card:hover {
+            box-shadow: 0 0 24px var(--terminal-green);
+        }
+        .article-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .article-date {
+            font-size: 0.95em;
+            color: #00bb00;
+            margin-bottom: 12px;
+        }
+        .article-summary {
+            margin-bottom: 12px;
+            color: #00ff99;
+        }
+        .read-more-btn {
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            color: var(--terminal-green);
+            padding: 6px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.2s, color 0.2s;
+        }
+        .read-more-btn:hover {
             background: var(--terminal-green);
             color: #000;
         }
-        .content {
+        .article-full {
             display: none;
-            padding: 20px;
-            border-top: 1px dashed var(--terminal-green);
-            text-align: left;
+            margin-top: 16px;
         }
-        .content.active {
+        .article-full.active {
             display: block;
         }
         .blink {
@@ -125,81 +154,81 @@
         <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
     </div>
 
-    <!-- Makaleler Listesi -->
+    <!-- Makaleler Listesi ve Kartları -->
     <div class="container">
         <h2>📂 Makaleler</h2>
-        <div id="staticArticles">
-            <div class="folder">
-                <button class="nav-button" onclick="showContent('post1')">📄 2025-03-02 - Abonelik Modelinin Yükselişi</button>
-            </div>
-            <div class="folder">
-                <button class="nav-button" onclick="showContent('post2')">📄 2025-02-15 - Dijital Dönüşümde Yapay Zeka</button>
-            </div>
-            <div class="folder">
-                <button class="nav-button" onclick="showContent('post3')">📄 2025-01-28 - Gelir Modelleri Nasıl Evrimleşti?</button>
-            </div>
-            <div class="folder">
-                <button class="nav-button" onclick="showContent('post4')">📄 2025-03-05 - Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</button>
-            </div>
-        </div>
-        <!-- Buraya yeni makale butonları otomatik eklenecek -->
-        <div id="dynamicButtons"></div>
+        <div class="article-list" id="articleList"></div>
     </div>
 
-    <!-- Makale İçeriği Kutuları -->
-    <div class="container" id="articleContents">
-        <div id="post1" class="content">
-            <h2>Abonelik Modelinin Yükselişi</h2>
-            <p><strong>Tarih:</strong> 2025-03-02</p>
-            <p>Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.</p>
-            <img src="https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png" class="retro-image" alt="Netflix Abonelik Modeli">
-        </div>
-        <div id="post2" class="content">
-            <h2>Dijital Dönüşümde Yapay Zeka</h2>
-            <p><strong>Tarih:</strong> 2025-02-15</p>
-            <p>Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?</p>
-        </div>
-        <div id="post3" class="content">
-            <h2>Gelir Modelleri Nasıl Evrimleşti?</h2>
-            <p><strong>Tarih:</strong> 2025-01-28</p>
-            <p>Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?</p>
-        </div>
-        <div id="post4" class="content">
-            <h2>Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili</h2>
-            <p><strong>Tarih:</strong> 2025-03-05</p>
-            <p>
-                **Veri Temelli Fiyatlandırma** <br>
-                Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.  
-                Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.
-            </p>
-            <p>
-                **Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.  
-                **Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.
-            </p>
-            <p>
-                Bu strateji, **veriye dayalı analizlerle müşteri tercihlerini anlamayı** ve buna göre fiyatlandırmayı optimize etmeyi kapsar.  
-                Örneğin, kullanıcı verilerine göre farklı müşteri gruplarına kişiselleştirilmiş teklifler sunulabilir veya fiyatlar dinamik olarak belirlenebilir.
-            </p>
-            <p>
-                **Freemium Model vs. Çift Taraflı Gelir Modeli**  
-                - **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.  
-                - **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.  
-                Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.
-            </p>
-            <p>
-                <img src="uploads/veri-temelli-model.png" class="retro-image" alt="Veri Temelli Gelir Modeli">
-            </p>
-        </div>
-        <!-- Yeni makale içerikleri buraya eklenecek -->
-    </div>
-
-    <!-- showContent fonksiyonu -->
     <script>
-        function showContent(id) {
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            var elem = document.getElementById(id);
-            if(elem) elem.classList.add('active');
+    // Makale verileri (statik ve dinamik)
+    const staticArticles = [
+        {
+            title: "Abonelik Modelinin Yükselişi",
+            date: "2025-03-02",
+            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><img src='https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png' class='retro-image' alt='Netflix Abonelik Modeli'>`
+        },
+        {
+            title: "Dijital Dönüşümde Yapay Zeka",
+            date: "2025-02-15",
+            content: `Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?`
+        },
+        {
+            title: "Gelir Modelleri Nasıl Evrimleşti?",
+            date: "2025-01-28",
+            content: `Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?`
+        },
+        {
+            title: "Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili",
+            date: "2025-03-05",
+            content: `**Veri Temelli Fiyatlandırma** <br>Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.<br>Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.<br><br>**Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.<br>**Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.<br><br>Bu strateji, **veriye dayalı analizlerle müşteri tercihlerini anlamayı** ve buna göre fiyatlandırmayı optimize etmeyi kapsar.<br>Örneğin, kullanıcı verilerine göre farklı müşteri gruplarına kişiselleştirilmiş teklifler sunulabilir veya fiyatlar dinamik olarak belirlenebilir.<br><br>**Freemium Model vs. Çift Taraflı Gelir Modeli**<br>- **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.<br>- **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.<br>Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.<br><br><img src='uploads/veri-temelli-model.png' class='retro-image' alt='Veri Temelli Gelir Modeli'>`
         }
+    ];
+
+    // Dinamik makaleler (localStorage)
+    let dynamicArticles = [];
+    try {
+        dynamicArticles = JSON.parse(localStorage.getItem("articles") || "[]");
+    } catch(e) { dynamicArticles = []; }
+
+    // Makale kartı oluşturucu
+    function createArticleCard(article, idx, isDynamic) {
+        const summary = article.content.replace(/<[^>]+>/g,"").slice(0,200) + (article.content.length > 200 ? "..." : "");
+        const cardId = (isDynamic ? "dyn" : "stat") + "_" + idx;
+        return `
+        <div class="article-card">
+            <div class="article-title">${article.title}</div>
+            <div class="article-date">${article.date}</div>
+            <div class="article-summary" id="summary_${cardId}">${summary}</div>
+            <button class="read-more-btn" onclick="toggleFull('${cardId}')">Devamını Oku</button>
+            <div class="article-full" id="${cardId}">
+                ${article.content}
+            </div>
+        </div>
+        `;
+    }
+
+    // Kartları ekle
+    const articleList = document.getElementById("articleList");
+    let allCards = "";
+    staticArticles.forEach((a,i) => {
+        allCards += createArticleCard(a,i,false);
+    });
+    dynamicArticles.forEach((a,i) => {
+        allCards += createArticleCard(a,i,true);
+    });
+    articleList.innerHTML = allCards;
+
+    // Devamını oku fonksiyonu
+    window.toggleFull = function(id) {
+        document.querySelectorAll('.article-full').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.article-summary').forEach(el => el.style.display = 'block');
+        const fullEl = document.getElementById(id);
+        const summaryEl = document.getElementById('summary_' + id);
+        if(fullEl) fullEl.classList.add('active');
+        if(summaryEl) summaryEl.style.display = 'none';
+        fullEl.scrollIntoView({behavior:'smooth',block:'center'});
+    }
     </script>
 
     <!-- GİZLİ MAKALE EKLE KUTUSU -->
@@ -251,35 +280,7 @@
     })();
     </script>
 
-    <!-- Dinamik olarak eklenen makaleleri listele -->
-    <script>
-    (function() {
-        let arr = JSON.parse(localStorage.getItem("articles") || "[]");
-        let dynamicButtons = "";
-        let dynamicContents = "";
-
-        arr.forEach((a, i) => {
-            // id: dynpostX (X = i)
-            let postId = "dynpost" + i;
-            dynamicButtons += `
-            <div class="folder">
-                <button class="nav-button" onclick="showContent('${postId}')">📄 ${a.date} - ${a.title}</button>
-            </div>`;
-            dynamicContents += `
-            <div id="${postId}" class="content">
-                <h2>${a.title}</h2>
-                <p><strong>Tarih:</strong> ${a.date}</p>
-                <div>${a.content.replace(/\n/g,"<br>")}</div>
-            </div>`;
-        });
-
-        // Butonları makale listesinin altına ekle
-        document.getElementById("dynamicButtons").innerHTML = dynamicButtons;
-
-        // İçerikleri articleContents kutusunun sonuna ekle
-        document.getElementById("articleContents").insertAdjacentHTML('beforeend', dynamicContents);
-    })();
-    </script>
+    // ...existing code...
 
 </body>
 </html>
