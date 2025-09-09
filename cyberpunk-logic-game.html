@@ -323,6 +323,24 @@
             <h1>TEST TAMAMLANDI</h1>
             <h2>TOPLAM PUANINIZ:</h2>
             <div id="final-score">0</div>
+            <div id="scoreboard-entry" style="margin-top:32px; display:none;">
+                <label for="player-initials" style="font-size:1.2em;">3 Harfli İsminizi Girin:</label><br>
+                <input id="player-initials" maxlength="3" style="text-transform:uppercase; font-size:2em; width:80px; text-align:center; background:#000; color:#0f8; border:2px solid #08f; margin:12px 0;" autofocus>
+                <button id="submit-score" style="padding:8px 18px; font-size:1.1em; background:#111; color:#0f8; border:2px solid #08f; border-radius:6px; cursor:pointer;">Kaydet</button>
+            </div>
+            <div id="scoreboard" style="margin-top:40px; display:none;">
+                <h2 style="font-family:'Courier New',monospace;color:#08f;">SCOREBOARD</h2>
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="color:#0f8;font-size:1.1em;border-bottom:2px solid #08f;">
+                            <th style="text-align:left;padding:8px 24px 8px 8px;">İsim</th>
+                            <th style="text-align:center;padding:8px 24px;">Puan</th>
+                            <th style="text-align:right;padding:8px 24px 8px 8px;">Süre</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scoreboard-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
     
@@ -384,8 +402,9 @@
                     ]
                 },
                 
-            ]
-            
+            ],
+            startTime: null,
+            endTime: null
         };
         
         // DOM elements
@@ -614,10 +633,60 @@ if (option.skip) {
             resultsElement.style.display = 'flex';
             finalScoreElement.textContent = gameState.score;
             clearInterval(gameState.timer);
+
+            // Bitirme süresini hesapla
+            gameState.endTime = Date.now();
+            gameState.finishDuration = Math.max(0, Math.floor((gameState.endTime - gameState.startTime) / 1000)); // saniye
+
+            // Skor girişi kutusunu göster
+            document.getElementById('scoreboard-entry').style.display = 'block';
+            document.getElementById('scoreboard').style.display = 'none';
+            document.getElementById('player-initials').value = '';
+            document.getElementById('player-initials').focus();
         }
+
+        // Skor kaydetme ve tabloyu gösterme
+        document.getElementById('submit-score').onclick = function() {
+            let initials = document.getElementById('player-initials').value.trim().toUpperCase().slice(0,3);
+            if(initials.length !== 3) {
+                document.getElementById('player-initials').style.borderColor = '#f00';
+                return;
+            }
+            document.getElementById('player-initials').style.borderColor = '#08f';
+            // Skoru localStorage'a ekle
+            let scores = [];
+            try {
+                scores = JSON.parse(localStorage.getItem('cyberpunk_scores') || '[]');
+            } catch(e) { scores = []; }
+            // Süreyi dakika:saniye formatına çevir
+            let duration = gameState.finishDuration;
+            let min = Math.floor(duration/60);
+            let sec = duration%60;
+            let durationStr = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
+            scores.push({ name: initials, score: gameState.score, duration: durationStr });
+            // En yüksekten en düşüğe sırala
+            scores.sort((a,b) => b.score - a.score);
+            // Sadece ilk 10 skoru tut
+            scores = scores.slice(0,10);
+            localStorage.setItem('cyberpunk_scores', JSON.stringify(scores));
+
+            // Skor tablosunu doldur
+            let tbody = '';
+            scores.forEach(s => {
+                tbody += `<tr style='font-size:1.2em;border-bottom:1px solid #222;'>
+                    <td style='color:#0f8;padding:8px 24px 8px 8px;text-align:left;'>${s.name}</td>
+                    <td style='color:#fff;padding:8px 24px;text-align:center;'>${s.score}</td>
+                    <td style='color:#08f;padding:8px 24px 8px 8px;text-align:right;'>${s.duration}</td>
+                </tr>`;
+            });
+            document.getElementById('scoreboard-body').innerHTML = tbody;
+            document.getElementById('scoreboard').style.display = 'block';
+            document.getElementById('scoreboard-entry').style.display = 'none';
+        };
         
         // Start the game
         function startGame() {
+            gameState.startTime = Date.now();
             updateScore();
             showQuestion();
         }
