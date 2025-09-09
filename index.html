@@ -86,23 +86,46 @@
         margin: 6px;
       }
     }
+    /* Neon artistic frames around the main container */
+    .frame-wrap { position: relative; display:flex; align-items:center; justify-content:center; padding:40px; }
+    .frame-wrap .neon-frame { position: absolute; border: 2px solid rgba(8,143,255,0.12); box-shadow: 0 0 30px rgba(8,143,255,0.06); pointer-events: none; }
+    .frame-wrap .n1 { width: 900px; height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: rotate(0deg); animation: spinCW 12s linear infinite; }
+    .frame-wrap .n2 { width: 960px; height: 580px; border-radius:18px; border-color: rgba(0,255,170,0.12); transform: rotate(-2deg); animation: spinCCW 20s linear infinite; }
+    .frame-wrap .n3 { width: 1020px; height: 640px; border-radius:22px; border-color: rgba(0,120,255,0.08); transform: rotate(4deg); animation: spinCW 28s linear infinite; }
+
+    /* Only show frames outside the container: use backdrop-like mask by adding big inner box-shadow on container */
+    .container { position: relative; z-index: 2; background: rgba(0,0,0,0.9); }
+
+    @keyframes spinCW {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @keyframes spinCCW {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(-360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Convivium<span class="blink">_</span></h1>
-    <p>
-      Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
-    </p>
-    <p>
-        Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
-</p>
-    <nav>
-      <a href="makaleler.html" class="nav-button">Makaleler</a>
-      <a href="cyberpunk-logic-game.html" class="nav-button">Cyberpunk Logic Game</a>
-      <a href="ozgecmisim.html" class="nav-button">Kariyerim</a>
-      <a href="Paradox_Terminal.html" class="nav-button">Paradokslar</a>
-    </nav>
+  <div class="frame-wrap">
+    <div class="neon-frame n1" aria-hidden="true"></div>
+    <div class="neon-frame n2" aria-hidden="true"></div>
+    <div class="neon-frame n3" aria-hidden="true"></div>
+    <div class="container">
+      <h1>Convivium<span class="blink">_</span></h1>
+      <p>
+        Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
+      </p>
+      <p>
+          Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
+      </p>
+      <nav>
+        <a href="makaleler.html" class="nav-button">Makaleler</a>
+        <a href="cyberpunk-logic-game.html" class="nav-button">Cyberpunk Logic Game</a>
+        <a href="ozgecmisim.html" class="nav-button">Kariyerim</a>
+        <a href="Paradox_Terminal.html" class="nav-button">Paradokslar</a>
+      </nav>
+    </div>
   </div>
 </body>
 </html>
