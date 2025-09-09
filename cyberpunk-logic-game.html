@@ -406,48 +406,48 @@
                 {
                     question: "8 tane bilardo topunuz var; bu toplardan biri diğerlerinden daha ağır. Elinizde sadece bir eşit kollu terazi (ağırlık terazisi) olduğunu düşünün. Ağır olan topu kesin olarak bulmak için en az kaç tartım yapmanız gerekir?",
                     options: [
-                        { text: "A) 2 denemede", correct: true },
-                        { text: "B) 3 denemede", correct: false },
-                        { text: "C) 4 denemede", correct: false },
-                        { text: "D) 5 denemede", correct: false },
+                        { text: "A) 2 denemede" },
+                        { text: "B) 3 denemede" },
+                        { text: "C) 4 denemede" },
+                        { text: "D) 5 denemede" },
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
                 {
                     question: "Aşağıdaki sayı dizisini devam ettirdiğimizde bir sonraki sayı ne olur? 2, 3, 5, 8, 13, 21, ...",
                     options: [
-                        { text: "A) 26", correct: false },
-                        { text: "B) 29", correct: false },
-                        { text: "C) 34", correct: true },
-                        { text: "D) 36", correct: false },
+                        { text: "A) 26" },
+                        { text: "B) 29" },
+                        { text: "C) 34" },
+                        { text: "D) 36" },
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
                 {
                     question: "127 oyuncunun katılacağı bir tenis turnuvasında 63 maçta karşılaşacak olan 126 oyuncu ve maç yapmadan tur atlayacak tek bir oyuncu var. Bir sonraki turda 64 oyuncu 32 tur yapacak şampiyonu belirlemek için toplam kaç tane maç yapılmalı?",
                     options: [
-                        { text: "A) 126", correct: true },
-                        { text: "B) 127", correct: false },
-                        { text: "C) 63", correct: false },
-                        { text: "D) 64", correct: false },
+                        { text: "A) 126" },
+                        { text: "B) 127" },
+                        { text: "C) 63" },
+                        { text: "D) 64" },
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
                 {
                     question: "Size dönük bir silah var ve içinde 6 ihtimalde 4 boş 2 dolu mermi var. Birkez tetik çekildi ve silah patlamadı. İkinci kez tetik çekilmeden önce mermilerin yerlerinin değişmesi için çevrilmesinimi seçersini yoksa düzen değişmeden yeniden tetiğe basılmasınımı istersiniz? ",
                     options: [
-                        { text: "A) Yeniden Çevir", correct: true },
-                        { text: "B) Çevirmeden tetiğe bas", correct: false },
+                        { text: "A) Yeniden Çevir" },
+                        { text: "B) Çevirmeden tetiğe bas" },
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
                 {
                     question: "Etkisi en az olacak şıkkı seçin?",
                     options: [
-                        { text: "A) 1 Ton", correct: false },
-                        { text: "B) 3 G-Kuvvet", correct: false },
-                        { text: "C) 1618", correct: false },
-                        { text: "D) 0", correct: false },
+                        { text: "A) 1 Ton" },
+                        { text: "B) 3 G-Kuvvet" },
+                        { text: "C) 1618" },
+                        { text: "D) 0" },
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
@@ -467,6 +467,19 @@
         const scoreElement = document.getElementById('score');
         const resultsElement = document.getElementById('results');
         const finalScoreElement = document.getElementById('final-score');
+
+        // Obfuscated answers: base64 blob of bytes where each byte = (correctIndex XOR _SALT)
+        const _SALT = 0x5a;
+        const _OBF_B64 = 'WlhaWqU='; // base64 encoded bytes [0x5A,0x58,0x5A,0x5A,0xA5]
+        // decode to array of numbers
+        const obfAnswers = (function(b64){
+            try {
+                const raw = atob(b64);
+                const arr = [];
+                for(let i=0;i<raw.length;i++) arr.push(raw.charCodeAt(i));
+                return arr;
+            } catch(e){ return []; }
+        })(_OBF_B64);
         // Yükleme sırasında sırayla gösterilecek metinler
         const loadingMessages = [
     "Mantık protokolleri yükleniyor...",
@@ -646,10 +659,12 @@ if (option.skip) {
     return;
 }
             
-            // Handle correct/incorrect
-            if (option.correct) {
+            // Determine correct index using obfuscated answers
+            const obf = obfAnswers[gameState.currentQuestion];
+            const correctIndex = (typeof obf === 'number') ? (obf ^ _SALT) : null;
+
+            if (correctIndex !== null && index === correctIndex) {
                 optionElements[index].classList.add('correct');
-                
                 // Point calculation based on time
                 let pointsEarned = 0;
                 if (elapsedTime <= 2) {
@@ -659,7 +674,6 @@ if (option.skip) {
                 } else {
                     pointsEarned = 5; // 5 points if answered after 5 minutes
                 }
-                
                 gameState.score += pointsEarned;
             } else {
                 optionElements[index].classList.add('incorrect');
