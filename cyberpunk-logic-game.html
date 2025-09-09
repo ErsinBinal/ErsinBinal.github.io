@@ -373,7 +373,7 @@
             <div id="magic-guard"> 
                 <div class="magic-inner">
                     <!-- Kullanıcının istediği Tenor GIF'i -->
-                    <img class="magic-gif" src="https://tenor.com/view/dennis-nedry-jurassic-park-gif-10352808620694624092" alt="Dennis Nedry - You didn't say the magic word" />
+                    <img class="magic-gif" src="https://media1.tenor.com/m/j6yQlsga11wAAAAd/dennis-nedry-jurassic-park.gif" alt="Dennis Nedry - You didn't say the magic word" />
                     <div class="magic-title">Ah ah ah!</div>
                     <div class="magic-sub">You didn't say the magic word!</div>
                 </div>
@@ -754,7 +754,8 @@ if (option.skip) {
                 scores = JSON.parse(localStorage.getItem('cyberpunk_scores') || '[]');
             } catch(e) { scores = []; }
             // Süreyi dakika:saniye formatına çevir
-            let duration = gameState.finishDuration;
+            // Eğer finishDuration daha önce ayarlanmadıysa (beklenmeyen durum), hesapla
+            let duration = typeof gameState.finishDuration === 'number' ? gameState.finishDuration : Math.max(0, Math.floor((Date.now() - (gameState.startTime || Date.now())) / 1000));
             let min = Math.floor(duration/60);
             let sec = duration%60;
             let durationStr = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
