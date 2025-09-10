@@ -87,36 +87,37 @@
       }
     }
     /* Neon artistic frames around the main container */
-    .frame-wrap { position: relative; display:flex; align-items:center; justify-content:center; padding:40px; }
-    .frame-wrap .neon-frame { position: absolute; border: 2px solid rgba(8,143,255,0.12); pointer-events: none; mix-blend-mode: screen; }
+  .frame-wrap { position: relative; display:flex; align-items:center; justify-content:center; padding:40px; overflow: hidden; max-width: 100vw; }
+  /* center frames and avoid their rotation affecting layout; improve GPU compositing */
+  .frame-wrap .neon-frame { position: absolute; left: 50%; top: 50%; transform-origin: center center; will-change: transform; border: 2px solid rgba(8,143,255,0.12); pointer-events: none; mix-blend-mode: screen; }
     /* stronger, layered glow per-frame (keeps container readable) */
-    .frame-wrap .n1 { width: 900px; height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: rotate(0deg); animation: spinCW 12s linear infinite; box-shadow:
+  .frame-wrap .n1 { width: min(900px, calc(100vw - 40px)); height: min(520px, calc(100vh - 80px)); border-radius:12px; border-color: rgba(255,0,150,0.12); transform: translate(-50%,-50%) rotate(0deg); animation: spinCW 12s linear infinite; box-shadow:
       0 0 8px rgba(255,0,150,0.25),
       0 0 28px rgba(255,0,150,0.16),
       0 0 80px rgba(255,0,150,0.08);
     }
-    .frame-wrap .n2 { width: 960px; height: 580px; border-radius:18px; border-color: rgba(0,255,170,0.12); transform: rotate(-2deg); animation: spinCCW 20s linear infinite; box-shadow:
+  .frame-wrap .n2 { width: min(960px, calc(100vw - 30px)); height: min(580px, calc(100vh - 60px)); border-radius:18px; border-color: rgba(0,255,170,0.12); transform: translate(-50%,-50%) rotate(-2deg); animation: spinCCW 20s linear infinite; box-shadow:
       0 0 10px rgba(0,255,170,0.22),
       0 0 36px rgba(0,255,170,0.14),
       0 0 90px rgba(0,255,170,0.06);
     }
-  .frame-wrap .n3 { width: 1020px; height: 640px; border-radius:22px; border-color: rgba(0,120,255,0.08); transform: rotate(4deg); animation: spinCW 28s linear infinite; }
-  .frame-wrap .n4 { width: 1080px; height: 700px; border-radius:26px; border-color: rgba(255,40,40,0.10); transform: rotate(-6deg); animation: spinCCW 35s linear infinite; box-shadow:
+  .frame-wrap .n3 { width: min(1020px, calc(100vw - 20px)); height: min(640px, calc(100vh - 40px)); border-radius:22px; border-color: rgba(0,120,255,0.08); transform: translate(-50%,-50%) rotate(4deg); animation: spinCW 28s linear infinite; }
+  .frame-wrap .n4 { width: min(1080px, calc(100vw + 40px)); height: min(700px, calc(100vh + 20px)); border-radius:26px; border-color: rgba(255,40,40,0.10); transform: translate(-50%,-50%) rotate(-6deg); animation: spinCCW 35s linear infinite; box-shadow:
       0 0 12px rgba(255,40,40,0.28),
       0 0 42px rgba(255,40,40,0.18),
       0 0 110px rgba(255,40,40,0.08);
     }
-  .frame-wrap .n5 { width: 1140px; height: 760px; border-radius:30px; border-color: rgba(40,120,255,0.10); transform: rotate(8deg); animation: spinCW 40s linear infinite; box-shadow:
+  .frame-wrap .n5 { width: min(1140px, calc(100vw + 80px)); height: min(760px, calc(100vh + 80px)); border-radius:30px; border-color: rgba(40,120,255,0.10); transform: translate(-50%,-50%) rotate(8deg); animation: spinCW 40s linear infinite; box-shadow:
       0 0 14px rgba(40,120,255,0.26),
       0 0 48px rgba(40,120,255,0.16),
       0 0 120px rgba(40,120,255,0.07);
     }
-  .frame-wrap .n6 { width: 1200px; height: 820px; border-radius:34px; border-color: rgba(180,180,180,0.06); transform: rotate(-10deg); animation: spinCCW 48s linear infinite; box-shadow:
+  .frame-wrap .n6 { width: min(1200px, calc(100vw + 120px)); height: min(820px, calc(100vh + 120px)); border-radius:34px; border-color: rgba(180,180,180,0.06); transform: translate(-50%,-50%) rotate(-10deg); animation: spinCCW 48s linear infinite; box-shadow:
       0 0 10px rgba(180,180,180,0.18),
       0 0 36px rgba(180,180,180,0.12),
       0 0 90px rgba(180,180,180,0.05);
     }
-  .frame-wrap .n7 { width: 1260px; height: 880px; border-radius:38px; border-color: rgba(255,90,120,0.06); transform: rotate(2deg); animation: spinCW 52s linear infinite; box-shadow:
+  .frame-wrap .n7 { width: min(1260px, calc(100vw + 160px)); height: min(880px, calc(100vh + 160px)); border-radius:38px; border-color: rgba(255,90,120,0.06); transform: translate(-50%,-50%) rotate(2deg); animation: spinCW 52s linear infinite; box-shadow:
       0 0 10px rgba(255,90,120,0.20),
       0 0 40px rgba(255,90,120,0.12),
       0 0 100px rgba(255,90,120,0.06);
@@ -140,9 +141,13 @@
     }
     @media (max-width: 800px) {
       .frame-wrap { padding: 20px; }
-      .frame-wrap .n1 { width: 520px; height: 360px; }
-      .frame-wrap .n2 { width: 560px; height: 400px; }
-      .frame-wrap .n3 { width: 600px; height: 440px; }
+      .frame-wrap .n1 { width: min(520px, calc(100vw - 40px)); height: min(360px, calc(100vh - 80px)); transform: translate(-50%,-50%) rotate(0deg); animation-duration: 10s; }
+      .frame-wrap .n2 { width: min(560px, calc(100vw - 30px)); height: min(400px, calc(100vh - 60px)); transform: translate(-50%,-50%) rotate(-2deg); animation-duration: 16s; }
+      .frame-wrap .n3 { width: min(600px, calc(100vw - 20px)); height: min(440px, calc(100vh - 50px)); transform: translate(-50%,-50%) rotate(4deg); animation-duration: 22s; }
+      /* on very small screens reduce visual noise to avoid layout shifts */
+      @media (max-width: 480px) {
+        .frame-wrap .n2, .frame-wrap .n3 { display:none; }
+      }
     }
   </style>
 </head>
