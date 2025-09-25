@@ -1,0 +1,12 @@
+{
+  "name": "ersinbinal-site-tools",
+  "version": "1.0.0",
+  "description": "Helper tools for ErsinBinal.github.io - image conversion",
+  "scripts": {
+    "convert-images": "node scripts/convert-images.js"
+  },
+  "dependencies": {
+    "fast-glob": "^3.2.12",
+    "sharp": "^0.32.1"
+  }
+}
