@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cyberpunk Logic Terminal</title>
+    <meta name="description" content="Kısa mantık soruları ve retro terminal estetiğinde interaktif bulmaca deneyimi.">
+    <link rel="canonical" href="https://ersinbinal.github.io/cyberpunk-logic-game.html">
+    <meta property="og:site_name" content="Convivium - Bulmacalar">
+    <meta property="og:title" content="Cyberpunk Logic Terminal">
+    <meta property="og:description" content="Kısa mantık soruları ve retro terminal estetiğinde interaktif bulmaca deneyimi.">
+    <meta property="og:type" content="game">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <style>
         :root {
             --neon-text-color: #f40;
@@ -165,6 +174,10 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
         }
         
         @keyframes glitch {
@@ -338,10 +351,13 @@
             80% { transform: rotate(-8deg); }
             100% { transform: rotate(0deg); }
         }
+        .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
     </style>
 </head>
 <body>
-    <div id="terminal">
+  <script type="application/ld+json">{ "@context":"https://schema.org","@type":"WebSite","name":"Convivium - Ersin Binal","url":"https://ersinbinal.github.io/" }</script>
+    <div id="terminal" role="main" aria-label="Cyberpunk Logic Terminal">
+        <a class="skip-link" href="#terminal" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
         <div class="scan-line"></div>
         
         <div id="score">PUAN: 0</div>
@@ -373,7 +389,7 @@
             <div id="magic-guard"> 
                 <div class="magic-inner">
                     <!-- Kullanıcının istediği Tenor GIF'i -->
-                    <img class="magic-gif" src="https://media1.tenor.com/m/j6yQlsga11wAAAAd/dennis-nedry-jurassic-park.gif" alt="Dennis Nedry - You didn't say the magic word" />
+                    <img class="magic-gif" src="https://media1.tenor.com/m/j6yQlsga11wAAAAd/dennis-nedry-jurassic-park.gif" alt="Dennis Nedry - You didn't say the magic word" loading="lazy" decoding="async" />
                     <div class="magic-title">Ah ah ah!</div>
                     <div class="magic-sub">You didn't say the magic word!</div>
                 </div>
@@ -803,6 +819,28 @@ if (option.skip) {
         
         // Initialize on load
         window.onload = startIntro;
+    </script>
+    <script>
+    (function(){
+        if('loading' in HTMLImageElement.prototype) return;
+        const imgs = document.querySelectorAll('img');
+        if('IntersectionObserver' in window){
+            const io = new IntersectionObserver((entries, obs) => {
+                entries.forEach(e => {
+                    if(e.isIntersecting){
+                        const img = e.target;
+                        if(img.dataset.src) img.src = img.dataset.src;
+                        obs.unobserve(img);
+                    }
+                });
+            });
+            imgs.forEach(img => {
+                if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+                if(img.src && !img.dataset.src){ img.dataset.src = img.src; img.removeAttribute('src'); }
+                io.observe(img);
+            });
+        }
+    })();
     </script>
 </body>
 </html>

@@ -2,8 +2,19 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ERSİN BİNAL - Terminal Blog</title>
+    <meta name="description" content="Ersin Binal'ın makaleleri ve yazıları — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
+    <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
+    <meta property="og:site_name" content="Ersin Binal">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <meta property="og:title" content="ERSİN BİNAL - Terminal Blog">
+    <meta property="og:description" content="Ersin Binal'ın makaleleri ve yazıları — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
     <style>
+    .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
         :root {
             --main-bg: #000;
             --terminal-green: #00ff00;
@@ -144,21 +155,42 @@
             );
             pointer-events: none;
         }
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+        }
     </style>
 </head>
 <body>
+        <!-- JSON-LD: WebSite -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Convivium - Ersin Binal",
+            "url": "https://ersinbinal.github.io/"
+        }
+        </script>
+    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
 
-    <!-- Blog Başlığı -->
-    <div class="container">
-        <h1>ERSİN BİNAL - BLOG<span class="blink">_</span></h1>
-        <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
-    </div>
+        <!-- Blog Başlığı -->
+        <div class="container" id="main-content">
+            <header>
+                <h1>ERSİN BİNAL - BLOG<span class="blink">_</span></h1>
+                <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
+            </header>
+        </div>
 
-    <!-- Makaleler Listesi ve Kartları -->
-    <div class="container">
-        <h2>📂 Makaleler</h2>
-        <div class="article-list" id="articleList"></div>
-    </div>
+        <!-- Makaleler Listesi ve Kartları -->
+        <main class="container" role="main" aria-label="Makaleler">
+            <h2>📂 Makaleler</h2>
+            <div class="article-list" id="articleList"></div>
+        </main>
+
+        <!-- Örnek görsel kullanımı: makale içine konumlandırılmış örnek -->
+        <picture>
+            <source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
+            <img src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async" style="max-width:100%;height:auto;border:1px solid #00ff00;">
+        </picture>
 
     <script>
     // Makale verileri (statik ve dinamik)
@@ -166,7 +198,7 @@
         {
             title: "Abonelik Modelinin Yükselişi",
             date: "2025-03-02",
-            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><img src='https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png' class='retro-image' alt='Netflix Abonelik Modeli'>`
+            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><img src='https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png' class='retro-image' alt='Netflix Abonelik Modeli' loading='lazy' decoding='async' width='700' height='393'>`
         },
         {
             title: "Dijital Dönüşümde Yapay Zeka",
@@ -217,13 +249,11 @@
     dynamicArticles.forEach((a,i) => {
         allCards += createArticleCard(a,i,true);
     });
-    articleList.innerHTML = allCards;
-
     // Devamını oku fonksiyonu
     window.toggleFull = function(id) {
         document.querySelectorAll('.article-full').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.article-summary').forEach(el => el.style.display = 'block');
-        const fullEl = document.getElementById(id);
+            content: `**Veri Temelli Fiyatlandırma** <br>Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.<br>Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.<br><br>**Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.<br>**Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.<br><br>**Freemium Model vs. Çift Taraflı Gelir Modeli**<br>- **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.<br>- **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.<br>Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.<br><br><img src='uploads/veri-temelli-model.png' class='retro-image' alt='Veri Temelli Gelir Modeli' loading='lazy' decoding='async' width='800' height='450'>`
         const summaryEl = document.getElementById('summary_' + id);
         if(fullEl) fullEl.classList.add('active');
         if(summaryEl) summaryEl.style.display = 'none';
@@ -281,6 +311,31 @@
     </script>
 
     // ...existing code...
+
+        // ...existing code...
+
+    <script>
+    (function(){
+        if('loading' in HTMLImageElement.prototype) return;
+        const imgs = document.querySelectorAll('img');
+        if('IntersectionObserver' in window){
+            const io = new IntersectionObserver((entries, obs) => {
+                entries.forEach(e => {
+                    if(e.isIntersecting){
+                        const img = e.target;
+                        if(img.dataset.src) img.src = img.dataset.src;
+                        obs.unobserve(img);
+                    }
+                });
+            });
+            imgs.forEach(img => {
+                if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+                if(img.src && !img.dataset.src){ img.dataset.src = img.src; img.removeAttribute('src'); }
+                io.observe(img);
+            });
+        }
+    })();
+    </script>
 
 </body>
 </html>

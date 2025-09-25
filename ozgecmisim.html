@@ -2,7 +2,21 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "WebSite", "name": "Convivium - Ersin Binal", "url": "https://ersinbinal.github.io/" }
+    </script>
+    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
+    <div class="container" id="main-content">
     <title>ERSİN BİNAL - Terminal CV</title>
+    <meta name="description" content="Ersin Binal'ın özgeçmişi, deneyimleri ve iletişim bilgileri. Dijital proje yönetimi ve e-ticaret deneyimi.">
+    <link rel="canonical" href="https://ersinbinal.github.io/ozgecmisim.html">
+    <meta property="og:site_name" content="Ersin Binal">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <meta property="og:title" content="ERSİN BİNAL - Terminal CV">
+    <meta property="og:description" content="Ersin Binal'ın özgeçmişi, deneyimleri ve iletişim bilgileri.">
+    <meta property="og:type" content="profile">
+    <meta name="twitter:card" content="summary">
     <style>
         :root {
             --main-bg: #000;
@@ -120,6 +134,11 @@
             to { opacity: 1; }
         }
 
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+        }
+            .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
+
         .contact-info {
             margin-top: 20px;
             padding: 10px;
@@ -155,18 +174,21 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>ERSİN BİNAL<span class="blink">_</span></h1>
-            <p>Dijital Proje Yöneticisi</p>
-        </div>
+    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
+        <div class="container" id="main-content">
+            <header class="header">
+                <h1>ERSİN BİNAL<span class="blink">_</span></h1>
+                <p>Dijital Proje Yöneticisi</p>
+            </header>
 
-        <button class="section-button" onclick="toggleSection('about')">Özetle</button>
-        <div id="about" class="content">
+            <main role="main">
+            <button class="section-button" onclick="toggleSection('about')">Özetle</button>
+            <div id="about" class="content">
            <p>1982 yılında İstanbul’da doğdum ve Beşiktaş, Ulus’ta büyüdüm. Dijital dünyaya olan ilgim, çocukluğumdan bu yanasüregelen oyun tutkum kadar derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda, ailemle birlikte seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri deneyimlemeyi seviyorum. Boş anlarımda ise kitaplara dalmayı ihmal etmiyorum; her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum. </p>
          
            <p>İşim; Pazarlama, performans ve dijital dönüşüm alanlarında proje yönetimi.</p>
         </div>
+    </main>
 
         <button class="section-button" onclick="toggleSection('education')">EĞİTİM</button>
         <div id="education" class="content">

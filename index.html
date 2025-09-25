@@ -2,7 +2,20 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ERSİN BİNAL - Ana Sayfa</title>
+  <meta name="description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler. Retro terminal estetiğiyle modern içerikler.">
+  <link rel="canonical" href="https://ersinbinal.github.io/">
+  <!-- Open Graph / Twitter -->
+  <meta property="og:site_name" content="Ersin Binal">
+  <!-- Performance: preconnect common CDNs and font hosts -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <meta property="og:title" content="ERSİN BİNAL - Ana Sayfa">
+  <meta property="og:description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     /* Temel retro terminal stilleri */
     body {
@@ -174,6 +187,10 @@
       0% { transform: translate(-50%,-50%) rotate(0deg); }
       100% { transform: translate(-50%,-50%) rotate(-360deg); }
     }
+    /* Respect user motion preferences */
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+    }
     /* responsive scaling: reduce outer frames on small screens */
     @media (max-width: 1100px) {
       .frame-wrap .neon-frame { display:block; }
@@ -192,6 +209,7 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
   <div class="frame-wrap">
     <div class="neon-frame n1" aria-hidden="true"></div>
     <div class="neon-frame n2" aria-hidden="true"></div>
@@ -200,21 +218,72 @@
     <div class="neon-frame n5" aria-hidden="true"></div>
     <div class="neon-frame n6" aria-hidden="true"></div>
     <div class="neon-frame n7" aria-hidden="true"></div>
-    <div class="container">
-      <h1>Convivium<span class="blink">_</span></h1>
-      <p>
-        Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
-      </p>
-      <p>
-          Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
-      </p>
-      <nav>
-        <a href="makaleler.html" class="nav-button">Makaleler</a>
-        <a href="cyberpunk-logic-game.html" class="nav-button">Cyberpunk Logic Game</a>
-        <a href="ozgecmisim.html" class="nav-button">Kariyerim</a>
-        <a href="Paradox_Terminal.html" class="nav-button">Paradokslar</a>
-      </nav>
+    <div class="container" id="main-content" role="main">
+      <header class="site-header">
+        <h1>Convivium<span class="blink">_</span></h1>
+        <p>
+          Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
+        </p>
+        <p>
+            Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
+        </p>
+        <nav role="navigation" aria-label="Ana site navigasyonu">
+          <a href="makaleler.html" class="nav-button" aria-label="Makaleler sayfasına git">Makaleler</a>
+          <a href="cyberpunk-logic-game.html" class="nav-button" aria-label="Bulmaca oyununa git">Cyberpunk Logic Game</a>
+          <a href="ozgecmisim.html" class="nav-button" aria-label="Özgeçmiş sayfasına git">Kariyerim</a>
+          <a href="Paradox_Terminal.html" class="nav-button" aria-label="Paradokslar sayfasına git">Paradokslar</a>
+        </nav>
+      </header>
     </div>
   </div>
+  <script>
+  // Small helper: make all images lazy by default if browser supports it
+  (function(){
+    if('loading' in HTMLImageElement.prototype) return; // native support
+    // if not supported, simple IntersectionObserver fallback
+    const imgs = document.querySelectorAll('img');
+    if('IntersectionObserver' in window){
+      const io = new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+          if(e.isIntersecting){
+            const img = e.target;
+            if(img.dataset.src) img.src = img.dataset.src;
+            obs.unobserve(img);
+          }
+        });
+      });
+      imgs.forEach(img => {
+        if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
+        if(img.src && !img.dataset.src){ img.dataset.src = img.src; img.removeAttribute('src'); }
+        io.observe(img);
+      });
+    }
+  })();
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Ersin Binal",
+    "url": "https://ersinbinal.github.io/",
+    "sameAs": [
+      "https://github.com/ErsinBinal"
+    ],
+    "jobTitle": "Dijital Proje Yöneticisi"
+  }
+  </script>
+  <style>
+    /* skip-link görünür yap */
+    .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
+    img { image-rendering: auto; }
+  </style>
+
+  <!-- Örnek: görsel optimizasyonu için picture/srcset kullanım önerisi -->
+  <!--
+  <picture>
+    <source type="image/webp" srcset="/assets/img/photo-400.webp 400w, /assets/img/photo-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
+    <img src="/assets/img/photo-800.jpg" alt="Açıklayıcı alternatif metin" width="800" height="450" loading="lazy" decoding="async" style="max-width:100%;height:auto;">
+  </picture>
+  -->
 </body>
 </html>
