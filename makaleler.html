@@ -3,337 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ERSİN BİNAL - Terminal Blog</title>
-    <meta name="description" content="Ersin Binal'ın makaleleri ve yazıları — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
+    <title>ERSİN BİNAL - Makaleler</title>
+    <meta name="description" content="Ersin Binal'ın makaleleri — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
     <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
     <meta property="og:site_name" content="Ersin Binal">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <meta property="og:title" content="ERSİN BİNAL - Terminal Blog">
-    <meta property="og:description" content="Ersin Binal'ın makaleleri ve yazıları — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
+    <meta property="og:title" content="ERSİN BİNAL - Makaleler">
+    <meta property="og:description" content="Ersin Binal'ın makaleleri — teknoloji, pazarlama ve dijital dönüşüm üzerine kısa notlar.">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <style>
-    .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
-        :root {
-            --main-bg: #000;
-            --terminal-green: #00ff00;
-            --terminal-dim: #007700;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-            color: var(--terminal-green);
-        }
-        body {
-            background: var(--main-bg);
-            padding: 20px;
-            min-height: 100vh;
-            text-align: center;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 2px solid var(--terminal-green);
-            box-shadow: 0 0 20px var(--terminal-dim);
-        }
-        .article-list {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            margin-top: 24px;
-        }
-        .article-card {
-            background: #111;
-            border: 2px solid var(--terminal-green);
-            box-shadow: 0 0 12px var(--terminal-dim);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: left;
-            position: relative;
-            transition: box-shadow 0.2s;
-        }
-        .article-card:hover {
-            box-shadow: 0 0 24px var(--terminal-green);
-        }
-        .article-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        .article-date {
-            font-size: 0.95em;
-            color: #00bb00;
-            margin-bottom: 12px;
-        }
-        .article-summary {
-            margin-bottom: 12px;
-            color: #00ff99;
-        }
-        .read-more-btn {
-            background: transparent;
-            border: 1px solid var(--terminal-green);
-            color: var(--terminal-green);
-            padding: 6px 18px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.2s, color 0.2s;
-        }
-        .read-more-btn:hover {
-            background: var(--terminal-green);
-            color: #000;
-        }
-        .article-full {
-            display: none;
-            margin-top: 16px;
-        }
-        .article-full.active {
-            display: block;
-        }
-        .blink {
-            animation: blink 1s step-start infinite;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        .folder {
-            text-align: left;
-            margin-bottom: 10px;
-        }
-        .folder::before {
-            content: "[+] ";
-        }
-        .retro-image {
-            max-width: 600px;
-            width: 100%;
-            height: auto;
-            border: 1px solid #00ff00;
-            filter: contrast(200%) brightness(80%) grayscale(100%);
-            image-rendering: pixelated;
-            cursor: pointer;
-            transition: transform 0.3s ease-in-out;
-        }
-        .fullscreen {
-            max-width: 100%;
-            max-height: 100vh;
-            width: auto;
-            height: auto;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 1000;
-            background: rgba(0, 0, 0, 0.9);
-            border: none;
-        }
-        .fullscreen-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 999;
-        }
-        .crt {
-            position: relative;
-        }
-        .crt::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(
-                transparent 1px,
-                rgba(0, 255, 0, 0.2) 2px
-            );
-            pointer-events: none;
-        }
-        @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
-        }
+        :root{ --bg:#000; --g:#00ff00; --dim:#007700; }
+        html,body{ height:100%; }
+        body{ background:var(--bg); color:var(--g); font-family: 'Courier New', monospace; margin:0; padding:20px; }
+        .skip-link{ position:absolute; left:-999px; top:auto; overflow:hidden; }
+        .skip-link:focus{ position:static; left:12px; top:12px; background:var(--g); color:#000; padding:8px 12px; border-radius:4px; z-index:9999; }
+        .site{ max-width:1000px; margin:0 auto; }
+        header.site-header{ border:2px solid var(--g); padding:18px; border-radius:8px; box-shadow:0 0 18px var(--dim); }
+        header h1{ margin:0 0 6px 0; font-size:1.6rem; }
+        header p{ margin:0; color:#00bb00; }
+        main{ margin-top:18px; }
+        .controls{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .search{ background:#111; border:1px solid var(--g); color:var(--g); padding:8px 12px; border-radius:6px; }
+        .article-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:18px; }
+        article.card{ background:#0b0b0b; border:1px solid var(--g); padding:14px; border-radius:8px; box-shadow:0 0 8px var(--dim); }
+        .card h3{ margin:0 0 6px 0; font-size:1.05rem; }
+        .meta{ font-size:0.85rem; color:#00bb00; margin-bottom:8px; }
+        .summary{ color:#9fffb5; margin-bottom:10px; }
+        .btn{ background:transparent; border:1px solid var(--g); color:var(--g); padding:6px 12px; border-radius:6px; cursor:pointer; }
+        .btn:hover{ background:var(--g); color:#000; }
+        .full{ display:none; margin-top:12px; color:#dfffe6; }
+        .full.active{ display:block; }
+        img.responsive{ max-width:100%; height:auto; display:block; margin:8px 0; border:1px solid var(--g); }
+        @media (prefers-reduced-motion: reduce){ *{ transition:none!important; animation:none!important; } }
     </style>
 </head>
 <body>
-        <!-- JSON-LD: WebSite -->
-        <script type="application/ld+json">
-        {
-            "@context": "https://schema.org",
-            "@type": "WebSite",
-            "name": "Convivium - Ersin Binal",
-            "url": "https://ersinbinal.github.io/"
-        }
-        </script>
-    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
+    <a class="skip-link" href="#content">İçeriğe atla</a>
+    <div class="site">
+        <header class="site-header" role="banner">
+            <h1>ERSİN BİNAL</h1>
+            <p>Terminal estetiğinde makaleler — teknoloji, pazarlama, iş modelleri.</p>
+        </header>
 
-        <!-- Blog Başlığı -->
-        <div class="container" id="main-content">
-            <header>
-                <h1>ERSİN BİNAL - BLOG<span class="blink">_</span></h1>
-                <p>Terminal üzerinden makalelere göz atabilirsiniz.</p>
-            </header>
-        </div>
+        <main id="content" role="main" aria-labelledby="page-title">
+            <div class="controls">
+                <h2 id="page-title">Makaleler</h2>
+                <div>
+                    <input id="search" class="search" type="search" placeholder="Ara... (başlık veya içerik)" aria-label="Makale ara">
+                </div>
+            </div>
 
-        <!-- Makaleler Listesi ve Kartları -->
-        <main class="container" role="main" aria-label="Makaleler">
-            <h2>📂 Makaleler</h2>
-            <div class="article-list" id="articleList"></div>
+            <section id="articles" class="article-grid" aria-live="polite"></section>
+
+            <!-- Template for articles -->
+            <template id="article-template">
+                <article class="card">
+                    <h3 class="title"></h3>
+                    <div class="meta"></div>
+                    <div class="summary"></div>
+                    <button class="btn read-btn">Devamını Oku</button>
+                    <div class="full" aria-hidden="true"></div>
+                </article>
+            </template>
+
         </main>
-
-        <!-- Örnek görsel kullanımı: makale içine konumlandırılmış örnek -->
-        <picture>
-            <source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
-            <img src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async" style="max-width:100%;height:auto;border:1px solid #00ff00;">
-        </picture>
+    </div>
 
     <script>
-    // Makale verileri (statik ve dinamik)
+    // Güvenli, temiz makale verisi. İçerikler HTML içerebilir; burada kontrol sahibi sizsiniz.
     const staticArticles = [
         {
-            title: "Abonelik Modelinin Yükselişi",
-            date: "2025-03-02",
-            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><img src='https://miro.medium.com/v2/resize:fit:1400/format:webp/0*2vMrL0CGjLyv4AHw.png' class='retro-image' alt='Netflix Abonelik Modeli' loading='lazy' decoding='async' width='700' height='393'>`
+            id: 'stat-1',
+            title: 'Abonelik Modelinin Yükselişi',
+            date: '2025-03-02',
+            summary: 'Dijital içerik platformlarının büyümesiyle abonelik modelleri işletmelerin öncelikli stratejisi oldu.',
+            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><picture><source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px"><img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async"></picture>`
         },
         {
-            title: "Dijital Dönüşümde Yapay Zeka",
-            date: "2025-02-15",
-            content: `Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?`
+            id: 'stat-2',
+            title: 'Dijital Dönüşümde Yapay Zeka',
+            date: '2025-02-15',
+            summary: 'Yapay zeka müşteri hizmetleri, veri analizi ve otomasyonda büyük etkiler yaratıyor.',
+            content: 'Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?'
         },
         {
-            title: "Gelir Modelleri Nasıl Evrimleşti?",
-            date: "2025-01-28",
-            content: `Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?`
+            id: 'stat-3',
+            title: 'Gelir Modelleri Nasıl Evrimleşti?',
+            date: '2025-01-28',
+            summary: 'Barter ekonomisinden SaaS dönemine kadar gelir modellerindeki kırılma noktaları.',
+            content: 'Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?'
         },
         {
-            title: "Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili",
-            date: "2025-03-05",
-            content: `**Veri Temelli Fiyatlandırma** <br>Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.<br>Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.<br><br>**Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.<br>**Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.<br><br>Bu strateji, **veriye dayalı analizlerle müşteri tercihlerini anlamayı** ve buna göre fiyatlandırmayı optimize etmeyi kapsar.<br>Örneğin, kullanıcı verilerine göre farklı müşteri gruplarına kişiselleştirilmiş teklifler sunulabilir veya fiyatlar dinamik olarak belirlenebilir.<br><br>**Freemium Model vs. Çift Taraflı Gelir Modeli**<br>- **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.<br>- **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.<br>Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.<br><br><img src='uploads/veri-temelli-model.png' class='retro-image' alt='Veri Temelli Gelir Modeli'>`
+            id: 'stat-4',
+            title: 'Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili',
+            date: '2025-03-05',
+            summary: 'Veri temelli fiyatlandırma ve çift taraflı gelir modellerinin avantajları.',
+            content: `**Veri Temelli Fiyatlandırma**<br>Bu model hem üyelik ücretleri hem de veri istihbaratı gelirlerini içerir. Örnekler ve karşılaştırmalar...<br><img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" loading="lazy" decoding="async" width="800" height="450">`
         }
     ];
 
-    // Dinamik makaleler (localStorage)
-    let dynamicArticles = [];
-    try {
-        dynamicArticles = JSON.parse(localStorage.getItem("articles") || "[]");
-    } catch(e) { dynamicArticles = []; }
-
-    // Makale kartı oluşturucu
-    function createArticleCard(article, idx, isDynamic) {
-        const summary = article.content.replace(/<[^>]+>/g,"").slice(0,200) + (article.content.length > 200 ? "..." : "");
-        const cardId = (isDynamic ? "dyn" : "stat") + "_" + idx;
-        return `
-        <div class="article-card">
-            <div class="article-title">${article.title}</div>
-            <div class="article-date">${article.date}</div>
-            <div class="article-summary" id="summary_${cardId}">${summary}</div>
-            <button class="read-more-btn" onclick="toggleFull('${cardId}')">Devamını Oku</button>
-            <div class="article-full" id="${cardId}">
-                ${article.content}
-            </div>
-        </div>
-        `;
+    // Dinamik makaleler localStorage'dan
+    function loadDynamicArticles(){
+        try{ return JSON.parse(localStorage.getItem('articles')||'[]'); }catch(e){ return []; }
     }
 
-    // Kartları ekle
-    const articleList = document.getElementById("articleList");
-    let allCards = "";
-    staticArticles.forEach((a,i) => {
-        allCards += createArticleCard(a,i,false);
-    });
-    dynamicArticles.forEach((a,i) => {
-        allCards += createArticleCard(a,i,true);
-    });
-    // Devamını oku fonksiyonu
-    window.toggleFull = function(id) {
-        document.querySelectorAll('.article-full').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.article-summary').forEach(el => el.style.display = 'block');
-            content: `**Veri Temelli Fiyatlandırma** <br>Bu model aslında **karma bir gelir modeli** olarak tanımlanabilir.<br>Hem üyelik ücretleri üzerinden gelir elde edilmesi hem de kullanıcı verilerinden anlamlı içgörüler çıkararak değer yaratılması gibi iki ana bileşeni içerir.<br><br>**Üyelik Gelirleri:** Kullanıcılar, premium hizmetler, ek özellikler veya reklamsız kullanım gibi avantajlar için belirli bir ücret öderler.<br>**Veri İstihbaratı Gelirleri:** Kullanıcıların verileri analiz edilerek elde edilen içgörüler, ürün geliştirme, reklam optimizasyonu veya üçüncü taraf işbirlikleri için kullanılabilir.<br><br>**Freemium Model vs. Çift Taraflı Gelir Modeli**<br>- **Freemium Modeli:** Ücretsiz kullanıcılar platformun büyümesi için önemli ancak doğrudan gelir sağlamazlar.<br>- **Çift Taraflı Gelir Modeli:** Hem ücretsiz hem de ücretli kullanıcıların verileri, platforma dolaylı gelir kazandırır.<br>Bu nedenle, **Freemium modeli premium üyelik yaratmaya odaklanırken, çift taraflı gelir modeli veri değerini gelir kaynağı olarak kullanır**.<br><br><img src='uploads/veri-temelli-model.png' class='retro-image' alt='Veri Temelli Gelir Modeli' loading='lazy' decoding='async' width='800' height='450'>`
-        const summaryEl = document.getElementById('summary_' + id);
-        if(fullEl) fullEl.classList.add('active');
-        if(summaryEl) summaryEl.style.display = 'none';
-        fullEl.scrollIntoView({behavior:'smooth',block:'center'});
+    // Render fonksiyonu
+    function renderArticles(list){
+        const container = document.getElementById('articles');
+        container.innerHTML = '';
+        const tpl = document.getElementById('article-template');
+        list.forEach(article => {
+            const node = tpl.content.cloneNode(true);
+            const art = node.querySelector('article');
+            node.querySelector('.title').textContent = article.title;
+            node.querySelector('.meta').textContent = article.date;
+            node.querySelector('.summary').textContent = article.summary || (article.content.replace(/<[^>]+>/g,'').slice(0,160) + '...');
+            const full = node.querySelector('.full');
+            full.innerHTML = article.content || '';
+            const btn = node.querySelector('.read-btn');
+            btn.addEventListener('click', () => {
+                const isActive = full.classList.toggle('active');
+                full.setAttribute('aria-hidden', !isActive);
+                btn.textContent = isActive ? 'Kapat' : 'Devamını Oku';
+                if(isActive) full.scrollIntoView({behavior:'smooth', block:'center'});
+            });
+            container.appendChild(node);
+        });
     }
+
+    // Başlangıç render
+    document.addEventListener('DOMContentLoaded', () => {
+        const dyn = loadDynamicArticles();
+        const all = [...staticArticles, ...dyn.map((a,i)=>({ id:'dyn-'+i, title:a.title, date:a.date, summary:a.content.replace(/<[^>]+>/g,'').slice(0,120), content: a.content }))];
+        renderArticles(all);
+
+        // Arama
+        const search = document.getElementById('search');
+        search.addEventListener('input', (e)=>{
+            const q = e.target.value.trim().toLowerCase();
+            if(!q){ renderArticles(all); return; }
+            const filtered = all.filter(a => (a.title + ' ' + (a.summary||'') + ' ' + (a.content||'')).toLowerCase().includes(q));
+            renderArticles(filtered);
+        });
+    });
     </script>
 
-    <!-- GİZLİ MAKALE EKLE KUTUSU -->
-    <div id="hiddenAddBox" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:2px solid #00ff00;padding:24px;z-index:9999;border-radius:10px;max-width:90vw;min-width:300px;">
-        <h2 style="margin-bottom:10px;">✍️ Makale Ekle</h2>
-        <form id="hiddenAddForm">
-            <input id="mBaslik" required placeholder="Başlık" style="width:100%;margin-bottom:8px;padding:8px;">
-            <input id="mTarih" required type="date" style="width:100%;margin-bottom:8px;padding:8px;">
-            <textarea id="mIcerik" required rows="6" placeholder="İçerik..." style="width:100%;margin-bottom:8px;padding:8px;"></textarea>
-            <button type="submit" style="background:#00ff00;color:#111;padding:8px 18px;font-weight:bold;border:none;border-radius:6px;margin-right:8px;">Ekle</button>
-            <button id="hideBoxBtn" type="button" style="background:#222;color:#00ff00;padding:8px 18px;font-weight:bold;border:1px solid #00ff00;border-radius:6px;">Vazgeç</button>
-        </form>
-    </div>
-    <script>
-    // 5 saniye mouse basılı tutunca açılan gizli makale ekleme fonksiyonu
-    (function() {
-        let mouseTimer, isDown = false;
-        document.addEventListener('mousedown', function(e) {
-            if(e.button !== 0) return; // Sadece sol tık
-            isDown = true;
-            mouseTimer = setTimeout(() => {
-                if(isDown) {
-                    document.getElementById('hiddenAddBox').style.display = 'block';
-                }
-            }, 5000); // 5 sn
-        });
-        document.addEventListener('mouseup', function() {
-            isDown = false;
-            clearTimeout(mouseTimer);
-        });
-
-        document.getElementById('hideBoxBtn').onclick = function() {
-            document.getElementById('hiddenAddBox').style.display = 'none';
-        };
-
-        document.getElementById('hiddenAddForm').onsubmit = function(e) {
-            e.preventDefault();
-            let baslik = document.getElementById('mBaslik').value.trim();
-            let tarih = document.getElementById('mTarih').value;
-            let icerik = document.getElementById('mIcerik').value.trim();
-            if(baslik && tarih && icerik) {
-                let arr = JSON.parse(localStorage.getItem("articles") || "[]");
-                arr.push({ title: baslik, date: tarih, content: icerik });
-                localStorage.setItem("articles", JSON.stringify(arr));
-                document.getElementById('hiddenAddBox').style.display = 'none';
-                location.reload();
-            }
-        };
-    })();
-    </script>
-
-    // ...existing code...
-
-        // ...existing code...
-
+    <!-- Lazy-loading fallback for older browsers -->
     <script>
     (function(){
         if('loading' in HTMLImageElement.prototype) return;
-        const imgs = document.querySelectorAll('img');
-        if('IntersectionObserver' in window){
-            const io = new IntersectionObserver((entries, obs) => {
-                entries.forEach(e => {
-                    if(e.isIntersecting){
-                        const img = e.target;
-                        if(img.dataset.src) img.src = img.dataset.src;
-                        obs.unobserve(img);
-                    }
-                });
+        if(!('IntersectionObserver' in window)) return; // very old browsers: skip
+        const imgs = document.querySelectorAll('img[loading]');
+        const io = new IntersectionObserver((entries, obs) => {
+            entries.forEach(e => {
+                if(e.isIntersecting){
+                    const img = e.target;
+                    if(img.dataset && img.dataset.src){ img.src = img.dataset.src; }
+                    obs.unobserve(img);
+                }
             });
-            imgs.forEach(img => {
-                if(!img.hasAttribute('loading')) img.setAttribute('loading','lazy');
-                if(img.src && !img.dataset.src){ img.dataset.src = img.src; img.removeAttribute('src'); }
-                io.observe(img);
-            });
-        }
+        });
+        imgs.forEach(i => io.observe(i));
     })();
     </script>
 
