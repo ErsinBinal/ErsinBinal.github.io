@@ -23,23 +23,166 @@
         header h1{ margin:0 0 6px 0; font-size:1.6rem; }
         header p{ margin:0; color:#00bb00; }
         main{ margin-top:18px; }
-        .controls{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; }
+        .controls{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:12px; flex-wrap:wrap; }
         .search{ background:#111; border:1px solid var(--g); color:var(--g); padding:8px 12px; border-radius:6px; }
         .article-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:18px; }
-        article.card{ background:#0b0b0b; border:1px solid var(--g); padding:14px; border-radius:8px; box-shadow:0 0 8px var(--dim); }
+        article.card{ background:#0b0b0b; border:1px solid var(--g); padding:14px; border-radius:8px; box-shadow:0 0 8px var(--dim); transition: all 0.3s ease; position:relative; }
+        article.card.expanded{ grid-column: 1/-1; max-width:800px; margin:0 auto; width:100%; }
         .card h3{ margin:0 0 6px 0; font-size:1.05rem; }
-        .meta{ font-size:0.85rem; color:#00bb00; margin-bottom:8px; }
+        .meta{ font-size:0.85rem; color:#00bb00; margin-bottom:8px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+        .read-time{ font-size:0.8rem; color:#00dd00; }
         .summary{ color:#9fffb5; margin-bottom:10px; }
-        .btn{ background:transparent; border:1px solid var(--g); color:var(--g); padding:6px 12px; border-radius:6px; cursor:pointer; }
+        .btn{ background:transparent; border:1px solid var(--g); color:var(--g); padding:6px 12px; border-radius:6px; cursor:pointer; transition: all 0.2s; }
         .btn:hover{ background:var(--g); color:#000; }
-        .full{ display:none; margin-top:12px; color:#dfffe6; }
+        
+        /* Progress bar for reading */
+        .read-progress{ height:3px; background:var(--dim); position:fixed; top:0; left:0; right:0; z-index:100; display:none; }
+        .read-progress.active{ display:block; }
+        .read-progress-bar{ height:100%; background:var(--g); width:0; transition: width 0.1s; box-shadow:0 0 10px var(--g); }
+        
+        /* Full article content */
+        .full{ display:none; margin-top:16px; color:#dfffe6; }
         .full.active{ display:block; }
-        img.responsive{ max-width:100%; height:auto; display:block; margin:8px 0; border:1px solid var(--g); }
-        @media (prefers-reduced-motion: reduce){ *{ transition:none!important; animation:none!important; } }
+        .full p{ line-height:1.7; margin:12px 0; max-width:70ch; }
+        .full h2, .full h3, .full h4{ color:var(--g); margin:20px 0 12px 0; }
+        .full ul, .full ol{ line-height:1.7; margin:12px 0; padding-left:24px; }
+        .full li{ margin:6px 0; }
+        .full blockquote{ border-left:3px solid var(--g); padding-left:16px; margin:16px 0; color:#00dd00; font-style:italic; }
+        .full code{ background:#0a0a0a; padding:2px 6px; border:1px solid var(--dim); border-radius:3px; font-size:0.9em; }
+        .full pre{ background:#0a0a0a; padding:12px; border:1px solid var(--g); border-radius:6px; overflow-x:auto; }
+        .full pre code{ border:none; padding:0; }
+        
+        /* Image handling */
+        .article-image{ position:relative; margin:20px 0; }
+        img.responsive{ 
+            max-width:100%; 
+            height:auto; 
+            display:block; 
+            margin:0 auto; 
+            border:2px solid var(--g); 
+            border-radius:6px;
+            box-shadow:0 0 15px var(--dim);
+            cursor:pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        img.responsive:hover{ transform:scale(1.02); box-shadow:0 0 25px var(--g); }
+        .image-caption{ 
+            text-align:center; 
+            font-size:0.85rem; 
+            color:#00bb00; 
+            margin-top:8px; 
+            font-style:italic; 
+        }
+        
+        /* Lightbox */
+        .lightbox{ 
+            display:none; 
+            position:fixed; 
+            top:0; left:0; right:0; bottom:0; 
+            background:rgba(0,0,0,0.95); 
+            z-index:1000; 
+            align-items:center; 
+            justify-content:center; 
+            padding:20px;
+        }
+        .lightbox.active{ display:flex; }
+        .lightbox img{ 
+            max-width:95%; 
+            max-height:95vh; 
+            border:2px solid var(--g); 
+            box-shadow:0 0 30px var(--g); 
+        }
+        .lightbox-close{ 
+            position:absolute; 
+            top:20px; 
+            right:30px; 
+            color:var(--g); 
+            font-size:36px; 
+            font-weight:bold; 
+            cursor:pointer; 
+            background:transparent; 
+            border:2px solid var(--g); 
+            width:50px; 
+            height:50px; 
+            border-radius:50%; 
+            display:flex; 
+            align-items:center; 
+            justify-content:center;
+            transition: all 0.3s;
+        }
+        .lightbox-close:hover{ background:var(--g); color:#000; }
+        
+        /* Table of contents */
+        .toc{ 
+            background:#0a0a0a; 
+            border:1px solid var(--g); 
+            padding:16px; 
+            margin:16px 0 24px 0; 
+            border-radius:6px; 
+        }
+        .toc-title{ color:var(--g); margin:0 0 12px 0; font-size:1.1rem; }
+        .toc ul{ margin:0; padding-left:20px; list-style:none; }
+        .toc li{ margin:6px 0; }
+        .toc a{ color:#00dd00; text-decoration:none; transition: all 0.2s; }
+        .toc a:hover{ color:var(--g); text-decoration:underline; }
+        
+        /* Back to top button */
+        .back-to-top{ 
+            position:fixed; 
+            bottom:30px; 
+            right:30px; 
+            background:var(--g); 
+            color:#000; 
+            border:2px solid var(--g); 
+            width:50px; 
+            height:50px; 
+            border-radius:50%; 
+            cursor:pointer; 
+            display:none; 
+            align-items:center; 
+            justify-content:center; 
+            font-size:20px; 
+            font-weight:bold; 
+            box-shadow:0 0 15px var(--dim); 
+            transition: all 0.3s; 
+            z-index:99;
+        }
+        .back-to-top.visible{ display:flex; }
+        .back-to-top:hover{ transform:translateY(-5px); box-shadow:0 0 25px var(--g); }
+        
+        @media (max-width: 768px) {
+            .controls{ flex-direction:column; align-items:stretch; }
+            .article-grid{ grid-template-columns:1fr; }
+            article.card.expanded{ padding:12px; }
+            .full p{ max-width:100%; }
+            img.responsive{ border-width:1px; }
+            .back-to-top{ bottom:20px; right:20px; width:45px; height:45px; }
+            .lightbox-close{ top:10px; right:10px; width:40px; height:40px; font-size:28px; }
+        }
+        
+        @media (prefers-reduced-motion: reduce){ 
+            *{ transition:none!important; animation:none!important; } 
+            img.responsive:hover{ transform:none; }
+        }
     </style>
 </head>
 <body>
     <a class="skip-link" href="#content">İçeriğe atla</a>
+    
+    <!-- Reading progress bar -->
+    <div class="read-progress" id="readProgress">
+        <div class="read-progress-bar" id="readProgressBar"></div>
+    </div>
+    
+    <!-- Lightbox for images -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Görsel büyütme">
+        <button class="lightbox-close" id="lightboxClose" aria-label="Kapat">&times;</button>
+        <img id="lightboxImg" src="" alt="">
+    </div>
+    
+    <!-- Back to top button -->
+    <button class="back-to-top" id="backToTop" aria-label="Başa dön">↑</button>
+    
     <div class="site">
         <header class="site-header" role="banner">
             <h1>ERSİN BİNAL</h1>
@@ -60,7 +203,10 @@
             <template id="article-template">
                 <article class="card">
                     <h3 class="title"></h3>
-                    <div class="meta"></div>
+                    <div class="meta">
+                        <span class="date"></span>
+                        <span class="read-time"></span>
+                    </div>
                     <div class="summary"></div>
                     <button class="btn read-btn">Devamını Oku</button>
                     <div class="full" aria-hidden="true"></div>
@@ -78,28 +224,97 @@
             title: 'Abonelik Modelinin Yükselişi',
             date: '2025-03-02',
             summary: 'Dijital içerik platformlarının büyümesiyle abonelik modelleri işletmelerin öncelikli stratejisi oldu.',
-            content: `Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.<br><picture><source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px"><img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async"></picture>`
+            content: `
+                <h2>Abonelik Ekonomisinin Evrimi</h2>
+                <p>Son yıllarda dijital içerik platformlarının büyümesiyle abonelik modeli işletmelerin öncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri şirketler, kullanıcılara sürekli içerik sunarak gelir modelini dönüştürdü.</p>
+                
+                <div class="article-image">
+                    <picture>
+                        <source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
+                        <img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async">
+                    </picture>
+                    <div class="image-caption">Veri temelli gelir modelinin yapısı ve bileşenleri</div>
+                </div>
+                
+                <h3>Neden Abonelik?</h3>
+                <p>Abonelik modelleri şirketlere tahmin edilebilir gelir akışı sağlar. Müşteri yaşam boyu değeri (CLV) artarken, kazanım maliyetleri düşer. Bu model özellikle SaaS şirketleri için altın standarttır.</p>
+                
+                <blockquote>"Abonelik modeli, müşteri ilişkisini bir kerelik satıştan sürekli değer yaratma sürecine dönüştürür."</blockquote>
+                
+                <h3>Başarı Faktörleri</h3>
+                <ul>
+                    <li>Sürekli değer sunumu ve içerik güncellemeleri</li>
+                    <li>Müşteri sadakati programları ve kişiselleştirme</li>
+                    <li>Esneklilik: farklı paketler ve fiyatlandırma seçenekleri</li>
+                    <li>Düşük giriş engelleri ve ücretsiz deneme süreleri</li>
+                </ul>
+            `
         },
         {
             id: 'stat-2',
             title: 'Dijital Dönüşümde Yapay Zeka',
             date: '2025-02-15',
             summary: 'Yapay zeka müşteri hizmetleri, veri analizi ve otomasyonda büyük etkiler yaratıyor.',
-            content: 'Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?'
+            content: `
+                <h2>YZ'nin İş Dünyasındaki Yeri</h2>
+                <p>Yapay zeka, iş dünyasında devrim yaratıyor. Özellikle müşteri hizmetleri, veri analizi ve otomasyon alanlarında büyük etkiler yaratıyor. Peki, yapay zeka işletmelerin geleceğini nasıl şekillendirecek?</p>
+                
+                <h3>Temel Uygulama Alanları</h3>
+                <ol>
+                    <li><strong>Müşteri Hizmetleri:</strong> Chatbotlar ve sanal asistanlar 7/24 destek sağlıyor</li>
+                    <li><strong>Veri Analizi:</strong> Büyük veri setlerinden anlamlı içgörüler çıkarma</li>
+                    <li><strong>Otomasyon:</strong> Rutin işlerin otomasyonu ve süreç optimizasyonu</li>
+                    <li><strong>Kişiselleştirme:</strong> Müşteri deneyiminin bireysel ihtiyaçlara göre uyarlanması</li>
+                </ol>
+                
+                <p>YZ entegrasyonu artık lüks değil, rekabet avantajı için zorunluluk haline geliyor.</p>
+            `
         },
         {
             id: 'stat-3',
             title: 'Gelir Modelleri Nasıl Evrimleşti?',
             date: '2025-01-28',
             summary: 'Barter ekonomisinden SaaS dönemine kadar gelir modellerindeki kırılma noktaları.',
-            content: 'Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?'
+            content: `
+                <h2>Tarihin Sayfalarında Gelir Modelleri</h2>
+                <p>Gelir modelleri tarih boyunca değişim gösterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan süreçte hangi kırılma noktaları yaşandı?</p>
+                
+                <h3>Evrim Aşamaları</h3>
+                <p><strong>1. Barter Ekonomisi:</strong> Mal ve hizmet takası<br>
+                <strong>2. Para Ekonomisi:</strong> Standart değişim aracı<br>
+                <strong>3. Perakende:</strong> Fiziksel mağaza satışları<br>
+                <strong>4. E-Ticaret:</strong> Online satış platformları<br>
+                <strong>5. Abonelik:</strong> Sürekli gelir modelleri<br>
+                <strong>6. Platform Ekonomisi:</strong> Çok taraflı pazaryerleri</p>
+                
+                <p>Her aşama, teknolojinin imkan verdiği yeni fırsatlarla şekillendi.</p>
+            `
         },
         {
             id: 'stat-4',
             title: 'Fiyatın Ötesinde: Gelir Yönetiminin Gizli Dili',
             date: '2025-03-05',
             summary: 'Veri temelli fiyatlandırma ve çift taraflı gelir modellerinin avantajları.',
-            content: `**Veri Temelli Fiyatlandırma**<br>Bu model hem üyelik ücretleri hem de veri istihbaratı gelirlerini içerir. Örnekler ve karşılaştırmalar...<br><img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" loading="lazy" decoding="async" width="800" height="450">`
+            content: `
+                <h2>Modern Fiyatlandırma Stratejileri</h2>
+                <p>Veri temelli fiyatlandırma hem üyelik ücretleri hem de veri istihbaratı gelirlerini içerir. Bu çift taraflı model, şirketlere çoklu gelir akışları sağlar.</p>
+                
+                <div class="article-image">
+                    <img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" loading="lazy" decoding="async" width="800" height="450">
+                    <div class="image-caption">Veri odaklı fiyatlandırma modelinin şeması</div>
+                </div>
+                
+                <h3>Veri Temelli Yaklaşım</h3>
+                <p>Şirketler artık müşteri davranışlarını analiz ederek dinamik fiyatlandırma yapabiliyor. Bu sayede:</p>
+                <ul>
+                    <li>Talep dalgalanmalarına hızlı tepki</li>
+                    <li>Kişiselleştirilmiş fiyat teklifleri</li>
+                    <li>Gelir maksimizasyonu</li>
+                    <li>Müşteri segmentasyonu optimizasyonu</li>
+                </ul>
+                
+                <blockquote>"Fiyat sadece bir sayı değil, müşteri algısının ve değer önerisinin bir yansımasıdır."</blockquote>
+            `
         }
     ];
 
@@ -107,27 +322,162 @@
     function loadDynamicArticles(){
         try{ return JSON.parse(localStorage.getItem('articles')||'[]'); }catch(e){ return []; }
     }
+    
+    // Calculate reading time (words per minute = 200)
+    function calculateReadTime(text){
+        const words = text.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length;
+        const minutes = Math.ceil(words / 200);
+        return `~${minutes} dk okuma`;
+    }
+    
+    // Generate table of contents from headings
+    function generateTOC(content){
+        const temp = document.createElement('div');
+        temp.innerHTML = content;
+        const headings = temp.querySelectorAll('h2, h3');
+        if(headings.length === 0) return '';
+        
+        let toc = '<div class="toc"><h4 class="toc-title">İçindekiler</h4><ul>';
+        headings.forEach((h, idx) => {
+            const id = `heading-${idx}`;
+            h.id = id;
+            const level = h.tagName === 'H2' ? '' : 'style="margin-left:16px;"';
+            toc += `<li ${level}><a href="#${id}">${h.textContent}</a></li>`;
+        });
+        toc += '</ul></div>';
+        
+        return toc + temp.innerHTML;
+    }
+    
+    // Setup image lightbox
+    function setupImageLightbox(){
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxClose = document.getElementById('lightboxClose');
+        
+        document.addEventListener('click', (e) => {
+            if(e.target.classList.contains('responsive')){
+                lightboxImg.src = e.target.src;
+                lightboxImg.alt = e.target.alt;
+                lightbox.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        });
+        
+        const closeLightbox = () => {
+            lightbox.classList.remove('active');
+            document.body.style.overflow = '';
+        };
+        
+        lightboxClose.addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', (e) => {
+            if(e.target === lightbox) closeLightbox();
+        });
+        
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'Escape' && lightbox.classList.contains('active')) closeLightbox();
+        });
+    }
+    
+    // Setup reading progress bar
+    function setupReadingProgress(){
+        const progressBar = document.getElementById('readProgressBar');
+        const progress = document.getElementById('readProgress');
+        
+        let activeArticle = null;
+        
+        window.addEventListener('scroll', () => {
+            if(!activeArticle) return;
+            
+            const rect = activeArticle.getBoundingClientRect();
+            const articleTop = rect.top + window.scrollY;
+            const articleHeight = rect.height;
+            const windowHeight = window.innerHeight;
+            const scrolled = window.scrollY - articleTop + windowHeight;
+            const percentage = Math.min(Math.max((scrolled / articleHeight) * 100, 0), 100);
+            
+            progressBar.style.width = percentage + '%';
+        });
+        
+        // Make it available to article expand/collapse
+        window.toggleProgress = (article) => {
+            activeArticle = article;
+            if(article){
+                progress.classList.add('active');
+            } else {
+                progress.classList.remove('active');
+                progressBar.style.width = '0';
+            }
+        };
+    }
+    
+    // Setup back to top button
+    function setupBackToTop(){
+        const backToTop = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if(window.scrollY > 300){
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+        
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 
     // Render fonksiyonu
     function renderArticles(list){
         const container = document.getElementById('articles');
         container.innerHTML = '';
         const tpl = document.getElementById('article-template');
+        
         list.forEach(article => {
             const node = tpl.content.cloneNode(true);
             const art = node.querySelector('article');
+            
             node.querySelector('.title').textContent = article.title;
-            node.querySelector('.meta').textContent = article.date;
-            node.querySelector('.summary').textContent = article.summary || (article.content.replace(/<[^>]+>/g,'').slice(0,160) + '...');
+            node.querySelector('.date').textContent = article.date;
+            
+            const readTime = calculateReadTime(article.content || '');
+            node.querySelector('.read-time').textContent = readTime;
+            
+            const summaryText = article.summary || (article.content.replace(/<[^>]+>/g,'').slice(0,160) + '...');
+            node.querySelector('.summary').textContent = summaryText;
+            
             const full = node.querySelector('.full');
-            full.innerHTML = article.content || '';
+            const processedContent = generateTOC(article.content || '');
+            full.innerHTML = processedContent;
+            
             const btn = node.querySelector('.read-btn');
             btn.addEventListener('click', () => {
-                const isActive = full.classList.toggle('active');
-                full.setAttribute('aria-hidden', !isActive);
-                btn.textContent = isActive ? 'Kapat' : 'Devamını Oku';
-                if(isActive) full.scrollIntoView({behavior:'smooth', block:'center'});
+                const wasActive = full.classList.contains('active');
+                
+                // Close all other articles
+                document.querySelectorAll('.full.active').forEach(f => {
+                    f.classList.remove('active');
+                    f.setAttribute('aria-hidden', 'true');
+                    f.closest('article').classList.remove('expanded');
+                });
+                document.querySelectorAll('.read-btn').forEach(b => b.textContent = 'Devamını Oku');
+                
+                if(!wasActive){
+                    full.classList.add('active');
+                    full.setAttribute('aria-hidden', 'false');
+                    art.classList.add('expanded');
+                    btn.textContent = 'Kapat';
+                    window.toggleProgress(art);
+                    setTimeout(() => {
+                        art.scrollIntoView({behavior:'smooth', block:'start'});
+                    }, 100);
+                } else {
+                    window.toggleProgress(null);
+                }
             });
+            
             container.appendChild(node);
         });
     }
@@ -135,15 +485,29 @@
     // Başlangıç render
     document.addEventListener('DOMContentLoaded', () => {
         const dyn = loadDynamicArticles();
-        const all = [...staticArticles, ...dyn.map((a,i)=>({ id:'dyn-'+i, title:a.title, date:a.date, summary:a.content.replace(/<[^>]+>/g,'').slice(0,120), content: a.content }))];
+        const all = [...staticArticles, ...dyn.map((a,i)=>({ 
+            id:'dyn-'+i, 
+            title:a.title, 
+            date:a.date, 
+            summary:a.content.replace(/<[^>]+>/g,'').slice(0,120), 
+            content: a.content 
+        }))];
+        
         renderArticles(all);
+        setupImageLightbox();
+        setupReadingProgress();
+        setupBackToTop();
 
         // Arama
         const search = document.getElementById('search');
         search.addEventListener('input', (e)=>{
             const q = e.target.value.trim().toLowerCase();
             if(!q){ renderArticles(all); return; }
-            const filtered = all.filter(a => (a.title + ' ' + (a.summary||'') + ' ' + (a.content||'')).toLowerCase().includes(q));
+            const filtered = all.filter(a => 
+                (a.title + ' ' + (a.summary||'') + ' ' + (a.content||''))
+                .toLowerCase()
+                .includes(q)
+            );
             renderArticles(filtered);
         });
     });
