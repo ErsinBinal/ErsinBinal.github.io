@@ -3,455 +3,431 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>NEON RIVER: 3D VOXEL ASSAULT</title>
+    <title>NEON RIVER: ULTIMATE</title>
     <style>
-        body { margin: 0; padding: 0; background: #111; overflow: hidden; touch-action: none; }
-        #game-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #1a1a2e; }
-        canvas { 
-            box-shadow: 0 0 50px rgba(0,0,0,0.8); 
-            image-rendering: pixelated; /* Pikseller keskin ve bloklu görünsün */
-        }
-        .ui-layer { position: absolute; top: 20px; left: 20px; font-family: 'Courier New', monospace; pointer-events: none; }
+        body { margin: 0; padding: 0; background: #050510; overflow: hidden; touch-action: none; font-family: 'Courier New', Courier, monospace; }
+        #game-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        canvas { box-shadow: 0 0 60px rgba(0,255,255,0.1); image-rendering: pixelated; }
+        /* CRT Efekti */
+        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 4px; pointer-events: none; z-index: 100; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
 
+<div class="scanlines"></div>
 <div id="game-container"></div>
 
 <script>
-// --- KONFİGÜRASYON ---
+// --- SES MOTORU (Synthesizer) ---
+// Harici dosya olmadan ses üretir
+const SynthAudio = {
+    ctx: null,
+    init: function() {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+    },
+    playTone: function(freq, type, duration, vol=0.1) {
+        if(!this.ctx) this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    },
+    playShoot: function() { this.playTone(800, 'square', 0.1, 0.05); },
+    playExplosion: function() { 
+        // Gürültü simülasyonu için düşük frekanslı testere dişi
+        this.playTone(100, 'sawtooth', 0.3, 0.1); 
+        setTimeout(()=>this.playTone(50, 'square', 0.3, 0.1), 50);
+    },
+    playPowerup: function() {
+        this.playTone(400, 'sine', 0.1, 0.1);
+        setTimeout(()=>this.playTone(600, 'sine', 0.1, 0.1), 100);
+        setTimeout(()=>this.playTone(1000, 'sine', 0.2, 0.1), 200);
+    },
+    playFuel: function() { this.playTone(300, 'triangle', 0.15, 0.1); }
+};
+
+// --- OYUN AYARLARI ---
 const CONFIG = {
     type: Phaser.AUTO,
-    // EKRANI GENİŞLETİYORUZ: Masaüstünde %100 genişlik, çok genişse biraz sınırla
-    width: Math.min(window.innerWidth, 1200), 
+    width: Math.min(window.innerWidth, 1024),
     height: window.innerHeight,
     parent: 'game-container',
-    pixelArt: true, // Keskin pikseller
-    physics: {
-        default: 'arcade',
-        arcade: { gravity: { y: 0 }, debug: false }
-    },
-    scene: { preload: preload, create: create, update: update }
+    pixelArt: true,
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+    scene: [] // Aşağıda tanımlayacağız
 };
 
-let game = new Phaser.Game(CONFIG);
+// --- GLOBAL VERİLER ---
+const SHIPS = [
+    { id: 0, name: 'SPEEDSTER', color: 0x00aaff, speed: 600, rate: 200, desc: 'HIZLI & ÇEVİK' },
+    { id: 1, name: 'HEAVY METAL', color: 0xff0055, speed: 350, rate: 350, desc: 'AĞIR & GÜÇLÜ' },
+    { id: 2, name: 'BALANCED', color: 0x00ff00, speed: 450, rate: 250, desc: 'DENGELİ SEÇİM' }
+];
+let selectedShipIndex = 2;
 
-// --- GLOBAL DEĞİŞKENLER ---
-let player;
-let cursors;
-let bullets, enemyBullets, enemies, powerups, sidekicks; // Gruplar
-let terrainLeft, terrainRight, riverWater;
-let score = 0, scoreText;
-let fuel = 100, fuelBar, fuelBarBg;
-let gameSpeed = 3; 
-let isGameOver = false;
-let lastFired = 0;
-
-// Silah Sistemi
-const WEAPONS = {
-    SINGLE: 0,
-    SPREAD: 1, // 3'lü atış
-    LASER: 2,  // Hızlı
-    SIDEKICK: 3 // Dronlar
-};
-let currentWeapon = WEAPONS.SINGLE;
-let sidekicksActive = false; // Dronlar aktif mi?
-let sidekickTimer = null;
-
-// --- PRELOAD: 3D VOXEL OLUŞTURUCU ---
-function preload() {
-    let g = this.make.graphics({x: 0, y: 0, add: false});
-
-    // --- YARDIMCI FONKSİYON: 3D BLOK ÇİZİCİ ---
-    // Bu fonksiyon 2D matrisi alıp, her kareye "derinlik" (yan yüzeyler) ekler.
-    const createVoxelSprite = (key, pixelSize, matrix, palette) => {
-        g.clear();
-        let height = matrix.length;
-        let width = matrix[0].length;
-        let depth = pixelSize / 2; // 3D Derinlik miktarı
-
-        // Önce gölgeleri (yan yüzeyleri) çiziyoruz (Arkadan öne)
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                let color = matrix[y][x];
-                if (color !== 0 && palette[color]) {
-                    let px = x * pixelSize;
-                    let py = y * pixelSize;
-                    let mainColor = palette[color];
-                    
-                    // Alt Yüzey (En koyu)
-                    g.fillStyle(Phaser.Display.Color.IntegerToColor(mainColor).darken(40).color, 1);
-                    g.fillRect(px, py + pixelSize, pixelSize, depth);
-                    
-                    // Sağ Yüzey (Orta koyu)
-                    g.fillStyle(Phaser.Display.Color.IntegerToColor(mainColor).darken(20).color, 1);
-                    g.fillRect(px + pixelSize, py, depth, pixelSize);
-
-                    // Ön Yüzey (Normal Renk - Üstüne basılacak)
-                    g.fillStyle(mainColor, 1);
-                    g.fillRect(px, py, pixelSize, pixelSize);
-                    
-                    // Highlight (Parlaklık - Üst kenar)
-                    g.fillStyle(0xffffff, 0.2);
-                    g.fillRect(px, py, pixelSize, 2);
-                }
+// --- YARDIMCI: 3D VOXEL ÇİZİCİ ---
+function createVoxelTexture(scene, key, matrix, palette, scale=1) {
+    let g = scene.make.graphics({x:0, y:0, add:false});
+    const size = 8 * scale;
+    const depth = size / 2;
+    
+    // Arkadan öne çizim
+    for(let y=0; y<matrix.length; y++) {
+        for(let x=0; x<matrix[y].length; x++) {
+            let colorCode = matrix[y][x];
+            if(colorCode && palette[colorCode]) {
+                let color = palette[colorCode];
+                let px = x * size;
+                let py = y * size;
+                
+                // Yan Yüzeyler (Gölge)
+                g.fillStyle(Phaser.Display.Color.IntegerToColor(color).darken(30).color, 1);
+                g.fillRect(px, py+size, size, depth); // Alt
+                g.fillStyle(Phaser.Display.Color.IntegerToColor(color).darken(15).color, 1);
+                g.fillRect(px+size, py, depth, size); // Sağ
+                
+                // Ön Yüz
+                g.fillStyle(color, 1);
+                g.fillRect(px, py, size, size);
+                
+                // Parlama
+                g.fillStyle(0xffffff, 0.2);
+                g.fillRect(px, py, size, 2);
             }
         }
-        g.generateTexture(key, width * pixelSize + depth, height * pixelSize + depth);
-    };
-
-    // 1. OYUNCU: Voxel Jet
-    // 1: Gövde (Mavi), 2: Cam (Açık Mavi), 3: Motor (Gri), 4: Alev
-    const playerColors = { 1: 0x3366cc, 2: 0x00ffff, 3: 0x555555, 4: 0xffaa00 };
-    const playerMatrix = [
-        [0,0,0,1,1,0,0,0],
-        [0,0,1,1,1,1,0,0],
-        [0,1,1,2,2,1,1,0],
-        [1,1,1,1,1,1,1,1],
-        [1,3,1,1,1,1,3,1],
-        [1,0,0,4,4,0,0,1]
-    ];
-    createVoxelSprite('player', 8, playerMatrix, playerColors);
-
-    // 2. DRON (Sidekick)
-    const droneColors = { 1: 0x00ff00, 2: 0xffffff };
-    const droneMatrix = [
-        [1,1,1],
-        [1,2,1],
-        [1,1,1]
-    ];
-    createVoxelSprite('drone', 6, droneMatrix, droneColors);
-
-    // 3. DÜŞMAN: CREEPER HELI (3D Kafa)
-    const heliColors = { 1: 0x44cc44, 2: 0x000000, 3: 0x888888 };
-    const heliMatrix = [
-        [3,0,3,0,3],
-        [0,3,3,3,0],
-        [1,1,1,1,1],
-        [1,2,1,2,1], // Gözler
-        [1,1,2,1,1], // Burun
-        [1,1,1,1,1]
-    ];
-    createVoxelSprite('enemy1', 8, heliMatrix, heliColors);
-
-    // 4. DÜŞMAN: TANKER GEMİ (Geniş)
-    const shipColors = { 1: 0xcc4444, 2: 0xdddddd };
-    const shipMatrix = [
-        [0,1,1,0],
-        [1,1,1,1],
-        [1,2,2,1],
-        [1,1,1,1]
-    ];
-    createVoxelSprite('enemy2', 10, shipMatrix, shipColors);
-
-    // 5. YAKIT (TNT Bloğu)
-    const fuelColors = { 1: 0xff0000, 2: 0xffffff }; // Kırmızı beyaz
-    const fuelMatrix = [
-        [1,1,1,1],
-        [1,2,2,1],
-        [1,2,2,1],
-        [1,1,1,1]
-    ];
-    createVoxelSprite('fuel', 8, fuelMatrix, fuelColors);
-
-    // 6. UPGRADE KUTUSU (Elmas Bloğu)
-    const upgColors = { 1: 0x00aaaa, 2: 0x00ffff }; // Camgöbeği
-    const upgMatrix = [
-        [1,1,1],
-        [1,2,1],
-        [1,1,1]
-    ];
-    createVoxelSprite('upgrade', 10, upgMatrix, upgColors);
-
-    // 7. DUVAR BLOĞU (Toprak + Çimen)
-    const wallColors = { 1: 0x664422, 2: 0x44aa44 }; // Kahve, Yeşil
-    const wallMatrix = [
-        [2,2,2,2],
-        [2,2,2,2],
-        [1,1,1,1],
-        [1,1,1,1]
-    ];
-    createVoxelSprite('wall', 16, wallMatrix, wallColors); // Büyük bloklar
-
-    // 8. MERMİLER
-    g.clear(); g.fillStyle(0xffff00, 1); g.fillRect(0,0,6,14); g.generateTexture('bullet', 6, 14);
-    g.clear(); g.fillStyle(0x00ff00, 1); g.fillRect(0,0,4,20); g.generateTexture('laser', 4, 20);
-    g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0,0,6,6); g.generateTexture('particle', 6, 6);
+    }
+    g.generateTexture(key, matrix[0].length * size + depth, matrix.length * size + depth);
 }
 
-// --- CREATE ---
-function create() {
-    // 1. ZEMİN (Voxel Su)
-    // Su için basit bir texture kullanalım
-    let bgGraphics = this.make.graphics({x:0, y:0, add:false});
-    bgGraphics.fillStyle(0x004488, 1); bgGraphics.fillRect(0,0,64,64);
-    bgGraphics.fillStyle(0x0055aa, 1); bgGraphics.fillRect(10,10,20,10); bgGraphics.fillRect(40,40,15,15);
-    bgGraphics.generateTexture('waterBg', 64, 64);
-    
-    riverWater = this.add.tileSprite(CONFIG.width/2, CONFIG.height/2, CONFIG.width, CONFIG.height, 'waterBg');
+// =============================================================================
+// SAHNE 1: MENU & HANGAR & SKOR TABLOSU
+// =============================================================================
+class MenuScene extends Phaser.Scene {
+    constructor() { super('MenuScene'); }
 
-    // 2. KANYON DUVARLARI (Geniş ekrana uyumlu)
-    let wallThick = 64;
-    terrainLeft = this.add.tileSprite(wallThick/2, CONFIG.height/2, wallThick, CONFIG.height, 'wall');
-    terrainRight = this.add.tileSprite(CONFIG.width - wallThick/2, CONFIG.height/2, wallThick, CONFIG.height, 'wall');
-    
-    this.physics.add.existing(terrainLeft, true);
-    this.physics.add.existing(terrainRight, true);
-
-    // 3. GRUPLAR
-    bullets = this.physics.add.group();
-    enemies = this.physics.add.group();
-    powerups = this.physics.add.group();
-    sidekicks = this.physics.add.group(); // Dron grubu
-
-    // 4. OYUNCU
-    player = this.physics.add.sprite(CONFIG.width/2, CONFIG.height - 100, 'player');
-    player.setCollideWorldBounds(true);
-    player.setDrag(1000); // Keskin duruş
-    player.setDepth(10);
-    player.body.setSize(40, 40); // Hitbox ayarı
-
-    // 5. ARAYÜZ
-    scoreText = this.add.text(80, 20, 'SKOR: 0', { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 4, fontFamily: 'Courier New' }).setDepth(20);
-    this.add.text(80, 50, 'YAKIT', { fontSize: '16px', fill: '#fff', fontFamily: 'Courier New' }).setDepth(20);
-    fuelBarBg = this.add.rectangle(180, 58, 204, 18, 0x000000).setStrokeStyle(2, 0xffffff).setDepth(20);
-    fuelBar = this.add.rectangle(180, 58, 200, 14, 0x00ff00).setDepth(20);
-
-    // 6. GİRDİLER
-    cursors = this.input.keyboard.createCursorKeys();
-    this.input.on('pointermove', (pointer) => {
-        if (!isGameOver && pointer.isDown) {
-            let targetX = Phaser.Math.Clamp(pointer.x, 80, CONFIG.width - 80);
-            this.physics.moveTo(player, targetX, pointer.y - 50, 600);
-            fireWeapon.call(this);
-        }
-    });
-
-    // 7. ÇARPIŞMALAR
-    this.physics.add.overlap(bullets, enemies, hitEnemy, null, this);
-    this.physics.add.overlap(bullets, powerups, hitPowerupWithBullet, null, this); // Kutuyu vurursan yok olur (dikkat!)
-    this.physics.add.overlap(player, enemies, crashPlayer, null, this);
-    this.physics.add.overlap(player, powerups, collectPowerup, null, this);
-
-    // 8. SPAWNERS
-    this.time.addEvent({ delay: 1000, callback: spawnManager, callbackScope: this, loop: true });
-    this.time.addEvent({ delay: 500, callback: decreaseFuel, callbackScope: this, loop: true });
-}
-
-// --- UPDATE ---
-function update() {
-    if (isGameOver) return;
-
-    // Arka plan kaydırma (Derinlik hissi)
-    riverWater.tilePositionY -= gameSpeed;
-    terrainLeft.tilePositionY -= gameSpeed;
-    terrainRight.tilePositionY -= gameSpeed;
-
-    // Oyuncu Hareketi
-    player.setVelocityX(0);
-    player.setVelocityY(0);
-    let speed = 500; // Geniş ekranda daha hızlı olmalı
-    
-    if (cursors.left.isDown) player.setVelocityX(-speed);
-    else if (cursors.right.isDown) player.setVelocityX(speed);
-    if (cursors.up.isDown) player.setVelocityY(-speed);
-    else if (cursors.down.isDown) player.setVelocityY(speed);
-
-    // Sınırlar
-    if (player.x < 80) player.x = 80;
-    if (player.x > CONFIG.width - 80) player.x = CONFIG.width - 80;
-
-    // Ateş
-    if (cursors.space.isDown) fireWeapon.call(this);
-
-    // Dron Takibi
-    if (sidekicksActive) {
-        let leftDrone = sidekicks.getChildren()[0];
-        let rightDrone = sidekicks.getChildren()[1];
-        if (leftDrone) { leftDrone.x = player.x - 40; leftDrone.y = player.y + 10; }
-        if (rightDrone) { rightDrone.x = player.x + 40; rightDrone.y = player.y + 10; }
-    }
-
-    // Temizlik
-    bullets.children.each(b => { if (b.y < -50) b.destroy(); });
-    enemies.children.each(e => { if (e.y > CONFIG.height + 50) e.destroy(); });
-    powerups.children.each(p => { if (p.y > CONFIG.height + 50) p.destroy(); });
-
-    // Yakıt Barı
-    fuelBar.width = Math.max(0, (fuel / 100) * 200);
-    fuelBar.fillColor = fuel < 30 ? 0xff0000 : 0x00ff00;
-}
-
-// --- OYUN MANTIĞI ---
-
-function spawnManager() {
-    if (isGameOver) return;
-    
-    // Geniş ekrana yayılmış spawn noktası
-    let x = Phaser.Math.Between(100, CONFIG.width - 100);
-    let chance = Phaser.Math.Between(0, 100);
-
-    if (chance < 15) { // %15 YAKIT (TNT)
-        let f = powerups.create(x, -50, 'fuel');
-        f.setVelocityY(gameSpeed * 50);
-        f.setData('type', 'fuel');
-    } 
-    else if (chance < 20) { // %5 SİLAH KUTUSU (Elmas)
-        let u = powerups.create(x, -50, 'upgrade');
-        u.setVelocityY(gameSpeed * 60);
-        u.setData('type', 'upgrade');
-        // Kutu parlasın
-        this.tweens.add({ targets: u, alpha: 0.5, duration: 300, yoyo: true, repeat: -1 });
-    }
-    else { // DÜŞMAN
-        let type = chance < 60 ? 'enemy1' : 'enemy2'; // Heli veya Gemi
-        let e = enemies.create(x, -50, type);
-        let moveSpeed = type === 'enemy1' ? 150 : 80;
-        e.setVelocityY(moveSpeed + (gameSpeed * 10));
-        
-        // Heli S çizsin
-        if (type === 'enemy1') {
-            this.tweens.add({ targets: e, x: e.x + 50, duration: 1500, yoyo: true, repeat: -1 });
-        }
-    }
-}
-
-function fireWeapon() {
-    let now = this.time.now;
-    let rate = currentWeapon === WEAPONS.LASER ? 150 : 250;
-    
-    if (now - lastFired < rate) return;
-    
-    // Ana Silah
-    if (currentWeapon === WEAPONS.SPREAD) {
-        let b1 = bullets.create(player.x, player.y - 30, 'bullet'); b1.setVelocity(0, -700);
-        let b2 = bullets.create(player.x, player.y - 30, 'bullet'); b2.setVelocity(-100, -650);
-        let b3 = bullets.create(player.x, player.y - 30, 'bullet'); b3.setVelocity(100, -650);
-    } else if (currentWeapon === WEAPONS.LASER) {
-        let l = bullets.create(player.x, player.y - 30, 'laser'); l.setVelocityY(-900);
-    } else {
-        let b = bullets.create(player.x, player.y - 30, 'bullet'); b.setVelocityY(-700);
-    }
-
-    // Dron Ateşi
-    if (sidekicksActive) {
-        sidekicks.children.each(drone => {
-            let db = bullets.create(drone.x, drone.y, 'bullet');
-            db.setVelocityY(-700);
-            db.setScale(0.7); // Küçük mermi
+    preload() {
+        // Gemi Grafikleri (Menu için)
+        const shipMatrix = [[0,1,0],[1,1,1],[1,2,1],[1,3,1]];
+        SHIPS.forEach((ship, idx) => {
+            let palette = { 
+                1: ship.color, 
+                2: 0xccffff, // Cam
+                3: 0xffaa00  // Motor
+            };
+            createVoxelTexture(this, 'ship_icon_'+idx, shipMatrix, palette, 4);
         });
     }
 
-    lastFired = now;
+    create() {
+        let cw = this.cameras.main.width;
+        let ch = this.cameras.main.height;
+
+        // Başlık
+        this.add.text(cw/2, 50, 'NEON RIVER', { fontSize: '64px', color: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0,0,'#00ffff',10);
+        this.add.text(cw/2, 100, 'ULTIMATE EDITION', { fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+
+        // --- GEMİ SEÇİMİ ---
+        this.add.text(cw/2, 160, '< UÇAK SEÇİMİ >', { fontSize: '20px', color: '#ffff00' }).setOrigin(0.5);
+        
+        this.shipDisplay = this.add.image(cw/2, 230, 'ship_icon_'+selectedShipIndex);
+        this.shipName = this.add.text(cw/2, 300, SHIPS[selectedShipIndex].name, { fontSize: '28px', color: '#fff' }).setOrigin(0.5);
+        this.shipDesc = this.add.text(cw/2, 330, SHIPS[selectedShipIndex].desc, { fontSize: '18px', color: '#aaa' }).setOrigin(0.5);
+
+        // Ok butonları
+        let leftBtn = this.add.text(cw/2 - 120, 230, '<', { fontSize: '64px', color: '#0f0' }).setOrigin(0.5).setInteractive();
+        let rightBtn = this.add.text(cw/2 + 120, 230, '>', { fontSize: '64px', color: '#0f0' }).setOrigin(0.5).setInteractive();
+
+        leftBtn.on('pointerdown', () => this.changeShip(-1));
+        rightBtn.on('pointerdown', () => this.changeShip(1));
+
+        // --- SKOR TABLOSU ---
+        this.add.text(cw/2, 400, 'EN YÜKSEK SKORLAR', { fontSize: '20px', color: '#ff00ff' }).setOrigin(0.5);
+        let scores = JSON.parse(localStorage.getItem('neonHighScores')) || [0,0,0];
+        scores.sort((a,b) => b-a);
+        scores.slice(0,3).forEach((s, i) => {
+            this.add.text(cw/2, 440 + (i*30), (i+1) + '. ' + s, { fontSize: '20px', color: '#fff' }).setOrigin(0.5);
+        });
+
+        // --- BAŞLAT BUTONU ---
+        let startBtn = this.add.rectangle(cw/2, ch - 80, 300, 60, 0x00ff00).setInteractive();
+        this.add.text(cw/2, ch - 80, 'BAŞLAT', { fontSize: '32px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+
+        startBtn.on('pointerdown', () => {
+            SynthAudio.init(); // Ses motorunu başlat (Kullanıcı etkileşimi şart)
+            SynthAudio.playPowerup();
+            this.scene.start('GameScene');
+        });
+    }
+
+    changeShip(dir) {
+        selectedShipIndex += dir;
+        if(selectedShipIndex < 0) selectedShipIndex = SHIPS.length - 1;
+        if(selectedShipIndex >= SHIPS.length) selectedShipIndex = 0;
+        
+        this.shipDisplay.setTexture('ship_icon_'+selectedShipIndex);
+        this.shipName.setText(SHIPS[selectedShipIndex].name);
+        this.shipDesc.setText(SHIPS[selectedShipIndex].desc);
+        SynthAudio.playFuel(); // Tık sesi
+    }
 }
 
-function collectPowerup(player, box) {
-    let type = box.getData('type');
-    createExplosion(this, box.x, box.y, 0xffffff, 10);
-    box.destroy();
+// =============================================================================
+// SAHNE 2: OYUN (GAMEPLAY)
+// =============================================================================
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
 
-    if (type === 'fuel') {
-        fuel = Math.min(100, fuel + 40);
-        score += 50;
-        showFloatingText(this, player.x, player.y, '+FUEL');
-    } else if (type === 'upgrade') {
-        score += 100;
-        // Rastgele özellik
-        let rnd = Phaser.Math.Between(0, 2);
-        if (rnd === 0) {
-            activateSidekicks.call(this);
-            showFloatingText(this, player.x, player.y, 'DRONES!');
-        } else if (rnd === 1) {
-            currentWeapon = WEAPONS.SPREAD;
-            showFloatingText(this, player.x, player.y, 'SPREAD!');
+    preload() {
+        // --- TEXTURE GENERATION ---
+        
+        // 1. ZEMİN (Su)
+        let g = this.make.graphics({x:0, y:0, add:false});
+        g.fillStyle(0x002244, 1); g.fillRect(0,0,64,64);
+        g.fillStyle(0x004488, 1); g.fillRect(10,10,10,4); g.fillRect(30,40,20,4);
+        g.generateTexture('water', 64, 64);
+
+        // 2. VOXEL ARAZİ (Ağaçlar ve Dağlar)
+        // Ağaç
+        createVoxelTexture(this, 'tree', [
+            [0,1,0],[1,1,1],[1,1,1],[0,2,0]
+        ], { 1: 0x00aa00, 2: 0x664422 }, 3); // Yeşil ve Kahve
+        
+        // Dağ (Kaya)
+        createVoxelTexture(this, 'rock', [
+            [0,1,0],[1,1,1],[1,1,1],[1,1,1]
+        ], { 1: 0x555555 }, 4); // Gri
+
+        // 3. GEMİLER VE OBJEKLER
+        // Oyuncu Gemisi (Daha küçük, oyun içi)
+        createVoxelTexture(this, 'player', [[0,0,1,0,0],[0,1,1,1,0],[1,1,2,1,1],[1,0,3,0,1]], 
+        { 1: SHIPS[selectedShipIndex].color, 2: 0xccffff, 3: 0xffaa00 }, 2);
+
+        // Düşmanlar
+        createVoxelTexture(this, 'enemy1', [[1,0,1],[0,1,0],[1,1,1],[0,2,0]], { 1: 0xff0000, 2:0xaaaaaa }, 3);
+        createVoxelTexture(this, 'enemy2', [[0,1,0],[1,2,1],[1,1,1]], { 1: 0xaa00aa, 2:0xff00ff }, 4);
+
+        // Yakıt
+        createVoxelTexture(this, 'fuel', [[1,2,1],[1,2,1],[1,1,1]], { 1: 0xff0000, 2: 0xffffff }, 3);
+
+        // Mermiler
+        let gb = this.make.graphics({x:0, y:0, add:false});
+        gb.fillStyle(0xffff00); gb.fillRect(0,0,6,12); gb.generateTexture('bullet', 6, 12);
+        gb.fillStyle(0xffffff); gb.fillRect(0,0,4,4); gb.generateTexture('particle', 4, 4);
+    }
+
+    create() {
+        this.W = this.cameras.main.width;
+        this.H = this.cameras.main.height;
+        this.score = 0;
+        this.fuel = 100;
+        this.gameSpeed = 4;
+        this.isOver = false;
+        
+        // Nehir
+        this.river = this.add.tileSprite(this.W/2, this.H/2, this.W, this.H, 'water');
+
+        // Arazi Grubu (Terrain)
+        this.terrainGroup = this.add.group(); // Ağaçlar ve dağlar
+
+        // Oyuncu
+        this.player = this.physics.add.sprite(this.W/2, this.H - 100, 'player');
+        this.player.setCollideWorldBounds(true);
+        this.player.setDrag(800);
+        this.player.setDepth(10);
+
+        // Gruplar
+        this.bullets = this.physics.add.group();
+        this.enemies = this.physics.add.group();
+        this.fuels = this.physics.add.group();
+
+        // UI
+        this.scoreText = this.add.text(20, 20, 'SKOR: 0', { fontSize: '24px', stroke: '#000', strokeThickness: 4 });
+        this.fuelBar = this.add.rectangle(this.W - 120, 30, 200, 16, 0x00ff00).setOrigin(1, 0.5);
+        this.add.rectangle(this.W - 120, 30, 204, 20).setStrokeStyle(2, 0xffffff).setOrigin(1, 0.5);
+        this.add.text(this.W - 240, 22, 'YAKIT', { fontSize: '16px' });
+
+        // Kontroller
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.input.on('pointermove', (p) => {
+            if(!this.isOver && p.isDown) {
+                this.physics.moveTo(this.player, p.x, p.y-50, SHIPS[selectedShipIndex].speed);
+                this.fire();
+            }
+        });
+
+        // Zamanlayıcılar
+        this.time.addEvent({ delay: 1000, callback: this.spawnManager, callbackScope: this, loop: true });
+        this.time.addEvent({ delay: 100, callback: this.spawnTerrain, callbackScope: this, loop: true });
+        this.time.addEvent({ delay: 500, callback: this.burnFuel, callbackScope: this, loop: true });
+
+        // Çarpışmalar
+        this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
+        this.physics.add.overlap(this.bullets, this.fuels, this.hitFuel, null, this); // Yakıtı vurma!
+        this.physics.add.overlap(this.player, this.enemies, this.crash, null, this);
+        this.physics.add.overlap(this.player, this.fuels, this.collectFuel, null, this);
+    }
+
+    update() {
+        if(this.isOver) return;
+
+        // Arka plan akışı
+        this.river.tilePositionY -= this.gameSpeed;
+
+        // Arazi akışı (Terrain)
+        this.terrainGroup.children.each(t => {
+            t.y += this.gameSpeed;
+            if(t.y > this.H + 50) t.destroy();
+        });
+
+        // Klavye Kontrolü
+        this.player.setVelocityX(0);
+        this.player.setVelocityY(0);
+        let s = SHIPS[selectedShipIndex].speed;
+        
+        if(this.cursors.left.isDown) this.player.setVelocityX(-s);
+        else if(this.cursors.right.isDown) this.player.setVelocityX(s);
+        if(this.cursors.up.isDown) this.player.setVelocityY(-s);
+        else if(this.cursors.down.isDown) this.player.setVelocityY(s);
+
+        if(this.cursors.space.isDown) this.fire();
+
+        // Yakıt Barı
+        this.fuelBar.width = (this.fuel / 100) * 200;
+        this.fuelBar.fillColor = this.fuel < 30 ? 0xff0000 : 0x00ff00;
+
+        // Temizlik
+        this.bullets.children.each(b => { if(b.y < -20) b.destroy(); });
+        this.enemies.children.each(e => { if(e.y > this.H + 50) e.destroy(); });
+    }
+
+    // --- MEKANİKLER ---
+
+    spawnManager() {
+        if(this.isOver) return;
+        let x = Phaser.Math.Between(100, this.W - 100);
+        
+        if(Phaser.Math.Between(0, 100) < 20) {
+            let f = this.fuels.create(x, -50, 'fuel');
+            f.setVelocityY(this.gameSpeed * 40);
         } else {
-            currentWeapon = WEAPONS.LASER;
-            showFloatingText(this, player.x, player.y, 'LASER!');
+            let type = Phaser.Math.Between(0,1) ? 'enemy1' : 'enemy2';
+            let e = this.enemies.create(x, -50, type);
+            e.setVelocityY(this.gameSpeed * 50 + 50);
+            if(type === 'enemy1') { // S-Çizen düşman
+                 this.tweens.add({ targets: e, x: e.x + 100, duration: 2000, yoyo: true, repeat: -1 });
+            }
         }
     }
-    scoreText.setText('SKOR: ' + score);
+
+    spawnTerrain() {
+        // Ekranın sağ ve soluna rastgele ağaç/kaya ekle
+        if(Phaser.Math.Between(0, 100) > 85) { // Sıklık
+            let side = Phaser.Math.Between(0, 1) ? 0 : 1; // 0: Sol, 1: Sağ
+            let texture = Phaser.Math.Between(0, 1) ? 'tree' : 'rock';
+            
+            // Konum hesapla (Nehir kenarları)
+            let x = side === 0 ? Phaser.Math.Between(20, 80) : Phaser.Math.Between(this.W - 80, this.W - 20);
+            
+            let obj = this.add.image(x, -50, texture);
+            obj.setScale(Phaser.Math.FloatBetween(0.8, 1.2)); // Rastgele boyut
+            this.terrainGroup.add(obj);
+        }
+    }
+
+    fire() {
+        let now = this.time.now;
+        if(!this.lastFired) this.lastFired = 0;
+        if(now - this.lastFired < SHIPS[selectedShipIndex].rate) return;
+
+        let b = this.bullets.create(this.player.x, this.player.y - 30, 'bullet');
+        b.setVelocityY(-800);
+        SynthAudio.playShoot();
+        this.lastFired = now;
+    }
+
+    hitEnemy(bullet, enemy) {
+        bullet.destroy();
+        enemy.destroy();
+        this.explosionEffect(enemy.x, enemy.y, 0xffaa00);
+        SynthAudio.playExplosion();
+        this.score += 100;
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
+
+    collectFuel(player, fuel) {
+        fuel.destroy();
+        this.fuel = Math.min(100, this.fuel + 30);
+        SynthAudio.playFuel();
+        this.score += 50;
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
+
+    hitFuel(bullet, fuel) {
+        bullet.destroy();
+        fuel.destroy();
+        this.explosionEffect(fuel.x, fuel.y, 0xff0000);
+        SynthAudio.playExplosion();
+        this.score -= 200; // Ceza
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
+
+    crash(player, enemy) {
+        this.gameOver('KAZA YAPTIN!');
+    }
+
+    burnFuel() {
+        if(this.isOver) return;
+        this.fuel -= 1.5;
+        if(this.fuel <= 0) this.gameOver('YAKIT BİTTİ');
+    }
+
+    explosionEffect(x, y, color) {
+        let p = this.add.particles(0, 0, 'particle', {
+            x: x, y: y,
+            speed: { min: 50, max: 200 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 2, end: 0 },
+            tint: color,
+            lifespan: 500,
+            quantity: 10
+        });
+        setTimeout(() => p.destroy(), 500);
+    }
+
+    gameOver(reason) {
+        this.isOver = true;
+        this.physics.pause();
+        this.player.setTint(0xff0000);
+        SynthAudio.playExplosion();
+
+        // Skoru kaydet
+        let scores = JSON.parse(localStorage.getItem('neonHighScores')) || [];
+        scores.push(this.score);
+        scores.sort((a,b) => b-a);
+        localStorage.setItem('neonHighScores', JSON.stringify(scores.slice(0, 5)));
+
+        // Game Over Ekranı
+        let bg = this.add.rectangle(this.W/2, this.H/2, 400, 250, 0x000000, 0.9).setStrokeStyle(4, 0xff0000);
+        this.add.text(this.W/2, this.H/2 - 50, reason, { fontSize: '32px', color: '#f00' }).setOrigin(0.5);
+        this.add.text(this.W/2, this.H/2, 'SKOR: ' + this.score, { fontSize: '28px' }).setOrigin(0.5);
+        
+        let btn = this.add.text(this.W/2, this.H/2 + 70, 'MENÜYE DÖN', { fontSize: '24px', backgroundColor: '#333', padding: 10 }).setOrigin(0.5).setInteractive();
+        btn.on('pointerdown', () => this.scene.start('MenuScene'));
+    }
 }
 
-function activateSidekicks() {
-    sidekicks.clear(true, true); // Varsa eskileri sil
-    sidekicksActive = true;
-    sidekicks.create(player.x - 40, player.y, 'drone');
-    sidekicks.create(player.x + 40, player.y, 'drone');
-    
-    // 15 saniye sonra gitsinler
-    if (sidekickTimer) sidekickTimer.remove();
-    sidekickTimer = this.time.delayedCall(15000, () => {
-        sidekicksActive = false;
-        sidekicks.clear(true, true);
-        currentWeapon = WEAPONS.SINGLE; // Silah da sıfırlansın
-        showFloatingText(this, player.x, player.y, 'POWER DOWN');
-    });
-}
+// --- OYUNU BAŞLAT ---
+CONFIG.scene = [MenuScene, GameScene];
+game = new Phaser.Game(CONFIG);
 
-function hitEnemy(bullet, enemy) {
-    bullet.destroy();
-    createExplosion(this, enemy.x, enemy.y, 0xffaa00, 15);
-    enemy.destroy();
-    score += 100;
-    scoreText.setText('SKOR: ' + score);
-}
-
-function hitPowerupWithBullet(bullet, box) {
-    bullet.destroy();
-    box.destroy();
-    createExplosion(this, box.x, box.y, 0xaaaaaa, 10); // Boşa gitti efekti
-    score -= 10;
-    scoreText.setText('SKOR: ' + score);
-}
-
-function crashPlayer(player, target) {
-    createExplosion(this, player.x, player.y, 0x00ffff, 30);
-    createExplosion(this, target.x, target.y, 0xff0000, 20);
-    player.setVisible(false);
-    if(sidekicksActive) sidekicks.clear(true, true);
-    gameOver.call(this, "ÇARPIŞMA!");
-}
-
-function decreaseFuel() {
-    if (isGameOver) return;
-    fuel -= 0.8;
-    if (fuel <= 0) gameOver.call(this, "YAKIT BİTTİ");
-}
-
-function createExplosion(scene, x, y, color, count) {
-    let particles = scene.add.particles(0, 0, 'particle', {
-        x: x, y: y,
-        speed: { min: 50, max: 300 },
-        angle: { min: 0, max: 360 },
-        scale: { start: 2, end: 0 },
-        tint: color,
-        lifespan: 800,
-        quantity: count,
-        gravityY: 300 // Parçalar aşağı düşsün (3D hissi)
-    });
-    scene.time.delayedCall(800, () => particles.destroy());
-}
-
-function showFloatingText(scene, x, y, msg) {
-    let t = scene.add.text(x, y-40, msg, { fontSize:'20px', fill:'#0ff', stroke:'#000', strokeThickness:3 });
-    scene.tweens.add({ targets: t, y: y-100, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
-}
-
-function gameOver(reason) {
-    isGameOver = true;
-    this.physics.pause();
-    
-    let box = this.add.rectangle(CONFIG.width/2, CONFIG.height/2, 500, 300, 0x000000, 0.9).setStrokeStyle(4, 0xff0000);
-    this.add.text(CONFIG.width/2, CONFIG.height/2 - 60, reason, { fontSize: '40px', fill: '#f00', fontWeight:'bold' }).setOrigin(0.5);
-    this.add.text(CONFIG.width/2, CONFIG.height/2, 'TOPLAM SKOR: ' + score, { fontSize: '30px', fill: '#fff' }).setOrigin(0.5);
-    
-    let btn = this.add.text(CONFIG.width/2, CONFIG.height/2 + 80, '[ TEKRAR DENE ]', { 
-        fontSize: '28px', fill: '#0f0', backgroundColor:'#222', padding:15 
-    }).setOrigin(0.5).setInteractive();
-    
-    btn.on('pointerdown', () => location.reload());
-}
 </script>
 </body>
 </html>
