@@ -263,8 +263,7 @@
         </div>
     </div>
 
-    <script>
-// Global AudioContext
+ <script>
         let audioCtx;
 
         function initAudio() {
@@ -277,19 +276,19 @@
             }
         }
 
-        function playTone(freq, type, duration, vol = 0.02) {
+        function playTone(freq, type, duration, vol) {
             if (!audioCtx) return;
             
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             
-            osc.type = type; // 'square' yerine 'sine' veya 'triangle' daha yumuşaktır
+            osc.type = type;
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             
-            // Ses seviyesini (volume) çok daha düşük tutuyoruz
+            // SES AYARI: Daha duyulabilir bir seviye (0.1)
+            // Başlangıçta ses var, sonra hızla azalarak bitiyor (Fade-out)
             gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            // Çok hızlı sönümleme (fade-out) ile "çıt" sesini engelle
-            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -301,9 +300,6 @@
         function toggleSection(sectionId) {
             initAudio(); 
             
-            // Açılış sesi: Tok ve derinden gelen bir bas sesi (Sine wave, 150Hz)
-            playTone(150, 'sine', 0.2, 0.05);
-
             const content = document.getElementById(sectionId);
             const allContents = document.getElementsByClassName('content');
             
@@ -313,18 +309,24 @@
             
             const isActive = content.classList.toggle('active');
             
-            // Daktilo efekti: Çok daha ince, kısa ve yumuşak "su damlası" gibi sesler
+            // YENİ SES EFEKTİ: "Interface On" Melodisi
+            // Taramalı ses yerine, artan frekanslı 3 kısa "bip" (Do-Mi-Sol gibi)
             if (isActive) {
-                const letters = content.textContent.length;
-                const soundCount = Math.min(letters, 15); // Maksimum ses sayısını azalttım
-                
-                for (let i = 0; i < soundCount; i++) {
-                    setTimeout(() => {
-                        // Hafif ton farkları ekleyerek robotikliği kıralım
-                        const randomFreq = 600 + (Math.random() * 100); 
-                        playTone(randomFreq, 'sine', 0.03, 0.015); // Çok düşük ses seviyesi
-                    }, i * 40); // Aralığı açtım, daha sakin çalsın
-                }
+                // 1. Ses (Daha bas)
+                playTone(300, 'sine', 0.15, 0.1);
+
+                // 2. Ses (Orta - 80ms sonra)
+                setTimeout(() => {
+                    playTone(400, 'sine', 0.15, 0.1);
+                }, 80);
+
+                // 3. Ses (Tiz - 160ms sonra)
+                setTimeout(() => {
+                    playTone(500, 'sine', 0.3, 0.08); // Bitiş biraz daha kısa
+                }, 160);
+            } else {
+                // Kapanırken tek bir tok ses (İsteğe bağlı)
+                playTone(200, 'triangle', 0.15, 0.08);
             }
         }
     </script>
