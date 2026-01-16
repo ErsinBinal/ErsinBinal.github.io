@@ -264,55 +264,69 @@
     </div>
 
     <script>
+      // Global AudioContext (Sadece bir kez oluşturulur)
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                // Tarayıcı desteğine göre context oluştur
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            // Eğer tarayıcı askıya aldıysa (autoplay policy) devam ettir
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(freq, type, duration) {
+            if (!audioCtx) return; // Context yoksa çalma
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            // Ses seviyesini ayarla ve yumuşak bitiş yap (click sesini önler)
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
         function toggleSection(sectionId) {
+            // Kullanıcı etkileşimi olduğu an sesi başlat
+            initAudio(); 
+            
+            // Açılış sesi (Boot-up sound)
+            playTone(440, 'square', 0.1);
+
             const content = document.getElementById(sectionId);
             const allContents = document.getElementsByClassName('content');
             
-            // Add terminal boot-up sound effect
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-            
-            oscillator.start();
-            oscillator.stop(audioContext.currentTime + 0.05); // Reduced from 0.1s to 0.05s
-
-            // Toggle sections with animation
+            // Diğer açık olanları kapat
             Array.from(allContents).forEach(elem => {
-                if (elem !== content) {
-                    elem.classList.remove('active');
-                }
+                if (elem !== content) elem.classList.remove('active');
             });
             
-            content.classList.toggle('active');
+            // Tıklananı aç/kapat
+            const isActive = content.classList.toggle('active');
             
-            // Add typing sound effect when opening
-            if (content.classList.contains('deactive')) {
+            // Eğer açılıyorsa daktilo efekti sesi
+            if (isActive) {
                 const letters = content.textContent.length;
-                const totalDuration = 1000; // 3 seconds max
-                const intervalBetweenSounds = totalDuration / letters;
+                // Çok uzun metinlerde sesi sınırla (max 20 ses)
+                const soundCount = Math.min(letters, 20); 
                 
-                for (let i = 0; i < letters; i++) {
+                for (let i = 0; i < soundCount; i++) {
                     setTimeout(() => {
-                        const typeOscillator = audioContext.createOscillator();
-                        const typeGain = audioContext.createGain();
-                        
-                        typeOscillator.connect(typeGain);
-                        typeGain.connect(audioContext.destination);
-                        
-                        typeOscillator.type = 'square';
-                        typeOscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-                        typeGain.gain.setValueAtTime(0.01, audioContext.currentTime);
-                        
-                        typeOscillator.start();
-                        typeOscillator.stop(audioContext.currentTime + 0.01); // Reduced from 0.02s to 0.01s
-                    }, i * intervalBetweenSounds);
+                        playTone(880, 'square', 0.05);
+                    }, i * 30); // Hızı biraz artırdım
                 }
             }
         }
