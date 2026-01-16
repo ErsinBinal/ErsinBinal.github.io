@@ -6,70 +6,108 @@
     <title>The Oracle | Convivium_</title>
     <link rel="stylesheet" href="style.css"> 
     <style>
-        /* Bu sayfaya özel ek stiller */
+        /* --- GÜNCELLENMİŞ ATMOSFERİK STİLLER --- */
+        
+        body {
+            /* Tamamen siyah yerine, eski ekran hissi veren derinlik */
+            background-color: #000;
+            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+            color: #0f0; /* Matrix Yeşili */
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden; /* Kaydırma çubuklarını gizle */
+        }
+
+        /* Navigasyon linki için özel stil */
+        nav {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        nav a {
+            color: #0f0;
+            text-decoration: none;
+            font-family: 'Courier New', Courier, monospace;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        nav a:hover {
+            opacity: 1;
+            text-shadow: 0 0 8px #0f0;
+        }
+
         .oracle-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 80vh;
+            height: 100%; /* Tüm ekranı kapla */
             text-align: center;
             font-family: 'Courier New', Courier, monospace;
             padding: 20px;
+            box-sizing: border-box;
         }
 
         .matrix-display {
             font-size: 2rem;
-            color: #0f0; /* Matrix yeşili */
+            color: #0f0;
             min-height: 60px;
             margin-bottom: 2rem;
-            text-shadow: 0 0 10px #0f0;
+            text-shadow: 0 0 10px #0f0; /* Neon parlaması */
             word-wrap: break-word;
+            font-weight: bold;
         }
 
         .instruction {
-            margin-bottom: 2rem;
+            margin-bottom: 3rem;
             max-width: 600px;
             line-height: 1.6;
-            color: #ccc;
+            color: #aaddaa; /* Tam beyaz değil, hafif yeşile çalan gri (Göz yormaz) */
+            text-shadow: 0 0 2px #003300;
         }
 
         .action-btn {
-            background: transparent;
+            background: rgba(0, 20, 0, 0.8); /* Yarı saydam koyu zemin */
             border: 2px solid #0f0;
             color: #0f0;
-            padding: 15px 30px;
+            padding: 15px 40px;
             font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
         }
 
         .action-btn:hover {
             background: #0f0;
             color: #000;
-            box-shadow: 0 0 20px #0f0;
+            box-shadow: 0 0 25px #0f0; /* Hoverda güçlü parlama */
         }
 
         .action-btn:disabled {
-            border-color: #555;
-            color: #555;
+            border-color: #444;
+            color: #444;
+            background: transparent;
             cursor: not-allowed;
             box-shadow: none;
         }
 
         /* Glitch efekti */
         .glitch-text {
-            animation: glitch 0.5s infinite;
+            animation: glitch 0.2s infinite;
         }
 
         @keyframes glitch {
             0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            60% { transform: translate(2px, 2px) }
-            80% { transform: translate(2px, -2px) }
+            20% { transform: translate(-3px, 3px) }
+            40% { transform: translate(-3px, -3px) }
+            60% { transform: translate(3px, 3px) }
+            80% { transform: translate(3px, -3px) }
             100% { transform: translate(0) }
         }
     </style>
@@ -77,29 +115,31 @@
 <body>
 
     <nav>
-        <a href="index.html" style="color:#0f0; text-decoration:none; font-family:'Courier New';">[ < Ana Sayfa ]</a>
+        <a href="index.html">[ < Ana Sayfa ]</a>
     </nav>
 
     <div class="oracle-container">
         <div id="instruction-text" class="instruction">
             <p>> SİSTEM BAŞLATILDI...</p>
-            <p>Kafandaki soruyu netleştir. Bu algoritma, senin fare hareketlerindeki kaosu (Entropy) kullanarak kaderini hesaplayacak.</p>
-            <p><strong>DİKKAT:</strong> Sadece tek bir hakkın var. Cevabı beğenmesen bile geri dönüş yok.</p>
+            <p>Kafandaki soruyu netleştir. Bu algoritma, şu anki fare hareketlerinin yarattığı "kaos"u (Entropy) kullanarak kaderini hesaplayacak.</p>
+            <p style="margin-top: 20px; border: 1px dashed #0f0; padding: 10px; display:inline-block;">
+                UYARI: Sadece tek bir hakkın var.
+            </p>
         </div>
 
         <div id="matrix-output" class="matrix-display">
-            [ SİNYAL BEKLENİYOR... ]
+            [ SİNYAL ARANIYOR... ]
         </div>
 
         <button id="oracle-btn" class="action-btn" onclick="initiateSequence()">Sorguyu Başlat</button>
     </div>
 
     <script>
-        // --- 1. KONFİGÜRASYON VE VERİ HAVUZU (Eksik olan kısımlar) ---
+        // --- 1. KONFİGÜRASYON ---
         const STORAGE_KEY = 'oracle_last_visit';
         const COOLDOWN_HOURS = 24; 
 
-        // 5x5 Matris: Satırlar (Konsept), Sütunlar (Şiddet)
+        // 5x5 Matris
         const answerMatrix = [
             ["Kesinlikle Evet", "Sistem Onaylıyor", "Yüksek İhtimal", "Kod Hatasız", "Yeşil Işık"], 
             ["Mümkün Değil", "Erişim Reddedildi", "Kritik Hata", "Asla", "Sistem Çöküşü"], 
@@ -108,22 +148,18 @@
             ["Sabırlı Ol", "Zamanı Değil", "Güncelleme Bekle", "Sessiz Kal", "Gözlemle"] 
         ];
 
-        // --- 2. ENTROPİ HAVUZU (Mouse Takibi) ---
+        // --- 2. ENTROPİ HAVUZU ---
         let entropyPool = 0;
         let mouseEvents = 0;
 
-        // Sayfa yüklendiğinde fare hareketlerini dinle
         document.addEventListener('mousemove', (e) => {
-            // Fare koordinatları + zaman damgası = Benzersiz Seed
             entropyPool += (e.clientX * e.clientY) + new Date().getMilliseconds();
             mouseEvents++;
             
-            // Matrix ekranında görsel geri bildirim (Kullanıcı izlendiğini hissetsin)
             const btn = document.getElementById('oracle-btn');
-            if(mouseEvents % 10 === 0 && !btn.disabled) {
+            if(mouseEvents % 8 === 0 && !btn.disabled) {
                 const preview = document.getElementById('matrix-output');
-                preview.style.opacity = 0.5;
-                // Hexadecimal değere çevirip son 6 haneyi göster
+                preview.style.opacity = 0.7;
                 preview.innerText = `[ ENTROPY: ${entropyPool.toString(16).toUpperCase().slice(-6)} ]`;
             }
         });
@@ -134,7 +170,6 @@
             const output = document.getElementById('matrix-output');
             const instruction = document.getElementById('instruction-text');
 
-            // KONTROL 1: Daha önce sormuş mu?
             const lastVisit = localStorage.getItem(STORAGE_KEY);
             const now = new Date().getTime();
 
@@ -146,10 +181,9 @@
                 }
             }
 
-            // KONTROL 2: Yeterli veri toplandı mı? (Bot önleme)
-            if (mouseEvents < 20) {
-                output.innerText = "> YETERSİZ VERİ. FAREYİ DAHA FAZLA HAREKET ETTİR.";
-                output.style.color = "yellow";
+            if (mouseEvents < 15) {
+                output.innerText = "> YETERSİZ ENTROPİ. FAREYİ HAREKET ETTİR.";
+                output.style.color = "#ffff00"; // Uyarı rengi sarı
                 setTimeout(() => { output.style.color = "#0f0"; }, 2000);
                 return;
             }
@@ -157,57 +191,46 @@
             // SÜREÇ BAŞLIYOR
             btn.disabled = true;
             btn.innerText = "HESAPLANIYOR...";
-            instruction.innerHTML = "<p>> EVRENSEL ENTROPİ İŞLENİYOR...</p>";
+            instruction.innerHTML = "<p>> EVRENSEL KAOS İŞLENİYOR...</p>";
             
-            // Animasyon Döngüsü
             let iterations = 0;
             const interval = setInterval(() => {
                 output.innerText = generateRandomBinaryString();
                 output.classList.add('glitch-text');
                 output.style.opacity = 1;
+                output.style.color = "#fff"; // Yanıp sönme efekti için anlık beyaz
+                setTimeout(() => { output.style.color = "#0f0"; }, 50);
                 iterations++;
 
-                if (iterations > 25) { // Yaklaşık 2.5 saniye sonra dur
+                if (iterations > 30) { 
                     clearInterval(interval);
                     output.classList.remove('glitch-text');
                     revealAnswer(output, btn, instruction);
                 }
-            }, 80);
+            }, 60);
         }
 
         function revealAnswer(output, btn, instruction) {
-            // KRİTİK NOKTA: entropyPool kullanarak matris koordinatlarını seçiyoruz
             const totalCells = answerMatrix.length * answerMatrix[0].length;
-            
-            // Modüler aritmetik ile sonsuz sayıyı matris boyutuna indirge
             const chosenIndex = entropyPool % totalCells;
             
-            // Dizi içinden satır ve sütunu bul
             const rowIndex = Math.floor(chosenIndex / answerMatrix[0].length);
             const colIndex = chosenIndex % answerMatrix[0].length;
-            
             const finalAnswer = answerMatrix[rowIndex][colIndex];
 
-            // Sonucu Yazdır
             output.innerHTML = `> SONUÇ: [ ${finalAnswer} ]`;
             instruction.innerHTML = "<p>> KADERİNİ KENDİ HAREKETLERİNLE BELİRLEDİN.</p>";
             
-            // Mühürle
             localStorage.setItem(STORAGE_KEY, new Date().getTime().toString());
             
             btn.innerText = "HAKKIN DOLDU";
-            
-            // Butona tekrar basılırsa reject fonksiyonu çalışsın
-            btn.onclick = () => {
-                rejectUser(output, btn, instruction);
-            };
+            btn.onclick = () => { rejectUser(output, btn, instruction); };
             btn.disabled = false; 
         }
 
         // --- 4. YARDIMCI FONKSİYONLAR ---
-        
         function rejectUser(output, btn, instruction) {
-            output.innerHTML = "<span style='color:red'>ERİŞİM REDDEDİLDİ</span>";
+            output.innerHTML = "<span style='color:#ff3333; text-shadow: 0 0 10px red;'>ERİŞİM REDDEDİLDİ</span>";
             output.classList.add('glitch-text');
             
             const messages = [
@@ -220,18 +243,18 @@
             
             const randomMsg = messages[Math.floor(Math.random() * messages.length)];
             
-            if(instruction) instruction.innerHTML = `<p style='color:red'>> ${randomMsg}</p>`;
+            if(instruction) instruction.innerHTML = `<p style='color:#ff5555'>> ${randomMsg}</p>`;
             btn.innerText = "KİLİTLENDİ";
-            btn.style.borderColor = "red";
-            btn.style.color = "red";
+            btn.style.borderColor = "#ff3333";
+            btn.style.color = "#ff3333";
+            btn.style.boxShadow = "none";
         }
 
         function generateRandomBinaryString() {
-            // Görsel efekt için rastgele Hex kodları üretir
             let text = "";
-            const chars = "01ABCDEF";
-            for (let i = 0; i < 10; i++) {
-                text += chars.charAt(Math.floor(Math.random() * chars.length)) + " ";
+            const chars = "01▓░▒▓░▒"; // Daha siber bir görünüm için blok karakterler ekledim
+            for (let i = 0; i < 12; i++) {
+                text += chars.charAt(Math.floor(Math.random() * chars.length));
             }
             return text;
         }
