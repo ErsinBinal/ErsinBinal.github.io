@@ -4,17 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ERSİN BİNAL - Ana Sayfa</title>
-  <meta name="description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler. Retro terminal estetiğiyle modern içerikler.">
+  <meta name="description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler.">
   <link rel="canonical" href="https://ersinbinal.github.io/">
   
-  <meta property="og:site_name" content="Ersin Binal">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <meta property="og:title" content="ERSİN BİNAL - Ana Sayfa">
-  <meta property="og:description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://ersinbinal.github.io/">
-  <meta name="twitter:card" content="summary_large_image">
   
   <style>
     /* --- TEMEL AYARLAR --- */
@@ -24,30 +18,29 @@
       font-family: 'Courier New', monospace;
       margin: 0;
       padding: 0;
-      display: flex;
+      display: flex; /* İçeriği ortalamak için */
       align-items: center;
       justify-content: center;
       min-height: 100vh;
+      overflow-x: hidden; /* Yanlardan taşmayı engelle */
     }
 
     img { image-rendering: auto; }
     
-    /* skip-link görünür yap (Erişilebilirlik) */
     .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
 
-    /* --- ANA KONTEYNER --- */
-    /* Only show frames outside the container: use backdrop-like mask */
+    /* --- ANA İÇERİK KUTUSU (CONTAINER) --- */
     .container { 
         position: relative; 
-        z-index: 2; 
-        background: rgba(0,0,0,0.96); 
+        z-index: 100; /* EN ÜSTTE OLDUĞUNDAN EMİN OLDUK */
+        background: rgba(0,0,0,0.95); /* Arkadaki çizgileri hafif gizle */
         box-shadow: 0 0 30px rgba(0,120,0,0.25), inset 0 0 40px rgba(0,0,0,0.6); 
         color: #00ff00; 
         text-shadow: 0 0 6px rgba(0,255,0,0.18); 
         max-width: 800px;
         width: 90%;
         margin: 50px auto;
-        padding: 20px;
+        padding: 40px 20px;
         border: 2px solid #00ff00;
         text-align: center;
     }
@@ -55,7 +48,7 @@
     h1 { font-size: 2.5em; margin-bottom: 20px; }
     p { font-size: 1.2em; margin-bottom: 30px; line-height: 1.5; }
 
-    /* Blinking cursor */
+    /* Cursor Yanıp Sönme */
     .blink { animation: blink 1s step-start 0s infinite; }
     @keyframes blink { 50% { opacity: 0; } }
 
@@ -70,30 +63,31 @@
       color: #00ff00;
       text-decoration: none;
       font-size: 1em;
-      transition: all 0.3s ease-in-out; /* Animasyon geçişi */
+      transition: all 0.3s ease-in-out;
+      position: relative;
+      z-index: 101; /* Butonları ekstra yukarı aldık */
+      cursor: pointer; /* Tıklanabilir el işareti */
     }
 
-    /* Butonun üzerine gelince çalışacak stil */
     .nav-button:hover {
       background-color: #00ff00;
       color: #000;
-      box-shadow: 0 0 10px #00ff00;
-      transform: translateY(-2px); /* Hafif yukarı kalkma hissi */
+      box-shadow: 0 0 15px #00ff00;
+      transform: translateY(-3px);
     }
 
-    /* --- ORACLE ÖZEL BUTONU --- */
-    /* Hem nav-button özelliklerini alsın hem de buradaki ek özellikleri */
+    /* --- THE ORACLE BUTONU --- */
     .oracle-link {
         font-weight: bold;
-        animation: pulse-green 2s infinite; /* Yanıp sönme efekti */
+        animation: pulse-green 2s infinite;
         text-shadow: 0 0 5px #0f0;
     }
 
     .oracle-link:hover {
-        animation: none; /* Hover olunca yanıp sönmeyi durdur */
+        animation: none;
         background-color: #0f0;
         color: #000;
-        box-shadow: 0 0 20px #0f0, inset 0 0 10px #000;
+        box-shadow: 0 0 25px #0f0, inset 0 0 10px #000;
     }
 
     @keyframes pulse-green {
@@ -114,8 +108,20 @@
       .nav-button { font-size: 0.8em; padding: 8px 16px; margin: 6px; }
     }
 
-    /* --- NEON FRAMES (ARKA PLAN EFEKTLERİ) --- */
-    .frame-wrap { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; padding:40px; overflow: hidden; pointer-events: none; z-index: 1; }
+    /* --- ARKA PLAN ANİMASYONU (NEON FRAMES) --- */
+    /* Container'dan tamamen bağımsız, ekranın arkasına sabitlenmiş */
+    .frame-wrap { 
+        position: fixed; 
+        inset: 0; 
+        display:flex; 
+        align-items:center; 
+        justify-content:center; 
+        padding:40px; 
+        overflow: hidden; 
+        pointer-events: none; /* KRİTİK: Tıklamalar buradan geçer, arkaya gitmez */
+        z-index: 1; /* Container'dan (100) çok daha düşük */
+    }
+    
     .frame-wrap .neon-frame { position: absolute; left: 50%; top: 50%; transform-origin: center center; will-change: transform, opacity; border: 2px solid rgba(8,143,255,0.12); mix-blend-mode: screen; }
     
     .frame-wrap .n1 { width: 70vw; height: 50vh; max-width: 900px; max-height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: translate(-50%,-50%) rotate(0deg); animation: spinCW 12s linear infinite; box-shadow: 0 0 8px rgba(255,0,150,0.25), 0 0 28px rgba(255,0,150,0.16), 0 0 80px rgba(255,0,150,0.08); }
@@ -136,15 +142,6 @@
       .frame-wrap .neon-frame { display:block; }
       .frame-wrap .n4, .frame-wrap .n5, .frame-wrap .n6, .frame-wrap .n7 { display:none; }
     }
-    @media (max-width: 800px) {
-      .frame-wrap { padding: 20px; }
-      .frame-wrap .n1 { width: min(520px, calc(100vw - 40px)); height: min(360px, calc(100vh - 80px)); transform: translate(-50%,-50%) rotate(0deg); animation-duration: 10s; }
-      .frame-wrap .n2 { width: min(560px, calc(100vw - 30px)); height: min(400px, calc(100vh - 60px)); transform: translate(-50%,-50%) rotate(-2deg); animation-duration: 16s; }
-      .frame-wrap .n3 { width: min(600px, calc(100vw - 20px)); height: min(440px, calc(100vh - 50px)); transform: translate(-50%,-50%) rotate(4deg); animation-duration: 22s; }
-    }
-    @media (max-width: 480px) {
-      .frame-wrap .n2, .frame-wrap .n3 { display:none; }
-    }
   </style>
 </head>
 <body>
@@ -158,8 +155,9 @@
     <div class="neon-frame n5" aria-hidden="true"></div>
     <div class="neon-frame n6" aria-hidden="true"></div>
     <div class="neon-frame n7" aria-hidden="true"></div>
-    
-    <div class="container" id="main-content" role="main">
+  </div>
+  
+  <div class="container" id="main-content" role="main">
       <header class="site-header">
         <h1>Convivium<span class="blink">_</span></h1>
         <p>
@@ -178,7 +176,6 @@
           <a href="TheOracle.html" class="nav-button oracle-link" aria-label="Kahin sayfasına git">[ The Oracle ]</a>
         </nav>
       </header>
-    </div>
   </div>
 
   <script>
