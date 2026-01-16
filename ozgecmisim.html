@@ -264,33 +264,32 @@
     </div>
 
     <script>
-      // Global AudioContext (Sadece bir kez oluşturulur)
+// Global AudioContext
         let audioCtx;
 
         function initAudio() {
             if (!audioCtx) {
-                // Tarayıcı desteğine göre context oluştur
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
                 audioCtx = new AudioContext();
             }
-            // Eğer tarayıcı askıya aldıysa (autoplay policy) devam ettir
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
         }
 
-        function playTone(freq, type, duration) {
-            if (!audioCtx) return; // Context yoksa çalma
+        function playTone(freq, type, duration, vol = 0.02) {
+            if (!audioCtx) return;
             
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             
-            osc.type = type;
+            osc.type = type; // 'square' yerine 'sine' veya 'triangle' daha yumuşaktır
             osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
             
-            // Ses seviyesini ayarla ve yumuşak bitiş yap (click sesini önler)
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            // Ses seviyesini (volume) çok daha düşük tutuyoruz
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            // Çok hızlı sönümleme (fade-out) ile "çıt" sesini engelle
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
@@ -300,33 +299,31 @@
         }
 
         function toggleSection(sectionId) {
-            // Kullanıcı etkileşimi olduğu an sesi başlat
             initAudio(); 
             
-            // Açılış sesi (Boot-up sound)
-            playTone(440, 'square', 0.1);
+            // Açılış sesi: Tok ve derinden gelen bir bas sesi (Sine wave, 150Hz)
+            playTone(150, 'sine', 0.2, 0.05);
 
             const content = document.getElementById(sectionId);
             const allContents = document.getElementsByClassName('content');
             
-            // Diğer açık olanları kapat
             Array.from(allContents).forEach(elem => {
                 if (elem !== content) elem.classList.remove('active');
             });
             
-            // Tıklananı aç/kapat
             const isActive = content.classList.toggle('active');
             
-            // Eğer açılıyorsa daktilo efekti sesi
+            // Daktilo efekti: Çok daha ince, kısa ve yumuşak "su damlası" gibi sesler
             if (isActive) {
                 const letters = content.textContent.length;
-                // Çok uzun metinlerde sesi sınırla (max 20 ses)
-                const soundCount = Math.min(letters, 20); 
+                const soundCount = Math.min(letters, 15); // Maksimum ses sayısını azalttım
                 
                 for (let i = 0; i < soundCount; i++) {
                     setTimeout(() => {
-                        playTone(880, 'square', 0.05);
-                    }, i * 30); // Hızı biraz artırdım
+                        // Hafif ton farkları ekleyerek robotikliği kıralım
+                        const randomFreq = 600 + (Math.random() * 100); 
+                        playTone(randomFreq, 'sine', 0.03, 0.015); // Çok düşük ses seviyesi
+                    }, i * 40); // Aralığı açtım, daha sakin çalsın
                 }
             }
         }
