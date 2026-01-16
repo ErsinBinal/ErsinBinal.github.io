@@ -6,8 +6,9 @@
   <title>ERSİN BİNAL - Ana Sayfa</title>
   <meta name="description" content="Ersin Binal'ın kişisel sitesi — araştırmalar, makaleler ve projeler. Retro terminal estetiğiyle modern içerikler.">
   <link rel="canonical" href="https://ersinbinal.github.io/">
-  
+  <!-- Open Graph / Twitter -->
   <meta property="og:site_name" content="Ersin Binal">
+  <!-- Performance: preconnect common CDNs and font hosts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
   <meta property="og:title" content="ERSİN BİNAL - Ana Sayfa">
@@ -15,9 +16,8 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ersinbinal.github.io/">
   <meta name="twitter:card" content="summary_large_image">
-  
- <style>
-    /* --- TEMEL AYARLAR --- */
+  <style>
+    /* Temel retro terminal stilleri */
     body {
       background: #000;
       color: #00ff00;
@@ -29,36 +29,32 @@
       justify-content: center;
       min-height: 100vh;
     }
-
-    img { image-rendering: auto; }
-    
-    /* skip-link görünür yap (Erişilebilirlik) */
-    .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
-
-    /* --- ANA KONTEYNER --- */
-    .container { 
-        position: relative; 
-        z-index: 2; 
-        background: rgba(0,0,0,0.96); 
-        box-shadow: 0 0 30px rgba(0,120,0,0.25), inset 0 0 40px rgba(0,0,0,0.6); 
-        color: #00ff00; 
-        text-shadow: 0 0 6px rgba(0,255,0,0.18); 
-        max-width: 800px;
-        width: 90%;
-        margin: 50px auto;
-        padding: 20px;
-        border: 2px solid #00ff00;
-        text-align: center;
+    .container {
+      max-width: 800px;
+      width: 90%;
+      margin: 50px auto;
+      padding: 20px;
+      border: 2px solid #00ff00;
+      box-shadow: 0 0 20px #007700;
+      text-align: center;
     }
-
-    h1 { font-size: 2.5em; margin-bottom: 20px; }
-    p { font-size: 1.2em; margin-bottom: 30px; line-height: 1.5; }
-
-    /* Blinking cursor */
-    .blink { animation: blink 1s step-start 0s infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
-
-    /* --- NAVİGASYON BUTONLARI --- */
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.2em;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    /* Blinking cursor efekti */
+    .blink {
+      animation: blink 1s step-start 0s infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+    /* Gumroad esintili navigasyon butonları */
     .nav-button {
       display: inline-block;
       padding: 12px 25px;
@@ -69,73 +65,133 @@
       color: #00ff00;
       text-decoration: none;
       font-size: 1em;
-      
-      /* KRİTİK DÜZELTME: Animasyon geçişi buraya eklendi */
-      transition: all 0.3s ease-in-out;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
     }
-
-    /* Butonun üzerine gelince çalışacak stil */
     .nav-button:hover {
       background-color: #00ff00;
       color: #000;
-      box-shadow: 0 0 15px #00ff00; /* Parlamayı biraz artırdım */
-      transform: translateY(-2px); /* Hafif yukarı kalkma hissi */
-      cursor: pointer;
+      box-shadow: 0 0 10px #00ff00;
     }
-
-    /* --- ORACLE ÖZEL BUTONU --- */
-    .oracle-link {
-        border-color: #0f0; 
-        font-weight: bold;
-        animation: pulse-green 2s infinite; /* Yanıp sönme efekti */
-        text-shadow: 0 0 5px #0f0;
-    }
-
-    /* Oracle butonunun üzerine gelince ne olsun? */
-    .oracle-link:hover {
-        animation: none; /* Yanıp sönmeyi durdur ki yeşil arka plan net görünsün */
-        opacity: 1;
-        background-color: #0f0;
-        color: #000;
-        box-shadow: 0 0 25px #0f0, inset 0 0 10px #000; 
-    }
-
-    @keyframes pulse-green {
-        0% { opacity: 1; box-shadow: 0 0 5px #0f0; }
-        50% { opacity: 0.6; box-shadow: 0 0 2px #0f0; }
-        100% { opacity: 1; box-shadow: 0 0 5px #0f0; }
-    }
-
-    /* --- RESPONSIVE --- */
+    /* Responsive düzenlemeler */
     @media (max-width: 768px) {
-      h1 { font-size: 2em; }
-      p { font-size: 1em; }
-      .nav-button { font-size: 0.9em; padding: 10px 20px; margin: 8px; }
+      h1 {
+        font-size: 2em;
+      }
+      p {
+        font-size: 1em;
+      }
+      .nav-button {
+        font-size: 0.9em;
+        padding: 10px 20px;
+        margin: 8px;
+      }
     }
     @media (max-width: 480px) {
-      h1 { font-size: 1.8em; }
-      p { font-size: 0.9em; }
-      .nav-button { font-size: 0.8em; padding: 8px 16px; margin: 6px; }
+      h1 {
+        font-size: 1.8em;
+      }
+      p {
+        font-size: 0.9em;
+      }
+      .nav-button {
+        font-size: 0.8em;
+        padding: 8px 16px;
+        margin: 6px;
+      }
+    }
+    /* Neon artistic frames around the main container */
+  .frame-wrap { position: relative; display:flex; align-items:center; justify-content:center; padding:40px; overflow: hidden; max-width: 100vw; }
+  /* center frames and avoid their rotation affecting layout; improve GPU compositing */
+  .frame-wrap .neon-frame { position: absolute; left: 50%; top: 50%; transform-origin: center center; will-change: transform; border: 2px solid rgba(8,143,255,0.12); pointer-events: none; mix-blend-mode: screen; }
+    /* stronger, layered glow per-frame (keeps container readable) */
+    .frame-wrap .n1 { width: 70vw; height: 50vh; max-width: 900px; max-height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: translate(-50%,-50%) rotate(0deg); animation: spinCW 12s linear infinite; box-shadow:
+      0 0 8px rgba(255,0,150,0.25),
+      0 0 28px rgba(255,0,150,0.16),
+      0 0 80px rgba(255,0,150,0.08);
+    }
+  .frame-wrap .n2 { width: min(960px, calc(100vw - 30px)); height: min(580px, calc(100vh - 60px)); border-radius:18px; border-color: rgba(0,255,170,0.12); transform: translate(-50%,-50%) rotate(-2deg); animation: spinCCW 20s linear infinite; box-shadow:
+      0 0 10px rgba(0,255,170,0.22),
+      0 0 36px rgba(0,255,170,0.14),
+      0 0 90px rgba(0,255,170,0.06);
+    }
+  .frame-wrap .n3 { width: min(1020px, calc(100vw - 20px)); height: min(640px, calc(100vh - 40px)); border-radius:22px; border-color: rgba(0,120,255,0.08); transform: translate(-50%,-50%) rotate(4deg); animation: spinCW 28s linear infinite; }
+  .frame-wrap .n4 { width: min(1080px, calc(100vw + 40px)); height: min(700px, calc(100vh + 20px)); border-radius:26px; border-color: rgba(255,40,40,0.10); transform: translate(-50%,-50%) rotate(-6deg); animation: spinCCW 35s linear infinite; box-shadow:
+      0 0 12px rgba(255,40,40,0.28),
+      0 0 42px rgba(255,40,40,0.18),
+      0 0 110px rgba(255,40,40,0.08);
+    }
+  .frame-wrap .n5 { width: min(1140px, calc(100vw + 80px)); height: min(760px, calc(100vh + 80px)); border-radius:30px; border-color: rgba(40,120,255,0.10); transform: translate(-50%,-50%) rotate(8deg); animation: spinCW 40s linear infinite; box-shadow:
+      0 0 14px rgba(40,120,255,0.26),
+      0 0 48px rgba(40,120,255,0.16),
+      0 0 120px rgba(40,120,255,0.07);
+    }
+  .frame-wrap .n6 { width: min(1200px, calc(100vw + 120px)); height: min(820px, calc(100vh + 120px)); border-radius:34px; border-color: rgba(180,180,180,0.06); transform: translate(-50%,-50%) rotate(-10deg); animation: spinCCW 48s linear infinite; box-shadow:
+      0 0 10px rgba(180,180,180,0.18),
+      0 0 36px rgba(180,180,180,0.12),
+      0 0 90px rgba(180,180,180,0.05);
+    }
+  .frame-wrap .n7 { width: min(1260px, calc(100vw + 160px)); height: min(880px, calc(100vh + 160px)); border-radius:38px; border-color: rgba(255,90,120,0.06); transform: translate(-50%,-50%) rotate(2deg); animation: spinCW 52s linear infinite; box-shadow:
+      0 0 10px rgba(255,90,120,0.20),
+      0 0 40px rgba(255,90,120,0.12),
+      0 0 100px rgba(255,90,120,0.06);
     }
 
-    /* --- NEON FRAMES (ARKA PLAN) --- */
+    /* Make neon frames act as a fixed animated background so they don't affect layout */
     .frame-wrap { position: fixed; inset: 0; display:flex; align-items:center; justify-content:center; padding:40px; overflow: hidden; pointer-events: none; z-index: 1; }
+    /* center frames and avoid their rotation affecting layout; improve GPU compositing */
     .frame-wrap .neon-frame { position: absolute; left: 50%; top: 50%; transform-origin: center center; will-change: transform, opacity; border: 2px solid rgba(8,143,255,0.12); mix-blend-mode: screen; }
-    
-    .frame-wrap .n1 { width: 70vw; height: 50vh; max-width: 900px; max-height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: translate(-50%,-50%) rotate(0deg); animation: spinCW 12s linear infinite; box-shadow: 0 0 8px rgba(255,0,150,0.25), 0 0 28px rgba(255,0,150,0.16), 0 0 80px rgba(255,0,150,0.08); }
-    .frame-wrap .n2 { width: 78vw; height: 56vh; max-width: 960px; max-height: 580px; border-radius:18px; border-color: rgba(0,255,170,0.12); transform: translate(-50%,-50%) rotate(-2deg); animation: spinCCW 20s linear infinite; box-shadow: 0 0 10px rgba(0,255,170,0.22), 0 0 36px rgba(0,255,170,0.14), 0 0 90px rgba(0,255,170,0.06); }
+      /* stronger, layered glow per-frame (keeps container readable) */
+    .frame-wrap .n1 { width: 70vw; height: 50vh; max-width: 900px; max-height: 520px; border-radius:12px; border-color: rgba(255,0,150,0.12); transform: translate(-50%,-50%) rotate(0deg); animation: spinCW 12s linear infinite; box-shadow:
+        0 0 8px rgba(255,0,150,0.25),
+        0 0 28px rgba(255,0,150,0.16),
+        0 0 80px rgba(255,0,150,0.08);
+      }
+    .frame-wrap .n2 { width: 78vw; height: 56vh; max-width: 960px; max-height: 580px; border-radius:18px; border-color: rgba(0,255,170,0.12); transform: translate(-50%,-50%) rotate(-2deg); animation: spinCCW 20s linear infinite; box-shadow:
+        0 0 10px rgba(0,255,170,0.22),
+        0 0 36px rgba(0,255,170,0.14),
+        0 0 90px rgba(0,255,170,0.06);
+      }
     .frame-wrap .n3 { width: 86vw; height: 62vh; max-width: 1020px; max-height: 640px; border-radius:22px; border-color: rgba(0,120,255,0.08); transform: translate(-50%,-50%) rotate(4deg); animation: spinCW 28s linear infinite; }
-    .frame-wrap .n4 { width: 94vw; height: 80vh; max-width: 1080px; max-height: 700px; border-radius:26px; border-color: rgba(255,40,40,0.10); transform: translate(-50%,-50%) rotate(-6deg); animation: spinCCW 35s linear infinite; box-shadow: 0 0 12px rgba(255,40,40,0.28), 0 0 42px rgba(255,40,40,0.18), 0 0 110px rgba(255,40,40,0.08); }
-    .frame-wrap .n5 { width: 102vw; height: 92vh; max-width: 1140px; max-height: 760px; border-radius:30px; border-color: rgba(40,120,255,0.10); transform: translate(-50%,-50%) rotate(8deg); animation: spinCW 40s linear infinite; box-shadow: 0 0 14px rgba(40,120,255,0.26), 0 0 48px rgba(40,120,255,0.16), 0 0 120px rgba(40,120,255,0.07); }
-    .frame-wrap .n6 { width: 110vw; height: 106vh; max-width: 1200px; max-height: 820px; border-radius:34px; border-color: rgba(180,180,180,0.06); transform: translate(-50%,-50%) rotate(-10deg); animation: spinCCW 48s linear infinite; box-shadow: 0 0 10px rgba(180,180,180,0.18), 0 0 36px rgba(180,180,180,0.12), 0 0 90px rgba(180,180,180,0.05); }
-    .frame-wrap .n7 { width: 120vw; height: 120vh; max-width: 1260px; max-height: 880px; border-radius:38px; border-color: rgba(255,90,120,0.06); transform: translate(-50%,-50%) rotate(2deg); animation: spinCW 52s linear infinite; box-shadow: 0 0 10px rgba(255,90,120,0.20), 0 0 40px rgba(255,90,120,0.12), 0 0 100px rgba(255,90,120,0.06); }
+    .frame-wrap .n4 { width: 94vw; height: 80vh; max-width: 1080px; max-height: 700px; border-radius:26px; border-color: rgba(255,40,40,0.10); transform: translate(-50%,-50%) rotate(-6deg); animation: spinCCW 35s linear infinite; box-shadow:
+        0 0 12px rgba(255,40,40,0.28),
+        0 0 42px rgba(255,40,40,0.18),
+        0 0 110px rgba(255,40,40,0.08);
+      }
+    .frame-wrap .n5 { width: 102vw; height: 92vh; max-width: 1140px; max-height: 760px; border-radius:30px; border-color: rgba(40,120,255,0.10); transform: translate(-50%,-50%) rotate(8deg); animation: spinCW 40s linear infinite; box-shadow:
+        0 0 14px rgba(40,120,255,0.26),
+        0 0 48px rgba(40,120,255,0.16),
+        0 0 120px rgba(40,120,255,0.07);
+      }
+    .frame-wrap .n6 { width: 110vw; height: 106vh; max-width: 1200px; max-height: 820px; border-radius:34px; border-color: rgba(180,180,180,0.06); transform: translate(-50%,-50%) rotate(-10deg); animation: spinCCW 48s linear infinite; box-shadow:
+        0 0 10px rgba(180,180,180,0.18),
+        0 0 36px rgba(180,180,180,0.12),
+        0 0 90px rgba(180,180,180,0.05);
+      }
+    .frame-wrap .n7 { width: 120vw; height: 120vh; max-width: 1260px; max-height: 880px; border-radius:38px; border-color: rgba(255,90,120,0.06); transform: translate(-50%,-50%) rotate(2deg); animation: spinCW 52s linear infinite; box-shadow:
+        0 0 10px rgba(255,90,120,0.20),
+        0 0 40px rgba(255,90,120,0.12),
+        0 0 100px rgba(255,90,120,0.06);
+      }
 
-    @keyframes spinCW { 0% { transform: translate(-50%,-50%) rotate(0deg); } 100% { transform: translate(-50%,-50%) rotate(360deg); } }
-    @keyframes spinCCW { 0% { transform: translate(-50%,-50%) rotate(0deg); } 100% { transform: translate(-50%,-50%) rotate(-360deg); } }
-    
+
+    /* Keep the content above the full-viewport frames and interactive */
+    .container { position: relative; z-index: 3; background: rgba(0,0,0,0.96); box-shadow: 0 0 30px rgba(0,120,0,0.25), inset 0 0 40px rgba(0,0,0,0.6); color: #00ff00; text-shadow: 0 0 6px rgba(0,255,0,0.18); pointer-events: auto; }
+  /* Only show frames outside the container: use backdrop-like mask by adding big inner box-shadow on container */
+  .container { position: relative; z-index: 2; background: rgba(0,0,0,0.96); box-shadow: 0 0 30px rgba(0,120,0,0.25), inset 0 0 40px rgba(0,0,0,0.6); color: #00ff00; text-shadow: 0 0 6px rgba(0,255,0,0.18); }
+
+    @keyframes spinCW {
+      0% { transform: translate(-50%,-50%) rotate(0deg); }
+      100% { transform: translate(-50%,-50%) rotate(360deg); }
+    }
+    @keyframes spinCCW {
+      0% { transform: translate(-50%,-50%) rotate(0deg); }
+      100% { transform: translate(-50%,-50%) rotate(-360deg); }
+    }
+    /* Respect user motion preferences */
     @media (prefers-reduced-motion: reduce) {
       * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
     }
+    /* responsive scaling: reduce outer frames on small screens */
     @media (max-width: 1100px) {
       .frame-wrap .neon-frame { display:block; }
       .frame-wrap .n4, .frame-wrap .n5, .frame-wrap .n6, .frame-wrap .n7 { display:none; }
@@ -145,15 +201,15 @@
       .frame-wrap .n1 { width: min(520px, calc(100vw - 40px)); height: min(360px, calc(100vh - 80px)); transform: translate(-50%,-50%) rotate(0deg); animation-duration: 10s; }
       .frame-wrap .n2 { width: min(560px, calc(100vw - 30px)); height: min(400px, calc(100vh - 60px)); transform: translate(-50%,-50%) rotate(-2deg); animation-duration: 16s; }
       .frame-wrap .n3 { width: min(600px, calc(100vw - 20px)); height: min(440px, calc(100vh - 50px)); transform: translate(-50%,-50%) rotate(4deg); animation-duration: 22s; }
-    }
-    @media (max-width: 480px) {
-      .frame-wrap .n2, .frame-wrap .n3 { display:none; }
+      /* on very small screens reduce visual noise to avoid layout shifts */
+      @media (max-width: 480px) {
+        .frame-wrap .n2, .frame-wrap .n3 { display:none; }
+      }
     }
   </style>
 </head>
 <body>
   <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
-  
   <div class="frame-wrap">
     <div class="neon-frame n1" aria-hidden="true"></div>
     <div class="neon-frame n2" aria-hidden="true"></div>
@@ -162,12 +218,11 @@
     <div class="neon-frame n5" aria-hidden="true"></div>
     <div class="neon-frame n6" aria-hidden="true"></div>
     <div class="neon-frame n7" aria-hidden="true"></div>
-    
     <div class="container" id="main-content" role="main">
       <header class="site-header">
         <h1>Convivium<span class="blink">_</span></h1>
         <p>
-          Merhaba, hoş geldin! Bu site, araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
+          Merhaba, hoş geldin! Bu site, hobi amaçlı hazırladığım araştırmaları ve deneyimleri paylaştığım kişisel bir set. Menu konsepti: Kendime Notlar, Meraklısına: Ben
         </p>
         <p>
             Retro terminal estetiğiyle modern dokunuşları harmanladığım bu platformda, nostaljiyi ve yeniliği bir arada bulacaksın. 
@@ -178,17 +233,16 @@
           <a href="ozgecmisim.html" class="nav-button" aria-label="Özgeçmiş sayfasına git">Kariyerim</a>
           <a href="Paradox_Terminal.html" class="nav-button" aria-label="Paradokslar sayfasına git">Paradokslar</a>
           <a href="neon-river.html" class="nav-button" aria-label="Neon River oyununa git">Neon River (Yeni)</a>
-          
-          <a href="TheOracle.html" class="nav-button oracle-link" aria-label="Kahin sayfasına git">[ The Oracle ]</a>
+          <a href="TheOracle.html" class="oracle-link">[ The Oracle ]</a>
         </nav>
       </header>
     </div>
   </div>
-
   <script>
-  // Lazy Loading Script
+  // Small helper: make all images lazy by default if browser supports it
   (function(){
-    if('loading' in HTMLImageElement.prototype) return; 
+    if('loading' in HTMLImageElement.prototype) return; // native support
+    // if not supported, simple IntersectionObserver fallback
     const imgs = document.querySelectorAll('img');
     if('IntersectionObserver' in window){
       const io = new IntersectionObserver((entries, obs) => {
@@ -208,7 +262,6 @@
     }
   })();
   </script>
-
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -221,5 +274,39 @@
     "jobTitle": "Dijital Proje Yöneticisi"
   }
   </script>
+  <style>
+    /* skip-link görünür yap */
+    .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
+    img { image-rendering: auto; }
+    /* Ana Sayfadaki Oracle Linki İçin Özel Stil */
+.oracle-link {
+    color: #0f0;             /* Matrix Yeşili */
+    text-decoration: none;   /* Alt çizgiyi kaldır */
+    font-weight: bold;
+    animation: pulse-green 2s infinite; /* Yanıp sönme efekti */
+}
+
+.oracle-link:hover {
+    background-color: #0f0;
+    color: #000;
+    box-shadow: 0 0 15px #0f0;
+    content: "[ GİRİŞ_YAPILIYOR... ]"; /* İstersen hover'da metin değişimi için JS gerekir ama CSS ile parlama yeterli */
+}
+
+/* Hafif yanıp sönme animasyonu */
+@keyframes pulse-green {
+    0% { opacity: 1; text-shadow: 0 0 5px #0f0; }
+    50% { opacity: 0.6; text-shadow: none; }
+    100% { opacity: 1; text-shadow: 0 0 5px #0f0; }
+}
+  </style>
+
+  <!-- Örnek: görsel optimizasyonu için picture/srcset kullanım önerisi -->
+  <!--
+  <picture>
+    <source type="image/webp" srcset="/assets/img/photo-400.webp 400w, /assets/img/photo-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
+    <img src="/assets/img/photo-800.jpg" alt="Açıklayıcı alternatif metin" width="800" height="450" loading="lazy" decoding="async" style="max-width:100%;height:auto;">
+  </picture>
+  -->
 </body>
 </html>
