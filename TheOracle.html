@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Oracle | Convivium_</title>
+    <link rel="stylesheet" href="style.css"> 
+    <style>
+        /* Bu sayfaya özel ek stiller */
+        .oracle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
+            text-align: center;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .matrix-display {
+            font-size: 2rem;
+            color: #0f0; /* Matrix yeşili */
+            min-height: 60px;
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        .instruction {
+            margin-bottom: 2rem;
+            max-width: 600px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .action-btn {
+            background: transparent;
+            border: 2px solid #0f0;
+            color: #0f0;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .action-btn:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+        }
+
+        .action-btn:disabled {
+            border-color: #555;
+            color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Glitch efekti için animasyon sınıfı */
+        .glitch-text {
+            animation: glitch 0.5s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="index.html">[ Ana Sayfa ]</a>
+    </nav>
+
+    <div class="oracle-container">
+        <div id="instruction-text" class="instruction">
+            <p>> SİSTEM BAŞLATILDI...</p>
+            <p>Kafandaki soruyu netleştir. Bu algoritma, Evrensel Kaos Matrisi'nden senin için tek bir koordinat seçecek.</p>
+            <p><strong>DİKKAT:</strong> Sadece tek bir hakkın var. Cevabı beğenmesen bile geri dönüş yok.</p>
+        </div>
+
+        <div id="matrix-output" class="matrix-display">
+            [ SİNYAL BEKLENİYOR... ]
+        </div>
+
+        <button id="oracle-btn" class="action-btn" onclick="initiateSequence()">Sorguyu Başlat</button>
+    </div>
+
+    <script>
+// --- ENTROPİ HAVUZU (Chaos Pool) ---
+let entropyPool = 0;
+let mouseEvents = 0;
+
+// Sayfa yüklendiğinde fare hareketlerini dinlemeye başla
+document.addEventListener('mousemove', (e) => {
+    // Farenin X ve Y koordinatlarını çarpıp, zamanla mod alarak havuzda biriktir
+    // Bu, kullanıcının "enerjisini" topladığımız kısımdır.
+    entropyPool += (e.clientX * e.clientY) + new Date().getMilliseconds();
+    mouseEvents++;
+    
+    // Matrix ekranında anlık değişimi göster (Sanki sistem onu izliyor gibi)
+    if(mouseEvents % 10 === 0 && !document.getElementById('oracle-btn').disabled) {
+        const preview = document.getElementById('matrix-output');
+        preview.style.opacity = 0.5;
+        preview.innerText = `[ ENTROPY: ${entropyPool.toString(16).toUpperCase().slice(-6)} ]`;
+    }
+});
+
+// --- GÜNCELLENMİŞ ALGORİTMA ---
+function initiateSequence() {
+    const btn = document.getElementById('oracle-btn');
+    const output = document.getElementById('matrix-output');
+    
+    // 1. KONTROL (Aynı)
+    const lastVisit = localStorage.getItem(STORAGE_KEY);
+    const now = new Date().getTime();
+
+    if (lastVisit) {
+        const diffHours = (now - parseInt(lastVisit)) / (1000 * 60 * 60);
+        if (diffHours < COOLDOWN_HOURS) {
+            rejectUser(output, btn);
+            return;
+        }
+    }
+
+    // Yeterince fare hareketi yoksa uyar (Bot koruması gibi çalışır)
+    if (mouseEvents < 20) {
+        output.innerText = "> YETERSİZ VERİ. FAREYİ HAREKET ETTİR.";
+        return;
+    }
+
+    // 2. SÜREÇ BAŞLATMA
+    btn.disabled = true;
+    document.removeEventListener('mousemove', null); // Dinlemeyi durdur
+    
+    let iterations = 0;
+    const interval = setInterval(() => {
+        // Görsel efekt...
+        output.innerText = generateRandomBinaryString();
+        output.classList.add('glitch-text');
+        output.style.opacity = 1;
+        iterations++;
+
+        if (iterations > 25) {
+            clearInterval(interval);
+            output.classList.remove('glitch-text');
+            
+            // --- KRİTİK NOKTA: GERÇEK RASTGELELİK ---
+            // EntropyPool'u kullanarak matris koordinatlarını belirle
+            // Math.random() yerine kullanıcının yarattığı değeri kullanıyoruz.
+            
+            const totalCells = answerMatrix.length * answerMatrix[0].length;
+            const chosenIndex = entropyPool % totalCells;
+            
+            // Düzleştirilmiş mantıkla satır ve sütunu bul
+            const rowIndex = Math.floor(chosenIndex / answerMatrix[0].length);
+            const colIndex = chosenIndex % answerMatrix[0].length;
+            
+            const finalAnswer = answerMatrix[rowIndex][colIndex];
+            
+            // Sonucu Yazdır & Kaydet
+            output.innerHTML = `> SONUÇ: [ ${finalAnswer} ]`;
+            document.getElementById('instruction-text').innerHTML = 
+                "<p>> KADERİNİ KENDİ HAREKETLERİNLE BELİRLEDİN.</p>";
+            
+            btn.innerText = "HAKKIN DOLDU";
+            localStorage.setItem(STORAGE_KEY, new Date().getTime().toString());
+            
+            btn.onclick = () => rejectUser(output, btn);
+            btn.disabled = false;
+        }
+    }, 80);
+}
+    </script>
+</body>
+</html>
