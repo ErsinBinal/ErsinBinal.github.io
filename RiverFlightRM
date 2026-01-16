@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON RIVER - Cyber Assault</title>
+    <style>
+        :root {
+            --bg-color: #050505;
+            --neon-green: #0f0;
+            --neon-red: #f00;
+            --neon-blue: #0ff;
+            --neon-yellow: #ff0;
+        }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Courier New', Courier, monospace;
+            touch-action: none; /* Mobilde kaydırmayı engelle */
+        }
+        #gameCanvas {
+            display: block;
+            margin: 0 auto;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            box-shadow: 0 0 50px rgba(0, 255, 0, 0.1);
+        }
+        #ui-layer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: var(--neon-green);
+            font-size: 20px;
+            text-shadow: 0 0 10px var(--neon-green);
+            pointer-events: none;
+            z-index: 10;
+        }
+        .fuel-bar-container {
+            width: 200px;
+            height: 20px;
+            border: 2px solid var(--neon-green);
+            margin-top: 10px;
+            position: relative;
+        }
+        .fuel-bar {
+            height: 100%;
+            background-color: var(--neon-green);
+            width: 100%;
+            box-shadow: 0 0 10px var(--neon-green);
+            transition: width 0.1s linear;
+        }
+        #game-over-screen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: var(--neon-green);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 30px var(--neon-green);
+            z-index: 20;
+        }
+        button {
+            background: transparent;
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 20px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px var(--neon-green);
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: var(--neon-green);
+            color: #000;
+        }
+        .controls-hint {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: rgba(0, 255, 0, 0.5);
+            font-size: 14px;
+            pointer-events: none;
+        }
+        /* Scanline Efekti */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <div id="score">SKOR: 0</div>
+        <div class="fuel-bar-container">
+            <div class="fuel-bar" id="fuel-bar"></div>
+        </div>
+        <div style="font-size: 0.8em; margin-top:5px;">FUEL</div>
+    </div>
+
+    <div id="game-over-screen">
+        <h1 style="font-size: 3rem; margin: 0 0 20px 0; text-shadow: 0 0 20px var(--neon-red); color: var(--neon-red);">SİSTEM ÇÖKTÜ</h1>
+        <p id="final-score" style="font-size: 1.5rem;">SKOR: 0</p>
+        <button onclick="startGame()">YENİDEN BAŞLAT</button>
+        <br><br>
+        <a href="index.html" style="color: var(--neon-blue); text-decoration: none; font-size: 0.9rem;">[ ANA MENÜYE DÖN ]</a>
+    </div>
+
+    <div class="controls-hint">
+        PC: Yön Tuşları + Space | MOBİL: Sürükle + Otomatik Ateş
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const fuelBar = document.getElementById('fuel-bar');
+        const scoreEl = document.getElementById('score');
+        const finalScoreEl = document.getElementById('final-score');
+        const gameOverScreen = document.getElementById('game-over-screen');
+
+        // Oyun Değişkenleri
+        let gameLoop;
+        let score = 0;
+        let frameCount = 0;
+        let isGameOver = false;
+        let gameSpeed = 3;
+        
+        // Canvas Boyutlandırma
+        function resizeCanvas() {
+            canvas.width = window.innerWidth > 600 ? 600 : window.innerWidth; // Max genişlik 600px
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Klavye Kontrolleri
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Dokunmatik Kontroller
+        let touchX = null;
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            touchX = e.touches[0].clientX - rect.left;
+        }, {passive: false});
+        canvas.addEventListener('touchstart', e => {
+            const rect = canvas.getBoundingClientRect();
+            touchX = e.touches[0].clientX - rect.left;
+        }, {passive: false});
+        canvas.addEventListener('touchend', () => touchX = null);
+
+        // OYUNCU GEMİSİ
+        const player = {
+            x: canvas.width / 2,
+            y: canvas.height - 100,
+            width: 40,
+            height: 50,
+            speed: 5,
+            fuel: 100,
+            color: '#0ff',
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                
+                // Glow efekti
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = this.color;
+                
+                // Gemi çizimi (Üçgenimsi)
+                ctx.beginPath();
+                ctx.moveTo(0, -this.height/2);
+                ctx.lineTo(this.width/2, this.height/2);
+                ctx.lineTo(0, this.height/2 - 10); // Motor kısmı girintisi
+                ctx.lineTo(-this.width/2, this.height/2);
+                ctx.closePath();
+                ctx.fillStyle = this.color;
+                ctx.fill();
+
+                // Motor alevi
+                if (!isGameOver) {
+                    ctx.beginPath();
+                    ctx.moveTo(-5, this.height/2 - 5);
+                    ctx.lineTo(5, this.height/2 - 5);
+                    ctx.lineTo(0, this.height/2 + 15 + Math.random() * 10);
+                    ctx.fillStyle = '#ff0';
+                    ctx.shadowColor = '#f00';
+                    ctx.fill();
+                }
+                ctx.restore();
+            },
+            update() {
+                // Hareket
+                if (keys['ArrowLeft'] && this.x > this.width) this.x -= this.speed;
+                if (keys['ArrowRight'] && this.x < canvas.width - this.width) this.x += this.speed;
+                
+                // Mobil hareket
+                if (touchX !== null) {
+                    const dx = touchX - this.x;
+                    this.x += dx * 0.1; // Smooth takip
+                }
+
+                // Yakıt tüketimi
+                this.fuel -= 0.05;
+                if (this.fuel <= 0) gameOver();
+                
+                // UI Güncelleme
+                fuelBar.style.width = Math.max(0, this.fuel) + '%';
+                if(this.fuel < 20) fuelBar.style.backgroundColor = '#f00';
+                else fuelBar.style.backgroundColor = '#0f0';
+            }
+        };
+
+        // MERMİLER
+        let bullets = [];
+        class Bullet {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.speed = 10;
+                this.radius = 3;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff0';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff0';
+                ctx.fill();
+            }
+            update() {
+                this.y -= this.speed;
+            }
+        }
+
+        // DÜŞMANLAR VE YAKIT DEPOLARI
+        let enemies = [];
+        class Enemy {
+            constructor(type) {
+                this.width = 40;
+                this.height = 40;
+                this.x = Math.random() * (canvas.width - 100) + 50; // Kenarlardan uzak
+                this.y = -50;
+                this.type = type; // 'ship', 'fuel', 'rock'
+                this.speed = gameSpeed * (type === 'ship' ? 1.2 : 1);
+            }
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.shadowBlur = 15;
+
+                if (this.type === 'ship') {
+                    // Düşman gemisi (Kırmızı)
+                    ctx.shadowColor = '#f00';
+                    ctx.fillStyle = '#f00';
+                    ctx.beginPath();
+                    ctx.moveTo(0, 15);
+                    ctx.lineTo(15, -15);
+                    ctx.lineTo(-15, -15);
+                    ctx.fill();
+                    // Kanatlar
+                    ctx.fillStyle = '#a00';
+                    ctx.fillRect(-20, -5, 40, 4);
+                } else if (this.type === 'fuel') {
+                    // Yakıt Tankı (Yeşil)
+                    ctx.shadowColor = '#0f0';
+                    ctx.fillStyle = '#0f0';
+                    ctx.fillRect(-15, -20, 30, 40);
+                    ctx.fillStyle = '#000';
+                    ctx.font = '12px Courier';
+                    ctx.fillText('FUEL', -13, 5);
+                } else if (this.type === 'rock') {
+                    // Kaya/Engel (Gri)
+                    ctx.shadowColor = '#fff';
+                    ctx.fillStyle = '#555';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI*2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+            update() {
+                this.y += this.speed;
+            }
+        }
+
+        // PARÇACIK EFEKTLERİ (Patlamalar)
+        let particles = [];
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 5,
+                    y: (Math.random() - 0.5) * 5
+                };
+                this.alpha = 1;
+                this.radius = Math.random() * 3;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= 0.02;
+            }
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+
+        // OYUN DÖNGÜSÜ
+        function startGame() {
+            isGameOver = false;
+            score = 0;
+            player.fuel = 100;
+            player.x = canvas.width / 2;
+            enemies = [];
+            bullets = [];
+            particles = [];
+            gameSpeed = 3;
+            gameOverScreen.style.display = 'none';
+            scoreEl.innerText = 'SKOR: 0';
+            animate();
+        }
+
+        function gameOver() {
+            isGameOver = true;
+            cancelAnimationFrame(gameLoop);
+            gameOverScreen.style.display = 'block';
+            finalScoreEl.innerText = 'TOPLAM SKOR: ' + score;
+        }
+
+        // Ateş etme kontrolü
+        let lastShot = 0;
+        function shoot() {
+            const now = Date.now();
+            if (now - lastShot > 250) { // 250ms ateş hızı
+                bullets.push(new Bullet(player.x, player.y - 25));
+                lastShot = now;
+            }
+        }
+
+        function animate() {
+            if (isGameOver) return;
+            
+            // Temizle
+            ctx.fillStyle = 'rgba(5, 5, 5, 0.3)'; // Hafif iz bırakma efekti (motion trail)
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Nehir Kenarları (River Banks) - Basit çizgi efekti
+            ctx.fillStyle = '#020';
+            ctx.fillRect(0, 0, 20, canvas.height);
+            ctx.fillRect(canvas.width - 20, 0, 20, canvas.height);
+            ctx.strokeStyle = '#0f0';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#0f0';
+            ctx.beginPath();
+            ctx.moveTo(20, 0); ctx.lineTo(20, canvas.height);
+            ctx.moveTo(canvas.width-20, 0); ctx.lineTo(canvas.width-20, canvas.height);
+            ctx.stroke();
+
+            player.update();
+            player.draw();
+
+            // Mermi Yönetimi
+            if (keys['Space'] || touchX !== null) shoot();
+            
+            bullets.forEach((bullet, bIndex) => {
+                bullet.update();
+                bullet.draw();
+                // Ekrandan çıkınca sil
+                if (bullet.y < 0) bullets.splice(bIndex, 1);
+            });
+
+            // Düşman Üretimi
+            if (frameCount % 60 === 0) { // Her saniye (yaklaşık)
+                const rand = Math.random();
+                let type = 'ship';
+                if (rand > 0.7) type = 'fuel';
+                else if (rand > 0.9) type = 'rock';
+                
+                enemies.push(new Enemy(type));
+                // Zamanla zorlaşsın
+                if (frameCount % 600 === 0) gameSpeed += 0.2;
+            }
+
+            enemies.forEach((enemy, eIndex) => {
+                enemy.update();
+                enemy.draw();
+
+                // Çarpışma Kontrolü (Oyuncu vs Düşman)
+                const dist = Math.hypot(player.x - enemy.x, player.y - enemy.y);
+                
+                // Yakıt tankına çarpınca doldur
+                if (enemy.type === 'fuel' && dist < player.width/2 + enemy.width/2) {
+                    player.fuel = Math.min(100, player.fuel + 30);
+                    score += 50;
+                    enemies.splice(eIndex, 1);
+                    createExplosion(enemy.x, enemy.y, '#0f0');
+                    return;
+                }
+                
+                // Diğerlerine çarpınca öl
+                if (dist < 30 && enemy.type !== 'fuel') {
+                    createExplosion(player.x, player.y, '#0ff');
+                    gameOver();
+                }
+
+                // Ekrandan çıkınca sil
+                if (enemy.y > canvas.height) enemies.splice(eIndex, 1);
+
+                // Mermi vs Düşman
+                bullets.forEach((bullet, bIndex) => {
+                    const bDist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+                    if (bDist < 25) {
+                        if (enemy.type === 'fuel') {
+                            // Yakıtı vurursan patlar ve puan kaybedersin!
+                            createExplosion(enemy.x, enemy.y, '#fa0');
+                            score -= 100;
+                            enemies.splice(eIndex, 1);
+                            bullets.splice(bIndex, 1);
+                        } else {
+                            // Düşmanı vur
+                            createExplosion(enemy.x, enemy.y, '#f00');
+                            score += 100;
+                            enemies.splice(eIndex, 1);
+                            bullets.splice(bIndex, 1);
+                        }
+                    }
+                });
+            });
+
+            // Parçacıklar
+            particles.forEach((p, pIndex) => {
+                p.update();
+                p.draw();
+                if (p.alpha <= 0) particles.splice(pIndex, 1);
+            });
+
+            // Nehir kenarına çarpma
+            if (player.x <= 40 || player.x >= canvas.width - 40) {
+                 gameOver();
+            }
+
+            frameCount++;
+            scoreEl.innerText = 'SKOR: ' + score;
+            requestAnimationFrame(animate);
+        }
+
+        // Başlat
+        startGame();
+    </script>
+</body>
+</html>
