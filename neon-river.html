@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BLOCKY RIVER: CRAFT EDITION</title>
+    <title>NEON RIVER: 3D VOXEL ASSAULT</title>
     <style>
-        body { margin: 0; padding: 0; background: #1a1a1a; overflow: hidden; touch-action: none; }
-        #game-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #000; }
+        body { margin: 0; padding: 0; background: #111; overflow: hidden; touch-action: none; }
+        #game-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #1a1a2e; }
         canvas { 
-            box-shadow: 0 0 0 4px #333, 0 0 20px rgba(0,0,0,0.5); 
-            image-rendering: pixelated; /* Pikseller keskin görünsün */
+            box-shadow: 0 0 50px rgba(0,0,0,0.8); 
+            image-rendering: pixelated; /* Pikseller keskin ve bloklu görünsün */
         }
+        .ui-layer { position: absolute; top: 20px; left: 20px; font-family: 'Courier New', monospace; pointer-events: none; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
@@ -19,12 +20,14 @@
 <div id="game-container"></div>
 
 <script>
+// --- KONFİGÜRASYON ---
 const CONFIG = {
     type: Phaser.AUTO,
-    width: window.innerWidth > 600 ? 600 : window.innerWidth,
+    // EKRANI GENİŞLETİYORUZ: Masaüstünde %100 genişlik, çok genişse biraz sınırla
+    width: Math.min(window.innerWidth, 1200), 
     height: window.innerHeight,
     parent: 'game-container',
-    pixelArt: true, // Phaser'a piksel sanatı olduğunu söylüyoruz
+    pixelArt: true, // Keskin pikseller
     physics: {
         default: 'arcade',
         arcade: { gravity: { y: 0 }, debug: false }
@@ -33,319 +36,418 @@ const CONFIG = {
 };
 
 let game = new Phaser.Game(CONFIG);
-let player, cursors, bullets, enemies, fuels, terrainLeft, terrainRight, riverWater;
-let score = 0, scoreText, fuel = 100, fuelBar, fuelBarBg, gameSpeed = 2;
-let isGameOver = false, lastFired = 0;
 
+// --- GLOBAL DEĞİŞKENLER ---
+let player;
+let cursors;
+let bullets, enemyBullets, enemies, powerups, sidekicks; // Gruplar
+let terrainLeft, terrainRight, riverWater;
+let score = 0, scoreText;
+let fuel = 100, fuelBar, fuelBarBg;
+let gameSpeed = 3; 
+let isGameOver = false;
+let lastFired = 0;
+
+// Silah Sistemi
+const WEAPONS = {
+    SINGLE: 0,
+    SPREAD: 1, // 3'lü atış
+    LASER: 2,  // Hızlı
+    SIDEKICK: 3 // Dronlar
+};
+let currentWeapon = WEAPONS.SINGLE;
+let sidekicksActive = false; // Dronlar aktif mi?
+let sidekickTimer = null;
+
+// --- PRELOAD: 3D VOXEL OLUŞTURUCU ---
 function preload() {
     let g = this.make.graphics({x: 0, y: 0, add: false});
 
-    // --- YARDIMCI FONKSİYON: PİKSEL ÇİZİCİ ---
-    // Verilen matrise göre blok blok çizer
-    const drawBlockySprite = (key, width, height, pixelSize, matrix, palette) => {
+    // --- YARDIMCI FONKSİYON: 3D BLOK ÇİZİCİ ---
+    // Bu fonksiyon 2D matrisi alıp, her kareye "derinlik" (yan yüzeyler) ekler.
+    const createVoxelSprite = (key, pixelSize, matrix, palette) => {
         g.clear();
-        for (let y = 0; y < matrix.length; y++) {
-            for (let x = 0; x < matrix[y].length; x++) {
-                let colorCode = matrix[y][x];
-                if (colorCode !== 0 && palette[colorCode]) {
-                    g.fillStyle(palette[colorCode], 1);
-                    // Hafif gölge efekti (Bevel)
-                    g.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        let height = matrix.length;
+        let width = matrix[0].length;
+        let depth = pixelSize / 2; // 3D Derinlik miktarı
+
+        // Önce gölgeleri (yan yüzeyleri) çiziyoruz (Arkadan öne)
+        for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+                let color = matrix[y][x];
+                if (color !== 0 && palette[color]) {
+                    let px = x * pixelSize;
+                    let py = y * pixelSize;
+                    let mainColor = palette[color];
                     
-                    // İç gölge (Daha bloklu hissetmesi için)
-                    g.fillStyle(0x000000, 0.1);
-                    g.fillRect(x * pixelSize + pixelSize - 2, y * pixelSize, 2, pixelSize);
-                    g.fillRect(x * pixelSize, y * pixelSize + pixelSize - 2, pixelSize, 2);
+                    // Alt Yüzey (En koyu)
+                    g.fillStyle(Phaser.Display.Color.IntegerToColor(mainColor).darken(40).color, 1);
+                    g.fillRect(px, py + pixelSize, pixelSize, depth);
+                    
+                    // Sağ Yüzey (Orta koyu)
+                    g.fillStyle(Phaser.Display.Color.IntegerToColor(mainColor).darken(20).color, 1);
+                    g.fillRect(px + pixelSize, py, depth, pixelSize);
+
+                    // Ön Yüzey (Normal Renk - Üstüne basılacak)
+                    g.fillStyle(mainColor, 1);
+                    g.fillRect(px, py, pixelSize, pixelSize);
+                    
+                    // Highlight (Parlaklık - Üst kenar)
+                    g.fillStyle(0xffffff, 0.2);
+                    g.fillRect(px, py, pixelSize, 2);
                 }
             }
         }
-        g.generateTexture(key, width * pixelSize, height * pixelSize);
+        g.generateTexture(key, width * pixelSize + depth, height * pixelSize + depth);
     };
 
-    // 1. OYUNCU: BLUE STARFIGHTER (Minecraft Elytra tarzı)
-    // 1: Koyu Mavi, 2: Açık Mavi (Cam), 3: Gri (Motor), 4: Turuncu (Alev)
-    const playerPalette = { 1: 0x0055aa, 2: 0x44ccff, 3: 0x555555, 4: 0xffaa00 };
+    // 1. OYUNCU: Voxel Jet
+    // 1: Gövde (Mavi), 2: Cam (Açık Mavi), 3: Motor (Gri), 4: Alev
+    const playerColors = { 1: 0x3366cc, 2: 0x00ffff, 3: 0x555555, 4: 0xffaa00 };
     const playerMatrix = [
         [0,0,0,1,1,0,0,0],
         [0,0,1,1,1,1,0,0],
-        [0,0,1,2,2,1,0,0], // Kokpit
-        [0,1,1,1,1,1,1,0],
-        [1,1,1,3,3,1,1,1],
-        [1,0,1,3,3,1,0,1],
-        [1,0,0,4,4,0,0,1], // Alevler
-        [0,0,0,4,4,0,0,0]
+        [0,1,1,2,2,1,1,0],
+        [1,1,1,1,1,1,1,1],
+        [1,3,1,1,1,1,3,1],
+        [1,0,0,4,4,0,0,1]
     ];
-    drawBlockySprite('playerShip', 8, 8, 6, playerMatrix, playerPalette); // 6x scale
+    createVoxelSprite('player', 8, playerMatrix, playerColors);
 
-    // 2. DÜŞMAN: CREEPER HELICOPTER
-    // 1: Yeşil (Creeper), 2: Siyah, 3: Gri (Pervane)
-    const heliPalette = { 1: 0x00aa00, 2: 0x000000, 3: 0xcccccc };
+    // 2. DRON (Sidekick)
+    const droneColors = { 1: 0x00ff00, 2: 0xffffff };
+    const droneMatrix = [
+        [1,1,1],
+        [1,2,1],
+        [1,1,1]
+    ];
+    createVoxelSprite('drone', 6, droneMatrix, droneColors);
+
+    // 3. DÜŞMAN: CREEPER HELI (3D Kafa)
+    const heliColors = { 1: 0x44cc44, 2: 0x000000, 3: 0x888888 };
     const heliMatrix = [
-        [0,3,0,3,0,3,0], // Pervane
-        [0,0,3,3,3,0,0],
-        [0,0,1,1,1,0,0],
-        [0,1,1,1,1,1,0],
-        [1,1,2,1,2,1,1], // Gözler
-        [1,1,1,2,1,1,1], // Ağız
-        [0,0,1,2,1,0,2], // Kuyruk
-    ];
-    drawBlockySprite('enemyHeli', 7, 7, 6, heliMatrix, heliPalette);
-
-    // 3. DÜŞMAN: IRON GOLEM JET
-    // 1: Beyaz/Demir, 2: Kırmızı (Göz), 3: Koyu Gri
-    const jetPalette = { 1: 0xeeeeee, 2: 0xff0000, 3: 0x444444 };
-    const jetMatrix = [
-        [0,0,0,1,0,0,0],
-        [0,0,1,1,1,0,0],
-        [0,1,1,2,1,1,0],
-        [1,1,1,1,1,1,1],
-        [1,0,3,1,3,0,1],
-        [0,0,3,0,3,0,0]
-    ];
-    drawBlockySprite('enemyJet', 7, 6, 6, jetMatrix, jetPalette);
-
-    // 4. DÜŞMAN: OBSIDIAN SHIP
-    // 1: Mor/Siyah (Obsidyen), 2: Mor (Parlak)
-    const shipPalette = { 1: 0x220033, 2: 0x6600aa };
-    const shipMatrix = [
-        [0,0,1,1,0,0],
-        [0,0,1,2,0,0], // Kule
-        [1,1,1,1,1,1],
-        [1,2,1,1,2,1],
-        [0,1,1,1,1,0]
-    ];
-    drawBlockySprite('enemyShip', 6, 5, 8, shipMatrix, shipPalette);
-
-    // 5. YAKIT: TNT BLOCK / REDSTONE
-    // 1: Kırmızı, 2: Beyaz, 3: Siyah
-    const fuelPalette = { 1: 0xff0000, 2: 0xffffff, 3: 0x000000 };
-    const fuelMatrix = [
+        [3,0,3,0,3],
+        [0,3,3,3,0],
         [1,1,1,1,1],
-        [1,2,2,2,1],
-        [1,2,3,2,1], // T N T yazısı gibi
-        [1,2,2,2,1],
+        [1,2,1,2,1], // Gözler
+        [1,1,2,1,1], // Burun
         [1,1,1,1,1]
     ];
-    drawBlockySprite('fuelTank', 5, 5, 8, fuelMatrix, fuelPalette);
+    createVoxelSprite('enemy1', 8, heliMatrix, heliColors);
 
-    // 6. SU DOKUSU (Minecraft Water)
-    g.clear();
-    g.fillStyle(0x0000aa, 1); // Ana Su Rengi
-    g.fillRect(0,0,64,64);
-    g.fillStyle(0x0000ff, 1); // Açık Mavi Noktalar
-    for(let i=0; i<20; i++) g.fillRect(Phaser.Math.Between(0,60), Phaser.Math.Between(0,60), 4, 4);
-    g.generateTexture('waterTile', 64, 64);
+    // 4. DÜŞMAN: TANKER GEMİ (Geniş)
+    const shipColors = { 1: 0xcc4444, 2: 0xdddddd };
+    const shipMatrix = [
+        [0,1,1,0],
+        [1,1,1,1],
+        [1,2,2,1],
+        [1,1,1,1]
+    ];
+    createVoxelSprite('enemy2', 10, shipMatrix, shipColors);
 
-    // 7. ÇİMENLİ DUVAR (Grass Block)
-    g.clear();
-    g.fillStyle(0x795548, 1); // Toprak (Kahverengi)
-    g.fillRect(0,0,64,64);
-    g.fillStyle(0x4caf50, 1); // Çimen (Yeşil - Üst Kısım)
-    g.fillRect(0,0,64,16); 
-    // Çimen sarkması
-    g.fillRect(4,16,4,4); g.fillRect(12,16,4,8); g.fillRect(24,16,4,4); g.fillRect(40,16,4,6);
-    // Toprak detayları
-    g.fillStyle(0x5d4037, 1);
-    g.fillRect(10,30,4,4); g.fillRect(50,50,4,4);
-    g.generateTexture('wallBlock', 64, 64);
+    // 5. YAKIT (TNT Bloğu)
+    const fuelColors = { 1: 0xff0000, 2: 0xffffff }; // Kırmızı beyaz
+    const fuelMatrix = [
+        [1,1,1,1],
+        [1,2,2,1],
+        [1,2,2,1],
+        [1,1,1,1]
+    ];
+    createVoxelSprite('fuel', 8, fuelMatrix, fuelColors);
 
-    // 8. MERMİ (Sarı Kare)
-    g.clear(); g.fillStyle(0xffff00, 1); g.fillRect(0,0,8,8); g.generateTexture('bullet', 8, 8);
+    // 6. UPGRADE KUTUSU (Elmas Bloğu)
+    const upgColors = { 1: 0x00aaaa, 2: 0x00ffff }; // Camgöbeği
+    const upgMatrix = [
+        [1,1,1],
+        [1,2,1],
+        [1,1,1]
+    ];
+    createVoxelSprite('upgrade', 10, upgMatrix, upgColors);
 
-    // 9. PARTİKÜL (Blok parçası)
+    // 7. DUVAR BLOĞU (Toprak + Çimen)
+    const wallColors = { 1: 0x664422, 2: 0x44aa44 }; // Kahve, Yeşil
+    const wallMatrix = [
+        [2,2,2,2],
+        [2,2,2,2],
+        [1,1,1,1],
+        [1,1,1,1]
+    ];
+    createVoxelSprite('wall', 16, wallMatrix, wallColors); // Büyük bloklar
+
+    // 8. MERMİLER
+    g.clear(); g.fillStyle(0xffff00, 1); g.fillRect(0,0,6,14); g.generateTexture('bullet', 6, 14);
+    g.clear(); g.fillStyle(0x00ff00, 1); g.fillRect(0,0,4,20); g.generateTexture('laser', 4, 20);
     g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(0,0,6,6); g.generateTexture('particle', 6, 6);
 }
 
+// --- CREATE ---
 function create() {
-    // 1. NEHİR SUYU (Hareketli Zemin)
-    riverWater = this.add.tileSprite(CONFIG.width/2, CONFIG.height/2, CONFIG.width, CONFIG.height, 'waterTile');
-    riverWater.setScale(2); // Bloklar büyük görünsün
-
-    // 2. KANYON DUVARLARI
-    // Sol ve Sağ duvarları blok blok döşemek yerine tileSprite ile yapıyoruz ama "bloklu" texture kullanıyoruz.
-    let wallWidth = 64;
-    terrainLeft = this.add.tileSprite(wallWidth/2, CONFIG.height/2, wallWidth, CONFIG.height, 'wallBlock');
-    this.physics.add.existing(terrainLeft, true);
+    // 1. ZEMİN (Voxel Su)
+    // Su için basit bir texture kullanalım
+    let bgGraphics = this.make.graphics({x:0, y:0, add:false});
+    bgGraphics.fillStyle(0x004488, 1); bgGraphics.fillRect(0,0,64,64);
+    bgGraphics.fillStyle(0x0055aa, 1); bgGraphics.fillRect(10,10,20,10); bgGraphics.fillRect(40,40,15,15);
+    bgGraphics.generateTexture('waterBg', 64, 64);
     
-    terrainRight = this.add.tileSprite(CONFIG.width - wallWidth/2, CONFIG.height/2, wallWidth, CONFIG.height, 'wallBlock');
+    riverWater = this.add.tileSprite(CONFIG.width/2, CONFIG.height/2, CONFIG.width, CONFIG.height, 'waterBg');
+
+    // 2. KANYON DUVARLARI (Geniş ekrana uyumlu)
+    let wallThick = 64;
+    terrainLeft = this.add.tileSprite(wallThick/2, CONFIG.height/2, wallThick, CONFIG.height, 'wall');
+    terrainRight = this.add.tileSprite(CONFIG.width - wallThick/2, CONFIG.height/2, wallThick, CONFIG.height, 'wall');
+    
+    this.physics.add.existing(terrainLeft, true);
     this.physics.add.existing(terrainRight, true);
 
-    // 3. OYUNCU
-    player = this.physics.add.sprite(CONFIG.width/2, CONFIG.height - 100, 'playerShip');
-    player.setCollideWorldBounds(true);
-    player.setDrag(800); 
-    player.setDepth(10);
-    player.body.setSize(30, 30); // Hitbox
-
-    // 4. GRUPLAR
+    // 3. GRUPLAR
     bullets = this.physics.add.group();
     enemies = this.physics.add.group();
-    fuels = this.physics.add.group();
+    powerups = this.physics.add.group();
+    sidekicks = this.physics.add.group(); // Dron grubu
 
-    // 5. ARAYÜZ (Minecraft Fontuna Benzer)
-    const fontStyle = { fontSize: '20px', fill: '#fff', stroke: '#000', strokeThickness: 4, fontFamily: 'Courier New' };
-    scoreText = this.add.text(80, 20, 'SCORE: 0', fontStyle).setDepth(20);
-    
-    // XP Barı gibi Yakıt Barı
-    this.add.text(80, 52, 'FUEL', { fontSize:'14px', fill:'#fff' }).setDepth(20);
-    fuelBarBg = this.add.rectangle(180, 60, 204, 14, 0x333333).setStrokeStyle(2, 0xffffff).setDepth(20);
-    fuelBar = this.add.rectangle(180, 60, 200, 10, 0x00ff00).setDepth(20);
+    // 4. OYUNCU
+    player = this.physics.add.sprite(CONFIG.width/2, CONFIG.height - 100, 'player');
+    player.setCollideWorldBounds(true);
+    player.setDrag(1000); // Keskin duruş
+    player.setDepth(10);
+    player.body.setSize(40, 40); // Hitbox ayarı
 
-    // 6. KONTROLLER
+    // 5. ARAYÜZ
+    scoreText = this.add.text(80, 20, 'SKOR: 0', { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 4, fontFamily: 'Courier New' }).setDepth(20);
+    this.add.text(80, 50, 'YAKIT', { fontSize: '16px', fill: '#fff', fontFamily: 'Courier New' }).setDepth(20);
+    fuelBarBg = this.add.rectangle(180, 58, 204, 18, 0x000000).setStrokeStyle(2, 0xffffff).setDepth(20);
+    fuelBar = this.add.rectangle(180, 58, 200, 14, 0x00ff00).setDepth(20);
+
+    // 6. GİRDİLER
     cursors = this.input.keyboard.createCursorKeys();
     this.input.on('pointermove', (pointer) => {
         if (!isGameOver && pointer.isDown) {
             let targetX = Phaser.Math.Clamp(pointer.x, 80, CONFIG.width - 80);
-            this.physics.moveTo(player, targetX, pointer.y - 50, 400);
+            this.physics.moveTo(player, targetX, pointer.y - 50, 600);
             fireWeapon.call(this);
         }
     });
 
     // 7. ÇARPIŞMALAR
     this.physics.add.overlap(bullets, enemies, hitEnemy, null, this);
-    this.physics.add.overlap(bullets, fuels, hitFuelTank, null, this);
+    this.physics.add.overlap(bullets, powerups, hitPowerupWithBullet, null, this); // Kutuyu vurursan yok olur (dikkat!)
     this.physics.add.overlap(player, enemies, crashPlayer, null, this);
-    this.physics.add.overlap(player, fuels, collectFuel, null, this);
+    this.physics.add.overlap(player, powerups, collectPowerup, null, this);
 
     // 8. SPAWNERS
-    this.time.addEvent({ delay: 1500, callback: spawnEnemy, callbackScope: this, loop: true });
+    this.time.addEvent({ delay: 1000, callback: spawnManager, callbackScope: this, loop: true });
     this.time.addEvent({ delay: 500, callback: decreaseFuel, callbackScope: this, loop: true });
 }
 
+// --- UPDATE ---
 function update() {
     if (isGameOver) return;
 
-    // Bloklu kaydırma efekti (Piksel piksel kaysın diye Math.floor kullanılabilir ama akıcılık için düz bırakıyoruz)
+    // Arka plan kaydırma (Derinlik hissi)
     riverWater.tilePositionY -= gameSpeed;
     terrainLeft.tilePositionY -= gameSpeed;
     terrainRight.tilePositionY -= gameSpeed;
 
+    // Oyuncu Hareketi
     player.setVelocityX(0);
     player.setVelocityY(0);
+    let speed = 500; // Geniş ekranda daha hızlı olmalı
     
-    let speed = 350;
     if (cursors.left.isDown) player.setVelocityX(-speed);
     else if (cursors.right.isDown) player.setVelocityX(speed);
     if (cursors.up.isDown) player.setVelocityY(-speed);
     else if (cursors.down.isDown) player.setVelocityY(speed);
-    
+
+    // Sınırlar
     if (player.x < 80) player.x = 80;
     if (player.x > CONFIG.width - 80) player.x = CONFIG.width - 80;
 
+    // Ateş
     if (cursors.space.isDown) fireWeapon.call(this);
 
+    // Dron Takibi
+    if (sidekicksActive) {
+        let leftDrone = sidekicks.getChildren()[0];
+        let rightDrone = sidekicks.getChildren()[1];
+        if (leftDrone) { leftDrone.x = player.x - 40; leftDrone.y = player.y + 10; }
+        if (rightDrone) { rightDrone.x = player.x + 40; rightDrone.y = player.y + 10; }
+    }
+
+    // Temizlik
     bullets.children.each(b => { if (b.y < -50) b.destroy(); });
     enemies.children.each(e => { if (e.y > CONFIG.height + 50) e.destroy(); });
-    fuels.children.each(f => { if (f.y > CONFIG.height + 50) f.destroy(); });
+    powerups.children.each(p => { if (p.y > CONFIG.height + 50) p.destroy(); });
 
-    // Yakıt Barı Renkleri (Yeşil -> Sarı -> Kırmızı)
+    // Yakıt Barı
     fuelBar.width = Math.max(0, (fuel / 100) * 200);
-    if (fuel > 50) fuelBar.fillColor = 0x00ff00;
-    else if (fuel > 20) fuelBar.fillColor = 0xffff00;
-    else fuelBar.fillColor = 0xff0000;
+    fuelBar.fillColor = fuel < 30 ? 0xff0000 : 0x00ff00;
 }
 
-function spawnEnemy() {
+// --- OYUN MANTIĞI ---
+
+function spawnManager() {
     if (isGameOver) return;
-    let x = Phaser.Math.Between(90, CONFIG.width - 90);
+    
+    // Geniş ekrana yayılmış spawn noktası
+    let x = Phaser.Math.Between(100, CONFIG.width - 100);
     let chance = Phaser.Math.Between(0, 100);
 
-    if (chance < 20) {
-        let f = fuels.create(x, -50, 'fuelTank');
-        f.setVelocityY(gameSpeed * 60);
-    } else {
-        let type = 'enemyHeli';
-        let speed = 80;
-        if (chance > 50 && chance < 80) { type = 'enemyJet'; speed = 180; }
-        else if (chance >= 80) { type = 'enemyShip'; speed = 40; }
-
+    if (chance < 15) { // %15 YAKIT (TNT)
+        let f = powerups.create(x, -50, 'fuel');
+        f.setVelocityY(gameSpeed * 50);
+        f.setData('type', 'fuel');
+    } 
+    else if (chance < 20) { // %5 SİLAH KUTUSU (Elmas)
+        let u = powerups.create(x, -50, 'upgrade');
+        u.setVelocityY(gameSpeed * 60);
+        u.setData('type', 'upgrade');
+        // Kutu parlasın
+        this.tweens.add({ targets: u, alpha: 0.5, duration: 300, yoyo: true, repeat: -1 });
+    }
+    else { // DÜŞMAN
+        let type = chance < 60 ? 'enemy1' : 'enemy2'; // Heli veya Gemi
         let e = enemies.create(x, -50, type);
-        e.setVelocityY(speed + (gameSpeed * 20));
+        let moveSpeed = type === 'enemy1' ? 150 : 80;
+        e.setVelocityY(moveSpeed + (gameSpeed * 10));
         
-        // Helikopter: Creeper gibi sinsi hareket
-        if (type === 'enemyHeli') {
-            this.tweens.add({
-                targets: e, x: e.x + 40, duration: 1500, yoyo: true, repeat: -1, ease: 'Stepped' // Bloklu hareket
-            });
+        // Heli S çizsin
+        if (type === 'enemy1') {
+            this.tweens.add({ targets: e, x: e.x + 50, duration: 1500, yoyo: true, repeat: -1 });
         }
     }
 }
 
 function fireWeapon() {
     let now = this.time.now;
-    if (now - lastFired < 200) return;
-    let b = bullets.create(player.x, player.y - 30, 'bullet');
-    b.setVelocityY(-700);
+    let rate = currentWeapon === WEAPONS.LASER ? 150 : 250;
+    
+    if (now - lastFired < rate) return;
+    
+    // Ana Silah
+    if (currentWeapon === WEAPONS.SPREAD) {
+        let b1 = bullets.create(player.x, player.y - 30, 'bullet'); b1.setVelocity(0, -700);
+        let b2 = bullets.create(player.x, player.y - 30, 'bullet'); b2.setVelocity(-100, -650);
+        let b3 = bullets.create(player.x, player.y - 30, 'bullet'); b3.setVelocity(100, -650);
+    } else if (currentWeapon === WEAPONS.LASER) {
+        let l = bullets.create(player.x, player.y - 30, 'laser'); l.setVelocityY(-900);
+    } else {
+        let b = bullets.create(player.x, player.y - 30, 'bullet'); b.setVelocityY(-700);
+    }
+
+    // Dron Ateşi
+    if (sidekicksActive) {
+        sidekicks.children.each(drone => {
+            let db = bullets.create(drone.x, drone.y, 'bullet');
+            db.setVelocityY(-700);
+            db.setScale(0.7); // Küçük mermi
+        });
+    }
+
     lastFired = now;
+}
+
+function collectPowerup(player, box) {
+    let type = box.getData('type');
+    createExplosion(this, box.x, box.y, 0xffffff, 10);
+    box.destroy();
+
+    if (type === 'fuel') {
+        fuel = Math.min(100, fuel + 40);
+        score += 50;
+        showFloatingText(this, player.x, player.y, '+FUEL');
+    } else if (type === 'upgrade') {
+        score += 100;
+        // Rastgele özellik
+        let rnd = Phaser.Math.Between(0, 2);
+        if (rnd === 0) {
+            activateSidekicks.call(this);
+            showFloatingText(this, player.x, player.y, 'DRONES!');
+        } else if (rnd === 1) {
+            currentWeapon = WEAPONS.SPREAD;
+            showFloatingText(this, player.x, player.y, 'SPREAD!');
+        } else {
+            currentWeapon = WEAPONS.LASER;
+            showFloatingText(this, player.x, player.y, 'LASER!');
+        }
+    }
+    scoreText.setText('SKOR: ' + score);
+}
+
+function activateSidekicks() {
+    sidekicks.clear(true, true); // Varsa eskileri sil
+    sidekicksActive = true;
+    sidekicks.create(player.x - 40, player.y, 'drone');
+    sidekicks.create(player.x + 40, player.y, 'drone');
+    
+    // 15 saniye sonra gitsinler
+    if (sidekickTimer) sidekickTimer.remove();
+    sidekickTimer = this.time.delayedCall(15000, () => {
+        sidekicksActive = false;
+        sidekicks.clear(true, true);
+        currentWeapon = WEAPONS.SINGLE; // Silah da sıfırlansın
+        showFloatingText(this, player.x, player.y, 'POWER DOWN');
+    });
 }
 
 function hitEnemy(bullet, enemy) {
     bullet.destroy();
-    createExplosion(this, enemy.x, enemy.y, 0xffffff, 15); // Beyaz duman (Minecraft ölüm efekti gibi)
+    createExplosion(this, enemy.x, enemy.y, 0xffaa00, 15);
     enemy.destroy();
     score += 100;
-    scoreText.setText('SCORE: ' + score);
-    if (score % 2000 === 0) gameSpeed += 0.5;
+    scoreText.setText('SKOR: ' + score);
 }
 
-function hitFuelTank(bullet, tank) {
+function hitPowerupWithBullet(bullet, box) {
     bullet.destroy();
-    tank.destroy();
-    createExplosion(this, tank.x, tank.y, 0xff0000, 30); // TNT patlaması
-    score -= 200;
-    scoreText.setText('SCORE: ' + score);
+    box.destroy();
+    createExplosion(this, box.x, box.y, 0xaaaaaa, 10); // Boşa gitti efekti
+    score -= 10;
+    scoreText.setText('SKOR: ' + score);
 }
 
-function collectFuel(player, tank) {
-    tank.destroy();
-    fuel = Math.min(100, fuel + 40);
-    score += 50;
-    scoreText.setText('SCORE: ' + score);
-    // XP Sesi efekti yazısı
-    let xpText = this.add.text(player.x, player.y-40, '+XP', {fontSize:'16px', fill:'#0f0'});
-    this.tweens.add({targets:xpText, y:player.y-80, alpha:0, duration:800});
-}
-
-function crashPlayer(player, enemy) {
-    createExplosion(this, player.x, player.y, 0x00aaff, 30);
-    createExplosion(this, enemy.x, enemy.y, 0xff0000, 20);
+function crashPlayer(player, target) {
+    createExplosion(this, player.x, player.y, 0x00ffff, 30);
+    createExplosion(this, target.x, target.y, 0xff0000, 20);
     player.setVisible(false);
-    gameOver.call(this, "WASTED!");
+    if(sidekicksActive) sidekicks.clear(true, true);
+    gameOver.call(this, "ÇARPIŞMA!");
 }
 
 function decreaseFuel() {
     if (isGameOver) return;
-    fuel -= 1.0;
-    if (fuel <= 0) gameOver.call(this, "OUT OF FUEL");
+    fuel -= 0.8;
+    if (fuel <= 0) gameOver.call(this, "YAKIT BİTTİ");
 }
 
 function createExplosion(scene, x, y, color, count) {
-    // Kare parçacıklar
     let particles = scene.add.particles(0, 0, 'particle', {
         x: x, y: y,
-        speed: { min: 50, max: 200 },
+        speed: { min: 50, max: 300 },
         angle: { min: 0, max: 360 },
-        scale: { start: 2, end: 0 }, // Büyük bloklar küçülür
-        rotate: { min: 0, max: 90 }, // Dönerek dağılır
+        scale: { start: 2, end: 0 },
         tint: color,
-        lifespan: 600,
-        quantity: count
+        lifespan: 800,
+        quantity: count,
+        gravityY: 300 // Parçalar aşağı düşsün (3D hissi)
     });
-    scene.time.delayedCall(600, () => particles.destroy());
+    scene.time.delayedCall(800, () => particles.destroy());
+}
+
+function showFloatingText(scene, x, y, msg) {
+    let t = scene.add.text(x, y-40, msg, { fontSize:'20px', fill:'#0ff', stroke:'#000', strokeThickness:3 });
+    scene.tweens.add({ targets: t, y: y-100, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
 }
 
 function gameOver(reason) {
     isGameOver = true;
     this.physics.pause();
     
-    // Minecraft menüsü tarzı
-    let bg = this.add.rectangle(CONFIG.width/2, CONFIG.height/2, 400, 250, 0x333333).setStrokeStyle(4, 0xffffff);
+    let box = this.add.rectangle(CONFIG.width/2, CONFIG.height/2, 500, 300, 0x000000, 0.9).setStrokeStyle(4, 0xff0000);
+    this.add.text(CONFIG.width/2, CONFIG.height/2 - 60, reason, { fontSize: '40px', fill: '#f00', fontWeight:'bold' }).setOrigin(0.5);
+    this.add.text(CONFIG.width/2, CONFIG.height/2, 'TOPLAM SKOR: ' + score, { fontSize: '30px', fill: '#fff' }).setOrigin(0.5);
     
-    this.add.text(CONFIG.width/2, CONFIG.height/2 - 50, reason, { fontSize: '32px', fill: '#ff5555', fontFamily: 'Courier New', fontWeight:'bold' }).setOrigin(0.5);
-    this.add.text(CONFIG.width/2, CONFIG.height/2, 'SCORE: ' + score, { fontSize: '28px', fill: '#ffffff', fontFamily: 'Courier New' }).setOrigin(0.5);
-    
-    let btn = this.add.text(CONFIG.width/2, CONFIG.height/2 + 70, '[ RESPAWN ]', { 
-        fontSize: '24px', fill: '#55ff55', backgroundColor:'#000', padding:10, fontFamily: 'Courier New' 
+    let btn = this.add.text(CONFIG.width/2, CONFIG.height/2 + 80, '[ TEKRAR DENE ]', { 
+        fontSize: '28px', fill: '#0f0', backgroundColor:'#222', padding:15 
     }).setOrigin(0.5).setInteractive();
     
     btn.on('pointerdown', () => location.reload());
