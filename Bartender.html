@@ -267,7 +267,7 @@
     </div>
 
     <script>
-        // --- 1. ASCII ANIMATION ---
+        // --- 1. ASCII ANIMATION (HATA DÜZELTİLDİ: Çift Ters Slash \\ ) ---
         const bartenderFrames = [
             // Frame 0: Bekleme
 `   .---.   
@@ -306,10 +306,7 @@
             frameIndex = (frameIndex + 1) % bartenderFrames.length;
         }, 800);
 
-        // --- 2. GENİŞLETİLMİŞ İÇKİ MATRİSİ (40+ ÇEŞİT) ---
-        // Mood: relax, energy, deep, classy
-        // Taste: sour, bitter, sweet, fruity
-        // Intensity: low, medium, high
+        // --- 2. GENİŞLETİLMİŞ İÇKİ MATRİSİ ---
         const drinksDB = [
             // --- KLASİKLER & VİSKİ ---
             {
@@ -661,6 +658,7 @@
 
         // Başlat
         window.onload = () => {
+            bartenderEl.innerText = bartenderFrames[0];
             renderStep();
         };
 
