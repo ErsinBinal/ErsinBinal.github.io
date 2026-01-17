@@ -26,12 +26,13 @@
         /* Navigasyon */
         nav { position: absolute; top: 20px; left: 20px; z-index: 10; }
         nav a {
-            color: #ff9900; /* Amber rengi (Klasik terminal) */
+            color: #ff9900;
             text-decoration: none;
             font-weight: bold;
             border: 1px solid #ff9900;
             padding: 8px 15px;
             transition: all 0.3s;
+            background: rgba(0,0,0,0.5);
         }
         nav a:hover { background: #ff9900; color: #000; box-shadow: 0 0 15px #ff9900; }
 
@@ -40,24 +41,38 @@
             max-width: 600px;
             text-align: center;
             z-index: 2;
+            padding-bottom: 50px;
+        }
+
+        /* --- BARMEN ANİMASYONU --- */
+        .bartender-wrapper {
+            margin-bottom: 20px;
+            height: 140px; /* Zıplamayı önlemek için sabit yükseklik */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bartender-face {
+            font-family: 'Courier New', Courier, monospace; /* Sabit genişlikli font şart */
+            font-size: 14px; /* Mobilde taşmaması için ayarlandı */
+            line-height: 1.2;
+            color: #ff9900;
+            white-space: pre; /* ASCII'nin bozulmaması için kritik */
+            text-shadow: 0 0 5px #ff9900;
+            font-weight: bold;
         }
 
         /* --- UI ELEMENTLERİ --- */
-        .bartender-face {
-            font-size: 1rem;
-            color: #ff9900;
-            margin-bottom: 20px;
-            white-space: pre;
-            text-shadow: 0 0 5px #ff9900;
-        }
-
         .dialogue-box {
             border: 2px solid #333;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             padding: 20px;
-            min-height: 100px;
+            min-height: 80px;
             margin-bottom: 30px;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border-radius: 4px;
+            text-align: left;
         }
 
         .typing-text {
@@ -89,6 +104,7 @@
             color: #ff9900;
             background: rgba(255, 153, 0, 0.1);
             transform: scale(1.02);
+            box-shadow: 0 0 10px rgba(255, 153, 0, 0.2);
         }
 
         /* --- SONUÇ KARTI --- */
@@ -99,6 +115,7 @@
             background: #111;
             padding: 0;
             animation: slideUp 0.6s ease;
+            margin-bottom: 20px;
         }
 
         .result-header {
@@ -114,13 +131,15 @@
 
         .result-body { padding: 20px; }
         
-        .drink-desc { margin-bottom: 20px; color: #ccc; font-style: italic; }
+        .drink-desc { margin-bottom: 20px; color: #ccc; font-style: italic; border-bottom: 1px solid #333; padding-bottom: 15px;}
         
         .recipe-box {
             border-left: 3px solid #ff9900;
             padding-left: 15px;
             margin: 20px 0;
             color: #ddd;
+            background: rgba(255, 153, 0, 0.05);
+            padding: 10px;
         }
         
         .recipe-title { color: #ff9900; font-weight: bold; display: block; margin-bottom: 5px; }
@@ -136,12 +155,15 @@
             border: 1px dashed #666;
             margin-top: 20px;
             transition: all 0.3s;
+            font-weight: bold;
+            box-sizing: border-box; /* Padding taşmasını önler */
         }
         
         .price-btn:hover {
             border-color: #0f0;
             color: #0f0;
             background: #001100;
+            box-shadow: 0 0 10px #0f0;
         }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -149,6 +171,7 @@
         
         @media (max-width: 500px) {
             .options-grid { grid-template-columns: 1fr; }
+            .bartender-face { font-size: 11px; } /* Çok küçük ekranlarda daha da küçült */
         }
     </style>
 </head>
@@ -159,13 +182,8 @@
     </nav>
 
     <div class="container">
-        <div class="bartender-face">
-   .---.
-  /     \   [ B A R T E N D E R _ v 1.0 ]
-  | O O |   
-   \ v /    "Ne vereyim abime?"
-  /  _  \
- (  (_|  )
+        <div class="bartender-wrapper">
+            <pre id="ascii-bartender" class="bartender-face"></pre>
         </div>
 
         <div class="dialogue-box">
@@ -189,119 +207,181 @@
                 </div>
 
                 <a id="price-link" href="#" target="_blank" class="price-btn">
-                    [ 🔍 İNTERNETTE FİYAT ARAŞTIRMASI YAP ]
+                    [ 📊 GÜNCEL RAF FİYATLARINI GÖR ]
                 </a>
                 
-                <button onclick="location.reload()" style="margin-top:15px; background:none; border:none; color:#555; cursor:pointer; width:100%">
-                    [ BAŞA DÖN ]
+                <button onclick="location.reload()" style="margin-top:15px; background:none; border:none; color:#555; cursor:pointer; width:100%; padding:10px;">
+                    [ < TEKRAR SEÇİM YAP ]
                 </button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. İÇKİ VERİTABANI (THE MATRIX) ---
-        // Her içkinin özellikleri: mood, taste, intensity
+        // --- 1. BARMEN ANİMASYONU (ASCII ANIMATION) ---
+        const bartenderFrames = [
+            // Frame 0: Bekleme (Gözler açık)
+`   .---.
+  /     \\   [ BEKLİYOR ]
+  | O O |   
+   \\ - /    
+  /  _  \\
+ |  | |  |
+ (  |_|  )
+`,
+            // Frame 1: Konuşma/Hareket (Gözler kısık, shaker sallıyor)
+`   .---.
+  /     \\   [ DİNLİYOR ]
+  | - - |   
+   \\ o /    
+  / / \\ \\
+ |  \\_/  |
+ ( SHAKE )
+`,
+            // Frame 2: İşlem Yapıyor (Tek göz kırpıyor)
+`   .---.
+  /     \\   [ HAZIRLIYOR ]
+  | O - |   
+   \\ ~ /    
+  /  _  \\
+ /  / \\  \\
+(   |_|   )
+`
+        ];
+
+        let frameIndex = 0;
+        const bartenderEl = document.getElementById('ascii-bartender');
+
+        // Barmen animasyon döngüsü
+        setInterval(() => {
+            // Eğer sonuç ekranı açıksa barmen daha hızlı hareket etsin (kutlama gibi)
+            // Normalde daha sakin dursun
+            bartenderEl.innerText = bartenderFrames[frameIndex];
+            frameIndex = (frameIndex + 1) % bartenderFrames.length;
+        }, 800); // 800ms'de bir kare değiştir
+
+        // --- 2. İÇKİ VERİTABANI ---
         const drinksDB = [
             {
                 name: "OLD FASHIONED",
                 tags: { mood: "deep", taste: "bitter", intensity: "high" },
                 desc: "Klasiklerin atası. Viskinin en saf ve karizmatik hali. Düşünmek ve yavaş yudumlamak için.",
-                recipe: "6cl Burbon veya Çavdar Viski<br>1 Küp Şeker<br>2 damla Angostura Bitters<br>Portakal kabuğu ile süsle.",
-                query: "viski fiyatları"
+                recipe: "• 6cl Burbon veya Çavdar Viski<br>• 1 Küp Şeker<br>• 2 damla Angostura Bitters<br>• Portakal kabuğu",
+                query: "viski fiyatları güncel"
             },
             {
                 name: "NEGRONI",
                 tags: { mood: "classy", taste: "bitter", intensity: "high" },
                 desc: "İtalyan asaleti. Tatlı ve acının mükemmel dengesi. Bir aperitiften fazlası.",
-                recipe: "3cl Cin<br>3cl Campari<br>3cl Vermut (Kırmızı)<br>Buz dolu bardağa dök, karıştır. Portakal dilimi at.",
-                query: "cin fiyatları campari"
+                recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Vermut (Kırmızı)<br>• Portakal dilimi ile servis et",
+                query: "cin fiyatları güncel"
             },
             {
                 name: "MOJITO",
                 tags: { mood: "energy", taste: "sour", intensity: "medium" },
-                desc: "Küba'nın ferahlatıcı rüzgarı. Nane ve limonun dansı. Dans etmek ve serinlemek için.",
-                recipe: "5cl Beyaz Rom<br>Yarım misket limonu<br>10 yaprak taze nane<br>2 kaşık şeker<br>Soda<br>Buzla doldur.",
+                desc: "Küba'nın ferahlatıcı rüzgarı. Nane ve limonun dansı.",
+                recipe: "• 5cl Beyaz Rom<br>• Yarım misket limonu<br>• 10 yaprak taze nane<br>• 2 kaşık şeker & Soda",
                 query: "beyaz rom fiyatları"
             },
             {
                 name: "WHISKEY SOUR",
                 tags: { mood: "relax", taste: "sour", intensity: "medium" },
-                desc: "Ekşi, tatlı ve sert. İpeksi bir doku için yumurta akı (opsiyonel) ile çalkalanır.",
-                recipe: "6cl Viski<br>3cl Limon Suyu<br>2cl Şeker Şurubu<br>(Opsiyonel) Yumurta akı<br>Buzla çalkala.",
-                query: "viski fiyatları"
+                desc: "Ekşi, tatlı ve sert. İpeksi bir doku için yumurta akı ile çalkalanır.",
+                recipe: "• 6cl Viski<br>• 3cl Limon Suyu<br>• 2cl Şeker Şurubu<br>• (Opsiyonel) Yumurta akı",
+                query: "viski fiyatları güncel"
             },
             {
                 name: "ESPRESSO MARTINI",
                 tags: { mood: "energy", taste: "sweet", intensity: "high" },
-                desc: "Hem uyandırır hem çarpar. Geceyi başlatmak veya bitirmek için mükemmel seçim.",
-                recipe: "5cl Votka<br>3cl Kahve Likörü (Kahlua)<br>1 shot taze Espresso<br>Buzla çok sert çalkala.",
+                desc: "Hem uyandırır hem çarpar. Geceyi başlatmak için mükemmel.",
+                recipe: "• 5cl Votka<br>• 3cl Kahve Likörü (Kahlua)<br>• 1 shot taze Espresso<br>• Buzla çok sert çalkala",
                 query: "votka fiyatları kahlua"
             },
             {
                 name: "APEROL SPRITZ",
                 tags: { mood: "relax", taste: "fruity", intensity: "low" },
                 desc: "Gün batımının resmi içeceği. Hafif, köpüklü ve turuncu.",
-                recipe: "3 ölçü Prosecco (veya Köpüklü Şarap)<br>2 ölçü Aperol<br>1 ölçü Soda<br>Bol buz ve portakal dilimi.",
-                query: "aperol fiyatları prosecco"
+                recipe: "• 3 ölçü Prosecco (Köpüklü Şarap)<br>• 2 ölçü Aperol<br>• 1 ölçü Soda<br>• Bol buz",
+                query: "aperol fiyatları güncel"
             },
             {
                 name: "LONG ISLAND ICED TEA",
                 tags: { mood: "energy", taste: "sour", intensity: "high" },
-                desc: "Masum adına aldanma, içinde 5 çeşit alkol var. Hızlı sarhoşluk garantili.",
-                recipe: "2cl Votka, 2cl Cin, 2cl Rom, 2cl Tekila, 2cl Portakal Likörü<br>Limon suyu<br>Kola ile tamamla.",
+                desc: "Masum adına aldanma, içinde 5 çeşit alkol var.",
+                recipe: "• 2cl Votka, 2cl Cin, 2cl Rom<br>• 2cl Tekila, 2cl Portakal Likörü<br>• Limon suyu & Kola",
                 query: "votka cin rom fiyatları"
             },
             {
                 name: "MOSCOW MULE",
                 tags: { mood: "relax", taste: "sour", intensity: "medium" },
                 desc: "Zencefilin yakıcı ferahlığı. Bakır kupada buz gibi bir klasik.",
-                recipe: "5cl Votka<br>15cl Zencefil Gazozu (Ginger Beer)<br>Misket limonu suyu.",
-                query: "votka fiyatları ginger beer"
+                recipe: "• 5cl Votka<br>• 15cl Zencefil Gazozu (Ginger Beer)<br>• Misket limonu suyu",
+                query: "votka fiyatları güncel"
             },
             {
                 name: "COSMOPOLITAN",
                 tags: { mood: "classy", taste: "fruity", intensity: "medium" },
-                desc: "Şehirli, şık ve pembe. Sex and the City ile ikonlaşmış modern bir klasik.",
-                recipe: "4cl Votka (Limonlu)<br>2cl Portakal Likörü<br>1cl Limon suyu<br>3cl Kızılcık suyu.",
-                query: "votka fiyatları cointreau"
+                desc: "Şehirli, şık ve pembe. Modern bir klasik.",
+                recipe: "• 4cl Votka (Limonlu)<br>• 2cl Portakal Likörü<br>• 1cl Limon suyu<br>• 3cl Kızılcık suyu",
+                query: "votka fiyatları güncel"
+            },
+            {
+                name: "RAKI (ASLAN SÜTÜ)",
+                tags: { mood: "deep", taste: "bitter", intensity: "high" },
+                desc: "Bu topraklarda dertler en iyi böyle çözülür. Yavaş iç, mezesiz içme.",
+                recipe: "• Duble Rakı<br>• Soğuk Su<br>• Bir dilim kavun ve beyaz peynir",
+                query: "rakı fiyatları güncel"
+            },
+            {
+                name: "GİN TONİC",
+                tags: { mood: "classy", taste: "sour", intensity: "medium" },
+                desc: "Basitliğin mükemmelliği. Kaliteli bir cin ve taze tonik.",
+                recipe: "• 5cl Cin<br>• 15cl Tonik<br>• Salatalık şeridi veya Limon",
+                query: "cin fiyatları güncel"
+            },
+            {
+                name: "MARGARITA",
+                tags: { mood: "energy", taste: "sour", intensity: "high" },
+                desc: "Meksika ateşi. Tuzlu kenarlar ve tekilanın gücü.",
+                recipe: "• 5cl Tekila<br>• 3cl Portakal Likörü<br>• 2cl Limon suyu<br>• Bardağın kenarını tuzla",
+                query: "tekila fiyatları güncel"
             }
         ];
 
-        // --- 2. SORULAR VE PUANLAMA ---
+        // --- 3. SORULAR ---
         const questions = [
             {
                 text: "Hoş geldin. Bugün ruh halin nasıl?",
                 options: [
-                    { label: "Yorgunum, Resetle beni", value: "relax" },
+                    { label: "Yorgunum, Sakinlik istiyorum", value: "relax" },
                     { label: "Enerjik, Parti modu!", value: "energy" },
-                    { label: "Melankolik / Düşünceli", value: "deep" },
-                    { label: "Sofistike / Şık", value: "classy" }
+                    { label: "Dertli / Düşünceli", value: "deep" },
+                    { label: "Sofistike / Kendimi Şımartıcam", value: "classy" }
                 ],
                 key: "mood"
             },
             {
-                text: "Damağında ne arıyorsun?",
+                text: "Damağında nasıl bir tat arıyorsun?",
                 options: [
                     { label: "Ekşi ve Ferah", value: "sour" },
                     { label: "Acı ve Karakterli", value: "bitter" },
-                    { label: "Tatlı / Yumuşak", value: "sweet" },
-                    { label: "Meyvemsi", value: "fruity" }
+                    { label: "Tatlı ve Yumuşak", value: "sweet" },
+                    { label: "Meyvemsi ve Aromatik", value: "fruity" }
                 ],
                 key: "taste"
             },
             {
-                text: "Son olarak, ne kadar sert olsun?",
+                text: "Son olarak, etki seviyesi ne olsun?",
                 options: [
                     { label: "Hafif (Çarpmayan)", value: "low" },
                     { label: "Orta (Keyiflik)", value: "medium" },
-                    { label: "Sert (Yüksek Alkol)", value: "high" }
+                    { label: "Sert (Beni çarpsın)", value: "high" }
                 ],
                 key: "intensity"
             }
         ];
 
-        // --- 3. UYGULAMA MANTIĞI ---
+        // --- 4. MANTIK ---
         let currentStep = 0;
         let userPrefs = {};
 
@@ -309,24 +389,22 @@
         const optionsBox = document.getElementById('options-container');
         const resultArea = document.getElementById('result-area');
 
-        // Yazı Efekti
         function typeWriter(text, i, callback) {
             if (i < text.length) {
                 dialogueBox.innerHTML = text.substring(0, i+1) + '<span style="color:#ff9900">_</span>';
-                setTimeout(() => typeWriter(text, i + 1, callback), 30);
+                setTimeout(() => typeWriter(text, i + 1, callback), 25); // Yazı hızı
             } else {
-                dialogueBox.innerHTML = text; // İmleci kaldır
+                dialogueBox.innerHTML = text; 
                 if (callback) callback();
             }
         }
 
         function renderStep() {
-            optionsBox.innerHTML = ""; // Temizle
+            optionsBox.innerHTML = ""; 
             
             if (currentStep < questions.length) {
                 const q = questions[currentStep];
                 typeWriter(q.text, 0, () => {
-                    // Seçenekleri oluştur
                     q.options.forEach(opt => {
                         const btn = document.createElement('button');
                         btn.className = 'option-btn';
@@ -346,24 +424,22 @@
             renderStep();
         }
 
-        // --- 4. HESAPLAMA MOTORU ---
         function calculateAndShowResult() {
-            typeWriter("Veriler analiz ediliyor... En uygun karışım hazırlanıyor...", 0, () => {
+            typeWriter("Sistem verileri işliyor... En uygun karışım taranıyor...", 0, () => {
                 setTimeout(() => {
-                    optionsBox.style.display = 'none'; // Seçenekleri gizle
+                    optionsBox.style.display = 'none'; 
                     
-                    // Puanlama Sistemi
                     let bestDrink = null;
                     let maxScore = -1;
 
                     drinksDB.forEach(drink => {
                         let score = 0;
-                        if (drink.tags.mood === userPrefs.mood) score += 3; // Mood çok önemli
+                        if (drink.tags.mood === userPrefs.mood) score += 4; // Mood en önemli faktör
                         if (drink.tags.taste === userPrefs.taste) score += 2;
                         if (drink.tags.intensity === userPrefs.intensity) score += 2;
                         
-                        // Biraz rastgelelik ekle ki hep aynısı çıkmasın (0 ile 1 arası)
-                        score += Math.random();
+                        // Küçük bir kaos faktörü
+                        score += Math.random() * 1.5;
 
                         if (score > maxScore) {
                             maxScore = score;
@@ -372,7 +448,7 @@
                     });
 
                     showResult(bestDrink);
-                }, 1000);
+                }, 1200);
             });
         }
 
@@ -383,16 +459,19 @@
             document.getElementById('drink-description').innerText = drink.desc;
             document.getElementById('drink-recipe').innerHTML = drink.recipe;
             
-            // Google Alışveriş Linki Oluşturma
-            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(drink.query)}&tbm=shop`;
+            // YENİ ÇÖZÜM: Direkt Google Araması (Web)
+            // "Shop" sekmesi yerine normal Google araması yapar.
+            // Sorguya "2026 güncel fiyat" ekleyerek blog/haber sitelerini hedefler.
+            const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
             const btn = document.getElementById('price-link');
             btn.href = searchUrl;
             
-            dialogueBox.innerHTML = `<span style="color:#ff9900">İŞTE TAVSİYEM:</span><br>Senin için ${drink.name} seçildi.`;
+            dialogueBox.innerHTML = `<span style="color:#ff9900">BULUNDU:</span><br>Senin için en uygun reçete: ${drink.name}`;
         }
 
-        // Başlat
         window.onload = () => {
+            // Başlangıç animasyonu
+            bartenderEl.innerText = bartenderFrames[0];
             renderStep();
         };
 
