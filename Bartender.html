@@ -7,15 +7,15 @@
     
     <style>
         /* ============================
-           1. CYBERPUNK BASE
+           1. CYBERPUNK BASE & OKUNABİLİRLİK
            ============================ */
         :root {
             --bg: #050505;
             --surface: #0e0e0e;
-            --primary: #ff9900; /* Amber */
-            --glass-tint: rgba(255, 153, 0, 0.05);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #eee;
+            --primary: #ff9900; /* Amber - Ana Vurgu */
+            --text-main: #e0e0e0; /* Okunabilir Ana Metin */
+            --text-muted: #999999; /* Yardımcı Metin */
+            --border: rgba(255, 255, 255, 0.15);
             --font: 'Courier New', Courier, monospace;
         }
 
@@ -23,7 +23,7 @@
 
         body {
             background-color: var(--bg);
-            color: var(--text);
+            color: var(--text-main);
             font-family: var(--font);
             margin: 0;
             min-height: 100vh;
@@ -37,7 +37,7 @@
             content: ""; position: fixed; inset: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
             background-size: 100% 3px;
-            pointer-events: none; z-index: 99; opacity: 0.3;
+            pointer-events: none; z-index: 99; opacity: 0.2;
         }
 
         .container {
@@ -47,11 +47,11 @@
         }
 
         nav { position: absolute; top: 20px; left: 20px; }
-        nav a { color: #666; text-decoration: none; font-size: 0.8rem; text-transform: uppercase; border:1px solid #333; padding:5px 10px; transition:0.3s; }
+        nav a { color: var(--text-muted); text-decoration: none; font-size: 0.8rem; text-transform: uppercase; border:1px solid #333; padding:6px 12px; transition:0.3s; background: #000; }
         nav a:hover { color: var(--primary); border-color:var(--primary); }
 
         /* ============================
-           2. SAHNE ALANI (STAGE AREA)
+           2. SAHNE ALANI (GÖRSEL)
            ============================ */
         .stage-area {
             height: 280px;
@@ -68,139 +68,44 @@
 
         /* --- KATMAN 0: ARKA PLAN --- */
         .bar-background {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 20px 10px 0 10px;
-            opacity: 0.5;
-            filter: blur(0.5px);
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
+            display: flex; justify-content: space-between; padding: 20px 10px 0 10px;
+            opacity: 0.4; filter: blur(0.5px);
         }
-
-        .shelf-block {
-            width: 35%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-bottom: 90px;
-            position: relative;
-        }
-
-        .shelf-line {
-            width: 100%; height: 4px; background: #333;
-            margin-bottom: 5px;
-            box-shadow: 0 2px 5px #000;
-            position: relative;
-        }
-
-        .bottles-row {
-            display: flex; justify-content: space-around; align-items: flex-end;
-            height: 60px; margin-bottom: -4px;
-            z-index: 1;
-        }
-
-        .bottle {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #555;
-            position: relative;
-        }
-        .bottle::after {
-            content:""; position: absolute; top:-5px; left: 50%; transform: translateX(-50%);
-            width: 40%; height: 5px; background: #444;
-        }
-
-        .b-tall { width: 14px; height: 50px; border-radius: 2px; border-color: #777; }
-        .b-fat { width: 20px; height: 35px; border-radius: 5px; border-color: #555; background: rgba(255,153,0,0.1); }
-        .b-sq { width: 18px; height: 45px; border-radius: 0; border-color: #446; background: rgba(0,100,255,0.1); }
-
-        .wall-texture {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px);
-            background-size: 20px 20px;
-            z-index: -1;
-            opacity: 0.3;
-        }
+        .shelf-block { width: 35%; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 90px; }
+        .shelf-line { width: 100%; height: 4px; background: #333; margin-bottom: 5px; }
+        .bottles-row { display: flex; justify-content: space-around; align-items: flex-end; height: 60px; margin-bottom: -4px; z-index: 1; }
+        .bottle { background: rgba(255,255,255,0.05); border: 1px solid #555; position: relative; }
+        .bottle::after { content:""; position: absolute; top:-5px; left: 50%; transform: translateX(-50%); width: 40%; height: 5px; background: #444; }
+        .b-tall { width: 14px; height: 50px; border-radius: 2px; }
+        .b-fat { width: 20px; height: 35px; border-radius: 5px; }
+        .b-sq { width: 18px; height: 45px; border-radius: 0; }
+        .wall-texture { position: absolute; top:0; left:0; width:100%; height:100%; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; z-index: -1; opacity: 0.3; }
 
         /* --- KATMAN 1: BEKLEYEN BARMEN --- */
-        .bartender-layer {
-            position: absolute; bottom: 0;
-            width: 100%; height: 100%;
-            display: flex; align-items: flex-end; justify-content: center;
-            transition: opacity 0.5s, transform 0.5s;
-            z-index: 5;
-        }
-
-        .bar-counter {
-            position: absolute; bottom: 0; width: 100%; height: 15px;
-            background: linear-gradient(to bottom, #333, #111);
-            border-top: 3px solid var(--primary);
-            box-shadow: 0 0 20px rgba(255,153,0,0.2);
-            z-index: 6;
-        }
-        
-        .cyber-tender {
-            width: 110px; height: 170px;
-            position: relative; bottom: 15px;
-            display: flex; flex-direction: column; align-items: center;
-            animation: idleBreathe 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
-        }
-        .tender-head {
-            width: 55px; height: 45px;
-            background: linear-gradient(135deg, #444, #222);
-            border: 2px solid var(--primary); border-radius: 8px;
-            position: relative;
-            box-shadow: inset 0 0 10px rgba(255,153,0,0.2);
-        }
-        .tender-eyes {
-            position: absolute; top: 15px; left: 10px; width: 30px; height: 4px;
-            background: var(--primary); box-shadow: 0 0 10px var(--primary);
-            animation: eyeScan 4s infinite ease-in-out;
-        }
+        .bartender-layer { position: absolute; bottom: 0; width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; transition: opacity 0.5s; z-index: 5; }
+        .bar-counter { position: absolute; bottom: 0; width: 100%; height: 15px; background: linear-gradient(to bottom, #333, #111); border-top: 3px solid var(--primary); z-index: 6; }
+        .cyber-tender { width: 110px; height: 170px; position: relative; bottom: 15px; display: flex; flex-direction: column; align-items: center; animation: idleBreathe 4s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
+        .tender-head { width: 55px; height: 45px; background: linear-gradient(135deg, #444, #222); border: 2px solid var(--primary); border-radius: 8px; position: relative; }
+        .tender-eyes { position: absolute; top: 15px; left: 10px; width: 30px; height: 4px; background: var(--primary); animation: eyeScan 4s infinite ease-in-out; }
         .tender-neck { width: 20px; height: 10px; background: #333; margin-top: -2px; z-index: -1; }
-        
-        .tender-body {
-            width: 100px; height: 115px;
-            background: radial-gradient(circle at center, #333, #111);
-            border: 1px solid #444; border-top: none;
-            border-radius: 20px 20px 0 0;
-            position: relative;
-            display: flex; justify-content: center; padding-top: 20px;
-        }
-        .tender-body::before {
-            content: ""; position: absolute; top:0; width: 40px; height: 20px;
-            border-bottom: 1px solid #555;
-        }
-        .tender-core {
-            width: 36px; height: 36px; background: rgba(255,153,0,0.1);
-            border: 1px solid var(--primary); border-radius: 50%;
-            box-shadow: 0 0 15px rgba(255,153,0,0.2);
-            animation: corePulse 2s infinite;
-        }
+        .tender-body { width: 100px; height: 115px; background: radial-gradient(circle at center, #333, #111); border: 1px solid #444; border-top: none; border-radius: 20px 20px 0 0; position: relative; display: flex; justify-content: center; padding-top: 20px; }
+        .tender-core { width: 36px; height: 36px; background: rgba(255,153,0,0.1); border: 1px solid var(--primary); border-radius: 50%; animation: corePulse 2s infinite; }
 
-        /* --- KATMAN 2 & 3: SHAKER & SUNUM --- */
-        .shaker-layer {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
-            opacity: 0; transition: all 0.5s; z-index: 7;
-        }
+        /* --- KATMAN 2: SHAKER --- */
+        .shaker-layer { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.5s; z-index: 7; }
         .shaker-container { width: 80px; height: 140px; position: relative; transform-origin: bottom center; }
         .shaker-body { width: 100%; height: 75%; background: linear-gradient(135deg, #555, #222); border-radius: 5px 5px 25px 25px; border: 2px solid #888; position: absolute; bottom: 0; }
         .shaker-cap { width: 100%; height: 25%; background: linear-gradient(135deg, #666, #333); border-radius: 15px 15px 5px 5px; border: 2px solid #999; border-bottom: 1px solid #222; position: absolute; top: 0; }
         .shaker-top { width: 40%; height: 15px; background: #555; position: absolute; top: -15px; left: 30%; border-radius: 5px 5px 0 0; border: 2px solid #888; }
         .is-shaking { animation: shakeHard 0.15s infinite; }
 
-        .presentation-layer {
-            position: absolute; width: 100%; height: 100%; bottom: 10px;
-            display: flex; align-items: flex-end; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 8;
-        }
+        /* --- KATMAN 3: SUNUM --- */
+        .presentation-layer { position: absolute; width: 100%; height: 100%; bottom: 10px; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 8; }
         .glass-svg { width: 140px; height: 140px; fill: none; stroke: #ccc; stroke-width: 2; overflow: visible; position: relative; z-index: 2; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         .liquid-stream { position: absolute; top: 0px; width: 8px; height: 0; background: var(--primary); box-shadow: 0 0 15px var(--primary); z-index: 1; transition: height 0.5s; border-radius: 4px; }
         .liquid-fill { fill: var(--primary); opacity: 0; transition: opacity 1s, fill 0.5s; filter: drop-shadow(0 0 8px var(--primary)); }
 
-        /* --- ANİMASYONLAR --- */
         @keyframes idleBreathe { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
         @keyframes eyeScan { 0%, 100% { width: 30px; left: 10px; opacity: 1; } 50% { width: 10px; left: 20px; opacity: 0.5; } }
         @keyframes corePulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
@@ -210,23 +115,45 @@
            4. UI (DİYALOG & SEÇENEKLER)
            ============================ */
         .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
-        .dialogue-header { font-size: 0.55rem; color: rgba(255, 255, 255, 0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
-        .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
+        .dialogue-header { font-size: 0.55rem; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; color: var(--text-main); }
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
-        .option-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #aaa; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
-        .option-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,153,0,0.05); }
+        .option-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #ccc; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--primary); color: #fff; background: rgba(255,153,0,0.1); transform: translateY(-2px); }
         
+        /* SONUÇ KARTI TASARIMI */
         .result-card { display: none; border: 1px solid var(--primary); background: #080808; margin-top: 20px; animation: slideUp 0.5s ease; text-align: left; }
-        .result-head { background: var(--primary); color: #000; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
+        .result-head { background: var(--primary); color: #000; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; font-size: 1.1rem; }
         .result-body { padding: 20px; }
         
-        /* Liste Tasarımı (Recipe) */
-        .recipe-list { color: #ccc; margin: 10px 0; padding-left: 0; font-size: 0.9rem; line-height: 1.6; list-style: none; }
-        .recipe-list li { margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 3px; display: flex; justify-content: space-between; }
-        .recipe-list li span:last-child { color: var(--primary); font-weight: bold; } /* Ölçek rengi */
+        .section-title { color: var(--primary); font-size: 0.8rem; letter-spacing: 1px; display: block; margin-bottom: 8px; margin-top: 20px; font-weight: bold; }
+        
+        .recipe-list { color: var(--text-main); margin: 0; padding-left: 0; font-size: 0.95rem; line-height: 1.6; list-style: none; }
+        .recipe-list li { margin-bottom: 6px; border-bottom: 1px dashed #333; padding-bottom: 3px; display: flex; justify-content: space-between; }
+        .recipe-list li span:last-child { color: var(--primary); font-weight: bold; } 
 
-        .btn-full { display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: 0.3s; font-size: 0.8rem; text-transform: uppercase; }
+        /* PLAYLIST KUTUSU */
+        .playlist-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            color: #bbb;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+        .playlist-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .icon-music { margin-right: 10px; color: var(--primary); font-size: 1rem; }
+
+        .btn-full { display: block; width: 100%; text-align: center; padding: 14px; margin-top: 15px; text-decoration: none; border: 1px solid var(--border); color: #ccc; transition: 0.3s; font-size: 0.9rem; text-transform: uppercase; background: #111; }
         .btn-full.highlight { border-color: var(--primary); color: var(--primary); font-weight: bold; }
         .btn-full:hover { background: var(--primary); color: #000; }
 
@@ -243,49 +170,17 @@
         
         <div class="stage-area">
             <div class="wall-texture"></div>
-
             <div class="bar-background">
-                <div class="shelf-block">
-                    <div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
-                    <div class="shelf-line"></div>
-                    <div class="bottles-row"><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
-                    <div class="shelf-line"></div>
-                </div>
-                <div class="shelf-block">
-                    <div class="bottles-row"><div class="bottle b-sq"></div><div class="bottle b-tall"></div></div>
-                    <div class="shelf-line"></div>
-                    <div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
-                    <div class="shelf-line"></div>
-                </div>
+                <div class="shelf-block"><div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div><div class="shelf-line"></div><div class="bottles-row"><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div><div class="shelf-line"></div></div>
+                <div class="shelf-block"><div class="bottles-row"><div class="bottle b-sq"></div><div class="bottle b-tall"></div></div><div class="shelf-line"></div><div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div><div class="shelf-line"></div></div>
             </div>
-
-            <div id="bartender-layer" class="bartender-layer">
-                <div class="cyber-tender">
-                    <div class="tender-head"><div class="tender-eyes"></div></div>
-                    <div class="tender-neck"></div>
-                    <div class="tender-body"><div class="tender-core"></div></div>
-                </div>
-                <div class="bar-counter"></div>
-            </div>
-
-            <div id="shaker-layer" class="shaker-layer">
-                <div id="shaker" class="shaker-container">
-                    <div class="shaker-top"></div><div class="shaker-cap"></div><div class="shaker-body"></div>
-                </div>
-            </div>
-
-            <div id="presentation-layer" class="presentation-layer">
-                <div id="stream" class="liquid-stream"></div>
-                <svg id="glass-icon" class="glass-svg" viewBox="0 0 100 100">
-                    <path id="glass-path" d="" fill="none" stroke="currentColor" stroke-width="2"/>
-                    <path id="liquid-path" class="liquid-fill" d="" />
-                </svg>
-            </div>
-
+            <div id="bartender-layer" class="bartender-layer"><div class="cyber-tender"><div class="tender-head"><div class="tender-eyes"></div></div><div class="tender-neck"></div><div class="tender-body"><div class="tender-core"></div></div></div><div class="bar-counter"></div></div>
+            <div id="shaker-layer" class="shaker-layer"><div id="shaker" class="shaker-container"><div class="shaker-top"></div><div class="shaker-cap"></div><div class="shaker-body"></div></div></div>
+            <div id="presentation-layer" class="presentation-layer"><div id="stream" class="liquid-stream"></div><svg id="glass-icon" class="glass-svg" viewBox="0 0 100 100"><path id="glass-path" d="" fill="none" stroke="currentColor" stroke-width="2"/><path id="liquid-path" class="liquid-fill" d="" /></svg></div>
         </div>
 
         <div class="dialogue-card">
-            <span class="dialogue-header">Cyber-Tender v4.0</span>
+            <span class="dialogue-header">Cyber-Tender v4.1</span>
             <div id="dialogue-text" class="typing-text"></div>
         </div>
 
@@ -297,13 +192,15 @@
                 <span>%98 MATCH</span>
             </div>
             <div class="result-body">
-                <p id="drink-desc" style="color:#888; font-style:italic; margin-bottom:15px;"></p>
+                <p id="drink-desc" style="color:#bbb; font-style:italic; margin-bottom:15px; font-size:1rem;"></p>
                 
-                <p id="drink-prep" style="color:#aaa; font-size:0.9rem; margin-bottom:20px; line-height:1.4; border-left:2px solid var(--primary); padding-left:10px;"></p>
+                <p id="drink-prep" style="color:#999; font-size:0.9rem; margin-bottom:20px; line-height:1.5; border-left:2px solid var(--primary); padding-left:12px;"></p>
                 
-                <strong style="color:var(--primary); font-size:0.8rem; letter-spacing:1px; display:block; margin-bottom:10px;">> İÇERİK & ÖLÇEKLER:</strong>
-                <ul id="drink-recipe" class="recipe-list">
-                    </ul>
+                <div class="section-title">> İÇERİK & ÖLÇEKLER:</div>
+                <ul id="drink-recipe" class="recipe-list"></ul>
+
+                <div class="section-title">> VIBE PLAYLIST:</div>
+                <div id="playlist-container" class="playlist-box"></div>
                 
                 <a id="price-btn" href="#" target="_blank" class="btn-full highlight">Fiyat Araştırması</a>
                 <button onclick="location.reload()" class="btn-full">Yeniden Başlat</button>
@@ -313,7 +210,6 @@
     </div>
 
     <script>
-        // --- SVG BARDAK YOLLARI ---
         const glassPaths = {
             martini: { path: "M10,10 L50,60 L90,10 Z M50,60 L50,95 M30,95 L70,95", fill: "M15,15 L50,55 L85,15 Z" },
             rocks: { path: "M15,20 L20,90 L80,90 L85,20 Z", fill: "M22,85 L78,85 L82,30 L18,30 Z" },
@@ -322,94 +218,102 @@
             shot: { path: "M30,30 L35,90 L65,90 L70,30 Z", fill: "M36,85 L64,85 L68,35 L32,35 Z" }
         };
 
-        // --- VERİTABANI (ÖLÇEKLER DAHİL) ---
-        // Malzemeler artık Array formatında, JS ile listeye çevrilecek
+        // --- VERİTABANI (YENİLENMİŞ: SEXY MODU & PLAYLIST) ---
         const drinksDB = [
+            { 
+                name: "PORN STAR MARTINI", type: "martini", color: "#f39c12", 
+                tags: { mood: "sexy", taste: "fruity", intensity: "medium" }, 
+                desc: "Tutkulu, egzotik ve kışkırtıcı.", 
+                prep: "Votka, pasiflora ve vanilyayı çalkalayın. Bardağa süzün. Yanında bir shot Prosecco ile servis edin.", 
+                recipe: ["Vanilyalı Votka|4 cl", "Pasiflora Likörü|2 cl", "Limon Suyu|2 cl", "Prosecco|1 Shot (Yanında)"],
+                playlist: ["Earned It - The Weeknd", "Do I Wanna Know? - Arctic Monkeys", "Streets - Doja Cat", "High - Dua Lipa", "Crazy in Love - Beyonce (Remix)"],
+                query: "vanilyalı votka pasiflora" 
+            },
+            { 
+                name: "FRENCH 75", type: "wine", color: "#f1c40f", 
+                tags: { mood: "sexy", taste: "sour", intensity: "high" }, 
+                desc: "Şampanyanın gücü, cinin keskinliği.", 
+                prep: "Cin, limon ve şekeri buzla çalkalayın. Kadehe süzüp üzerini soğuk şampanya ile tamamlayın.", 
+                recipe: ["Cin|3 cl", "Limon Suyu|1.5 cl", "Şeker Şurubu|1 cl", "Şampanya|Tamamlamak için"],
+                playlist: ["Young and Beautiful - Lana Del Rey", "Feeling Good - Nina Simone", "Back to Black - Amy Winehouse", "Glory Box - Portishead", "Wicked Game - Chris Isaak"],
+                query: "cin şampanya fiyat" 
+            },
+            { 
+                name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", 
+                tags: { mood: "sexy", taste: "sweet", intensity: "high" }, 
+                desc: "Geceyi uzatmak isteyenler için.", 
+                prep: "Sıcak espresso ve diğer malzemeleri buzla dolu shakerda çok sert çalkalayın. Köpüğüyle birlikte süzün.", 
+                recipe: ["Votka|5 cl", "Kahve Likörü|3 cl", "Espresso|1 Shot", "Kahve Çekirdeği|3 Adet"],
+                playlist: ["Midnight City - M83", "Latch - Disclosure", "Goosebumps - Travis Scott", "Starboy - The Weeknd", "Get Lucky - Daft Punk"],
+                query: "votka kahlua" 
+            },
             { 
                 name: "OLD FASHIONED", type: "rocks", color: "#e67e22", 
                 tags: { mood: "deep", taste: "bitter", intensity: "high" }, 
-                desc: "Viskinin en saf hali.", 
-                prep: "Küp şekeri bitter ile ezin. Büyük bir buz ve viskiyi ekleyip 30 saniye karıştırın. Portakal kabuğunu sıkıp içine atın.", 
+                desc: "Klasik, ağır ve karizmatik.", 
+                prep: "Şekeri bitter ile ezin. Buz ve viski ekleyip karıştırın.", 
                 recipe: ["Burbon Viski|6 cl", "Küp Şeker|1 Adet", "Angostura Bitters|2 Damla", "Portakal Kabuğu|1 Parça"],
+                playlist: ["Fly Me To The Moon - Frank Sinatra", "I Put A Spell On You - Nina Simone", "Ain't No Sunshine - Bill Withers", "Feeling Good - Muse", "Way Down We Go - Kaleo"],
                 query: "viski fiyatları" 
             },
             { 
                 name: "NEGRONI", type: "rocks", color: "#e74c3c", 
                 tags: { mood: "classy", taste: "bitter", intensity: "high" }, 
                 desc: "İtalyan asaleti. Acı ve tatlı dengesi.", 
-                prep: "Bardağı buzla doldurun. Tüm malzemeleri ekleyip soğuyana kadar karıştırın. Portakal dilimi ile servis edin.", 
+                prep: "Bardağı buzla doldurun. Tüm malzemeleri ekleyip karıştırın.", 
                 recipe: ["Cin|3 cl", "Campari|3 cl", "Kırmızı Vermut|3 cl", "Portakal Dilimi|1 Adet"],
+                playlist: ["Ciao Amore - Dalida", "Tu Vuo Fa L'Americano - Renato Carosone", "Beggin' - Maneskin", "Golden - Harry Styles", "Cold Heart - Dua Lipa & Elton John"],
                 query: "cin campari fiyat" 
-            },
-            { 
-                name: "DRY MARTINI", type: "martini", color: "#bdc3c7", 
-                tags: { mood: "classy", taste: "sour", intensity: "high" }, 
-                desc: "Sek ve keskin. Bond'un tercihi.", 
-                prep: "Cin ve vermutu buz dolu bir karıştırma kabında karıştırın (shaker kullanmayın). Soğutulmuş bardağa süzün.", 
-                recipe: ["Cin|6 cl", "Kuru Vermut|1 cl", "Yeşil Zeytin|1-2 Adet"],
-                query: "cin vermut fiyat" 
             },
             { 
                 name: "MOJITO", type: "highball", color: "#2ecc71", 
                 tags: { mood: "energy", taste: "sour", intensity: "medium" }, 
                 desc: "Küba ferahlığı.", 
-                prep: "Nane, şeker ve limonu bardakta ezin. Kırık buz ve rom ekleyin. Üzerini sodayla tamamlayıp karıştırın.", 
-                recipe: ["Beyaz Rom|5 cl", "Taze Nane|10 Yaprak", "Yarım Limon|4 Parça", "Esmer Şeker|2 Kaşık", "Soda|Tamamlamak için"],
+                prep: "Nane, şeker ve limonu ezin. Rom ve soda ekleyin.", 
+                recipe: ["Beyaz Rom|5 cl", "Taze Nane|10 Yaprak", "Limon|4 Parça", "Soda|Tamamlamak için"],
+                playlist: ["Havana - Camila Cabello", "Despacito - Luis Fonsi", "Chan Chan - Buena Vista Social Club", "I Like It - Cardi B", "Pepas - Farruko"],
                 query: "rom fiyatları" 
             },
             { 
                 name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", 
                 tags: { mood: "relax", taste: "sour", intensity: "medium" }, 
                 desc: "Ekşi ve tatlı mükemmel denge.", 
-                prep: "Tüm malzemeleri önce buzsuz (dry shake), sonra buzla çalkalayın. Bardağa süzün.", 
+                prep: "Tüm malzemeleri önce buzsuz, sonra buzla çalkalayın.", 
                 recipe: ["Burbon Viski|6 cl", "Limon Suyu|3 cl", "Şeker Şurubu|2 cl", "Yumurta Akı|Opsiyonel"],
+                playlist: ["R U Mine? - Arctic Monkeys", "Seven Nation Army - The White Stripes", "Take Me Out - Franz Ferdinand", "Lonely Boy - The Black Keys", "Sweater Weather - The Neighbourhood"],
                 query: "viski fiyatları" 
-            },
-            { 
-                name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", 
-                tags: { mood: "energy", taste: "sweet", intensity: "high" }, 
-                desc: "Uyandırır ve canlandırır.", 
-                prep: "Sıcak espresso ve diğer malzemeleri buzla dolu shakerda çok sert çalkalayın. Köpüğüyle birlikte süzün.", 
-                recipe: ["Votka|5 cl", "Kahve Likörü|3 cl", "Espresso|1 Shot (3cl)", "Kahve Çekirdeği|3 Adet"],
-                query: "votka kahlua" 
             },
             { 
                 name: "TEQUILA SHOT", type: "shot", color: "#f39c12", 
                 tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
-                desc: "Hızlı ve etkili.", 
-                prep: "Klasik ritüel: Elinize tuz döküp yalayın, tekilayı tek dikişte için, hemen ardından limonu ısırın.", 
-                recipe: ["Tekila|4 cl", "Tuz|Bir tutam", "Limon|1 Dilim"],
+                desc: "Hızlı, sert ve tehlikeli.", 
+                prep: "Tuz, Tekila, Limon. Sıralamayı şaşırma.", 
+                recipe: ["Tekila|4 cl", "Tuz|Bir tutam", "Limon|1 Dilim", "Cesaret|%100"],
+                playlist: ["Gasolina - Daddy Yankee", "Turn Down for What - DJ Snake", "Party Rock Anthem - LMFAO", "Bonfire - Childish Gambino", "Tequila - The Champs"],
                 query: "tekila fiyat" 
-            },
-            { 
-                name: "APEROL SPRITZ", type: "wine", color: "#ff7043", 
-                tags: { mood: "relax", taste: "fruity", intensity: "low" }, 
-                desc: "İtalyan gün batımı.", 
-                prep: "Büyük şarap bardağını buzla doldurun. Sırasıyla Prosecco, Aperol ve sodayı ekleyip hafifçe karıştırın.", 
-                recipe: ["Prosecco|9 cl (3 ölçü)", "Aperol|6 cl (2 ölçü)", "Soda|3 cl (1 ölçü)", "Portakal Dilimi|1 Adet"],
-                query: "aperol fiyat" 
-            },
-            { 
-                name: "LONG ISLAND", type: "highball", color: "#795548", 
-                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
-                desc: "Tek bardakta 5 beyaz içki.", 
-                prep: "Kola hariç tüm alkolleri ve limon suyunu buzla çalkalayın. Bardağa döküp üzerini kola ile tamamlayın.", 
-                recipe: ["Votka|1.5 cl", "Cin|1.5 cl", "Rom|1.5 cl", "Tekila|1.5 cl", "Portakal Likörü|1.5 cl", "Limon Suyu|2 cl", "Kola|Tamamlamak için"],
-                query: "votka cin rom fiyat" 
             },
             { 
                 name: "COSMOPOLITAN", type: "martini", color: "#e91e63", 
                 tags: { mood: "classy", taste: "fruity", intensity: "medium" }, 
                 desc: "Şehirli ve modern.", 
-                prep: "Tüm malzemeleri buzla dolu shakerda çalkalayın. Soğutulmuş martini bardağına süzün.", 
+                prep: "Tüm malzemeleri buzla çalkalayın ve süzün.", 
                 recipe: ["Limonlu Votka|4 cl", "Portakal Likörü|2 cl", "Kızılcık Suyu|3 cl", "Limon Suyu|1 cl"],
+                playlist: ["Material Girl - Madonna", "Levitating - Dua Lipa", "Flowers - Miley Cyrus", "Bad Romance - Lady Gaga", "Vogue - Madonna"],
                 query: "votka fiyat" 
+            },
+            { 
+                name: "LONG ISLAND", type: "highball", color: "#795548", 
+                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
+                desc: "Tek bardakta 5 beyaz içki.", 
+                prep: "Kola hariç her şeyi çalkala, bardağa dök, kola ekle.", 
+                recipe: ["Votka|1.5 cl", "Cin|1.5 cl", "Rom|1.5 cl", "Tekila|1.5 cl", "Likör|1.5 cl", "Kola|Fulleyin"],
+                playlist: ["Highway to Hell - AC/DC", "Paradise City - Guns N' Roses", "Smells Like Teen Spirit - Nirvana", "Born to be Wild - Steppenwolf", "Rock You Like a Hurricane - Scorpions"],
+                query: "votka cin rom fiyat" 
             }
         ];
 
-        // --- SORULAR ---
         const questions = [
-            { text: "Ruh halin nasıl?", options: [{l:"Sakin",v:"relax"}, {l:"Enerjik",v:"energy"}, {l:"Derin",v:"deep"}, {l:"Şık",v:"classy"}, {l:"Asi",v:"rebel"}], key:"mood" },
+            { text: "Ruh halin nasıl?", options: [{l:"Sakin / Relax",v:"relax"}, {l:"Enerjik / Parti",v:"energy"}, {l:"Derin / Düşünceli",v:"deep"}, {l:"Sofistike / Şık",v:"classy"}, {l:"Asi / Kural Tanımaz",v:"rebel"}, {l:"Seksi / Kışkırtıcı",v:"sexy"}], key:"mood" },
             { text: "Tat tercihin?", options: [{l:"Ekşi",v:"sour"}, {l:"Acı",v:"bitter"}, {l:"Tatlı",v:"sweet"}, {l:"Meyve",v:"fruity"}, {l:"Otlu",v:"herbal"}], key:"taste" },
             { text: "Sertlik?", options: [{l:"Hafif",v:"low"}, {l:"Orta",v:"medium"}, {l:"Sert",v:"high"}], key:"intensity" }
         ];
@@ -495,19 +399,28 @@
             document.getElementById('drink-desc').innerText = drink.desc;
             document.getElementById('drink-prep').innerText = drink.prep;
             
-            // Reçete Listesini Oluştur
+            // Reçete Listesi
             const recipeList = document.getElementById('drink-recipe');
-            recipeList.innerHTML = ""; // Temizle
+            recipeList.innerHTML = "";
             drink.recipe.forEach(item => {
-                const parts = item.split('|'); // İsim|Miktar şeklinde ayırdım
+                const parts = item.split('|');
                 const li = document.createElement('li');
-                if(parts.length > 1) {
-                    li.innerHTML = `<span>${parts[0]}</span> <span>${parts[1]}</span>`;
-                } else {
-                    li.innerText = parts[0];
-                }
+                if(parts.length > 1) { li.innerHTML = `<span>${parts[0]}</span> <span>${parts[1]}</span>`; } 
+                else { li.innerText = parts[0]; }
                 recipeList.appendChild(li);
             });
+
+            // Playlist Oluştur
+            const playlistBox = document.getElementById('playlist-container');
+            playlistBox.innerHTML = "";
+            if(drink.playlist) {
+                drink.playlist.forEach(song => {
+                    const div = document.createElement('div');
+                    div.className = 'playlist-item';
+                    div.innerHTML = `<span class="icon-music">♬</span> ${song}`;
+                    playlistBox.appendChild(div);
+                });
+            }
 
             document.getElementById('price-btn').href = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
             dialogue.textContent = "Servis edildi. Afiyet olsun.";
