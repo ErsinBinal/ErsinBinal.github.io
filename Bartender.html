@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Bartender v2.0 | Convivium_</title>
+    <title>The Bartender | Convivium_</title>
     <style>
         /* --- GENEL ATMOSFER --- */
         body {
@@ -58,15 +58,15 @@
             position: relative;
         }
 
-        /* --- MONİTÖR VE GÖRSEL ALAN --- */
+        /* --- MONİTÖR ÇERÇEVESİ --- */
         .monitor-frame {
             border: 2px solid #333;
             background: #080808;
             padding: 15px;
             margin-bottom: 20px;
-            box-shadow: 0 0 20px rgba(255, 153, 0, 0.15);
+            box-shadow: 0 0 20px rgba(255, 153, 0, 0.1);
             position: relative;
-            min-height: 180px; /* Sabit yükseklik */
+            min-height: 180px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -93,7 +93,6 @@
             font-size: 14px;
             line-height: 1.2;
             text-align: center;
-            transition: opacity 0.5s;
         }
 
         /* --- DİYALOG KUTUSU --- */
@@ -134,7 +133,7 @@
             padding: 15px 10px;
             cursor: pointer;
             font-family: inherit;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
             text-transform: uppercase;
         }
@@ -146,7 +145,7 @@
             box-shadow: 0 0 10px rgba(255, 153, 0, 0.1);
         }
 
-        /* --- SONUÇ ALANI --- */
+        /* --- SONUÇ KARTI --- */
         .result-card {
             display: none;
             text-align: left;
@@ -213,7 +212,7 @@
         @media (max-width: 600px) {
             .options-grid { grid-template-columns: 1fr; }
             .container { padding-top: 60px; }
-            .visual-display { font-size: 11px; } /* Mobilde görsel taşmasın */
+            .visual-display { font-size: 11px; } /* Mobilde ASCII taşmasın */
         }
     </style>
 </head>
@@ -223,12 +222,104 @@
         <a href="index.html">[ < Geri ]</a>
     </nav>
 
+    <div id="ascii-storage" style="display:none;">
+        <div id="frame-0">
+   .---.   
+  /     \  
+  | O O |  
+   \ - /   
+  /  _  \  
+ |  | |  | 
+ (  |_|  ) 
+        </div>
+        <div id="frame-1">
+   .---.   
+  /     \  
+  | > < |  
+   \ o /   
+  / / \ \  
+ |  \_/  | 
+ ( SHAKE ) 
+        </div>
+        <div id="frame-2">
+   .---.   
+  /     \  
+  | - O |  
+   \ ~ /   
+  /  _  \  
+ /  / \  \ 
+(   |_|   )
+        </div>
+        
+        <div id="glass-rocks">
+   _________
+  |         |
+  |  ICE    |
+  |   O     |
+  |_________|
+ [ ROCKS GL ]
+        </div>
+        <div id="glass-martini">
+   \     /
+    \ o /
+     \ /
+      |
+      |
+     _|_
+ [ MARTINI ]
+        </div>
+        <div id="glass-highball">
+  |       |
+  |   |   |
+  |   |   |
+  |   O   |
+  |_______|
+ [ HIGHBALL]
+        </div>
+        <div id="glass-shot">
+   _     _
+   \___/
+   |   |
+   |___|
+  [ SHOT ]
+        </div>
+        <div id="glass-wine">
+    \   /
+     \ /
+      |
+      |
+     _|_
+  [ WINE ]
+        </div>
+        <div id="glass-raki">
+   |     |
+   |     |
+   |_____|
+   |     |
+   |_____|
+   [ RAKI ]
+        </div>
+        <div id="glass-mule">
+   |~~~~~|
+  _|     |
+ [_      |
+   |_____|
+  [ MUG  ]
+        </div>
+        <div id="glass-tiki">
+   /     \
+  |  O O  |
+  |   ^   |
+   \  -  /
+    -----
+   [ TIKI ]
+        </div>
+    </div>
     <div class="container">
         
         <div class="monitor-frame">
             <div id="status-badge" class="status-badge">[ BEKLİYOR ]</div>
-            <div id="visual-content" class="visual-display">
-                </div>
+            <div id="visual-content" class="visual-display"></div>
         </div>
 
         <div class="dialogue-box">
@@ -263,143 +354,56 @@
     </div>
 
     <script>
-        // --- 1. ASCII SANATLARI (BARMEN VE BARDAKLAR) ---
-        
-        // Barmen Animasyon Kareleri
+        // --- GÜVENLİ ASCII YÜKLEYİCİ ---
+        // JS içinde string hatasını önlemek için HTML'den okuyoruz
+        function getAscii(id) {
+            return document.getElementById(id).innerHTML;
+        }
+
         const bartenderFrames = [
-`   .---.   
-  /     \\  
-  | O O |  
-   \\ - /   
-  /  _  \\  
- |  | |  | 
- (  |_|  ) `,
-
-`   .---.   
-  /     \\  
-  | > < |  
-   \\ o /   
-  / / \\ \\  
- |  \\_/  | 
- ( SHAKE ) `,
-
-`   .---.   
-  /     \\  
-  | - O |  
-   \\ ~ /   
-  /  _  \\  
- /  / \\  \\ 
-(   |_|   )`
+            getAscii('frame-0'),
+            getAscii('frame-1'),
+            getAscii('frame-2')
         ];
-
-        // İçki Bardakları (Sonuç ekranında çıkacak)
-        const glassArts = {
-            rocks: 
-`
-   _________
-  |         |
-  |  ICE    |
-  |   O     |
-  |_________|
- [ ROCKS GL ]`,
-
-            martini:
-`
-   \\     /
-    \\ o /
-     \\ /
-      |
-      |
-     _|_
- [ MARTINI ]`,
-
-            highball:
-`
-  |       |
-  |   |   |
-  |   |   |
-  |   O   |
-  |_______|
- [ HIGHBALL]`,
-
-            shot:
-`
-   _     _
-   \\___/
-   |   |
-   |___|
-  [ SHOT ]`,
-
-            wine:
-`
-    \\   /
-     \\ /
-      |
-      |
-     _|_
-  [ WINE ]`,
-
-            raki:
-`
-   |     |
-   |     |
-   |_____|
-   |     |
-   |_____|
-   [ RAKI ]`,
-   
-            mule:
-`
-   |~~~~~|
-  _|     |
- [_      |
-   |_____|
-  [ MUG  ]`,
-
-            tiki:
-`
-   /     \\
-  |  O O  |
-  |   ^   |
-   \\  -  /
-    -----
-   [ TIKI ]`
-        };
 
         let frameIndex = 0;
         let animationInterval;
         const visualEl = document.getElementById('visual-content');
         const statusEl = document.getElementById('status-badge');
 
-        // Animasyonu Başlat
         function startBartender() {
             animationInterval = setInterval(() => {
-                visualEl.innerText = bartenderFrames[frameIndex];
+                visualEl.innerHTML = bartenderFrames[frameIndex];
                 frameIndex = (frameIndex + 1) % bartenderFrames.length;
             }, 800);
         }
 
-        // Animasyonu Durdur ve İçkiyi Göster
-        function showDrinkArt(type) {
-            clearInterval(animationInterval); // Barmeni durdur
+        function showDrinkArt(glassType) {
+            clearInterval(animationInterval); 
             visualEl.style.opacity = 0;
+            
             setTimeout(() => {
-                // Eğer veritabanında çizim varsa onu kullan, yoksa Rocks bardağını varsayılan yap
-                visualEl.innerText = glassArts[type] || glassArts['rocks'];
+                // Güvenli şekilde ID'den çek: 'glass-rocks' gibi
+                let art = document.getElementById('glass-' + glassType);
+                
+                // Eğer çizim bulunamazsa varsayılan olarak Rocks kullan
+                if (!art) art = document.getElementById('glass-rocks');
+                
+                visualEl.innerHTML = art.innerHTML;
                 visualEl.style.opacity = 1;
-                visualEl.style.color = "#0f0"; // Yeşil renk (Başarı)
+                visualEl.style.color = "#0f0";
+                
                 statusEl.innerText = "[ HAZIR ]";
                 statusEl.style.color = "#0f0";
                 statusEl.style.borderColor = "#0f0";
             }, 500);
         }
 
-        // --- 2. GENİŞLETİLMİŞ VERİTABANI (60+ İÇKİ VE BARDAK TÜRÜ) ---
-        // glass: 'rocks', 'martini', 'highball', 'shot', 'wine', 'raki', 'mule', 'tiki'
+        // --- VERİTABANI (60+ SEÇENEK) ---
         const drinksDB = [
             // --- KLASİKLER & VİSKİ ---
-            { name: "OLD FASHIONED", glass: "rocks", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
-            { name: "WHISKEY SOUR", glass: "rocks", tags: { mood: "relax", taste: "sour", intensity: "medium" }, desc: "Ekşi, tatlı ve sert.", recipe: "• 6cl Viski<br>• 3cl Limon Suyu<br>• Şeker Şurubu", query: "viski fiyatları" },
+            { name: "OLD FASHIONED", glass: "rocks", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali. Düşünmek ve yavaş yudumlamak için.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
+            { name: "WHISKEY SOUR", glass: "rocks", tags: { mood: "relax", taste: "sour", intensity: "medium" }, desc: "Ekşi, tatlı ve sert. İpeksi bir doku.", recipe: "• 6cl Viski<br>• 3cl Limon Suyu<br>• Şeker Şurubu", query: "viski fiyatları" },
             { name: "GODFATHER", glass: "rocks", tags: { mood: "deep", taste: "sweet", intensity: "high" }, desc: "Viski ve badem likörü.", recipe: "• 5cl Viski<br>• 2.5cl Amaretto", query: "viski amaretto fiyat" },
             { name: "RUSTY NAIL", glass: "rocks", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "İskoç viskisi ve bal likörü.", recipe: "• 4.5cl Scotch<br>• 2.5cl Drambuie", query: "scotch viski drambuie fiyat" },
             { name: "MANHATTAN", glass: "martini", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "New York klasiği.", recipe: "• 5cl Çavdar Viski<br>• 2cl Kırmızı Vermut<br>• Bitters", query: "viski vermut fiyat" },
@@ -438,7 +442,7 @@
             { name: "RAKI (DUBLE)", glass: "raki", tags: { mood: "deep", taste: "herbal", intensity: "high" }, desc: "Aslan sütü.", recipe: "• Duble Rakı<br>• Soğuk Su<br>• Peynir & Kavun", query: "rakı fiyatları" },
             { name: "RAKI KOKTEYLİ", glass: "highball", tags: { mood: "classy", taste: "fruity", intensity: "medium" }, desc: "Modern dokunuş.", recipe: "• 5cl Rakı<br>• Nar Suyu<br>• Nane", query: "rakı fiyatları" },
             { name: "JAGER BOMB", glass: "shot", tags: { mood: "rebel", taste: "herbal", intensity: "high" }, desc: "Enerji patlaması.", recipe: "• 4cl Jägermeister<br>• Yarım kutu Enerji İçeceği", query: "jagermeister fiyat" },
-            { name: "ABSINTHE", glass: "wine", tags: { mood: "adventure", taste: "herbal", intensity: "high" }, desc: "Yeşil peri.", recipe: "• 4cl Absinthe<br>• Soğuk su damlatarak eritilmiş şeker", query: "absinthe fiyat" },
+            { name: "ABSINTHE", glass: "wine", tags: { mood: "adventure", taste: "herbal", intensity: "high" }, desc: "Yeşil peri.", recipe: "• 4cl Absinthe<br>• Soğuk su ile eritilmiş şeker", query: "absinthe fiyat" },
 
             // --- HAFİF & KÖPÜKLÜ ---
             { name: "APEROL SPRITZ", glass: "wine", tags: { mood: "relax", taste: "fruity", intensity: "low" }, desc: "İtalyan aperitifi.", recipe: "• Prosecco<br>• Aperol<br>• Soda", query: "aperol fiyatları" },
@@ -451,7 +455,7 @@
             { name: "BOULEVARDIER", glass: "rocks", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "Viskili Negroni.", recipe: "• Viski<br>• Campari<br>• Vermut", query: "viski campari fiyat" }
         ];
 
-        // --- 3. GENİŞLETİLMİŞ SORULAR ---
+        // --- 3. SORULAR ---
         const questions = [
             {
                 text: "Hoş geldin. Ruh halin nasıl?",
@@ -553,12 +557,10 @@
 
                     drinksDB.forEach(drink => {
                         let score = 0;
-                        // Puanlama Sistemi (Genişletilmiş)
-                        if (drink.tags.mood === userPrefs.mood) score += 5; 
-                        if (drink.tags.taste === userPrefs.taste) score += 4; 
-                        if (drink.tags.intensity === userPrefs.intensity) score += 3;
+                        if (drink.tags.mood === userPrefs.mood) score += 5;
+                        if (drink.tags.taste === userPrefs.taste) score += 3;
+                        if (drink.tags.intensity === userPrefs.intensity) score += 2;
                         
-                        // Rastgelelik faktörü (Tekrarları önlemek için)
                         score += Math.random() * 2;
 
                         if (score > maxScore) {
@@ -567,7 +569,7 @@
                         }
                     });
 
-                    // Eğer eşleşme çok kötüyse varsayılan bir içki öner
+                    // Hiç eşleşme olmazsa varsayılan
                     if (!bestDrink) bestDrink = drinksDB[0];
 
                     showResult(bestDrink);
@@ -576,7 +578,6 @@
         }
 
         function showResult(drink) {
-            // Görseli Değiştir (Barmen -> İçki)
             showDrinkArt(drink.glass);
 
             resultArea.style.display = 'block';
@@ -589,14 +590,14 @@
             const btn = document.getElementById('price-link');
             btn.href = searchUrl;
             
-            dialogueBox.innerHTML = `<span style="color:#ff9900">SERVİS EDİLDİ:</span><br>Senin için en iyi seçim: ${drink.name}`;
+            dialogueBox.innerHTML = `<span style="color:#ff9900">BULUNDU:</span><br>Senin için en uygun reçete: ${drink.name}`;
         }
 
         // Başlat
-        window.onload = () => {
+        window.addEventListener('DOMContentLoaded', () => {
             startBartender();
             renderStep();
-        };
+        });
 
     </script>
 </body>
