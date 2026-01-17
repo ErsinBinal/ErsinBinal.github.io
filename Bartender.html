@@ -218,13 +218,14 @@
             shot: { path: "M30,30 L35,90 L65,90 L70,30 Z", fill: "M36,85 L64,85 L68,35 L32,35 Z" }
         };
 
-        // --- VERİTABANI (YENİLENMİŞ: SEXY MODU & PLAYLIST) ---
+        // --- GENİŞLETİLMİŞ VERİTABANI ---
         const drinksDB = [
+            // SEXY / KIŞKIRTICI
             { 
                 name: "PORN STAR MARTINI", type: "martini", color: "#f39c12", 
                 tags: { mood: "sexy", taste: "fruity", intensity: "medium" }, 
-                desc: "Tutkulu, egzotik ve kışkırtıcı.", 
-                prep: "Votka, pasiflora ve vanilyayı çalkalayın. Bardağa süzün. Yanında bir shot Prosecco ile servis edin.", 
+                desc: "Tutkulu, egzotik ve modern bir klasik.", 
+                prep: "Votka, pasiflora likörü ve vanilya şurubunu çalkalayın. Bardağa süzün. Yanında bir shot Prosecco ile servis edin.", 
                 recipe: ["Vanilyalı Votka|4 cl", "Pasiflora Likörü|2 cl", "Limon Suyu|2 cl", "Prosecco|1 Shot (Yanında)"],
                 playlist: ["Earned It - The Weeknd", "Do I Wanna Know? - Arctic Monkeys", "Streets - Doja Cat", "High - Dua Lipa", "Crazy in Love - Beyonce (Remix)"],
                 query: "vanilyalı votka pasiflora" 
@@ -241,12 +242,103 @@
             { 
                 name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", 
                 tags: { mood: "sexy", taste: "sweet", intensity: "high" }, 
-                desc: "Geceyi uzatmak isteyenler için.", 
+                desc: "Geceyi uzatmak isteyenler için enerji bombası.", 
                 prep: "Sıcak espresso ve diğer malzemeleri buzla dolu shakerda çok sert çalkalayın. Köpüğüyle birlikte süzün.", 
                 recipe: ["Votka|5 cl", "Kahve Likörü|3 cl", "Espresso|1 Shot", "Kahve Çekirdeği|3 Adet"],
                 playlist: ["Midnight City - M83", "Latch - Disclosure", "Goosebumps - Travis Scott", "Starboy - The Weeknd", "Get Lucky - Daft Punk"],
                 query: "votka kahlua" 
             },
+
+            // ROMANTİK
+            { 
+                name: "CLOVER CLUB", type: "martini", color: "#e91e63", 
+                tags: { mood: "romantic", taste: "fruity", intensity: "medium" }, 
+                desc: "İpeksi dokusuyla zarif bir klasik.", 
+                prep: "Tüm malzemeleri önce buzsuz (dry shake), sonra buzla çalkalayın. Soğutulmuş bardağa süzün.", 
+                recipe: ["Cin|4.5 cl", "Limon Suyu|1.5 cl", "Ahududu Şurubu|1.5 cl", "Yumurta Akı|1 Adet"],
+                playlist: ["La Vie En Rose - Edith Piaf", "Dream A Little Dream - Ella Fitzgerald", "At Last - Etta James", "Video Games - Lana Del Rey", "Lover - Taylor Swift"],
+                query: "cin ahududu şurubu" 
+            },
+            { 
+                name: "PINK LADY", type: "martini", color: "#ff69b4", 
+                tags: { mood: "romantic", taste: "sweet", intensity: "medium" }, 
+                desc: "1950'lerin zarafeti, tatlı ve yumuşak.", 
+                prep: "Cin, elma likörü ve grenadini çalkalayın. Kiraz ile süsleyin.", 
+                recipe: ["Cin|4 cl", "Elma Likörü|2 cl", "Limon Suyu|1 cl", "Grenadine|1 damla"],
+                playlist: ["Put Your Head On My Shoulder - Paul Anka", "Can't Help Falling in Love - Elvis", "Perfect - Ed Sheeran", "Just The Way You Are - Bruno Mars", "Love on the Brain - Rihanna"],
+                query: "cin elma likörü" 
+            },
+
+            // KUTLAMA / ZAFER
+            { 
+                name: "KIR ROYALE", type: "wine", color: "#8e44ad", 
+                tags: { mood: "celebrate", taste: "fruity", intensity: "medium" }, 
+                desc: "Fransız şıklığı, kutlamaların vazgeçilmezi.", 
+                prep: "Kadehin dibine likörü dökün. Üzerine yavaşça şampanyayı ekleyin.", 
+                recipe: ["Creme de Cassis|1.5 cl", "Şampanya|Tamamlamak için"],
+                playlist: ["Celebration - Kool & The Gang", "Uptown Funk - Bruno Mars", "Happy - Pharrell Williams", "Good Feeling - Flo Rida", "Can't Stop the Feeling - Justin Timberlake"],
+                query: "creme de cassis şampanya" 
+            },
+            { 
+                name: "CHAMPAGNE COCKTAIL", type: "wine", color: "#f39c12", 
+                tags: { mood: "celebrate", taste: "bitter", intensity: "medium" }, 
+                desc: "Köpüren altın.", 
+                prep: "Küp şekere bitter damlatıp kadehe atın. Üzerine konyak ve şampanya ekleyin.", 
+                recipe: ["Konyak|1 cl", "Küp Şeker|1 Adet", "Angostura|2 Damla", "Şampanya|Tamamlamak için"],
+                playlist: ["Fly Me To The Moon - Frank Sinatra", "New York, New York - Frank Sinatra", "Feeling Good - Michael Buble", "The Best is Yet to Come - Tony Bennett", "Moondance - Van Morrison"],
+                query: "konyak şampanya" 
+            },
+
+            // MACERACI / KEŞİF
+            { 
+                name: "PISCO SOUR", type: "rocks", color: "#f1c40f", 
+                tags: { mood: "adventure", taste: "sour", intensity: "high" }, 
+                desc: "Güney Amerika'nın ruhu.", 
+                prep: "Malzemeleri çok güçlü çalkalayın. Bardağa süzüp üzerine bitter damlatın.", 
+                recipe: ["Pisco|6 cl", "Limon Suyu|3 cl", "Şeker Şurubu|2 cl", "Yumurta Akı|1 Adet", "Angostura|3 Damla"],
+                playlist: ["Desaparecido - Manu Chao", "Oye Como Va - Santana", "Chan Chan - Buena Vista Social Club", "Bamboleo - Gipsy Kings", "Smooth - Santana"],
+                query: "pisco fiyat" 
+            },
+            { 
+                name: "AVIATION", type: "martini", color: "#a29bfe", 
+                tags: { mood: "adventure", taste: "herbal", intensity: "high" }, 
+                desc: "Gökyüzü kadar mavi, çiçeksi ve nostaljik.", 
+                prep: "Menekşe likörü, maraschino ve cini çalkalayın. Kiraz ile süsleyin.", 
+                recipe: ["Cin|4.5 cl", "Limon Suyu|1.5 cl", "Maraschino Likörü|1.5 cl", "Menekşe Likörü|1 Kaşık"],
+                playlist: ["Come Fly With Me - Frank Sinatra", "Learn to Fly - Foo Fighters", "Space Oddity - David Bowie", "Rocket Man - Elton John", "Across the Universe - The Beatles"],
+                query: "maraschino likörü menekşe likörü" 
+            },
+            { 
+                name: "MAI TAI", type: "highball", color: "#e67e22", 
+                tags: { mood: "adventure", taste: "fruity", intensity: "high" }, 
+                desc: "Tiki kültürünün kralı. Egzotik ve sert.", 
+                prep: "Tüm malzemeleri buzla çalkalayın. Bol buzlu bardağa döküp nane ile süsleyin.", 
+                recipe: ["Koyu Rom|4 cl", "Beyaz Rom|2 cl", "Portakal Likörü|1.5 cl", "Badem Şurubu|1.5 cl", "Limon Suyu|1 cl"],
+                playlist: ["Three Little Birds - Bob Marley", "Somewhere Over the Rainbow - Iz", "Surfin' USA - Beach Boys", "Kokomo - Beach Boys", "Is This Love - Bob Marley"],
+                query: "badem şurubu rom" 
+            },
+
+            // NOSTALJİK
+            { 
+                name: "WHITE RUSSIAN", type: "rocks", color: "#ecf0f1", 
+                tags: { mood: "nostalgic", taste: "sweet", intensity: "low" }, 
+                desc: "The Dude'un favorisi. Tatlı ve rahat.", 
+                prep: "Bardağa buz, votka ve kahve likörünü koyun. Üzerine yavaşça kremayı gezdirin.", 
+                recipe: ["Votka|5 cl", "Kahve Likörü|2 cl", "Süt/Krema|3 cl"],
+                playlist: ["The Man in Me - Bob Dylan", "Hotel California - Eagles", "Just Dropped In - Kenny Rogers", "Peaceful Easy Feeling - Eagles", "Dreams - Fleetwood Mac"],
+                query: "votka kahlua" 
+            },
+            { 
+                name: "GRASSHOPPER", type: "martini", color: "#2ecc71", 
+                tags: { mood: "nostalgic", taste: "sweet", intensity: "low" }, 
+                desc: "Naneli çikolata tadında bir tatlı.", 
+                prep: "Nane likörü, kakao likörü ve kremayı buzla çalkalayın.", 
+                recipe: ["Nane Likörü|3 cl", "Kakao Likörü|3 cl", "Krema|3 cl"],
+                playlist: ["Mint Julep - The Clovers", "Lollipop - The Chordettes", "Mr. Sandman - The Chordettes", "Beyond the Sea - Bobby Darin", "Dream Lover - Bobby Darin"],
+                query: "nane likörü kakao likörü" 
+            },
+
+            // MEVCUTLAR (GÜNCELLENMİŞ)
             { 
                 name: "OLD FASHIONED", type: "rocks", color: "#e67e22", 
                 tags: { mood: "deep", taste: "bitter", intensity: "high" }, 
@@ -309,11 +401,20 @@
                 recipe: ["Votka|1.5 cl", "Cin|1.5 cl", "Rom|1.5 cl", "Tekila|1.5 cl", "Likör|1.5 cl", "Kola|Fulleyin"],
                 playlist: ["Highway to Hell - AC/DC", "Paradise City - Guns N' Roses", "Smells Like Teen Spirit - Nirvana", "Born to be Wild - Steppenwolf", "Rock You Like a Hurricane - Scorpions"],
                 query: "votka cin rom fiyat" 
+            },
+            { 
+                name: "BLOODY MARY", type: "highball", color: "#c0392b", 
+                tags: { mood: "rebel", taste: "spicy", intensity: "medium" }, 
+                desc: "Kahvaltının şampiyonu. Tuzlu ve acı.", 
+                prep: "Buzlu bardağa malzemeleri ekleyin, kereviz sapı ile karıştırın.", 
+                recipe: ["Votka|5 cl", "Domates Suyu|10 cl", "Limon Suyu|1 cl", "Tabasco & Worcestershire|Bolca"],
+                playlist: ["Sunday Morning - Maroon 5", "Rehab - Amy Winehouse", "Easy - Commodores", "Banana Pancakes - Jack Johnson", "Lovely Day - Bill Withers"],
+                query: "votka domates suyu" 
             }
         ];
 
         const questions = [
-            { text: "Ruh halin nasıl?", options: [{l:"Sakin / Relax",v:"relax"}, {l:"Enerjik / Parti",v:"energy"}, {l:"Derin / Düşünceli",v:"deep"}, {l:"Sofistike / Şık",v:"classy"}, {l:"Asi / Kural Tanımaz",v:"rebel"}, {l:"Seksi / Kışkırtıcı",v:"sexy"}], key:"mood" },
+            { text: "Ruh halin nasıl?", options: [{l:"Sakin / Relax",v:"relax"}, {l:"Enerjik / Parti",v:"energy"}, {l:"Derin / Düşünceli",v:"deep"}, {l:"Sofistike / Şık",v:"classy"}, {l:"Asi / Kural Tanımaz",v:"rebel"}, {l:"Seksi / Kışkırtıcı",v:"sexy"}, {l:"Kutlama / Zafer",v:"celebrate"}, {l:"Maceracı / Keşif",v:"adventure"}, {l:"Nostaljik / Retro",v:"nostalgic"}], key:"mood" },
             { text: "Tat tercihin?", options: [{l:"Ekşi",v:"sour"}, {l:"Acı",v:"bitter"}, {l:"Tatlı",v:"sweet"}, {l:"Meyve",v:"fruity"}, {l:"Otlu",v:"herbal"}], key:"taste" },
             { text: "Sertlik?", options: [{l:"Hafif",v:"low"}, {l:"Orta",v:"medium"}, {l:"Sert",v:"high"}], key:"intensity" }
         ];
