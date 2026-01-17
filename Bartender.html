@@ -57,13 +57,63 @@
         .stage-area {
             height: 260px;
             display: flex;
-            align-items: flex-end; /* Elemanları alta hizala */
+            align-items: flex-end;
             justify-content: center;
             position: relative;
             background: radial-gradient(circle at bottom, var(--glass-tint), transparent 70%);
             margin-bottom: 20px;
             border-bottom: 2px solid #222;
             overflow: hidden;
+            perspective: 1000px; /* Derinlik için */
+        }
+
+        /* --- KATMAN 0: ARKA PLAN (BAR TEZGAHI) --- */
+        .bar-background {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; /* En arkada */
+            opacity: 0.6; /* Odak barmende kalsın diye biraz soluk */
+            pointer-events: none;
+        }
+
+        .shelf {
+            position: absolute;
+            width: 100%; height: 4px;
+            background: #222;
+            border-bottom: 1px solid #444;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .shelf.top { top: 80px; }
+        .shelf.bottom { top: 160px; }
+
+        /* CSS Şişeler */
+        .bottle {
+            position: absolute; bottom: 4px;
+            border: 1px solid #555;
+            background: linear-gradient(to right, rgba(255,255,255,0.05), rgba(255,255,255,0.1));
+        }
+        /* Şişe Tipleri */
+        .b-tall { width: 18px; height: 60px; border-radius: 2px 2px 0 0; }
+        .b-short { width: 24px; height: 40px; border-radius: 4px 4px 0 0; }
+        .b-round { width: 30px; height: 50px; border-radius: 15px 15px 0 0; }
+        /* Şişe Renkleri (Hafif parlamalar) */
+        .c-amber { border-color: var(--primary); box-shadow: inset 0 0 5px rgba(255, 153, 0, 0.3); }
+        .c-blue { border-color: #3498db; box-shadow: inset 0 0 5px rgba(52, 152, 219, 0.3); }
+        .c-clear { border-color: #aaa; }
+
+        /* Asılı Bardaklar */
+        .hanging-glass {
+            position: absolute; top: 84px; /* Üst rafın altı */
+            width: 16px; height: 25px;
+            border: 1px solid #444; border-top: none;
+            border-radius: 0 0 8px 8px;
+            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.05));
+        }
+        .hanging-glass::before { /* Sap */
+            content: ""; position: absolute; top: -10px; left: 7px; width: 2px; height: 10px; background: #444;
+        }
+        .hanging-glass::after { /* Taban */
+            content: ""; position: absolute; top: -12px; left: 2px; width: 12px; height: 2px; background: #444;
         }
 
         /* --- KATMAN 1: BEKLEYEN BARMEN (CYBER-TENDER) --- */
@@ -75,13 +125,14 @@
             align-items: flex-end;
             justify-content: center;
             transition: opacity 0.5s, transform 0.5s;
+            z-index: 2; /* Arka planın önünde */
         }
 
-        /* Bar Tezgahı */
+        /* Bar Tezgahı (Ön Kısım) */
         .bar-counter {
-            position: absolute; bottom: 0; width: 80%; height: 10px;
+            position: absolute; bottom: 0; width: 100%; height: 10px;
             background: #222; border-top: 2px solid var(--primary);
-            box-shadow: 0 0 10px var(--primary);
+            box-shadow: 0 0 15px var(--primary);
         }
         
         /* Barmen Silüeti (CSS Çizim) */
@@ -123,6 +174,7 @@
             display: flex; align-items: center; justify-content: center;
             opacity: 0; transform: translateY(20px); /* Başlangıçta gizli */
             transition: all 0.5s;
+            z-index: 3;
         }
         .shaker-container { width: 80px; height: 140px; position: relative; transform-origin: bottom center; }
         .shaker-body { width: 100%; height: 75%; background: linear-gradient(135deg, #444, #222); border-radius: 5px 5px 25px 25px; border: 2px solid #666; border-top: none; position: absolute; bottom: 0; box-shadow: inset 5px 0 10px rgba(0,0,0,0.5), 0 0 15px rgba(0,0,0,0.5); }
@@ -135,6 +187,7 @@
             position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
+            z-index: 4;
         }
         .glass-svg { width: 120px; height: 120px; fill: none; stroke: #444; stroke-width: 3; overflow: visible; position: relative; z-index: 2; }
         .liquid-stream { position: absolute; top: 20px; width: 6px; height: 0; background: var(--primary); box-shadow: 0 0 10px var(--primary); z-index: 1; transition: height 0.5s; border-radius: 4px; }
@@ -153,7 +206,7 @@
             background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; position: relative;
         }
         .dialogue-header { font-size: 0.6rem; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
-        .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; } /* pre-wrap boşlukları korur */
+        .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
 
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
         .option-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #aaa; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
@@ -180,6 +233,21 @@
         
         <div class="stage-area">
             
+            <div class="bar-background">
+                <div class="shelf top"></div>
+                <div class="bottle b-round c-amber" style="left: 10%; bottom: 164px;"></div>
+                <div class="bottle b-tall c-clear" style="left: 25%; bottom: 164px;"></div>
+                <div class="bottle b-short c-blue" style="left: 40%; bottom: 164px;"></div>
+                <div class="hanging-glass" style="right: 35%;"></div>
+                <div class="hanging-glass" style="right: 20%;"></div>
+
+                <div class="shelf bottom"></div>
+                <div class="bottle b-tall c-amber" style="left: 15%; bottom: 84px;"></div>
+                <div class="bottle b-round c-clear" style="left: 35%; bottom: 84px;"></div>
+                <div class="bottle b-short c-amber" style="left: 55%; bottom: 84px;"></div>
+                <div class="bottle b-tall c-blue" style="left: 75%; bottom: 84px;"></div>
+            </div>
+
             <div id="bartender-layer" class="bartender-layer">
                 <div class="bar-counter"></div>
                 <div class="cyber-tender">
@@ -207,7 +275,7 @@
         </div>
 
         <div class="dialogue-card">
-            <span class="dialogue-header">Cyber-Tender v3.1</span>
+            <span class="dialogue-header">Cyber-Tender v3.2</span>
             <div id="dialogue-text" class="typing-text"></div>
         </div>
 
@@ -278,9 +346,9 @@
         const resultCard = document.getElementById('result-card');
         const root = document.documentElement;
 
-        // Daktilo Efekti (Boşluk Düzeltmeli)
+        // Daktilo Efekti
         function type(txt, cb) {
-            dialogue.textContent = ""; // innerText yerine textContent daha güvenli
+            dialogue.textContent = "";
             let i = 0;
             let currentText = "";
             let timer = setInterval(() => {
@@ -293,18 +361,16 @@
 
         // Sahne Değiştirici
         function setScene(scene) {
-            // Hepsini gizle/sıfırla
             bartenderLayer.style.opacity = 0; bartenderLayer.style.transform = "translateY(20px)";
             shakerLayer.style.opacity = 0; shakerLayer.style.transform = "translateY(20px)";
             presentationLayer.style.opacity = 0;
             shaker.classList.remove('is-shaking');
 
-            // İsteneni aç
             if(scene === 'bartender') {
                 bartenderLayer.style.opacity = 1; bartenderLayer.style.transform = "translateY(0)";
             } else if(scene === 'shaker') {
                 shakerLayer.style.opacity = 1; shakerLayer.style.transform = "translateY(0)";
-                setTimeout(() => shaker.classList.add('is-shaking'), 300); // Biraz gecikmeli başlasın
+                setTimeout(() => shaker.classList.add('is-shaking'), 300);
             } else if(scene === 'presentation') {
                 presentationLayer.style.opacity = 1;
             }
@@ -313,7 +379,7 @@
         function renderStep() {
             optArea.innerHTML = "";
             optArea.style.opacity = 0;
-            setScene('bartender'); // Barmen sahneye
+            setScene('bartender');
             
             if(currentStep < questions.length) {
                 let q = questions[currentStep];
@@ -335,10 +401,9 @@
         function calculate() {
             type("Veriler işleniyor... Karışım hazırlanıyor...", () => {
                 optArea.style.display = "none";
-                setScene('shaker'); // Shaker sahneye
+                setScene('shaker');
 
                 setTimeout(() => {
-                    // Hesaplama
                     let best = drinksDB[0];
                     let max = -1;
                     drinksDB.forEach(d => {
@@ -351,33 +416,28 @@
                     });
                     
                     showResult(best);
-                }, 2500); // 2.5 saniye sallasın
+                }, 2500);
             });
         }
 
         function showResult(drink) {
-            setScene('presentation'); // Sunum sahneye
+            setScene('presentation');
 
-            // Bardağı Ayarla
             let paths = glassPaths[drink.type] || glassPaths.rocks;
             glassPath.setAttribute('d', paths.path);
             liquidPath.setAttribute('d', paths.fill);
             
-            // Rengi ayarla
             root.style.setProperty('--primary', drink.color);
             stream.style.background = drink.color;
             stream.style.boxShadow = `0 0 10px ${drink.color}`;
             liquidPath.style.fill = drink.color;
 
-            // Dökülme Animasyonu
             setTimeout(() => {
-                stream.style.height = "100px"; // Akış başlar
-                
+                stream.style.height = "100px";
                 setTimeout(() => {
-                    liquidPath.style.opacity = 0.8; // Bardak dolar
-                    
+                    liquidPath.style.opacity = 0.8;
                     setTimeout(() => {
-                        stream.style.height = "0"; stream.style.top = "120px"; // Akış biter
+                        stream.style.height = "0"; stream.style.top = "120px";
                         finish(drink);
                     }, 800);
                 }, 400);
