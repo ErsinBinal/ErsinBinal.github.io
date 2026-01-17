@@ -3,15 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Mixologist AI | Convivium_</title>
+    <title>The Digital Mixologist | Convivium_</title>
+    
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
     <style>
         /* ============================
-           MODERN CYBERPUNK VARIABLES
+           CYBERPUNK ATMOSFERİ (Aynı kaldı)
            ============================ */
         :root {
             --bg: #030305;
             --surface: #0a0a0c;
-            --primary: #ff9900; /* Varsayılan Amber */
+            --primary: #ff9900; /* Amber */
+            --accent-blue: #00f3ff; /* İkinci bir neon renk */
             --glass-bg: rgba(255, 255, 255, 0.03);
             --border: rgba(255, 255, 255, 0.1);
             --text-main: #ececec;
@@ -33,17 +37,17 @@
             overflow-x: hidden;
         }
 
-        /* Arka Plan Izgarası (Grid) */
+        /* Arka Plan Efekti */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
+            background: 
+                radial-gradient(circle at 50% 0%, rgba(255, 153, 0, 0.1), transparent 50%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
             z-index: -1;
-            mask-image: radial-gradient(circle, black 40%, transparent 80%);
         }
 
         .container {
@@ -51,119 +55,69 @@
             max-width: 500px;
             text-align: center;
             padding-bottom: 40px;
+            padding-top: 40px;
         }
 
-        nav {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        
+        nav { position: absolute; top: 20px; left: 20px; }
         nav a {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: 0.3s;
+            color: var(--text-muted); text-decoration: none; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s;
         }
-        nav a:hover { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        nav a:hover { color: var(--primary); }
 
         /* ============================
-           THE AI CORE (YENİ BARMEN)
+           YENİ BARMEN SAHNESİ (LOTTIE)
            ============================ */
-        .ai-stage {
-            height: 220px;
+        .bartender-stage {
+            height: 280px; /* Alanı biraz büyüttük */
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             margin-bottom: 20px;
+            /* Hafif bir sahne parlaması */
+            background: radial-gradient(circle at center bottom, rgba(255, 153, 0, 0.05) 0%, transparent 70%);
         }
 
-        /* Çekirdek Yapısı */
-        .core-wrapper {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* 1. Shaker Animasyon Katmanı */
+        #anim-shaker {
+            width: 250px;
+            height: 250px;
+            display: block; /* Başlangıçta görünür */
         }
 
-        /* Dış Halka */
-        .ring-outer {
+        /* 2. Sonuç/Bardak Katmanı (Başlangıçta gizli) */
+        .result-presentation {
             position: absolute;
             width: 100%;
             height: 100%;
-            border: 2px dashed var(--primary);
-            border-radius: 50%;
-            opacity: 0.3;
-            transition: all 0.5s ease;
-        }
-
-        /* İç Halka */
-        .ring-inner {
-            position: absolute;
-            width: 70%;
-            height: 70%;
-            border: 4px solid var(--primary);
-            border-top-color: transparent;
-            border-bottom-color: transparent;
-            border-radius: 50%;
-            box-shadow: 0 0 15px var(--primary);
-            transition: all 0.5s ease;
-        }
-
-        /* Merkez Göz (Çekirdek) */
-        .core-eye {
-            width: 20px;
-            height: 20px;
-            background: var(--primary);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary), 0 0 40px var(--primary);
-            transition: all 0.5s ease;
-            z-index: 2;
-        }
-
-        /* SVG Hologram Alanı (İçki İkonu) */
-        .hologram-projection {
-            position: absolute;
-            width: 80px;
-            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             opacity: 0;
-            transform: scale(0.5);
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            z-index: 5;
-            fill: var(--primary);
-            filter: drop-shadow(0 0 5px var(--primary));
+            pointer-events: none;
+            transition: opacity 0.5s ease;
         }
 
-        /* --- ANİMASYON DURUMLARI (STATES) --- */
-        
-        /* 1. IDLE (Bekleme) */
-        .state-idle .ring-outer { animation: spin 10s linear infinite; }
-        .state-idle .ring-inner { animation: spin-rev 6s linear infinite; opacity: 0.7; }
-        .state-idle .core-eye   { animation: breathe 3s ease-in-out infinite; }
+        /* Statik Bardak İkonu */
+        .final-glass-svg {
+            width: 100px;
+            height: 100px;
+            color: var(--primary);
+            filter: drop-shadow(0 0 8px var(--primary));
+            z-index: 1;
+        }
 
-        /* 2. THINKING (Düşünme/Yazma) */
-        .state-thinking .ring-outer { animation: spin 2s linear infinite; border-style: solid; opacity: 0.8; }
-        .state-thinking .ring-inner { animation: spin-rev 1s linear infinite; border-width: 2px; }
-        .state-thinking .core-eye   { transform: scale(1.5); }
+        /* Dökülme Efekti (Pouring) - Bardağın üstüne gelecek */
+        #anim-pour {
+            position: absolute;
+            top: 30px; /* Bardağın üst kısmına denk getirmek için */
+            width: 180px;
+            height: 180px;
+            z-index: 2; /* Bardağın önünde */
+            opacity: 0.8;
+        }
 
-        /* 3. MIXING (Karıştırma/Hesaplama) */
-        .state-mixing .ring-outer { animation: pulse-shake 0.2s infinite; border-color: #fff; }
-        .state-mixing .ring-inner { animation: spin 0.5s linear infinite; border-color: #fff; }
-        .state-mixing .core-eye   { animation: glitch 0.1s infinite; background: #fff; }
-
-        /* 4. SERVING (Sunum) */
-        .state-serving .core-wrapper { transform: translateY(-20px); } /* Çekirdek yukarı kayar */
-        .state-serving .ring-outer { opacity: 0; transform: scale(1.5); }
-        .state-serving .ring-inner { opacity: 0; transform: scale(0); }
-        .state-serving .core-eye   { width: 100px; height: 10px; border-radius: 50%; transform: translateY(60px) scaleX(0.5); opacity: 0.5; filter: blur(5px); } /* Tabana dönüşür */
-        .state-serving .hologram-projection { opacity: 1; transform: scale(1.5) translateY(-10px); }
-
-        /* --- UI ELEMENTS --- */
+        /* --- UI ELEMENTS (Aynı kaldı) --- */
         .dialogue-card {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -173,111 +127,31 @@
             text-align: left;
             min-height: 80px;
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
         .label-tech {
             position: absolute;
-            top: -10px;
-            left: 10px;
-            font-size: 0.6rem;
-            background: var(--bg);
-            padding: 2px 8px;
-            color: var(--text-muted);
-            border: 1px solid var(--border);
-            text-transform: uppercase;
+            top: -10px; left: 10px; font-size: 0.6rem; background: var(--bg); padding: 2px 8px; color: var(--text-muted); border: 1px solid var(--border); text-transform: uppercase;
         }
 
         .option-btn {
-            width: 100%;
-            background: var(--glass-bg);
-            border: 1px solid var(--border);
-            color: var(--text-muted);
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            font-family: inherit;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            width: 100%; background: var(--glass-bg); border: 1px solid var(--border); color: var(--text-muted); padding: 15px; margin-bottom: 10px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.9rem; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center;
         }
-
-        .option-btn:hover {
-            background: rgba(255, 153, 0, 0.1);
-            border-color: var(--primary);
-            color: #fff;
-            padding-left: 25px; /* Hareket efekti */
-        }
-
+        .option-btn:hover { background: rgba(255, 153, 0, 0.1); border-color: var(--primary); color: #fff; padding-left: 25px; }
         .option-btn::after { content: "›"; opacity: 0; transition: 0.3s; }
         .option-btn:hover::after { opacity: 1; color: var(--primary); }
 
-        /* Sonuç Kartı */
         .result-card {
-            display: none;
-            background: var(--surface);
-            border: 1px solid var(--primary);
-            padding: 0;
-            margin-top: 20px;
-            animation: slideUp 0.6s ease;
-            text-align: left;
+            display: none; background: var(--surface); border: 1px solid var(--primary); padding: 0; margin-top: 20px; animation: slideUp 0.6s ease; text-align: left;
         }
-
-        .result-header {
-            background: var(--primary);
-            color: #000;
-            padding: 15px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            display: flex;
-            justify-content: space-between;
-        }
-
+        .result-header { background: var(--primary); color: #000; padding: 15px; font-weight: bold; font-size: 1.1rem; text-transform: uppercase; display: flex; justify-content: space-between; }
         .result-content { padding: 20px; }
+        .recipe-list { margin: 15px 0; padding-left: 20px; color: #ccc; line-height: 1.6; font-size: 0.9rem; }
+        .action-btn { display: block; width: 100%; padding: 15px; margin-top: 15px; text-align: center; text-decoration: none; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-weight: bold; transition: 0.3s; }
+        .action-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 20px var(--primary); }
 
-        .recipe-list {
-            margin: 15px 0;
-            padding-left: 20px;
-            color: #ccc;
-            line-height: 1.6;
-            font-size: 0.9rem;
-        }
-
-        .action-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin-top: 15px;
-            text-align: center;
-            text-decoration: none;
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            font-weight: bold;
-            transition: 0.3s;
-        }
-
-        .action-btn:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 20px var(--primary);
-        }
-
-        /* --- ANIMATIONS FRAMES --- */
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes spin-rev { 100% { transform: rotate(-360deg); } }
-        @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.8); opacity: 0.7; } }
-        @keyframes pulse-shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 25% { transform: translate(-1px, -2px) rotate(-1deg); } 50% { transform: translate(-3px, 0px) rotate(1deg); } 75% { transform: translate(3px, 2px) rotate(0deg); } 100% { transform: translate(1px, -1px) rotate(0deg); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes glitch { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        @media (max-width: 600px) {
-            .option-btn { font-size: 0.8rem; padding: 12px; }
-        }
     </style>
 </head>
 <body>
@@ -288,31 +162,48 @@
 
     <svg style="display:none;">
         <defs>
-            <path id="icon-highball" d="M10,10 L15,90 L85,90 L90,10 Z M20,20 L80,20 M25,80 L75,80" fill="currentColor"/>
-            <path id="icon-martini" d="M5,10 L50,60 L95,10 Z M50,60 L50,90 M30,90 L70,90" stroke="currentColor" stroke-width="5" fill="none"/>
-            <path id="icon-rocks" d="M10,20 L15,90 L85,90 L90,20 Z" fill="currentColor"/>
-            <path id="icon-shot" d="M20,30 L25,90 L75,90 L80,30 Z" fill="currentColor"/>
-            <path id="icon-wine" d="M20,10 Q20,60 50,60 Q80,60 80,10 Z M50,60 L50,90 M30,90 L70,90" fill="currentColor"/>
+            <path id="icon-highball" d="M15,10 L20,90 L80,90 L85,10 Z M25,20 L75,20 M30,80 L70,80" fill="none" stroke="currentColor" stroke-width="4"/>
+            <path id="icon-martini" d="M10,10 L50,60 L90,10 Z M50,60 L50,90 M30,90 L70,90" stroke="currentColor" stroke-width="4" fill="none"/>
+            <path id="icon-rocks" d="M15,20 L20,90 L80,90 L85,20 Z M25,80 L75,80" fill="none" stroke="currentColor" stroke-width="4"/>
+            <path id="icon-shot" d="M25,30 L30,90 L70,90 L75,30 Z" fill="none" stroke="currentColor" stroke-width="4"/>
+            <path id="icon-wine" d="M25,10 Q25,60 50,60 Q75,60 75,10 Z M50,60 L50,90 M30,90 L70,90" fill="none" stroke="currentColor" stroke-width="4"/>
+            <path id="icon-raki" d="M25,10 L25,90 M75,10 L75,90 M25,90 L75,90" fill="none" stroke="currentColor" stroke-width="4"/>
         </defs>
     </svg>
 
     <div class="container">
         
-        <div class="ai-stage">
-            <div class="core-wrapper state-idle" id="ai-core">
-                <div class="ring-outer"></div>
-                <div class="ring-inner"></div>
-                <div class="core-eye"></div>
-                
-                <svg class="hologram-projection" viewBox="0 0 100 100">
-                    <use id="hologram-use" href="#icon-highball"></use>
+        <div class="bartender-stage">
+            
+            <lottie-player 
+                id="anim-shaker"
+                src="https://lottie.host/6d667458-3794-4488-b978-368238605783/7t8F3v0C8O.json"
+                background="transparent"
+                speed="1"
+                loop="true"
+                autoplay="false">
+            </lottie-player>
+
+            <div class="result-presentation" id="result-layer">
+                <lottie-player 
+                    id="anim-pour"
+                    src="https://lottie.host/0c1b9071-a429-4f08-8067-845045276128/P5gY2s8W5y.json"
+                    background="transparent"
+                    speed="1.5"
+                    loop="false"
+                    autoplay="false">
+                </lottie-player>
+
+                <svg class="final-glass-svg" viewBox="0 0 100 100">
+                    <use id="glass-use" href="#icon-rocks"></use>
                 </svg>
             </div>
+
         </div>
 
         <div class="dialogue-card">
-            <span class="label-tech">SYSTEM_MSG_LOG</span>
-            <div id="dialogue-text">Sistem hazır. Veri girişi bekleniyor...</div>
+            <span class="label-tech">BAR_OS v2.1</span>
+            <div id="dialogue-text">Sistem hazır. Sipariş bekleniyor...</div>
         </div>
 
         <div id="options-area"></div>
@@ -327,17 +218,20 @@
                 <strong style="color:var(--primary)">> REÇETE:</strong>
                 <div id="drink-recipe" class="recipe-list"></div>
                 
-                <a id="price-btn" href="#" target="_blank" class="action-btn">FİYAT ARAŞTIRMASI</a>
-                <button onclick="location.reload()" class="action-btn" style="border-color:#444; color:#888; margin-top:10px;">YENİDEN BAŞLAT</button>
+                <a id="price-btn" href="#" target="_blank" class="action-btn">GÜNCEL FİYATLARI GÖR</a>
+                <button onclick="location.reload()" class="action-btn" style="border-color:#444; color:#888; margin-top:10px;">BAŞKA BİR ŞEY?</button>
             </div>
         </div>
 
     </div>
 
     <script>
-        // --- 1. VERİTABANI (RENK KODLARI EKLENDİ) ---
-        // glass: 'highball', 'martini', 'rocks', 'shot', 'wine'
-        // color: Hex kodu (AI çekirdeği bu renge dönüşecek)
+        // --- LOTTIE REFERANSLARI ---
+        const shakerAnim = document.getElementById('anim-shaker');
+        const pourAnim = document.getElementById('anim-pour');
+        const resultLayer = document.getElementById('result-layer');
+
+        // --- VERİTABANI ---
         const drinksDB = [
             { name: "OLD FASHIONED", glass: "rocks", color: "#e67e22", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali. Klasiklerin babası.", recipe: "6cl Burbon Viski<br>1 Küp Şeker<br>2 damla Angostura<br>Portakal kabuğu", query: "viski fiyatları" },
             { name: "NEGRONI", glass: "rocks", color: "#e74c3c", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "İtalyan asaleti. Tatlı ve acının dengesi.", recipe: "3cl Cin<br>3cl Campari<br>3cl Kırmızı Vermut<br>Portakal dilimi", query: "cin campari fiyat" },
@@ -352,7 +246,6 @@
             { name: "RAKI", glass: "raki", color: "#ecf0f1", tags: { mood: "deep", taste: "herbal", intensity: "high" }, desc: "Aslan sütü. Yavaş içilir.", recipe: "Duble Rakı<br>Soğuk Su<br>Peynir & Kavun", query: "rakı fiyatları" }
         ];
 
-        // --- 2. SORULAR ---
         const questions = [
             {
                 text: "Hoş geldin. Bugün modun nasıl?",
@@ -387,10 +280,8 @@
             }
         ];
 
-        // --- 3. CORE LOGIC ---
         let currentStep = 0;
         let userPrefs = {};
-        const aiCore = document.getElementById('ai-core');
         const dialogueText = document.getElementById('dialogue-text');
         const optionsArea = document.getElementById('options-area');
         const resultCard = document.getElementById('result-card');
@@ -400,33 +291,23 @@
         function typeText(text, callback) {
             let i = 0;
             dialogueText.innerHTML = "";
-            setAiState('thinking'); // AI düşünmeye başlasın
+            // Soru sorarken shaker dursun (daha sakin)
+            shakerAnim.stop(); 
             
             const interval = setInterval(() => {
                 dialogueText.innerHTML += text.charAt(i);
                 i++;
                 if (i >= text.length) {
                     clearInterval(interval);
-                    setAiState('idle'); // Yazma bitince normale dön
                     if (callback) callback();
                 }
             }, 25);
         }
 
-        // AI Durum Değiştirici (CSS Class Kontrolü)
-        function setAiState(state) {
-            // Önceki tüm durumları temizle
-            aiCore.className = 'core-wrapper'; 
-            // Yeni durumu ekle
-            aiCore.classList.add('state-' + state);
-        }
-
-        // Rengi Güncelle
         function setPrimaryColor(color) {
             root.style.setProperty('--primary', color);
         }
 
-        // Adımları Göster
         function renderStep() {
             optionsArea.innerHTML = "";
             
@@ -450,15 +331,15 @@
             }
         }
 
-        // Sonuç Hesaplama ve Sunum
         function calculateResult() {
-            setAiState('mixing'); // Çılgın mod
-            typeText("Veriler işleniyor... En uygun karışım simüle ediliyor...", () => {
+            // HESAPLAMA BAŞLADI: Shaker'ı çalıştır!
+            shakerAnim.play();
+            
+            typeText("Reçeteler taranıyor... En uygun karışım hazırlanıyor...", () => {
                 
                 setTimeout(() => {
                     optionsArea.style.display = 'none';
                     
-                    // Basit Puanlama
                     let bestDrink = drinksDB[0];
                     let maxScore = -1;
 
@@ -467,7 +348,7 @@
                         if (drink.tags.mood === userPrefs.mood) score += 5;
                         if (drink.tags.taste === userPrefs.taste) score += 3;
                         if (drink.tags.intensity === userPrefs.intensity) score += 2;
-                        score += Math.random(); // Rastgelelik
+                        score += Math.random();
 
                         if (score > maxScore) {
                             maxScore = score;
@@ -477,24 +358,27 @@
 
                     presentDrink(bestDrink);
 
-                }, 1500); // Karıştırma süresi
+                }, 2000); // 2 saniye shaker sallama süresi
             });
         }
 
         function presentDrink(drink) {
-            // 1. Rengi değiştir
+            // 1. Shaker'ı durdur ve gizle
+            shakerAnim.stop();
+            shakerAnim.style.opacity = 0;
+
+            // 2. Rengi ve Bardağı Ayarla
             setPrimaryColor(drink.color);
-            
-            // 2. İkonu değiştir (Hologram)
-            // Eğer uygun ikon yoksa varsayılan olarak 'icon-rocks' kullan
             let iconId = 'icon-' + drink.glass;
-            // SVG use elementini güncelle
-            document.getElementById('hologram-use').setAttribute('href', '#' + iconId);
+            document.getElementById('glass-use').setAttribute('href', '#' + iconId);
 
-            // 3. Animasyon Durumu: Serving
-            setAiState('serving');
+            // 3. Sonuç Katmanını Göster (Bardak + Dökülme Efekti)
+            resultLayer.style.opacity = 1;
+            
+            // 4. DÖKÜLME EFEKTİNİ BAŞLAT! (Sadece bir kere oynar)
+            pourAnim.play();
 
-            // 4. Kartı Göster
+            // 5. Kartı Göster
             resultCard.style.display = 'block';
             document.getElementById('drink-title').innerText = drink.name;
             document.getElementById('drink-desc').innerText = drink.desc;
@@ -503,12 +387,13 @@
             const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
             document.getElementById('price-btn').href = searchUrl;
 
-            dialogueText.innerHTML = "Analiz Tamamlandı. <span style='color:var(--primary)'>Mükemmel Eşleşme.</span>";
+            dialogueText.innerHTML = "Karışım tamamlandı. <span style='color:var(--primary)'>Afiyet olsun.</span>";
         }
 
-        // Başlat
         window.onload = () => {
             renderStep();
+            // Sayfa yüklendiğinde shaker'ı durdur (sadece hesaplarken çalışsın)
+            shakerAnim.stop();
         };
 
     </script>
