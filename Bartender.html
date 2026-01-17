@@ -90,7 +90,7 @@
             color: #ff9900;
             white-space: pre; 
             text-shadow: 0 0 5px #ff9900;
-            font-size: 14px;
+            font-size: 13px; /* Sabit font boyutu kaymayı önler */
             line-height: 1.2;
             text-align: center;
         }
@@ -212,7 +212,7 @@
         @media (max-width: 600px) {
             .options-grid { grid-template-columns: 1fr; }
             .container { padding-top: 60px; }
-            .visual-display { font-size: 11px; } /* Mobilde ASCII taşmasın */
+            .visual-display { font-size: 11px; } 
         }
     </style>
 </head>
@@ -222,99 +222,6 @@
         <a href="index.html">[ < Geri ]</a>
     </nav>
 
-    <div id="ascii-storage" style="display:none;">
-        <div id="frame-0">
-   .---.   
-  /     \  
-  | O O |  
-   \ - /   
-  /  _  \  
- |  | |  | 
- (  |_|  ) 
-        </div>
-        <div id="frame-1">
-   .---.   
-  /     \  
-  | > < |  
-   \ o /   
-  / / \ \  
- |  \_/  | 
- ( SHAKE ) 
-        </div>
-        <div id="frame-2">
-   .---.   
-  /     \  
-  | - O |  
-   \ ~ /   
-  /  _  \  
- /  / \  \ 
-(   |_|   )
-        </div>
-        
-        <div id="glass-rocks">
-   _________
-  |         |
-  |  ICE    |
-  |   O     |
-  |_________|
- [ ROCKS GL ]
-        </div>
-        <div id="glass-martini">
-   \     /
-    \ o /
-     \ /
-      |
-      |
-     _|_
- [ MARTINI ]
-        </div>
-        <div id="glass-highball">
-  |       |
-  |   |   |
-  |   |   |
-  |   O   |
-  |_______|
- [ HIGHBALL]
-        </div>
-        <div id="glass-shot">
-   _     _
-   \___/
-   |   |
-   |___|
-  [ SHOT ]
-        </div>
-        <div id="glass-wine">
-    \   /
-     \ /
-      |
-      |
-     _|_
-  [ WINE ]
-        </div>
-        <div id="glass-raki">
-   |     |
-   |     |
-   |_____|
-   |     |
-   |_____|
-   [ RAKI ]
-        </div>
-        <div id="glass-mule">
-   |~~~~~|
-  _|     |
- [_      |
-   |_____|
-  [ MUG  ]
-        </div>
-        <div id="glass-tiki">
-   /     \
-  |  O O  |
-  |   ^   |
-   \  -  /
-    -----
-   [ TIKI ]
-        </div>
-    </div>
     <div class="container">
         
         <div class="monitor-frame">
@@ -354,27 +261,122 @@
     </div>
 
     <script>
-        // --- GÜVENLİ ASCII YÜKLEYİCİ ---
-        // JS içinde string hatasını önlemek için HTML'den okuyoruz
-        function getAscii(id) {
-            return document.getElementById(id).innerHTML;
-        }
-
+        // --- 1. GÜVENLİ ASCII VERİTABANI ---
+        // Backslash (\) karakterleri çift (\\) yazılarak kaçış hatası önlendi.
+        
         const bartenderFrames = [
-            getAscii('frame-0'),
-            getAscii('frame-1'),
-            getAscii('frame-2')
+`   .---.   
+  /     \\  
+  | O O |  
+   \\ - /   
+  /  _  \\  
+ |  | |  | 
+ (  |_|  ) `,
+
+`   .---.   
+  /     \\  
+  | > < |  
+   \\ o /   
+  / / \\ \\  
+ |  \\_/  | 
+ ( SHAKE ) `,
+
+`   .---.   
+  /     \\  
+  | - O |  
+   \\ ~ /   
+  /  _  \\  
+ /  / \\  \\ 
+(   |_|   )`
         ];
 
+        const glassArts = {
+            rocks: 
+`   _________
+  |         |
+  |  ICE    |
+  |   O     |
+  |_________|
+ [ ROCKS GL ]`,
+
+            martini:
+`   \\     /
+    \\ o /
+     \\ /
+      |
+      |
+     _|_
+ [ MARTINI ]`,
+
+            highball:
+`  |       |
+  |   |   |
+  |   |   |
+  |   O   |
+  |_______|
+ [ HIGHBALL]`,
+
+            shot:
+`   _     _
+   \\___/
+   |   |
+   |___|
+  [ SHOT ]`,
+
+            wine:
+`    \\   /
+     \\ /
+      |
+      |
+     _|_
+  [ WINE ]`,
+
+            raki:
+`   |     |
+   |     |
+   |_____|
+   |     |
+   |_____|
+   [ RAKI ]`,
+   
+            mule:
+`   |~~~~~|
+  _|     |
+ [_      |
+   |_____|
+  [ MUG  ]`,
+
+            tiki:
+`   /     \\
+  |  O O  |
+  |   ^   |
+   \\  -  /
+    -----
+   [ TIKI ]`
+        };
+
+        // --- 2. DEĞİŞKENLER VE AYARLAR ---
         let frameIndex = 0;
         let animationInterval;
         const visualEl = document.getElementById('visual-content');
         const statusEl = document.getElementById('status-badge');
+        const dialogueBox = document.getElementById('dialogue-text');
+        const optionsBox = document.getElementById('options-container');
+        const resultArea = document.getElementById('result-area');
 
+        // --- 3. ANİMASYON FONKSİYONLARI ---
         function startBartender() {
+            // Temizle
+            if (animationInterval) clearInterval(animationInterval);
+            
+            // Başlat
             animationInterval = setInterval(() => {
-                visualEl.innerHTML = bartenderFrames[frameIndex];
-                frameIndex = (frameIndex + 1) % bartenderFrames.length;
+                try {
+                    visualEl.innerText = bartenderFrames[frameIndex];
+                    frameIndex = (frameIndex + 1) % bartenderFrames.length;
+                } catch(e) {
+                    console.log("Animasyon hatası:", e);
+                }
             }, 800);
         }
 
@@ -383,15 +385,13 @@
             visualEl.style.opacity = 0;
             
             setTimeout(() => {
-                // Güvenli şekilde ID'den çek: 'glass-rocks' gibi
-                let art = document.getElementById('glass-' + glassType);
+                // Güvenli görsel seçimi (Hata varsa varsayılanı kullan)
+                const art = glassArts[glassType] || glassArts['rocks'];
                 
-                // Eğer çizim bulunamazsa varsayılan olarak Rocks kullan
-                if (!art) art = document.getElementById('glass-rocks');
-                
-                visualEl.innerHTML = art.innerHTML;
+                visualEl.innerText = art;
                 visualEl.style.opacity = 1;
                 visualEl.style.color = "#0f0";
+                visualEl.style.textShadow = "0 0 10px #0f0";
                 
                 statusEl.innerText = "[ HAZIR ]";
                 statusEl.style.color = "#0f0";
@@ -399,7 +399,7 @@
             }, 500);
         }
 
-        // --- VERİTABANI (60+ SEÇENEK) ---
+        // --- 4. VERİTABANI (60+ İÇKİ) ---
         const drinksDB = [
             // --- KLASİKLER & VİSKİ ---
             { name: "OLD FASHIONED", glass: "rocks", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali. Düşünmek ve yavaş yudumlamak için.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
@@ -455,7 +455,7 @@
             { name: "BOULEVARDIER", glass: "rocks", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "Viskili Negroni.", recipe: "• Viski<br>• Campari<br>• Vermut", query: "viski campari fiyat" }
         ];
 
-        // --- 3. SORULAR ---
+        // --- 5. SORULAR ---
         const questions = [
             {
                 text: "Hoş geldin. Ruh halin nasıl?",
@@ -493,14 +493,9 @@
             }
         ];
 
-        // --- 4. MANTIK ---
+        // --- 6. İŞLEYİŞ MANTIĞI ---
         let currentStep = 0;
         let userPrefs = {};
-
-        const dialogueBox = document.getElementById('dialogue-text');
-        const optionsBox = document.getElementById('options-container');
-        const resultArea = document.getElementById('result-area');
-        const statusEl = document.getElementById('status-badge');
 
         function updateStatus(text) {
             statusEl.innerText = `[ ${text} ]`;
@@ -557,11 +552,10 @@
 
                     drinksDB.forEach(drink => {
                         let score = 0;
-                        if (drink.tags.mood === userPrefs.mood) score += 5;
-                        if (drink.tags.taste === userPrefs.taste) score += 3;
-                        if (drink.tags.intensity === userPrefs.intensity) score += 2;
-                        
-                        score += Math.random() * 2;
+                        if (drink.tags.mood === userPrefs.mood) score += 5; 
+                        if (drink.tags.taste === userPrefs.taste) score += 4; 
+                        if (drink.tags.intensity === userPrefs.intensity) score += 3;
+                        score += Math.random() * 2; // Rastgelelik faktörü
 
                         if (score > maxScore) {
                             maxScore = score;
@@ -569,7 +563,7 @@
                         }
                     });
 
-                    // Hiç eşleşme olmazsa varsayılan
+                    // Fallback (Güvenlik)
                     if (!bestDrink) bestDrink = drinksDB[0];
 
                     showResult(bestDrink);
@@ -590,7 +584,7 @@
             const btn = document.getElementById('price-link');
             btn.href = searchUrl;
             
-            dialogueBox.innerHTML = `<span style="color:#ff9900">BULUNDU:</span><br>Senin için en uygun reçete: ${drink.name}`;
+            dialogueBox.innerHTML = `<span style="color:#ff9900">SERVİS EDİLDİ:</span><br>Senin için en iyi seçim: ${drink.name}`;
         }
 
         // Başlat
