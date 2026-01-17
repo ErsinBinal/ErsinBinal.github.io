@@ -12,13 +12,13 @@
             color: #0f0;
             margin: 0;
             padding: 0;
-            height: 100vh;
-            overflow: hidden; /* Sayfa kaydırmayı engelle */
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Courier New', Courier, monospace;
-            touch-action: none; /* Mobilde sayfayı çekiştirmeyi engelle */
+            touch-action: pan-y; /* Dikey kaydırmaya izin ver */
+            overflow-x: hidden;
         }
 
         nav {
@@ -33,7 +33,14 @@
             text-decoration: none;
             font-weight: bold;
             opacity: 0.7;
-            padding: 10px; /* Mobilde parmakla basmak kolay olsun */
+            padding: 10px;
+            border: 1px solid transparent;
+        }
+        
+        nav a:hover {
+            opacity: 1;
+            border-color: #0f0;
+            box-shadow: 0 0 10px #0f0;
         }
 
         .oracle-container {
@@ -42,13 +49,15 @@
             max-width: 800px;
             width: 90%;
             z-index: 5;
+            margin-top: 40px; /* Mobilde yukarı sıkışmasın diye */
+            padding-bottom: 50px;
         }
 
         .matrix-display {
             font-size: 1.8rem;
             color: #0f0;
             min-height: 80px;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
             text-shadow: 0 0 8px #0f0;
             word-wrap: break-word;
             font-weight: bold;
@@ -56,11 +65,40 @@
         }
 
         .instruction {
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
             line-height: 1.6;
             color: #aaddaa;
             text-shadow: 0 0 2px #003300;
             font-size: 1rem;
+        }
+
+        /* DETAY ALANI (YENİ) */
+        .detail-box {
+            display: none; /* Başlangıçta gizli */
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px dashed #0f0;
+            background: rgba(0, 20, 0, 0.8);
+            color: #ccc;
+            text-align: left;
+            font-size: 1rem;
+            line-height: 1.6;
+            animation: fadeIn 1s ease;
+        }
+
+        .detail-link {
+            display: none; /* Başlangıçta gizli */
+            color: #0ff; /* Cyan rengi farkedilsin diye */
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .detail-link:hover {
+            color: #fff;
+            text-shadow: 0 0 5px #0ff;
         }
 
         .action-btn {
@@ -75,7 +113,8 @@
             letter-spacing: 3px;
             font-family: 'Courier New', Courier, monospace;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
-            -webkit-tap-highlight-color: transparent; /* Mobilde tıklama grisini kaldır */
+            -webkit-tap-highlight-color: transparent;
+            margin-top: 20px;
         }
 
         .action-btn:hover, .action-btn:active {
@@ -92,14 +131,17 @@
             box-shadow: none;
         }
 
-        /* --- MOBİL UYUMLULUK (RESPONSIVE) --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Ayarlar */
         @media (max-width: 600px) {
-            .matrix-display { font-size: 1.2rem; min-height: 60px; margin-bottom: 1rem; }
-            .instruction { font-size: 0.9rem; margin-bottom: 1.5rem; }
+            .matrix-display { font-size: 1.3rem; min-height: 60px; }
+            .instruction { font-size: 0.9rem; }
             .action-btn { padding: 12px 25px; font-size: 1rem; width: 100%; }
-            h1 { font-size: 1.5rem; }
-            /* Mobilde klavye açılırsa düzen bozulmasın diye */
-            .oracle-container { margin-top: -50px; }
+            .detail-box { font-size: 0.9rem; }
         }
 
         .glitch-text { animation: glitch 0.1s infinite; }
@@ -122,7 +164,7 @@
     <div class="oracle-container">
         <div id="instruction-text" class="instruction">
             <p>> SİSTEM BAŞLATILDI...</p>
-            <p>Kafandaki soruyu netleştir. Bu algoritma, senin şu anki <strong>fare veya parmak hareketlerinin</strong> yarattığı "kaos"u (Entropy) kullanarak kaderini hesaplayacak.</p>
+            <p>Kafandaki soruyu netleştir. Bu algoritma, senin şu anki <strong>hareketlerinin yarattığı kaosu</strong> kullanarak kaderini hesaplayacak.</p>
             <p style="margin-top: 20px; border: 1px dashed #0f0; padding: 10px; display:inline-block; color:#fff;">
                 UYARI: Sadece tek bir hakkın var.
             </p>
@@ -132,71 +174,85 @@
             [ SİNYAL ARANIYOR... ]
         </div>
 
+        <div id="detail-trigger" class="detail-link" onclick="revealDetails()">
+            [ >> VERİYİ ÇÖZÜMLE / DETAYLARI GÖSTER << ]
+        </div>
+        <div id="detail-container" class="detail-box">
+            </div>
+
         <button id="oracle-btn" class="action-btn" onclick="initiateSequence()">Sorguyu Başlat</button>
     </div>
 
     <script>
         // --- 1. KONFİGÜRASYON ---
-        const STORAGE_KEY = 'oracle_v3_mobile_session'; 
+        const STORAGE_KEY = 'oracle_v4_detailed'; 
         const COOLDOWN_HOURS = 24; 
 
-        // --- 2. VERİTABANI (50 YANIT) ---
+        // --- 2. VERİTABANI (NESNE YAPISINA DÖNÜŞTÜRÜLDÜ) ---
+        // Her öğe artık { text: "Kısa Cevap", detail: "Uzun Açıklama" } şeklindedir.
         const oracleDatabase = [
-            "Derleme (Compile) Başarılı. Kodun çalışmasına izin ver.",
-            "Root erişimi onaylandı. Kontrol tamamen sende.",
-            "Algoritma optimum çalışıyor. Tereddüt etme, çalıştır (Run).",
-            "Latency (Gecikme) sıfıra indi. Şimdi tam zamanı.",
-            "Patch (Yama) yüklendi. Sorun çözüldü, ilerle.",
-            "Bağımlılıklar (Dependencies) doğru kurulmuş. Temel sağlam.",
-            "Render işlemi tamamlandı. Sonuç kusursuz görünüyor.",
-            "Bant genişliği (Bandwidth) müsait. Veriyi gönder.",
-            "Sistem online. Tüm ışıklar yeşil.",
-            "Ping süresi mükemmel. Bağlantı kur.",
-            "Firewall (Güvenlik Duvarı) geçildi. Kapı açık.",
-            "Cache (Önbellek) temizlendi. Yeni bir sayfa aç.",
-            "Kernel Panic: Beklenmeyen bir değişken her şeyi çökertmek üzere.",
-            "404: Aradığın cevap bu sunucuda (server) barınmıyor.",
-            "Sistem aşırı yüklendi (Overload). Geri çekil ve gözlemle.",
-            "Bellek Sızıntısı (Memory Leak) var. Enerjini boşa harcıyorsun.",
-            "Fatal Error: Bu yolu zorlarsan veri kaybı kaçınılmaz.",
-            "Sinyal gürültüye (Noise) karıştı. Anlamsızlığı zorlama.",
-            "Sonsuz döngüye (Infinite Loop) giriyorsun. Çıkış koşulunu değiştir.",
-            "Erişim Reddedildi (Access Denied). Yetkin yetersiz.",
-            "Mavi Ekran (BSOD). Her şeyi yeniden başlatman gerekebilir.",
-            "Bağlantı zaman aşımına uğradı (Time-out). Çok geç.",
-            "Dosya bozuk (Corrupted). Bu fikri kurtaramazsın.",
-            "Güvenlik protokolü ihlali. Hemen dur.",
-            "Hayalet makinenin içinde fısıldıyor: 'Bunu yapma.'",
-            "Cevap kaynak kodda (Source Code) değil, yorum satırlarında gizli.",
-            "Heisenberg İlkesi: Gözlemci, sonucu değiştirir. Bakış açını değiştir.",
-            "Entropi artıyor. Kaosu düzeltmeye çalışma, onu kullan.",
-            "Eski bir sürümü (Rollback) geri yüklemeyi dene. İlerleme geridedir.",
-            "Değişkenleri (Variables) sabitleme. Akışkan ol.",
-            "Schrödinger'in Kedisi: Kutu açılana kadar her iki sonuç da doğru.",
-            "Matrix'te bir hata (Glitch). Gördüklerine güvenme.",
-            "Simülasyon teorisi: Bu sorunun bir anlamı var mı?",
-            "Daemon arka planda çalışıyor. Sessizce bekle.",
-            "Veri tabanında (Database) tutarsızlık var. İçgüdüne güven.",
-            "En bariz seçeneği sil (Delete). Geriye ne kaldı?",
-            "Bu hata (Bug) aslında bir özellik (Feature) olabilir mi?",
-            "Sistemi hackle: Protokollerin etrafından dolaş.",
-            "Çıktıyı (Output) değil, Girdiyi (Input) sorgula. Soru yanlış.",
-            "Offline ol. Bazen çözüm bağlantıyı kesmektedir.",
-            "Şifreyi çözmek için anahtarı (Key) kırman gerekebilir.",
-            "Sandbox modunda dene. Gerçek hayata geçirmeden önce test et.",
-            "Kullanıcı arayüzünü (UI) değil, altyapıyı (Backend) değiştir.",
-            "Log kayıtlarını incele. Geçmişte bir ipucu var.",
-            "Tek bir satır kodu değiştirirsen, tüm program değişir.",
-            "Yedek (Backup) almadan risk alma.",
-            "Brute Force (Kaba Kuvvet) kullanma. Daha zarif bir yol bul.",
-            "Dark Web'e girme. Yüzeyde kal."
+            // --- YEŞİL / ONAYLAYICI ---
+            { text: "Derleme (Compile) Başarılı. Kodun çalışmasına izin ver.", detail: "Hazırlık aşaması tamamlandı. Zihninde kurduğun senaryoları tekrar tekrar test etmeyi bırak. Teorik planlama evresi bitti, artık pratik uygulama zamanı. Hata almaktan korkma, çünkü temel sağlam." },
+            { text: "Root erişimi onaylandı. Kontrol tamamen sende.", detail: "Şu an yaşadığın durumda ipler başkasının elinde sanıyorsun ama yanılıyorsun. Yönetici izinlerine sahipsin. Olayları yönlendirme gücü senin içinde. Başkalarından izin beklemeyi bırak ve kendi kurallarını koy." },
+            { text: "Algoritma optimum çalışıyor. Tereddüt etme, çalıştır (Run).", detail: "Mevcut planın veya düşünce yapın şu anki şartlar için en verimli olanı. Daha iyisini ararken zaman kaybediyorsun. 'Mükemmel', 'İyi'nin düşmanıdır. Düğmeye bas ve akışı izle." },
+            { text: "Latency (Gecikme) sıfıra indi. Şimdi tam zamanı.", detail: "Evrenin zamanlaması ile senin niyetin hizalandı. Beklediğin o 'doğru an' şu anın ta kendisi. Ertelemek için ürettiğin bahaneler artık geçerli değil. Hızla hareket et." },
+            { text: "Patch (Yama) yüklendi. Sorun çözüldü, ilerle.", detail: "Geçmişte seni durduran o engel veya travma artık onarıldı. Sen hala yara aldığını sanıyorsun ama sistem kendini iyileştirdi. Eski korkularla bugünü sınırlama. Güncelleme tamamlandı." },
+            { text: "Bağımlılıklar (Dependencies) doğru kurulmuş. Temel sağlam.", detail: "Bu işe girişirken dayandığın insanlar, kaynaklar veya bilgiler seni yarı yolda bırakmayacak. Arka planın sağlam. Güvenle inşa etmeye başlayabilirsin." },
+            { text: "Render işlemi tamamlandı. Sonuç kusursuz görünüyor.", detail: "Hayal ettiğin şeyin gerçekleşme olasılığı çok yüksek. Zihnindeki imaj neyse, çıktı da o olacak. Görselleştirmeye devam et, çünkü gerçeklik şu an zihnini takip ediyor." },
+            { text: "Bant genişliği (Bandwidth) müsait. Veriyi gönder.", detail: "İletişim kurmak, kendini ifade etmek veya o mesajı atmak için kanallar açık. Karşı tarafın alıcıları seni duymaya hazır. İçinde tuttuğun ne varsa dışarı aktar." },
+            { text: "Sistem online. Tüm ışıklar yeşil.", detail: "Evren sana dur demiyor. Önündeki tüm engeller aslında senin zihinsel illüzyonların. Yol açık, trafik akıyor. Sadece gaza basman gerekiyor." },
+            { text: "Ping süresi mükemmel. Bağlantı kur.", detail: "Aradaki mesafe (fiziksel veya duygusal) şu an önemsiz. Bağlantı kurmak istediğin kişi veya durumla senkronizasyon halindesin. Şimdi atacağın adım anında karşılık bulacak." },
+            { text: "Firewall (Güvenlik Duvarı) geçildi. Kapı açık.", detail: "Zor sandığın o kapı aslında kilitli değil. Birinin kalbini veya bir fırsatı zorluyordun; artık savunma mekanizmaları indi. Giriş yapabilirsin." },
+            { text: "Cache (Önbellek) temizlendi. Yeni bir sayfa aç.", detail: "Eski verilerin yükünden kurtuldun. Önyargılarını ve geçmiş tecrübelerini bir kenara bırak. Bu duruma 'ilk kez' yaşıyormuş gibi taze bir zihinle yaklaş." },
+
+            // --- KIRMIZI / UYARICI ---
+            { text: "Kernel Panic: Beklenmeyen bir değişken her şeyi çökertmek üzere.", detail: "Hesaba katmadığın kritik bir faktör var. Şu anki planın pamuk ipliğine bağlı. Ani bir kriz kapıda. Dur, her şeyi dondur ve en baştan risk analizi yap." },
+            { text: "404: Aradığın cevap bu sunucuda (server) barınmıyor.", detail: "Yanlış yerde doğru şeyi arıyorsun. Mutluluğu, başarıyı veya onayı aradığın kaynak (kişi veya yer) sana bunu veremez. Sorgunu başka bir veritabanına yönlendir." },
+            { text: "Sistem aşırı yüklendi (Overload). Geri çekil ve gözlemle.", detail: "Çok fazla şeyi aynı anda yapmaya çalışıyorsun. Zihnin ve bedenin alarm veriyor. Şu an karar vermek için çok yorgunsun. Hiçbir şey yapmama (shutdown) hakkını kullan." },
+            { text: "Bellek Sızıntısı (Memory Leak) var. Enerjini boşa harcıyorsun.", detail: "Sürekli seni tüketen ama karşılığında hiçbir şey vermeyen bir durumdasın. Bu bir ilişki veya takıntılı bir düşünce olabilir. Kaynağı bul ve süreci sonlandır (Kill Process)." },
+            { text: "Fatal Error: Bu yolu zorlarsan veri kaybı kaçınılmaz.", detail: "Şu anki ısrarın sana sadece zarar verecek. Kaybedeceğin şey (zaman, para, onur) kazanacağından çok daha büyük. Zararın neresinden dönersen kârdır. İptal et." },
+            { text: "Sinyal gürültüye (Noise) karıştı. Anlamsızlığı zorlama.", detail: "Ortamda çok fazla dedikodu, fikir ve kafa karışıklığı var. Net bir karar alamazsın. Duyduğun şeylerin çoğu gerçek değil, sadece parazit. Sessizliğe ihtiyacın var." },
+            { text: "Sonsuz döngüye (Infinite Loop) giriyorsun. Çıkış koşulunu değiştir.", detail: "Aynı hataları yapıp farklı sonuçlar bekliyorsun. Bu döngü sen 'yeter' diyene kadar kırılmayacak. Yöntemini kökten değiştirmezsen tarih tekerrür edecek." },
+            { text: "Erişim Reddedildi (Access Denied). Yetkin yetersiz.", detail: "Şu an bu kapı sana kapalı çünkü henüz girmeye hazır değilsin. Bu bir reddedilme değil, bir koruma mekanizması. Donanımını yükselt ve daha sonra tekrar dene." },
+            { text: "Mavi Ekran (BSOD). Her şeyi yeniden başlatman gerekebilir.", detail: "Mevcut durum kurtarılamaz halde olabilir. Bazen en iyisi fişi çekip sıfırdan başlamaktır. Yıkımdan korkma, temiz bir kurulum her zaman daha hızlı çalışır." },
+            { text: "Bağlantı zaman aşımına uğradı (Time-out). Çok geç.", detail: "O fırsat penceresi kapandı. Hala geçmişteki bir ihtimalin peşinden koşuyorsun. Gidenin arkasından yas tutmayı bırak ve mevcut zaman dilimine dön." },
+            { text: "Dosya bozuk (Corrupted). Bu fikri kurtaramazsın.", detail: "Temeli çürük bir şeye yatırım yapıyorsun. Bu ilişki veya proje, ne kadar yama yaparsan yap düzelmeyecek. Bozuk dosyayı sil ve diskte yer aç." },
+            { text: "Güvenlik protokolü ihlali. Hemen dur.", detail: "Kendi ahlaki veya kişisel sınırlarını ihlal etmek üzeresin. Bu yol seni kendine yabancılaştırır. İçindeki alarm sesini dinle ve hemen geri adım at." },
+
+            // --- GRİ / FELSEFİ ---
+            { text: "Hayalet makinenin içinde fısıldıyor: 'Bunu yapma.'", detail: "Mantığın 'evet' dese de, içgüdülerin (hayalet) hayır diyor. Verilere değil, hislerine güven. İzah edemediğin o huzursuzluk senin en büyük rehberin." },
+            { text: "Cevap kaynak kodda değil, yorum satırlarında gizli.", detail: "Söylenenlere değil, söylenmeyenlere odaklan. Asıl mesaj satır aralarında. İnsanların ne yaptığına değil, neyi yapmaktan kaçındığına bak." },
+            { text: "Heisenberg İlkesi: Gözlemci, sonucu değiştirir.", detail: "Olayı o kadar çok irdeliyor ve o kadar çok üstüne düşüyorsun ki, doğal akışı bozuyorsun. Senin endişen sonucun kendisini etkiliyor. Biraz geri çekilip akışına bırak." },
+            { text: "Entropi artıyor. Kaosu düzeltmeye çalışma, onu kullan.", detail: "Her şeyin düzenli olmasını istiyorsun ama evren kaosa meyilli. Dağınıklıkla savaşma. Kriz anları, en büyük fırsatların doğduğu anlardır. Dalgayı arkana al." },
+            { text: "Eski bir sürümü (Rollback) geri yüklemeyi dene.", detail: "İlerleme her zaman ileriye doğru olmaz. Bazen çözüm, geçmişteki haline, o eski saflığına veya eski yöntemlerine dönmektir. Özüne dön." },
+            { text: "Değişkenleri (Variables) sabitleme. Akışkan ol.", detail: "Şartlar her an değişebilir. Keskin kararlar alma. 'Asla' veya 'Daima' kelimelerini kullanma. Şu anki duruma uyum sağlayan (responsive) bir zihin yapısına geç." },
+            { text: "Schrödinger'in Kedisi: Kutu açılana kadar her iki sonuç da doğru.", detail: "Şu an belirsizlik seni yiyor ama bu belirsizlik aslında tüm olasılıkların hala mümkün olduğu anlamına gelir. Sonucu öğrenmek için acele etme, olasılıkların keyfini çıkar." },
+            { text: "Matrix'te bir hata (Glitch). Gördüklerine güvenme.", detail: "Sana sunulan gerçeklik, gerçeğin kendisi olmayabilir. Birileri seni manipüle ediyor veya algılarınla oynuyor olabilir. Gözünü aç ve perde arkasını gör." },
+            { text: "Simülasyon teorisi: Bu sorunun bir anlamı var mı?", detail: "Çok küçük bir detaya takılıp kaldın. Büyük resimde (Grand Scheme) bu sorunun hiçbir önemi yok. 5 yıl sonra bu konuyu hatırlamayacaksın bile. Rahatla." },
+            { text: "Daemon arka planda çalışıyor. Sessizce bekle.", detail: "Sen hiçbir şey olmuyor sansan da, arka planda süreçler işliyor. Tohum toprağın altında. Sürekli kazıp bakma, sürece güven." },
+            { text: "Veri tabanında tutarsızlık var. İçgüdüne güven.", detail: "Biri sana yalan söylüyor veya veriler birbirini tutmuyor. Mantığın bir açıklama bulsa da midendeki o düğüm yalan söylemez. Şüphelenmekte haklısın." },
+
+            // --- MAVİ / STRATEJİK ---
+            { text: "En bariz seçeneği sil (Delete). Geriye ne kaldı?", detail: "Herkesin yaptığı veya ilk aklına gelen yolu seçme. O seçenek çok kalabalık. Yaratıcı ol. Aklına gelen ikinci veya üçüncü çözüm asıl çıkış yoludur." },
+            { text: "Bu hata (Bug) aslında bir özellik (Feature) olabilir mi?", detail: "Kusur veya eksiklik olarak gördüğün şey, aslında seni diğerlerinden ayıran en büyük gücün olabilir. Zayıf yönünü saklama, onu parlatıp sahneye çıkar." },
+            { text: "Sistemi hackle: Protokollerin etrafından dolaş.", detail: "Kurallar başkaları için yazıldı, senin için değil. Resmi yollar tıkalıysa yan yolları dene. İzin isteme, özür dile. Biraz asi olmak günü kurtarır." },
+            { text: "Çıktıyı (Output) değil, Girdiyi (Input) sorgula. Soru yanlış.", detail: "Yanlış soruyu soruyorsun, bu yüzden doğru cevabı bulamıyorsun. 'Neden bu başıma geldi?' yerine 'Bununla ne yapabilirim?' diye sor." },
+            { text: "Offline ol. Bazen çözüm bağlantıyı kesmektedir.", detail: "Çok fazla maruz kaldın. Telefonu kapat, bildirimleri sustur, insanlardan uzaklaş. Cevap gürültüde değil, sessizlikte gelecek." },
+            { text: "Şifreyi çözmek için anahtarı (Key) kırman gerekebilir.", detail: "Kibar olmayı bırak. Bazen kapıyı açmak için zorlamak gerekir. Hakkın olanı almak için agresif olman gerekiyorsa, ol." },
+            { text: "Sandbox modunda dene. Test etmeden uygulama.", detail: "Büyük bir risk almadan önce küçük bir prototip yap. O kişiye küçük bir test uygula. O işe küçük bir bütçeyle gir. Deneme yanılma yapmadan tüm sermayeni yatırma." },
+            { text: "Arayüzü (UI) değil, altyapıyı (Backend) değiştir.", detail: "Dış görünüşü veya yüzeysel şeyleri değiştirerek sorunu çözemezsin. Sorun temelde. Saçını değiştirmek yerine düşünce yapını değiştir." },
+            { text: "Log kayıtlarını incele. Geçmişte bir ipucu var.", detail: "Bu durum daha önce de başına geldi. O zaman ne yapmıştın? Tarih tekerrür ediyor. Geçmişteki tecrübeni bugüne uyarla." },
+            { text: "Tek bir satır kodu değiştirirsen, tüm program değişir.", detail: "Devrim yapmana gerek yok. Günlük rutinindeki küçücük bir değişiklik (erken kalkmak, bir kelimeyi değiştirmek) kelebek etkisi yaratacak." },
+            { text: "Yedek (Backup) almadan risk alma.", detail: "Cesur ol ama aptal olma. Eğer işler ters giderse bir B planın olsun. Güvenlik ağını kurduktan sonra o atlayışı yap." },
+            { text: "Brute Force (Kaba Kuvvet) kullanma. Daha zarif bir yol bul.", detail: "Üstüne giderek, ısrar ederek veya zorlayarak çözemezsin. Zekanı kullan. İnce bir manevra, kaba kuvvetten daha etkilidir." },
+            { text: "Dark Web'e girme. Yüzeyde kal.", detail: "Olayın çok derinine inme, çok fazla kurcalama. Bazen bilmemek mutluluktur. Görünenle yetin, perdeyi kaldırırsan hoşuna gitmeyecek şeyler görebilirsin." }
         ];
 
-        // --- 3. ENTROPİ HAVUZU (Mouse + Touch) ---
+        // --- 3. ENTROPİ HAVUZU ---
         let entropyPool = 0;
         let interactionEvents = 0;
+        let selectedDetail = ""; // Seçilen detayı tutmak için
 
-        // Hem Mouse hem Touch olaylarını tek fonksiyonda topluyoruz
         function collectEntropy(x, y) {
             entropyPool += (x * y) + new Date().getMilliseconds();
             interactionEvents++;
@@ -209,17 +265,11 @@
             }
         }
 
-        // Mouse Dinleyicisi
-        document.addEventListener('mousemove', (e) => {
-            collectEntropy(e.clientX, e.clientY);
-        });
-
-        // Touch (Mobil) Dinleyicisi
+        document.addEventListener('mousemove', (e) => { collectEntropy(e.clientX, e.clientY); });
         document.addEventListener('touchmove', (e) => {
-            // Mobilde ilk parmağın konumunu al
             const touch = e.touches[0];
             collectEntropy(touch.clientX, touch.clientY);
-        }, { passive: false }); // Performans için passive false
+        }, { passive: false });
 
         // --- 4. ANA SÜREÇ ---
         function initiateSequence() {
@@ -228,8 +278,10 @@
             const instruction = document.getElementById('instruction-text');
 
             const lastVisit = localStorage.getItem(STORAGE_KEY);
-            const now = new Date().getTime();
-
+            // const now = new Date().getTime(); // TEST İÇİN KAPALI (Geliştirme aşamasında bekleme olmasın)
+            
+            // CANLIYA ALIRKEN BURAYI AÇABİLİRSİN:
+            /*
             if (lastVisit) {
                 const diffHours = (now - parseInt(lastVisit)) / (1000 * 60 * 60);
                 if (diffHours < COOLDOWN_HOURS) {
@@ -237,8 +289,8 @@
                     return;
                 }
             }
+            */
 
-            // KONTROL: Yeterli etkileşim var mı? (Mouse veya Touch)
             if (interactionEvents < 10) {
                 output.innerText = "> VERİ YETERSİZ. EKRANDA GEZİN.";
                 output.style.color = "#ffff00";
@@ -249,6 +301,10 @@
             btn.disabled = true;
             btn.innerText = "HESAPLANIYOR...";
             instruction.innerHTML = "<p>> EVRENSEL ENTROPİ DEŞİFRE EDİLİYOR...</p>";
+            
+            // Detayları gizle (yeni sorgu için)
+            document.getElementById('detail-container').style.display = 'none';
+            document.getElementById('detail-trigger').style.display = 'none';
             
             let iterations = 0;
             const interval = setInterval(() => {
@@ -268,7 +324,11 @@
 
         function selectAndTypeAnswer(output, btn, instruction) {
             const chosenIndex = entropyPool % oracleDatabase.length;
-            const finalAnswer = oracleDatabase[chosenIndex];
+            
+            // NESNE YAPISINDAN VERİYİ ÇEKİYORUZ
+            const selectedObj = oracleDatabase[chosenIndex];
+            const finalAnswer = selectedObj.text;
+            selectedDetail = selectedObj.detail; // Detayı global değişkene ata
 
             localStorage.setItem(STORAGE_KEY, new Date().getTime().toString());
 
@@ -286,6 +346,9 @@
                     output.style.textShadow = "0 0 8px #0f0";
                     instruction.innerHTML = "<p>> OTURUM SONLANDIRILDI.</p>";
                     
+                    // Detay butonunu göster
+                    document.getElementById('detail-trigger').style.display = 'inline-block';
+                    
                     btn.innerText = "SİNYAL KESİLDİ";
                     btn.onclick = () => rejectUser(output, btn, instruction);
                     btn.disabled = false;
@@ -293,9 +356,23 @@
             }, 40); 
         }
 
+        // --- YENİ DETAY FONKSİYONU ---
+        function revealDetails() {
+            const detailBox = document.getElementById('detail-container');
+            const trigger = document.getElementById('detail-trigger');
+            
+            detailBox.innerHTML = `<strong>> DERİN ANALİZ:</strong><br><br>${selectedDetail}`;
+            detailBox.style.display = 'block';
+            trigger.style.display = 'none'; // Butonu gizle, kutu kalsın
+        }
+
         function rejectUser(output, btn, instruction) {
             output.innerHTML = "<span style='color:#ff3333; text-shadow: 0 0 10px red;'>[ ERİŞİM REDDEDİLDİ ]</span>";
             output.classList.add('glitch-text');
+            
+            // Hata anında detayları gizle
+            document.getElementById('detail-container').style.display = 'none';
+            document.getElementById('detail-trigger').style.display = 'none';
             
             const messages = [
                 "Aynı nehirde iki kez yıkanılmaz.",
