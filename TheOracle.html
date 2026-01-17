@@ -17,7 +17,7 @@
             align-items: center;
             justify-content: center;
             font-family: 'Courier New', Courier, monospace;
-            touch-action: pan-y; /* Dikey kaydırmaya izin ver */
+            touch-action: pan-y;
             overflow-x: hidden;
         }
 
@@ -35,21 +35,23 @@
             opacity: 0.7;
             padding: 10px;
             border: 1px solid transparent;
+            transition: all 0.3s;
         }
         
         nav a:hover {
             opacity: 1;
             border-color: #0f0;
             box-shadow: 0 0 10px #0f0;
+            background: rgba(0, 255, 0, 0.1);
         }
 
         .oracle-container {
             text-align: center;
             padding: 20px;
-            max-width: 800px;
+            max-width: 700px; /* Okunabilirlik için genişliği biraz daralttım */
             width: 90%;
             z-index: 5;
-            margin-top: 40px; /* Mobilde yukarı sıkışmasın diye */
+            margin-top: 20px;
             padding-bottom: 50px;
         }
 
@@ -57,11 +59,12 @@
             font-size: 1.8rem;
             color: #0f0;
             min-height: 80px;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             text-shadow: 0 0 8px #0f0;
             word-wrap: break-word;
             font-weight: bold;
             line-height: 1.4;
+            padding: 10px;
         }
 
         .instruction {
@@ -72,35 +75,58 @@
             font-size: 1rem;
         }
 
-        /* DETAY ALANI (YENİ) */
-        .detail-box {
+        /* --- YENİ DETAY TASARIMI: TERMINAL WINDOW --- */
+        .detail-window {
             display: none; /* Başlangıçta gizli */
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px dashed #0f0;
-            background: rgba(0, 20, 0, 0.8);
-            color: #ccc;
+            margin-top: 30px;
+            border: 2px solid #0f0;
+            background: #000;
             text-align: left;
+            box-shadow: 10px 10px 0px rgba(0, 50, 0, 0.5); /* Retro gölge efekti */
+            animation: unfold 0.5s ease-out;
+            position: relative;
+        }
+
+        .detail-header {
+            background: #0f0;
+            color: #000;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #0f0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .detail-content {
+            padding: 20px;
+            color: #ccc;
             font-size: 1rem;
             line-height: 1.6;
-            animation: fadeIn 1s ease;
         }
 
-        .detail-link {
+        .detail-trigger-btn {
             display: none; /* Başlangıçta gizli */
-            color: #0ff; /* Cyan rengi farkedilsin diye */
-            text-decoration: underline;
+            margin-top: 15px;
+            background: transparent;
+            border: 1px solid #0ff; /* Cyan rengi */
+            color: #0ff;
+            padding: 10px 20px;
+            font-family: inherit;
             cursor: pointer;
             font-size: 0.9rem;
-            margin-top: 10px;
-            letter-spacing: 1px;
-        }
-        
-        .detail-link:hover {
-            color: #fff;
-            text-shadow: 0 0 5px #0ff;
+            transition: all 0.3s;
+            animation: pulse-cyan 2s infinite;
         }
 
+        .detail-trigger-btn:hover {
+            background: #0ff;
+            color: #000;
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        /* --- BUTONLAR --- */
         .action-btn {
             background: rgba(0, 20, 0, 0.6);
             border: 2px solid #0f0;
@@ -114,7 +140,7 @@
             font-family: 'Courier New', Courier, monospace;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
             -webkit-tap-highlight-color: transparent;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .action-btn:hover, .action-btn:active {
@@ -129,19 +155,18 @@
             background: transparent;
             cursor: not-allowed;
             box-shadow: none;
+            opacity: 0.5;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes unfold {
+            from { opacity: 0; transform: scaleY(0); transform-origin: top; }
+            to { opacity: 1; transform: scaleY(1); transform-origin: top; }
         }
 
-        /* Responsive Ayarlar */
-        @media (max-width: 600px) {
-            .matrix-display { font-size: 1.3rem; min-height: 60px; }
-            .instruction { font-size: 0.9rem; }
-            .action-btn { padding: 12px 25px; font-size: 1rem; width: 100%; }
-            .detail-box { font-size: 0.9rem; }
+        @keyframes pulse-cyan {
+            0% { opacity: 0.7; box-shadow: 0 0 2px #0ff; }
+            50% { opacity: 1; box-shadow: 0 0 10px #0ff; }
+            100% { opacity: 0.7; box-shadow: 0 0 2px #0ff; }
         }
 
         .glitch-text { animation: glitch 0.1s infinite; }
@@ -152,6 +177,13 @@
             60% { transform: translate(2px, 2px) }
             80% { transform: translate(2px, -2px) }
             100% { transform: translate(0) }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .matrix-display { font-size: 1.3rem; min-height: 60px; }
+            .action-btn { padding: 12px 20px; font-size: 1rem; width: 100%; }
+            .oracle-container { margin-top: 60px; } /* Mobilde üstten biraz daha boşluk */
         }
     </style>
 </head>
@@ -164,8 +196,8 @@
     <div class="oracle-container">
         <div id="instruction-text" class="instruction">
             <p>> SİSTEM BAŞLATILDI...</p>
-            <p>Kafandaki soruyu netleştir. Bu algoritma, senin şu anki <strong>hareketlerinin yarattığı kaosu</strong> kullanarak kaderini hesaplayacak.</p>
-            <p style="margin-top: 20px; border: 1px dashed #0f0; padding: 10px; display:inline-block; color:#fff;">
+            <p>Kafandaki soruyu netleştir. Bu algoritma, senin şu anki <strong>hareketlerinin kaotik izini</strong> sürerek 50 olasılık içinden kaderini hesaplayacak.</p>
+            <p style="margin-top: 10px; border: 1px dashed #0f0; padding: 10px; display:inline-block; color:#fff; font-size:0.9rem;">
                 UYARI: Sadece tek bir hakkın var.
             </p>
         </div>
@@ -174,22 +206,28 @@
             [ SİNYAL ARANIYOR... ]
         </div>
 
-        <div id="detail-trigger" class="detail-link" onclick="revealDetails()">
-            [ >> VERİYİ ÇÖZÜMLE / DETAYLARI GÖSTER << ]
-        </div>
-        <div id="detail-container" class="detail-box">
+        <button id="detail-trigger" class="detail-trigger-btn" onclick="revealDetails()">
+            [ ? ] VERİYİ ÇÖZÜMLE / DETAYLARI GÖSTER
+        </button>
+
+        <div id="detail-window" class="detail-window">
+            <div class="detail-header">
+                <span>ANALYSIS_LOG_V4.txt</span>
+                <span>[X]</span>
             </div>
+            <div id="detail-content" class="detail-content">
+                </div>
+        </div>
 
         <button id="oracle-btn" class="action-btn" onclick="initiateSequence()">Sorguyu Başlat</button>
     </div>
 
     <script>
         // --- 1. KONFİGÜRASYON ---
-        const STORAGE_KEY = 'oracle_v4_detailed'; 
+        const STORAGE_KEY = 'oracle_v5_final'; 
         const COOLDOWN_HOURS = 24; 
 
-        // --- 2. VERİTABANI (NESNE YAPISINA DÖNÜŞTÜRÜLDÜ) ---
-        // Her öğe artık { text: "Kısa Cevap", detail: "Uzun Açıklama" } şeklindedir.
+        // --- 2. VERİTABANI ---
         const oracleDatabase = [
             // --- YEŞİL / ONAYLAYICI ---
             { text: "Derleme (Compile) Başarılı. Kodun çalışmasına izin ver.", detail: "Hazırlık aşaması tamamlandı. Zihninde kurduğun senaryoları tekrar tekrar test etmeyi bırak. Teorik planlama evresi bitti, artık pratik uygulama zamanı. Hata almaktan korkma, çünkü temel sağlam." },
@@ -251,7 +289,7 @@
         // --- 3. ENTROPİ HAVUZU ---
         let entropyPool = 0;
         let interactionEvents = 0;
-        let selectedDetail = ""; // Seçilen detayı tutmak için
+        let selectedDetail = "";
 
         function collectEntropy(x, y) {
             entropyPool += (x * y) + new Date().getMilliseconds();
@@ -276,12 +314,13 @@
             const btn = document.getElementById('oracle-btn');
             const output = document.getElementById('matrix-output');
             const instruction = document.getElementById('instruction-text');
+            const detailWindow = document.getElementById('detail-window');
+            const triggerBtn = document.getElementById('detail-trigger');
 
             const lastVisit = localStorage.getItem(STORAGE_KEY);
-            // const now = new Date().getTime(); // TEST İÇİN KAPALI (Geliştirme aşamasında bekleme olmasın)
-            
-            // CANLIYA ALIRKEN BURAYI AÇABİLİRSİN:
-            /*
+            const now = new Date().getTime();
+
+            // SÜRE KONTROLÜ (AKTİF)
             if (lastVisit) {
                 const diffHours = (now - parseInt(lastVisit)) / (1000 * 60 * 60);
                 if (diffHours < COOLDOWN_HOURS) {
@@ -289,7 +328,6 @@
                     return;
                 }
             }
-            */
 
             if (interactionEvents < 10) {
                 output.innerText = "> VERİ YETERSİZ. EKRANDA GEZİN.";
@@ -302,9 +340,9 @@
             btn.innerText = "HESAPLANIYOR...";
             instruction.innerHTML = "<p>> EVRENSEL ENTROPİ DEŞİFRE EDİLİYOR...</p>";
             
-            // Detayları gizle (yeni sorgu için)
-            document.getElementById('detail-container').style.display = 'none';
-            document.getElementById('detail-trigger').style.display = 'none';
+            // Gizle
+            detailWindow.style.display = 'none';
+            triggerBtn.style.display = 'none';
             
             let iterations = 0;
             const interval = setInterval(() => {
@@ -324,11 +362,9 @@
 
         function selectAndTypeAnswer(output, btn, instruction) {
             const chosenIndex = entropyPool % oracleDatabase.length;
-            
-            // NESNE YAPISINDAN VERİYİ ÇEKİYORUZ
             const selectedObj = oracleDatabase[chosenIndex];
             const finalAnswer = selectedObj.text;
-            selectedDetail = selectedObj.detail; // Detayı global değişkene ata
+            selectedDetail = selectedObj.detail;
 
             localStorage.setItem(STORAGE_KEY, new Date().getTime().toString());
 
@@ -346,7 +382,7 @@
                     output.style.textShadow = "0 0 8px #0f0";
                     instruction.innerHTML = "<p>> OTURUM SONLANDIRILDI.</p>";
                     
-                    // Detay butonunu göster
+                    // Detay tetikleyicisini göster
                     document.getElementById('detail-trigger').style.display = 'inline-block';
                     
                     btn.innerText = "SİNYAL KESİLDİ";
@@ -356,22 +392,22 @@
             }, 40); 
         }
 
-        // --- YENİ DETAY FONKSİYONU ---
         function revealDetails() {
-            const detailBox = document.getElementById('detail-container');
-            const trigger = document.getElementById('detail-trigger');
+            const detailWindow = document.getElementById('detail-window');
+            const contentDiv = document.getElementById('detail-content');
+            const triggerBtn = document.getElementById('detail-trigger');
             
-            detailBox.innerHTML = `<strong>> DERİN ANALİZ:</strong><br><br>${selectedDetail}`;
-            detailBox.style.display = 'block';
-            trigger.style.display = 'none'; // Butonu gizle, kutu kalsın
+            contentDiv.innerHTML = selectedDetail;
+            detailWindow.style.display = 'block';
+            triggerBtn.style.display = 'none';
         }
 
         function rejectUser(output, btn, instruction) {
             output.innerHTML = "<span style='color:#ff3333; text-shadow: 0 0 10px red;'>[ ERİŞİM REDDEDİLDİ ]</span>";
             output.classList.add('glitch-text');
             
-            // Hata anında detayları gizle
-            document.getElementById('detail-container').style.display = 'none';
+            // Gizle
+            document.getElementById('detail-window').style.display = 'none';
             document.getElementById('detail-trigger').style.display = 'none';
             
             const messages = [
