@@ -66,7 +66,7 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        /* --- KATMAN 0: ARKA PLAN (SİMETRİK RAFLAR) --- */
+        /* --- KATMAN 0: ARKA PLAN --- */
         .bar-background {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -123,7 +123,7 @@
             opacity: 0.3;
         }
 
-        /* --- KATMAN 1: BEKLEYEN BARMEN (CYBER-TENDER) --- */
+        /* --- KATMAN 1: BEKLEYEN BARMEN --- */
         .bartender-layer {
             position: absolute; bottom: 0;
             width: 100%; height: 100%;
@@ -210,18 +210,9 @@
            4. UI (DİYALOG & SEÇENEKLER)
            ============================ */
         .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
-        
-        /* GÜNCELLENDİ: Daha küçük ve soluk başlık */
-        .dialogue-header {
-            font-size: 0.55rem;
-            color: rgba(255, 255, 255, 0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            display: block;
-        }
-
+        .dialogue-header { font-size: 0.55rem; color: rgba(255, 255, 255, 0.3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
         .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
+
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
         .option-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #aaa; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
         .option-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,153,0,0.05); }
@@ -229,7 +220,12 @@
         .result-card { display: none; border: 1px solid var(--primary); background: #080808; margin-top: 20px; animation: slideUp 0.5s ease; text-align: left; }
         .result-head { background: var(--primary); color: #000; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
         .result-body { padding: 20px; }
-        .recipe-list { color: #ccc; margin: 10px 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.6; }
+        
+        /* Liste Tasarımı (Recipe) */
+        .recipe-list { color: #ccc; margin: 10px 0; padding-left: 0; font-size: 0.9rem; line-height: 1.6; list-style: none; }
+        .recipe-list li { margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 3px; display: flex; justify-content: space-between; }
+        .recipe-list li span:last-child { color: var(--primary); font-weight: bold; } /* Ölçek rengi */
+
         .btn-full { display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: 0.3s; font-size: 0.8rem; text-transform: uppercase; }
         .btn-full.highlight { border-color: var(--primary); color: var(--primary); font-weight: bold; }
         .btn-full:hover { background: var(--primary); color: #000; }
@@ -250,23 +246,15 @@
 
             <div class="bar-background">
                 <div class="shelf-block">
-                    <div class="bottles-row">
-                        <div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div>
-                    </div>
+                    <div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
                     <div class="shelf-line"></div>
-                    <div class="bottles-row">
-                        <div class="bottle b-fat"></div><div class="bottle b-sq"></div>
-                    </div>
+                    <div class="bottles-row"><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
                     <div class="shelf-line"></div>
                 </div>
                 <div class="shelf-block">
-                    <div class="bottles-row">
-                        <div class="bottle b-sq"></div><div class="bottle b-tall"></div>
-                    </div>
+                    <div class="bottles-row"><div class="bottle b-sq"></div><div class="bottle b-tall"></div></div>
                     <div class="shelf-line"></div>
-                    <div class="bottles-row">
-                        <div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div>
-                    </div>
+                    <div class="bottles-row"><div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div></div>
                     <div class="shelf-line"></div>
                 </div>
             </div>
@@ -311,10 +299,11 @@
             <div class="result-body">
                 <p id="drink-desc" style="color:#888; font-style:italic; margin-bottom:15px;"></p>
                 
-                <p id="drink-prep" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;"></p>
+                <p id="drink-prep" style="color:#aaa; font-size:0.9rem; margin-bottom:20px; line-height:1.4; border-left:2px solid var(--primary); padding-left:10px;"></p>
                 
-                <strong style="color:var(--primary); font-size:0.9rem;">> MALZEMELER:</strong>
-                <div id="drink-recipe" class="recipe-list"></div>
+                <strong style="color:var(--primary); font-size:0.8rem; letter-spacing:1px; display:block; margin-bottom:10px;">> İÇERİK & ÖLÇEKLER:</strong>
+                <ul id="drink-recipe" class="recipe-list">
+                    </ul>
                 
                 <a id="price-btn" href="#" target="_blank" class="btn-full highlight">Fiyat Araştırması</a>
                 <button onclick="location.reload()" class="btn-full">Yeniden Başlat</button>
@@ -333,18 +322,89 @@
             shot: { path: "M30,30 L35,90 L65,90 L70,30 Z", fill: "M36,85 L64,85 L68,35 L32,35 Z" }
         };
 
-        // --- VERİTABANI (GÜNCELLENDİ: 'prep' alanı eklendi) ---
+        // --- VERİTABANI (ÖLÇEKLER DAHİL) ---
+        // Malzemeler artık Array formatında, JS ile listeye çevrilecek
         const drinksDB = [
-            { name: "OLD FASHIONED", type: "rocks", color: "#e67e22", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali.", prep: "Şekeri bitter ile ezin, buz ve viski ekleyip karıştırın. Portakal kabuğu sıkın.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
-            { name: "NEGRONI", type: "rocks", color: "#e74c3c", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "İtalyan asaleti.", prep: "Tüm malzemeleri buzlu bardağa dökün, karıştırın. Portakal dilimi ile süsleyin.", recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Vermut", query: "cin campari fiyat" },
-            { name: "MARTINI", type: "martini", color: "#bdc3c7", tags: { mood: "classy", taste: "sour", intensity: "high" }, desc: "Sek ve keskin.", prep: "Cin ve vermutu buzla karıştırın (shaker kullanmayın). Soğutulmuş bardağa süzün.", recipe: "• 6cl Cin<br>• 1cl Kuru Vermut<br>• Yeşil Zeytin", query: "cin vermut fiyat" },
-            { name: "MOJITO", type: "highball", color: "#2ecc71", tags: { mood: "energy", taste: "sour", intensity: "medium" }, desc: "Küba ferahlığı.", prep: "Nane, şeker ve limonu bardakta ezin. Rom ve buz ekleyin, soda ile tamamlayın.", recipe: "• 5cl Rom<br>• Nane & Limon<br>• Soda", query: "rom fiyatları" },
-            { name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", tags: { mood: "relax", taste: "sour", intensity: "medium" }, desc: "Ekşi ve tatlı denge.", prep: "Tüm malzemeleri buzsuz (dry shake), sonra buzlu shakerda çalkalayın. Süzün.", recipe: "• 6cl Viski<br>• Limon Suyu<br>• Şeker", query: "viski fiyatları" },
-            { name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", tags: { mood: "energy", taste: "sweet", intensity: "high" }, desc: "Uyandırır.", prep: "Tüm malzemeleri buzla shakerda sertçe çalkalayın. Soğutulmuş bardağa süzün.", recipe: "• Votka<br>• Kahve Likörü<br>• Espresso", query: "votka kahlua" },
-            { name: "TEQUILA SHOT", type: "shot", color: "#f39c12", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Hızlı çözüm.", prep: "Önce tuz yalayın, tekilayı için, ardından limonu ısırın.", recipe: "• Tekila<br>• Tuz<br>• Limon", query: "tekila fiyat" },
-            { name: "APEROL SPRITZ", type: "wine", color: "#ff7043", tags: { mood: "relax", taste: "fruity", intensity: "low" }, desc: "İtalyan aperitifi.", prep: "Bardağı buzla doldurun. Sırasıyla Prosecco, Aperol ve sodayı ekleyip hafifçe karıştırın.", recipe: "• Prosecco<br>• Aperol<br>• Soda", query: "aperol fiyat" },
-            { name: "LONG ISLAND", type: "highball", color: "#795548", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Çok karışık.", prep: "Kola hariç tüm malzemeleri buzla shakerda çalkalayın. Bardağa döküp kola ekleyin.", recipe: "• 5 Çeşit Alkol<br>• Kola & Limon", query: "votka cin rom fiyat" },
-            { name: "COSMOPOLITAN", type: "martini", color: "#e91e63", tags: { mood: "classy", taste: "fruity", intensity: "medium" }, desc: "Şehirli.", prep: "Tüm malzemeleri buzla shakerda çalkalayın. Soğutulmuş martini bardağına süzün.", recipe: "• Votka<br>• Portakal Likörü<br>• Kızılcık", query: "votka fiyat" }
+            { 
+                name: "OLD FASHIONED", type: "rocks", color: "#e67e22", 
+                tags: { mood: "deep", taste: "bitter", intensity: "high" }, 
+                desc: "Viskinin en saf hali.", 
+                prep: "Küp şekeri bitter ile ezin. Büyük bir buz ve viskiyi ekleyip 30 saniye karıştırın. Portakal kabuğunu sıkıp içine atın.", 
+                recipe: ["Burbon Viski|6 cl", "Küp Şeker|1 Adet", "Angostura Bitters|2 Damla", "Portakal Kabuğu|1 Parça"],
+                query: "viski fiyatları" 
+            },
+            { 
+                name: "NEGRONI", type: "rocks", color: "#e74c3c", 
+                tags: { mood: "classy", taste: "bitter", intensity: "high" }, 
+                desc: "İtalyan asaleti. Acı ve tatlı dengesi.", 
+                prep: "Bardağı buzla doldurun. Tüm malzemeleri ekleyip soğuyana kadar karıştırın. Portakal dilimi ile servis edin.", 
+                recipe: ["Cin|3 cl", "Campari|3 cl", "Kırmızı Vermut|3 cl", "Portakal Dilimi|1 Adet"],
+                query: "cin campari fiyat" 
+            },
+            { 
+                name: "DRY MARTINI", type: "martini", color: "#bdc3c7", 
+                tags: { mood: "classy", taste: "sour", intensity: "high" }, 
+                desc: "Sek ve keskin. Bond'un tercihi.", 
+                prep: "Cin ve vermutu buz dolu bir karıştırma kabında karıştırın (shaker kullanmayın). Soğutulmuş bardağa süzün.", 
+                recipe: ["Cin|6 cl", "Kuru Vermut|1 cl", "Yeşil Zeytin|1-2 Adet"],
+                query: "cin vermut fiyat" 
+            },
+            { 
+                name: "MOJITO", type: "highball", color: "#2ecc71", 
+                tags: { mood: "energy", taste: "sour", intensity: "medium" }, 
+                desc: "Küba ferahlığı.", 
+                prep: "Nane, şeker ve limonu bardakta ezin. Kırık buz ve rom ekleyin. Üzerini sodayla tamamlayıp karıştırın.", 
+                recipe: ["Beyaz Rom|5 cl", "Taze Nane|10 Yaprak", "Yarım Limon|4 Parça", "Esmer Şeker|2 Kaşık", "Soda|Tamamlamak için"],
+                query: "rom fiyatları" 
+            },
+            { 
+                name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", 
+                tags: { mood: "relax", taste: "sour", intensity: "medium" }, 
+                desc: "Ekşi ve tatlı mükemmel denge.", 
+                prep: "Tüm malzemeleri önce buzsuz (dry shake), sonra buzla çalkalayın. Bardağa süzün.", 
+                recipe: ["Burbon Viski|6 cl", "Limon Suyu|3 cl", "Şeker Şurubu|2 cl", "Yumurta Akı|Opsiyonel"],
+                query: "viski fiyatları" 
+            },
+            { 
+                name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", 
+                tags: { mood: "energy", taste: "sweet", intensity: "high" }, 
+                desc: "Uyandırır ve canlandırır.", 
+                prep: "Sıcak espresso ve diğer malzemeleri buzla dolu shakerda çok sert çalkalayın. Köpüğüyle birlikte süzün.", 
+                recipe: ["Votka|5 cl", "Kahve Likörü|3 cl", "Espresso|1 Shot (3cl)", "Kahve Çekirdeği|3 Adet"],
+                query: "votka kahlua" 
+            },
+            { 
+                name: "TEQUILA SHOT", type: "shot", color: "#f39c12", 
+                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
+                desc: "Hızlı ve etkili.", 
+                prep: "Klasik ritüel: Elinize tuz döküp yalayın, tekilayı tek dikişte için, hemen ardından limonu ısırın.", 
+                recipe: ["Tekila|4 cl", "Tuz|Bir tutam", "Limon|1 Dilim"],
+                query: "tekila fiyat" 
+            },
+            { 
+                name: "APEROL SPRITZ", type: "wine", color: "#ff7043", 
+                tags: { mood: "relax", taste: "fruity", intensity: "low" }, 
+                desc: "İtalyan gün batımı.", 
+                prep: "Büyük şarap bardağını buzla doldurun. Sırasıyla Prosecco, Aperol ve sodayı ekleyip hafifçe karıştırın.", 
+                recipe: ["Prosecco|9 cl (3 ölçü)", "Aperol|6 cl (2 ölçü)", "Soda|3 cl (1 ölçü)", "Portakal Dilimi|1 Adet"],
+                query: "aperol fiyat" 
+            },
+            { 
+                name: "LONG ISLAND", type: "highball", color: "#795548", 
+                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
+                desc: "Tek bardakta 5 beyaz içki.", 
+                prep: "Kola hariç tüm alkolleri ve limon suyunu buzla çalkalayın. Bardağa döküp üzerini kola ile tamamlayın.", 
+                recipe: ["Votka|1.5 cl", "Cin|1.5 cl", "Rom|1.5 cl", "Tekila|1.5 cl", "Portakal Likörü|1.5 cl", "Limon Suyu|2 cl", "Kola|Tamamlamak için"],
+                query: "votka cin rom fiyat" 
+            },
+            { 
+                name: "COSMOPOLITAN", type: "martini", color: "#e91e63", 
+                tags: { mood: "classy", taste: "fruity", intensity: "medium" }, 
+                desc: "Şehirli ve modern.", 
+                prep: "Tüm malzemeleri buzla dolu shakerda çalkalayın. Soğutulmuş martini bardağına süzün.", 
+                recipe: ["Limonlu Votka|4 cl", "Portakal Likörü|2 cl", "Kızılcık Suyu|3 cl", "Limon Suyu|1 cl"],
+                query: "votka fiyat" 
+            }
         ];
 
         // --- SORULAR ---
@@ -433,9 +493,22 @@
             resultCard.style.display = "block";
             document.getElementById('drink-title').innerText = drink.name;
             document.getElementById('drink-desc').innerText = drink.desc;
-            // GÜNCELLENDİ: Hazırlanış eklendi
-            document.getElementById('drink-prep').innerText = "Hazırlanışı: " + drink.prep;
-            document.getElementById('drink-recipe').innerHTML = drink.recipe;
+            document.getElementById('drink-prep').innerText = drink.prep;
+            
+            // Reçete Listesini Oluştur
+            const recipeList = document.getElementById('drink-recipe');
+            recipeList.innerHTML = ""; // Temizle
+            drink.recipe.forEach(item => {
+                const parts = item.split('|'); // İsim|Miktar şeklinde ayırdım
+                const li = document.createElement('li');
+                if(parts.length > 1) {
+                    li.innerHTML = `<span>${parts[0]}</span> <span>${parts[1]}</span>`;
+                } else {
+                    li.innerText = parts[0];
+                }
+                recipeList.appendChild(li);
+            });
+
             document.getElementById('price-btn').href = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
             dialogue.textContent = "Servis edildi. Afiyet olsun.";
         }
