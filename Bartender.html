@@ -476,10 +476,16 @@
 
     function renderBartender(){
       // IDLE/LISTEN: tek kare (komikliği öldürür, gerçekçi durur)
-      if (scene === Scene.IDLE || scene === Scene.LISTEN){
-        visualEl.innerText = bartenderFrames[0];
-        return;
-      }
+if (scene === Scene.IDLE) {
+   // Her 4 saniyede bir, çok kısa süre frame 2'yi göster (göz kırpma)
+   const now = Date.now();
+   if (now % 4000 < 150) { 
+       visualEl.innerText = bartenderFrames[2]; 
+   } else {
+       visualEl.innerText = bartenderFrames[0];
+   }
+   return;
+}
 
       // SCAN: iki kare arasında çok yumuşak geçiş (hala ciddi)
       if (scene === Scene.SCAN){
