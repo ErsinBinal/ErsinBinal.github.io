@@ -72,20 +72,19 @@
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0;
             display: flex;
-            justify-content: space-between; /* Sağa ve Sola yasla */
+            justify-content: space-between;
             padding: 20px 10px 0 10px;
-            opacity: 0.5; /* Arka planı biraz söndür */
-            filter: blur(0.5px); /* Hafif flu yap ki barmen öne çıksın */
+            opacity: 0.5;
+            filter: blur(0.5px);
         }
 
-        /* Sol ve Sağ Raf Blokları */
         .shelf-block {
-            width: 35%; /* Ortayı boş bırak (Barmen için) */
+            width: 35%;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: flex-end;
-            padding-bottom: 90px; /* Bar tezgahının üstünde kalsın */
+            padding-bottom: 90px;
             position: relative;
         }
 
@@ -96,10 +95,9 @@
             position: relative;
         }
 
-        /* Şişe Grupları */
         .bottles-row {
             display: flex; justify-content: space-around; align-items: flex-end;
-            height: 60px; margin-bottom: -4px; /* Rafa otursun */
+            height: 60px; margin-bottom: -4px;
             z-index: 1;
         }
 
@@ -108,17 +106,15 @@
             border: 1px solid #555;
             position: relative;
         }
-        .bottle::after { /* Kapak */
+        .bottle::after {
             content:""; position: absolute; top:-5px; left: 50%; transform: translateX(-50%);
             width: 40%; height: 5px; background: #444;
         }
 
-        /* Çeşitlilik */
         .b-tall { width: 14px; height: 50px; border-radius: 2px; border-color: #777; }
         .b-fat { width: 20px; height: 35px; border-radius: 5px; border-color: #555; background: rgba(255,153,0,0.1); }
         .b-sq { width: 18px; height: 45px; border-radius: 0; border-color: #446; background: rgba(0,100,255,0.1); }
 
-        /* Arka duvar deseni */
         .wall-texture {
             position: absolute; top:0; left:0; width:100%; height:100%;
             background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px);
@@ -133,10 +129,9 @@
             width: 100%; height: 100%;
             display: flex; align-items: flex-end; justify-content: center;
             transition: opacity 0.5s, transform 0.5s;
-            z-index: 5; /* Şişelerin önünde */
+            z-index: 5;
         }
 
-        /* Bar Tezgahı (Ön Panel) */
         .bar-counter {
             position: absolute; bottom: 0; width: 100%; height: 15px;
             background: linear-gradient(to bottom, #333, #111);
@@ -150,7 +145,7 @@
             position: relative; bottom: 15px;
             display: flex; flex-direction: column; align-items: center;
             animation: idleBreathe 4s ease-in-out infinite;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); /* Barmeni arka plandan ayır */
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
         }
         .tender-head {
             width: 55px; height: 45px;
@@ -164,7 +159,6 @@
             background: var(--primary); box-shadow: 0 0 10px var(--primary);
             animation: eyeScan 4s infinite ease-in-out;
         }
-        /* Boyun */
         .tender-neck { width: 20px; height: 10px; background: #333; margin-top: -2px; z-index: -1; }
         
         .tender-body {
@@ -175,7 +169,6 @@
             position: relative;
             display: flex; justify-content: center; padding-top: 20px;
         }
-        /* Yaka Detayı */
         .tender-body::before {
             content: ""; position: absolute; top:0; width: 40px; height: 20px;
             border-bottom: 1px solid #555;
@@ -187,12 +180,11 @@
             animation: corePulse 2s infinite;
         }
 
-        /* --- KATMAN 2 & 3: SHAKER & SUNUM (AYNI KALDI) --- */
+        /* --- KATMAN 2 & 3: SHAKER & SUNUM --- */
         .shaker-layer {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
             opacity: 0; transition: all 0.5s; z-index: 7;
         }
-        /* Shaker CSS (Öncekiyle aynı ama ortalı) */
         .shaker-container { width: 80px; height: 140px; position: relative; transform-origin: bottom center; }
         .shaker-body { width: 100%; height: 75%; background: linear-gradient(135deg, #555, #222); border-radius: 5px 5px 25px 25px; border: 2px solid #888; position: absolute; bottom: 0; }
         .shaker-cap { width: 100%; height: 25%; background: linear-gradient(135deg, #666, #333); border-radius: 15px 15px 5px 5px; border: 2px solid #999; border-bottom: 1px solid #222; position: absolute; top: 0; }
@@ -214,16 +206,30 @@
         @keyframes corePulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
         @keyframes shakeHard { 0% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } 100% { transform: rotate(0deg); } }
 
-        /* --- UI (AYNI KALDI) --- */
+        /* ============================
+           4. UI (DİYALOG & SEÇENEKLER)
+           ============================ */
         .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
+        
+        /* GÜNCELLENDİ: Daha küçük ve soluk başlık */
+        .dialogue-header {
+            font-size: 0.55rem;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
         .typing-text { font-size: 1rem; line-height: 1.5; white-space: pre-wrap; }
         .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
         .option-btn { background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: #aaa; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
         .option-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(255,153,0,0.05); }
+        
         .result-card { display: none; border: 1px solid var(--primary); background: #080808; margin-top: 20px; animation: slideUp 0.5s ease; text-align: left; }
         .result-head { background: var(--primary); color: #000; padding: 10px 15px; font-weight: bold; display: flex; justify-content: space-between; }
         .result-body { padding: 20px; }
-        .recipe-list { color: #ccc; margin: 15px 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.6; }
+        .recipe-list { color: #ccc; margin: 10px 0; padding-left: 20px; font-size: 0.9rem; line-height: 1.6; }
         .btn-full { display: block; width: 100%; text-align: center; padding: 12px; margin-top: 10px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: 0.3s; font-size: 0.8rem; text-transform: uppercase; }
         .btn-full.highlight { border-color: var(--primary); color: var(--primary); font-weight: bold; }
         .btn-full:hover { background: var(--primary); color: #000; }
@@ -240,34 +246,26 @@
     <div class="container">
         
         <div class="stage-area">
-            
             <div class="wall-texture"></div>
 
             <div class="bar-background">
                 <div class="shelf-block">
                     <div class="bottles-row">
-                        <div class="bottle b-tall"></div>
-                        <div class="bottle b-fat"></div>
-                        <div class="bottle b-sq"></div>
+                        <div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div>
                     </div>
                     <div class="shelf-line"></div>
                     <div class="bottles-row">
-                        <div class="bottle b-fat"></div>
-                        <div class="bottle b-sq"></div>
+                        <div class="bottle b-fat"></div><div class="bottle b-sq"></div>
                     </div>
                     <div class="shelf-line"></div>
                 </div>
-
                 <div class="shelf-block">
                     <div class="bottles-row">
-                        <div class="bottle b-sq"></div>
-                        <div class="bottle b-tall"></div>
+                        <div class="bottle b-sq"></div><div class="bottle b-tall"></div>
                     </div>
                     <div class="shelf-line"></div>
                     <div class="bottles-row">
-                        <div class="bottle b-tall"></div>
-                        <div class="bottle b-fat"></div>
-                        <div class="bottle b-sq"></div>
+                        <div class="bottle b-tall"></div><div class="bottle b-fat"></div><div class="bottle b-sq"></div>
                     </div>
                     <div class="shelf-line"></div>
                 </div>
@@ -284,9 +282,7 @@
 
             <div id="shaker-layer" class="shaker-layer">
                 <div id="shaker" class="shaker-container">
-                    <div class="shaker-top"></div>
-                    <div class="shaker-cap"></div>
-                    <div class="shaker-body"></div>
+                    <div class="shaker-top"></div><div class="shaker-cap"></div><div class="shaker-body"></div>
                 </div>
             </div>
 
@@ -314,7 +310,12 @@
             </div>
             <div class="result-body">
                 <p id="drink-desc" style="color:#888; font-style:italic; margin-bottom:15px;"></p>
+                
+                <p id="drink-prep" style="color:#aaa; font-size:0.9rem; margin-bottom:15px;"></p>
+                
+                <strong style="color:var(--primary); font-size:0.9rem;">> MALZEMELER:</strong>
                 <div id="drink-recipe" class="recipe-list"></div>
+                
                 <a id="price-btn" href="#" target="_blank" class="btn-full highlight">Fiyat Araştırması</a>
                 <button onclick="location.reload()" class="btn-full">Yeniden Başlat</button>
             </div>
@@ -332,18 +333,18 @@
             shot: { path: "M30,30 L35,90 L65,90 L70,30 Z", fill: "M36,85 L64,85 L68,35 L32,35 Z" }
         };
 
-        // --- VERİTABANI ---
+        // --- VERİTABANI (GÜNCELLENDİ: 'prep' alanı eklendi) ---
         const drinksDB = [
-            { name: "OLD FASHIONED", type: "rocks", color: "#e67e22", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
-            { name: "NEGRONI", type: "rocks", color: "#e74c3c", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "İtalyan asaleti.", recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Vermut", query: "cin campari fiyat" },
-            { name: "MARTINI", type: "martini", color: "#bdc3c7", tags: { mood: "classy", taste: "sour", intensity: "high" }, desc: "Sek ve keskin.", recipe: "• 6cl Cin<br>• 1cl Kuru Vermut<br>• Yeşil Zeytin", query: "cin vermut fiyat" },
-            { name: "MOJITO", type: "highball", color: "#2ecc71", tags: { mood: "energy", taste: "sour", intensity: "medium" }, desc: "Küba ferahlığı.", recipe: "• 5cl Rom<br>• Nane & Limon<br>• Soda", query: "rom fiyatları" },
-            { name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", tags: { mood: "relax", taste: "sour", intensity: "medium" }, desc: "Ekşi ve tatlı denge.", recipe: "• 6cl Viski<br>• Limon Suyu<br>• Şeker", query: "viski fiyatları" },
-            { name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", tags: { mood: "energy", taste: "sweet", intensity: "high" }, desc: "Uyandırır.", recipe: "• Votka<br>• Kahve Likörü<br>• Espresso", query: "votka kahlua" },
-            { name: "TEQUILA SHOT", type: "shot", color: "#f39c12", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Hızlı çözüm.", recipe: "• Tekila<br>• Tuz<br>• Limon", query: "tekila fiyat" },
-            { name: "APEROL SPRITZ", type: "wine", color: "#ff7043", tags: { mood: "relax", taste: "fruity", intensity: "low" }, desc: "İtalyan aperitifi.", recipe: "• Prosecco<br>• Aperol<br>• Soda", query: "aperol fiyat" },
-            { name: "LONG ISLAND", type: "highball", color: "#795548", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Çok karışık.", recipe: "• 5 Çeşit Alkol<br>• Kola & Limon", query: "votka cin rom fiyat" },
-            { name: "COSMOPOLITAN", type: "martini", color: "#e91e63", tags: { mood: "classy", taste: "fruity", intensity: "medium" }, desc: "Şehirli.", recipe: "• Votka<br>• Portakal Likörü<br>• Kızılcık", query: "votka fiyat" }
+            { name: "OLD FASHIONED", type: "rocks", color: "#e67e22", tags: { mood: "deep", taste: "bitter", intensity: "high" }, desc: "Viskinin en saf hali.", prep: "Şekeri bitter ile ezin, buz ve viski ekleyip karıştırın. Portakal kabuğu sıkın.", recipe: "• 6cl Burbon<br>• 1 Küp Şeker<br>• Angostura Bitters", query: "viski fiyatları" },
+            { name: "NEGRONI", type: "rocks", color: "#e74c3c", tags: { mood: "classy", taste: "bitter", intensity: "high" }, desc: "İtalyan asaleti.", prep: "Tüm malzemeleri buzlu bardağa dökün, karıştırın. Portakal dilimi ile süsleyin.", recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Vermut", query: "cin campari fiyat" },
+            { name: "MARTINI", type: "martini", color: "#bdc3c7", tags: { mood: "classy", taste: "sour", intensity: "high" }, desc: "Sek ve keskin.", prep: "Cin ve vermutu buzla karıştırın (shaker kullanmayın). Soğutulmuş bardağa süzün.", recipe: "• 6cl Cin<br>• 1cl Kuru Vermut<br>• Yeşil Zeytin", query: "cin vermut fiyat" },
+            { name: "MOJITO", type: "highball", color: "#2ecc71", tags: { mood: "energy", taste: "sour", intensity: "medium" }, desc: "Küba ferahlığı.", prep: "Nane, şeker ve limonu bardakta ezin. Rom ve buz ekleyin, soda ile tamamlayın.", recipe: "• 5cl Rom<br>• Nane & Limon<br>• Soda", query: "rom fiyatları" },
+            { name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", tags: { mood: "relax", taste: "sour", intensity: "medium" }, desc: "Ekşi ve tatlı denge.", prep: "Tüm malzemeleri buzsuz (dry shake), sonra buzlu shakerda çalkalayın. Süzün.", recipe: "• 6cl Viski<br>• Limon Suyu<br>• Şeker", query: "viski fiyatları" },
+            { name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", tags: { mood: "energy", taste: "sweet", intensity: "high" }, desc: "Uyandırır.", prep: "Tüm malzemeleri buzla shakerda sertçe çalkalayın. Soğutulmuş bardağa süzün.", recipe: "• Votka<br>• Kahve Likörü<br>• Espresso", query: "votka kahlua" },
+            { name: "TEQUILA SHOT", type: "shot", color: "#f39c12", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Hızlı çözüm.", prep: "Önce tuz yalayın, tekilayı için, ardından limonu ısırın.", recipe: "• Tekila<br>• Tuz<br>• Limon", query: "tekila fiyat" },
+            { name: "APEROL SPRITZ", type: "wine", color: "#ff7043", tags: { mood: "relax", taste: "fruity", intensity: "low" }, desc: "İtalyan aperitifi.", prep: "Bardağı buzla doldurun. Sırasıyla Prosecco, Aperol ve sodayı ekleyip hafifçe karıştırın.", recipe: "• Prosecco<br>• Aperol<br>• Soda", query: "aperol fiyat" },
+            { name: "LONG ISLAND", type: "highball", color: "#795548", tags: { mood: "rebel", taste: "sour", intensity: "high" }, desc: "Çok karışık.", prep: "Kola hariç tüm malzemeleri buzla shakerda çalkalayın. Bardağa döküp kola ekleyin.", recipe: "• 5 Çeşit Alkol<br>• Kola & Limon", query: "votka cin rom fiyat" },
+            { name: "COSMOPOLITAN", type: "martini", color: "#e91e63", tags: { mood: "classy", taste: "fruity", intensity: "medium" }, desc: "Şehirli.", prep: "Tüm malzemeleri buzla shakerda çalkalayın. Soğutulmuş martini bardağına süzün.", recipe: "• Votka<br>• Portakal Likörü<br>• Kızılcık", query: "votka fiyat" }
         ];
 
         // --- SORULAR ---
@@ -356,14 +357,11 @@
         let currentStep = 0;
         let userPrefs = {};
         
-        // Elementler
         const dialogue = document.getElementById('dialogue-text');
         const optArea = document.getElementById('options-area');
-        
         const bartenderLayer = document.getElementById('bartender-layer');
         const shakerLayer = document.getElementById('shaker-layer');
         const presentationLayer = document.getElementById('presentation-layer');
-        
         const shaker = document.getElementById('shaker');
         const stream = document.getElementById('stream');
         const glassPath = document.getElementById('glass-path');
@@ -371,75 +369,47 @@
         const resultCard = document.getElementById('result-card');
         const root = document.documentElement;
 
-        // Daktilo Efekti
         function type(txt, cb) {
             dialogue.textContent = "";
-            let i = 0;
-            let currentText = "";
+            let i = 0; let currentText = "";
             let timer = setInterval(() => {
-                currentText += txt.charAt(i);
-                dialogue.textContent = currentText;
-                i++;
+                currentText += txt.charAt(i); dialogue.textContent = currentText; i++;
                 if(i >= txt.length) { clearInterval(timer); if(cb) cb(); }
             }, 30);
         }
 
-        // Sahne Değiştirici
         function setScene(scene) {
-            bartenderLayer.style.opacity = 0; 
-            shakerLayer.style.opacity = 0; shakerLayer.style.transform = "translate(-50%, 20px)";
-            presentationLayer.style.opacity = 0;
-            shaker.classList.remove('is-shaking');
-
-            if(scene === 'bartender') {
-                bartenderLayer.style.opacity = 1;
-            } else if(scene === 'shaker') {
-                shakerLayer.style.opacity = 1; shakerLayer.style.transform = "translate(-50%, 0)";
-                setTimeout(() => shaker.classList.add('is-shaking'), 300);
-            } else if(scene === 'presentation') {
-                presentationLayer.style.opacity = 1;
-            }
+            bartenderLayer.style.opacity = 0; shakerLayer.style.opacity = 0; shakerLayer.style.transform = "translate(-50%, 20px)"; presentationLayer.style.opacity = 0; shaker.classList.remove('is-shaking');
+            if(scene === 'bartender') { bartenderLayer.style.opacity = 1; }
+            else if(scene === 'shaker') { shakerLayer.style.opacity = 1; shakerLayer.style.transform = "translate(-50%, 0)"; setTimeout(() => shaker.classList.add('is-shaking'), 300); }
+            else if(scene === 'presentation') { presentationLayer.style.opacity = 1; }
         }
 
         function renderStep() {
-            optArea.innerHTML = "";
-            optArea.style.opacity = 0;
-            setScene('bartender');
-            
+            optArea.innerHTML = ""; optArea.style.opacity = 0; setScene('bartender');
             if(currentStep < questions.length) {
                 let q = questions[currentStep];
                 type(q.text, () => {
                     q.options.forEach(o => {
-                        let btn = document.createElement('button');
-                        btn.className = 'option-btn';
-                        btn.innerText = "> " + o.l;
+                        let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = "> " + o.l;
                         btn.onclick = () => { userPrefs[q.key] = o.v; currentStep++; renderStep(); };
                         optArea.appendChild(btn);
                     });
                     optArea.style.animation = "fadeIn 0.5s forwards";
                 });
-            } else {
-                calculate();
-            }
+            } else { calculate(); }
         }
 
         function calculate() {
             type("Veriler işleniyor... Karışım hazırlanıyor...", () => {
-                optArea.style.display = "none";
-                setScene('shaker');
-
+                optArea.style.display = "none"; setScene('shaker');
                 setTimeout(() => {
-                    let best = drinksDB[0];
-                    let max = -1;
+                    let best = drinksDB[0]; let max = -1;
                     drinksDB.forEach(d => {
                         let s = 0;
-                        if(d.tags.mood == userPrefs.mood) s+=5;
-                        if(d.tags.taste == userPrefs.taste) s+=3;
-                        if(d.tags.intensity == userPrefs.intensity) s+=2;
-                        s += Math.random();
-                        if(s > max) { max = s; best = d; }
+                        if(d.tags.mood == userPrefs.mood) s+=5; if(d.tags.taste == userPrefs.taste) s+=3; if(d.tags.intensity == userPrefs.intensity) s+=2;
+                        s += Math.random(); if(s > max) { max = s; best = d; }
                     });
-                    
                     showResult(best);
                 }, 2500);
             });
@@ -447,24 +417,14 @@
 
         function showResult(drink) {
             setScene('presentation');
-
             let paths = glassPaths[drink.type] || glassPaths.rocks;
-            glassPath.setAttribute('d', paths.path);
-            liquidPath.setAttribute('d', paths.fill);
-            
-            root.style.setProperty('--primary', drink.color);
-            stream.style.background = drink.color;
-            stream.style.boxShadow = `0 0 10px ${drink.color}`;
-            liquidPath.style.fill = drink.color;
-
+            glassPath.setAttribute('d', paths.path); liquidPath.setAttribute('d', paths.fill);
+            root.style.setProperty('--primary', drink.color); stream.style.background = drink.color; stream.style.boxShadow = `0 0 10px ${drink.color}`; liquidPath.style.fill = drink.color;
             setTimeout(() => {
                 stream.style.height = "100px";
                 setTimeout(() => {
                     liquidPath.style.opacity = 0.8;
-                    setTimeout(() => {
-                        stream.style.height = "0"; stream.style.top = "120px";
-                        finish(drink);
-                    }, 800);
+                    setTimeout(() => { stream.style.height = "0"; stream.style.top = "120px"; finish(drink); }, 800);
                 }, 400);
             }, 300);
         }
@@ -473,16 +433,14 @@
             resultCard.style.display = "block";
             document.getElementById('drink-title').innerText = drink.name;
             document.getElementById('drink-desc').innerText = drink.desc;
+            // GÜNCELLENDİ: Hazırlanış eklendi
+            document.getElementById('drink-prep').innerText = "Hazırlanışı: " + drink.prep;
             document.getElementById('drink-recipe').innerHTML = drink.recipe;
             document.getElementById('price-btn').href = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
-            
             dialogue.textContent = "Servis edildi. Afiyet olsun.";
         }
 
-        window.onload = () => {
-            renderStep();
-        }
-
+        window.onload = () => { renderStep(); }
     </script>
 </body>
 </html>
