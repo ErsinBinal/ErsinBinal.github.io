@@ -17,11 +17,10 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
-            /* Hafif CRT Titremesi */
             animation: textShadow 1.6s infinite;
         }
 
-        /* Scanline (Tarama Çizgileri) Efekti */
+        /* Scanline Efekti */
         body::before {
             content: " ";
             display: block;
@@ -59,7 +58,7 @@
             position: relative;
         }
 
-        /* --- BARMEN SAHNESİ (ARTIK SABİT VE AYRIK) --- */
+        /* --- BARMEN SAHNESİ --- */
         .monitor-frame {
             border: 2px solid #333;
             background: #0a0a0a;
@@ -69,7 +68,6 @@
             position: relative;
         }
 
-        /* Durum Rozeti (Örn: [ BEKLİYOR ]) */
         .status-badge {
             position: absolute;
             top: 10px;
@@ -82,9 +80,9 @@
         }
 
         .bartender-wrapper {
-            height: 160px; /* SABİT YÜKSEKLİK - Kaymayı önler */
+            height: 160px;
             display: flex;
-            align-items: flex-end; /* Tabana hizala */
+            align-items: flex-end;
             justify-content: center;
             overflow: hidden;
         }
@@ -95,7 +93,6 @@
             color: #ff9900;
             white-space: pre; 
             text-shadow: 0 0 5px #ff9900;
-            /* Mobilde patlamaması için responsive font boyutu */
             font-size: clamp(10px, 2.5vw, 14px); 
             line-height: 1.2;
             text-align: center;
@@ -212,9 +209,9 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes textShadow {
-            0% { text-shadow: 0.4389924193300864px 0 1px rgba(0,30,255,0.5), -0.4389924193300864px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
-            50% { text-shadow: 2.7928974010788217px 0 1px rgba(0,30,255,0.5), -2.7928974010788217px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
-            100% { text-shadow: 0.4389924193300864px 0 1px rgba(0,30,255,0.5), -0.4389924193300864px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
+            0% { text-shadow: 0.4px 0 1px rgba(0,30,255,0.5), -0.4px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
+            50% { text-shadow: 2.7px 0 1px rgba(0,30,255,0.5), -2.7px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
+            100% { text-shadow: 0.4px 0 1px rgba(0,30,255,0.5), -0.4px 0 1px rgba(255,0,80,0.3), 0 0 3px; }
         }
 
         @media (max-width: 600px) {
@@ -270,10 +267,7 @@
     </div>
 
     <script>
-        // --- 1. SABİTLENMİŞ ASCII SANATI (KAYMA YAPMAZ) ---
-        // Her satırın karakter sayısını eşitlemek için boşluklar kullanıldı.
-        // Barmen ve metinler ayrıldı.
-        
+        // --- 1. ASCII ANIMATION ---
         const bartenderFrames = [
             // Frame 0: Bekleme
 `   .---.   
@@ -293,7 +287,7 @@
  |  \\_/  | 
  ( SHAKE ) `,
 
-            // Frame 2: Göz Kırpma / Hazırlama
+            // Frame 2: Göz Kırpma
 `   .---.   
   /     \\  
   | - O |  
@@ -307,100 +301,233 @@
         const bartenderEl = document.getElementById('ascii-bartender');
         const statusEl = document.getElementById('status-badge');
 
-        // Animasyon Döngüsü
         setInterval(() => {
             bartenderEl.innerText = bartenderFrames[frameIndex];
-            
-            // Sadece görsel değişsin, metin sabit kalsın veya manuel değişsin
-            // Bu sayede "kayma" (layout shift) olmaz.
             frameIndex = (frameIndex + 1) % bartenderFrames.length;
         }, 800);
 
-        // --- 2. VERİTABANI ---
+        // --- 2. GENİŞLETİLMİŞ İÇKİ MATRİSİ (40+ ÇEŞİT) ---
+        // Mood: relax, energy, deep, classy
+        // Taste: sour, bitter, sweet, fruity
+        // Intensity: low, medium, high
         const drinksDB = [
+            // --- KLASİKLER & VİSKİ ---
             {
                 name: "OLD FASHIONED",
                 tags: { mood: "deep", taste: "bitter", intensity: "high" },
-                desc: "Klasiklerin atası. Viskinin en saf ve karizmatik hali. Düşünmek ve yavaş yudumlamak için.",
+                desc: "Viskinin en saf hali. Düşünmek ve yavaş yudumlamak için.",
                 recipe: "• 6cl Burbon Viski<br>• 1 Küp Şeker<br>• 2 damla Angostura<br>• Portakal kabuğu",
-                query: "viski fiyatları güncel 2026"
-            },
-            {
-                name: "NEGRONI",
-                tags: { mood: "classy", taste: "bitter", intensity: "high" },
-                desc: "İtalyan asaleti. Tatlı ve acının mükemmel dengesi. Bir aperitiften fazlası.",
-                recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Kırmızı Vermut<br>• Portakal dilimi",
-                query: "cin fiyatları güncel 2026"
-            },
-            {
-                name: "MOJITO",
-                tags: { mood: "energy", taste: "sour", intensity: "medium" },
-                desc: "Küba'nın ferahlatıcı rüzgarı. Nane ve limonun dansı.",
-                recipe: "• 5cl Beyaz Rom<br>• Yarım misket limonu<br>• 10 yaprak taze nane<br>• Şeker & Soda",
-                query: "beyaz rom fiyatları 2026"
+                query: "viski fiyatları 2026"
             },
             {
                 name: "WHISKEY SOUR",
                 tags: { mood: "relax", taste: "sour", intensity: "medium" },
-                desc: "Ekşi, tatlı ve sert. İpeksi bir doku için iyice çalkalanmalı.",
+                desc: "Ekşi, tatlı ve sert. İpeksi bir doku.",
                 recipe: "• 6cl Viski<br>• 3cl Limon Suyu<br>• 2cl Şeker Şurubu<br>• (Opsiyonel) Yumurta akı",
                 query: "viski fiyatları 2026"
             },
             {
+                name: "GODFATHER",
+                tags: { mood: "deep", taste: "sweet", intensity: "high" },
+                desc: "Viski ve badem likörünün suç ortaklığı. Ağır ama tatlı.",
+                recipe: "• 5cl Viski (Scotch)<br>• 2.5cl Amaretto<br>• Buz dolu bardağa dök",
+                query: "viski amaretto fiyat 2026"
+            },
+            {
+                name: "RUSTY NAIL",
+                tags: { mood: "deep", taste: "bitter", intensity: "high" },
+                desc: "Paslı çivi. İskoç viskisi ve bal likörünün sert buluşması.",
+                recipe: "• 4.5cl Scotch Viski<br>• 2.5cl Drambuie<br>• Limon kabuğu ile servis",
+                query: "scotch viski drambuie fiyat 2026"
+            },
+            
+            // --- CİN & SOFİSTİKE ---
+            {
+                name: "NEGRONI",
+                tags: { mood: "classy", taste: "bitter", intensity: "high" },
+                desc: "İtalyan asaleti. Tatlı ve acının mükemmel dengesi.",
+                recipe: "• 3cl Cin<br>• 3cl Campari<br>• 3cl Kırmızı Vermut<br>• Portakal dilimi",
+                query: "cin campari vermut fiyat 2026"
+            },
+            {
+                name: "DRY MARTINI",
+                tags: { mood: "classy", taste: "sour", intensity: "high" },
+                desc: "James Bond'un tercihi. Sek, keskin ve şık.",
+                recipe: "• 6cl Cin<br>• 1cl Kuru Vermut<br>• Yeşil Zeytin",
+                query: "cin vermut fiyat 2026"
+            },
+            {
+                name: "GIN TONIC",
+                tags: { mood: "relax", taste: "sour", intensity: "medium" },
+                desc: "Basitliğin mükemmelliği. Serinletici ve temiz.",
+                recipe: "• 5cl Cin<br>• 15cl Tonik<br>• Salatalık veya Limon",
+                query: "cin fiyatları 2026"
+            },
+            {
+                name: "TOM COLLINS",
+                tags: { mood: "energy", taste: "sour", intensity: "medium" },
+                desc: "Limonata gibi akar ama içindeki cin çarpar.",
+                recipe: "• 5cl Cin<br>• 3cl Limon Suyu<br>• 2cl Şeker Şurubu<br>• Soda ile tamamla",
+                query: "cin fiyatları 2026"
+            },
+
+            // --- VOTKA & PARTİ ---
+            {
                 name: "ESPRESSO MARTINI",
                 tags: { mood: "energy", taste: "sweet", intensity: "high" },
-                desc: "Hem uyandırır hem çarpar. Geceyi başlatmak için mükemmel.",
-                recipe: "• 5cl Votka<br>• 3cl Kahve Likörü<br>• 1 shot taze Espresso<br>• Buzla sert çalkala",
-                query: "votka fiyatları 2026"
-            },
-            {
-                name: "APEROL SPRITZ",
-                tags: { mood: "relax", taste: "fruity", intensity: "low" },
-                desc: "Gün batımının resmi içeceği. Hafif, köpüklü ve turuncu.",
-                recipe: "• 3 ölçü Prosecco<br>• 2 ölçü Aperol<br>• 1 ölçü Soda<br>• Bol buz",
-                query: "aperol fiyatları 2026"
-            },
-            {
-                name: "LONG ISLAND",
-                tags: { mood: "energy", taste: "sour", intensity: "high" },
-                desc: "Masum adına aldanma, içinde 5 çeşit alkol var.",
-                recipe: "• Votka, Cin, Rom, Tekila<br>• Portakal Likörü<br>• Limon suyu & Kola",
-                query: "votka cin rom fiyatları 2026"
+                desc: "Hem uyandırır hem çarpar. Geceyi başlatmak için.",
+                recipe: "• 5cl Votka<br>• 3cl Kahve Likörü<br>• 1 shot taze Espresso<br>• Sert çalkala",
+                query: "votka kahlua fiyat 2026"
             },
             {
                 name: "MOSCOW MULE",
                 tags: { mood: "relax", taste: "sour", intensity: "medium" },
-                desc: "Zencefilin yakıcı ferahlığı. Bakır kupada buz gibi bir klasik.",
+                desc: "Zencefilin yakıcı ferahlığı. Bakır kupada klasik.",
                 recipe: "• 5cl Votka<br>• 15cl Zencefil Gazozu<br>• Misket limonu suyu",
-                query: "votka fiyatları 2026"
+                query: "votka ginger beer fiyat 2026"
             },
             {
                 name: "COSMOPOLITAN",
                 tags: { mood: "classy", taste: "fruity", intensity: "medium" },
                 desc: "Şehirli, şık ve pembe. Modern bir klasik.",
-                recipe: "• 4cl Limonlu Votka<br>• 2cl Portakal Likörü<br>• Limon & Kızılcık suyu",
-                query: "votka fiyatları 2026"
+                recipe: "• 4cl Limonlu Votka<br>• 2cl Portakal Likörü<br>• Kızılcık suyu",
+                query: "votka cointreau fiyat 2026"
             },
             {
-                name: "RAKI (DUBLE)",
-                tags: { mood: "deep", taste: "bitter", intensity: "high" },
-                desc: "Bu topraklarda dertler en iyi böyle çözülür. Yavaş iç.",
-                recipe: "• Duble Rakı<br>• Soğuk Su ve Buz<br>• Beyaz Peynir & Kavun",
-                query: "rakı fiyatları 2026"
+                name: "WHITE RUSSIAN",
+                tags: { mood: "relax", taste: "sweet", intensity: "low" },
+                desc: "Tatlı krizi ve alkol ihtiyacı için kremsi bir çözüm.",
+                recipe: "• 5cl Votka<br>• 2cl Kahve Likörü<br>• 3cl Krema",
+                query: "votka kahlua fiyat 2026"
             },
             {
-                name: "GIN TONIC",
-                tags: { mood: "classy", taste: "sour", intensity: "medium" },
-                desc: "Basitliğin mükemmelliği. Kaliteli bir cin ve taze tonik.",
-                recipe: "• 5cl Cin<br>• 15cl Tonik<br>• Salatalık veya Limon",
-                query: "cin fiyatları 2026"
+                name: "SEX ON THE BEACH",
+                tags: { mood: "energy", taste: "fruity", intensity: "medium" },
+                desc: "Yaz, plaj ve meyve. Tam bir parti kokteyli.",
+                recipe: "• 4cl Votka<br>• 2cl Şeftali Likörü<br>• Portakal & Kızılcık Suyu",
+                query: "votka şeftali likörü fiyat 2026"
             },
+
+            // --- ROM & TROPİKAL ---
+            {
+                name: "MOJITO",
+                tags: { mood: "energy", taste: "sour", intensity: "medium" },
+                desc: "Küba'nın ferahlatıcı rüzgarı. Nane ve limon.",
+                recipe: "• 5cl Beyaz Rom<br>• Yarım misket limonu<br>• 10 yaprak taze nane<br>• Şeker & Soda",
+                query: "beyaz rom fiyatları 2026"
+            },
+            {
+                name: "CUBA LIBRE",
+                tags: { mood: "relax", taste: "sweet", intensity: "medium" },
+                desc: "Özgür Küba. Rom ve kolanın efsanevi uyumu.",
+                recipe: "• 5cl Rom<br>• 12cl Kola<br>• Yarım limon suyu<br>• Bol buz",
+                query: "rom fiyatları 2026"
+            },
+            {
+                name: "DAIQUIRI",
+                tags: { mood: "classy", taste: "sour", intensity: "high" },
+                desc: "Sadece 3 malzeme ama yapması ustalık ister.",
+                recipe: "• 6cl Beyaz Rom<br>• 3cl Taze Limon Suyu<br>• 2cl Şeker Şurubu",
+                query: "beyaz rom fiyat 2026"
+            },
+            {
+                name: "PINA COLADA",
+                tags: { mood: "relax", taste: "sweet", intensity: "low" },
+                desc: "Ananas ve Hindistan cevizinin kremamsı rüyası.",
+                recipe: "• 5cl Rom<br>• 3cl Hindistan Cevizi Kreması<br>• 10cl Ananas Suyu",
+                query: "rom malibu fiyat 2026"
+            },
+            {
+                name: "ZOMBIE",
+                tags: { mood: "energy", taste: "fruity", intensity: "high" },
+                desc: "Adı üzerinde. Çok fazla rom içerir, dikkatli ol.",
+                recipe: "• 3 farklı çeşit Rom (Beyaz, Altın, Siyah)<br>• Kayısı Likörü<br>• Ananas & Portakal Suyu",
+                query: "rom çeşitleri fiyat 2026"
+            },
+
+            // --- TEKİLA & MEKSİKA ---
             {
                 name: "MARGARITA",
                 tags: { mood: "energy", taste: "sour", intensity: "high" },
                 desc: "Meksika ateşi. Tuzlu kenarlar ve tekilanın gücü.",
                 recipe: "• 5cl Tekila<br>• 3cl Portakal Likörü<br>• 2cl Limon suyu<br>• Tuzlu kenar",
                 query: "tekila fiyatları 2026"
+            },
+            {
+                name: "TEQUILA SUNRISE",
+                tags: { mood: "relax", taste: "sweet", intensity: "medium" },
+                desc: "Gün doğumu renklerinde tatlı bir klasik.",
+                recipe: "• 5cl Tekila<br>• 10cl Portakal Suyu<br>• 1cl Grenadine (Nar Şurubu)",
+                query: "tekila fiyatları 2026"
+            },
+            {
+                name: "PALOMA",
+                tags: { mood: "relax", taste: "sour", intensity: "medium" },
+                desc: "Meksika'nın gerçek favorisi. Greyfurt ferahlığı.",
+                recipe: "• 5cl Tekila<br>• 1cl Limon Suyu<br>• Greyfurt Gazozu",
+                query: "tekila fiyatları 2026"
+            },
+
+            // --- YEREL & SERT ---
+            {
+                name: "RAKI (DUBLE)",
+                tags: { mood: "deep", taste: "bitter", intensity: "high" },
+                desc: "Bu topraklarda dertler en iyi böyle çözülür.",
+                recipe: "• Duble Rakı<br>• Soğuk Su<br>• Beyaz Peynir & Kavun",
+                query: "rakı fiyatları 2026"
+            },
+            {
+                name: "RAKI KOKTEYLİ",
+                tags: { mood: "classy", taste: "fruity", intensity: "medium" },
+                desc: "Rakıya modern bir dokunuş. Nar suyu ile şaşırtıcı uyum.",
+                recipe: "• 5cl Rakı<br>• 10cl Taze Nar Suyu<br>• Nane yaprağı",
+                query: "rakı fiyatları 2026"
+            },
+
+            // --- HAFİF & KÖPÜKLÜ ---
+            {
+                name: "APEROL SPRITZ",
+                tags: { mood: "relax", taste: "fruity", intensity: "low" },
+                desc: "Hafif, köpüklü ve turuncu İtalyan klasiği.",
+                recipe: "• 3 ölçü Prosecco<br>• 2 ölçü Aperol<br>• 1 ölçü Soda",
+                query: "aperol fiyatları 2026"
+            },
+            {
+                name: "MIMOSA",
+                tags: { mood: "energy", taste: "fruity", intensity: "low" },
+                desc: "Brunchların vazgeçilmezi. Portakal suyu ve şampanya.",
+                recipe: "• Yarı yarıya Şampanya<br>• Yarı yarıya Portakal Suyu",
+                query: "şampanya fiyatları 2026"
+            },
+            {
+                name: "BELLINI",
+                tags: { mood: "classy", taste: "sweet", intensity: "low" },
+                desc: "Venedik usulü şeftali rüyası.",
+                recipe: "• 10cl Prosecco<br>• 5cl Şeftali Püresi",
+                query: "prosecco fiyatları 2026"
+            },
+
+            // --- AĞIR SİKLET ---
+            {
+                name: "LONG ISLAND",
+                tags: { mood: "energy", taste: "sour", intensity: "high" },
+                desc: "İçinde 5 çeşit alkol var. Hızlı sarhoşluk garantili.",
+                recipe: "• Votka, Cin, Rom, Tekila<br>• Portakal Likörü<br>• Limon suyu & Kola",
+                query: "votka cin rom fiyatları 2026"
+            },
+            {
+                name: "SAZERAC",
+                tags: { mood: "deep", taste: "bitter", intensity: "high" },
+                desc: "New Orleans efsanesi. Absinthe ile durulanan bardakta.",
+                recipe: "• 6cl Çavdar Viski (Rye)<br>• 1 küp şeker<br>• Peychaud's Bitters<br>• Absinthe (bardak yıkama)",
+                query: "viski absinthe fiyat 2026"
+            },
+            {
+                name: "BOULEVARDIER",
+                tags: { mood: "classy", taste: "bitter", intensity: "high" },
+                desc: "Negroni'nin viskili kuzeni. Daha karanlık ve zengin.",
+                recipe: "• 4.5cl Viski<br>• 3cl Campari<br>• 3cl Kırmızı Vermut",
+                query: "viski campari fiyat 2026"
             }
         ];
 
@@ -409,8 +536,8 @@
             {
                 text: "Hoş geldin yabancı. Bugün ruh halin nasıl?",
                 options: [
-                    { label: "Yorgunum, Sakinlik", value: "relax" },
-                    { label: "Enerjik, Parti Modu", value: "energy" },
+                    { label: "Yorgunum / Sakinlik", value: "relax" },
+                    { label: "Enerjik / Parti Modu", value: "energy" },
                     { label: "Dertli / Düşünceli", value: "deep" },
                     { label: "Sofistike / Şık", value: "classy" }
                 ],
@@ -421,7 +548,7 @@
                 options: [
                     { label: "Ekşi ve Ferah", value: "sour" },
                     { label: "Acı ve Karakterli", value: "bitter" },
-                    { label: "Tatlı ve Yumuşak", value: "sweet" },
+                    { label: "Tatlı / Yumuşak", value: "sweet" },
                     { label: "Meyvemsi", value: "fruity" }
                 ],
                 key: "taste"
@@ -444,11 +571,12 @@
         const dialogueBox = document.getElementById('dialogue-text');
         const optionsBox = document.getElementById('options-container');
         const resultArea = document.getElementById('result-area');
+        const statusEl = document.getElementById('status-badge');
 
         function updateStatus(text) {
             statusEl.innerText = `[ ${text} ]`;
             statusEl.style.animation = "none";
-            statusEl.offsetHeight; /* trigger reflow */
+            statusEl.offsetHeight; 
             statusEl.style.animation = "fadeIn 0.5s";
         }
 
@@ -531,8 +659,8 @@
             dialogueBox.innerHTML = `<span style="color:#ff9900">BULUNDU:</span><br>Senin için en uygun reçete: ${drink.name}`;
         }
 
+        // Başlat
         window.onload = () => {
-            bartenderEl.innerText = bartenderFrames[0];
             renderStep();
         };
 
