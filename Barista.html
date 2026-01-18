@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Cyber-Barista | Convivium_</title>
+    <title>The Cyber-Barista v2.0 | Convivium_</title>
     
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+
     <style>
         /* ============================
            1. COFFEE SHOP AESTHETICS
@@ -12,8 +14,8 @@
         :root {
             --bg: #1a1512;
             --surface: #261e1b;
-            --primary: #d4af37; /* Altın Sarısı */
-            --accent: #c27e4e; /* Kavrulmuş Kahve */
+            --primary: #d4af37; /* Gold */
+            --accent: #c27e4e; /* Roasted */
             --text-main: #e0d6cc;
             --text-muted: #8c7b70;
             --border: rgba(212, 175, 55, 0.2);
@@ -59,7 +61,7 @@
         .stage-area {
             height: 320px;
             display: flex;
-            align-items: center; /* Ortala */
+            align-items: center;
             justify-content: center;
             position: relative;
             background: radial-gradient(circle at bottom, #2a201c, transparent 70%);
@@ -69,135 +71,102 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
 
-        /* --- KATMAN 1: BEKLEME (PULSE LOGO) --- */
+        /* KATMAN 1: BEKLEME */
         #layer-idle {
-            position: absolute;
-            width: 100%; height: 100%;
+            position: absolute; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: center;
             transition: opacity 0.5s;
         }
         .idle-logo {
-            font-size: 4rem;
-            color: var(--primary);
+            font-size: 4rem; color: var(--primary);
             filter: drop-shadow(0 0 15px var(--primary));
             animation: pulse-logo 3s infinite ease-in-out;
         }
 
-        /* --- KATMAN 2: DEMLEME (BREWING / PORTAFILTER) --- */
+        /* KATMAN 2: DEMLEME */
         #layer-brew {
-            position: absolute;
-            width: 100%; height: 100%;
+            position: absolute; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
         }
-
-        /* Portafilter (Kaşık) */
         .portafilter {
             width: 120px; height: 60px;
             background: linear-gradient(90deg, #111, #333, #111);
             border-radius: 5px 5px 30px 30px;
             border: 2px solid #555; border-top: none;
-            position: relative; z-index: 2;
-            margin-bottom: 0; /* Akışla birleşmesi için */
+            position: relative; z-index: 2; margin-bottom: 0;
         }
-        .portafilter::before { /* Sap */
+        .portafilter::before {
             content: ""; position: absolute; right: -60px; top: 10px;
             width: 60px; height: 15px; background: #222;
             border-radius: 0 5px 5px 0; border: 2px solid #444;
         }
-        .machine-group { /* Titreşim Grubu */
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .is-brewing .machine-group {
-            animation: machine-vibrate 0.1s infinite; /* Makine Titreşimi */
-        }
-
-        /* Akış (Stream) */
+        .machine-group { display: flex; flex-direction: column; align-items: center; }
+        .is-brewing .machine-group { animation: machine-vibrate 0.1s infinite; }
         .coffee-stream {
-            width: 6px; height: 0; /* JS ile uzayacak */
+            width: 6px; height: 0;
             background: linear-gradient(to bottom, #3e2723, #d4af37);
             box-shadow: 0 0 10px var(--accent);
             border-radius: 0 0 4px 4px;
             transition: height 0.5s ease-in;
             opacity: 0.9;
         }
-        .stream-active {
-            height: 140px !important;
-            animation: stream-wiggle 0.2s infinite; /* Akış Dalgalanması */
-        }
+        .stream-active { height: 140px !important; animation: stream-wiggle 0.2s infinite; }
 
-        /* --- KATMAN 3: SUNUM (BARDAK + BUHAR) --- */
+        /* KATMAN 3: SUNUM */
         #layer-result {
             position: absolute; bottom: 30px;
             display: flex; flex-direction: column; align-items: center;
             opacity: 0; pointer-events: none; transition: opacity 0.5s;
         }
-
         .coffee-cup-svg {
             width: 130px; height: 130px;
             filter: drop-shadow(0 5px 15px rgba(0,0,0,0.5));
-            fill: none; stroke: var(--primary); stroke-width: 2;
-            z-index: 2;
+            fill: none; stroke: var(--primary); stroke-width: 2; z-index: 2;
         }
-
-        /* Buhar Efekti (CSS Particles) */
-        .steam-container {
-            position: absolute; top: -60px; width: 80px; height: 100px;
-            pointer-events: none; z-index: 1;
-        }
+        .steam-container { position: absolute; top: -60px; width: 80px; height: 100px; pointer-events: none; z-index: 1; }
         .steam {
-            position: absolute; bottom: 0; left: 50%;
-            width: 20px; height: 40px;
+            position: absolute; bottom: 0; left: 50%; width: 20px; height: 40px;
             background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
-            filter: blur(6px); opacity: 0;
-            border-radius: 50%;
+            filter: blur(6px); opacity: 0; border-radius: 50%;
             animation: steam-rise 4s infinite ease-out;
         }
         .steam:nth-child(1) { animation-delay: 0s; left: 30%; transform: scale(0.8); }
         .steam:nth-child(2) { animation-delay: 1.5s; left: 60%; transform: scale(1.1); }
         .steam:nth-child(3) { animation-delay: 3s; left: 45%; transform: scale(0.9); }
 
-        /* --- ANİMASYON KEYFRAMES --- */
         @keyframes pulse-logo { 0%,100% { opacity:0.6; transform:scale(1); } 50% { opacity:1; transform:scale(1.1); } }
         @keyframes machine-vibrate { 0% { transform: translate(0, 0); } 25% { transform: translate(1px, 1px); } 50% { transform: translate(0, -1px); } 75% { transform: translate(-1px, 0); } 100% { transform: translate(0, 0); } }
         @keyframes stream-wiggle { 0% { transform: translateX(0); width:6px; } 50% { transform: translateX(1px); width:5px; } 100% { transform: translateX(0); width:6px; } }
-        @keyframes steam-rise { 
-            0% { transform: translateY(0) scale(0.5); opacity: 0; } 
-            20% { opacity: 0.4; } 
-            100% { transform: translateY(-60px) scale(1.5); opacity: 0; } 
-        }
+        @keyframes steam-rise { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 0.4; } 100% { transform: translateY(-60px) scale(1.5); opacity: 0; } }
 
         /* ============================
            3. UI & KARTLAR
            ============================ */
-        .dialogue-card {
-            background: var(--surface); border: 1px solid var(--border);
-            border-left: 4px solid var(--primary); padding: 20px;
-            margin-bottom: 20px; text-align: left; min-height: 80px;
-        }
+        .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
         .dialogue-header { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: block; }
         .typing-text { font-size: 1rem; line-height: 1.5; color: var(--text-main); }
 
         .options-grid { display: grid; grid-template-columns: 1fr; gap: 10px; opacity: 0; animation: fadeIn 0.5s forwards; }
-        .option-btn {
-            background: rgba(255,255,255,0.03); border: 1px solid #3e322b;
-            color: #b0a093; padding: 16px; cursor: pointer;
-            font-family: inherit; text-transform: uppercase; font-size: 0.9rem;
-            transition: 0.2s; text-align: left; display: flex; justify-content: space-between;
-        }
+        .option-btn { background: rgba(255,255,255,0.03); border: 1px solid #3e322b; color: #b0a093; padding: 16px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; text-align: left; display: flex; justify-content: space-between; }
         .option-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(212, 175, 55, 0.05); padding-left: 20px; }
         .option-btn span { font-size: 0.8em; opacity: 0.5; }
 
         .result-card { display: none; border: 1px solid var(--primary); background: #1a1614; margin-top: 20px; animation: slideUp 0.5s ease; text-align: left; }
         .result-head { background: var(--primary); color: #1a1512; padding: 15px; font-weight: bold; display: flex; justify-content: space-between; font-size: 1.1rem; }
         .result-body { padding: 25px; }
-        .tag-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tag-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .tag { font-size: 0.7rem; background: #3e322b; padding: 4px 8px; border-radius: 4px; color: #ccc; }
+        
         .recipe-block { background: rgba(0,0,0,0.2); padding: 15px; border-left: 2px solid var(--accent); margin-bottom: 20px; }
         .recipe-title { color: var(--accent); font-size: 0.8rem; font-weight: bold; display: block; margin-bottom: 5px; }
+        
+        .barista-note { font-style: italic; color: #eebb99; font-size: 0.9rem; margin-bottom: 20px; padding: 10px; border: 1px dashed #6f4e37; border-radius: 4px; background: rgba(111, 78, 55, 0.1); }
+        
         .playlist-box { margin-top: 20px; border-top: 1px dashed #3e322b; padding-top: 15px; }
         .song-item { display: flex; align-items: center; font-size: 0.85rem; color: #8c7b70; margin-bottom: 6px; }
         .song-icon { color: var(--primary); margin-right: 8px; }
+        
         .btn-action { display: block; width: 100%; text-align: center; padding: 14px; margin-top: 15px; text-decoration: none; border: 1px solid var(--border); color: var(--primary); font-weight: bold; transition: 0.3s; background: transparent; }
         .btn-action:hover { background: var(--primary); color: #1a1512; }
 
@@ -207,7 +176,7 @@
 </head>
 <body>
 
-    <nav><a href="index.html">[ ← GERİ ]</a></nav>
+    <nav><a href="index.html">[ ← ANA MENÜ ]</a></nav>
 
     <svg style="display:none;">
         <defs>
@@ -220,33 +189,21 @@
     <div class="container">
         
         <div class="stage-area">
-            
-            <div id="layer-idle">
-                <div class="idle-logo">☕</div>
-            </div>
-
+            <div id="layer-idle"><div class="idle-logo">☕</div></div>
             <div id="layer-brew">
                 <div class="machine-group">
                     <div class="portafilter"></div>
                     <div class="coffee-stream" id="coffee-stream"></div>
                 </div>
             </div>
-
             <div id="layer-result">
-                <div class="steam-container">
-                    <div class="steam"></div>
-                    <div class="steam"></div>
-                    <div class="steam"></div>
-                </div>
-                <svg class="coffee-cup-svg" viewBox="0 0 100 100">
-                    <use id="cup-use" href="#cup-hot"></use>
-                </svg>
+                <div class="steam-container"><div class="steam"></div><div class="steam"></div><div class="steam"></div></div>
+                <svg class="coffee-cup-svg" viewBox="0 0 100 100"><use id="cup-use" href="#cup-hot"></use></svg>
             </div>
-
         </div>
 
         <div class="dialogue-card">
-            <span class="dialogue-header">THE CYBER-BARISTA AI</span>
+            <span class="dialogue-header">THE CYBER-BARISTA AI v2.0</span>
             <div id="dialogue-text" class="typing-text"></div>
         </div>
 
@@ -255,20 +212,24 @@
         <div id="result-card" class="result-card">
             <div class="result-head">
                 <span id="drink-title">KAHVE ADI</span>
-                <span>%99 MATCH</span>
+                <span>MATCHED</span>
             </div>
             <div class="result-body">
                 <div class="tag-row">
                     <span class="tag" id="tag-brand">BRAND</span>
                     <span class="tag" id="tag-temp">HOT</span>
-                    <span class="tag" id="tag-cal">~150 KCAL</span>
+                    <span class="tag" id="tag-cal">KCAL</span>
                 </div>
 
                 <p id="drink-desc" style="color:#b0a093; margin-bottom:20px; font-style:italic;"></p>
                 
                 <div class="recipe-block">
-                    <span class="recipe-title">> İÇERİK BİLEŞENLERİ:</span>
+                    <span class="recipe-title">> İÇERİK:</span>
                     <div id="drink-recipe" style="color:#ddd; font-size:0.9rem;"></div>
+                </div>
+
+                <div class="barista-note">
+                    <strong>💡 Barista Tüyo:</strong> <span id="drink-tip"></span>
                 </div>
 
                 <div class="playlist-box">
@@ -279,37 +240,79 @@
                 <button onclick="location.reload()" class="btn-action">YENİ SİPARİŞ OLUŞTUR</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        // --- 1. KAHVE VERİTABANI ---
+        // --- 1. GENİŞLETİLMİŞ KAHVE VERİTABANI ---
         const coffeeDB = [
             // STARBUCKS
-            { name: "White Chocolate Mocha", brand: "Starbucks", temp: "hot", mood: "indulge", desc: "Beyaz çikolata sosu, espresso ve sütün tatlı uyumu.", content: "Espresso (2 shot) + Beyaz Çikolata + Süt + Krema", cal: "350 kcal", playlist: ["Sweater Weather - The Neighbourhood", "Coffee - beabadoobee"] },
-            { name: "Caffè Americano", brand: "Starbucks", temp: "hot", mood: "focus", desc: "Sıcak su ile inceltilmiş yoğun espresso.", content: "Espresso (3 shot) + Sıcak Su", cal: "15 kcal", playlist: ["Deep Focus", "Lo-Fi Beats"] },
-            { name: "Iced White Mocha", brand: "Starbucks", temp: "cold", mood: "indulge", desc: "Buzlu beyaz çikolata lezzeti.", content: "Espresso + Beyaz Çikolata + Süt + Buz", cal: "300 kcal", playlist: ["Summer Vibes", "Watermelon Sugar"] },
-            { name: "Cold Brew", brand: "Starbucks", temp: "cold", mood: "energy", desc: "20 saat soğuk demlenmiş, yumuşak içim.", content: "Soğuk Demleme Kahve + Buz", cal: "5 kcal", playlist: ["Work Hard Play Hard", "Power Workout"] },
+            { name: "White Chocolate Mocha", brand: "Starbucks", temp: "hot", mood: "indulge", desc: "Beyaz çikolata sosu, espresso ve sütün tatlı uyumu.", content: "Espresso (2 shot) + Beyaz Çikolata + Süt + Krema", cal: "350 kcal", tip: "Çok tatlı geldiyse 'Half Sweet' (yarım pompa) isteyin.", playlist: ["Sweater Weather - The Neighbourhood", "Coffee - beabadoobee"] },
+            { name: "Caffè Americano", brand: "Starbucks", temp: "hot", mood: "focus", desc: "Sıcak su ile inceltilmiş yoğun espresso.", content: "Espresso (3 shot) + Sıcak Su", cal: "15 kcal", tip: "Daha yumuşak içim için 'Misto' (yarım su yarım süt) deneyin.", playlist: ["Deep Focus", "Lo-Fi Beats"] },
+            { name: "Iced White Mocha", brand: "Starbucks", temp: "cold", mood: "indulge", desc: "Buzlu beyaz çikolata lezzeti.", content: "Espresso + Beyaz Çikolata + Süt + Buz", cal: "300 kcal", tip: "Kremasız isteyerek 100 kalori tasarruf edebilirsiniz.", playlist: ["Summer Vibes", "Watermelon Sugar"] },
+            { name: "Cold Brew", brand: "Starbucks", temp: "cold", mood: "energy", desc: "20 saat soğuk demlenmiş, yumuşak ama güçlü.", content: "Soğuk Demleme Kahve + Buz", cal: "5 kcal", tip: "Vanilla Sweet Cream ekleterek lezzeti katlayın.", playlist: ["Work Hard Play Hard", "Power Workout"] },
+            { name: "Caramel Macchiato", brand: "Starbucks", temp: "hot", mood: "social", desc: "Vanilya şurubu, süt ve üzerine espresso ile karamel.", content: "Süt + Vanilya + Espresso + Karamel Sos", cal: "250 kcal", tip: "Karıştırmadan için, her yudumda farklı katmanı tadın.", playlist: ["Pop Hits", "Happy Mood"] },
+            { name: "Cool Lime Refresha", brand: "Starbucks", temp: "cold", mood: "fit", desc: "Gerçek misket limonu özüyle ferahlatıcı.", content: "Lime Özü + Su + Kurutulmuş Limon + Buz", cal: "90 kcal", tip: "Su yerine Hindistan Cevizi sütüyle isteyin (Pink Drink tarzı).", playlist: ["Tropical House", "Poolside"] },
 
             // ESPRESSOLAB
-            { name: "Lotus Latte", brand: "Espressolab", temp: "hot", mood: "indulge", desc: "Karamelize bisküvi tadında latte.", content: "Lotus Ezmesi + Espresso + Süt + Bisküvi", cal: "380 kcal", playlist: ["Cozy Autumn", "Dream A Little Dream"] },
-            { name: "Cortado", brand: "Espressolab", temp: "hot", mood: "focus", desc: "Eşit oranda espresso ve süt.", content: "Espresso + Süt (1:1 Oran)", cal: "60 kcal", playlist: ["Indie Folk", "Acoustic Covers"] },
-            { name: "Iced Lotus Latte", brand: "Espressolab", temp: "cold", mood: "indulge", desc: "Buzlu Lotus lezzeti.", content: "Lotus Ezmesi + Espresso + Süt + Buz", cal: "350 kcal", playlist: ["Chill Hits", "Good Vibes Only"] },
+            { name: "Lotus Latte", brand: "Espressolab", temp: "hot", mood: "indulge", desc: "Karamelize bisküvi tadında latte.", content: "Lotus Ezmesi + Espresso + Süt + Bisküvi", cal: "380 kcal", tip: "Yulaf sütüyle içerseniz bisküvi tadı daha çok ortaya çıkar.", playlist: ["Cozy Autumn", "Dream A Little Dream"] },
+            { name: "Cortado", brand: "Espressolab", temp: "hot", mood: "focus", desc: "Eşit oranda espresso ve süt.", content: "Espresso + Süt (1:1 Oran)", cal: "60 kcal", tip: "Sabah uyanamayanlar için ideal doz.", playlist: ["Indie Folk", "Acoustic Covers"] },
+            { name: "Iced Lotus Latte", brand: "Espressolab", temp: "cold", mood: "indulge", desc: "Buzlu Lotus lezzeti.", content: "Lotus Ezmesi + Espresso + Süt + Buz", cal: "350 kcal", tip: "Ekstra bisküvi kırıntısı istemeyi unutmayın.", playlist: ["Chill Hits", "Good Vibes Only"] },
+            { name: "Chemex", brand: "Espressolab", temp: "hot", mood: "melancholy", desc: "Özel filtreleme ile berrak ve aromatik.", content: "Single Origin Kahve Çekirdeği + Sıcak Su", cal: "5 kcal", tip: "Şeker atmayın, kahvenin meyvemsi notalarını keşfedin.", playlist: ["Bon Iver", "Rainy Day Jazz"] },
 
             // CAFFE NERO
-            { name: "Cappuccino", brand: "Caffè Nero", temp: "hot", mood: "relax", desc: "Bol köpüklü İtalyan klasiği.", content: "Espresso + Süt + Bol Köpük + Kakao", cal: "110 kcal", playlist: ["Italian Coffee House", "Dean Martin"] },
-            { name: "Flat White", brand: "Caffè Nero", temp: "hot", mood: "focus", desc: "İnce köpüklü, yoğun kahve tadı.", content: "Ristretto (2 shot) + Süt", cal: "90 kcal", playlist: ["Morning Focus", "Jazz Vibes"] },
+            { name: "Cappuccino", brand: "Caffè Nero", temp: "hot", mood: "relax", desc: "Bol köpüklü İtalyan klasiği.", content: "Espresso + Süt + Bol Köpük + Kakao", cal: "110 kcal", tip: "Ekstra sıcak isteyin, köpüğü daha uzun süre dayanır.", playlist: ["Italian Coffee House", "Dean Martin"] },
+            { name: "Flat White", brand: "Caffè Nero", temp: "hot", mood: "focus", desc: "İnce köpüklü, yoğun kahve tadı.", content: "Ristretto (2 shot) + Süt", cal: "90 kcal", tip: "Kısa ve yoğun bir mola için en iyi seçenek.", playlist: ["Morning Focus", "Jazz Vibes"] },
+            { name: "Milano Hot Chocolate", brand: "Caffè Nero", temp: "hot", mood: "melancholy", desc: "Erimiş çikolata kıvamında yoğun lezzet.", content: "Çikolata + Süt + Krema", cal: "400 kcal", tip: "Naneli şurup ekleterek 'After Eight' tadı yakalayabilirsiniz.", playlist: ["Winter Wonderland", "Comfort Songs"] },
 
             // KAHVE DÜNYASI
-            { name: "Türk Kahvesi", brand: "Kahve Dünyası", temp: "hot", mood: "relax", desc: "Geleneksel, telveli ve yoğun.", content: "Türk Kahvesi + Su (+Şeker)", cal: "20 kcal", playlist: ["Zeki Müren", "Klasik Türk Müziği"] },
-            { name: "Soğuk Türk Kahvesi", brand: "Kahve Dünyası", temp: "cold", mood: "energy", desc: "Modern ve serinletici.", content: "Türk Kahvesi + Süt + Buz", cal: "120 kcal", playlist: ["Modern Pop", "Yaz Hitleri"] }
+            { name: "Türk Kahvesi", brand: "Kahve Dünyası", temp: "hot", mood: "relax", desc: "Geleneksel, telveli ve yoğun.", content: "Türk Kahvesi + Su (+Şeker)", cal: "20 kcal", tip: "Yanında mutlaka çifte kavrulmuş lokum yiyin.", playlist: ["Zeki Müren", "Klasik Türk Müziği"] },
+            { name: "Soğuk Türk Kahvesi", brand: "Kahve Dünyası", temp: "cold", mood: "energy", desc: "Modern ve serinletici.", content: "Türk Kahvesi + Süt + Buz", cal: "120 kcal", tip: "Damla sakızlı versiyonunu denediniz mi?", playlist: ["Modern Pop", "Yaz Hitleri"] },
+            { name: "Filtre Kahve", brand: "Kahve Dünyası", temp: "hot", mood: "fit", desc: "Sade, taze demlenmiş ve şekersiz.", content: "Filtre Kahve + Sıcak Su", cal: "5 kcal", tip: "Süt tozu yerine az miktarda gerçek süt kullanın.", playlist: ["Focus Flow", "Deep House"] },
+
+            // TCHIBO
+            { name: "Davids Kaffee", brand: "Tchibo", temp: "hot", mood: "focus", desc: "Alman usulü, yoğun ve asiditesi düşük.", content: "%100 Arabica Filtre Kahve", cal: "5 kcal", tip: "Yanında Tchibo'nun Brezellerinden birini alın.", playlist: ["Classical Essentials", "Piano Study"] },
+            { name: "Mazagran", brand: "Tchibo", temp: "cold", mood: "energy", desc: "Limonlu ve konyaklı (opsiyonel) buzlu kahve.", content: "Espresso + Limon + Buz + Şeker", cal: "120 kcal", tip: "Çok ferahlatıcıdır, yazın vazgeçilmezi.", playlist: ["Upbeat Funk", "Summer Drive"] },
+
+            // CARIBOU COFFEE
+            { name: "Turtle Mocha", brand: "Caribou Coffee", temp: "hot", mood: "indulge", desc: "Çikolata, karamel ve fındık üçlüsü.", content: "Espresso + Çikolata + Karamel + Fındık + Krema", cal: "450 kcal", tip: "Bitter çikolata ile yapılırsa tadı dengelenir.", playlist: ["Pop Rock", "Road Trip"] },
+            { name: "Mint Condition", brand: "Caribou Coffee", temp: "hot", mood: "melancholy", desc: "Nane ferahlığı ve çikolata sıcaklığı.", content: "Espresso + Nane Şurubu + Çikolata + Süt", cal: "380 kcal", tip: "Soğuk günlerde boğazı yumuşatır.", playlist: ["Indie Chill", "Acoustic Pop"] }
         ];
 
         // --- 2. AKIŞ VE SORULAR ---
         const questions = [
-            { text: "Hangi dükkanın önündesin?", key: "brand", options: [ { l: "Starbucks", v: "Starbucks" }, { l: "EspressoLab", v: "Espressolab" }, { l: "Caffè Nero", v: "Caffè Nero" }, { l: "Kahve Dünyası", v: "Kahve Dünyası" } ] },
-            { text: "Hava nasıl? Ne içmek istersin?", key: "temp", options: [ { l: "Sıcak (İçim ısınsın)", v: "hot" }, { l: "Soğuk (Ferahlayayım)", v: "cold" } ] },
-            { text: "Şu anki modun nedir?", key: "mood", options: [ { l: "Uyanmam Lazım (Enerji)", v: "energy" }, { l: "Keyif / Ödül (Tatlı)", v: "indulge" }, { l: "Odaklanma / İş (Sade)", v: "focus" }, { l: "Rahatlama (Yumuşak)", v: "relax" } ] }
+            { 
+                text: "Hangi dükkanın önündesin?", 
+                key: "brand",
+                options: [
+                    { l: "Starbucks", v: "Starbucks" },
+                    { l: "EspressoLab", v: "Espressolab" },
+                    { l: "Caffè Nero", v: "Caffè Nero" },
+                    { l: "Kahve Dünyası", v: "Kahve Dünyası" },
+                    { l: "Tchibo", v: "Tchibo" },
+                    { l: "Caribou", v: "Caribou Coffee" }
+                ]
+            },
+            {
+                text: "Hava nasıl? Ne içmek istersin?",
+                key: "temp",
+                options: [
+                    { l: "Sıcak (İçim ısınsın)", v: "hot" },
+                    { l: "Soğuk (Ferahlayayım)", v: "cold" }
+                ]
+            },
+            {
+                text: "Şu anki modun nedir?",
+                key: "mood",
+                options: [
+                    { l: "Enerji Lazım / Uyan", v: "energy" },
+                    { l: "Keyif / Şımart Beni", v: "indulge" },
+                    { l: "Odaklanma / İş", v: "focus" },
+                    { l: "Rahatlama / Mola", v: "relax" },
+                    { l: "Sağlıklı / Fit", v: "fit" },
+                    { l: "Melankolik / Duygusal", v: "melancholy" },
+                    { l: "Sosyal / Sohbet", v: "social" }
+                ]
+            }
         ];
 
         let currentStep = 0;
@@ -327,10 +330,11 @@
 
         function type(txt, cb) {
             dialogue.textContent = "";
-            let i = 0; let timer = setInterval(() => {
+            let i = 0;
+            let timer = setInterval(() => {
                 dialogue.textContent += txt.charAt(i); i++;
                 if (i >= txt.length) { clearInterval(timer); if(cb) cb(); }
-            }, 25);
+            }, 20);
         }
 
         function renderStep() {
@@ -339,7 +343,9 @@
                 const q = questions[currentStep];
                 type(q.text, () => {
                     q.options.forEach(o => {
-                        const btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerHTML = `<span>> ${o.l}</span>`;
+                        const btn = document.createElement('button');
+                        btn.className = 'option-btn';
+                        btn.innerHTML = `<span>> ${o.l}</span>`;
                         btn.onclick = () => { userPrefs[q.key] = o.v; currentStep++; renderStep(); };
                         optArea.appendChild(btn);
                     });
@@ -350,46 +356,37 @@
 
         function calculate() {
             optArea.style.display = "none";
-            
-            // Sahne Geçişi: IDLE -> BREW
             layerIdle.style.opacity = 0;
             layerBrew.style.opacity = 1;
-            
-            // Animasyon: Makine Titreşimi Başlasın
             layerBrew.classList.add('is-brewing');
 
             type("Sipariş veriliyor... Kahve demleniyor...", () => {
-                // Akış Animasyonu: Sıvı dökülmeye başlasın
+                setTimeout(() => { coffeeStream.classList.add('stream-active'); }, 500);
                 setTimeout(() => {
-                    coffeeStream.classList.add('stream-active');
-                }, 500);
-
-                setTimeout(() => {
-                    // Hesaplama
+                    // Mantık: Tam eşleşme ara, yoksa en yakını bul
                     let best = coffeeDB.find(c => c.brand === userPrefs.brand && c.temp === userPrefs.temp && c.mood === userPrefs.mood);
-                    if (!best) { best = coffeeDB.find(c => c.brand === userPrefs.brand && c.temp === userPrefs.temp) || coffeeDB[0]; }
+                    // Fallback 1: Sadece Marka + Sıcaklık
+                    if (!best) { best = coffeeDB.find(c => c.brand === userPrefs.brand && c.temp === userPrefs.temp); }
+                    // Fallback 2: Sadece Marka
+                    if (!best) { best = coffeeDB.find(c => c.brand === userPrefs.brand); }
+                    
                     showResult(best);
-                }, 3000); // 3 saniye demleme
+                }, 3000);
             });
         }
 
         function showResult(coffee) {
-            // Sahne Geçişi: BREW -> RESULT
-            coffeeStream.classList.remove('stream-active'); // Akışı kes
+            coffeeStream.classList.remove('stream-active');
             layerBrew.style.opacity = 0;
-            layerBrew.classList.remove('is-brewing'); // Titreşimi durdur
+            layerBrew.classList.remove('is-brewing');
             
-            setTimeout(() => {
-                layerResult.style.opacity = 1;
-            }, 500);
+            setTimeout(() => { layerResult.style.opacity = 1; }, 500);
 
-            // Bardak İkonu
             let icon = "#cup-hot";
             if(coffee.temp === "cold") icon = "#cup-cold";
             if(coffee.name.includes("Türk Kahvesi") || coffee.name.includes("Espresso")) icon = "#cup-mug";
             cupUse.setAttribute("href", icon);
 
-            // Sonuçları Yazdır
             resultCard.style.display = "block";
             document.getElementById('drink-title').innerText = coffee.name;
             document.getElementById('tag-brand').innerText = coffee.brand;
@@ -397,17 +394,17 @@
             document.getElementById('tag-cal').innerText = coffee.cal;
             document.getElementById('drink-desc').innerText = coffee.desc;
             document.getElementById('drink-recipe').innerText = coffee.content;
+            document.getElementById('drink-tip').innerText = coffee.tip;
 
             const plBox = document.getElementById('playlist-container');
             plBox.innerHTML = "";
             coffee.playlist.forEach(song => { plBox.innerHTML += `<div class="song-item"><span class="song-icon">♪</span> ${song}</div>`; });
 
-            dialogue.textContent = "Kahveniz hazır. Buyrun!";
+            dialogue.textContent = "Kahveniz hazır. Afiyet olsun!";
             
-            // YouTube
             const ytLink = document.createElement('div');
             ytLink.style.marginTop = "15px";
-            ytLink.innerHTML = `<a href="https://www.youtube.com/watch?v=uJaYCTCvOcA" target="_blank" style="color:var(--primary); font-size:0.8rem;">[ Cozy Coffee Shop Ambience ]</a>`;
+            ytLink.innerHTML = `<a href="https://www.youtube.com/watch?v=uJaYCTCvOcA" target="_blank" style="color:var(--primary); font-size:0.8rem;">[ 🎧 Ortam Sesi: Coffee Shop Jazz ]</a>`;
             plBox.appendChild(ytLink);
         }
 
