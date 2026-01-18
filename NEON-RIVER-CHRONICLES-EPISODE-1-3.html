@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>NEON RIVER : CHRONICLES</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<style>
+html,body{margin:0;background:#02020a;overflow:hidden;font-family:monospace}
+canvas{image-rendering:pixelated}
+.scan{position:fixed;inset:0;pointer-events:none;
+background:linear-gradient(rgba(0,0,0,.25) 50%,transparent 50%);
+background-size:100% 4px}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<script>
+/* =====================================================
+   AUDIO CORE
+===================================================== */
+const AudioCore={
+ ctx:null,
+ init(){if(!this.ctx)this.ctx=new (AudioContext||webkitAudioContext)()},
+ tone(f,t,d,v=.08){
+  this.init();
+  const o=this.ctx.createOscillator(),g=this.ctx.createGain();
+  o.type=t;o.frequency.value=f;
+  g.gain.value=v;
+  g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+d);
+  o.connect(g);g.connect(this.ctx.destination);
+  o.start();o.stop(this.ctx.currentTime+d);
+ },
+ drone(f){this.tone(f,'sawtooth',2,.04)},
+ shot(l){this.tone(400+40*l,'square',.08,.06)},
+ boom(){this.tone(80,'triangle',.6,.2)}
+};
+
+/* =====================================================
+   VOXEL FACTORY
+===================================================== */
+function voxel(scene,key,map,pal,s){
+ let g=scene.make.graphics({add:false});
+ const sz=8*s,d=sz/2;
+ map.forEach((r,y)=>r.forEach((c,x)=>{
+  if(!c)return;
+  const col=pal[c],px=x*sz,py=y*sz;
+  g.fillStyle(Phaser.Display.Color.IntegerToColor(col).darken(25).color);
+  g.fillRect(px,py+sz,sz,d);
+  g.fillStyle(col);g.fillRect(px,py,sz,sz);
+ }));
+ g.generateTexture(key,map[0].length*sz+d,map.length*sz+d);
+}
+
+/* =====================================================
+   CHAPTER DATA
+===================================================== */
+const CHAPTERS=[
+{
+ id:1,
+ title:"THE RIVER WAKES",
+ story:"Neon River artık doğal bir akış değil.\nBir şey onu yukarıdan kontrol ediyor.",
+ color:0x003366,
+ boss:"GATEKEEPER"
+},
+{
+ id:2,
+ title:"ECHOES OF STEEL",
+ story:"Savunma yapıları terk edilmiş gibi.\nAma hala izliyorlar.",
+ color:0x330033,
+ boss:"SENTINEL CORE"
+},
+{
+ id:3,
+ title:"THE FALSE SKY",
+ story:"Gökyüzü sandığımız şey sadece bir tavandı.",
+ color:0x331100,
+ boss:"SKY ENGINE"
+}
+];
+
+/* =====================================================
+   STORY SCENE
+===================================================== */
+class StoryScene extends Phaser.Scene{
+ constructor(){super('story')}
+ init(d){this.chapter=d.chapter}
+ create(){
+  const c=CHAPTERS[this.chapter-1];
+  this.cameras.main.setBackgroundColor(c.color);
+  AudioCore.drone(60+this.chapter*20);
+
+  const t=this.add.text(
+   this.scale.width/2,
+   this.scale.height/2,
+   `CHAPTER ${c.id}\n${c.title}\n\n${c.story}`,
+   {fontSize:'28px',align:'center'}
+  ).setOrigin(.5).setAlpha(0);
+
+  this.tweens.add({
+   targets:t,alpha:1,duration:1500,
+   yoyo:true,hold:3000,
+   onComplete:()=>this.scene.start('game',{chapter:this.chapter})
+  });
+ }
+}
+
+/* =====================================================
+   GAME SCENE
+===================================================== */
+class GameScene extends Phaser.Scene{
+ constructor(){super('game')}
+ init(d){this.chapter=d.chapter}
+ preload(){
+  voxel(this,'ship',[[0,1,0],[1,1,1],[1,2,1],[0,3,0]],
+   {1:0x00ffff,2:0xccffff,3:0xffaa00},2);
+
+  voxel(this,'enemy',[[1,0,1],[0,1,0],[1,1,1]],
+   {1:0xff0055},3);
+
+  voxel(this,'boss',[[1,1,1,1],[1,0,0,1],[1,1,1,1]],
+   {1:0xffaa00},4);
+
+  const g=this.make.graphics({add:false});
+  g.fillStyle(0xffff00);g.fillRect(0,0,4,12);
+  g.generateTexture('b',4,12);
+ }
+ create(){
+  this.W=this.scale.width;this.H=this.scale.height;
+  this.level=1;this.xp=0;this.xpMax=100;
+  this.score=0;this.fuel=100;
+  this.bg=this.add.rectangle(this.W/2,this.H/2,this.W,this.H,CHAPTERS[this.chapter-1].color);
+
+  this.player=this.physics.add.sprite(this.W/2,this.H*.75,'ship');
+  this.player.setCollideWorldBounds(true);
+
+  this.bullets=this.physics.add.group();
+  this.enemies=this.physics.add.group();
+
+  this.time.addEvent({delay:900,loop:true,callback:()=>this.spawn()});
+  this.time.addEvent({delay:600,loop:true,callback:()=>this.fuel-=1});
+
+  this.physics.add.overlap(this.bullets,this.enemies,(b,e)=>{
+   b.destroy();e.destroy();
+   this.score+=100;this.gainXP(25);
+   AudioCore.boom();
+  });
+
+  this.ui=this.add.text(20,20,'');
+  this.cursors=this.input.keyboard.createCursorKeys();
+ }
+ spawn(){
+  const e=this.enemies.create(
+   Phaser.Math.Between(80,this.W-80),-40,'enemy');
+  e.setVelocityY(150+this.chapter*40);
+ }
+ gainXP(v){
+  this.xp+=v;
+  if(this.xp>=this.xpMax){
+   this.xp=0;this.level++;
+   AudioCore.tone(800,'sine',.3,.2);
+  }
+ }
+ shoot(){
+  const b=this.bullets.create(this.player.x,this.player.y-20,'b');
+  b.setVelocityY(-700);
+  AudioCore.shot(this.level);
+ }
+ update(){
+  if(this.cursors.left.isDown)this.player.x-=5;
+  if(this.cursors.right.isDown)this.player.x+=5;
+  if(this.cursors.space.isDown)this.shoot();
+
+  this.ui.setText(
+   `CH ${this.chapter} LV ${this.level}\nXP ${this.xp}/${this.xpMax}\nSKOR ${this.score}`
+  );
+
+  if(this.score>2000){
+   this.scene.start('boss',{chapter:this.chapter});
+  }
+ }
+}
+
+/* =====================================================
+   BOSS SCENE
+===================================================== */
+class BossScene extends Phaser.Scene{
+ constructor(){super('boss')}
+ init(d){this.chapter=d.chapter}
+ create(){
+  this.W=this.scale.width;this.H=this.scale.height;
+  this.add.text(this.W/2,80,
+   `BOSS APPROACHING\n${CHAPTERS[this.chapter-1].boss}`,
+   {fontSize:'32px',align:'center'}).setOrigin(.5);
+
+  const boss=this.add.sprite(this.W/2,-100,'boss');
+  this.tweens.add({targets:boss,y:200,duration:2000});
+
+  this.time.delayedCall(4000,()=>{
+   if(this.chapter<3)
+    this.scene.start('story',{chapter:this.chapter+1});
+   else{
+    this.add.text(this.W/2,this.H/2,
+     "TO BE CONTINUED",{fontSize:'40px'}).setOrigin(.5);
+   }
+  });
+ }
+}
+
+/* =====================================================
+   GAME INIT
+===================================================== */
+new Phaser.Game({
+ type:Phaser.AUTO,
+ width:Math.min(innerWidth,960),
+ height:innerHeight,
+ physics:{default:'arcade',arcade:{gravity:{y:0}}},
+ scene:[StoryScene,GameScene,BossScene]
+});
+</script>
+</body>
+</html>
