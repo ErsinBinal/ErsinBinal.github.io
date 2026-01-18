@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The Pure Mixologist | Convivium_</title>
+    <title>The Pure Mixologist | Matrix Edition</title>
     
     <style>
         /* ============================
@@ -12,9 +12,9 @@
         :root {
             --bg: #050505;
             --surface: #0e0e0e;
-            --primary: #ff9900; /* Amber - Ana Vurgu */
-            --text-main: #e0e0e0; /* Okunabilir Ana Metin */
-            --text-muted: #999999; /* Yardımcı Metin */
+            --primary: #ff9900; /* Amber */
+            --text-main: #e0e0e0; 
+            --text-muted: #999999;
             --border: rgba(255, 255, 255, 0.15);
             --font: 'Courier New', Courier, monospace;
         }
@@ -51,7 +51,7 @@
         nav a:hover { color: var(--primary); border-color:var(--primary); }
 
         /* ============================
-           2. SAHNE ALANI (GÖRSEL)
+           2. SAHNE ALANI
            ============================ */
         .stage-area {
             height: 280px;
@@ -66,7 +66,6 @@
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
 
-        /* --- KATMAN 0: ARKA PLAN --- */
         .bar-background {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
             display: flex; justify-content: space-between; padding: 20px 10px 0 10px;
@@ -82,7 +81,6 @@
         .b-sq { width: 18px; height: 45px; border-radius: 0; }
         .wall-texture { position: absolute; top:0; left:0; width:100%; height:100%; background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 20px 20px; z-index: -1; opacity: 0.3; }
 
-        /* --- KATMAN 1: BEKLEYEN BARMEN --- */
         .bartender-layer { position: absolute; bottom: 0; width: 100%; height: 100%; display: flex; align-items: flex-end; justify-content: center; transition: opacity 0.5s; z-index: 5; }
         .bar-counter { position: absolute; bottom: 0; width: 100%; height: 15px; background: linear-gradient(to bottom, #333, #111); border-top: 3px solid var(--primary); z-index: 6; }
         .cyber-tender { width: 110px; height: 170px; position: relative; bottom: 15px; display: flex; flex-direction: column; align-items: center; animation: idleBreathe 4s ease-in-out infinite; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
@@ -92,7 +90,6 @@
         .tender-body { width: 100px; height: 115px; background: radial-gradient(circle at center, #333, #111); border: 1px solid #444; border-top: none; border-radius: 20px 20px 0 0; position: relative; display: flex; justify-content: center; padding-top: 20px; }
         .tender-core { width: 36px; height: 36px; background: rgba(255,153,0,0.1); border: 1px solid var(--primary); border-radius: 50%; animation: corePulse 2s infinite; }
 
-        /* --- KATMAN 2: SHAKER --- */
         .shaker-layer { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all 0.5s; z-index: 7; }
         .shaker-container { width: 80px; height: 140px; position: relative; transform-origin: bottom center; }
         .shaker-body { width: 100%; height: 75%; background: linear-gradient(135deg, #555, #222); border-radius: 5px 5px 25px 25px; border: 2px solid #888; position: absolute; bottom: 0; }
@@ -100,7 +97,6 @@
         .shaker-top { width: 40%; height: 15px; background: #555; position: absolute; top: -15px; left: 30%; border-radius: 5px 5px 0 0; border: 2px solid #888; }
         .is-shaking { animation: shakeHard 0.15s infinite; }
 
-        /* --- KATMAN 3: SUNUM --- */
         .presentation-layer { position: absolute; width: 100%; height: 100%; bottom: 10px; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 8; }
         .glass-svg { width: 140px; height: 140px; fill: none; stroke: #ccc; stroke-width: 2; overflow: visible; position: relative; z-index: 2; filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
         .liquid-stream { position: absolute; top: 0px; width: 8px; height: 0; background: var(--primary); box-shadow: 0 0 15px var(--primary); z-index: 1; transition: height 0.5s; border-radius: 4px; }
@@ -112,7 +108,7 @@
         @keyframes shakeHard { 0% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } 100% { transform: rotate(0deg); } }
 
         /* ============================
-           4. UI (DİYALOG & SEÇENEKLER)
+           4. UI ELEMANLARI
            ============================ */
         .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
         .dialogue-header { font-size: 0.55rem; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
@@ -122,34 +118,17 @@
         .option-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #ccc; padding: 15px; cursor: pointer; font-family: inherit; text-transform: uppercase; font-size: 0.85rem; transition: 0.2s; }
         .option-btn:hover { border-color: var(--primary); color: #fff; background: rgba(255,153,0,0.1); transform: translateY(-2px); }
         
-        /* SONUÇ KARTI TASARIMI */
         .result-card { display: none; border: 1px solid var(--primary); background: #080808; margin-top: 20px; animation: slideUp 0.5s ease; text-align: left; }
         .result-head { background: var(--primary); color: #000; padding: 12px 15px; font-weight: bold; display: flex; justify-content: space-between; font-size: 1.1rem; }
         .result-body { padding: 20px; }
         
         .section-title { color: var(--primary); font-size: 0.8rem; letter-spacing: 1px; display: block; margin-bottom: 8px; margin-top: 20px; font-weight: bold; }
-        
         .recipe-list { color: var(--text-main); margin: 0; padding-left: 0; font-size: 0.95rem; line-height: 1.6; list-style: none; }
         .recipe-list li { margin-bottom: 6px; border-bottom: 1px dashed #333; padding-bottom: 3px; display: flex; justify-content: space-between; }
         .recipe-list li span:last-child { color: var(--primary); font-weight: bold; } 
 
-        /* PLAYLIST KUTUSU */
-        .playlist-box {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid #333;
-            padding: 15px;
-            margin-top: 10px;
-            border-radius: 4px;
-        }
-        .playlist-item {
-            display: flex;
-            align-items: center;
-            color: #bbb;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #222;
-        }
+        .playlist-box { background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 15px; margin-top: 10px; border-radius: 4px; }
+        .playlist-item { display: flex; align-items: center; color: #bbb; font-size: 0.85rem; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid #222; }
         .playlist-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
         .icon-music { margin-right: 10px; color: var(--primary); font-size: 1rem; }
 
@@ -167,7 +146,6 @@
     <nav><a href="index.html">← GERİ</a></nav>
 
     <div class="container">
-        
         <div class="stage-area">
             <div class="wall-texture"></div>
             <div class="bar-background">
@@ -180,7 +158,7 @@
         </div>
 
         <div class="dialogue-card">
-            <span class="dialogue-header">Cyber-Tender v4.1</span>
+            <span class="dialogue-header">Cyber-Tender v5.0 [Matrix Core]</span>
             <div id="dialogue-text" class="typing-text"></div>
         </div>
 
@@ -189,11 +167,10 @@
         <div id="result-card" class="result-card">
             <div class="result-head">
                 <span id="drink-title"></span>
-                <span>%98 MATCH</span>
+                <span>%100 MATCH</span>
             </div>
             <div class="result-body">
                 <p id="drink-desc" style="color:#bbb; font-style:italic; margin-bottom:15px; font-size:1rem;"></p>
-                
                 <p id="drink-prep" style="color:#999; font-size:0.9rem; margin-bottom:20px; line-height:1.5; border-left:2px solid var(--primary); padding-left:12px;"></p>
                 
                 <div class="section-title">> İÇERİK & ÖLÇEKLER:</div>
@@ -206,7 +183,6 @@
                 <button onclick="location.reload()" class="btn-full">Yeniden Başlat</button>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -218,209 +194,116 @@
             shot: { path: "M30,30 L35,90 L65,90 L70,30 Z", fill: "M36,85 L64,85 L68,35 L32,35 Z" }
         };
 
-        // --- GENİŞLETİLMİŞ VERİTABANI ---
-        const drinksDB = [
-            // SEXY / KIŞKIRTICI
-            { 
-                name: "PORN STAR MARTINI", type: "martini", color: "#f39c12", 
-                tags: { mood: "sexy", taste: "fruity", intensity: "medium" }, 
-                desc: "Tutkulu, egzotik ve modern bir klasik.", 
-                prep: "Votka, pasiflora likörü ve vanilya şurubunu çalkalayın. Bardağa süzün. Yanında bir shot Prosecco ile servis edin.", 
-                recipe: ["Vanilyalı Votka|4 cl", "Pasiflora Likörü|2 cl", "Limon Suyu|2 cl", "Prosecco|1 Shot (Yanında)"],
-                playlist: ["Earned It - The Weeknd", "Do I Wanna Know? - Arctic Monkeys", "Streets - Doja Cat", "High - Dua Lipa", "Crazy in Love - Beyonce (Remix)"],
-                query: "vanilyalı votka pasiflora" 
-            },
-            { 
-                name: "FRENCH 75", type: "wine", color: "#f1c40f", 
-                tags: { mood: "sexy", taste: "sour", intensity: "high" }, 
-                desc: "Şampanyanın gücü, cinin keskinliği.", 
-                prep: "Cin, limon ve şekeri buzla çalkalayın. Kadehe süzüp üzerini soğuk şampanya ile tamamlayın.", 
-                recipe: ["Cin|3 cl", "Limon Suyu|1.5 cl", "Şeker Şurubu|1 cl", "Şampanya|Tamamlamak için"],
-                playlist: ["Young and Beautiful - Lana Del Rey", "Feeling Good - Nina Simone", "Back to Black - Amy Winehouse", "Glory Box - Portishead", "Wicked Game - Chris Isaak"],
-                query: "cin şampanya fiyat" 
-            },
-            { 
-                name: "ESPRESSO MARTINI", type: "martini", color: "#3e2723", 
-                tags: { mood: "sexy", taste: "sweet", intensity: "high" }, 
-                desc: "Geceyi uzatmak isteyenler için enerji bombası.", 
-                prep: "Sıcak espresso ve diğer malzemeleri buzla dolu shakerda çok sert çalkalayın. Köpüğüyle birlikte süzün.", 
-                recipe: ["Votka|5 cl", "Kahve Likörü|3 cl", "Espresso|1 Shot", "Kahve Çekirdeği|3 Adet"],
-                playlist: ["Midnight City - M83", "Latch - Disclosure", "Goosebumps - Travis Scott", "Starboy - The Weeknd", "Get Lucky - Daft Punk"],
-                query: "votka kahlua" 
-            },
+        // --- PDF MATRİS VE REÇETE VERİTABANI ---
+        const drinksDB = {
+            // SAKİN
+            "APEROL SPRITZ": { type: "wine", color: "#e67e22", desc: "Hafif, köpüklü ve turuncu. İtalyan klasiği.", prep: "Büyük şarap bardağını buzla doldurun. Malzemeleri ekleyip hafifçe karıştırın.", recipe: ["Prosecco|9cl", "Aperol|6cl", "Soda|3cl"], playlist: ["La Dolce Vita - Nino Rota", "Sunny - Boney M", "Volare - Gipsy Kings", "Sway - Dean Martin", "It's Now or Never - Elvis"], query: "aperol fiyat" },
+            "WHISKEY SOUR": { type: "rocks", color: "#f1c40f", desc: "Viskinin en ipeksi hali.", prep: "Malzemeleri buzsuz çalkalayın (dry shake), sonra buzla çalkalayıp süzün.", recipe: ["Burbon|6cl", "Limon Suyu|3cl", "Şeker Şurubu|2cl", "Yumurta Akı|Opsiyonel"], playlist: ["Take Five - Dave Brubeck", "Feeling Good - Nina Simone", "Summertime - Ella Fitzgerald", "Unchain My Heart - Ray Charles", "What a Wonderful World - Louis Armstrong"], query: "viski fiyat" },
+            "AMERICANO": { type: "highball", color: "#c0392b", desc: "Campari ve Vermutun hafif buluşması.", prep: "Buz dolu bardağa dökün, sodayla tamamlayın.", recipe: ["Campari|3cl", "Kırmızı Vermut|3cl", "Soda|Fulleyin"], playlist: ["Mambo Italiano - Dean Martin", "Tu Vuo Fa L'Americano - Renato Carosone", "Via Con Me - Paolo Conte", "Tintarella di Luna - Mina", "Parole Parole - Mina"], query: "campari vermut" },
+
+            // EĞLENCELİ
+            "PINA COLADA": { type: "highball", color: "#f1c40f", desc: "Tropikal bir tatil kaçamağı.", prep: "Tüm malzemeleri buzla blenderdan geçirin veya çok iyi çalkalayın.", recipe: ["Beyaz Rom|5cl", "Hindistan Cevizi Kreması|3cl", "Ananas Suyu|10cl"], playlist: ["Escape (Piña Colada Song) - Rupert Holmes", "Copacabana - Barry Manilow", "Club Tropicana - Wham!", "Kokomo - Beach Boys", "Is This Love - Bob Marley"], query: "rom malibu" },
+            "MOJITO": { type: "highball", color: "#2ecc71", desc: "Küba'nın ferahlatıcı nane rüzgarı.", prep: "Nane, şeker ve limonu ezin. Rom ve kırık buz ekleyip sodayla tamamlayın.", recipe: ["Beyaz Rom|5cl", "Taze Nane|10 Yaprak", "Limon|Yarım", "Şeker|2 Kaşık", "Soda|Fulleyin"], playlist: ["Havana - Camila Cabello", "Despacito - Luis Fonsi", "Bailando - Enrique Iglesias", "Suavemente - Elvis Crespo", "Danza Kuduro - Don Omar"], query: "rom fiyat" },
+            "DAIQUIRI": { type: "martini", color: "#ecf0f1", desc: "Rom, limon ve şekerin mükemmel dengesi.", prep: "Tüm malzemeleri buzla çalkalayıp soğutulmuş bardağa süzün.", recipe: ["Beyaz Rom|6cl", "Limon Suyu|3cl", "Şeker Şurubu|2cl"], playlist: ["Smooth Operator - Sade", "Mas Que Nada - Sergio Mendes", "The Girl from Ipanema - Stan Getz", "Sway - Michael Buble", "Save the Last Dance - Drifters"], query: "beyaz rom" },
+
+            // SEXY
+            "NEGRONI": { type: "rocks", color: "#e74c3c", desc: "Kırmızı, acı ve kışkırtıcı.", prep: "Buzlu bardağa dökün ve karıştırın. Portakal dilimi şart.", recipe: ["Cin|3cl", "Campari|3cl", "Kırmızı Vermut|3cl"], playlist: ["Wicked Game - Chris Isaak", "Glory Box - Portishead", "Do I Wanna Know? - Arctic Monkeys", "Back to Black - Amy Winehouse", "Red Right Hand - Nick Cave"], query: "cin campari" },
+            "ESPRESSO MARTINI": { type: "martini", color: "#3e2723", desc: "Geceyi uzatmak isteyenlere.", prep: "Sıcak espresso ve alkolleri buzla çok sert çalkalayın.", recipe: ["Votka|5cl", "Kahve Likörü|3cl", "Espresso|1 Shot"], playlist: ["Midnight City - M83", "Starboy - The Weeknd", "Get Lucky - Daft Punk", "Goosebumps - Travis Scott", "Latch - Disclosure"], query: "votka kahlua" },
+            "BOULEVARDIER": { type: "rocks", color: "#d35400", desc: "Negroni'nin viskili, karanlık kuzeni.", prep: "Tüm malzemeleri buzla karıştırıp süzün.", recipe: ["Burbon|4.5cl", "Campari|3cl", "Kırmızı Vermut|3cl"], playlist: ["Personal Jesus - Depeche Mode", "Seven Nation Army - The White Stripes", "No Diggity - Blackstreet", "Human - Rag'n'Bone Man", "Way Down We Go - Kaleo"], query: "viski campari" },
+
+            // YORGUN
+            "WHITE RUSSIAN": { type: "rocks", color: "#ecf0f1", desc: "Tatlı, kremsi ve rahatlatıcı.", prep: "Votka ve kahve likörünü buzla karıştırın, üzerine kremayı yüzdürün.", recipe: ["Votka|5cl", "Kahve Likörü|2cl", "Krema|3cl"], playlist: ["The Man in Me - Bob Dylan", "Hotel California - Eagles", "Just Dropped In - Kenny Rogers", "Dreams - Fleetwood Mac", "Rocket Man - Elton John"], query: "votka kahlua" },
+            "PALOMA": { type: "highball", color: "#ecf0f1", desc: "Meksika'nın ferahlatıcı favorisi.", prep: "Tekila ve limonu buzlu bardağa dökün, greyfurt gazozu ekleyin.", recipe: ["Tekila|5cl", "Limon Suyu|1cl", "Greyfurt Gazozu|Fulleyin"], playlist: ["Californication - RHCP", "Island in the Sun - Weezer", "Santeria - Sublime", "Scar Tissue - RHCP", "Amber - 311"], query: "tekila fiyat" },
+            "AMARETTO SOUR": { type: "rocks", color: "#f39c12", desc: "Badem ezmesi tadında yumuşak içim.", prep: "Malzemeleri buzla çalkalayıp süzün.", recipe: ["Amaretto|5cl", "Limon Suyu|3cl", "Şeker Şurubu|1cl"], playlist: ["Easy - Commodores", "Lovely Day - Bill Withers", "Just the Two of Us - Grover Washington Jr.", "Let's Stay Together - Al Green", "Sitting on the Dock of the Bay - Otis Redding"], query: "amaretto fiyat" },
+
+            // MACERACI
+            "BLOODY MARY": { type: "highball", color: "#c0392b", desc: "Tuzlu, acı ve besleyici.", prep: "Tüm malzemeleri buzla " + "roll" + " yapın (bir bardaktan diğerine dökün).", recipe: ["Votka|5cl", "Domates Suyu|10cl", "Limon Suyu|1cl", "Baharatlar|Tuz, Biber, Tabasco"], playlist: ["Psycho Killer - Talking Heads", "Sympathy for the Devil - Rolling Stones", "Born to be Wild - Steppenwolf", "Paint It Black - Rolling Stones", "Fortunate Son - CCR"], query: "votka domates suyu" },
+            "JUNGLE BIRD": { type: "highball", color: "#e74c3c", desc: "Campari'nin tropikal yorumu.", prep: "Tüm malzemeleri buzla çalkalayıp buzlu bardağa süzün.", recipe: ["Koyu Rom|4.5cl", "Campari|2cl", "Ananas Suyu|4.5cl", "Limon & Şeker|1.5cl"], playlist: ["Welcome to the Jungle - Guns N' Roses", "Africa - Toto", "Down Under - Men at Work", "Safety Dance - Men Without Hats", "Hungry Like the Wolf - Duran Duran"], query: "rom campari" },
+            "LAST WORD": { type: "martini", color: "#2ecc71", desc: "Eşit ölçülerin mükemmel dengesi.", prep: "Tüm malzemeleri buzla çalkalayıp süzün.", recipe: ["Cin|2cl", "Yeşil Chartreuse|2cl", "Maraschino|2cl", "Limon Suyu|2cl"], playlist: ["The Final Countdown - Europe", "Don't Stop Believin' - Journey", "Eye of the Tiger - Survivor", "Livin' on a Prayer - Bon Jovi", "Bohemian Rhapsody - Queen"], query: "chartreuse maraschino" },
+
+            // MELANKOLİK
+            "NEGRONI SBAGLIATO": { type: "rocks", color: "#e74c3c", desc: "Yanlışlıkla yapılan efsane (Cin yerine Prosecco).", prep: "Buzlu bardağa malzemeleri ekleyip karıştırın.", recipe: ["Prosecco|3cl", "Campari|3cl", "Kırmızı Vermut|3cl"], playlist: ["Someone Like You - Adele", "Fix You - Coldplay", "Yesterday - Beatles", "Tears in Heaven - Eric Clapton", "Hallelujah - Jeff Buckley"], query: "campari prosecco" },
+            "PORTO FLIP": { type: "martini", color: "#8e44ad", desc: "Zengin, yoğun ve tatlı.", prep: "Tüm malzemeleri (yumurta sarısı dahil) buzla iyice çalkalayın.", recipe: ["Porto Şarabı|4.5cl", "Konyak|1.5cl", "Yumurta Sarısı|1 Adet"], playlist: ["My Way - Frank Sinatra", "Sound of Silence - Simon & Garfunkel", "Yesterday - Beatles", "Unchained Melody - Righteous Brothers", "Bridge Over Troubled Water - Simon & Garfunkel"], query: "porto şarabı konyak" },
+            "MANHATTAN": { type: "martini", color: "#c0392b", desc: "New York'un melankolik yüzü.", prep: "Viski ve vermutu buzla karıştırın (çalkalamayın), süzün.", recipe: ["Çavdar Viski|5cl", "Kırmızı Vermut|2cl", "Angostura|2 Damla"], playlist: ["New York, New York - Frank Sinatra", "Empire State of Mind - Jay-Z", "Piano Man - Billy Joel", "Englishman in New York - Sting", "Streets of Philadelphia - Bruce Springsteen"], query: "viski vermut" },
+
+            // SOSYAL
+            "HUGO SPRITZ": { type: "wine", color: "#2ecc71", desc: "Mürver çiçeği ferahlığı.", prep: "Buzlu kadehe likör ve sodayı ekleyin, Prosecco ile tamamlayın.", recipe: ["Prosecco|6cl", "Mürver Çiçeği Likörü|3cl", "Soda|3cl", "Nane|Taze"], playlist: ["Happy - Pharrell Williams", "Can't Stop the Feeling - Justin Timberlake", "Uptown Funk - Bruno Mars", "I Gotta Feeling - Black Eyed Peas", "Dynamite - BTS"], query: "mürver çiçeği likörü" },
+            "TOM COLLINS": { type: "highball", color: "#ecf0f1", desc: "Yetişkin limonatası.", prep: "Cin, limon ve şekeri bardağa dökün, buz ve soda ekleyin.", recipe: ["Cin|5cl", "Limon Suyu|3cl", "Şeker Şurubu|2cl", "Soda|Fulleyin"], playlist: ["Mr. Brightside - The Killers", "Chelsea Dagger - The Fratellis", "Last Nite - The Strokes", "Sex on Fire - Kings of Leon", "Pumped Up Kicks - Foster the People"], query: "cin fiyat" },
+            "FRENCH 75": { type: "wine", color: "#f1c40f", desc: "Kutlama modu.", prep: "Cin, limon ve şekeri çalkalayın, kadehe döküp şampanya ekleyin.", recipe: ["Cin|3cl", "Limon Suyu|1.5cl", "Şeker|1cl", "Şampanya|Fulleyin"], playlist: ["Raise Your Glass - P!nk", "Firework - Katy Perry", "Roar - Katy Perry", "Shake It Off - Taylor Swift", "Single Ladies - Beyonce"], query: "cin şampanya" },
+
+            // ODAKLI
+            "CAMPARI & SODA": { type: "highball", color: "#e74c3c", desc: "Basit, net, şekersiz.", prep: "Campari'yi buzlu bardağa dökün, soda ile tamamlayın.", recipe: ["Campari|6cl", "Soda|Fulleyin"], playlist: ["Take Five - Dave Brubeck", "So What - Miles Davis", "Blue in Green - Miles Davis", "My Favorite Things - John Coltrane", "Autumn Leaves - Cannonball Adderley"], query: "campari fiyat" },
+            "DRY MARTINI": { type: "martini", color: "#bdc3c7", desc: "Saf konsantrasyon.", prep: "Cin ve vermutu buzla karıştırıp süzün. Zeytin ekleyin.", recipe: ["Cin|6cl", "Kuru Vermut|1cl", "Zeytin|1 Adet"], playlist: ["007 Theme", "Goldfinger - Shirley Bassey", "Skyfall - Adele", "Live and Let Die - Paul McCartney", "Nobody Does It Better - Carly Simon"], query: "cin vermut" },
+            "GIBSON": { type: "martini", color: "#bdc3c7", desc: "Martini'nin soğanlı kuzeni.", prep: "Dry Martini gibi yapın, zeytin yerine arpacık soğanı turşusu koyun.", recipe: ["Cin|6cl", "Kuru Vermut|1cl", "Arpacık Soğanı|1 Adet"], playlist: ["The Mentalist Theme", "Sherlock Theme", "X-Files Theme", "Twin Peaks Theme", "Stranger Things Theme"], query: "cin vermut" },
+
+            // ASİ
+            "FERNET & COLA": { type: "highball", color: "#2c3e50", desc: "Arjantin usulü sert karışım.", prep: "Bol buzlu bardağa Fernet dökün, yavaşça kola ekleyin.", recipe: ["Fernet Branca|5cl", "Kola|Fulleyin"], playlist: ["Smells Like Teen Spirit - Nirvana", "Killing in the Name - RATM", "Chop Suey! - SOAD", "Du Hast - Rammstein", "Enter Sandman - Metallica"], query: "fernet branca" },
+            "PENICILLIN": { type: "rocks", color: "#f1c40f", desc: "İsli viski ve zencefilin şifası.", prep: "Malzemeleri çalkalayın, buzlu bardağa süzün. Üste isli viski gezdirin.", recipe: ["Harman Viski|6cl", "Limon|2cl", "Bal-Zencefil Şurubu|2cl", "İsli Viski|Üste dök"], playlist: ["Paint It Black - Rolling Stones", "Sympathy for the Devil - Rolling Stones", "Gimme Shelter - Rolling Stones", "Start Me Up - Rolling Stones", "(I Can't Get No) Satisfaction - Rolling Stones"], query: "viski zencefil" },
+            "DARK 'N STORMY": { type: "highball", color: "#d35400", desc: "Koyu rom ve zencefil gazozu.", prep: "Bardağı buzla doldurun, zencefil gazozu ekleyin, üste koyu romu yüzdürün.", recipe: ["Koyu Rom|6cl", "Zencefil Gazozu|Fulleyin", "Limon|1 Dilim"], playlist: ["Back in Black - AC/DC", "Thunderstruck - AC/DC", "Highway to Hell - AC/DC", "T.N.T. - AC/DC", "You Shook Me All Night Long - AC/DC"], query: "koyu rom ginger beer" },
 
             // ROMANTİK
-            { 
-                name: "CLOVER CLUB", type: "martini", color: "#e91e63", 
-                tags: { mood: "romantic", taste: "fruity", intensity: "medium" }, 
-                desc: "İpeksi dokusuyla zarif bir klasik.", 
-                prep: "Tüm malzemeleri önce buzsuz (dry shake), sonra buzla çalkalayın. Soğutulmuş bardağa süzün.", 
-                recipe: ["Cin|4.5 cl", "Limon Suyu|1.5 cl", "Ahududu Şurubu|1.5 cl", "Yumurta Akı|1 Adet"],
-                playlist: ["La Vie En Rose - Edith Piaf", "Dream A Little Dream - Ella Fitzgerald", "At Last - Etta James", "Video Games - Lana Del Rey", "Lover - Taylor Swift"],
-                query: "cin ahududu şurubu" 
-            },
-            { 
-                name: "PINK LADY", type: "martini", color: "#ff69b4", 
-                tags: { mood: "romantic", taste: "sweet", intensity: "medium" }, 
-                desc: "1950'lerin zarafeti, tatlı ve yumuşak.", 
-                prep: "Cin, elma likörü ve grenadini çalkalayın. Kiraz ile süsleyin.", 
-                recipe: ["Cin|4 cl", "Elma Likörü|2 cl", "Limon Suyu|1 cl", "Grenadine|1 damla"],
-                playlist: ["Put Your Head On My Shoulder - Paul Anka", "Can't Help Falling in Love - Elvis", "Perfect - Ed Sheeran", "Just The Way You Are - Bruno Mars", "Love on the Brain - Rihanna"],
-                query: "cin elma likörü" 
-            },
+            "BELLINI": { type: "wine", color: "#ffcccc", desc: "Venedik şeftali rüyası.", prep: "Şeftali püresini kadehe koyun, üzerine Prosecco ekleyip karıştırın.", recipe: ["Şeftali Püresi|5cl", "Prosecco|10cl"], playlist: ["That's Amore - Dean Martin", "Volare - Dean Martin", "Sway - Dean Martin", "Mambo Italiano - Dean Martin", "On An Evening In Roma - Dean Martin"], query: "prosecco şeftali" },
+            "KIR ROYALE": { type: "wine", color: "#8e44ad", desc: "Zarif frenk üzümü dokunuşu.", prep: "Likörü kadehe dökün, üzerine şampanya ekleyin.", recipe: ["Creme de Cassis|1.5cl", "Şampanya|Fulleyin"], playlist: ["La Vie En Rose - Edith Piaf", "Non, Je Ne Regrette Rien - Edith Piaf", "Milord - Edith Piaf", "Padam Padam - Edith Piaf", "Hymne A L'Amour - Edith Piaf"], query: "creme de cassis" },
+            "ROSE SPRITZ": { type: "wine", color: "#ff9ff3", desc: "Pembe ve çiçeksi.", prep: "Buzlu kadehe roze şarap ve soda ekleyin.", recipe: ["Roze Şarap|9cl", "Soda|3cl", "Gül Şurubu|1cl"], playlist: ["La Vie En Rose - Grace Jones", "I Feel Love - Donna Summer", "Love to Love You Baby - Donna Summer", "Hot Stuff - Donna Summer", "Bad Girls - Donna Summer"], query: "roze şarap" }
+        };
 
-            // KUTLAMA / ZAFER
-            { 
-                name: "KIR ROYALE", type: "wine", color: "#8e44ad", 
-                tags: { mood: "celebrate", taste: "fruity", intensity: "medium" }, 
-                desc: "Fransız şıklığı, kutlamaların vazgeçilmezi.", 
-                prep: "Kadehin dibine likörü dökün. Üzerine yavaşça şampanyayı ekleyin.", 
-                recipe: ["Creme de Cassis|1.5 cl", "Şampanya|Tamamlamak için"],
-                playlist: ["Celebration - Kool & The Gang", "Uptown Funk - Bruno Mars", "Happy - Pharrell Williams", "Good Feeling - Flo Rida", "Can't Stop the Feeling - Justin Timberlake"],
-                query: "creme de cassis şampanya" 
+        // --- MATRİS MANTIĞI (PDF'e GÖRE KARAR AĞACI) ---
+        const matrix = {
+            "Sakin": {
+                "Ferah": { "Yumuşak": "APEROL SPRITZ" },
+                "Ekşi": { "Orta": "WHISKEY SOUR" },
+                "Mayhoş": { "Orta": "AMERICANO" }
             },
-            { 
-                name: "CHAMPAGNE COCKTAIL", type: "wine", color: "#f39c12", 
-                tags: { mood: "celebrate", taste: "bitter", intensity: "medium" }, 
-                desc: "Köpüren altın.", 
-                prep: "Küp şekere bitter damlatıp kadehe atın. Üzerine konyak ve şampanya ekleyin.", 
-                recipe: ["Konyak|1 cl", "Küp Şeker|1 Adet", "Angostura|2 Damla", "Şampanya|Tamamlamak için"],
-                playlist: ["Fly Me To The Moon - Frank Sinatra", "New York, New York - Frank Sinatra", "Feeling Good - Michael Buble", "The Best is Yet to Come - Tony Bennett", "Moondance - Van Morrison"],
-                query: "konyak şampanya" 
+            "Eğlenceli": {
+                "Tatlı": { "Orta": "PINA COLADA" },
+                "Ferah": { "Orta": "MOJITO" },
+                "Ekşi": { "Orta": "DAIQUIRI" }
             },
-
-            // MACERACI / KEŞİF
-            { 
-                name: "PISCO SOUR", type: "rocks", color: "#f1c40f", 
-                tags: { mood: "adventure", taste: "sour", intensity: "high" }, 
-                desc: "Güney Amerika'nın ruhu.", 
-                prep: "Malzemeleri çok güçlü çalkalayın. Bardağa süzüp üzerine bitter damlatın.", 
-                recipe: ["Pisco|6 cl", "Limon Suyu|3 cl", "Şeker Şurubu|2 cl", "Yumurta Akı|1 Adet", "Angostura|3 Damla"],
-                playlist: ["Desaparecido - Manu Chao", "Oye Como Va - Santana", "Chan Chan - Buena Vista Social Club", "Bamboleo - Gipsy Kings", "Smooth - Santana"],
-                query: "pisco fiyat" 
+            "Sexy": {
+                "Acı": { "Sert": "NEGRONI" },
+                "Tatlı": { "Sert": "ESPRESSO MARTINI" },
+                "Mayhoş": { "Çok Sert": "BOULEVARDIER" }
             },
-            { 
-                name: "AVIATION", type: "martini", color: "#a29bfe", 
-                tags: { mood: "adventure", taste: "herbal", intensity: "high" }, 
-                desc: "Gökyüzü kadar mavi, çiçeksi ve nostaljik.", 
-                prep: "Menekşe likörü, maraschino ve cini çalkalayın. Kiraz ile süsleyin.", 
-                recipe: ["Cin|4.5 cl", "Limon Suyu|1.5 cl", "Maraschino Likörü|1.5 cl", "Menekşe Likörü|1 Kaşık"],
-                playlist: ["Come Fly With Me - Frank Sinatra", "Learn to Fly - Foo Fighters", "Space Oddity - David Bowie", "Rocket Man - Elton John", "Across the Universe - The Beatles"],
-                query: "maraschino likörü menekşe likörü" 
+            "Yorgun": {
+                "Tatlı": { "Orta": "WHITE RUSSIAN" },
+                "Ferah": { "Yumuşak": "PALOMA" },
+                "Ekşi": { "Orta": "AMARETTO SOUR" }
             },
-            { 
-                name: "MAI TAI", type: "highball", color: "#e67e22", 
-                tags: { mood: "adventure", taste: "fruity", intensity: "high" }, 
-                desc: "Tiki kültürünün kralı. Egzotik ve sert.", 
-                prep: "Tüm malzemeleri buzla çalkalayın. Bol buzlu bardağa döküp nane ile süsleyin.", 
-                recipe: ["Koyu Rom|4 cl", "Beyaz Rom|2 cl", "Portakal Likörü|1.5 cl", "Badem Şurubu|1.5 cl", "Limon Suyu|1 cl"],
-                playlist: ["Three Little Birds - Bob Marley", "Somewhere Over the Rainbow - Iz", "Surfin' USA - Beach Boys", "Kokomo - Beach Boys", "Is This Love - Bob Marley"],
-                query: "badem şurubu rom" 
+            "Maceracı": {
+                "Baharatlı": { "Sert": "BLOODY MARY" },
+                "Acı": { "Sert": "JUNGLE BIRD" },
+                "Ekşi": { "Çok Sert": "LAST WORD" }
             },
-
-            // NOSTALJİK
-            { 
-                name: "WHITE RUSSIAN", type: "rocks", color: "#ecf0f1", 
-                tags: { mood: "nostalgic", taste: "sweet", intensity: "low" }, 
-                desc: "The Dude'un favorisi. Tatlı ve rahat.", 
-                prep: "Bardağa buz, votka ve kahve likörünü koyun. Üzerine yavaşça kremayı gezdirin.", 
-                recipe: ["Votka|5 cl", "Kahve Likörü|2 cl", "Süt/Krema|3 cl"],
-                playlist: ["The Man in Me - Bob Dylan", "Hotel California - Eagles", "Just Dropped In - Kenny Rogers", "Peaceful Easy Feeling - Eagles", "Dreams - Fleetwood Mac"],
-                query: "votka kahlua" 
+            "Melankolik": {
+                "Acı": { "Sert": "NEGRONI SBAGLIATO" },
+                "Tatlı": { "Orta": "PORTO FLIP" },
+                "Mayhoş": { "Sert": "MANHATTAN" }
             },
-            { 
-                name: "GRASSHOPPER", type: "martini", color: "#2ecc71", 
-                tags: { mood: "nostalgic", taste: "sweet", intensity: "low" }, 
-                desc: "Naneli çikolata tadında bir tatlı.", 
-                prep: "Nane likörü, kakao likörü ve kremayı buzla çalkalayın.", 
-                recipe: ["Nane Likörü|3 cl", "Kakao Likörü|3 cl", "Krema|3 cl"],
-                playlist: ["Mint Julep - The Clovers", "Lollipop - The Chordettes", "Mr. Sandman - The Chordettes", "Beyond the Sea - Bobby Darin", "Dream Lover - Bobby Darin"],
-                query: "nane likörü kakao likörü" 
+            "Sosyal": {
+                "Ferah": { "Yumuşak": "HUGO SPRITZ" },
+                "Ekşi": { "Orta": "TOM COLLINS" },
+                "Tatlı": { "Orta": "FRENCH 75" }
             },
-
-            // MEVCUTLAR (GÜNCELLENMİŞ)
-            { 
-                name: "OLD FASHIONED", type: "rocks", color: "#e67e22", 
-                tags: { mood: "deep", taste: "bitter", intensity: "high" }, 
-                desc: "Klasik, ağır ve karizmatik.", 
-                prep: "Şekeri bitter ile ezin. Buz ve viski ekleyip karıştırın.", 
-                recipe: ["Burbon Viski|6 cl", "Küp Şeker|1 Adet", "Angostura Bitters|2 Damla", "Portakal Kabuğu|1 Parça"],
-                playlist: ["Fly Me To The Moon - Frank Sinatra", "I Put A Spell On You - Nina Simone", "Ain't No Sunshine - Bill Withers", "Feeling Good - Muse", "Way Down We Go - Kaleo"],
-                query: "viski fiyatları" 
+            "Odaklı": {
+                "Acı": { "Orta": "CAMPARI & SODA" },
+                "Ekşi": { "Sert": "DRY MARTINI" },
+                "Mayhoş": { "Sert": "GIBSON" }
             },
-            { 
-                name: "NEGRONI", type: "rocks", color: "#e74c3c", 
-                tags: { mood: "classy", taste: "bitter", intensity: "high" }, 
-                desc: "İtalyan asaleti. Acı ve tatlı dengesi.", 
-                prep: "Bardağı buzla doldurun. Tüm malzemeleri ekleyip karıştırın.", 
-                recipe: ["Cin|3 cl", "Campari|3 cl", "Kırmızı Vermut|3 cl", "Portakal Dilimi|1 Adet"],
-                playlist: ["Ciao Amore - Dalida", "Tu Vuo Fa L'Americano - Renato Carosone", "Beggin' - Maneskin", "Golden - Harry Styles", "Cold Heart - Dua Lipa & Elton John"],
-                query: "cin campari fiyat" 
+            "Asi": {
+                "Acı": { "Çok Sert": "FERNET & COLA" },
+                "Ekşi": { "Sert": "PENICILLIN" },
+                "Baharatlı": { "Sert": "DARK 'N STORMY" }
             },
-            { 
-                name: "MOJITO", type: "highball", color: "#2ecc71", 
-                tags: { mood: "energy", taste: "sour", intensity: "medium" }, 
-                desc: "Küba ferahlığı.", 
-                prep: "Nane, şeker ve limonu ezin. Rom ve soda ekleyin.", 
-                recipe: ["Beyaz Rom|5 cl", "Taze Nane|10 Yaprak", "Limon|4 Parça", "Soda|Tamamlamak için"],
-                playlist: ["Havana - Camila Cabello", "Despacito - Luis Fonsi", "Chan Chan - Buena Vista Social Club", "I Like It - Cardi B", "Pepas - Farruko"],
-                query: "rom fiyatları" 
-            },
-            { 
-                name: "WHISKEY SOUR", type: "rocks", color: "#f1c40f", 
-                tags: { mood: "relax", taste: "sour", intensity: "medium" }, 
-                desc: "Ekşi ve tatlı mükemmel denge.", 
-                prep: "Tüm malzemeleri önce buzsuz, sonra buzla çalkalayın.", 
-                recipe: ["Burbon Viski|6 cl", "Limon Suyu|3 cl", "Şeker Şurubu|2 cl", "Yumurta Akı|Opsiyonel"],
-                playlist: ["R U Mine? - Arctic Monkeys", "Seven Nation Army - The White Stripes", "Take Me Out - Franz Ferdinand", "Lonely Boy - The Black Keys", "Sweater Weather - The Neighbourhood"],
-                query: "viski fiyatları" 
-            },
-            { 
-                name: "TEQUILA SHOT", type: "shot", color: "#f39c12", 
-                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
-                desc: "Hızlı, sert ve tehlikeli.", 
-                prep: "Tuz, Tekila, Limon. Sıralamayı şaşırma.", 
-                recipe: ["Tekila|4 cl", "Tuz|Bir tutam", "Limon|1 Dilim", "Cesaret|%100"],
-                playlist: ["Gasolina - Daddy Yankee", "Turn Down for What - DJ Snake", "Party Rock Anthem - LMFAO", "Bonfire - Childish Gambino", "Tequila - The Champs"],
-                query: "tekila fiyat" 
-            },
-            { 
-                name: "COSMOPOLITAN", type: "martini", color: "#e91e63", 
-                tags: { mood: "classy", taste: "fruity", intensity: "medium" }, 
-                desc: "Şehirli ve modern.", 
-                prep: "Tüm malzemeleri buzla çalkalayın ve süzün.", 
-                recipe: ["Limonlu Votka|4 cl", "Portakal Likörü|2 cl", "Kızılcık Suyu|3 cl", "Limon Suyu|1 cl"],
-                playlist: ["Material Girl - Madonna", "Levitating - Dua Lipa", "Flowers - Miley Cyrus", "Bad Romance - Lady Gaga", "Vogue - Madonna"],
-                query: "votka fiyat" 
-            },
-            { 
-                name: "LONG ISLAND", type: "highball", color: "#795548", 
-                tags: { mood: "rebel", taste: "sour", intensity: "high" }, 
-                desc: "Tek bardakta 5 beyaz içki.", 
-                prep: "Kola hariç her şeyi çalkala, bardağa dök, kola ekle.", 
-                recipe: ["Votka|1.5 cl", "Cin|1.5 cl", "Rom|1.5 cl", "Tekila|1.5 cl", "Likör|1.5 cl", "Kola|Fulleyin"],
-                playlist: ["Highway to Hell - AC/DC", "Paradise City - Guns N' Roses", "Smells Like Teen Spirit - Nirvana", "Born to be Wild - Steppenwolf", "Rock You Like a Hurricane - Scorpions"],
-                query: "votka cin rom fiyat" 
-            },
-            { 
-                name: "BLOODY MARY", type: "highball", color: "#c0392b", 
-                tags: { mood: "rebel", taste: "spicy", intensity: "medium" }, 
-                desc: "Kahvaltının şampiyonu. Tuzlu ve acı.", 
-                prep: "Buzlu bardağa malzemeleri ekleyin, kereviz sapı ile karıştırın.", 
-                recipe: ["Votka|5 cl", "Domates Suyu|10 cl", "Limon Suyu|1 cl", "Tabasco & Worcestershire|Bolca"],
-                playlist: ["Sunday Morning - Maroon 5", "Rehab - Amy Winehouse", "Easy - Commodores", "Banana Pancakes - Jack Johnson", "Lovely Day - Bill Withers"],
-                query: "votka domates suyu" 
+            "Romantik": {
+                "Tatlı": { "Orta": "BELLINI" },
+                "Mayhoş": { "Orta": "KIR ROYALE" },
+                "Ferah": { "Yumuşak": "ROSE SPRITZ" }
             }
-        ];
+        };
 
-        const questions = [
-            { text: "Ruh halin nasıl?", options: [{l:"Sakin / Relax",v:"relax"}, {l:"Enerjik / Parti",v:"energy"}, {l:"Derin / Düşünceli",v:"deep"}, {l:"Sofistike / Şık",v:"classy"}, {l:"Asi / Kural Tanımaz",v:"rebel"}, {l:"Seksi / Kışkırtıcı",v:"sexy"}, {l:"Kutlama / Zafer",v:"celebrate"}, {l:"Maceracı / Keşif",v:"adventure"}, {l:"Nostaljik / Retro",v:"nostalgic"}], key:"mood" },
-            { text: "Tat tercihin?", options: [{l:"Ekşi",v:"sour"}, {l:"Acı",v:"bitter"}, {l:"Tatlı",v:"sweet"}, {l:"Meyve",v:"fruity"}, {l:"Otlu",v:"herbal"}], key:"taste" },
-            { text: "Sertlik?", options: [{l:"Hafif",v:"low"}, {l:"Orta",v:"medium"}, {l:"Sert",v:"high"}], key:"intensity" }
-        ];
-
+        // --- İŞLEYİŞ ---
         let currentStep = 0;
-        let userPrefs = {};
+        let userChoices = { mood: null, taste: null, intensity: null };
         
         const dialogue = document.getElementById('dialogue-text');
         const optArea = document.getElementById('options-area');
@@ -452,31 +335,52 @@
 
         function renderStep() {
             optArea.innerHTML = ""; optArea.style.opacity = 0; setScene('bartender');
-            if(currentStep < questions.length) {
-                let q = questions[currentStep];
-                type(q.text, () => {
-                    q.options.forEach(o => {
-                        let btn = document.createElement('button'); btn.className = 'option-btn'; btn.innerText = "> " + o.l;
-                        btn.onclick = () => { userPrefs[q.key] = o.v; currentStep++; renderStep(); };
-                        optArea.appendChild(btn);
-                    });
+            
+            // ADIM 0: MOOD SEÇİMİ
+            if (currentStep === 0) {
+                type("Hoş geldin. Bugün ruh halin nasıl?", () => {
+                    const moods = Object.keys(matrix);
+                    moods.forEach(m => createBtn(m, () => { userChoices.mood = m; currentStep++; renderStep(); }));
                     optArea.style.animation = "fadeIn 0.5s forwards";
                 });
-            } else { calculate(); }
+            }
+            // ADIM 1: TAT SEÇİMİ (Mood'a göre filtrelenmiş)
+            else if (currentStep === 1) {
+                const tastes = Object.keys(matrix[userChoices.mood]);
+                type(`${userChoices.mood} hissediyorsun... Peki damağında ne arıyorsun?`, () => {
+                    tastes.forEach(t => createBtn(t, () => { userChoices.taste = t; currentStep++; renderStep(); }));
+                    optArea.style.animation = "fadeIn 0.5s forwards";
+                });
+            }
+            // ADIM 2: SERTLİK SEÇİMİ (Mood ve Tat'a göre filtrelenmiş)
+            else if (currentStep === 2) {
+                const intensities = Object.keys(matrix[userChoices.mood][userChoices.taste]);
+                type("Son olarak, sertlik derecesi?", () => {
+                    intensities.forEach(i => createBtn(i, () => { userChoices.intensity = i; calculate(); }));
+                    optArea.style.animation = "fadeIn 0.5s forwards";
+                });
+            }
+        }
+
+        function createBtn(text, onClick) {
+            let btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = "> " + text;
+            btn.onclick = onClick;
+            optArea.appendChild(btn);
         }
 
         function calculate() {
-            type("Veriler işleniyor... Karışım hazırlanıyor...", () => {
+            type("Seçimler analiz ediliyor... Karışım hazırlanıyor...", () => {
                 optArea.style.display = "none"; setScene('shaker');
+                
+                // Matristen sonucu bul
+                const resultName = matrix[userChoices.mood][userChoices.taste][userChoices.intensity];
+                const bestDrink = drinksDB[resultName];
+
                 setTimeout(() => {
-                    let best = drinksDB[0]; let max = -1;
-                    drinksDB.forEach(d => {
-                        let s = 0;
-                        if(d.tags.mood == userPrefs.mood) s+=5; if(d.tags.taste == userPrefs.taste) s+=3; if(d.tags.intensity == userPrefs.intensity) s+=2;
-                        s += Math.random(); if(s > max) { max = s; best = d; }
-                    });
-                    showResult(best);
-                }, 2500);
+                    showResult(bestDrink);
+                }, 2000);
             });
         }
 
@@ -496,11 +400,31 @@
 
         function finish(drink) {
             resultCard.style.display = "block";
-            document.getElementById('drink-title').innerText = drink.name;
+            // Matristen gelen key'i başlık yap (düzeltme: resultName kullanabilirdik ama drink objesinde name yoksa key kullanılır, burada manual DB olduğu için keyleri eşledik)
+            // drinksDB'de keyleri büyük harfle yazdık, o yüzden drink.name yerine anahtarı bulmamız lazım ya da DB'ye name eklemeliyiz.
+            // *Düzeltme:* DB yapısında name zaten var.
+            
+            // İsmi bulmak için ters arama ya da DB'ye name ekleme. DB'de name yok, key var.
+            // Hızlı çözüm: DB anahtarlarını name olarak kabul et.
+            // Fakat yukarıda DB'yi güncelledik ve name ekledik mi? Evet önceki kodda vardı, bunda silmişim.
+            // HATA DÜZELTME: drinksDB key-value yapısına döndü. Name'i keyden alalım.
+            // Yukarıdaki calculate fonksiyonunda `const bestDrink = drinksDB[resultName]` dedik.
+            // resultName string'i ("APEROL SPRITZ") elimizde.
+            
+            // drink objesinin içine name eklemedim, key'i title yapalım.
+            // Ancak önceki kodda 'name' prop'u vardı.
+            // Manuel düzeltme: resultName değişkenini finish'e taşımamız lazım.
+            // Ya da drink objesine name ekleyelim. (Ekliyorum şimdi DB'ye sanal olarak)
+            
+            // DB yapısında `name` alanı YOK. Matrisin value'su direkt isim.
+            // O yüzden başlığı resultName'den alacağız. 
+            // Ancak finish fonksiyonuna sadece `drink` objesi gidiyor.
+            // Calculate içinde resultName'i drink objesine ekleyelim geçici olarak.
+            
+            document.getElementById('drink-title').innerText = drink._name; // _name'i calculate'de ekleyeceğiz
             document.getElementById('drink-desc').innerText = drink.desc;
             document.getElementById('drink-prep').innerText = drink.prep;
             
-            // Reçete Listesi
             const recipeList = document.getElementById('drink-recipe');
             recipeList.innerHTML = "";
             drink.recipe.forEach(item => {
@@ -511,7 +435,6 @@
                 recipeList.appendChild(li);
             });
 
-            // Playlist Oluştur
             const playlistBox = document.getElementById('playlist-container');
             playlistBox.innerHTML = "";
             if(drink.playlist) {
@@ -525,6 +448,23 @@
 
             document.getElementById('price-btn').href = `https://www.google.com/search?q=${encodeURIComponent(drink.query + " 2026")}`;
             dialogue.textContent = "Servis edildi. Afiyet olsun.";
+        }
+
+        // Calculate fonksiyonunu revize edelim (Name eklemek için)
+        // Yukarıdaki calculate fonksiyonunu eziyorum:
+        const originalCalculate = calculate;
+        calculate = function() {
+             type("Veriler işleniyor... Karışım hazırlanıyor...", () => {
+                optArea.style.display = "none"; setScene('shaker');
+                
+                const resultName = matrix[userChoices.mood][userChoices.taste][userChoices.intensity];
+                const bestDrink = drinksDB[resultName];
+                bestDrink._name = resultName; // İsmi objeye ekle
+
+                setTimeout(() => {
+                    showResult(bestDrink);
+                }, 2000);
+            });
         }
 
         window.onload = () => { renderStep(); }
