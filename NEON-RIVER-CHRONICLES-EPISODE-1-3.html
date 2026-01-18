@@ -15,46 +15,50 @@ background-size:100% 4px}
 </head>
 <body>
 <div class="scan"></div>
+
 <script>
-/* =====================================================
-   AUDIO CORE
-===================================================== */
+// =====================================================
+// AUDIO CORE
+// =====================================================
 const AudioCore={
  ctx:null,
- init(){if(!this.ctx)this.ctx=new (AudioContext||webkitAudioContext)()},
+ init(){
+  if(!this.ctx)
+   this.ctx=new (window.AudioContext||window.webkitAudioContext)();
+ },
  tone(f,t,d,v=.08){
   this.init();
-  const o=this.ctx.createOscillator(),g=this.ctx.createGain();
-  o.type=t;o.frequency.value=f;
+  const o=this.ctx.createOscillator();
+  const g=this.ctx.createGain();
+  o.type=t; o.frequency.value=f;
   g.gain.value=v;
   g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+d);
-  o.connect(g);g.connect(this.ctx.destination);
-  o.start();o.stop(this.ctx.currentTime+d);
+  o.connect(g); g.connect(this.ctx.destination);
+  o.start(); o.stop(this.ctx.currentTime+d);
  },
- drone(f){this.tone(f,'sawtooth',2,.04)},
- shot(l){this.tone(400+40*l,'square',.08,.06)},
- boom(){this.tone(80,'triangle',.6,.2)}
+ shot(l){ this.tone(400+40*l,'square',.08,.06); },
+ boom(){ this.tone(80,'triangle',.6,.2); }
 };
 
-/* =====================================================
-   VOXEL FACTORY
-===================================================== */
+// =====================================================
+// VOXEL FACTORY
+// =====================================================
 function voxel(scene,key,map,pal,s){
  let g=scene.make.graphics({add:false});
  const sz=8*s,d=sz/2;
  map.forEach((r,y)=>r.forEach((c,x)=>{
-  if(!c)return;
+  if(!c) return;
   const col=pal[c],px=x*sz,py=y*sz;
   g.fillStyle(Phaser.Display.Color.IntegerToColor(col).darken(25).color);
   g.fillRect(px,py+sz,sz,d);
-  g.fillStyle(col);g.fillRect(px,py,sz,sz);
+  g.fillStyle(col); g.fillRect(px,py,sz,sz);
  }));
  g.generateTexture(key,map[0].length*sz+d,map.length*sz+d);
 }
 
-/* =====================================================
-   CHAPTER DATA
-===================================================== */
+// =====================================================
+// CHAPTER DATA
+// =====================================================
 const CHAPTERS=[
 {
  id:1,
@@ -79,16 +83,35 @@ const CHAPTERS=[
 }
 ];
 
-/* =====================================================
-   STORY SCENE
-===================================================== */
+// =====================================================
+// BOOT SCENE (KRİTİK)
+// =====================================================
+class BootScene extends Phaser.Scene{
+ constructor(){ super('boot'); }
+ create(){
+  this.add.text(
+   this.scale.width/2,
+   this.scale.height/2,
+   "NEON RIVER\nCLICK TO START",
+   {fontSize:'32px',align:'center'}
+  ).setOrigin(.5);
+
+  this.input.once('pointerdown',()=>{
+   AudioCore.init();
+   this.scene.start('story',{chapter:1});
+  });
+ }
+}
+
+// =====================================================
+// STORY SCENE
+// =====================================================
 class StoryScene extends Phaser.Scene{
- constructor(){super('story')}
- init(d){this.chapter=d.chapter}
+ constructor(){ super('story'); }
+ init(d){ this.chapter=d.chapter; }
  create(){
   const c=CHAPTERS[this.chapter-1];
   this.cameras.main.setBackgroundColor(c.color);
-  AudioCore.drone(60+this.chapter*20);
 
   const t=this.add.text(
    this.scale.width/2,
@@ -98,19 +121,19 @@ class StoryScene extends Phaser.Scene{
   ).setOrigin(.5).setAlpha(0);
 
   this.tweens.add({
-   targets:t,alpha:1,duration:1500,
-   yoyo:true,hold:3000,
+   targets:t, alpha:1, duration:1200,
+   yoyo:true, hold:3000,
    onComplete:()=>this.scene.start('game',{chapter:this.chapter})
   });
  }
 }
 
-/* =====================================================
-   GAME SCENE
-===================================================== */
+// =====================================================
+// GAME SCENE
+// =====================================================
 class GameScene extends Phaser.Scene{
- constructor(){super('game')}
- init(d){this.chapter=d.chapter}
+ constructor(){ super('game'); }
+ init(d){ this.chapter=d.chapter; }
  preload(){
   voxel(this,'ship',[[0,1,0],[1,1,1],[1,2,1],[0,3,0]],
    {1:0x00ffff,2:0xccffff,3:0xffaa00},2);
@@ -118,31 +141,34 @@ class GameScene extends Phaser.Scene{
   voxel(this,'enemy',[[1,0,1],[0,1,0],[1,1,1]],
    {1:0xff0055},3);
 
-  voxel(this,'boss',[[1,1,1,1],[1,0,0,1],[1,1,1,1]],
-   {1:0xffaa00},4);
-
   const g=this.make.graphics({add:false});
-  g.fillStyle(0xffff00);g.fillRect(0,0,4,12);
+  g.fillStyle(0xffff00); g.fillRect(0,0,4,12);
   g.generateTexture('b',4,12);
  }
  create(){
-  this.W=this.scale.width;this.H=this.scale.height;
-  this.level=1;this.xp=0;this.xpMax=100;
-  this.score=0;this.fuel=100;
-  this.bg=this.add.rectangle(this.W/2,this.H/2,this.W,this.H,CHAPTERS[this.chapter-1].color);
+  this.W=this.scale.width;
+  this.H=this.scale.height;
+  this.score=0;
 
-  this.player=this.physics.add.sprite(this.W/2,this.H*.75,'ship');
+  this.add.rectangle(
+   this.W/2,this.H/2,this.W,this.H,
+   CHAPTERS[this.chapter-1].color
+  );
+
+  this.player=this.physics.add.sprite(this.W/2,this.H*0.75,'ship');
   this.player.setCollideWorldBounds(true);
 
   this.bullets=this.physics.add.group();
   this.enemies=this.physics.add.group();
 
-  this.time.addEvent({delay:900,loop:true,callback:()=>this.spawn()});
-  this.time.addEvent({delay:600,loop:true,callback:()=>this.fuel-=1});
+  this.time.addEvent({
+   delay:900, loop:true,
+   callback:()=>this.spawn()
+  });
 
   this.physics.add.overlap(this.bullets,this.enemies,(b,e)=>{
-   b.destroy();e.destroy();
-   this.score+=100;this.gainXP(25);
+   b.destroy(); e.destroy();
+   this.score+=100;
    AudioCore.boom();
   });
 
@@ -152,70 +178,51 @@ class GameScene extends Phaser.Scene{
  spawn(){
   const e=this.enemies.create(
    Phaser.Math.Between(80,this.W-80),-40,'enemy');
-  e.setVelocityY(150+this.chapter*40);
- }
- gainXP(v){
-  this.xp+=v;
-  if(this.xp>=this.xpMax){
-   this.xp=0;this.level++;
-   AudioCore.tone(800,'sine',.3,.2);
-  }
+  e.setVelocityY(200);
  }
  shoot(){
   const b=this.bullets.create(this.player.x,this.player.y-20,'b');
   b.setVelocityY(-700);
-  AudioCore.shot(this.level);
+  AudioCore.shot(1);
  }
  update(){
-  if(this.cursors.left.isDown)this.player.x-=5;
-  if(this.cursors.right.isDown)this.player.x+=5;
-  if(this.cursors.space.isDown)this.shoot();
+  if(this.cursors.left.isDown) this.player.x-=5;
+  if(this.cursors.right.isDown) this.player.x+=5;
+  if(this.cursors.space.isDown) this.shoot();
 
-  this.ui.setText(
-   `CH ${this.chapter} LV ${this.level}\nXP ${this.xp}/${this.xpMax}\nSKOR ${this.score}`
-  );
+  this.ui.setText(`CHAPTER ${this.chapter}\nSKOR ${this.score}`);
 
-  if(this.score>2000){
-   this.scene.start('boss',{chapter:this.chapter});
+  if(this.score>=1500){
+   if(this.chapter<3)
+    this.scene.start('story',{chapter:this.chapter+1});
+   else
+    this.scene.start('end');
   }
  }
 }
 
-/* =====================================================
-   BOSS SCENE
-===================================================== */
-class BossScene extends Phaser.Scene{
- constructor(){super('boss')}
- init(d){this.chapter=d.chapter}
+// =====================================================
+// END SCENE
+// =====================================================
+class EndScene extends Phaser.Scene{
+ constructor(){ super('end'); }
  create(){
-  this.W=this.scale.width;this.H=this.scale.height;
-  this.add.text(this.W/2,80,
-   `BOSS APPROACHING\n${CHAPTERS[this.chapter-1].boss}`,
-   {fontSize:'32px',align:'center'}).setOrigin(.5);
-
-  const boss=this.add.sprite(this.W/2,-100,'boss');
-  this.tweens.add({targets:boss,y:200,duration:2000});
-
-  this.time.delayedCall(4000,()=>{
-   if(this.chapter<3)
-    this.scene.start('story',{chapter:this.chapter+1});
-   else{
-    this.add.text(this.W/2,this.H/2,
-     "TO BE CONTINUED",{fontSize:'40px'}).setOrigin(.5);
-   }
-  });
+  this.add.text(
+   this.scale.width/2,
+   this.scale.height/2,
+   "TO BE CONTINUED",
+   {fontSize:'40px'}
+  ).setOrigin(.5);
  }
 }
 
-/* =====================================================
-   GAME INIT
-===================================================== */
+// =====================================================
 new Phaser.Game({
  type:Phaser.AUTO,
  width:Math.min(innerWidth,960),
  height:innerHeight,
  physics:{default:'arcade',arcade:{gravity:{y:0}}},
- scene:[StoryScene,GameScene,BossScene]
+ scene:[BootScene,StoryScene,GameScene,EndScene]
 });
 </script>
 </body>
