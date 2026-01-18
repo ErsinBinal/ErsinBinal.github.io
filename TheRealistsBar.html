@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Realist's Bar | No-Nonsense Drinks</title>
+    <style>
+        /* --- MİMARİ NOT: CSS DEĞİŞKENLERİ --- */
+        /* Renkleri buradan tek hamlede değiştirebilirsin */
+        :root {
+            --bg-color: #121212; /* Göz yormayan koyu tema */
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #4caf50; /* Sağlık vurgusu için minimal yeşil */
+            --danger: #e57373;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            padding: 2rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid #333;
+        }
+
+        h1 { margin: 0; font-weight: 300; letter-spacing: 2px; }
+        p.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; }
+
+        /* --- FILTER SECTION --- */
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        button:hover, button.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        /* --- GRID LAYOUT (RESPONSIVE) --- */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- RECIPE CARD --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-5px); border-color: var(--accent); }
+
+        .card h3 { margin-top: 0; color: var(--accent); }
+        
+        .tags { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1rem; display: block;}
+        
+        .ingredients-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .ingredients-list li {
+            border-bottom: 1px solid #333;
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .why-it-works {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>THE REALIST'S BAR</h1>
+        <p class="subtitle">Pratik. Lezzetli. Bilimsel. Saçmalık yok.</p>
+    </header>
+
+    <div class="filters" id="filterContainer">
+        <button class="active" data-filter="all">Tümü</button>
+        <button data-filter="ekşi">Ekşi & Ferah</button>
+        <button data-filter="baharat">Baharatlı & Keskin</button>
+        <button data-filter="gövdeli">Buru & Gövdeli</button>
+    </div>
+
+    <main class="menu-grid" id="menuContainer">
+        </main>
+
+    <script>
+        // --- VERİ YAPISI (DATABASE SİMÜLASYONU) ---
+        // Gerçek bir senaryoda bu veri bir JSON dosyasından veya API'den gelir.
+        const recipes = [
+            {
+                id: 1,
+                name: "The Ginger Snap",
+                category: "baharat",
+                tags: "Odaklanma | Enerji",
+                ingredients: [
+                    { item: "Taze Zencefil Suyu", amount: "1 tk" },
+                    { item: "Limon Suyu", amount: "1/2 adet" },
+                    { item: "Bal", amount: "1 tk" },
+                    { item: "Maden Suyu", amount: "200 ml" }
+                ],
+                why: "Zencefildeki gingerol maddesi beyin fonksiyonlarını uyarır ve kafeinsiz bir uyanıklık sağlar."
+            },
+            {
+                id: 2,
+                name: "The Red Velvet",
+                category: "gövdeli",
+                tags: "Akşam Yemeği | Antioksidan",
+                ingredients: [
+                    { item: "Pancar Suyu", amount: "100 ml" },
+                    { item: "Portakal Suyu", amount: "50 ml" },
+                    { item: "Elma Sirkesi", amount: "1 çk" },
+                    { item: "Tuz & Karabiber", amount: "Bir tutam" }
+                ],
+                why: "Pancarın toprakımsı tadı, şaraptaki tanen hissini taklit eder. Yemek eşlikçisidir."
+            },
+            {
+                id: 3,
+                name: "Cold Brew Tonic",
+                category: "ekşi",
+                tags: "Sabah Rutini | Serinletici",
+                ingredients: [
+                    { item: "Cold Brew Kahve", amount: "100 ml" },
+                    { item: "Tonik", amount: "100 ml" },
+                    { item: "Greyfurt Kabuğu", amount: "1 dilim" }
+                ],
+                why: "Kahvenin asiditesi ile toniğin kinin acılığı birbirini dengeler. Kompleks bir tat profilidir."
+            },
+             {
+                id: 4,
+                name: "Green Machine",
+                category: "ekşi",
+                tags: "Detox | Vitamin C",
+                ingredients: [
+                    { item: "Salatalık Suyu", amount: "100 ml" },
+                    { item: "Limon Suyu", amount: "20 ml" },
+                    { item: "Fesleğen", amount: "3 yaprak" },
+                    { item: "Tuz", amount: "Çok az" }
+                ],
+                why: "Salatalık ve tuz elektrolit dengesini sağlar, spor sonrası için idealdir."
+            }
+        ];
+
+        // --- DOM ELEMENTLERİ ---
+        const container = document.getElementById('menuContainer');
+        const buttons = document.querySelectorAll('.filters button');
+
+        // --- RENDER FONKSİYONU ---
+        // Veriyi alır ve HTML kartlarına dönüştürür
+        function renderRecipes(filterType) {
+            container.innerHTML = ''; // Önce temizle
+            
+            const filteredData = filterType === 'all' 
+                ? recipes 
+                : recipes.filter(r => r.category === filterType);
+
+            if (filteredData.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-muted)">Bu kategoride henüz reçete yok.</p>';
+                return;
+            }
+
+            filteredData.forEach(recipe => {
+                // Malzeme listesini HTML'e çevir
+                const ingredientsHTML = recipe.ingredients
+                    .map(ing => `<li><span>${ing.item}</span> <span>${ing.amount}</span></li>`)
+                    .join('');
+
+                const card = document.createElement('article');
+                card.className = 'card';
+                card.innerHTML = `
+                    <span class="tags">${recipe.tags}</span>
+                    <h3>${recipe.name}</h3>
+                    <ul class="ingredients-list">
+                        ${ingredientsHTML}
+                    </ul>
+                    <div class="why-it-works">
+                        💡 <strong>Neden Çalışır?</strong><br> ${recipe.why}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        buttons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Aktif sınıfını yönet
+                buttons.forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Filtrele
+                const filter = e.target.getAttribute('data-filter');
+                renderRecipes(filter);
+            });
+        });
+
+        // Sayfa yüklendiğinde hepsini göster
+        renderRecipes('all');
+
+    </script>
+</body>
+</html>
