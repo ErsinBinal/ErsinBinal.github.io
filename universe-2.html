@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Space Raid – Velocity Control</title>
+<title>Space Raid – Parallax Space</title>
 <style>
     body { margin: 0; overflow: hidden; background: #000; }
 </style>
@@ -13,21 +13,21 @@
 
 <script>
 /* =====================================================
-   SCENE / CAMERA / RENDERER
+   CORE
 ===================================================== */
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000008, 60, 600);
+scene.fog = new THREE.Fog(0x000008, 80, 900);
 
 const baseFov = 68;
 const camera = new THREE.PerspectiveCamera(
     baseFov,
     window.innerWidth / window.innerHeight,
     0.1,
-    2500
+    4000
 );
-camera.position.set(0, 10, 25);
-camera.lookAt(0, 0, -80);
+camera.position.set(0, 10, 28);
+camera.lookAt(0, 0, -120);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -39,52 +39,109 @@ document.body.appendChild(renderer.domElement);
 ===================================================== */
 
 scene.add(new THREE.AmbientLight(0x444466, 1.2));
-
-const mainLight = new THREE.DirectionalLight(0x88aaff, 2);
-mainLight.position.set(5, 20, 10);
-scene.add(mainLight);
+const sun = new THREE.DirectionalLight(0x88aaff, 2);
+sun.position.set(10, 30, 20);
+scene.add(sun);
 
 /* =====================================================
-   STARFIELD (HIZ ALGISI BURADA)
+   STARFIELD (PARALLAX DESTEKLİ)
 ===================================================== */
 
-const starCount = 1500;
-const starGeometry = new THREE.BufferGeometry();
-const starPositions = [];
+const starCount = 1600;
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
 
 for (let i = 0; i < starCount; i++) {
-    starPositions.push(
-        (Math.random() - 0.5) * 350,
-        (Math.random() - 0.5) * 350,
-        -Math.random() * 1600
+    starPos.push(
+        (Math.random() - 0.5) * 600,
+        (Math.random() - 0.5) * 400,
+        -Math.random() * 2500
     );
 }
 
-starGeometry.setAttribute(
+starGeo.setAttribute(
     'position',
-    new THREE.Float32BufferAttribute(starPositions, 3)
+    new THREE.Float32BufferAttribute(starPos, 3)
 );
 
-const starMaterial = new THREE.PointsMaterial({
+const starMat = new THREE.PointsMaterial({
     color: 0xffffff,
     size: 0.9
 });
 
-const starField = new THREE.Points(starGeometry, starMaterial);
-scene.add(starField);
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
 
 /* =====================================================
-   DISTANT GALAXY DOME
+   DEV GALAKSİLER
 ===================================================== */
 
-const galaxy = new THREE.Mesh(
-    new THREE.SphereGeometry(1200, 32, 32),
-    new THREE.MeshBasicMaterial({
-        color: 0x080018,
-        side: THREE.BackSide
-    })
-);
-scene.add(galaxy);
+const galaxies = [];
+
+function spawnGalaxy() {
+    const g = new THREE.Mesh(
+        new THREE.TorusGeometry(
+            40 + Math.random() * 40,
+            8,
+            16,
+            64
+        ),
+        new THREE.MeshBasicMaterial({
+            color: 0x5522aa,
+            transparent: true,
+            opacity: 0.35,
+            wireframe: true
+        })
+    );
+
+    g.position.set(
+        (Math.random() - 0.5) * 200,
+        (Math.random() - 0.5) * 150,
+        -3000
+    );
+
+    scene.add(g);
+    galaxies.push(g);
+}
+
+for (let i = 0; i < 4; i++) spawnGalaxy();
+
+/* =====================================================
+   ASTEROIDS
+===================================================== */
+
+const asteroids = [];
+
+function spawnAsteroid() {
+    const a = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(
+            2 + Math.random() * 3,
+            1
+        ),
+        new THREE.MeshStandardMaterial({
+            color: 0x555555,
+            roughness: 0.9,
+            metalness: 0.1
+        })
+    );
+
+    a.position.set(
+        (Math.random() - 0.5) * 80,
+        (Math.random() - 0.5) * 40,
+        -1200
+    );
+
+    a.userData.rot = new THREE.Vector3(
+        Math.random() * 0.01,
+        Math.random() * 0.01,
+        Math.random() * 0.01
+    );
+
+    scene.add(a);
+    asteroids.push(a);
+}
+
+setInterval(spawnAsteroid, 900);
 
 /* =====================================================
    PLAYER SHIP
@@ -110,17 +167,14 @@ scene.add(ship);
 const keys = {};
 let charging = false;
 let chargePower = 0;
-const maxCharge = 120;
 
-/* hız sistemi */
 let speed = 1.0;
 let targetSpeed = 1.0;
-const minSpeed = 0.4;
-const maxSpeed = 3.5;
+
+let lateralVelocity = 0;
 
 window.addEventListener("keydown", e => {
     keys[e.code] = true;
-
     if (e.code === "Space" && !charging) {
         charging = true;
         chargePower = 0;
@@ -129,26 +183,25 @@ window.addEventListener("keydown", e => {
 
 window.addEventListener("keyup", e => {
     keys[e.code] = false;
-
     if (e.code === "Space" && charging) {
         firePlasma(chargePower);
         charging = false;
         chargePower = 0;
-        ship.material.emissiveIntensity = 0.6;
     }
 });
 
 /* =====================================================
-   PLASMA SHOTS
+   PLASMA
 ===================================================== */
 
 const shots = [];
 
 function firePlasma(power) {
-    const size = THREE.MathUtils.clamp(power / 30, 0.6, 3.2);
-
-    const plasma = new THREE.Mesh(
-        new THREE.SphereGeometry(size, 20, 20),
+    const s = new THREE.Mesh(
+        new THREE.SphereGeometry(
+            THREE.MathUtils.clamp(power / 30, 0.6, 3),
+            20, 20
+        ),
         new THREE.MeshStandardMaterial({
             color: 0x66ccff,
             emissive: 0x33aaff,
@@ -156,10 +209,10 @@ function firePlasma(power) {
         })
     );
 
-    plasma.position.copy(ship.position);
-    plasma.userData.speed = 2 + power / 20;
-    scene.add(plasma);
-    shots.push(plasma);
+    s.position.copy(ship.position);
+    s.userData.speed = 2 + power / 20;
+    scene.add(s);
+    shots.push(s);
 }
 
 /* =====================================================
@@ -169,57 +222,66 @@ function firePlasma(power) {
 function animate() {
     requestAnimationFrame(animate);
 
-    /* -------------------------
-       YATAY HAREKET
-    -------------------------- */
-    if (keys["ArrowLeft"]) ship.position.x -= 0.5;
-    if (keys["ArrowRight"]) ship.position.x += 0.5;
-    ship.position.x = THREE.MathUtils.clamp(ship.position.x, -12, 12);
+    /* ---------- LATERAL MOVEMENT ---------- */
+    if (keys["ArrowLeft"]) lateralVelocity -= 0.03;
+    if (keys["ArrowRight"]) lateralVelocity += 0.03;
+    lateralVelocity *= 0.92;
 
-    /* -------------------------
-       HIZ KONTROLÜ (ANA MEKANİK)
-    -------------------------- */
-    if (keys["ArrowUp"]) {
-        targetSpeed += 0.05;
-    } else if (keys["ArrowDown"]) {
-        targetSpeed -= 0.05;
-    } else {
-        targetSpeed += (1.0 - targetSpeed) * 0.02; // doğal denge
-    }
+    ship.position.x += lateralVelocity * 10;
+    ship.position.x = THREE.MathUtils.clamp(ship.position.x, -14, 14);
 
-    targetSpeed = THREE.MathUtils.clamp(targetSpeed, minSpeed, maxSpeed);
-    speed += (targetSpeed - speed) * 0.08; // yumuşak geçiş
+    /* ---------- SPEED ---------- */
+    if (keys["ArrowUp"]) targetSpeed += 0.05;
+    if (keys["ArrowDown"]) targetSpeed -= 0.05;
+    targetSpeed = THREE.MathUtils.clamp(targetSpeed, 0.5, 3.8);
+    speed += (targetSpeed - speed) * 0.08;
 
-    /* Kamera FOV ile hız hissi */
     camera.fov = baseFov + speed * 3.5;
     camera.updateProjectionMatrix();
 
-    /* -------------------------
-       CHARGE FEEDBACK
-    -------------------------- */
+    /* ---------- CHARGE FEEDBACK ---------- */
     if (charging) {
-        chargePower = Math.min(maxCharge, chargePower + 1.4);
+        chargePower = Math.min(120, chargePower + 1.5);
         ship.material.emissiveIntensity = 0.6 + chargePower / 60;
+    } else {
+        ship.material.emissiveIntensity = 0.6;
     }
 
-    /* -------------------------
-       STAR FLOW (ASIL İLERLEME)
-    -------------------------- */
-    const positions = starGeometry.attributes.position.array;
-    for (let i = 2; i < positions.length; i += 3) {
-        positions[i] += 2.2 * speed;
-        if (positions[i] > 30) positions[i] = -1600;
+    /* ---------- STAR PARALLAX ---------- */
+    const p = starGeo.attributes.position.array;
+    for (let i = 2; i < p.length; i += 3) {
+        p[i] += 2.2 * speed;
+        p[i - 2] -= lateralVelocity * 4; // parallax
+        if (p[i] > 40) p[i] = -2500;
     }
-    starGeometry.attributes.position.needsUpdate = true;
+    starGeo.attributes.position.needsUpdate = true;
 
-    galaxy.rotation.y += 0.0002 * speed;
+    /* ---------- GALAXIES ---------- */
+    galaxies.forEach(g => {
+        g.position.z += 0.6 * speed;
+        g.rotation.z += 0.0004;
+        if (g.position.z > 200) {
+            g.position.z = -3000;
+        }
+    });
 
-    /* -------------------------
-       PLASMA
-    -------------------------- */
+    /* ---------- ASTEROIDS ---------- */
+    asteroids.forEach((a, i) => {
+        a.position.z += 1.2 * speed;
+        a.position.x -= lateralVelocity * 2;
+        a.rotation.x += a.userData.rot.x;
+        a.rotation.y += a.userData.rot.y;
+
+        if (a.position.z > 100) {
+            scene.remove(a);
+            asteroids.splice(i, 1);
+        }
+    });
+
+    /* ---------- PLASMA ---------- */
     shots.forEach((s, i) => {
         s.position.z -= s.userData.speed * speed;
-        if (s.position.z < -2000) {
+        if (s.position.z < -3000) {
             scene.remove(s);
             shots.splice(i, 1);
         }
