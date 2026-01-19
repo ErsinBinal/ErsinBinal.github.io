@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Space Raid – Forward Space Shooter</title>
+<title>Space Raid – Velocity Control</title>
 <style>
     body { margin: 0; overflow: hidden; background: #000; }
 </style>
@@ -17,13 +17,14 @@
 ===================================================== */
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000008, 50, 500);
+scene.fog = new THREE.Fog(0x000008, 60, 600);
 
+const baseFov = 68;
 const camera = new THREE.PerspectiveCamera(
-    68,
+    baseFov,
     window.innerWidth / window.innerHeight,
     0.1,
-    2000
+    2500
 );
 camera.position.set(0, 10, 25);
 camera.lookAt(0, 0, -80);
@@ -44,18 +45,18 @@ mainLight.position.set(5, 20, 10);
 scene.add(mainLight);
 
 /* =====================================================
-   STARFIELD – GERÇEK İLERLEME HİSSİ
+   STARFIELD (HIZ ALGISI BURADA)
 ===================================================== */
 
-const starCount = 1400;
+const starCount = 1500;
 const starGeometry = new THREE.BufferGeometry();
 const starPositions = [];
 
 for (let i = 0; i < starCount; i++) {
     starPositions.push(
-        (Math.random() - 0.5) * 300,
-        (Math.random() - 0.5) * 300,
-        -Math.random() * 1200
+        (Math.random() - 0.5) * 350,
+        (Math.random() - 0.5) * 350,
+        -Math.random() * 1600
     );
 }
 
@@ -73,13 +74,13 @@ const starField = new THREE.Points(starGeometry, starMaterial);
 scene.add(starField);
 
 /* =====================================================
-   DISTANT GALAXY DOME (kubbe hissi)
+   DISTANT GALAXY DOME
 ===================================================== */
 
 const galaxy = new THREE.Mesh(
-    new THREE.SphereGeometry(1000, 32, 32),
+    new THREE.SphereGeometry(1200, 32, 32),
     new THREE.MeshBasicMaterial({
-        color: 0x080015,
+        color: 0x080018,
         side: THREE.BackSide
     })
 );
@@ -103,7 +104,7 @@ ship.position.y = 1.5;
 scene.add(ship);
 
 /* =====================================================
-   INPUT & CHARGE SYSTEM
+   INPUT & STATE
 ===================================================== */
 
 const keys = {};
@@ -111,8 +112,15 @@ let charging = false;
 let chargePower = 0;
 const maxCharge = 120;
 
+/* hız sistemi */
+let speed = 1.0;
+let targetSpeed = 1.0;
+const minSpeed = 0.4;
+const maxSpeed = 3.5;
+
 window.addEventListener("keydown", e => {
     keys[e.code] = true;
+
     if (e.code === "Space" && !charging) {
         charging = true;
         chargePower = 0;
@@ -121,6 +129,7 @@ window.addEventListener("keydown", e => {
 
 window.addEventListener("keyup", e => {
     keys[e.code] = false;
+
     if (e.code === "Space" && charging) {
         firePlasma(chargePower);
         charging = false;
@@ -148,7 +157,7 @@ function firePlasma(power) {
     );
 
     plasma.position.copy(ship.position);
-    plasma.userData.speed = 1.5 + power / 25;
+    plasma.userData.speed = 2 + power / 20;
     scene.add(plasma);
     shots.push(plasma);
 }
@@ -160,31 +169,57 @@ function firePlasma(power) {
 function animate() {
     requestAnimationFrame(animate);
 
-    /* Ship movement */
+    /* -------------------------
+       YATAY HAREKET
+    -------------------------- */
     if (keys["ArrowLeft"]) ship.position.x -= 0.5;
     if (keys["ArrowRight"]) ship.position.x += 0.5;
     ship.position.x = THREE.MathUtils.clamp(ship.position.x, -12, 12);
 
-    /* Charge feedback */
+    /* -------------------------
+       HIZ KONTROLÜ (ANA MEKANİK)
+    -------------------------- */
+    if (keys["ArrowUp"]) {
+        targetSpeed += 0.05;
+    } else if (keys["ArrowDown"]) {
+        targetSpeed -= 0.05;
+    } else {
+        targetSpeed += (1.0 - targetSpeed) * 0.02; // doğal denge
+    }
+
+    targetSpeed = THREE.MathUtils.clamp(targetSpeed, minSpeed, maxSpeed);
+    speed += (targetSpeed - speed) * 0.08; // yumuşak geçiş
+
+    /* Kamera FOV ile hız hissi */
+    camera.fov = baseFov + speed * 3.5;
+    camera.updateProjectionMatrix();
+
+    /* -------------------------
+       CHARGE FEEDBACK
+    -------------------------- */
     if (charging) {
         chargePower = Math.min(maxCharge, chargePower + 1.4);
         ship.material.emissiveIntensity = 0.6 + chargePower / 60;
     }
 
-    /* Star movement – ilerleme hissi */
+    /* -------------------------
+       STAR FLOW (ASIL İLERLEME)
+    -------------------------- */
     const positions = starGeometry.attributes.position.array;
     for (let i = 2; i < positions.length; i += 3) {
-        positions[i] += 2.6;
-        if (positions[i] > 20) positions[i] = -1200;
+        positions[i] += 2.2 * speed;
+        if (positions[i] > 30) positions[i] = -1600;
     }
     starGeometry.attributes.position.needsUpdate = true;
 
-    galaxy.rotation.y += 0.00025;
+    galaxy.rotation.y += 0.0002 * speed;
 
-    /* Plasma movement */
+    /* -------------------------
+       PLASMA
+    -------------------------- */
     shots.forEach((s, i) => {
-        s.position.z -= s.userData.speed;
-        if (s.position.z < -1500) {
+        s.position.z -= s.userData.speed * speed;
+        if (s.position.z < -2000) {
             scene.remove(s);
             shots.splice(i, 1);
         }
