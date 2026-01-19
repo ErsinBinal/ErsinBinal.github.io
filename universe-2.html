@@ -2,298 +2,242 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Space Raid – Futuristic Ship</title>
+<title>Space Raid – Enemies Online</title>
 <style>
-    body { margin: 0; overflow: hidden; background: #000; }
+body { margin:0; overflow:hidden; background:#000; }
 </style>
 </head>
 <body>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
 <script>
 /* =====================================================
-   CORE (önceki sistemle uyumlu)
+   CORE
 ===================================================== */
-
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000008, 120, 1400);
+scene.fog = new THREE.Fog(0x000008, 120, 1500);
 
-const baseFov = 68;
-const camera = new THREE.PerspectiveCamera(
-    baseFov,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    6000
-);
-camera.position.set(0, 10, 30);
-camera.lookAt(0, 0, -200);
+const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 6000);
+camera.position.set(0,10,30);
+camera.lookAt(0,0,-200);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 /* =====================================================
-   LIGHTING
+   LIGHT
 ===================================================== */
-
-scene.add(new THREE.AmbientLight(0x444466, 1.1));
-const sun = new THREE.DirectionalLight(0x88aaff, 2);
-sun.position.set(30, 40, 20);
+scene.add(new THREE.AmbientLight(0x444466,1.1));
+const sun = new THREE.DirectionalLight(0x88aaff,2);
+sun.position.set(30,40,20);
 scene.add(sun);
 
 /* =====================================================
-   STARFIELD (basit – önceki sürümden)
+   STARFIELD
 ===================================================== */
-
 const starGeo = new THREE.BufferGeometry();
 const starPos = [];
-
-for (let i = 0; i < 1600; i++) {
-    starPos.push(
-        (Math.random() - 0.5) * 800,
-        (Math.random() - 0.5) * 500,
-        -Math.random() * 4000
-    );
+for(let i=0;i<1800;i++){
+    starPos.push((Math.random()-0.5)*800,(Math.random()-0.5)*500,-Math.random()*4000);
 }
-starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-
-const stars = new THREE.Points(
-    starGeo,
-    new THREE.PointsMaterial({ color: 0xffffff, size: 0.9 })
-);
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos,3));
+const stars = new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.9}));
 scene.add(stars);
 
 /* =====================================================
-   FUTURISTIC SHIP (ASIL OLAY)
+   PLAYER SHIP (öncekinden kısaltılmış)
 ===================================================== */
-
 const ship = new THREE.Group();
-
-/* --- GÖVDE --- */
 const body = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.2, 1.6, 6, 16),
-    new THREE.MeshStandardMaterial({
-        color: 0xbfdcff,
-        metalness: 0.85,
-        roughness: 0.25
-    })
+    new THREE.CylinderGeometry(1.2,1.6,6,16),
+    new THREE.MeshStandardMaterial({color:0xbfdcff,metalness:0.85,roughness:0.25})
 );
-body.rotation.x = Math.PI / 2;
+body.rotation.x=Math.PI/2;
 ship.add(body);
 
-/* --- BURUN --- */
 const nose = new THREE.Mesh(
-    new THREE.ConeGeometry(1.2, 3, 16),
-    new THREE.MeshStandardMaterial({
-        color: 0xe8f2ff,
-        metalness: 0.9,
-        roughness: 0.2
-    })
+    new THREE.ConeGeometry(1.2,3,16),
+    new THREE.MeshStandardMaterial({color:0xe8f2ff,metalness:0.9})
 );
-nose.rotation.x = Math.PI / 2;
-nose.position.z = -4.5;
+nose.rotation.x=Math.PI/2;
+nose.position.z=-4.5;
 ship.add(nose);
 
-/* --- KAMARA (COCKPIT) --- */
-const cockpit = new THREE.Mesh(
-    new THREE.SphereGeometry(0.9, 16, 16),
-    new THREE.MeshStandardMaterial({
-        color: 0x111122,
-        emissive: 0x111144,
-        transparent: true,
-        opacity: 0.85
-    })
-);
-cockpit.position.set(0, 1.1, -1);
-ship.add(cockpit);
-
-/* --- YAN MOTORLAR --- */
-const engineMaterial = new THREE.MeshStandardMaterial({
-    color: 0x888888,
-    metalness: 0.8,
-    roughness: 0.4
-});
-
-const leftEngine = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.4, 0.5, 2.2, 12),
-    engineMaterial
-);
-leftEngine.rotation.z = Math.PI / 2;
-leftEngine.position.set(-2, 0, 1.5);
-ship.add(leftEngine);
-
-const rightEngine = leftEngine.clone();
-rightEngine.position.x = 2;
-ship.add(rightEngine);
-
-/* --- MOTOR PLAZMALARI (SİMGesel) --- */
-const thrusterMat = new THREE.MeshStandardMaterial({
-    color: 0x66ccff,
-    emissive: 0x3399ff,
-    transparent: true,
-    opacity: 0.6
-});
-
-const leftFlame = new THREE.Mesh(
-    new THREE.ConeGeometry(0.25, 1.5, 12),
-    thrusterMat
-);
-leftFlame.rotation.x = -Math.PI / 2;
-leftFlame.position.set(-3.1, 0, 1.5);
-ship.add(leftFlame);
-
-const rightFlame = leftFlame.clone();
-rightFlame.position.x = 3.1;
-ship.add(rightFlame);
-
-/* --- PLAZMA TOPU --- */
-const cannon = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.25, 0.25, 1.5, 12),
-    new THREE.MeshStandardMaterial({
-        color: 0x555577,
-        metalness: 0.9,
-        roughness: 0.3
-    })
-);
-cannon.rotation.x = Math.PI / 2;
-cannon.position.z = -6.2;
-ship.add(cannon);
-
-/* --- CHARGE CORE (birikme efekti) --- */
 const chargeCore = new THREE.Mesh(
-    new THREE.SphereGeometry(0.3, 16, 16),
-    new THREE.MeshStandardMaterial({
-        color: 0x66ccff,
-        emissive: 0x33aaff,
-        emissiveIntensity: 0
-    })
+    new THREE.SphereGeometry(0.3,16,16),
+    new THREE.MeshStandardMaterial({color:0x66ccff,emissive:0x33aaff,emissiveIntensity:0})
 );
-chargeCore.position.z = -6.9;
+chargeCore.position.z=-6.8;
 ship.add(chargeCore);
 
-ship.position.y = 1.5;
+ship.position.y=1.5;
 scene.add(ship);
 
 /* =====================================================
-   INPUT & STATE
+   INPUT / STATE
 ===================================================== */
+const keys={};
+let speed=1,targetSpeed=1,lateralVelocity=0;
+let charging=false,chargePower=0;
 
-const keys = {};
-let charging = false;
-let chargePower = 0;
-let speed = 1.0;
-let targetSpeed = 1.0;
-let lateralVelocity = 0;
-
-window.addEventListener("keydown", e => {
-    keys[e.code] = true;
-    if (e.code === "Space" && !charging) {
-        charging = true;
-        chargePower = 0;
-    }
+addEventListener("keydown",e=>{
+    keys[e.code]=true;
+    if(e.code==="Space"&&!charging){charging=true;chargePower=0;}
 });
-
-window.addEventListener("keyup", e => {
-    keys[e.code] = false;
-    if (e.code === "Space" && charging) {
+addEventListener("keyup",e=>{
+    keys[e.code]=false;
+    if(e.code==="Space"&&charging){
         firePlasma(chargePower);
-        charging = false;
-        chargePower = 0;
+        charging=false;
+        chargePower=0;
         chargeCore.scale.set(0.3,0.3,0.3);
-        chargeCore.material.emissiveIntensity = 0;
+        chargeCore.material.emissiveIntensity=0;
     }
 });
 
 /* =====================================================
-   PLASMA SHOT
+   PLAYER SHOTS
 ===================================================== */
-
-const shots = [];
-
-function firePlasma(power) {
-    const s = new THREE.Mesh(
-        new THREE.SphereGeometry(
-            THREE.MathUtils.clamp(power / 30, 0.6, 3),
-            20, 20
-        ),
-        new THREE.MeshStandardMaterial({
-            color: 0x66ccff,
-            emissive: 0x33aaff,
-            emissiveIntensity: power / 35
-        })
+const shots=[];
+function firePlasma(p){
+    const s=new THREE.Mesh(
+        new THREE.SphereGeometry(Math.min(3,0.6+p/30),16,16),
+        new THREE.MeshStandardMaterial({color:0x66ccff,emissive:0x33aaff,emissiveIntensity:p/35})
     );
     s.position.copy(chargeCore.getWorldPosition(new THREE.Vector3()));
-    s.userData.speed = 2 + power / 20;
-    scene.add(s);
-    shots.push(s);
+    s.userData.speed=3+p/20;
+    scene.add(s); shots.push(s);
 }
+
+/* =====================================================
+   ENEMY SYSTEM
+===================================================== */
+const enemies=[];
+const enemyShots=[];
+
+function createEnemy(){
+    const g=new THREE.Group();
+
+    const hull=new THREE.Mesh(
+        new THREE.BoxGeometry(2,1,3),
+        new THREE.MeshStandardMaterial({color:0xff5555,metalness:0.6,roughness:0.4})
+    );
+    g.add(hull);
+
+    const wing=new THREE.Mesh(
+        new THREE.BoxGeometry(4,0.3,1),
+        hull.material
+    );
+    wing.position.y=-0.3;
+    g.add(wing);
+
+    const angle=Math.random()*Math.PI*2;
+    const radius=80+Math.random()*120;
+
+    g.position.set(Math.cos(angle)*radius,(Math.random()-0.5)*20,-3000);
+    g.userData={
+        speed:1.2+Math.random(),
+        fireCooldown:Math.random()*120
+    };
+
+    scene.add(g);
+    enemies.push(g);
+}
+
+setInterval(createEnemy,1200);
 
 /* =====================================================
    GAME LOOP
 ===================================================== */
+function animate(){
+requestAnimationFrame(animate);
 
-function animate() {
-    requestAnimationFrame(animate);
+/* PLAYER MOVE */
+if(keys.ArrowLeft) lateralVelocity-=0.03;
+if(keys.ArrowRight) lateralVelocity+=0.03;
+lateralVelocity*=0.9;
+ship.position.x+=lateralVelocity*10;
+ship.position.x=THREE.MathUtils.clamp(ship.position.x,-18,18);
 
-    /* YATAY */
-    if (keys["ArrowLeft"]) lateralVelocity -= 0.03;
-    if (keys["ArrowRight"]) lateralVelocity += 0.03;
-    lateralVelocity *= 0.92;
-    ship.position.x += lateralVelocity * 10;
+/* SPEED */
+if(keys.ArrowUp) targetSpeed+=0.05;
+if(keys.ArrowDown) targetSpeed-=0.05;
+targetSpeed=THREE.MathUtils.clamp(targetSpeed,0.5,4);
+speed+= (targetSpeed-speed)*0.08;
 
-    /* HIZ */
-    if (keys["ArrowUp"]) targetSpeed += 0.05;
-    if (keys["ArrowDown"]) targetSpeed -= 0.05;
-    targetSpeed = THREE.MathUtils.clamp(targetSpeed, 0.5, 4);
-    speed += (targetSpeed - speed) * 0.08;
-
-    /* MOTOR PLAZMA GERİ BESLEMESİ */
-    const flameScale = 0.8 + speed * 0.25;
-    leftFlame.scale.y = flameScale;
-    rightFlame.scale.y = flameScale;
-
-    /* CHARGE */
-    if (charging) {
-        chargePower = Math.min(120, chargePower + 1.5);
-        const c = 0.3 + chargePower / 120;
-        chargeCore.scale.set(c, c, c);
-        chargeCore.material.emissiveIntensity = chargePower / 30;
-    }
-
-    /* STARS */
-    const p = starGeo.attributes.position.array;
-    for (let i = 2; i < p.length; i += 3) {
-        p[i] += 2.2 * speed;
-        if (p[i] > 80) p[i] = -4000;
-    }
-    starGeo.attributes.position.needsUpdate = true;
-
-    /* SHOTS */
-    shots.forEach((s, i) => {
-        s.position.z -= s.userData.speed * speed;
-        if (s.position.z < -4000) {
-            scene.remove(s);
-            shots.splice(i, 1);
-        }
-    });
-
-    renderer.render(scene, camera);
+/* CHARGE */
+if(charging){
+    chargePower=Math.min(120,chargePower+1.5);
+    const c=0.3+chargePower/120;
+    chargeCore.scale.set(c,c,c);
+    chargeCore.material.emissiveIntensity=chargePower/30;
 }
 
+/* STARS */
+const p=starGeo.attributes.position.array;
+for(let i=2;i<p.length;i+=3){
+    p[i]+=2.2*speed;
+    if(p[i]>100)p[i]=-4000;
+}
+starGeo.attributes.position.needsUpdate=true;
+
+/* PLAYER SHOTS */
+shots.forEach((s,i)=>{
+    s.position.z-=s.userData.speed*speed;
+    if(s.position.z<-4000){scene.remove(s);shots.splice(i,1);}
+});
+
+/* ENEMIES */
+enemies.forEach((e,ei)=>{
+    e.position.z+=e.userData.speed*speed;
+    e.position.x+=(ship.position.x-e.position.x)*0.002;
+    e.lookAt(ship.position);
+
+    e.userData.fireCooldown--;
+    if(e.userData.fireCooldown<0){
+        const b=new THREE.Mesh(
+            new THREE.SphereGeometry(0.4,8,8),
+            new THREE.MeshBasicMaterial({color:0xff3333})
+        );
+        b.position.copy(e.position);
+        b.userData.vel=e.position.clone().sub(ship.position).normalize().multiplyScalar(-4);
+        scene.add(b); enemyShots.push(b);
+        e.userData.fireCooldown=120+Math.random()*80;
+    }
+
+    if(e.position.z>200){scene.remove(e);enemies.splice(ei,1);}
+});
+
+/* ENEMY SHOTS */
+enemyShots.forEach((b,i)=>{
+    b.position.add(b.userData.vel);
+    if(b.position.z>200){scene.remove(b);enemyShots.splice(i,1);}
+});
+
+/* COLLISION */
+shots.forEach((s,si)=>{
+    enemies.forEach((e,ei)=>{
+        if(s.position.distanceTo(e.position)<2){
+            scene.remove(e);scene.remove(s);
+            enemies.splice(ei,1);shots.splice(si,1);
+        }
+    });
+});
+
+renderer.render(scene,camera);
+}
 animate();
 
 /* =====================================================
    RESIZE
 ===================================================== */
-
-window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+addEventListener("resize",()=>{
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth,innerHeight);
 });
 </script>
-
 </body>
 </html>
