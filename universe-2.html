@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJECT: CHRONOS - PHASE II</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; background: #000510; overflow: hidden; font-family: 'Verdana', sans-serif; }
+        canvas { 
+            display: block; 
+            margin: 0 auto;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.1);
+            cursor: none; /* Mouse imlecini gizle, nişangah hissi için */
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container"></div>
+
+<script>
+/**
+ * =============================================================================
+ * PROJECT CHRONOS - ENGINE CORE
+ * Architecture: Object Oriented / Component Based
+ * Era Style: 2005-2010 Flash/Arcade Aesthetics
+ * =============================================================================
+ */
+
+// --- OYUN KONFIGÜRASYONU ---
+const CONFIG = {
+    type: Phaser.AUTO,
+    width: 1024,
+    height: 768,
+    parent: 'game-container',
+    backgroundColor: '#000510',
+    physics: {
+        default: 'arcade',
+        arcade: { fps: 60, gravity: { y: 0 }, debug: false }
+    },
+    scene: [] // Sahneler aşağıda eklenecek
+};
+
+// --- GLOBAL OYUN DURUMU (STATE) ---
+const GameState = {
+    player: {
+        name: "OPERATOR",
+        hull: 100,
+        heat: 0,
+        maxHeat: 100,
+        weaponLevel: 1
+    },
+    stats: {
+        score: 0, // Data (TB)
+        shotsFired: 0,
+        shotsHit: 0,
+        enemiesDestroyed: 0
+    }
+};
+
+// =============================================================================
+// SYSTEM: ASSET FACTORY (Grafik Motoru)
+// Harici dosya yüklemeden profesyonel assetler üretir.
+// =============================================================================
+class AssetFactory {
+    static init(scene) {
+        // 1. HERO SHIP (Modern Jet)
+        let ship = scene.make.graphics({x:0, y:0, add:false});
+        ship.fillStyle(0x00aaff, 1); // Gövde
+        ship.beginPath(); ship.moveTo(0, -30); ship.lineTo(20, 20); ship.lineTo(0, 10); ship.lineTo(-20, 20); ship.closePath(); ship.fill();
+        ship.fillStyle(0xccffff, 1); // Kokpit
+        ship.beginPath(); ship.moveTo(0, -5); ship.lineTo(5, 10); ship.lineTo(-5, 10); ship.closePath(); ship.fill();
+        ship.fillStyle(0xffaa00, 0.6); // Motor Glow
+        ship.fillCircle(0, 22, 8);
+        ship.generateTexture('hero_ship', 64, 64);
+
+        // 2. ENEMY: DRONE (Hunter)
+        let drone = scene.make.graphics({x:0, y:0, add:false});
+        drone.lineStyle(2, 0xff3333); 
+        drone.strokeCircle(25, 25, 15); // Halka
+        drone.fillStyle(0x550000); 
+        drone.fillCircle(25, 25, 8); // Çekirdek
+        drone.generateTexture('enemy_drone', 50, 50);
+
+        // 3. PROJECTILE (Laser)
+        let laser = scene.make.graphics({x:0, y:0, add:false});
+        laser.fillStyle(0x00ffff, 1); laser.fillRect(0, 0, 4, 20);
+        laser.fillStyle(0xffffff, 1); laser.fillRect(1, 1, 2, 18);
+        laser.generateTexture('laser_blue', 4, 20);
+
+        // 4. PARTICLE (Explosion)
+        let p = scene.make.graphics({x:0, y:0, add:false});
+        p.fillStyle(0xffaa00); p.fillCircle(4,4,4);
+        p.generateTexture('particle_fire', 8, 8);
+
+        // 5. STAR TEXTURE (Background)
+        let star = scene.make.graphics({x:0, y:0, add:false});
+        star.fillStyle(0xffffff, 1); star.fillCircle(1,1,1);
+        star.generateTexture('star_px', 2, 2);
+    }
+}
+
+// =============================================================================
+// SCENE: BOOT & INTRO
+// =============================================================================
+class IntroScene extends Phaser.Scene {
+    constructor() { super('IntroScene'); }
+    
+    preload() { AssetFactory.init(this); }
+    
+    create() {
+        // Matrix Efekti
+        this.add.text(50, 50, '> SYSTEM REBOOT...', { font: '20px Courier', fill: '#0f0' });
+        this.add.text(50, 80, '> DETECTING USER...', { font: '20px Courier', fill: '#0f0' });
+        
+        let msg = this.add.text(CONFIG.width/2, CONFIG.height/2, "EVREN II: UYANIŞ", {
+            fontSize: '40px', color: '#fff', fontStyle: 'bold'
+        }).setOrigin(0.5).setAlpha(0);
+
+        this.tweens.add({
+            targets: msg, alpha: 1, duration: 2000, hold: 1000, yoyo: true,
+            onComplete: () => this.scene.start('GameScene')
+        });
+    }
+}
+
+// =============================================================================
+// SCENE: GAMEPLAY (Ana Oyun)
+// =============================================================================
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+
+    create() {
+        // Reset Stats
+        GameState.player.hull = 100;
+        GameState.player.heat = 0;
+        GameState.stats.score = 0;
+        GameState.stats.shotsFired = 0;
+
+        // 1. Background (Parallax)
+        this.starfield = this.add.tileSprite(0, 0, CONFIG.width, CONFIG.height, 'star_px').setOrigin(0);
+        
+        // 2. Player
+        this.player = this.physics.add.sprite(CONFIG.width/2, CONFIG.height - 100, 'hero_ship');
+        this.player.setCollideWorldBounds(true);
+        this.player.setDrag(800); // Sürtünme hissi
+        
+        // 3. Groups
+        this.bullets = this.physics.add.group({ defaultKey: 'laser_blue', maxSize: 30 });
+        this.enemies = this.physics.add.group();
+        
+        // 4. Input
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        
+        // 5. Particles
+        this.emitter = this.add.particles(0, 0, 'particle_fire', {
+            lifespan: 400, speed: { min: 100, max: 200 }, scale: { start: 1, end: 0 },
+            blendMode: 'ADD', emitting: false
+        });
+
+        // 6. HUD Oluştur
+        this.createHUD();
+
+        // 7. Enemy Spawner (Zamanlayıcı)
+        this.time.addEvent({ delay: 800, callback: this.spawnEnemy, callbackScope: this, loop: true });
+    }
+
+    createHUD() {
+        // Arka Panel
+        this.add.rectangle(CONFIG.width/2, CONFIG.height, CONFIG.width, 60, 0x111111).setOrigin(0.5, 1).setAlpha(0.8);
+        this.add.rectangle(CONFIG.width/2, CONFIG.height-60, CONFIG.width, 2, 0x00ffff).setOrigin(0.5);
+
+        // Health
+        this.add.text(20, CONFIG.height-45, "HULL INTEGRITY:", { fontSize: '14px', color: '#aaa' });
+        this.hullText = this.add.text(150, CONFIG.height-48, "100%", { fontSize: '20px', color: '#0f0' });
+
+        // Heat (Isı) Barı
+        this.add.text(300, CONFIG.height-45, "WEAPON HEAT:", { fontSize: '14px', color: '#aaa' });
+        this.heatBarBg = this.add.rectangle(420, CONFIG.height-35, 200, 10, 0x333333).setOrigin(0, 0.5);
+        this.heatBar = this.add.rectangle(420, CONFIG.height-35, 0, 10, 0x00ff00).setOrigin(0, 0.5);
+
+        // Score (Data)
+        this.scoreText = this.add.text(CONFIG.width-20, CONFIG.height-45, "DATA: 0.00 TB", { fontSize: '20px', color: '#0ff' }).setOrigin(1, 0);
+    }
+
+    update() {
+        // Yıldız kayması
+        this.starfield.tilePositionY -= 2; // Aşağı akış
+        this.starfield.tilePositionX += (this.player.body.velocity.x * 0.05); // Sağa sola yatış
+
+        // Oyuncu Hareketi (Acceleration ile yumuşak fizik)
+        const speed = 600;
+        if (this.cursors.left.isDown) { 
+            this.player.setAccelerationX(-speed); 
+            this.player.setAngle(-10); // Sola yat
+        } else if (this.cursors.right.isDown) { 
+            this.player.setAccelerationX(speed); 
+            this.player.setAngle(10); // Sağa yat
+        } else { 
+            this.player.setAccelerationX(0); 
+            this.player.setAngle(0); 
+        }
+
+        if (this.cursors.up.isDown) this.player.setAccelerationY(-speed);
+        else if (this.cursors.down.isDown) this.player.setAccelerationY(speed);
+        else this.player.setAccelerationY(0);
+
+        // Ateş Etme
+        if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
+            this.fireWeapon();
+        }
+        this.coolDownWeapon(); // Sürekli soğutma çalıştır
+
+        // Çarpışmalar
+        this.physics.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
+        this.physics.overlap(this.player, this.enemies, this.hitPlayer, null, this);
+
+        // Ekran dışı temizlik
+        this.bullets.children.each(b => { if(b.y < -50) b.destroy(); });
+        this.enemies.children.each(e => { if(e.y > CONFIG.height + 50) e.destroy(); });
+        
+        // HUD Update
+        this.heatBar.width = (GameState.player.heat / GameState.player.maxHeat) * 200;
+        this.heatBar.fillColor = GameState.player.heat > 80 ? 0xff0000 : 0x00ff00;
+    }
+
+    fireWeapon() {
+        if (GameState.player.heat >= GameState.player.maxHeat) {
+            // Aşırı ısınma sesi veya efekti eklenebilir
+            this.cameras.main.shake(50, 0.005); // Titret
+            return;
+        }
+
+        // Mermi oluştur
+        let bullet = this.bullets.get(this.player.x, this.player.y - 30);
+        if (bullet) {
+            bullet.setActive(true).setVisible(true);
+            bullet.body.reset(this.player.x, this.player.y - 30);
+            bullet.body.setVelocityY(-800);
+            
+            // İstatistik güncelle
+            GameState.stats.shotsFired++;
+            GameState.player.heat = Math.min(GameState.player.maxHeat, GameState.player.heat + 15);
+        }
+    }
+
+    coolDownWeapon() {
+        if (GameState.player.heat > 0) {
+            GameState.player.heat -= 0.5; // Her frame'de soğuma
+        }
+    }
+
+    spawnEnemy() {
+        let x = Phaser.Math.Between(50, CONFIG.width - 50);
+        let enemy = this.enemies.create(x, -50, 'enemy_drone');
+        enemy.setVelocityY(Phaser.Math.Between(150, 250));
+        // Sinüs dalgası hareketi (AI)
+        this.tweens.add({
+            targets: enemy,
+            x: enemy.x + (Math.random() > 0.5 ? 100 : -100),
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    hitEnemy(bullet, enemy) {
+        bullet.destroy();
+        enemy.destroy();
+        
+        // Efektler
+        this.emitter.emitParticleAt(enemy.x, enemy.y, 10); // Patlama
+        
+        // Skor
+        GameState.stats.score += 0.25; // 0.25 TB
+        GameState.stats.shotsHit++;
+        GameState.stats.enemiesDestroyed++;
+        this.scoreText.setText("DATA: " + GameState.stats.score.toFixed(2) + " TB");
+
+        // Bitiş Koşulu (Örnek: 5 TB veri)
+        if (GameState.stats.score >= 5.00) {
+            this.missionComplete();
+        }
+    }
+
+    hitPlayer(player, enemy) {
+        enemy.destroy();
+        this.cameras.main.shake(200, 0.02); // Güçlü titreme
+        this.emitter.emitParticleAt(player.x, player.y, 20);
+        
+        GameState.player.hull -= 20;
+        this.hullText.setText(GameState.player.hull + "%");
+        
+        if (GameState.player.hull <= 0) {
+            this.physics.pause();
+            player.setTint(0xff0000);
+            alert("SİNYAL KAYBEDİLDİ - OPERASYON BAŞARISIZ");
+            this.scene.start('IntroScene');
+        }
+    }
+
+    missionComplete() {
+        this.physics.pause();
+        let txt = this.add.text(CONFIG.width/2, CONFIG.height/2, "VERİ PAKETİ TAMAMLANDI", {
+            fontSize: '48px', color: '#0f0', backgroundColor: '#000', padding: 20
+        }).setOrigin(0.5);
+        
+        this.time.delayedCall(2000, () => {
+            this.scene.start('DebriefScene');
+        });
+    }
+}
+
+// =============================================================================
+// SCENE: DEBRIEFING (Analiz & Hikaye)
+// =============================================================================
+class DebriefScene extends Phaser.Scene {
+    constructor() { super('DebriefScene'); }
+    
+    create() {
+        // Arkaplan
+        this.add.grid(CONFIG.width/2, CONFIG.height/2, CONFIG.width, CONFIG.height, 40, 40, 0x001100).setAltFillStyle(0x002200).setOutlineStyle();
+
+        // Başlık
+        this.add.text(50, 50, "GÖREV SONU RAPORU", { fontSize: '32px', color: '#0f0', fontStyle: 'bold' });
+
+        // İstatistikler
+        let acc = (GameState.stats.shotsHit / GameState.stats.shotsFired * 100).toFixed(1);
+        let content = `
+        > TOPLANAN VERİ: ${GameState.stats.score.toFixed(2)} TB
+        > İMHA EDİLEN HEDEFLER: ${GameState.stats.enemiesDestroyed}
+        > ATIŞ İSABET ORANI: %${acc}
+        > ZIRH DURUMU: %${GameState.player.hull}
+        
+        ----------------------------------
+        
+        > ANALİZ:
+        Zaman akışında bir kırılma tespit edildi.
+        Bu "oyun" sandığımızdan daha karmaşık.
+        
+        Sana bir soru sormam gerekiyor Operatör...
+        `;
+
+        this.add.text(50, 120, content, { fontSize: '20px', color: '#fff', lineHeight: 1.5 });
+
+        // Meta-Soru
+        this.add.text(CONFIG.width/2, 500, "ZAMAN DOĞRUSAL MIDIR?", { fontSize: '28px', color: '#ffff00' }).setOrigin(0.5);
+
+        // Butonlar
+        let btnYes = this.createBtn(CONFIG.width/2 - 150, 600, "EVET", () => this.endGame("lineer"));
+        let btnNo = this.createBtn(CONFIG.width/2 + 150, 600, "HAYIR", () => this.endGame("döngüsel"));
+    }
+
+    createBtn(x, y, text, callback) {
+        let btn = this.add.text(x, y, text, { fontSize: '24px', backgroundColor: '#333', padding: { x:20, y:10 } })
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true });
+            
+        btn.on('pointerover', () => btn.setStyle({ fill: '#0f0' }));
+        btn.on('pointerout', () => btn.setStyle({ fill: '#fff' }));
+        btn.on('pointerdown', callback);
+        return btn;
+    }
+
+    endGame(choice) {
+        // Seçimi kaydet (İleride Evren 3 için kullanılacak)
+        localStorage.setItem('chronos_philosophy', choice);
+        alert(`Yanıtın kaydedildi: ${choice.toUpperCase()}. \n\nEVREN III İÇİN HAZIRLIKLAR BAŞLIYOR...`);
+        // Burada Evren 3'e yönlendirme yapılacak. Şimdilik reload.
+        location.reload();
+    }
+}
+
+// --- BAŞLAT ---
+CONFIG.scene = [IntroScene, GameScene, DebriefScene];
+const game = new Phaser.Game(CONFIG);
+
+</script>
+</body>
+</html>
