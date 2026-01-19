@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>Space Raid – Parallax Space</title>
+<title>Space Raid – Random Horizon Space</title>
 <style>
     body { margin: 0; overflow: hidden; background: #000; }
 </style>
@@ -17,17 +17,17 @@
 ===================================================== */
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000008, 80, 900);
+scene.fog = new THREE.Fog(0x000008, 120, 1200);
 
 const baseFov = 68;
 const camera = new THREE.PerspectiveCamera(
     baseFov,
     window.innerWidth / window.innerHeight,
     0.1,
-    4000
+    6000
 );
-camera.position.set(0, 10, 28);
-camera.lookAt(0, 0, -120);
+camera.position.set(0, 10, 30);
+camera.lookAt(0, 0, -200);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -38,24 +38,25 @@ document.body.appendChild(renderer.domElement);
    LIGHTING
 ===================================================== */
 
-scene.add(new THREE.AmbientLight(0x444466, 1.2));
+scene.add(new THREE.AmbientLight(0x444466, 1.1));
+
 const sun = new THREE.DirectionalLight(0x88aaff, 2);
-sun.position.set(10, 30, 20);
+sun.position.set(30, 40, 20);
 scene.add(sun);
 
 /* =====================================================
-   STARFIELD (PARALLAX DESTEKLİ)
+   STARFIELD (HACİMSEL)
 ===================================================== */
 
-const starCount = 1600;
+const starCount = 1800;
 const starGeo = new THREE.BufferGeometry();
 const starPos = [];
 
 for (let i = 0; i < starCount; i++) {
     starPos.push(
-        (Math.random() - 0.5) * 600,
-        (Math.random() - 0.5) * 400,
-        -Math.random() * 2500
+        (Math.random() - 0.5) * 800,
+        (Math.random() - 0.5) * 500,
+        -Math.random() * 4000
     );
 }
 
@@ -64,25 +65,26 @@ starGeo.setAttribute(
     new THREE.Float32BufferAttribute(starPos, 3)
 );
 
-const starMat = new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.9
-});
-
-const stars = new THREE.Points(starGeo, starMat);
+const stars = new THREE.Points(
+    starGeo,
+    new THREE.PointsMaterial({ color: 0xffffff, size: 0.9 })
+);
 scene.add(stars);
 
 /* =====================================================
-   DEV GALAKSİLER
+   GALAXIES (RASTLANTISAL UFUK)
 ===================================================== */
 
 const galaxies = [];
 
 function spawnGalaxy() {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 400 + Math.random() * 400;
+
     const g = new THREE.Mesh(
         new THREE.TorusGeometry(
-            40 + Math.random() * 40,
-            8,
+            60 + Math.random() * 60,
+            10,
             16,
             64
         ),
@@ -95,53 +97,71 @@ function spawnGalaxy() {
     );
 
     g.position.set(
+        Math.cos(angle) * radius,
         (Math.random() - 0.5) * 200,
-        (Math.random() - 0.5) * 150,
-        -3000
+        -5000
     );
+
+    g.userData = {
+        drift: new THREE.Vector3(
+            -Math.cos(angle) * 0.15,
+            (Math.random() - 0.5) * 0.05,
+            1
+        ),
+        scaleSpeed: 0.0006 + Math.random() * 0.0006
+    };
 
     scene.add(g);
     galaxies.push(g);
 }
 
-for (let i = 0; i < 4; i++) spawnGalaxy();
+for (let i = 0; i < 5; i++) spawnGalaxy();
 
 /* =====================================================
-   ASTEROIDS
+   ASTEROIDS (ÇAPRAZ AKIŞ)
 ===================================================== */
 
 const asteroids = [];
 
 function spawnAsteroid() {
+    const side = Math.random() < 0.5 ? -1 : 1;
+
     const a = new THREE.Mesh(
         new THREE.IcosahedronGeometry(
-            2 + Math.random() * 3,
+            2 + Math.random() * 4,
             1
         ),
         new THREE.MeshStandardMaterial({
-            color: 0x555555,
+            color: 0x666666,
             roughness: 0.9,
             metalness: 0.1
         })
     );
 
     a.position.set(
-        (Math.random() - 0.5) * 80,
+        side * (50 + Math.random() * 80),
         (Math.random() - 0.5) * 40,
-        -1200
+        -3000
     );
 
-    a.userData.rot = new THREE.Vector3(
-        Math.random() * 0.01,
-        Math.random() * 0.01,
-        Math.random() * 0.01
-    );
+    a.userData = {
+        velocity: new THREE.Vector3(
+            -side * (0.2 + Math.random() * 0.4),
+            (Math.random() - 0.5) * 0.05,
+            2 + Math.random() * 1.5
+        ),
+        rot: new THREE.Vector3(
+            Math.random() * 0.02,
+            Math.random() * 0.02,
+            Math.random() * 0.02
+        )
+    };
 
     scene.add(a);
     asteroids.push(a);
 }
 
-setInterval(spawnAsteroid, 900);
+setInterval(spawnAsteroid, 700);
 
 /* =====================================================
    PLAYER SHIP
@@ -170,7 +190,6 @@ let chargePower = 0;
 
 let speed = 1.0;
 let targetSpeed = 1.0;
-
 let lateralVelocity = 0;
 
 window.addEventListener("keydown", e => {
@@ -222,24 +241,24 @@ function firePlasma(power) {
 function animate() {
     requestAnimationFrame(animate);
 
-    /* ---------- LATERAL MOVEMENT ---------- */
+    /* ---- SHIP LATERAL ---- */
     if (keys["ArrowLeft"]) lateralVelocity -= 0.03;
     if (keys["ArrowRight"]) lateralVelocity += 0.03;
     lateralVelocity *= 0.92;
 
     ship.position.x += lateralVelocity * 10;
-    ship.position.x = THREE.MathUtils.clamp(ship.position.x, -14, 14);
+    ship.position.x = THREE.MathUtils.clamp(ship.position.x, -16, 16);
 
-    /* ---------- SPEED ---------- */
+    /* ---- SPEED ---- */
     if (keys["ArrowUp"]) targetSpeed += 0.05;
     if (keys["ArrowDown"]) targetSpeed -= 0.05;
-    targetSpeed = THREE.MathUtils.clamp(targetSpeed, 0.5, 3.8);
+    targetSpeed = THREE.MathUtils.clamp(targetSpeed, 0.5, 4);
     speed += (targetSpeed - speed) * 0.08;
 
     camera.fov = baseFov + speed * 3.5;
     camera.updateProjectionMatrix();
 
-    /* ---------- CHARGE FEEDBACK ---------- */
+    /* ---- CHARGE ---- */
     if (charging) {
         chargePower = Math.min(120, chargePower + 1.5);
         ship.material.emissiveIntensity = 0.6 + chargePower / 60;
@@ -247,41 +266,44 @@ function animate() {
         ship.material.emissiveIntensity = 0.6;
     }
 
-    /* ---------- STAR PARALLAX ---------- */
+    /* ---- STARS ---- */
     const p = starGeo.attributes.position.array;
     for (let i = 2; i < p.length; i += 3) {
         p[i] += 2.2 * speed;
-        p[i - 2] -= lateralVelocity * 4; // parallax
-        if (p[i] > 40) p[i] = -2500;
+        p[i - 2] -= lateralVelocity * 4;
+        if (p[i] > 60) p[i] = -4000;
     }
     starGeo.attributes.position.needsUpdate = true;
 
-    /* ---------- GALAXIES ---------- */
+    /* ---- GALAXIES ---- */
     galaxies.forEach(g => {
-        g.position.z += 0.6 * speed;
-        g.rotation.z += 0.0004;
-        if (g.position.z > 200) {
-            g.position.z = -3000;
+        g.position.addScaledVector(g.userData.drift, speed);
+        g.scale.multiplyScalar(1 + g.userData.scaleSpeed * speed);
+        g.rotation.z += 0.0004 * speed;
+
+        if (g.position.z > 300) {
+            scene.remove(g);
+            galaxies.splice(galaxies.indexOf(g), 1);
+            spawnGalaxy();
         }
     });
 
-    /* ---------- ASTEROIDS ---------- */
+    /* ---- ASTEROIDS ---- */
     asteroids.forEach((a, i) => {
-        a.position.z += 1.2 * speed;
-        a.position.x -= lateralVelocity * 2;
+        a.position.addScaledVector(a.userData.velocity, speed);
         a.rotation.x += a.userData.rot.x;
         a.rotation.y += a.userData.rot.y;
 
-        if (a.position.z > 100) {
+        if (a.position.z > 200) {
             scene.remove(a);
             asteroids.splice(i, 1);
         }
     });
 
-    /* ---------- PLASMA ---------- */
+    /* ---- PLASMA ---- */
     shots.forEach((s, i) => {
         s.position.z -= s.userData.speed * speed;
-        if (s.position.z < -3000) {
+        if (s.position.z < -4000) {
             scene.remove(s);
             shots.splice(i, 1);
         }
