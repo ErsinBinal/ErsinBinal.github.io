@@ -1,185 +1,197 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8" />
-<title>River Raid WebGL</title>
+<meta charset="UTF-8">
+<title>River Raid 3D</title>
 <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        background: #000;
-        overflow: hidden;
-    }
-    canvas {
-        display: block;
-    }
+    body { margin: 0; overflow: hidden; background: #000; }
 </style>
 </head>
 <body>
 
-<canvas id="glCanvas"></canvas>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
 /* =====================================================
-   BASIC WEBGL SETUP (OpenGL ES mindset)
+   SCENE / CAMERA / RENDERER
 ===================================================== */
 
-const canvas = document.getElementById("glCanvas");
-const gl = canvas.getContext("webgl");
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x000000, 10, 120);
 
-if (!gl) {
-    alert("WebGL desteklenmiyor, çağ dışı tarayıcı kullanıyorsun 😄");
-}
+const camera = new THREE.PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    500
+);
+camera.position.set(0, 10, 20);
+camera.lookAt(0, 0, 0);
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    gl.viewport(0, 0, canvas.width, canvas.height);
-}
-window.addEventListener("resize", resize);
-resize();
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
 
 /* =====================================================
-   SHADERS
+   LIGHTING (güzellik burada başlar)
 ===================================================== */
 
-const vertexShaderSource = `
-attribute vec2 a_position;
-uniform vec2 u_resolution;
+scene.add(new THREE.AmbientLight(0x404040, 1.5));
 
-void main() {
-    vec2 zeroToOne = a_position / u_resolution;
-    vec2 zeroToTwo = zeroToOne * 2.0;
-    vec2 clipSpace = zeroToTwo - 1.0;
-    gl_Position = vec4(clipSpace * vec2(1, -1), 0, 1);
-}
-`;
-
-const fragmentShaderSource = `
-precision mediump float;
-uniform vec4 u_color;
-void main() {
-    gl_FragColor = u_color;
-}
-`;
-
-function createShader(type, source) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    return shader;
-}
-
-const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
-const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
-
-const program = gl.createProgram();
-gl.attachShader(program, vertexShader);
-gl.attachShader(program, fragmentShader);
-gl.linkProgram(program);
-gl.useProgram(program);
+const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+dirLight.position.set(5, 20, 10);
+scene.add(dirLight);
 
 /* =====================================================
-   ATTRIBUTES & UNIFORMS
+   PLAYER (uçak)
 ===================================================== */
 
-const positionLocation = gl.getAttribLocation(program, "a_position");
-const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-const colorLocation = gl.getUniformLocation(program, "u_color");
-
-const buffer = gl.createBuffer();
-gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-gl.enableVertexAttribArray(positionLocation);
-gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-
-gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+const player = new THREE.Mesh(
+    new THREE.ConeGeometry(0.7, 3, 12),
+    new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        metalness: 0.4,
+        roughness: 0.3
+    })
+);
+player.rotation.x = Math.PI / 2;
+player.position.y = 1;
+scene.add(player);
 
 /* =====================================================
-   GAME OBJECTS
+   RIVER
 ===================================================== */
 
-const player = {
-    x: canvas.width / 2,
-    y: canvas.height - 80,
-    width: 20,
-    height: 30,
-    speed: 6
-};
+const riverSegments = [];
+for (let i = 0; i < 50; i++) {
+    const segment = new THREE.Mesh(
+        new THREE.PlaneGeometry(10, 10),
+        new THREE.MeshStandardMaterial({
+            color: 0x003366,
+            metalness: 0.2,
+            roughness: 0.8
+        })
+    );
+    segment.rotation.x = -Math.PI / 2;
+    segment.position.z = -i * 10;
+    scene.add(segment);
+    riverSegments.push(segment);
+}
 
-let riverOffset = 0;
+/* =====================================================
+   BULLETS
+===================================================== */
+
+const bullets = [];
+
+function shoot() {
+    const bullet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xffcc00 })
+    );
+    bullet.position.copy(player.position);
+    scene.add(bullet);
+    bullets.push(bullet);
+}
+
+/* =====================================================
+   ENEMIES
+===================================================== */
+
+const enemies = [];
+
+function spawnEnemy() {
+    const enemy = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 1.5, 1.5),
+        new THREE.MeshStandardMaterial({
+            color: 0xff3333,
+            metalness: 0.6,
+            roughness: 0.2
+        })
+    );
+    enemy.position.set(
+        (Math.random() - 0.5) * 6,
+        1,
+        -120
+    );
+    scene.add(enemy);
+    enemies.push(enemy);
+}
+
+setInterval(spawnEnemy, 1200);
 
 /* =====================================================
    INPUT
 ===================================================== */
 
 const keys = {};
-window.addEventListener("keydown", e => keys[e.key] = true);
-window.addEventListener("keyup", e => keys[e.key] = false);
-
-/* =====================================================
-   DRAW HELPERS
-===================================================== */
-
-function drawRect(x, y, w, h, color) {
-    const vertices = new Float32Array([
-        x, y,
-        x + w, y,
-        x, y + h,
-        x, y + h,
-        x + w, y,
-        x + w, y + h
-    ]);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-    gl.uniform4fv(colorLocation, color);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-}
+window.addEventListener("keydown", e => {
+    keys[e.code] = true;
+    if (e.code === "Space") shoot();
+});
+window.addEventListener("keyup", e => keys[e.code] = false);
 
 /* =====================================================
    GAME LOOP
 ===================================================== */
 
-function update() {
-    if (keys["ArrowLeft"]) player.x -= player.speed;
-    if (keys["ArrowRight"]) player.x += player.speed;
+function animate() {
+    requestAnimationFrame(animate);
 
-    player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+    /* Player Movement */
+    if (keys["ArrowLeft"]) player.position.x -= 0.3;
+    if (keys["ArrowRight"]) player.position.x += 0.3;
+    player.position.x = THREE.MathUtils.clamp(player.position.x, -4, 4);
 
-    riverOffset += 4;
-    if (riverOffset > 40) riverOffset = 0;
+    /* River Flow */
+    riverSegments.forEach(seg => {
+        seg.position.z += 0.6;
+        if (seg.position.z > 10) seg.position.z = -490;
+    });
+
+    /* Bullets */
+    bullets.forEach((b, i) => {
+        b.position.z -= 1.2;
+        if (b.position.z < -150) {
+            scene.remove(b);
+            bullets.splice(i, 1);
+        }
+    });
+
+    /* Enemies */
+    enemies.forEach((e, ei) => {
+        e.position.z += 0.4;
+
+        bullets.forEach((b, bi) => {
+            if (b.position.distanceTo(e.position) < 1) {
+                scene.remove(e);
+                scene.remove(b);
+                enemies.splice(ei, 1);
+                bullets.splice(bi, 1);
+            }
+        });
+
+        if (e.position.z > 20) {
+            scene.remove(e);
+            enemies.splice(ei, 1);
+        }
+    });
+
+    renderer.render(scene, camera);
 }
 
-function render() {
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+animate();
 
-    /* River */
-    for (let i = -1; i < canvas.height / 40 + 1; i++) {
-        drawRect(
-            canvas.width * 0.25,
-            i * 40 + riverOffset,
-            canvas.width * 0.5,
-            20,
-            [0.0, 0.3, 0.6, 1.0]
-        );
-    }
+/* =====================================================
+   RESIZE
+===================================================== */
 
-    /* Player */
-    drawRect(
-        player.x,
-        player.y,
-        player.width,
-        player.height,
-        [1.0, 1.0, 1.0, 1.0]
-    );
-}
-
-function loop() {
-    update();
-    render();
-    requestAnimationFrame(loop);
-}
-
-loop();
+window.addEventListener("resize", () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
 </script>
 
 </body>
