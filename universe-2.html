@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<title>River Raid 3D</title>
+<title>Space Raid</title>
 <style>
     body { margin: 0; overflow: hidden; background: #000; }
 </style>
@@ -13,20 +13,15 @@
 
 <script>
 /* =====================================================
-   SCENE / CAMERA / RENDERER
+   CORE SETUP
 ===================================================== */
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x000000, 10, 120);
+scene.fog = new THREE.Fog(0x000010, 40, 260);
 
-const camera = new THREE.PerspectiveCamera(
-    70,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    500
-);
-camera.position.set(0, 10, 20);
-camera.lookAt(0, 0, 0);
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth/window.innerHeight, 0.1, 1000);
+camera.position.set(0, 12, 22);
+camera.lookAt(0, 0, -40);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -34,103 +29,112 @@ renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 /* =====================================================
-   LIGHTING (güzellik burada başlar)
+   LIGHTING
 ===================================================== */
 
-scene.add(new THREE.AmbientLight(0x404040, 1.5));
+scene.add(new THREE.AmbientLight(0x555577, 1.5));
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 2);
-dirLight.position.set(5, 20, 10);
-scene.add(dirLight);
+const keyLight = new THREE.DirectionalLight(0x88aaff, 2);
+keyLight.position.set(5, 30, 10);
+scene.add(keyLight);
 
 /* =====================================================
-   PLAYER (uçak)
+   STAR DOME (arkadaki hiçlik)
 ===================================================== */
 
-const player = new THREE.Mesh(
-    new THREE.ConeGeometry(0.7, 3, 12),
+const starGeometry = new THREE.SphereGeometry(500, 32, 32);
+const starMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    side: THREE.BackSide
+});
+
+const starMesh = new THREE.Mesh(starGeometry, starMaterial);
+scene.add(starMesh);
+
+/* =====================================================
+   PLAYER SHIP
+===================================================== */
+
+const ship = new THREE.Mesh(
+    new THREE.ConeGeometry(1, 4, 16),
     new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        metalness: 0.4,
-        roughness: 0.3
+        color: 0xddddff,
+        emissive: 0x222266,
+        metalness: 0.8,
+        roughness: 0.2
     })
 );
-player.rotation.x = Math.PI / 2;
-player.position.y = 1;
-scene.add(player);
+ship.rotation.x = Math.PI / 2;
+ship.position.y = 1.5;
+scene.add(ship);
 
 /* =====================================================
-   RIVER
+   SPACE LANE (geniş oyun yüzeyi)
 ===================================================== */
 
-const riverSegments = [];
-for (let i = 0; i < 50; i++) {
-    const segment = new THREE.Mesh(
-        new THREE.PlaneGeometry(10, 10),
+const lanes = [];
+for (let i = 0; i < 60; i++) {
+    const lane = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
         new THREE.MeshStandardMaterial({
-            color: 0x003366,
-            metalness: 0.2,
-            roughness: 0.8
+            color: 0x050515,
+            roughness: 1
         })
     );
-    segment.rotation.x = -Math.PI / 2;
-    segment.position.z = -i * 10;
-    scene.add(segment);
-    riverSegments.push(segment);
+    lane.rotation.x = -Math.PI / 2;
+    lane.position.z = -i * 20;
+    scene.add(lane);
+    lanes.push(lane);
 }
 
 /* =====================================================
-   BULLETS
-===================================================== */
-
-const bullets = [];
-
-function shoot() {
-    const bullet = new THREE.Mesh(
-        new THREE.SphereGeometry(0.2, 8, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffcc00 })
-    );
-    bullet.position.copy(player.position);
-    scene.add(bullet);
-    bullets.push(bullet);
-}
-
-/* =====================================================
-   ENEMIES
-===================================================== */
-
-const enemies = [];
-
-function spawnEnemy() {
-    const enemy = new THREE.Mesh(
-        new THREE.BoxGeometry(1.5, 1.5, 1.5),
-        new THREE.MeshStandardMaterial({
-            color: 0xff3333,
-            metalness: 0.6,
-            roughness: 0.2
-        })
-    );
-    enemy.position.set(
-        (Math.random() - 0.5) * 6,
-        1,
-        -120
-    );
-    scene.add(enemy);
-    enemies.push(enemy);
-}
-
-setInterval(spawnEnemy, 1200);
-
-/* =====================================================
-   INPUT
+   INPUT & CHARGE SYSTEM
 ===================================================== */
 
 const keys = {};
+let charging = false;
+let chargePower = 0;
+const maxCharge = 100;
+
 window.addEventListener("keydown", e => {
     keys[e.code] = true;
-    if (e.code === "Space") shoot();
+    if (e.code === "Space" && !charging) {
+        charging = true;
+        chargePower = 0;
+    }
 });
-window.addEventListener("keyup", e => keys[e.code] = false);
+
+window.addEventListener("keyup", e => {
+    keys[e.code] = false;
+    if (e.code === "Space" && charging) {
+        firePlasma(chargePower);
+        charging = false;
+        chargePower = 0;
+    }
+});
+
+/* =====================================================
+   PLASMA SHOTS
+===================================================== */
+
+const shots = [];
+
+function firePlasma(power) {
+    const size = THREE.MathUtils.clamp(power / 25, 0.5, 3);
+
+    const shot = new THREE.Mesh(
+        new THREE.SphereGeometry(size, 16, 16),
+        new THREE.MeshStandardMaterial({
+            color: 0x66ccff,
+            emissive: 0x2299ff,
+            emissiveIntensity: power / 40
+        })
+    );
+    shot.position.copy(ship.position);
+    shot.userData.speed = 1 + power / 30;
+    scene.add(shot);
+    shots.push(shot);
+}
 
 /* =====================================================
    GAME LOOP
@@ -139,42 +143,33 @@ window.addEventListener("keyup", e => keys[e.code] = false);
 function animate() {
     requestAnimationFrame(animate);
 
-    /* Player Movement */
-    if (keys["ArrowLeft"]) player.position.x -= 0.3;
-    if (keys["ArrowRight"]) player.position.x += 0.3;
-    player.position.x = THREE.MathUtils.clamp(player.position.x, -4, 4);
+    /* Movement */
+    if (keys["ArrowLeft"]) ship.position.x -= 0.4;
+    if (keys["ArrowRight"]) ship.position.x += 0.4;
+    ship.position.x = THREE.MathUtils.clamp(ship.position.x, -8, 8);
 
-    /* River Flow */
-    riverSegments.forEach(seg => {
-        seg.position.z += 0.6;
-        if (seg.position.z > 10) seg.position.z = -490;
+    /* Charging feedback */
+    if (charging) {
+        chargePower = Math.min(maxCharge, chargePower + 1.2);
+        ship.material.emissiveIntensity = 0.5 + chargePower / 80;
+    } else {
+        ship.material.emissiveIntensity = 0.5;
+    }
+
+    /* Space flow */
+    lanes.forEach(l => {
+        l.position.z += 0.8;
+        if (l.position.z > 20) l.position.z = -1200;
     });
 
-    /* Bullets */
-    bullets.forEach((b, i) => {
-        b.position.z -= 1.2;
-        if (b.position.z < -150) {
-            scene.remove(b);
-            bullets.splice(i, 1);
-        }
-    });
+    starMesh.rotation.y += 0.0003;
 
-    /* Enemies */
-    enemies.forEach((e, ei) => {
-        e.position.z += 0.4;
-
-        bullets.forEach((b, bi) => {
-            if (b.position.distanceTo(e.position) < 1) {
-                scene.remove(e);
-                scene.remove(b);
-                enemies.splice(ei, 1);
-                bullets.splice(bi, 1);
-            }
-        });
-
-        if (e.position.z > 20) {
-            scene.remove(e);
-            enemies.splice(ei, 1);
+    /* Shots */
+    shots.forEach((s, i) => {
+        s.position.z -= s.userData.speed;
+        if (s.position.z < -300) {
+            scene.remove(s);
+            shots.splice(i, 1);
         }
     });
 
@@ -188,7 +183,7 @@ animate();
 ===================================================== */
 
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
