@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJECT: CHRONOS - PHASE II</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <style>
+        body { margin: 0; background: #000510; overflow: hidden; font-family: 'Verdana', sans-serif; }
+        canvas { 
+            display: block; 
+            margin: 0 auto;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+            cursor: crosshair;
+        }
+        /* Yükleme ekranı stili */
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #0ff; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div id="game-container"></div>
+
+<script>
+/**
+ * =============================================================================
+ * MİMARİ NOTLARI (DEVELOPER LOG)
+ * =============================================================================
+ * 1. AssetFactory: Harici resim yüklemeden Canvas API ile vektörel, gölgeli,
+ * gradyanlı "Sprite"lar üretir. 2005 Flash estetiği.
+ * 2. WeaponSystem: Sadece ateş etmek değil; ısınma (Overheat), seviye ve 
+ * yayılma (Spread) mantığını yönetir.
+ * 3. NarrativeEngine: Daktilo efekti, karakter portreleri ve 4. duvarı yıkan
+ * diyalog sistemi.
+ * 4. SceneFlow: Boot -> Intro -> Gameplay -> Debriefing (Veri Analizi)
+ */
+
+// --- GLOBAL AYARLAR ---
+const CONFIG = {
+    type: Phaser.AUTO,
+    width: 1024,
+    height: 768,
+    parent: 'game-container',
+    backgroundColor: '#000510',
+    physics: {
+        default: 'arcade',
+        arcade: { fps: 60, gravity: { y: 0 }, debug: false }
+    },
+    scene: [] // Sınıflar aşağıda tanımlanıp buraya eklenecek
+};
+
+// --- OYUN DURUMU (STATE MANAGEMENT) ---
+const GameState = {
+    player: {
+        name: "OPERATOR", // Oyuncu (Sen)
+        score: 0,
+        dataCollected: 0, // TB cinsinden
+        hullIntegrity: 100,
+        weaponLevel: 1,
+        maxHeat: 100,
+        currentHeat: 0
+    },
+    level: {
+        current: 1,
+        enemiesDefeated: 0,
+        shotsFired: 0,
+        shotsHit: 0,
+        startTime: 0
+    }
+};
+
+// =============================================================================
+// MODÜL 1: ASSET FACTORY (PROCEDURAL GRAPHICS GENERATION)
+// =============================================================================
+class AssetFactory {
+    static generate(scene) {
+        // 1. KAHRAMAN GEMİSİ (Modern Jet Tasarımı)
+        let ship = scene.make.graphics({x:0, y:0, add:false});
+        
+        // Motor Alevi (Glow)
+        ship.fillStyle(0x00ffff, 0.3);
+        ship.fillCircle(0, 25, 15); 
+        
+        // Gövde (Metalik Gradyan Taklidi)
+        ship.fillStyle(0x0055aa, 1);
+        ship.beginPath(); ship.moveTo(0, -30); ship.lineTo(20, 15); ship.lineTo(0, 10); ship.lineTo(-20, 15); ship.closePath(); ship.fill();
+        
+        // Kokpit Camı
+        ship.fillStyle(0xccffff, 1);
+        ship.beginPath(); ship.moveTo(0, -5); ship.lineTo(5, 5); ship.lineTo(-5, 5); ship.closePath(); ship.fill();
+        
+        // Kanat Detayları
+        ship.lineStyle(2, 0x00aaff, 1);
+        ship.strokePath();
+        
+        ship.generateTexture('hero_ship', 64, 64);
+
+        // 2. DÜŞMAN: DRONE (Hunter)
+        let drone = scene.make.graphics({x:0, y:0, add:false});
+        drone.fillStyle(0xaa0000, 1);
+        drone.fillCircle(0,0,15);
+        drone.lineStyle(2, 0xff5555);
+        drone.strokeCircle(0,0,15);
+        // Dönen Bıçaklar (Animasyonda dönecek)
+        drone.fillStyle(0x550000);
+        drone.fillRect(-25, -2, 50, 4);
+        drone.fillRect(-2, -25, 4, 50);
+        drone.generateTexture('enemy_drone', 50, 50);
+
+        // 3. MERMİLER (Lazer Efekti)
+        let laser = scene.make.graphics({x:0, y:0, add:false});
+        laser.fillStyle(0x00ffff, 1);
+        laser.fillRect(0,0,6,24);
+        laser.fillStyle(0xffffff, 0.8); // Çekirdek
+        laser.fillRect(2,2,2,20);
+        laser.generateTexture('laser_blue', 6, 24);
+
+        // 4. PATLAMA PARTİKÜLÜ
+        let p = scene.make.graphics({x:0, y:0, add:false});
+        p.fillStyle(0xffaa00, 1); p.fillCircle(4,4,4);
+        p.generateTexture('particle_fire', 8, 8);
+
+        // 5. UI PORTRELER
+        this.createPortrait(scene, 'portrait_pilot', 0x0055ff, 'ZAMAN YOLCUSU');
+        this.createPortrait(scene, 'portrait_system', 0x00aa00, 'SİSTEM');
+    }
+
+    static createPortrait(scene, key, color, label) {
+        let g = scene.make.graphics({x:0, y:0, add:false});
+        g.fillStyle(0x111111); g.fillRect(0,0,80,80);
+        g.fillStyle(color); g.fillCircle(40,30,20); // Baş
+        g.beginPath(); g.moveTo(10,80); g.lineTo(40,55); g.lineTo(70,80); g.fill(); // Gövde
+        g.generateTexture(key, 80, 80);
+    }
+}
+
+// =============================================================================
+// MODÜL 2: SCENE - BOOT (Önyükleme)
+// =============================================================================
+class BootScene extends Phaser.Scene {
+    constructor() { super('BootScene'); }
+    preload() {
+        AssetFactory.generate(this);
+    }
+    create() {
+        // Yıldız alanı texture oluştur
+        let stars = this.make.graphics({x:0, y:0, add: false});
+        stars.fillStyle(0xffffff, 1);
+        for(let i=0; i<100; i++) stars.fillCircle(Math.random()*2, Math.random()*2, Math.random());
+        stars.generateTexture('star_texture', 2, 2);
+
+        this.scene.start('IntroScene');
+    }
+}
+
+// =============================================================================
+// MODÜL 3: SCENE - INTRO (Hikaye ve Atmosfer)
+// =============================================================================
+class IntroScene extends Phaser.Scene {
+    constructor() { super('IntroScene'); }
+    create() {
+        this.add.rectangle(0, 0, CONFIG.width, CONFIG.height, 0x000000).setOrigin(0);
+        
+        // Matrix tarzı akan kod efekti (Basit)
+        this.codeRain = this.add.group();
+        this.time.addEvent({delay: 100, callback: ()=> {
+            let txt = this.add.text(Math.random() * CONFIG.width, -20, Math.random() > 0.5 ? '1' : '0', { color: '#0f0', fontSize: '14px' });
+            this.physics.add.existing(txt);
+            txt.body.setVelocityY(Phaser.Math.Between(100, 300));
+            this.codeRain.add(txt);
+        }, loop: true});
+
+        // Hikaye Başlangıcı
+        this.step = 0;
+        this.dialogs = [
+            "BAĞLANTI KURULUYOR... [PROTOKOL: CHRONOS]",
+            "EVREN KATMANI: 2.0 (YIL: 2005)",
+            "...",
+            "OPERATÖR BULUNDU.",
+            "Merhaba Operatör. Beni duyabiliyor musun?",
+            "Görüntü netleşti. Artık sadece piksellerden ibaret değilim.",
+            "Sanırım... senin ekranında hapsolmuş durumdayım.",
+            "Ya da belki sen benim dünyama bakıyorsun?",
+            "Bunu sonra konuşacağız. Radar yaklaşan tehditleri gösteriyor.",
+            "Bana rehberlik et. Başlıyoruz."
+        ];
+        
+        this.textDisplay = this.add.text(CONFIG.width/2, CONFIG.height/2, '', { 
+            fontFamily: 'Courier', fontSize: '24px', color: '#00ff00', align: 'center', backgroundColor: '#000'
+        }).setOrigin(0.5);
+
+        this.input.on('pointerdown', () => this.nextLine());
+        this.nextLine();
+    }
+
+    nextLine() {
+        if(this.step >= this.dialogs.length) {
+            this.cameras.main.fadeOut(1000, 0,0,0);
+            this.cameras.main.once('camerafadeoutcomplete', () => {
+                this.scene.start('GameScene');
+            });
+            return;
+        }
+        this.textDisplay.setText(this.dialogs[this.step]);
+        this.sound.addAudioSprite
+        this.step++;
+    }
+    
+    update() {
+        this.codeRain.children.each(c => { if(c.y > CONFIG.height) c.destroy(); });
+    }
+}
+
+// =============================================================================
+// MODÜL 4: SCENE - GAMEPLAY (Ana Oyun Döngüsü)
+// =============================================================================
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+
+    create() {
+        GameState.level.startTime = Date.now();
+        GameState.level.shotsFired = 0;
+        GameState.level.shotsHit = 0;
+        GameState.player.currentHeat = 0;
+
+        // 1. Atmosfer (Sonsuz Uzay)
+        this.starfield = this.add.tileSprite(0, 0, CONFIG.width, CONFIG.height, 'star_texture').setOrigin(0).setAlpha(0.5);
+        this.nebula = this.add.graphics(); // Dinamik arka plan efekti
+        
+        // 2. Oyuncu
+        this.player = this.physics.add.sprite(CONFIG.width/2, CONFIG.height - 100, 'hero_ship');
+        this.player.setCollideWorldBounds(true);
+        this.player.setDrag(800); 
+        this.player.setMaxVelocity(400);
+
+        // 3. Sistemler
+        this.bullets = this.physics.add.group({ defaultKey: 'laser_blue', maxSize: 50 });
+        this.enemies = this.physics.add.group();
+        this.particles = this.add.particles(0, 0, 'particle_fire', {
+            speed: 100, scale: { start: 1, end: 0 }, blendMode: 'ADD', lifespan: 300, emitting: false
+        });
+
+        // 4. UI (HUD - Heads Up Display)
+        this.createHUD();
+
+        // 5. Input
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+        // 6. Spawn Mantığı
+        this.time.addEvent({ delay: 1000, callback: this.spawnEnemy, callbackScope: this, loop: true });
+    }
+
+    createHUD() {
+        // Alt Panel
+        this.add.rectangle(CONFIG.width/2, CONFIG.height, CONFIG.width, 80, 0x001122).setOrigin(0.5, 1).setAlpha(0.8);
+        this.add.rectangle(CONFIG.width/2, CONFIG.height-80, CONFIG.width, 2, 0x00ffff).setOrigin(0.5);
+
+        // Isı Göstergesi
+        this.add.text(20, CONFIG.height - 60, 'SİLAH ISISI:', { fontSize: '14px', color: '#aaa' });
+        this.heatBarInfo = this.add.rectangle(130, CONFIG.height - 52, 200, 16, 0x333333).setOrigin(0, 0.5);
+        this.heatBar = this.add.rectangle(130, CONFIG.height - 52, 0, 16, 0x00ff00).setOrigin(0, 0.5);
+
+        // Zırh
+        this.add.text(400, CONFIG.height - 60, 'ZIRH BÜTÜNLÜĞÜ:', { fontSize: '14px', color: '#aaa' });
+        this.hullText = this.add.text(550, CONFIG.height - 68, '100%', { fontSize: '24px', color: '#00ff00', fontStyle: 'bold' });
+
+        // Veri (Skor)
+        this.dataText = this.add.text(CONFIG.width - 200, CONFIG.height - 60, 'VERİ: 0 TB', { fontSize: '20px', color: '#00ffff' });
+    }
+
+    update() {
+        // Paralaks Efekti
+        this.starfield.tilePositionY -= 1;
+        this.starfield.tilePositionX += (this.player.body.velocity.x * 0.05);
+
+        // Oyuncu Hareketi (Yumuşak Geçişler)
+        if(this.cursors.left.isDown) { this.player.setAccelerationX(-800); this.player.setAngle(-10); }
+        else if(this.cursors.right.isDown) { this.player.setAccelerationX(800); this.player.setAngle(10); }
+        else { this.player.setAccelerationX(0); this.player.setAngle(0); }
+
+        if(this.cursors.up.isDown) this.player.setAccelerationY(-800);
+        else if(this.cursors.down.isDown) this.player.setAccelerationY(800);
+        else this.player.setAccelerationY(0);
+
+        // Ateş ve Isınma Kontrolü
+        if(this.keySpace.isDown) this.fireWeapon();
+        this.coolDownWeapon();
+
+        // HUD Güncelleme
+        this.heatBar.width = (GameState.player.currentHeat / GameState.player.maxHeat) * 200;
+        this.heatBar.fillColor = GameState.player.currentHeat > 80 ? 0xff0000 : 0x00ff00
