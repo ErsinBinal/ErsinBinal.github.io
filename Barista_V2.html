@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Barista | Single Page</title>
+
+<style>
+:root{
+  --bg:#12100e;
+  --surface:#1f1a17;
+  --primary:#d4af37;
+  --text:#e0d6cc;
+  --muted:#8c7b70;
+  font-family: "Courier New", monospace;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+}
+.container{
+  width:420px;
+  padding:20px;
+}
+.card{
+  background:var(--surface);
+  border-left:4px solid var(--primary);
+  padding:16px;
+  margin-bottom:16px;
+}
+button{
+  width:100%;
+  margin-top:8px;
+  padding:12px;
+  background:transparent;
+  border:1px solid #3e322b;
+  color:var(--text);
+  cursor:pointer;
+}
+button:hover{
+  border-color:var(--primary);
+  color:var(--primary);
+}
+.result{
+  display:none;
+  border:1px solid var(--primary);
+}
+.tag{
+  display:inline-block;
+  font-size:0.7rem;
+  background:#3e322b;
+  padding:4px 8px;
+  margin-right:6px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="card">
+  <strong>CYBER BARISTA</strong>
+  <div id="dialogue"></div>
+</div>
+
+<div id="options"></div>
+
+<div id="result" class="card result">
+  <h3 id="drinkName"></h3>
+  <div>
+    <span class="tag" id="tagBrand"></span>
+    <span class="tag" id="tagTemp"></span>
+    <span class="tag" id="tagCal"></span>
+  </div>
+  <p id="drinkDesc"></p>
+  <strong>İçerik</strong>
+  <p id="drinkRecipe"></p>
+  <em id="drinkTip"></em>
+  <hr>
+  <div id="playlist"></div>
+</div>
+
+</div>
+
+<script>
+/* =========================
+   DATABASE
+========================= */
+const coffeeDB = {
+  Starbucks:{
+    menu:[
+      {
+        name:"White Chocolate Mocha",
+        category:"latte",
+        temps:["hot","cold"],
+        moods:["indulge","social"],
+        calories:{hot:"350 kcal",cold:"300 kcal"},
+        recipe:{
+          hot:"Espresso + Beyaz Çikolata + Süt + Krema",
+          cold:"Espresso + Beyaz Çikolata + Süt + Buz"
+        },
+        desc:"Tatlı ve yoğun.",
+        tip:"Half sweet isteyebilirsin.",
+        playlist:["Coffee – Sylvan Esso"]
+      },
+      {
+        name:"Caffè Americano",
+        category:"espresso",
+        temps:["hot"],
+        moods:["focus","fit"],
+        calories:{hot:"15 kcal"},
+        recipe:{hot:"Espresso + Sıcak Su"},
+        desc:"Net ve sade.",
+        tip:"Misto deneyebilirsin.",
+        playlist:["Lo-Fi Focus"]
+      }
+    ]
+  },
+
+  Espressolab:{
+    menu:[
+      {
+        name:"Cortado",
+        category:"espresso",
+        temps:["hot"],
+        moods:["focus"],
+        calories:{hot:"60 kcal"},
+        recipe:{hot:"Espresso + Süt (1:1)"},
+        desc:"Dengeli ve tok.",
+        tip:"Sabah için ideal.",
+        playlist:["Acoustic Focus"]
+      }
+    ]
+  },
+
+  "Kahve Dünyası":{
+    menu:[
+      {
+        name:"Türk Kahvesi",
+        category:"traditional",
+        temps:["hot"],
+        moods:["relax","melancholy"],
+        calories:{hot:"20 kcal"},
+        recipe:{hot:"Türk Kahvesi + Su"},
+        desc:"Geleneksel.",
+        tip:"Lokumla içilir.",
+        playlist:["Zeki Müren"]
+      }
+    ]
+  }
+};
+
+/* =========================
+   QUESTIONS
+========================= */
+const steps = [
+  { key:"brand", text:"Hangi dükkandasın?", options:Object.keys(coffeeDB) },
+  { key:"temp", text:"Sıcak mı soğuk mu?", options:["hot","cold"] },
+  { key:"mood", text:"Modun?", options:["energy","focus","relax","indulge","fit","melancholy","social"] }
+];
+
+let step = 0;
+let prefs = {};
+
+const dialogue = document.getElementById("dialogue");
+const options = document.getElementById("options");
+
+/* =========================
+   RENDER
+========================= */
+function renderStep(){
+  options.innerHTML="";
+  dialogue.innerText = steps[step].text;
+
+  steps[step].options.forEach(opt=>{
+    const b=document.createElement("button");
+    b.innerText=opt;
+    b.onclick=()=>{
+      prefs[steps[step].key]=opt;
+      step++;
+      step < steps.length ? renderStep() : calculate();
+    };
+    options.appendChild(b);
+  });
+}
+
+/* =========================
+   MATCH ENGINE
+========================= */
+function matchCoffee(){
+  const menu = coffeeDB[prefs.brand].menu;
+  return menu
+    .filter(i=>i.temps.includes(prefs.temp))
+    .map(i=>{
+      let score=0;
+      if(i.moods.includes(prefs.mood)) score+=3;
+      if(i.category==="espresso" && prefs.mood==="focus") score++;
+      if(i.category==="latte" && prefs.mood==="indulge") score++;
+      return {i,score};
+    })
+    .sort((a,b)=>b.score-a.score)[0].i;
+}
+
+/* =========================
+   RESULT
+========================= */
+function calculate(){
+  options.style.display="none";
+  const c = matchCoffee();
+
+  document.getElementById("drinkName").innerText = c.name;
+  document.getElementById("tagBrand").innerText = prefs.brand;
+  document.getElementById("tagTemp").innerText = prefs.temp;
+  document.getElementById("tagCal").innerText = c.calories[prefs.temp];
+  document.getElementById("drinkDesc").innerText = c.desc;
+  document.getElementById("drinkRecipe").innerText = c.recipe[prefs.temp];
+  document.getElementById("drinkTip").innerText = c.tip;
+
+  const pl=document.getElementById("playlist");
+  pl.innerHTML="";
+  c.playlist.forEach(p=>pl.innerHTML+=`♪ ${p}<br>`);
+
+  document.getElementById("result").style.display="block";
+}
+
+renderStep();
+</script>
+</body>
+</html>
