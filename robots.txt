@@ -1,0 +1,16 @@
+# Convivium - Ersin Binal
+# https://ersinbinal.github.io
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ersinbinal.github.io/sitemap.xml
+
+# Assets (allow indexing)
+Allow: /assets/
+
+# Disallow temporary/development files
+Disallow: /scripts/
+Disallow: /.github/
+Disallow: /node_modules/
