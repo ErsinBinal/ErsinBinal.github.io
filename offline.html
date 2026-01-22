@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline - Convivium</title>
+  <style>
+    :root {
+      --bg: #000;
+      --primary: #00ff00;
+      --dim: #007700;
+    }
+    body {
+      background: var(--bg);
+      color: var(--primary);
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container {
+      max-width: 500px;
+      padding: 40px 20px;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      box-shadow: 0 0 20px var(--dim);
+    }
+    h1 {
+      font-size: 2em;
+      margin: 0 0 20px;
+      animation: flicker 3s infinite;
+    }
+    p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: var(--dim);
+    }
+    .icon {
+      font-size: 4em;
+      margin-bottom: 20px;
+    }
+    .retry-btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-family: inherit;
+      font-size: 1em;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: all 0.3s;
+    }
+    .retry-btn:hover {
+      background: var(--primary);
+      color: var(--bg);
+      box-shadow: 0 0 15px var(--primary);
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      41% { opacity: 1; }
+      42% { opacity: 0.8; }
+      43% { opacity: 1; }
+      45% { opacity: 0.3; }
+      46% { opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      h1 { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">&#x26A0;</div>
+    <h1>Cevrimdisi<span style="animation: blink 1s step-start infinite;">_</span></h1>
+    <p>
+      Internet baglantisi bulunamadi.<br>
+      Lutfen baglantiyi kontrol edip tekrar deneyin.
+    </p>
+    <button class="retry-btn" onclick="location.reload()">
+      Tekrar Dene
+    </button>
+  </div>
+  <style>
+    @keyframes blink { 50% { opacity: 0; } }
+  </style>
+</body>
+</html>
