@@ -2,503 +2,450 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon River - Chapter I | Convivium</title>
-    <meta name="description" content="Bir zamanlar basit bir oyundu... 5. boyutun duvarlarını yıkan bir yolculuğun başlangıcı.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon River | Convivium</title>
+    <meta name="description" content="Neon River - Arcade tarzi aksiyon oyunu. Phaser.js ile gelistirildi.">
     <meta name="author" content="Ersin Binal">
+    <link rel="canonical" href="https://ersinbinal.github.io/neon-river.html">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self';">
+
+    <!-- OpenGraph -->
+    <meta property="og:site_name" content="Convivium">
+    <meta property="og:title" content="Neon River | Convivium">
+    <meta property="og:description" content="Arcade tarzi aksiyon oyunu.">
+    <meta property="og:type" content="game">
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#00ffff">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #000;
-            overflow: hidden;
-            font-family: 'Courier New', monospace;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-
-        /* CGA Renk Paleti */
-        :root {
-            --cga-black: #000000;
-            --cga-cyan: #00AAAA;
-            --cga-magenta: #AA00AA;
-            --cga-white: #AAAAAA;
-            --cga-bright-cyan: #55FFFF;
-            --cga-bright-magenta: #FF55FF;
-            --cga-yellow: #FFFF55;
-        }
-
-        #gameCanvas {
-            display: block;
-            margin: 0 auto;
-            background: #000;
-            border: 4px solid var(--cga-cyan);
-            box-shadow: 0 0 30px rgba(0, 170, 170, 0.5);
-        }
-
-        /* Scanline Effect */
-        #gameCanvas::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: repeating-linear-gradient(
-                0deg,
-                rgba(0,0,0,0.15) 0px,
-                transparent 1px,
-                transparent 2px,
-                rgba(0,0,0,0.15) 3px
-            );
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        /* Portal Overlay */
-        #portalOverlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: radial-gradient(circle, transparent 0%, #000 100%);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-            z-index: 1000;
-        }
-
-        #portalOverlay.active {
-            opacity: 1;
-        }
-
-        /* Loading Message */
-        #loadingMsg {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: var(--cga-bright-cyan);
-            font-size: 24px;
-            text-align: center;
-            opacity: 0;
-            z-index: 2000;
-            text-shadow: 0 0 10px var(--cga-cyan);
-        }
-
-        #loadingMsg.show {
-            opacity: 1;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
+        body { margin: 0; padding: 0; background: #050510; overflow: hidden; touch-action: none; font-family: 'Courier New', Courier, monospace; }
+        #game-container { width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; }
+        canvas { box-shadow: 0 0 60px rgba(0,255,255,0.1); image-rendering: pixelated; }
+        /* CRT Efekti */
+        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 4px; pointer-events: none; z-index: 100; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="portalOverlay"></div>
-    <div id="loadingMsg">DIMENSIONAL BREACH DETECTED<br>PREPARING JUMP...</div>
 
-    <script>
-        // ============================================
-        // NEON RIVER - CHAPTER I: THE BEGINNING
-        // Oyun tarihinin evrimini anlatan bir yolculuk
-        // ============================================
+<div class="scanlines"></div>
+<div id="game-container"></div>
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const portalOverlay = document.getElementById('portalOverlay');
-        const loadingMsg = document.getElementById('loadingMsg');
+<script>
+// --- SES MOTORU (Synthesizer) ---
+// Harici dosya olmadan ses üretir
+const SynthAudio = {
+    ctx: null,
+    init: function() {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        this.ctx = new AudioContext();
+    },
+    playTone: function(freq, type, duration, vol=0.1) {
+        if(!this.ctx) this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    },
+    playShoot: function() { this.playTone(800, 'square', 0.1, 0.05); },
+    playExplosion: function() { 
+        // Gürültü simülasyonu için düşük frekanslı testere dişi
+        this.playTone(100, 'sawtooth', 0.3, 0.1); 
+        setTimeout(()=>this.playTone(50, 'square', 0.3, 0.1), 50);
+    },
+    playPowerup: function() {
+        this.playTone(400, 'sine', 0.1, 0.1);
+        setTimeout(()=>this.playTone(600, 'sine', 0.1, 0.1), 100);
+        setTimeout(()=>this.playTone(1000, 'sine', 0.2, 0.1), 200);
+    },
+    playFuel: function() { this.playTone(300, 'triangle', 0.15, 0.1); }
+};
 
-        // Canvas boyutu - DOS çağına uygun 320x200 upscaled
-        const GAME_WIDTH = 320;
-        const GAME_HEIGHT = 200;
-        const SCALE = Math.min(
-            Math.floor(window.innerWidth / GAME_WIDTH),
-            Math.floor(window.innerHeight / GAME_HEIGHT)
-        );
+// --- OYUN AYARLARI ---
+const CONFIG = {
+    type: Phaser.AUTO,
+    width: Math.min(window.innerWidth, 1024),
+    height: window.innerHeight,
+    parent: 'game-container',
+    pixelArt: true,
+    physics: { default: 'arcade', arcade: { gravity: { y: 0 }, debug: false } },
+    scene: [] // Aşağıda tanımlayacağız
+};
 
-        canvas.width = GAME_WIDTH;
-        canvas.height = GAME_HEIGHT;
-        canvas.style.width = (GAME_WIDTH * SCALE) + 'px';
-        canvas.style.height = (GAME_HEIGHT * SCALE) + 'px';
+// --- GLOBAL VERİLER ---
+const SHIPS = [
+    { id: 0, name: 'SPEEDSTER', color: 0x00aaff, speed: 600, rate: 200, desc: 'HIZLI & ÇEVİK' },
+    { id: 1, name: 'HEAVY METAL', color: 0xff0055, speed: 350, rate: 350, desc: 'AĞIR & GÜÇLÜ' },
+    { id: 2, name: 'BALANCED', color: 0x00ff00, speed: 450, rate: 250, desc: 'DENGELİ SEÇİM' }
+];
+let selectedShipIndex = 2;
 
-        // CGA Renk Paleti
-        const COLORS = {
-            BLACK: '#000000',
-            CYAN: '#00AAAA',
-            MAGENTA: '#AA00AA',
-            WHITE: '#AAAAAA',
-            BRIGHT_CYAN: '#55FFFF',
-            BRIGHT_MAGENTA: '#FF55FF',
-            YELLOW: '#FFFF55'
-        };
+// --- YARDIMCI: 3D VOXEL ÇİZİCİ ---
+function createVoxelTexture(scene, key, matrix, palette, scale=1) {
+    let g = scene.make.graphics({x:0, y:0, add:false});
+    const size = 8 * scale;
+    const depth = size / 2;
+    
+    // Arkadan öne çizim
+    for(let y=0; y<matrix.length; y++) {
+        for(let x=0; x<matrix[y].length; x++) {
+            let colorCode = matrix[y][x];
+            if(colorCode && palette[colorCode]) {
+                let color = palette[colorCode];
+                let px = x * size;
+                let py = y * size;
+                
+                // Yan Yüzeyler (Gölge)
+                g.fillStyle(Phaser.Display.Color.IntegerToColor(color).darken(30).color, 1);
+                g.fillRect(px, py+size, size, depth); // Alt
+                g.fillStyle(Phaser.Display.Color.IntegerToColor(color).darken(15).color, 1);
+                g.fillRect(px+size, py, depth, size); // Sağ
+                
+                // Ön Yüz
+                g.fillStyle(color, 1);
+                g.fillRect(px, py, size, size);
+                
+                // Parlama
+                g.fillStyle(0xffffff, 0.2);
+                g.fillRect(px, py, size, 2);
+            }
+        }
+    }
+    g.generateTexture(key, matrix[0].length * size + depth, matrix.length * size + depth);
+}
 
-        // Oyun Durumu
-        let gameState = 'PLAYING'; // PLAYING, PORTAL_OPENING, TRANSITIONING
-        let score = 0;
-        let lives = 3;
-        let gameSpeed = 2;
+// =============================================================================
+// SAHNE 1: MENU & HANGAR & SKOR TABLOSU
+// =============================================================================
+class MenuScene extends Phaser.Scene {
+    constructor() { super('MenuScene'); }
 
-        // Portal
-        let portalActive = false;
-        let portalRadius = 0;
-        let portalRotation = 0;
-        let portalPulse = 0;
-        let playerInPortal = false;
-        let transitionProgress = 0;
+    preload() {
+        // Gemi Grafikleri (Menu için)
+        const shipMatrix = [[0,1,0],[1,1,1],[1,2,1],[1,3,1]];
+        SHIPS.forEach((ship, idx) => {
+            let palette = { 
+                1: ship.color, 
+                2: 0xccffff, // Cam
+                3: 0xffaa00  // Motor
+            };
+            createVoxelTexture(this, 'ship_icon_'+idx, shipMatrix, palette, 4);
+        });
+    }
 
-        // Oyuncu
-        const player = {
-            x: GAME_WIDTH / 2,
-            y: GAME_HEIGHT - 30,
-            width: 8,
-            height: 12,
-            speed: 3,
-            color: COLORS.BRIGHT_CYAN
-        };
+    create() {
+        let cw = this.cameras.main.width;
+        let ch = this.cameras.main.height;
 
-        // Portal konumu (ekranın ortasında)
-        const portal = {
-            x: GAME_WIDTH / 2,
-            y: GAME_HEIGHT / 3,
-            targetRadius: 30
-        };
+        // Başlık
+        this.add.text(cw/2, 50, 'NEON RIVER', { fontSize: '64px', color: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0,0,'#00ffff',10);
+        this.add.text(cw/2, 100, 'ULTIMATE EDITION', { fontSize: '24px', color: '#ffffff' }).setOrigin(0.5);
+
+        // --- GEMİ SEÇİMİ ---
+        this.add.text(cw/2, 160, '< UÇAK SEÇİMİ >', { fontSize: '20px', color: '#ffff00' }).setOrigin(0.5);
+        
+        this.shipDisplay = this.add.image(cw/2, 230, 'ship_icon_'+selectedShipIndex);
+        this.shipName = this.add.text(cw/2, 300, SHIPS[selectedShipIndex].name, { fontSize: '28px', color: '#fff' }).setOrigin(0.5);
+        this.shipDesc = this.add.text(cw/2, 330, SHIPS[selectedShipIndex].desc, { fontSize: '18px', color: '#aaa' }).setOrigin(0.5);
+
+        // Ok butonları
+        let leftBtn = this.add.text(cw/2 - 120, 230, '<', { fontSize: '64px', color: '#0f0' }).setOrigin(0.5).setInteractive();
+        let rightBtn = this.add.text(cw/2 + 120, 230, '>', { fontSize: '64px', color: '#0f0' }).setOrigin(0.5).setInteractive();
+
+        leftBtn.on('pointerdown', () => this.changeShip(-1));
+        rightBtn.on('pointerdown', () => this.changeShip(1));
+
+        // --- SKOR TABLOSU ---
+        this.add.text(cw/2, 400, 'EN YÜKSEK SKORLAR', { fontSize: '20px', color: '#ff00ff' }).setOrigin(0.5);
+        let scores = JSON.parse(localStorage.getItem('neonHighScores')) || [0,0,0];
+        scores.sort((a,b) => b-a);
+        scores.slice(0,3).forEach((s, i) => {
+            this.add.text(cw/2, 440 + (i*30), (i+1) + '. ' + s, { fontSize: '20px', color: '#fff' }).setOrigin(0.5);
+        });
+
+        // --- BAŞLAT BUTONU ---
+        let startBtn = this.add.rectangle(cw/2, ch - 80, 300, 60, 0x00ff00).setInteractive();
+        this.add.text(cw/2, ch - 80, 'BAŞLAT', { fontSize: '32px', color: '#000', fontStyle: 'bold' }).setOrigin(0.5);
+
+        startBtn.on('pointerdown', () => {
+            SynthAudio.init(); // Ses motorunu başlat (Kullanıcı etkileşimi şart)
+            SynthAudio.playPowerup();
+            this.scene.start('GameScene');
+        });
+    }
+
+    changeShip(dir) {
+        selectedShipIndex += dir;
+        if(selectedShipIndex < 0) selectedShipIndex = SHIPS.length - 1;
+        if(selectedShipIndex >= SHIPS.length) selectedShipIndex = 0;
+        
+        this.shipDisplay.setTexture('ship_icon_'+selectedShipIndex);
+        this.shipName.setText(SHIPS[selectedShipIndex].name);
+        this.shipDesc.setText(SHIPS[selectedShipIndex].desc);
+        SynthAudio.playFuel(); // Tık sesi
+    }
+}
+
+// =============================================================================
+// SAHNE 2: OYUN (GAMEPLAY)
+// =============================================================================
+class GameScene extends Phaser.Scene {
+    constructor() { super('GameScene'); }
+
+    preload() {
+        // --- TEXTURE GENERATION ---
+        
+        // 1. ZEMİN (Su)
+        let g = this.make.graphics({x:0, y:0, add:false});
+        g.fillStyle(0x002244, 1); g.fillRect(0,0,64,64);
+        g.fillStyle(0x004488, 1); g.fillRect(10,10,10,4); g.fillRect(30,40,20,4);
+        g.generateTexture('water', 64, 64);
+
+        // 2. VOXEL ARAZİ (Ağaçlar ve Dağlar)
+        // Ağaç
+        createVoxelTexture(this, 'tree', [
+            [0,1,0],[1,1,1],[1,1,1],[0,2,0]
+        ], { 1: 0x00aa00, 2: 0x664422 }, 3); // Yeşil ve Kahve
+        
+        // Dağ (Kaya)
+        createVoxelTexture(this, 'rock', [
+            [0,1,0],[1,1,1],[1,1,1],[1,1,1]
+        ], { 1: 0x555555 }, 4); // Gri
+
+        // 3. GEMİLER VE OBJEKLER
+        // Oyuncu Gemisi (Daha küçük, oyun içi)
+        createVoxelTexture(this, 'player', [[0,0,1,0,0],[0,1,1,1,0],[1,1,2,1,1],[1,0,3,0,1]], 
+        { 1: SHIPS[selectedShipIndex].color, 2: 0xccffff, 3: 0xffaa00 }, 2);
 
         // Düşmanlar
-        const enemies = [];
-        const bullets = [];
-        const particles = [];
+        createVoxelTexture(this, 'enemy1', [[1,0,1],[0,1,0],[1,1,1],[0,2,0]], { 1: 0xff0000, 2:0xaaaaaa }, 3);
+        createVoxelTexture(this, 'enemy2', [[0,1,0],[1,2,1],[1,1,1]], { 1: 0xaa00aa, 2:0xff00ff }, 4);
+
+        // Yakıt
+        createVoxelTexture(this, 'fuel', [[1,2,1],[1,2,1],[1,1,1]], { 1: 0xff0000, 2: 0xffffff }, 3);
+
+        // Mermiler
+        let gb = this.make.graphics({x:0, y:0, add:false});
+        gb.fillStyle(0xffff00); gb.fillRect(0,0,6,12); gb.generateTexture('bullet', 6, 12);
+        gb.fillStyle(0xffffff); gb.fillRect(0,0,4,4); gb.generateTexture('particle', 4, 4);
+    }
+
+    create() {
+        this.W = this.cameras.main.width;
+        this.H = this.cameras.main.height;
+        this.score = 0;
+        this.fuel = 100;
+        this.gameSpeed = 4;
+        this.isOver = false;
+        
+        // Nehir
+        this.river = this.add.tileSprite(this.W/2, this.H/2, this.W, this.H, 'water');
+
+        // Arazi Grubu (Terrain)
+        this.terrainGroup = this.add.group(); // Ağaçlar ve dağlar
+
+        // Oyuncu
+        this.player = this.physics.add.sprite(this.W/2, this.H - 100, 'player');
+        this.player.setCollideWorldBounds(true);
+        this.player.setDrag(800);
+        this.player.setDepth(10);
+
+        // Gruplar
+        this.bullets = this.physics.add.group();
+        this.enemies = this.physics.add.group();
+        this.fuels = this.physics.add.group();
+
+        // UI
+        this.scoreText = this.add.text(20, 20, 'SKOR: 0', { fontSize: '24px', stroke: '#000', strokeThickness: 4 });
+        this.fuelBar = this.add.rectangle(this.W - 120, 30, 200, 16, 0x00ff00).setOrigin(1, 0.5);
+        this.add.rectangle(this.W - 120, 30, 204, 20).setStrokeStyle(2, 0xffffff).setOrigin(1, 0.5);
+        this.add.text(this.W - 240, 22, 'YAKIT', { fontSize: '16px' });
 
         // Kontroller
-        const keys = {};
-
-        window.addEventListener('keydown', (e) => {
-            keys[e.code] = true;
-            if (e.code === 'Space') {
-                shootBullet();
-                e.preventDefault();
+        this.cursors = this.input.keyboard.createCursorKeys();
+        this.input.on('pointermove', (p) => {
+            if(!this.isOver && p.isDown) {
+                this.physics.moveTo(this.player, p.x, p.y-50, SHIPS[selectedShipIndex].speed);
+                this.fire();
             }
         });
 
-        window.addEventListener('keyup', (e) => {
-            keys[e.code] = false;
+        // Zamanlayıcılar
+        this.time.addEvent({ delay: 1000, callback: this.spawnManager, callbackScope: this, loop: true });
+        this.time.addEvent({ delay: 100, callback: this.spawnTerrain, callbackScope: this, loop: true });
+        this.time.addEvent({ delay: 500, callback: this.burnFuel, callbackScope: this, loop: true });
+
+        // Çarpışmalar
+        this.physics.add.overlap(this.bullets, this.enemies, this.hitEnemy, null, this);
+        this.physics.add.overlap(this.bullets, this.fuels, this.hitFuel, null, this); // Yakıtı vurma!
+        this.physics.add.overlap(this.player, this.enemies, this.crash, null, this);
+        this.physics.add.overlap(this.player, this.fuels, this.collectFuel, null, this);
+    }
+
+    update() {
+        if(this.isOver) return;
+
+        // Arka plan akışı
+        this.river.tilePositionY -= this.gameSpeed;
+
+        // Arazi akışı (Terrain)
+        this.terrainGroup.children.each(t => {
+            t.y += this.gameSpeed;
+            if(t.y > this.H + 50) t.destroy();
         });
 
-        // Basit ses sistemi
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Klavye Kontrolü
+        this.player.setVelocityX(0);
+        this.player.setVelocityY(0);
+        let s = SHIPS[selectedShipIndex].speed;
+        
+        if(this.cursors.left.isDown) this.player.setVelocityX(-s);
+        else if(this.cursors.right.isDown) this.player.setVelocityX(s);
+        if(this.cursors.up.isDown) this.player.setVelocityY(-s);
+        else if(this.cursors.down.isDown) this.player.setVelocityY(s);
 
-        function playSound(freq, duration, type = 'square') {
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = type;
-            osc.frequency.value = freq;
-            gain.gain.value = 0.1;
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
+        if(this.cursors.space.isDown) this.fire();
 
-        function shootBullet() {
-            bullets.push({
-                x: player.x,
-                y: player.y - 5,
-                width: 2,
-                height: 6,
-                speed: 4,
-                color: COLORS.YELLOW
-            });
-            playSound(800, 0.1);
-        }
+        // Yakıt Barı
+        this.fuelBar.width = (this.fuel / 100) * 200;
+        this.fuelBar.fillColor = this.fuel < 30 ? 0xff0000 : 0x00ff00;
 
-        function spawnEnemy() {
-            enemies.push({
-                x: Math.random() * (GAME_WIDTH - 20) + 10,
-                y: -10,
-                width: 8,
-                height: 8,
-                speed: 1 + Math.random(),
-                color: Math.random() > 0.5 ? COLORS.MAGENTA : COLORS.BRIGHT_MAGENTA
-            });
-        }
+        // Temizlik
+        this.bullets.children.each(b => { if(b.y < -20) b.destroy(); });
+        this.enemies.children.each(e => { if(e.y > this.H + 50) e.destroy(); });
+    }
 
-        function createExplosion(x, y, color) {
-            for (let i = 0; i < 8; i++) {
-                particles.push({
-                    x: x,
-                    y: y,
-                    vx: (Math.random() - 0.5) * 3,
-                    vy: (Math.random() - 0.5) * 3,
-                    life: 20,
-                    color: color
-                });
-            }
-            playSound(150, 0.2, 'sawtooth');
-        }
+    // --- MEKANİKLER ---
 
-        function updateGame() {
-            // Oyuncu hareketi
-            if (keys['ArrowLeft'] && player.x > player.width / 2) {
-                player.x -= player.speed;
-            }
-            if (keys['ArrowRight'] && player.x < GAME_WIDTH - player.width / 2) {
-                player.x += player.speed;
-            }
-            if (keys['ArrowUp'] && player.y > player.height / 2) {
-                player.y -= player.speed;
-            }
-            if (keys['ArrowDown'] && player.y < GAME_HEIGHT - player.height / 2) {
-                player.y += player.speed;
-            }
-
-            // Mermiler
-            bullets.forEach((bullet, i) => {
-                bullet.y -= bullet.speed;
-                if (bullet.y < 0) {
-                    bullets.splice(i, 1);
-                }
-            });
-
-            // Düşmanlar
-            enemies.forEach((enemy, i) => {
-                enemy.y += enemy.speed * gameSpeed;
-
-                if (enemy.y > GAME_HEIGHT) {
-                    enemies.splice(i, 1);
-                }
-
-                // Çarpışma kontrolü (mermi - düşman)
-                bullets.forEach((bullet, bi) => {
-                    if (Math.abs(bullet.x - enemy.x) < 6 &&
-                        Math.abs(bullet.y - enemy.y) < 6) {
-                        createExplosion(enemy.x, enemy.y, enemy.color);
-                        enemies.splice(i, 1);
-                        bullets.splice(bi, 1);
-                        score += 100;
-
-                        // 3000 puana ulaşınca portal aç!
-                        if (score >= 3000 && !portalActive && gameState === 'PLAYING') {
-                            activatePortal();
-                        }
-                    }
-                });
-
-                // Oyuncu çarpışması
-                if (Math.abs(player.x - enemy.x) < 8 &&
-                    Math.abs(player.y - enemy.y) < 8) {
-                    createExplosion(player.x, player.y, COLORS.BRIGHT_CYAN);
-                    lives--;
-                    player.x = GAME_WIDTH / 2;
-                    player.y = GAME_HEIGHT - 30;
-
-                    if (lives <= 0) {
-                        gameState = 'GAME_OVER';
-                    }
-                }
-            });
-
-            // Partiküller
-            particles.forEach((p, i) => {
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life--;
-                if (p.life <= 0) {
-                    particles.splice(i, 1);
-                }
-            });
-
-            // Portal animasyonu
-            if (portalActive && gameState === 'PORTAL_OPENING') {
-                portalRadius += 1;
-                portalRotation += 0.05;
-                portalPulse = Math.sin(Date.now() / 100) * 5;
-
-                // Portal tamamen açıldı
-                if (portalRadius >= portal.targetRadius) {
-                    gameState = 'PLAYING'; // Portal açık, oyun devam
-                }
-            }
-
-            // Oyuncu portala girdi mi?
-            if (portalActive && gameState === 'PLAYING') {
-                const dist = Math.sqrt(
-                    Math.pow(player.x - portal.x, 2) +
-                    Math.pow(player.y - portal.y, 2)
-                );
-
-                if (dist < portalRadius) {
-                    startDimensionalJump();
-                }
-            }
-
-            // Boyut atlama animasyonu
-            if (gameState === 'TRANSITIONING') {
-                transitionProgress += 0.02;
-                portalRadius += 2;
-                portalRotation += 0.1;
-
-                if (transitionProgress >= 1) {
-                    // Universe-2'ye geçiş yap!
-                    window.location.href = 'universe-2.html';
-                }
+    spawnManager() {
+        if(this.isOver) return;
+        let x = Phaser.Math.Between(100, this.W - 100);
+        
+        if(Phaser.Math.Between(0, 100) < 20) {
+            let f = this.fuels.create(x, -50, 'fuel');
+            f.setVelocityY(this.gameSpeed * 40);
+        } else {
+            let type = Phaser.Math.Between(0,1) ? 'enemy1' : 'enemy2';
+            let e = this.enemies.create(x, -50, type);
+            e.setVelocityY(this.gameSpeed * 50 + 50);
+            if(type === 'enemy1') { // S-Çizen düşman
+                 this.tweens.add({ targets: e, x: e.x + 100, duration: 2000, yoyo: true, repeat: -1 });
             }
         }
+    }
 
-        function activatePortal() {
-            portalActive = true;
-            gameState = 'PORTAL_OPENING';
-            playSound(400, 0.3, 'sine');
-            setTimeout(() => playSound(600, 0.3, 'sine'), 100);
-            setTimeout(() => playSound(800, 0.5, 'sine'), 200);
+    spawnTerrain() {
+        // Ekranın sağ ve soluna rastgele ağaç/kaya ekle
+        if(Phaser.Math.Between(0, 100) > 85) { // Sıklık
+            let side = Phaser.Math.Between(0, 1) ? 0 : 1; // 0: Sol, 1: Sağ
+            let texture = Phaser.Math.Between(0, 1) ? 'tree' : 'rock';
+            
+            // Konum hesapla (Nehir kenarları)
+            let x = side === 0 ? Phaser.Math.Between(20, 80) : Phaser.Math.Between(this.W - 80, this.W - 20);
+            
+            let obj = this.add.image(x, -50, texture);
+            obj.setScale(Phaser.Math.FloatBetween(0.8, 1.2)); // Rastgele boyut
+            this.terrainGroup.add(obj);
         }
+    }
 
-        function startDimensionalJump() {
-            gameState = 'TRANSITIONING';
-            portalOverlay.classList.add('active');
-            loadingMsg.classList.add('show');
-            playSound(200, 2, 'sine');
-        }
+    fire() {
+        let now = this.time.now;
+        if(!this.lastFired) this.lastFired = 0;
+        if(now - this.lastFired < SHIPS[selectedShipIndex].rate) return;
 
-        function drawGame() {
-            // Temizle
-            ctx.fillStyle = COLORS.BLACK;
-            ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+        let b = this.bullets.create(this.player.x, this.player.y - 30, 'bullet');
+        b.setVelocityY(-800);
+        SynthAudio.playShoot();
+        this.lastFired = now;
+    }
 
-            // Basit yıldız arka planı
-            ctx.fillStyle = COLORS.WHITE;
-            for (let i = 0; i < 30; i++) {
-                const x = (i * 37 + Date.now() / 50) % GAME_WIDTH;
-                const y = (i * 17) % GAME_HEIGHT;
-                ctx.fillRect(x, y, 1, 1);
-            }
+    hitEnemy(bullet, enemy) {
+        bullet.destroy();
+        enemy.destroy();
+        this.explosionEffect(enemy.x, enemy.y, 0xffaa00);
+        SynthAudio.playExplosion();
+        this.score += 100;
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
 
-            // Portal çiz (eğer aktifse)
-            if (portalActive) {
-                const px = portal.x;
-                const py = portal.y;
+    collectFuel(player, fuel) {
+        fuel.destroy();
+        this.fuel = Math.min(100, this.fuel + 30);
+        SynthAudio.playFuel();
+        this.score += 50;
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
 
-                // Portal halkaları
-                for (let i = 0; i < 5; i++) {
-                    const r = portalRadius - i * 5 + portalPulse;
-                    if (r > 0) {
-                        ctx.strokeStyle = i % 2 === 0 ? COLORS.BRIGHT_CYAN : COLORS.BRIGHT_MAGENTA;
-                        ctx.lineWidth = 2;
-                        ctx.beginPath();
-                        ctx.arc(px, py, r, 0, Math.PI * 2);
-                        ctx.stroke();
-                    }
-                }
+    hitFuel(bullet, fuel) {
+        bullet.destroy();
+        fuel.destroy();
+        this.explosionEffect(fuel.x, fuel.y, 0xff0000);
+        SynthAudio.playExplosion();
+        this.score -= 200; // Ceza
+        this.scoreText.setText('SKOR: ' + this.score);
+    }
 
-                // Portal merkezi (dönen spiral)
-                ctx.save();
-                ctx.translate(px, py);
-                ctx.rotate(portalRotation);
-                for (let i = 0; i < 8; i++) {
-                    const angle = (i / 8) * Math.PI * 2;
-                    const x1 = Math.cos(angle) * 5;
-                    const y1 = Math.sin(angle) * 5;
-                    const x2 = Math.cos(angle) * portalRadius;
-                    const y2 = Math.sin(angle) * portalRadius;
+    crash(player, enemy) {
+        this.gameOver('KAZA YAPTIN!');
+    }
 
-                    ctx.strokeStyle = COLORS.YELLOW;
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                    ctx.stroke();
-                }
-                ctx.restore();
+    burnFuel() {
+        if(this.isOver) return;
+        this.fuel -= 1.5;
+        if(this.fuel <= 0) this.gameOver('YAKIT BİTTİ');
+    }
 
-                // Portal metni
-                if (gameState === 'PORTAL_OPENING') {
-                    ctx.fillStyle = COLORS.YELLOW;
-                    ctx.font = '8px "Courier New"';
-                    ctx.textAlign = 'center';
-                    ctx.fillText('DIMENSIONAL BREACH', px, py - 50);
-                }
-            }
+    explosionEffect(x, y, color) {
+        let p = this.add.particles(0, 0, 'particle', {
+            x: x, y: y,
+            speed: { min: 50, max: 200 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 2, end: 0 },
+            tint: color,
+            lifespan: 500,
+            quantity: 10
+        });
+        setTimeout(() => p.destroy(), 500);
+    }
 
-            // Düşmanlar
-            enemies.forEach(enemy => {
-                ctx.fillStyle = enemy.color;
-                ctx.fillRect(
-                    enemy.x - enemy.width / 2,
-                    enemy.y - enemy.height / 2,
-                    enemy.width,
-                    enemy.height
-                );
-            });
+    gameOver(reason) {
+        this.isOver = true;
+        this.physics.pause();
+        this.player.setTint(0xff0000);
+        SynthAudio.playExplosion();
 
-            // Mermiler
-            bullets.forEach(bullet => {
-                ctx.fillStyle = bullet.color;
-                ctx.fillRect(
-                    bullet.x - bullet.width / 2,
-                    bullet.y - bullet.height / 2,
-                    bullet.width,
-                    bullet.height
-                );
-            });
+        // Skoru kaydet
+        let scores = JSON.parse(localStorage.getItem('neonHighScores')) || [];
+        scores.push(this.score);
+        scores.sort((a,b) => b-a);
+        localStorage.setItem('neonHighScores', JSON.stringify(scores.slice(0, 5)));
 
-            // Partiküller
-            particles.forEach(p => {
-                ctx.fillStyle = p.color;
-                ctx.fillRect(p.x, p.y, 2, 2);
-            });
+        // Game Over Ekranı
+        let bg = this.add.rectangle(this.W/2, this.H/2, 400, 250, 0x000000, 0.9).setStrokeStyle(4, 0xff0000);
+        this.add.text(this.W/2, this.H/2 - 50, reason, { fontSize: '32px', color: '#f00' }).setOrigin(0.5);
+        this.add.text(this.W/2, this.H/2, 'SKOR: ' + this.score, { fontSize: '28px' }).setOrigin(0.5);
+        
+        let btn = this.add.text(this.W/2, this.H/2 + 70, 'MENÜYE DÖN', { fontSize: '24px', backgroundColor: '#333', padding: 10 }).setOrigin(0.5).setInteractive();
+        btn.on('pointerdown', () => this.scene.start('MenuScene'));
+    }
+}
 
-            // Oyuncu (basit üçgen uçak)
-            ctx.fillStyle = player.color;
-            ctx.beginPath();
-            ctx.moveTo(player.x, player.y - player.height / 2);
-            ctx.lineTo(player.x - player.width / 2, player.y + player.height / 2);
-            ctx.lineTo(player.x + player.width / 2, player.y + player.height / 2);
-            ctx.closePath();
-            ctx.fill();
+// --- OYUNU BAŞLAT ---
+CONFIG.scene = [MenuScene, GameScene];
+game = new Phaser.Game(CONFIG);
 
-            // UI
-            ctx.fillStyle = COLORS.WHITE;
-            ctx.font = '8px "Courier New"';
-            ctx.textAlign = 'left';
-            ctx.fillText('SCORE: ' + score, 5, 10);
-            ctx.fillText('LIVES: ' + lives, 5, 20);
-
-            if (score >= 2500 && !portalActive) {
-                ctx.fillStyle = COLORS.YELLOW;
-                ctx.textAlign = 'center';
-                ctx.fillText('DIMENSIONAL ENERGY: ' + Math.floor((score / 3000) * 100) + '%', GAME_WIDTH / 2, 10);
-            }
-
-            // Geçiş efekti
-            if (gameState === 'TRANSITIONING') {
-                ctx.fillStyle = `rgba(85, 255, 255, ${transitionProgress * 0.8})`;
-                ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-            }
-        }
-
-        // Düşman spawn zamanlayıcı
-        setInterval(() => {
-            if (gameState === 'PLAYING' || gameState === 'PORTAL_OPENING') {
-                spawnEnemy();
-            }
-        }, 1000);
-
-        // Oyun döngüsü
-        function gameLoop() {
-            updateGame();
-            drawGame();
-            requestAnimationFrame(gameLoop);
-        }
-
-        // Başlat
-        gameLoop();
-
-        // Bilgi mesajı
-        setTimeout(() => {
-            ctx.fillStyle = COLORS.BRIGHT_CYAN;
-            ctx.font = '6px "Courier New"';
-            ctx.textAlign = 'center';
-            ctx.fillText('USE ARROW KEYS TO MOVE, SPACE TO SHOOT', GAME_WIDTH / 2, GAME_HEIGHT - 5);
-        }, 100);
-    </script>
+</script>
 </body>
 </html>

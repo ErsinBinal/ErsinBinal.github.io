@@ -1,683 +1,261 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Universe-2: The Awakening | Convivium</title>
-    <meta name="description" content="Boyutlar arası yolculuk devam ediyor... Hoş geldin, yeni evrene.">
-    <meta name="author" content="Ersin Binal">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Raid | Convivium</title>
+<meta name="description" content="Space Raid - Three.js tabanli uzay oyunu.">
+<meta name="author" content="Ersin Binal">
+<link rel="canonical" href="https://ersinbinal.github.io/universe-2.html">
 
-        body {
-            background: #000;
-            overflow: hidden;
-            font-family: 'Courier New', monospace;
-            color: #fff;
-        }
+<!-- Content Security Policy -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self';">
 
-        #container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
+<!-- OpenGraph -->
+<meta property="og:site_name" content="Convivium">
+<meta property="og:title" content="Space Raid | Convivium">
+<meta property="og:description" content="Uzay aksiyon oyunu.">
+<meta property="og:type" content="game">
 
-        /* Giriş Animasyonu Katmanı */
-        #introOverlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 2s;
-        }
-
-        #introOverlay.hide {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .intro-text {
-            font-size: 32px;
-            color: #55FFFF;
-            text-align: center;
-            opacity: 0;
-            text-shadow: 0 0 20px rgba(85, 255, 255, 0.8);
-            margin: 20px 0;
-            animation: fadeInOut 4s ease-in-out forwards;
-        }
-
-        .intro-text.delayed-1 { animation-delay: 2s; }
-        .intro-text.delayed-2 { animation-delay: 4s; }
-        .intro-text.delayed-3 { animation-delay: 6s; }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(20px); }
-            20% { opacity: 1; transform: translateY(0); }
-            80% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-20px); }
-        }
-
-        /* HUD */
-        #hud {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 100;
-            font-size: 18px;
-            color: #55FFFF;
-            text-shadow: 0 0 10px rgba(85, 255, 255, 0.5);
-            user-select: none;
-        }
-
-        #hud div {
-            margin: 5px 0;
-        }
-
-        /* Bilgi Mesajı */
-        #infoBox {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px 30px;
-            border: 2px solid #55FFFF;
-            border-radius: 5px;
-            color: #55FFFF;
-            font-size: 16px;
-            text-align: center;
-            z-index: 100;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        #infoBox.show {
-            opacity: 1;
-        }
-
-        /* Portal İkonu (Universe-3 için hazırlık) */
-        #portalIndicator {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border: 3px solid #FF55FF;
-            border-radius: 50%;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            color: #FF55FF;
-            text-shadow: 0 0 15px rgba(255, 85, 255, 0.8);
-            animation: pulse 2s infinite;
-            z-index: 100;
-        }
-
-        #portalIndicator.active {
-            display: flex;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.1); opacity: 0.7; }
-        }
-
-        /* Yükleniyor */
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #55FFFF;
-            font-size: 24px;
-            z-index: 2000;
-        }
-    </style>
+<!-- PWA -->
+<meta name="theme-color" content="#000008">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+<style>
+body { margin:0; overflow:hidden; background:#000; }
+</style>
 </head>
 <body>
-    <div id="container"></div>
 
-    <!-- Giriş Animasyonu -->
-    <div id="introOverlay">
-        <div class="intro-text">WHERE... AM I?</div>
-        <div class="intro-text delayed-1">THE WORLD HAS CHANGED...</div>
-        <div class="intro-text delayed-2">EVERYTHING IS DIFFERENT NOW.</div>
-        <div class="intro-text delayed-3">WELCOME TO UNIVERSE-2</div>
-    </div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+/* =====================================================
+   CORE
+===================================================== */
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x000008, 120, 1500);
 
-    <!-- HUD -->
-    <div id="hud">
-        <div>SCORE: <span id="scoreDisplay">0</span></div>
-        <div>DIMENSION: <span style="color: #FF55FF;">UNIVERSE-2</span></div>
-        <div>TECH LEVEL: <span style="color: #FFFF55;">WEBGL 3D</span></div>
-    </div>
+const camera = new THREE.PerspectiveCamera(68, innerWidth/innerHeight, 0.1, 6000);
+camera.position.set(0,10,30);
+camera.lookAt(0,0,-200);
 
-    <!-- Bilgi Kutusu -->
-    <div id="infoBox">
-        Use ARROW KEYS to move • SPACE to charge and fire
-    </div>
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.body.appendChild(renderer.domElement);
 
-    <!-- Portal Göstergesi -->
-    <div id="portalIndicator">
-        <span>∞</span>
-    </div>
+/* =====================================================
+   LIGHT
+===================================================== */
+scene.add(new THREE.AmbientLight(0x444466,1.1));
+const sun = new THREE.DirectionalLight(0x88aaff,2);
+sun.position.set(30,40,20);
+scene.add(sun);
 
-    <div id="loading">LOADING UNIVERSE-2...</div>
+/* =====================================================
+   STARFIELD
+===================================================== */
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for(let i=0;i<1800;i++){
+    starPos.push((Math.random()-0.5)*800,(Math.random()-0.5)*500,-Math.random()*4000);
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos,3));
+const stars = new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:0.9}));
+scene.add(stars);
 
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script>
-        // ============================================
-        // UNIVERSE-2: THE AWAKENING
-        // 5. Boyutun Duvarlarını Yıkan Yolculuk
-        // ============================================
+/* =====================================================
+   PLAYER SHIP (öncekinden kısaltılmış)
+===================================================== */
+const ship = new THREE.Group();
+const body = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.2,1.6,6,16),
+    new THREE.MeshStandardMaterial({color:0xbfdcff,metalness:0.85,roughness:0.25})
+);
+body.rotation.x=Math.PI/2;
+ship.add(body);
 
-        let scene, camera, renderer;
-        let ship, chargeCore;
-        let enemies = [];
-        let shots = [];
-        let enemyShots = [];
-        let stars;
-        let score = 0;
-        let gameStarted = false;
-        let nextDimensionReady = false;
+const nose = new THREE.Mesh(
+    new THREE.ConeGeometry(1.2,3,16),
+    new THREE.MeshStandardMaterial({color:0xe8f2ff,metalness:0.9})
+);
+nose.rotation.x=Math.PI/2;
+nose.position.z=-4.5;
+ship.add(nose);
 
-        const keys = {};
-        let speed = 1, targetSpeed = 1, lateralVelocity = 0;
-        let charging = false, chargePower = 0;
+const chargeCore = new THREE.Mesh(
+    new THREE.SphereGeometry(0.3,16,16),
+    new THREE.MeshStandardMaterial({color:0x66ccff,emissive:0x33aaff,emissiveIntensity:0})
+);
+chargeCore.position.z=-6.8;
+ship.add(chargeCore);
 
-        // Giriş animasyonunu kontrol et
-        setTimeout(() => {
-            document.getElementById('introOverlay').classList.add('hide');
-            setTimeout(() => {
-                gameStarted = true;
-                document.getElementById('infoBox').classList.add('show');
-                setTimeout(() => {
-                    document.getElementById('infoBox').classList.remove('show');
-                }, 5000);
-            }, 2000);
-        }, 10000); // 10 saniye giriş animasyonu
+ship.position.y=1.5;
+scene.add(ship);
 
-        // ============================================
-        // SCENE SETUP
-        // ============================================
-        function initScene() {
-            scene = new THREE.Scene();
-            scene.fog = new THREE.Fog(0x000020, 100, 800);
+/* =====================================================
+   INPUT / STATE
+===================================================== */
+const keys={};
+let speed=1,targetSpeed=1,lateralVelocity=0;
+let charging=false,chargePower=0;
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-            camera.position.set(0, 12, 35);
-            camera.lookAt(0, 0, -100);
+addEventListener("keydown",e=>{
+    keys[e.code]=true;
+    if(e.code==="Space"&&!charging){charging=true;chargePower=0;}
+});
+addEventListener("keyup",e=>{
+    keys[e.code]=false;
+    if(e.code==="Space"&&charging){
+        firePlasma(chargePower);
+        charging=false;
+        chargePower=0;
+        chargeCore.scale.set(0.3,0.3,0.3);
+        chargeCore.material.emissiveIntensity=0;
+    }
+});
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setClearColor(0x000020);
-            document.getElementById('container').appendChild(renderer.domElement);
+/* =====================================================
+   PLAYER SHOTS
+===================================================== */
+const shots=[];
+function firePlasma(p){
+    const s=new THREE.Mesh(
+        new THREE.SphereGeometry(Math.min(3,0.6+p/30),16,16),
+        new THREE.MeshStandardMaterial({color:0x66ccff,emissive:0x33aaff,emissiveIntensity:p/35})
+    );
+    s.position.copy(chargeCore.getWorldPosition(new THREE.Vector3()));
+    s.userData.speed=3+p/20;
+    scene.add(s); shots.push(s);
+}
 
-            document.getElementById('loading').style.display = 'none';
+/* =====================================================
+   ENEMY SYSTEM
+===================================================== */
+const enemies=[];
+const enemyShots=[];
+
+function createEnemy(){
+    const g=new THREE.Group();
+
+    const hull=new THREE.Mesh(
+        new THREE.BoxGeometry(2,1,3),
+        new THREE.MeshStandardMaterial({color:0xff5555,metalness:0.6,roughness:0.4})
+    );
+    g.add(hull);
+
+    const wing=new THREE.Mesh(
+        new THREE.BoxGeometry(4,0.3,1),
+        hull.material
+    );
+    wing.position.y=-0.3;
+    g.add(wing);
+
+    const angle=Math.random()*Math.PI*2;
+    const radius=80+Math.random()*120;
+
+    g.position.set(Math.cos(angle)*radius,(Math.random()-0.5)*20,-3000);
+    g.userData={
+        speed:1.2+Math.random(),
+        fireCooldown:Math.random()*120
+    };
+
+    scene.add(g);
+    enemies.push(g);
+}
+
+setInterval(createEnemy,1200);
+
+/* =====================================================
+   GAME LOOP
+===================================================== */
+function animate(){
+requestAnimationFrame(animate);
+
+/* PLAYER MOVE */
+if(keys.ArrowLeft) lateralVelocity-=0.03;
+if(keys.ArrowRight) lateralVelocity+=0.03;
+lateralVelocity*=0.9;
+ship.position.x+=lateralVelocity*10;
+ship.position.x=THREE.MathUtils.clamp(ship.position.x,-18,18);
+
+/* SPEED */
+if(keys.ArrowUp) targetSpeed+=0.05;
+if(keys.ArrowDown) targetSpeed-=0.05;
+targetSpeed=THREE.MathUtils.clamp(targetSpeed,0.5,4);
+speed+= (targetSpeed-speed)*0.08;
+
+/* CHARGE */
+if(charging){
+    chargePower=Math.min(120,chargePower+1.5);
+    const c=0.3+chargePower/120;
+    chargeCore.scale.set(c,c,c);
+    chargeCore.material.emissiveIntensity=chargePower/30;
+}
+
+/* STARS */
+const p=starGeo.attributes.position.array;
+for(let i=2;i<p.length;i+=3){
+    p[i]+=2.2*speed;
+    if(p[i]>100)p[i]=-4000;
+}
+starGeo.attributes.position.needsUpdate=true;
+
+/* PLAYER SHOTS */
+shots.forEach((s,i)=>{
+    s.position.z-=s.userData.speed*speed;
+    if(s.position.z<-4000){scene.remove(s);shots.splice(i,1);}
+});
+
+/* ENEMIES */
+enemies.forEach((e,ei)=>{
+    e.position.z+=e.userData.speed*speed;
+    e.position.x+=(ship.position.x-e.position.x)*0.002;
+    e.lookAt(ship.position);
+
+    e.userData.fireCooldown--;
+    if(e.userData.fireCooldown<0){
+        const b=new THREE.Mesh(
+            new THREE.SphereGeometry(0.4,8,8),
+            new THREE.MeshBasicMaterial({color:0xff3333})
+        );
+        b.position.copy(e.position);
+        b.userData.vel=e.position.clone().sub(ship.position).normalize().multiplyScalar(-4);
+        scene.add(b); enemyShots.push(b);
+        e.userData.fireCooldown=120+Math.random()*80;
+    }
+
+    if(e.position.z>200){scene.remove(e);enemies.splice(ei,1);}
+});
+
+/* ENEMY SHOTS */
+enemyShots.forEach((b,i)=>{
+    b.position.add(b.userData.vel);
+    if(b.position.z>200){scene.remove(b);enemyShots.splice(i,1);}
+});
+
+/* COLLISION */
+shots.forEach((s,si)=>{
+    enemies.forEach((e,ei)=>{
+        if(s.position.distanceTo(e.position)<2){
+            scene.remove(e);scene.remove(s);
+            enemies.splice(ei,1);shots.splice(si,1);
         }
-
-        // ============================================
-        // LIGHTING
-        // ============================================
-        function setupLights() {
-            const ambient = new THREE.AmbientLight(0x4444ff, 0.8);
-            scene.add(ambient);
-
-            const directional = new THREE.DirectionalLight(0xaaccff, 1.5);
-            directional.position.set(50, 80, 50);
-            scene.add(directional);
-
-            // Neon glow
-            const pointLight = new THREE.PointLight(0x55ffff, 2, 100);
-            pointLight.position.set(0, 10, -50);
-            scene.add(pointLight);
-        }
-
-        // ============================================
-        // STARFIELD
-        // ============================================
-        function createStarfield() {
-            const starGeometry = new THREE.BufferGeometry();
-            const starPositions = [];
-            const starColors = [];
-
-            for (let i = 0; i < 2000; i++) {
-                starPositions.push(
-                    (Math.random() - 0.5) * 1000,
-                    (Math.random() - 0.5) * 600,
-                    -Math.random() * 2000
-                );
-
-                // Renkli yıldızlar
-                const color = new THREE.Color();
-                if (Math.random() > 0.95) {
-                    color.setHSL(Math.random(), 1, 0.7);
-                } else {
-                    color.setHSL(0, 0, 0.8 + Math.random() * 0.2);
-                }
-                starColors.push(color.r, color.g, color.b);
-            }
-
-            starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-            starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
-
-            const starMaterial = new THREE.PointsMaterial({
-                size: 1.5,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.9
-            });
-
-            stars = new THREE.Points(starGeometry, starMaterial);
-            scene.add(stars);
-        }
-
-        // ============================================
-        // PLAYER SHIP (Gelişmiş 3D Model)
-        // ============================================
-        function createPlayerShip() {
-            ship = new THREE.Group();
-
-            // Ana gövde - daha detaylı
-            const bodyGeometry = new THREE.CylinderGeometry(1.5, 2, 8, 16);
-            const bodyMaterial = new THREE.MeshStandardMaterial({
-                color: 0xbfdcff,
-                metalness: 0.9,
-                roughness: 0.2,
-                emissive: 0x1155ff,
-                emissiveIntensity: 0.2
-            });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            body.rotation.x = Math.PI / 2;
-            ship.add(body);
-
-            // Burun - keskin
-            const noseGeometry = new THREE.ConeGeometry(1.5, 4, 16);
-            const noseMaterial = new THREE.MeshStandardMaterial({
-                color: 0xe8f2ff,
-                metalness: 0.95,
-                roughness: 0.1
-            });
-            const nose = new THREE.Mesh(noseGeometry, noseMaterial);
-            nose.rotation.x = Math.PI / 2;
-            nose.position.z = -6;
-            ship.add(nose);
-
-            // Kanatlar
-            const wingGeometry = new THREE.BoxGeometry(8, 0.3, 3);
-            const wingMaterial = new THREE.MeshStandardMaterial({
-                color: 0x55aaff,
-                metalness: 0.8,
-                roughness: 0.3
-            });
-            const wings = new THREE.Mesh(wingGeometry, wingMaterial);
-            wings.position.y = -0.5;
-            wings.position.z = 1;
-            ship.add(wings);
-
-            // Şarj çekirdeği (parlayan)
-            const coreGeometry = new THREE.SphereGeometry(0.4, 16, 16);
-            const coreMaterial = new THREE.MeshStandardMaterial({
-                color: 0x55ffff,
-                emissive: 0x33aaff,
-                emissiveIntensity: 0,
-                metalness: 0.5,
-                roughness: 0.1
-            });
-            chargeCore = new THREE.Mesh(coreGeometry, coreMaterial);
-            chargeCore.position.z = -8;
-            ship.add(chargeCore);
-
-            // Motor parıltısı
-            const engineGlow = new THREE.PointLight(0x55ffff, 2, 20);
-            engineGlow.position.z = 5;
-            ship.add(engineGlow);
-
-            ship.position.y = 2;
-            scene.add(ship);
-        }
-
-        // ============================================
-        // ENEMY SYSTEM
-        // ============================================
-        function createEnemy() {
-            const enemyGroup = new THREE.Group();
-
-            // Düşman gövdesi
-            const hullGeometry = new THREE.BoxGeometry(3, 1.5, 4);
-            const hullMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff3333,
-                metalness: 0.7,
-                roughness: 0.3,
-                emissive: 0xff0000,
-                emissiveIntensity: 0.3
-            });
-            const hull = new THREE.Mesh(hullGeometry, hullMaterial);
-            enemyGroup.add(hull);
-
-            // Kanatlar
-            const wingGeometry = new THREE.BoxGeometry(6, 0.4, 1.5);
-            const wing = new THREE.Mesh(wingGeometry, hullMaterial);
-            wing.position.y = -0.5;
-            enemyGroup.add(wing);
-
-            // Silah
-            const gunGeometry = new THREE.CylinderGeometry(0.2, 0.2, 2, 8);
-            const gunMaterial = new THREE.MeshStandardMaterial({ color: 0xaa0000 });
-            const gun = new THREE.Mesh(gunGeometry, gunMaterial);
-            gun.rotation.x = Math.PI / 2;
-            gun.position.z = 2;
-            enemyGroup.add(gun);
-
-            // Pozisyon
-            const angle = Math.random() * Math.PI * 2;
-            const radius = 100 + Math.random() * 150;
-            enemyGroup.position.set(
-                Math.cos(angle) * radius,
-                (Math.random() - 0.5) * 30,
-                -2000 - Math.random() * 500
-            );
-
-            enemyGroup.userData = {
-                speed: 1.5 + Math.random() * 0.5,
-                fireCooldown: Math.random() * 100,
-                health: 100
-            };
-
-            scene.add(enemyGroup);
-            enemies.push(enemyGroup);
-        }
-
-        // Düşman spawn
-        setInterval(() => {
-            if (gameStarted && enemies.length < 15) {
-                createEnemy();
-            }
-        }, 1500);
-
-        // ============================================
-        // SHOOTING SYSTEM
-        // ============================================
-        function firePlasma(power) {
-            const shotSize = Math.min(3, 0.8 + power / 25);
-            const shotGeometry = new THREE.SphereGeometry(shotSize, 16, 16);
-            const shotMaterial = new THREE.MeshStandardMaterial({
-                color: 0x55ffff,
-                emissive: 0x33aaff,
-                emissiveIntensity: power / 20,
-                metalness: 0.5,
-                roughness: 0.1
-            });
-            const shot = new THREE.Mesh(shotGeometry, shotMaterial);
-
-            const worldPos = new THREE.Vector3();
-            chargeCore.getWorldPosition(worldPos);
-            shot.position.copy(worldPos);
-
-            shot.userData = {
-                speed: 4 + power / 15,
-                damage: 30 + power
-            };
-
-            // Glow efekti
-            const glowLight = new THREE.PointLight(0x55ffff, power / 10, 30);
-            shot.add(glowLight);
-
-            scene.add(shot);
-            shots.push(shot);
-
-            playSound(800 + power * 2, 0.15, 'sine');
-        }
-
-        function fireEnemyShot(enemy) {
-            const shotGeometry = new THREE.SphereGeometry(0.5, 8, 8);
-            const shotMaterial = new THREE.MeshBasicMaterial({
-                color: 0xff3333,
-                emissive: 0xff0000,
-                emissiveIntensity: 1
-            });
-            const shot = new THREE.Mesh(shotGeometry, shotMaterial);
-
-            shot.position.copy(enemy.position);
-
-            const direction = ship.position.clone()
-                .sub(enemy.position)
-                .normalize()
-                .multiplyScalar(-5);
-
-            shot.userData = { velocity: direction };
-
-            scene.add(shot);
-            enemyShots.push(shot);
-        }
-
-        // ============================================
-        // INPUT
-        // ============================================
-        window.addEventListener('keydown', (e) => {
-            keys[e.code] = true;
-            if (e.code === 'Space' && !charging && gameStarted) {
-                charging = true;
-                chargePower = 0;
-            }
-        });
-
-        window.addEventListener('keyup', (e) => {
-            keys[e.code] = false;
-            if (e.code === 'Space' && charging) {
-                firePlasma(chargePower);
-                charging = false;
-                chargePower = 0;
-                chargeCore.scale.set(1, 1, 1);
-                chargeCore.material.emissiveIntensity = 0;
-            }
-        });
-
-        // ============================================
-        // SOUND
-        // ============================================
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-        function playSound(freq, duration, type = 'square') {
-            try {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.value = freq;
-                gain.gain.value = 0.08;
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {}
-        }
-
-        // ============================================
-        // GAME LOOP
-        // ============================================
-        function animate() {
-            requestAnimationFrame(animate);
-
-            if (!gameStarted) {
-                renderer.render(scene, camera);
-                return;
-            }
-
-            // Oyuncu hareketi
-            if (keys.ArrowLeft) lateralVelocity -= 0.04;
-            if (keys.ArrowRight) lateralVelocity += 0.04;
-            lateralVelocity *= 0.88;
-            ship.position.x += lateralVelocity * 12;
-            ship.position.x = THREE.MathUtils.clamp(ship.position.x, -25, 25);
-
-            if (keys.ArrowUp) targetSpeed += 0.05;
-            if (keys.ArrowDown) targetSpeed -= 0.05;
-            targetSpeed = THREE.MathUtils.clamp(targetSpeed, 0.5, 3);
-            speed += (targetSpeed - speed) * 0.1;
-
-            // Şarj mekaniği
-            if (charging) {
-                chargePower = Math.min(150, chargePower + 2);
-                const scale = 1 + chargePower / 100;
-                chargeCore.scale.set(scale, scale, scale);
-                chargeCore.material.emissiveIntensity = chargePower / 40;
-            }
-
-            // Yıldızlar
-            const starPos = stars.geometry.attributes.position.array;
-            for (let i = 2; i < starPos.length; i += 3) {
-                starPos[i] += 2.5 * speed;
-                if (starPos[i] > 100) starPos[i] = -2000;
-            }
-            stars.geometry.attributes.position.needsUpdate = true;
-
-            // Oyuncu mermileri
-            shots.forEach((shot, i) => {
-                shot.position.z -= shot.userData.speed * speed;
-                shot.rotation.y += 0.1;
-
-                if (shot.position.z < -2000) {
-                    scene.remove(shot);
-                    shots.splice(i, 1);
-                }
-            });
-
-            // Düşmanlar
-            enemies.forEach((enemy, ei) => {
-                enemy.position.z += enemy.userData.speed * speed;
-                enemy.position.x += (ship.position.x - enemy.position.x) * 0.003;
-                enemy.lookAt(ship.position);
-
-                // Ateş et
-                enemy.userData.fireCooldown--;
-                if (enemy.userData.fireCooldown < 0) {
-                    fireEnemyShot(enemy);
-                    enemy.userData.fireCooldown = 80 + Math.random() * 60;
-                }
-
-                // Çarpışma kontrolü
-                shots.forEach((shot, si) => {
-                    if (shot.position.distanceTo(enemy.position) < 3) {
-                        enemy.userData.health -= shot.userData.damage;
-                        scene.remove(shot);
-                        shots.splice(si, 1);
-
-                        if (enemy.userData.health <= 0) {
-                            createExplosion(enemy.position);
-                            scene.remove(enemy);
-                            enemies.splice(ei, 1);
-                            score += 200;
-                            updateScore();
-                            playSound(150, 0.3, 'sawtooth');
-
-                            // 5000 puana ulaşınca Universe-3 hazır
-                            if (score >= 5000 && !nextDimensionReady) {
-                                nextDimensionReady = true;
-                                document.getElementById('portalIndicator').classList.add('active');
-                                document.getElementById('infoBox').innerHTML = 'DIMENSIONAL BREACH DETECTED<br>Next evolution awaits...';
-                                document.getElementById('infoBox').classList.add('show');
-                            }
-                        }
-                    }
-                });
-
-                // Ekranın dışına çıktı
-                if (enemy.position.z > 100) {
-                    scene.remove(enemy);
-                    enemies.splice(ei, 1);
-                }
-            });
-
-            // Düşman mermileri
-            enemyShots.forEach((shot, i) => {
-                shot.position.add(shot.userData.velocity);
-
-                if (shot.position.distanceTo(ship.position) < 3) {
-                    // Oyuncu vuruldu
-                    scene.remove(shot);
-                    enemyShots.splice(i, 1);
-                    playSound(100, 0.4, 'sawtooth');
-                }
-
-                if (shot.position.z > 100) {
-                    scene.remove(shot);
-                    enemyShots.splice(i, 1);
-                }
-            });
-
-            renderer.render(scene, camera);
-        }
-
-        function createExplosion(position) {
-            // Basit patlama efekti
-            for (let i = 0; i < 12; i++) {
-                const particleGeometry = new THREE.SphereGeometry(0.3, 4, 4);
-                const particleMaterial = new THREE.MeshBasicMaterial({
-                    color: Math.random() > 0.5 ? 0xff5500 : 0xffaa00
-                });
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial);
-                particle.position.copy(position);
-
-                const velocity = new THREE.Vector3(
-                    (Math.random() - 0.5) * 5,
-                    (Math.random() - 0.5) * 5,
-                    (Math.random() - 0.5) * 5
-                );
-                particle.userData = { velocity: velocity, life: 30 };
-
-                scene.add(particle);
-
-                // Parçacık animasyonu
-                const animateParticle = () => {
-                    particle.position.add(particle.userData.velocity);
-                    particle.userData.life--;
-                    particle.material.opacity = particle.userData.life / 30;
-
-                    if (particle.userData.life > 0) {
-                        requestAnimationFrame(animateParticle);
-                    } else {
-                        scene.remove(particle);
-                    }
-                };
-                animateParticle();
-            }
-        }
-
-        function updateScore() {
-            document.getElementById('scoreDisplay').textContent = score;
-        }
-
-        // ============================================
-        // RESIZE
-        // ============================================
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // ============================================
-        // INITIALIZE
-        // ============================================
-        initScene();
-        setupLights();
-        createStarfield();
-        createPlayerShip();
-
-        animate();
-    </script>
+    });
+});
+
+renderer.render(scene,camera);
+}
+animate();
+
+/* =====================================================
+   RESIZE
+===================================================== */
+addEventListener("resize",()=>{
+camera.aspect=innerWidth/innerHeight;
+camera.updateProjectionMatrix();
+renderer.setSize(innerWidth,innerHeight);
+});
+</script>
 </body>
 </html>
