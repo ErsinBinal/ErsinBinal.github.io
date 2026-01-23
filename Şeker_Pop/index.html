@@ -1,1 +1,188 @@
 
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobil Dönüşüm Platformu | E-Ticaretinizi Büyütün</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            900: '#0f172a', // Koyu Lacivert (Güven)
+                            600: '#2563eb', // Ana Mavi
+                            accent: '#10b981' // Canlı Yeşil (Action)
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-slate-800 antialiased">
+
+    <header class="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i data-lucide="layers" class="text-brand-600 h-8 w-8"></i>
+                <span class="font-bold text-xl tracking-tight text-brand-900">AppBuilder</span>
+            </div>
+            <nav class="hidden md:flex gap-8 text-sm font-medium text-slate-600">
+                <a href="#features" class="hover:text-brand-600 transition">Özellikler</a>
+                <a href="#process" class="hover:text-brand-600 transition">Nasıl Çalışır?</a>
+                <a href="#benefits" class="hover:text-brand-600 transition">Avantajlar</a>
+            </nav>
+            <a href="#apply" class="bg-brand-900 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-slate-800 transition shadow-lg shadow-brand-900/20">
+                Tüccar Başvurusu Yap
+            </a>
+        </div>
+    </header>
+
+    <section class="pt-32 pb-20 lg:pt-40 lg:pb-28 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="max-w-2xl">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wide mb-6">
+                        <span class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></span>
+                        Sınırlı Kontenjan
+                    </div>
+                    <h1 class="text-5xl lg:text-6xl font-extrabold text-brand-900 tracking-tight leading-[1.1] mb-6">
+                        Pazaryeri Mağazanızı <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-brand-accent">24 Saatte</span> Mobil Uygulamaya Dönüştürün.
+                    </h1>
+                    <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                        Kodlama yok. Tasarım derdi yok. Trendyol entegrasyonu ile ürünleriniz otomatik senkronize edilir. Müşterilerinize bildirim gönderin, komisyonsuz satış yapın.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="#apply" class="flex items-center justify-center gap-2 bg-brand-accent text-white px-8 py-4 rounded-xl text-base font-bold hover:bg-emerald-600 transition shadow-xl shadow-emerald-500/20">
+                            Hemen Başvurun
+                            <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                        </a>
+                        <div class="flex items-center gap-4 px-6 py-4 text-sm font-medium text-slate-500">
+                            <i data-lucide="shield-check" class="text-brand-600"></i>
+                            Ön Ödeme Yok
+                        </div>
+                    </div>
+                </div>
+                <div class="relative lg:h-[600px] w-full flex items-center justify-center">
+                    <div class="absolute inset-0 bg-gradient-to-tr from-blue-100 to-emerald-50 rounded-full blur-3xl opacity-60"></div>
+                    <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=800" alt="App Mockup" class="relative z-10 w-72 rounded-[3rem] shadow-2xl border-8 border-slate-900 rotate-[-6deg] hover:rotate-0 transition duration-500">
+                    <div class="absolute bottom-20 -left-4 z-20 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 animate-bounce">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-green-100 p-2 rounded-full text-green-600">
+                                <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500">Anlık Bildirim</p>
+                                <p class="text-sm font-bold text-slate-800">Flash İndirim Başladı!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="py-24 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl font-bold text-brand-900 mb-4">Neden Kendi Uygulamanız Olmalı?</h2>
+                <p class="text-slate-600">Sadece bir uygulama değil, müşterilerinizi sadık bir kitleye dönüştüren bir pazarlama makinesi.</p>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="layout-template" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">8 Profesyonel Tema</h3>
+                    <p class="text-slate-600 leading-relaxed">Sektörünüze uygun, UX uzmanları tarafından hazırlanmış, yüksek dönüşüm odaklı temalardan dilediğinizi seçin.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="bar-chart-3" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Akıllı Yönetim Paneli</h3>
+                    <p class="text-slate-600 leading-relaxed">Satışlarınızı takip edin, uygulama içi kampanyalar kurgulayın ve özel kupon kodları dağıtın.</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition">
+                    <div class="w-12 h-12 bg-green-100 text-green-600 rounded-xl flex items-center justify-center mb-6">
+                        <i data-lucide="smartphone" class="w-6 h-6"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-3">Müşteri Sadakati</h3>
+                    <p class="text-slate-600 leading-relaxed">Cebindeki mağaza olun. Push bildirimlerle kendinizi hatırlatın, rekabette öne geçin.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="apply" class="py-24 bg-brand-900 text-white relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div class="max-w-4xl mx-auto px-4 relative z-10">
+            <div class="bg-white text-slate-900 rounded-3xl p-8 md:p-12 shadow-2xl">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold mb-4">E-Ticaretinizi Mobilin Gücüyle Büyütün</h2>
+                    <p class="text-slate-500">Bu özel programa katılım başvuru usulüdür. Bilgilerinizi bırakın, mağazanızı inceleyip dönüş yapalım.</p>
+                </div>
+                
+                <form class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Ad Soyad</label>
+                            <input type="text" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition" placeholder="Örn: Ahmet Yılmaz">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Telefon Numarası</label>
+                            <input type="tel" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition" placeholder="0555 000 0000">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Mağaza Linki (Trendyol/Hepsiburada)</label>
+                        <input type="url" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition" placeholder="https://trendyol.com/magaza/...">
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-6">
+                         <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">E-posta Adresi</label>
+                            <input type="email" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition" placeholder="ornek@sirket.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Sektör</label>
+                            <select class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-brand-600 focus:border-transparent outline-none transition bg-white">
+                                <option>Giyim & Moda</option>
+                                <option>Elektronik</option>
+                                <option>Ev & Yaşam</option>
+                                <option>Kozmetik</option>
+                                <option>Diğer</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="button" class="w-full bg-brand-600 text-white font-bold text-lg py-4 rounded-xl hover:bg-brand-700 transition shadow-lg transform hover:-translate-y-1">
+                        Başvuruyu Tamamla
+                    </button>
+                    <p class="text-xs text-center text-slate-400 mt-4">
+                        Başvurunuz gizlilik politikamız çerçevesinde değerlendirilecektir. Ücretlendirme veya komisyon bilgisi onay aşamasında paylaşılır.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-slate-50 py-12 border-t border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="flex justify-center items-center gap-2 mb-6">
+                <i data-lucide="layers" class="text-brand-600 h-6 w-6"></i>
+                <span class="font-bold text-lg text-slate-900">AppBuilder</span>
+            </div>
+            <p class="text-slate-500 text-sm">© 2026 AppBuilder Inc. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
