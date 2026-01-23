@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Satıcı Paneli | AppBuilder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: { 600: '#2563eb' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans h-screen flex overflow-hidden">
+
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-10">
+        <div class="p-6 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold">TS</div>
+            <div>
+                <h1 class="font-bold text-sm">Tech Store</h1>
+                <p class="text-xs text-slate-500 text-green-600 flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-green-500"></span> Online
+                </p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="#" onclick="switchTab('dashboard')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition group active-nav bg-blue-50 text-brand-600 font-medium">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                Genel Bakış
+            </a>
+            <a href="#" onclick="switchTab('products')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition">
+                <i data-lucide="package" class="w-5 h-5"></i>
+                Ürün Yönetimi
+            </a>
+            <a href="#" onclick="switchTab('campaigns')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition">
+                <i data-lucide="megaphone" class="w-5 h-5"></i>
+                Kampanya & Bildirim
+                <span class="ml-auto bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold">YENİ</span>
+            </a>
+            <a href="#" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-brand-600 transition">
+                <i data-lucide="settings" class="w-5 h-5"></i>
+                Mağaza Ayarları
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-100">
+            <div class="bg-slate-900 rounded-xl p-4 text-white">
+                <p class="text-xs text-slate-400 mb-1">Uygulama Durumu</p>
+                <div class="flex items-center gap-2 font-semibold text-sm text-green-400">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i> Yayında
+                </div>
+                <div class="mt-3 w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                    <div class="bg-green-400 w-full h-full"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-hidden relative">
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+            <h2 class="text-xl font-bold text-slate-800" id="page-title">Genel Bakış</h2>
+            <div class="flex items-center gap-4">
+                <button class="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-brand-600 transition">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    Verileri Yenile
+                </button>
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-auto p-8" id="content-area">
+            
+            <div id="view-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Toplam İndirme</p>
+                                <h3 class="text-3xl font-bold text-slate-900 mt-1">1,240</h3>
+                            </div>
+                            <div class="p-2 bg-blue-50 text-brand-600 rounded-lg">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <span class="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">+12% Geçen Hafta</span>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">App Cirosu</p>
+                                <h3 class="text-3xl font-bold text-slate-900 mt-1">₺45,200</h3>
+                            </div>
+                            <div class="p-2 bg-green-50 text-green-600 rounded-lg">
+                                <i data-lucide="wallet" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                         <span class="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">+5% Geçen Hafta</span>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-sm text-slate-500 font-medium">Aktif Kullanıcı</p>
+                                <h3 class="text-3xl font-bold text-slate-900 mt-1">328</h3>
+                            </div>
+                            <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                         <span class="text-xs text-slate-400 font-medium">Anlık</span>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                    <h3 class="font-bold text-lg mb-4">Aktif Tema</h3>
+                    <div class="flex gap-6 items-center">
+                        <div class="w-32 h-64 bg-slate-100 rounded-xl border-4 border-slate-800 relative overflow-hidden shadow-lg">
+                            <div class="h-4 bg-brand-600 w-full"></div>
+                            <div class="p-2 grid grid-cols-2 gap-1">
+                                <div class="h-10 bg-slate-200 rounded"></div>
+                                <div class="h-10 bg-slate-200 rounded"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="font-bold">Minimalist V2</h4>
+                            <p class="text-sm text-slate-500 mb-4">Teknoloji mağazaları için optimize edilmiş görünüm.</p>
+                            <button class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50">Temayı Değiştir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-campaigns" class="hidden space-y-6">
+                <div class="bg-gradient-to-r from-brand-600 to-indigo-700 rounded-2xl p-8 text-white relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-2xl font-bold mb-2">Satışları Artırın 🚀</h2>
+                        <p class="text-blue-100 max-w-xl">Müşterilerinize anlık bildirim (Push Notification) göndererek onları uygulamaya çekin. İstatistiklere göre bildirimler satışları %40 artırır.</p>
+                    </div>
+                    <div class="absolute right-0 top-0 h-full w-1/3 bg-white/10 skew-x-12 transform translate-x-12"></div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                            <i data-lucide="bell-plus" class="text-brand-600"></i>
+                            <h3 class="font-bold text-lg">Yeni Bildirim Oluştur</h3>
+                        </div>
+                        <form class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Bildirim Başlığı</label>
+                                <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-600 outline-none" placeholder="Örn: Fırsat Ürünü!">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">İçerik Metni</label>
+                                <textarea class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-brand-600 outline-none h-24" placeholder="Kullanıcının telefonunda görünecek kısa mesaj..."></textarea>
+                            </div>
+                             <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Hedef Kitle</label>
+                                <select class="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white">
+                                    <option>Tüm Kullanıcılar</option>
+                                    <option>Sepetinde Ürün Unutanlar</option>
+                                    <option>Son 30 Günde Alışveriş Yapmayanlar</option>
+                                </select>
+                            </div>
+                            <button type="button" class="w-full bg-brand-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                <i data-lucide="send"></i>
+                                Bildirimi Gönder
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+                         <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                            <i data-lucide="ticket" class="text-purple-600"></i>
+                            <h3 class="font-bold text-lg">Özel Kupon Tanımla</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-orange-50 border border-orange-100 rounded-lg flex items-start gap-3">
+                                <i data-lucide="info" class="text-orange-500 w-5 h-5 flex-shrink-0 mt-0.5"></i>
+                                <p class="text-sm text-orange-800">Bu kuponlar sadece mobil uygulamayı indiren kullanıcılara özel olarak tanımlanacaktır.</p>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">Kupon Kodu</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg uppercase" placeholder="YAZ50">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-700 mb-1">İndirim Tutarı</label>
+                                    <input type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="50 TL">
+                                </div>
+                            </div>
+                            <button class="w-full border border-slate-300 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-50 transition">
+                                Kuponu Oluştur
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-products" class="hidden">
+                <div class="bg-white p-8 rounded-xl text-center border border-slate-200">
+                    <img src="https://illustrations.popsy.co/gray/surr-list.svg" class="w-48 h-48 mx-auto opacity-50 mb-4">
+                    <h3 class="text-xl font-bold text-slate-700">Ürün Listesi Senkronize Ediliyor</h3>
+                    <p class="text-slate-500">Bu alan senin paylaştığın tablo tasarımını içerecek.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // Icons
+        lucide.createIcons();
+
+        // Simple Tab Switcher Logic
+        function switchTab(tabName) {
+            // Hide all views
+            document.getElementById('view-dashboard').classList.add('hidden');
+            document.getElementById('view-campaigns').classList.add('hidden');
+            document.getElementById('view-products').classList.add('hidden');
+
+            // Show selected view
+            document.getElementById('view-' + tabName).classList.remove('hidden');
+
+            // Update Header Title
+            const titles = {
+                'dashboard': 'Genel Bakış',
+                'campaigns': 'Kampanya Yönetimi',
+                'products': 'Ürün Listesi'
+            };
+            document.getElementById('page-title').innerText = titles[tabName];
+
+            // Update Nav Styles (Simple Reset)
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('bg-blue-50', 'text-brand-600', 'font-medium');
+                el.classList.add('text-slate-600');
+            });
+            // Highlight clicked (this is a rough approximation for prototype)
+            event.currentTarget.classList.add('bg-blue-50', 'text-brand-600', 'font-medium');
+            event.currentTarget.classList.remove('text-slate-600');
+        }
+    </script>
+</body>
+</html>
