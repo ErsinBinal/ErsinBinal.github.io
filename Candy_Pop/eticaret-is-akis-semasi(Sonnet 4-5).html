@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Ticaret Mobil Uygulama - İlişkisel İş Akışı Şeması</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn.active {
+            background: #764ba2;
+        }
+
+        .workflow-container {
+            min-width: 1800px;
+            padding: 40px;
+            background: #16213e;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .phase {
+            margin-bottom: 80px;
+            position: relative;
+        }
+
+        .phase-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 40px;
+            display: inline-block;
+            font-size: 1.5em;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+            position: relative;
+        }
+
+        .phase-number {
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2em;
+        }
+
+        .tasks-row {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            position: relative;
+            margin: 30px 0;
+        }
+
+        .task-group {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .task-box {
+            background: #0f3460;
+            border: 3px solid #667eea;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .task-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+            border-color: #764ba2;
+        }
+
+        .task-box.completed {
+            border-color: #00d9ff;
+            background: #0a2540;
+        }
+
+        .task-box.in-progress {
+            border-color: #ffd700;
+            background: #3d2800;
+        }
+
+        .task-box.blocked {
+            border-color: #ff6b6b;
+            background: #3d1010;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .task-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #fff;
+        }
+
+        .task-priority {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .priority-high {
+            background: #ff6b6b;
+        }
+
+        .priority-medium {
+            background: #ffd700;
+            color: #333;
+        }
+
+        .priority-low {
+            background: #00d9ff;
+            color: #333;
+        }
+
+        .task-description {
+            color: #b8c5d6;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+            color: #b8c5d6;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .task-tech {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .tech-label {
+            font-size: 0.8em;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tech-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            color: #00d9ff;
+            border: 1px solid #00d9ff;
+        }
+
+        /* Bağlantı okları */
+        .arrow-container {
+            position: absolute;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .arrow-line {
+            stroke: #667eea;
+            stroke-width: 3;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .dependency-line {
+            stroke: #ffd700;
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            fill: none;
+            marker-end: url(#arrowhead-dependency);
+        }
+
+        .phase-connector {
+            width: 4px;
+            height: 60px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .phase-connector::after {
+            content: '▼';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #764ba2;
+            font-size: 1.5em;
+        }
+
+        .dependencies {
+            background: rgba(255, 215, 0, 0.05);
+            border: 2px dashed #ffd700;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .dep-title {
+            font-size: 0.85em;
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .dep-list {
+            list-style: none;
+            font-size: 0.85em;
+            color: #b8c5d6;
+        }
+
+        .dep-list li {
+            padding: 3px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .dep-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #ffd700;
+        }
+
+        .legend {
+            background: #0f3460;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 40px;
+        }
+
+        .legend-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+            border: 3px solid;
+        }
+
+        .deliverable {
+            background: rgba(0, 217, 255, 0.1);
+            border: 2px solid #00d9ff;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .deliverable-title {
+            font-size: 0.85em;
+            color: #00d9ff;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .deliverable-items {
+            list-style: none;
+            font-size: 0.85em;
+            color: #b8c5d6;
+        }
+
+        .deliverable-items li {
+            padding: 3px 0;
+            padding-left: 15px;
+            position: relative;
+        }
+
+        .deliverable-items li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #00d9ff;
+        }
+
+        .timeline {
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 3px solid #667eea;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+
+        .timeline-label {
+            font-size: 0.8em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .timeline-value {
+            font-size: 0.9em;
+            color: #fff;
+            margin-top: 3px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+            }
+            .controls {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📊 E-Ticaret Mobil Uygulama</h1>
+        <p>İlişkisel İş Akışı Şeması & Proje Görev Planı</p>
+    </div>
+
+    <div class="controls">
+        <button class="btn" onclick="filterTasks('all')">Tüm Görevler</button>
+        <button class="btn" onclick="filterTasks('high')">Yüksek Öncelik</button>
+        <button class="btn" onclick="filterTasks('frontend')">Frontend</button>
+        <button class="btn" onclick="filterTasks('backend')">Backend</button>
+        <button class="btn" onclick="toggleStatus()">Durum Göster/Gizle</button>
+    </div>
+
+    <div class="workflow-container">
+        
+        <!-- FAZ 1: PROJE HAZIRLIGI -->
+        <div class="phase" id="phase-1">
+            <div class="phase-header">
+                <span class="phase-number">1</span>
+                Faz 1: Proje Hazırlığı ve Planlama
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box completed" data-category="planning">
+                        <div class="task-header">
+                            <div class="task-title">📋 Gereksinim Analizi</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Fonksiyonel ve fonksiyonel olmayan gereksinimlerin belirlenmesi. Kullanıcı hikayeleri, use case'ler ve kabul kriterleri.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1-2 Hafta</div>
+                            <div class="meta-item">👥 Product Manager, BA</div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 Çıktılar</div>
+                            <ul class="deliverable-items">
+                                <li>PRD (Product Requirements Document)</li>
+                                <li>User Stories & Use Cases</li>
+                                <li>Feature Priority Matrix</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box in-progress" data-category="planning">
+                        <div class="task-header">
+                            <div class="task-title">🎨 UI/UX Tasarım</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Wireframe, mockup ve prototiplerin oluşturulması. User flow diyagramları, design system kurulumu.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2-3 Hafta</div>
+                            <div class="meta-item">👥 UI/UX Designer</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Figma</span>
+                                <span class="tech-tag">Adobe XD</span>
+                                <span class="tech-tag">Sketch</span>
+                            </div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 Çıktılar</div>
+                            <ul class="deliverable-items">
+                                <li>Wireframes (Tüm ekranlar)</li>
+                                <li>High-fidelity Mockups</li>
+                                <li>Interactive Prototype</li>
+                                <li>Design System & Style Guide</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box completed" data-category="planning">
+                        <div class="task-header">
+                            <div class="task-title">🏗️ Teknik Mimari Tasarımı</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Sistem mimarisi, veritabanı şeması, API tasarımı, teknoloji stack seçimi. Ölçeklenebilirlik planlaması.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1-2 Hafta</div>
+                            <div class="meta-item">👥 Tech Lead, Architects</div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 Çıktılar</div>
+                            <ul class="deliverable-items">
+                                <li>System Architecture Diagram</li>
+                                <li>Database Schema (ERD)</li>
+                                <li>API Specification (Swagger/OpenAPI)</li>
+                                <li>Tech Stack Decision Document</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box completed" data-category="planning">
+                        <div class="task-header">
+                            <div class="task-title">⚙️ Geliştirme Ortamı Kurulumu</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Git repository, CI/CD pipeline, staging/production ortamları, development tools kurulumu.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 DevOps, Developers</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">GitHub/GitLab</span>
+                                <span class="tech-tag">Docker</span>
+                                <span class="tech-tag">GitHub Actions</span>
+                                <span class="tech-tag">AWS/GCP</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box in-progress" data-category="planning">
+                        <div class="task-header">
+                            <div class="task-title">📊 Sprint Planlama</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Backlog oluşturma, epic ve story tanımlama, sprint planning, velocity hesaplama, timeline belirleme.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Devam Eden</div>
+                            <div class="meta-item">👥 Scrum Master, Team</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Jira</span>
+                                <span class="tech-tag">Trello</span>
+                                <span class="tech-tag">Asana</span>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 1 Toplam: 4-6 Hafta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-connector"></div>
+
+        <!-- FAZ 2: BACKEND GELİŞTİRME -->
+        <div class="phase" id="phase-2">
+            <div class="phase-header">
+                <span class="phase-number">2</span>
+                Faz 2: Backend API Geliştirme
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">🗄️ Veritabanı Kurulumu</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            PostgreSQL/MongoDB kurulumu, tablo yapıları, indexleme, migration scriptleri, seed data hazırlama.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev, DBA</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">PostgreSQL</span>
+                                <span class="tech-tag">MongoDB</span>
+                                <span class="tech-tag">Redis</span>
+                                <span class="tech-tag">Sequelize/Mongoose</span>
+                            </div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Database Schema Design (Faz 1)</li>
+                                <li>Cloud Infrastructure Setup</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">🔐 Authentication Service</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            JWT token yönetimi, login/register, password reset, refresh token, OAuth 2.0 entegrasyonu (Google, Apple).
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">JWT</span>
+                                <span class="tech-tag">Passport.js</span>
+                                <span class="tech-tag">bcrypt</span>
+                                <span class="tech-tag">OAuth 2.0</span>
+                            </div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 API Endpoints</div>
+                            <ul class="deliverable-items">
+                                <li>POST /auth/register</li>
+                                <li>POST /auth/login</li>
+                                <li>POST /auth/refresh-token</li>
+                                <li>POST /auth/forgot-password</li>
+                                <li>POST /auth/logout</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">📦 Product Service</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Ürün CRUD, kategori yönetimi, filtreleme, arama (Elasticsearch), pagination, stok takibi, varyant yönetimi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Node.js/Express</span>
+                                <span class="tech-tag">Elasticsearch</span>
+                                <span class="tech-tag">Image CDN</span>
+                            </div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 API Endpoints</div>
+                            <ul class="deliverable-items">
+                                <li>GET /products (filter, pagination)</li>
+                                <li>GET /products/:id</li>
+                                <li>GET /search/products</li>
+                                <li>GET /categories</li>
+                                <li>GET /products/:id/reviews</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">🛒 Cart Service</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Sepet CRUD, stok kontrolü, fiyat hesaplama, kupon uygulaması, sepet validasyonu, session yönetimi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Product Service (Stok kontrolü)</li>
+                                <li>Authentication Service (User session)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">💳 Payment Service</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            iyzico/PayTR entegrasyonu, 3D Secure, ödeme callback, webhook yönetimi, PCI-DSS compliance.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev, Security</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">iyzico API</span>
+                                <span class="tech-tag">PayTR</span>
+                                <span class="tech-tag">SSL/TLS</span>
+                                <span class="tech-tag">Encryption</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">📋 Order Service</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Sipariş oluşturma, durum yönetimi, sipariş geçmişi, iptal işlemleri, fatura oluşturma.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Cart Service</li>
+                                <li>Payment Service</li>
+                                <li>Inventory Service</li>
+                            </ul>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 2 Toplam: 6-8 Hafta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tasks-row" style="margin-top: 30px;">
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">👤 User Service</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Profil yönetimi, adres CRUD, favori ürünler, sipariş geçmişi, kullanıcı tercihleri.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">🔔 Notification Service</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Push notification (FCM/APNS), email/SMS servisleri, bildirim tercihleri, template yönetimi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">FCM</span>
+                                <span class="tech-tag">APNS</span>
+                                <span class="tech-tag">SendGrid</span>
+                                <span class="tech-tag">Twilio</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="backend">
+                        <div class="task-header">
+                            <div class="task-title">🚚 Shipping Service</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Kargo firması API entegrasyonları (Aras, Yurtiçi, MNG), teslimat tahmini, kargo takibi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Backend Dev</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-connector"></div>
+
+        <!-- FAZ 3: MOBİL UYGULAMA GELİŞTİRME -->
+        <div class="phase" id="phase-3">
+            <div class="phase-header">
+                <span class="phase-number">3</span>
+                Faz 3: Mobil Uygulama (Frontend) Geliştirme
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">📱 Proje Kurulumu</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            React Native/Flutter proje başlatma, klasör yapısı, state management, navigation, linting, code standards.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 Mobile Dev Lead</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Teknolojiler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">React Native</span>
+                                <span class="tech-tag">Redux Toolkit</span>
+                                <span class="tech-tag">React Navigation</span>
+                                <span class="tech-tag">ESLint</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🎨 UI Component Library</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Reusable component'ler: Button, Input, Card, Modal, Loading, Toast, Navigation vb. Design system uygulaması.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developers</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>UI/UX Design System (Faz 1)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🔐 Authentication Ekranları</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Splash, Login, Register, Forgot Password, OTP verification, biometric login, OAuth integration.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Kütüphaneler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">react-native-biometrics</span>
+                                <span class="tech-tag">react-native-keychain</span>
+                                <span class="tech-tag">Formik/Yup</span>
+                            </div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Authentication Service API (Faz 2)</li>
+                                <li>UI Components</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🏠 Ana Sayfa & Kategoriler</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Home screen, kampanyalar, öne çıkan ürünler, kategori listesi, carousel, banner yönetimi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Product Service API</li>
+                                <li>Image CDN Setup</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">📦 Ürün Listesi & Detay</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Ürün listesi, filtreleme, sıralama, arama, infinite scroll, ürün detay, galeri, varyant seçimi, yorumlar.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Kütüphaneler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">FlatList</span>
+                                <span class="tech-tag">react-native-fast-image</span>
+                                <span class="tech-tag">Image Lightbox</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🔍 Arama Fonksiyonu</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Autocomplete, search history, filters, sorting, voice search, barcode scanner.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tasks-row" style="margin-top: 30px;">
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🛒 Sepet & Checkout</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Sepet görüntüleme, miktar değiştirme, silme, kupon, adres seçimi/ekleme, kargo seçimi, özet ekranı.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Cart Service API</li>
+                                <li>User Service (Address)</li>
+                                <li>Shipping Service</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">💳 Ödeme Ekranları</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Ödeme yöntemi seçimi, kart bilgisi girişi, 3D Secure web view, ödeme sonuç ekranları.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Dev, Security</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Kütüphaneler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">react-native-webview</span>
+                                <span class="tech-tag">Input Masking</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">👤 Profil & Siparişlerim</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Profil bilgileri, düzenleme, adres yönetimi, sipariş geçmişi, sipariş detayı, takip, favoriler.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>User Service API</li>
+                                <li>Order Service API</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">🔔 Push Notification</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            FCM/APNS entegrasyonu, notification handler, deep linking, notification preferences.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Kütüphaneler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">@react-native-firebase/messaging</span>
+                                <span class="tech-tag">react-native-push-notification</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="frontend">
+                        <div class="task-header">
+                            <div class="task-title">📴 Offline Support</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Network monitoring, cache management, offline queue, data sync, retry logic.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Mobile Developer</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Kütüphaneler</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">@react-native-community/netinfo</span>
+                                <span class="tech-tag">Redux Persist</span>
+                                <span class="tech-tag">SQLite/Realm</span>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 3 Toplam: 8-10 Hafta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-connector"></div>
+
+        <!-- FAZ 4: ENTEGRASYON & TEST -->
+        <div class="phase" id="phase-4">
+            <div class="phase-header">
+                <span class="phase-number">4</span>
+                Faz 4: Entegrasyon, Test ve Optimizasyon
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">🔗 API Entegrasyon Testleri</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Mobil app - Backend entegrasyonu, API endpoint testleri, error handling, timeout yönetimi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Full Team</div>
+                        </div>
+                        <div class="dependencies">
+                            <div class="dep-title">⚠️ Bağımlılıklar</div>
+                            <ul class="dep-list">
+                                <li>Tüm Backend Servisler (Faz 2)</li>
+                                <li>Mobil App Ekranları (Faz 3)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">✅ Unit & Integration Tests</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Backend unit test, API integration test, mobil component testleri, %80+ code coverage hedefi.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Developers, QA</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Jest</span>
+                                <span class="tech-tag">React Native Testing Library</span>
+                                <span class="tech-tag">Supertest</span>
+                                <span class="tech-tag">Mocha</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">📱 E2E & UI Testleri</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            User journey testleri (login to checkout), automated UI tests, screenshot regression tests.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 QA, Mobile Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Detox</span>
+                                <span class="tech-tag">Appium</span>
+                                <span class="tech-tag">Maestro</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">🐛 Bug Fixing & Refinement</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Test sonuçlarına göre bug fix, UI/UX iyileştirmeler, performance optimization, refactoring.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 2 Hafta</div>
+                            <div class="meta-item">👥 Full Team</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">⚡ Performans Optimizasyonu</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            App launch time, API response time, image optimization, bundle size, memory leak, render performance.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1.5 Hafta</div>
+                            <div class="meta-item">👥 Mobile Dev, Backend Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Flipper</span>
+                                <span class="tech-tag">React DevTools</span>
+                                <span class="tech-tag">Lighthouse</span>
+                                <span class="tech-tag">New Relic</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="testing">
+                        <div class="task-header">
+                            <div class="task-title">🔐 Security Audit</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Penetration testing, OWASP security check, API security, data encryption, SSL pinning verification.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta</div>
+                            <div class="meta-item">👥 Security Team, DevOps</div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 4 Toplam: 4-5 Hafta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-connector"></div>
+
+        <!-- FAZ 5: DEPLOYMENT & LAUNCH -->
+        <div class="phase" id="phase-5">
+            <div class="phase-header">
+                <span class="phase-number">5</span>
+                Faz 5: Deployment, Store Yayını ve Monitoring
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">📦 Production Build</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Release build hazırlama, code signing, obfuscation, app icons, splash screens, store assets.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 Mobile Lead, DevOps</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Fastlane</span>
+                                <span class="tech-tag">Gradle</span>
+                                <span class="tech-tag">Xcode</span>
+                                <span class="tech-tag">ProGuard</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">🍎 App Store Submission</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            App Store Connect kurulum, metadata, screenshots, privacy policy, terms, app review süreci.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1 Hafta (Review dahil)</div>
+                            <div class="meta-item">👥 Product Manager, Mobile Lead</div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 Gereksinimler</div>
+                            <ul class="deliverable-items">
+                                <li>App Description (TR/EN)</li>
+                                <li>Screenshots (6.7", 6.5", 5.5")</li>
+                                <li>App Icon (1024x1024)</li>
+                                <li>Privacy Policy URL</li>
+                                <li>Support URL</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">🤖 Google Play Submission</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Google Play Console kurulum, app bundle, metadata, content rating, privacy questionnaire.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 Product Manager, Mobile Lead</div>
+                        </div>
+                        <div class="deliverable">
+                            <div class="deliverable-title">📦 Gereksinimler</div>
+                            <ul class="deliverable-items">
+                                <li>App Description (TR/EN)</li>
+                                <li>Screenshots + Feature Graphic</li>
+                                <li>App Icon (512x512)</li>
+                                <li>Content Rating Certificate</li>
+                                <li>Data Safety Form</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">🚀 Backend Production Deploy</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Production server setup, database migration, environment variables, SSL certificates, CDN config.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 DevOps, Backend Lead</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Platform</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">AWS EC2/ECS</span>
+                                <span class="tech-tag">Google Cloud</span>
+                                <span class="tech-tag">Docker</span>
+                                <span class="tech-tag">Kubernetes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">📊 Analytics & Monitoring Setup</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Firebase Analytics, Google Analytics 4, Sentry error tracking, New Relic APM, dashboard kurulumu.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 3-5 Gün</div>
+                            <div class="meta-item">👥 DevOps, Mobile Dev</div>
+                        </div>
+                        <div class="task-tech">
+                            <div class="tech-label">🛠️ Araçlar</div>
+                            <div class="tech-tags">
+                                <span class="tech-tag">Firebase</span>
+                                <span class="tech-tag">GA4</span>
+                                <span class="tech-tag">Sentry</span>
+                                <span class="tech-tag">Mixpanel</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">📣 Soft Launch & Beta Testing</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Beta kullanıcılarla test (TestFlight/Internal Testing), feedback toplama, critical bug fix.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ 1-2 Hafta</div>
+                            <div class="meta-item">👥 Full Team</div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="deployment">
+                        <div class="task-header">
+                            <div class="task-title">🎉 Public Launch</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Store'larda yayın, marketing kampanyası, press release, social media duyuru, kullanıcı desteği hazırlığı.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Launch Day</div>
+                            <div class="meta-item">👥 Full Team + Marketing</div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 5 Toplam: 3-4 Hafta</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="phase-connector"></div>
+
+        <!-- FAZ 6: POST-LAUNCH -->
+        <div class="phase" id="phase-6">
+            <div class="phase-header">
+                <span class="phase-number">6</span>
+                Faz 6: Post-Launch Support & Gelişim
+            </div>
+
+            <div class="tasks-row">
+                <div class="task-group">
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">📈 Performance Monitoring</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            7/24 sistem izleme, crash rate tracking, API performance, user metrics, alerting setup.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Sürekli</div>
+                            <div class="meta-item">👥 DevOps, Support</div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">🐛 Bug Fix & Hotfix</div>
+                            <div class="task-priority priority-high">Yüksek</div>
+                        </div>
+                        <div class="task-description">
+                            Kullanıcı raporlarına göre bug fix, critical hotfix deployment, OTA updates (CodePush).
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Sürekli</div>
+                            <div class="meta-item">👥 Developers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">💬 Kullanıcı Geri Bildirimleri</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Store reviews takibi, in-app feedback, user support tickets, feature requests toplama.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Sürekli</div>
+                            <div class="meta-item">👥 Product, Support</div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">📊 Data Analysis & A/B Testing</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Kullanıcı davranışı analizi, conversion rate optimization, A/B test'ler, funnel analysis.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Sürekli</div>
+                            <div class="meta-item">👥 Product, Data Analyst</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-group">
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">🚀 Feature Releases (v2.0+)</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Yeni özellikler: Wishlist, live chat, AR try-on, social sharing, referral program, loyalty points.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Quarterly</div>
+                            <div class="meta-item">👥 Full Team</div>
+                        </div>
+                    </div>
+
+                    <div class="task-box" data-category="support">
+                        <div class="task-header">
+                            <div class="task-title">🔄 Sürekli İyileştirme</div>
+                            <div class="task-priority priority-medium">Orta</div>
+                        </div>
+                        <div class="task-description">
+                            Code refactoring, tech debt azaltma, dependency updates, performance tuning, security patches.
+                        </div>
+                        <div class="task-meta">
+                            <div class="meta-item">⏱️ Sürekli</div>
+                            <div class="meta-item">👥 Full Team</div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-label">⏱️ Tahmini Süre</div>
+                            <div class="timeline-value">Faz 6: Sürekli (Ongoing)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend">
+        <div class="legend-title">📌 Görev Durumu & Öncelik Göstergeleri</div>
+        <div class="legend-grid">
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #00d9ff; background: #0a2540;"></div>
+                <span>Tamamlandı (Completed)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #ffd700; background: #3d2800;"></div>
+                <span>Devam Ediyor (In Progress)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #667eea; background: #0f3460;"></div>
+                <span>Bekliyor (Pending)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box" style="border-color: #ff6b6b; background: #3d1010;"></div>
+                <span>Engelli (Blocked)</span>
+            </div>
+            <div class="legend-item">
+                <div style="padding: 5px 12px; border-radius: 15px; background: #ff6b6b;">Yüksek</div>
+                <span>Yüksek Öncelik</span>
+            </div>
+            <div class="legend-item">
+                <div style="padding: 5px 12px; border-radius: 15px; background: #ffd700; color: #333;">Orta</div>
+                <span>Orta Öncelik</span>
+            </div>
+            <div class="legend-item">
+                <div style="padding: 5px 12px; border-radius: 15px; background: #00d9ff; color: #333;">Düşük</div>
+                <span>Düşük Öncelik</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px; border-left: 4px solid #667eea;">
+            <h3 style="color: #667eea; margin-bottom: 10px;">📅 Toplam Proje Tahmini Süresi</h3>
+            <p style="font-size: 1.1em; line-height: 1.8;">
+                <strong>Minimum:</strong> 25-30 Hafta (~6-7 Ay)<br>
+                <strong>Ortalama:</strong> 30-35 Hafta (~7-8 Ay)<br>
+                <strong>Maksimum:</strong> 35-40 Hafta (~8-10 Ay)<br><br>
+                <em style="color: #b8c5d6;">* Ekip büyüklüğü, deneyim ve paralel geliştirmeye göre değişkenlik gösterebilir.</em>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Filtreleme fonksiyonları
+        function filterTasks(category) {
+            const tasks = document.querySelectorAll('.task-box');
+            const buttons = document.querySelectorAll('.btn');
+            
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            tasks.forEach(task => {
+                if (category === 'all') {
+                    task.style.display = 'block';
+                } else if (category === 'high') {
+                    const priority = task.querySelector('.task-priority');
+                    task.style.display = priority && priority.classList.contains('priority-high') ? 'block' : 'none';
+                } else {
+                    const taskCategory = task.getAttribute('data-category');
+                    task.style.display = taskCategory === category ? 'block' : 'none';
+                }
+            });
+        }
+
+        // Durum gösterme/gizleme
+        let statusVisible = true;
+        function toggleStatus() {
+            statusVisible = !statusVisible;
+            const metaItems = document.querySelectorAll('.task-meta, .dependencies, .deliverable, .timeline');
+            metaItems.forEach(item => {
+                item.style.display = statusVisible ? 'flex' : 'none';
+            });
+        }
+
+        // Task box tıklama için expand/collapse
+        document.querySelectorAll('.task-box').forEach(box => {
+            box.addEventListener('click', function(e) {
+                if (!e.target.closest('.task-tech') && !e.target.closest('.dependencies')) {
+                    this.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        console.log('🚀 E-Ticaret Proje İş Akış Şeması Yüklendi!');
+        console.log('📊 6 Faz, 50+ Görev');
+    </script>
+</body>
+</html>
