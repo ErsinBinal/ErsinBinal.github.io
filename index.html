@@ -1154,7 +1154,7 @@
 
     .gate-toggle {
       justify-self: start;
-      min-width: 96px;
+      min-width: 118px;
       height: 34px;
       border: 1px solid rgba(0, 234, 255, 0.42);
       border-radius: 2px;
@@ -1173,22 +1173,51 @@
       box-shadow: 0 0 18px rgba(255, 46, 166, 0.24);
     }
 
+    .journey-gate.is-unlocked .gate-toggle {
+      border-color: var(--journey-green);
+      color: var(--journey-green);
+    }
+
     .drawer-menu {
       display: grid;
       align-content: end;
       gap: 8px;
       min-height: 180px;
-      opacity: 0.18;
-      transform: translate3d(0, 8px, 0);
+      opacity: 0.14;
+      transform: translate3d(0, 10px, 0);
       transition: opacity 0.3s ease, transform 0.3s ease;
       pointer-events: none;
+      filter: grayscale(0.6);
     }
 
-    .journey-gate:hover .drawer-menu,
     .journey-gate.is-open .drawer-menu {
       opacity: 1;
       transform: translate3d(0, 0, 0);
       pointer-events: auto;
+      filter: none;
+    }
+
+    .gate-drawer::after {
+      content: 'LOCKED / REQUEST ACCESS';
+      position: absolute;
+      left: 16px;
+      right: 0;
+      top: 52px;
+      min-height: 28px;
+      color: var(--journey-muted);
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .journey-gate.is-unlocked .gate-drawer::after {
+      content: 'ACCESS GRANTED';
+      color: var(--journey-green);
+    }
+
+    .journey-gate.is-open .gate-drawer::after {
+      opacity: 0;
     }
 
     .gate-drawer h3 {
@@ -1976,7 +2005,7 @@
       const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
-      const state = JSON.parse(localStorage.getItem(stateKey) || '{"visits":0,"level":0,"opened":[],"commands":0}');
+      const state = JSON.parse(localStorage.getItem(stateKey) || '{"visits":0,"level":0,"opened":[],"unlocked":[],"commands":0}');
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       let signalIndex = 0;
@@ -2033,19 +2062,43 @@
         if (Number(step) > state.level) award(Number(step));
       };
 
+      const updateGateButton = (gate) => {
+        const button = gate.querySelector('.gate-toggle');
+        if (!button) return;
+        const unlocked = gate.classList.contains('is-unlocked');
+        const open = gate.classList.contains('is-open');
+        button.textContent = !unlocked ? 'Request' : open ? 'Collapse' : 'Open';
+        button.setAttribute('aria-expanded', String(open));
+      };
+
+      const unlockGate = (gate, open = true) => {
+        if (!gate) return;
+        gate.classList.add('is-unlocked', 'is-visited');
+        gate.classList.toggle('is-open', open);
+        state.unlocked = [...new Set([...(state.unlocked || []), gate.id])];
+        state.opened = [...new Set([...(state.opened || []), gate.id])];
+        if ((state.unlocked || []).length >= 3) award(3);
+        else award(Math.max(state.level, 1));
+        persist();
+        updateGateButton(gate);
+        if (consoleLine) consoleLine.textContent = `${gate.id} access granted`;
+        if (microOracle) microOracle.textContent = `${gate.id}: locked surface removed`;
+        pulse(open ? 330 : 180);
+      };
+
       document.querySelectorAll('.gate-toggle').forEach(button => {
+        button.textContent = 'Request';
         button.addEventListener('click', () => {
           const gate = button.closest('.journey-gate');
+          if (!gate.classList.contains('is-unlocked')) {
+            unlockGate(gate, true);
+            return;
+          }
+
           const open = !gate.classList.contains('is-open');
           gate.classList.toggle('is-open', open);
-          button.setAttribute('aria-expanded', String(open));
-          button.textContent = open ? 'Unlocked' : 'Access';
-          gate.classList.add('is-visited');
-          state.opened = [...new Set([...(state.opened || []), gate.id])];
-          if ((state.opened || []).length >= 3) award(3);
-          else award(Math.max(state.level, 1));
-          persist();
-          pulse(open ? 330 : 180);
+          updateGateButton(gate);
+          pulse(open ? 280 : 170);
         });
       });
 
@@ -2099,8 +2152,9 @@
         'trace persona': () => { location.href = 'ozgecmisim.html'; },
         'persona': () => { location.href = 'ozgecmisim.html'; },
         'unlock hidden': () => {
-          document.getElementById('hidden')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          document.querySelector('#hidden .journey-gate, #hidden')?.classList.add('is-open');
+          const gate = document.getElementById('hidden');
+          gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          unlockGate(gate, true);
           award(3);
           return 'hidden layer unlocked';
         },
@@ -2155,11 +2209,7 @@
           closeCommand();
           document.querySelectorAll('.journey-gate.is-open').forEach(gate => {
             gate.classList.remove('is-open');
-            const button = gate.querySelector('.gate-toggle');
-            if (button) {
-              button.textContent = 'Access';
-              button.setAttribute('aria-expanded', 'false');
-            }
+            updateGateButton(gate);
           });
         } else if (key === 'd') location.href = 'makaleler.html';
         else if (key === 'o') location.href = 'TheOracle.html';
@@ -2216,6 +2266,15 @@
       };
 
       updateAccess();
+      if (state.unlocked?.length) {
+        state.unlocked.forEach(id => {
+          const gate = document.getElementById(id);
+          if (gate) {
+            gate.classList.add('is-unlocked');
+            updateGateButton(gate);
+          }
+        });
+      }
       if (state.opened?.length) {
         state.opened.forEach(id => document.getElementById(id)?.classList.add('is-visited'));
       }
