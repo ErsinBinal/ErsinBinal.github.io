@@ -1,7 +1,7 @@
 {
   "name": "Convivium - Ersin Binal",
   "short_name": "Convivium",
-  "description": "Ersin Binal'in kisisel sitesi - arastirmalar, makaleler ve projeler.",
+  "description": "Ersin Binal'in kişisel sitesi - araştırmalar, makaleler, oyunlar ve deneysel projeler.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",
@@ -92,7 +92,7 @@
     {
       "name": "The Oracle",
       "short_name": "Oracle",
-      "description": "Kahinden bilgelik al",
+      "description": "The Oracle deneyimini aç",
       "url": "/TheOracle.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     }
