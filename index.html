@@ -2025,6 +2025,14 @@
         'En fazla 4 cumle.',
         'Soru:'
       ].join(' ');
+      const oracleWaitLines = [
+        'oracle channel opening...',
+        'signal queued. cevap bekleniyor...',
+        'oracle hala dusunuyor. baglanti aktif...',
+        'yanit paketleri toplanıyor...',
+        'biraz gecikti ama islem devam ediyor...',
+        'terminal hatta. cevabi bekliyorum...'
+      ];
       const state = JSON.parse(localStorage.getItem(stateKey) || '{"visits":0,"level":0,"opened":[],"unlocked":[],"commands":0}');
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
@@ -2192,7 +2200,7 @@
 
       const askOracleFallback = async (command) => {
         const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 50000);
+        const timeout = window.setTimeout(() => controller.abort(), 90000);
         const prompt = `${oraclePrompt} ${command}`;
 
         try {
@@ -2237,14 +2245,15 @@
           return;
         }
 
-        if (commandOutput) commandOutput.textContent = 'oracle channel opening...';
+        if (commandOutput) commandOutput.textContent = oracleWaitLines[0];
         if (microOracle) microOracle.textContent = 'freeform query routed';
         setCommandBusy(true);
-        const slowSignal = window.setTimeout(() => {
-          if (commandInFlight && commandOutput) {
-            commandOutput.textContent = 'oracle channel still resolving...';
-          }
-        }, 9000);
+        let waitLineIndex = 0;
+        const waitSignal = window.setInterval(() => {
+          if (!commandInFlight || !commandOutput) return;
+          waitLineIndex = (waitLineIndex + 1) % oracleWaitLines.length;
+          commandOutput.textContent = oracleWaitLines[waitLineIndex];
+        }, 7000);
 
         try {
           const result = await askOracleFallback(query);
@@ -2257,7 +2266,7 @@
           if (microOracle) microOracle.textContent = 'oracle unavailable';
           pulse(150, 0.08);
         } finally {
-          window.clearTimeout(slowSignal);
+          window.clearInterval(waitSignal);
           setCommandBusy(false);
           commandInput.focus();
         }
