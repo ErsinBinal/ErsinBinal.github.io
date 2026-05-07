@@ -46,6 +46,227 @@
             pointer-events: none;
         }
 
+        #introOverlay.rift-entry {
+            overflow: hidden;
+            background:
+                radial-gradient(circle at center, rgba(255, 85, 255, 0.35) 0 8%, rgba(85, 255, 255, 0.18) 20%, transparent 42%),
+                radial-gradient(circle at center, rgba(0, 0, 0, 0) 0 38%, rgba(0, 0, 0, 0.92) 72%),
+                #020008;
+        }
+
+        .rift-stage {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            overflow: hidden;
+        }
+
+        .pixel-river {
+            position: absolute;
+            width: min(74vmin, 620px);
+            height: min(74vmin, 620px);
+            transform: perspective(720px) rotateX(58deg) translateY(16vmin);
+            background:
+                linear-gradient(90deg, transparent 0 42%, rgba(0, 255, 255, 0.9) 42% 45%, transparent 45% 55%, rgba(255, 85, 255, 0.8) 55% 58%, transparent 58%),
+                linear-gradient(rgba(85, 255, 255, 0.22) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255, 85, 255, 0.18) 2px, transparent 2px),
+                #03152a;
+            background-size: 100% 100%, 24px 24px, 24px 24px, 100% 100%;
+            clip-path: polygon(36% 0, 64% 0, 100% 100%, 0 100%);
+            image-rendering: pixelated;
+            box-shadow: 0 0 44px rgba(85, 255, 255, 0.45);
+            animation: pixelRiverShift 9.8s ease-in-out forwards;
+        }
+
+        .pixel-ship {
+            position: absolute;
+            width: 96px;
+            height: 128px;
+            top: 58%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            image-rendering: pixelated;
+            filter: drop-shadow(0 0 16px rgba(85, 255, 255, 0.9));
+            animation: pixelShipAscend 9.8s cubic-bezier(.2,.8,.2,1) forwards;
+        }
+
+        .pixel-ship::before {
+            content: "";
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            left: 40px;
+            top: 0;
+            background: #cfffff;
+            box-shadow:
+                0 16px #22d7ff,
+                -16px 32px #22d7ff, 0 32px #22d7ff, 16px 32px #22d7ff,
+                -32px 48px #1177ff, -16px 48px #22d7ff, 0 48px #ffffff, 16px 48px #22d7ff, 32px 48px #1177ff,
+                -32px 64px #1177ff, 0 64px #ffbb33, 32px 64px #1177ff,
+                -16px 80px #ff55ff, 16px 80px #ff55ff;
+        }
+
+        .gl-lattice {
+            position: absolute;
+            width: min(86vmin, 760px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            opacity: 0;
+            background:
+                radial-gradient(circle, transparent 0 28%, rgba(85, 255, 255, 0.2) 29% 30%, transparent 31% 100%),
+                conic-gradient(from 0deg, rgba(85,255,255,0), rgba(85,255,255,.8), rgba(255,85,255,.75), rgba(85,255,255,0));
+            mask: radial-gradient(circle, transparent 0 24%, #000 25% 68%, transparent 69%);
+            animation: glLatticeReveal 9.8s ease-in-out forwards;
+        }
+
+        .gl-star-field {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            background:
+                radial-gradient(circle at 15% 22%, rgba(255,255,255,.9) 0 1px, transparent 2px),
+                radial-gradient(circle at 78% 28%, rgba(85,255,255,.9) 0 1px, transparent 2px),
+                radial-gradient(circle at 30% 68%, rgba(255,85,255,.9) 0 1px, transparent 2px),
+                radial-gradient(circle at 62% 76%, rgba(255,255,255,.85) 0 1px, transparent 2px),
+                radial-gradient(circle at 50% 50%, rgba(85, 255, 255, 0.28), transparent 42%);
+            animation: starFieldReveal 9.8s ease-in-out forwards;
+        }
+
+        .rift-story {
+            position: relative;
+            z-index: 2;
+            width: min(90vw, 920px);
+            min-height: 320px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .rift-story-line {
+            position: absolute;
+            max-width: min(88vw, 820px);
+            color: #eaffff;
+            font-size: clamp(21px, 4vw, 42px);
+            text-shadow:
+                0 0 16px rgba(85, 255, 255, 0.95),
+                0 0 32px rgba(255, 85, 255, 0.7);
+            opacity: 0;
+            animation: riftStoryLine 3.4s ease-in-out forwards;
+        }
+
+        .rift-story-line.small {
+            font-size: clamp(15px, 2.4vw, 24px);
+            color: #bffcff;
+        }
+
+        .rift-story-line.line-1 { animation-delay: 0.2s; }
+        .rift-story-line.line-2 { animation-delay: 2s; }
+        .rift-story-line.line-3 { animation-delay: 3.8s; }
+        .rift-story-line.line-4 { animation-delay: 5.8s; }
+        .rift-story-line.line-5 { animation-delay: 7.9s; }
+
+        .rift-entry .rift-vortex {
+            position: absolute;
+            opacity: 0;
+            animation: riftSpin 1.8s linear infinite, riftPulse 1.1s ease-in-out infinite alternate, vortexReturn 9.8s ease-in-out forwards;
+        }
+
+        .rift-vortex {
+            position: relative;
+            width: min(72vmin, 640px);
+            aspect-ratio: 1;
+            border-radius: 50%;
+            border: 2px solid rgba(85, 255, 255, 0.75);
+            box-shadow:
+                0 0 35px rgba(85, 255, 255, 0.9),
+                inset 0 0 70px rgba(255, 85, 255, 0.65);
+            animation: riftSpin 1.8s linear infinite, riftPulse 1.1s ease-in-out infinite alternate;
+        }
+
+        .rift-vortex::before,
+        .rift-vortex::after {
+            content: "";
+            position: absolute;
+            inset: 18%;
+            border-radius: 50%;
+            border: 4px dashed rgba(255, 255, 255, 0.68);
+            box-shadow: 0 0 24px rgba(255, 85, 255, 0.9);
+        }
+
+        .rift-vortex::after {
+            inset: 34%;
+            border-color: rgba(85, 255, 255, 0.8);
+            animation: riftSpin 0.9s linear infinite reverse;
+        }
+
+        .rift-status {
+            margin-top: 32px;
+            color: #fff;
+            font-size: clamp(16px, 3vw, 28px);
+            text-shadow: 0 0 20px rgba(85, 255, 255, 0.9);
+            letter-spacing: 0;
+            opacity: 0.9;
+        }
+
+        @keyframes riftSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes riftPulse {
+            from {
+                filter: hue-rotate(0deg);
+                box-shadow:
+                    0 0 28px rgba(85, 255, 255, 0.75),
+                    inset 0 0 56px rgba(255, 85, 255, 0.5);
+            }
+            to {
+                filter: hue-rotate(55deg);
+                box-shadow:
+                    0 0 52px rgba(85, 255, 255, 0.95),
+                    inset 0 0 92px rgba(255, 85, 255, 0.72);
+            }
+        }
+
+        @keyframes pixelRiverShift {
+            0% { opacity: 1; filter: saturate(1); transform: perspective(720px) rotateX(58deg) translateY(16vmin) scale(1); }
+            48% { opacity: 1; filter: saturate(1.6) contrast(1.25); }
+            70% { opacity: 0.42; transform: perspective(720px) rotateX(40deg) translateY(2vmin) scale(0.82); }
+            100% { opacity: 0; transform: perspective(720px) rotateX(8deg) translateY(-10vmin) scale(0.22); }
+        }
+
+        @keyframes pixelShipAscend {
+            0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            42% { opacity: 1; transform: translate(-50%, -66%) scale(0.9); filter: drop-shadow(0 0 18px rgba(85, 255, 255, 0.9)); }
+            66% { opacity: 0.8; transform: translate(-50%, -86%) scale(0.55); filter: blur(1px) drop-shadow(0 0 30px rgba(255, 85, 255, 1)); }
+            100% { opacity: 0; transform: translate(-50%, -104%) scale(0.08); filter: blur(5px); }
+        }
+
+        @keyframes glLatticeReveal {
+            0%, 36% { opacity: 0; transform: scale(0.35) rotate(0deg); }
+            64% { opacity: 0.82; transform: scale(1) rotate(160deg); }
+            100% { opacity: 0.28; transform: scale(1.35) rotate(360deg); }
+        }
+
+        @keyframes starFieldReveal {
+            0%, 48% { opacity: 0; transform: scale(1.15); }
+            76% { opacity: 0.9; transform: scale(1); }
+            100% { opacity: 0.55; transform: scale(0.96); }
+        }
+
+        @keyframes riftStoryLine {
+            0% { opacity: 0; transform: translateY(22px) scale(0.98); }
+            18%, 74% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-20px) scale(1.02); }
+        }
+
+        @keyframes vortexReturn {
+            0%, 58% { opacity: 0; transform: scale(0.2); }
+            78% { opacity: 0.95; transform: scale(0.92); }
+            100% { opacity: 0.35; transform: scale(1.35); }
+        }
+
         .intro-text {
             font-size: 32px;
             color: #55FFFF;
@@ -153,13 +374,13 @@
         <div class="intro-text">WHERE... AM I?</div>
         <div class="intro-text delayed-1">THE WORLD HAS CHANGED...</div>
         <div class="intro-text delayed-2">EVERYTHING IS DIFFERENT NOW.</div>
-        <div class="intro-text delayed-3">WELCOME TO UNIVERSE-2</div>
+        <div class="intro-text delayed-3">THE CURRENT HAS SHIFTED</div>
     </div>
 
     <!-- HUD -->
     <div id="hud">
         <div>SCORE: <span id="scoreDisplay">0</span></div>
-        <div>DIMENSION: <span style="color: #FF55FF;">UNIVERSE-2</span></div>
+        <div>DIMENSION: <span id="dimensionDisplay" style="color: #FF55FF;">UNIVERSE-2</span></div>
         <div>TECH LEVEL: <span style="color: #FFFF55;">WEBGL 3D</span></div>
     </div>
 
@@ -173,7 +394,7 @@
         <span>∞</span>
     </div>
 
-    <div id="loading">LOADING UNIVERSE-2...</div>
+    <div id="loading">LOADING SIGNAL...</div>
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
     <script>
@@ -188,7 +409,16 @@
         let shots = [];
         let enemyShots = [];
         let stars;
-        let score = 0;
+        const entryParams = new URLSearchParams(window.location.search);
+        let shiftedEntry = null;
+        try {
+            shiftedEntry = JSON.parse(sessionStorage.getItem('neonRiverDimensionShift') || 'null');
+        } catch(e) {}
+        const enteredFromNeon = entryParams.get('rift') === 'neon' || !!shiftedEntry;
+        const rawCarriedScore = Number(entryParams.get('score') || (shiftedEntry && shiftedEntry.score) || 0);
+        const carriedScore = Number.isFinite(rawCarriedScore) ? Math.max(0, rawCarriedScore) : 0;
+        const nextDimensionScore = enteredFromNeon && carriedScore > 0 ? carriedScore + 5000 : 5000;
+        let score = carriedScore;
         let gameStarted = false;
         let nextDimensionReady = false;
 
@@ -196,17 +426,54 @@
         let speed = 1, targetSpeed = 1, lateralVelocity = 0;
         let charging = false, chargePower = 0;
 
+        if (enteredFromNeon) {
+            prepareRiftEntry();
+        }
+
+        const introHoldTime = enteredFromNeon ? 10600 : 10000;
+
         // Giriş animasyonunu kontrol et
         setTimeout(() => {
             document.getElementById('introOverlay').classList.add('hide');
+            setTimeout(startGameFlow, enteredFromNeon ? 900 : 2000);
+        }, introHoldTime);
+
+        function prepareRiftEntry() {
+            const introOverlay = document.getElementById('introOverlay');
+            introOverlay.classList.add('rift-entry');
+            introOverlay.innerHTML = `
+                <div class="rift-stage">
+                    <div class="gl-star-field"></div>
+                    <div class="pixel-river"></div>
+                    <div class="gl-lattice"></div>
+                    <div class="rift-vortex"></div>
+                    <div class="pixel-ship"></div>
+                </div>
+                <div class="rift-story">
+                    <div class="rift-story-line line-1">WHERE... AM I?</div>
+                    <div class="rift-story-line line-2">THE WORLD HAS CHANGED...</div>
+                    <div class="rift-story-line small line-3">THE NEON RIVER IS NO LONGER WATER.</div>
+                    <div class="rift-story-line line-4">PIXELS ARE BREAKING INTO OPENGL LIGHT.</div>
+                    <div class="rift-story-line small line-5">THE CURRENT HAS SHIFTED.</div>
+                </div>`;
+            document.getElementById('loading').textContent = 'RIFT STABILIZING...';
+            document.getElementById('dimensionDisplay').textContent = 'SHIFTED CURRENT';
+        }
+
+        function startGameFlow() {
+            gameStarted = true;
+            updateScore();
+            document.getElementById('infoBox').innerHTML = enteredFromNeon
+                ? 'Flow stabilized'
+                : 'Use ARROW KEYS to move • SPACE to charge and fire';
+            document.getElementById('infoBox').classList.add('show');
             setTimeout(() => {
-                gameStarted = true;
-                document.getElementById('infoBox').classList.add('show');
-                setTimeout(() => {
-                    document.getElementById('infoBox').classList.remove('show');
-                }, 5000);
-            }, 2000);
-        }, 10000); // 10 saniye giriş animasyonu
+                document.getElementById('infoBox').classList.remove('show');
+            }, enteredFromNeon ? 2200 : 5000);
+            if (enteredFromNeon) {
+                try { sessionStorage.removeItem('neonRiverDimensionShift'); } catch(e) {}
+            }
+        }
 
         // ============================================
         // SCENE SETUP
@@ -583,8 +850,8 @@
                             updateScore();
                             playSound(150, 0.3, 'sawtooth');
 
-                            // 5000 puana ulaşınca Universe-3 hazır
-                            if (score >= 5000 && !nextDimensionReady) {
+                            // Bu evrende 5000 puan daha kazaninca sonraki kırılma hazır
+                            if (score >= nextDimensionScore && !nextDimensionReady) {
                                 nextDimensionReady = true;
                                 document.getElementById('portalIndicator').classList.add('active');
                                 document.getElementById('infoBox').innerHTML = 'DIMENSIONAL BREACH DETECTED<br>Next evolution awaits...';

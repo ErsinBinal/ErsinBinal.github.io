@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v1';
+const CACHE_NAME = 'convivium-v2';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -69,6 +69,37 @@ self.addEventListener('fetch', (event) => {
 
   // Chrome extension isteklerini atla
   if (event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
+
+  // Sayfa gezinmelerinde once network'e git; oyun HTML'leri eski cache'de kalmasin.
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseClone);
+              });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request)
+            .then((cachedResponse) => {
+              if (cachedResponse) return cachedResponse;
+              return caches.match(OFFLINE_URL)
+                .then((offlineResponse) => {
+                  return offlineResponse || new Response(
+                    '<h1>Offline</h1><p>Internet baglantisi yok.</p>',
+                    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+                  );
+                });
+            });
+        })
+    );
     return;
   }
 
