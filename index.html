@@ -1695,10 +1695,6 @@
       color: var(--journey-amber);
     }
 
-    .project-row[data-artifact="rift"]:hover {
-      background: linear-gradient(90deg, rgba(69, 255, 241, 0.14), rgba(255, 46, 166, 0.1), rgba(0, 0, 0, 0.52));
-    }
-
     .dossier-tree {
       display: grid;
       gap: 6px;
@@ -1764,7 +1760,6 @@
       <span>open dossier</span>
       <span>query oracle</span>
       <span>run logic</span>
-      <span>run universe</span>
       <span>trace persona</span>
       <span>unlock hidden</span>
       <span>level</span>
@@ -1809,7 +1804,6 @@
                 <a class="action-link" href="makaleler.html">Dossier</a>
                 <a class="action-link" href="ozgecmisim.html">Persona</a>
                 <a class="action-link" href="TheOracle.html">Oracle</a>
-                <a class="action-link" href="cyberpunk-logic-game.html">Logic</a>
                 <button class="action-link" id="command-launch" type="button">Command</button>
               </nav>
             </div>
@@ -1832,10 +1826,6 @@
           <a class="terminal-command" href="ozgecmisim.html" data-action="TRACE">
             <span>&gt; persona</span>
             Ünvan değil; karar izi.
-          </a>
-          <a class="terminal-command" href="cyberpunk-logic-game.html" data-action="RUN">
-            <span>&gt; logic</span>
-            Mantık devresini başlat.
           </a>
         </section>
 
@@ -1892,7 +1882,6 @@
               <a class="project-row" href="Bartender.html" data-artifact="bar"><span>02</span><strong>Bartender</strong><em>mix / ritual</em></a>
               <a class="project-row" href="Barista.html" data-artifact="coffee"><span>03</span><strong>Cyber Barista</strong><em>brew / terminal</em></a>
               <a class="project-row" href="Paradox_Terminal.html" data-artifact="logic"><span>04</span><strong>Paradoks Terminal</strong><em>fold / logic</em></a>
-              <a class="project-row" href="universe-3.html" data-artifact="rift"><span>05</span><strong>Universe-3</strong><em>map / rift</em></a>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab gizli menüsü">
@@ -1956,11 +1945,6 @@
                 <span class="route-kicker">Fiction</span>
                 <strong>Universe-2</strong>
                 <em>boot story</em>
-              </a>
-              <a class="route-link" href="universe-3.html">
-                <span class="route-kicker">Godot</span>
-                <strong>Universe-3</strong>
-                <em>map rift</em>
               </a>
               <a class="route-link" href="offline.html">
                 <span class="route-kicker">Fallback</span>
@@ -2192,9 +2176,6 @@
         'oracle': () => { location.href = 'TheOracle.html'; },
         'run logic': () => { location.href = 'cyberpunk-logic-game.html'; },
         'logic': () => { location.href = 'cyberpunk-logic-game.html'; },
-        'run universe': () => { location.href = 'universe-3.html'; },
-        'universe': () => { location.href = 'universe-3.html'; },
-        'universe 3': () => { location.href = 'universe-3.html'; },
         'run flow': () => { location.href = 'neon-river.html'; },
         'flow': () => { location.href = 'neon-river.html'; },
         'trace persona': () => { location.href = 'ozgecmisim.html'; },
@@ -2207,8 +2188,8 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / run universe / trace persona / unlock hidden',
-        '?': () => 'keyboard: D dossier, O oracle, L logic, U universe, F flow, P persona, ? command shell, ESC close'
+        'help': () => 'commands: open dossier / query oracle / run logic / trace persona / unlock hidden',
+        '?': () => 'keyboard: D dossier, O oracle, L logic, F flow, P persona, ? command shell, ESC close'
       };
 
       const normalizeOracleAnswer = (answer) => answer
@@ -2331,7 +2312,6 @@
         } else if (key === 'd') location.href = 'makaleler.html';
         else if (key === 'o') location.href = 'TheOracle.html';
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
-        else if (key === 'u') location.href = 'universe-3.html';
         else if (key === 'f') location.href = 'neon-river.html';
         else if (key === 'p') location.href = 'ozgecmisim.html';
       });
