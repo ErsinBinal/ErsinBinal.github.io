@@ -563,6 +563,126 @@
                         { text: "Bu soruyu geç", skip: true }
                     ]
                 },
+                {
+                    question: "Bir güvenlik duvarında tek bir veri hücresi her 5 saniyede iki katına çıkıyor. Hücre alanı 80. saniyede tamamen doluyorsa, alan ne zaman yarı doludur?",
+                    answer: 2,
+                    explanation: "İki katına çıkma düzeninde tam dolmadan bir adım önce alan yarı doludur; 80 - 5 = 75.",
+                    options: [
+                        { text: "A) 40. saniye" },
+                        { text: "B) 70. saniye" },
+                        { text: "C) 75. saniye" },
+                        { text: "D) 79. saniye" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir terminal kodu şu ipuçlarıyla çözülüyor: 682 -> bir rakam doğru ve doğru yerde. 614 -> bir rakam doğru ama yanlış yerde. 206 -> iki rakam doğru ama yanlış yerde. 738 -> hiçbir rakam doğru değil. 780 -> bir rakam doğru ama yanlış yerde. Kod nedir?",
+                    answer: 1,
+                    explanation: "738 sıfırlar; 780 ipucundan 0 var ama sonda değil. 206 ile 0 ve 2 doğru ama yerleri yanlış. 682 ile 2 üçüncü sırada doğru olur; kalan düzen 042.",
+                    options: [
+                        { text: "A) 204" },
+                        { text: "B) 042" },
+                        { text: "C) 062" },
+                        { text: "D) 420" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "İki kapı var: biri güvenli çıkışa, diğeri alarm odasına gidiyor. İki bekçiden biri daima doğruyu, diğeri daima yalanı söylüyor. Tek soru hakkın var. Güvenli kapıyı bulmak için ne sorarsın?",
+                    answer: 3,
+                    explanation: "Her bekçiye 'diğeri hangi kapıyı gösterirdi?' diye sorarsan ikisi de yanlış kapıyı işaret eder; tersini seçersin.",
+                    options: [
+                        { text: "A) Sen doğru mu söylüyorsun?" },
+                        { text: "B) Bu kapı güvenli mi?" },
+                        { text: "C) Diğer bekçi yalan mı söyler?" },
+                        { text: "D) Diğer bekçi hangi kapıyı gösterirdi?" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir sistemde parola denemesi her hatada 2 saniye daha uzun sürüyor: 2, 4, 6, 8... saniye. İlk 6 hatalı denemenin toplam kilit süresi kaç saniyedir?",
+                    answer: 2,
+                    explanation: "2 + 4 + 6 + 8 + 10 + 12 = 42 saniye.",
+                    options: [
+                        { text: "A) 30" },
+                        { text: "B) 36" },
+                        { text: "C) 42" },
+                        { text: "D) 48" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Üç veri paketi var: A, B ve C. Yalnızca biri bozuk. Tarayıcı 'A bozuk değil' ve 'B bozuk değil' ifadelerinden tam olarak birinin doğru olduğunu söylüyor. Bozuk paket hangisi?",
+                    answer: 2,
+                    explanation: "Tam olarak bir ifade doğruysa A ve B aynı anda sağlam olamaz. C bozuk olsaydı iki ifade de doğru olurdu. A bozuksa ilk yanlış, ikinci doğru olur.",
+                    options: [
+                        { text: "A) A" },
+                        { text: "B) B" },
+                        { text: "C) A veya B olabilir" },
+                        { text: "D) C" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir saat 03:15'i gösterirken akrep ile yelkovan arasındaki en küçük açı kaç derecedir?",
+                    answer: 0,
+                    explanation: "Yelkovan 90 derecededir; akrep 3'ten 15 dakika ilerlediği için 97.5 derecededir. Fark 7.5 derecedir.",
+                    options: [
+                        { text: "A) 7.5°" },
+                        { text: "B) 15°" },
+                        { text: "C) 22.5°" },
+                        { text: "D) 30°" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir node dizisi şöyle ilerliyor: 1, 4, 9, 16, 25, ... Sıradaki değer nedir?",
+                    answer: 1,
+                    explanation: "Dizi kare sayılardır: 1², 2², 3², 4², 5². Sıradaki 6² = 36.",
+                    options: [
+                        { text: "A) 30" },
+                        { text: "B) 36" },
+                        { text: "C) 42" },
+                        { text: "D) 49" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir yarışta 2. sıradaki drone'u geçersen kaçıncı sıraya yükselirsin?",
+                    answer: 1,
+                    explanation: "İkinciyi geçince onun yerini alırsın; birinci değil, ikinci olursun.",
+                    options: [
+                        { text: "A) 1." },
+                        { text: "B) 2." },
+                        { text: "C) 3." },
+                        { text: "D) Sıralama değişmez" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir odada 3 anahtar ve kapalı bir odada 3 lamba var. Odaya yalnızca bir kez girebilirsin. Hangi anahtarın hangi lambaya ait olduğunu kesin bulmak için en iyi yöntem nedir?",
+                    answer: 2,
+                    explanation: "Bir anahtarı bir süre açık bırakıp kapatırsın, ikinciyi açık bırakırsın, üçüncüye dokunmazsın. Odada yanan lamba ikinci, sıcak ama sönük lamba birinci, soğuk sönük lamba üçüncüdür.",
+                    options: [
+                        { text: "A) Anahtarları rastgele denemek" },
+                        { text: "B) İki anahtarı açık bırakmak" },
+                        { text: "C) Birini ısıtıp kapatmak, birini açık bırakmak" },
+                        { text: "D) Hepsini kapalı bırakmak" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
+                {
+                    question: "Bir kutuda 10 kırmızı, 10 mavi ve 10 yeşil kablo etiketi var. Karanlıkta en az kaç etiket çekersen aynı renkten kesin 2 tane olur?",
+                    answer: 0,
+                    explanation: "En kötü durumda önce üç farklı renkten birer tane çekersin. Dördüncü etiket mutlaka bu renklerden birini tekrarlar.",
+                    options: [
+                        { text: "A) 4" },
+                        { text: "B) 5" },
+                        { text: "C) 10" },
+                        { text: "D) 11" },
+                        { text: "Bu soruyu geç", skip: true }
+                    ]
+                },
                 
             ],
             startTime: null,
