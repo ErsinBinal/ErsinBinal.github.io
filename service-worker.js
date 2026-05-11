@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v7';
+const CACHE_NAME = 'convivium-v8';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -11,6 +11,8 @@ const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/cyberpunk-logic-game.html',
+  '/universe-2.html',
+  '/universe-3.html',
   '/makaleler.html',
   '/ozgecmisim.html',
   '/assets/css/common.css',

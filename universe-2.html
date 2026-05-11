@@ -247,6 +247,7 @@
       <p id="finalScore">Skor: 0</p>
       <p id="finalWave">Dalga: 1</p>
       <p id="finalHigh">En iyi skor: 0</p>
+      <button id="nextUniverse" type="button" style="display:none;">EVREN-3'E GEÇ</button>
       <button id="restart" type="button">YENİDEN BAŞLAT</button>
     </div>
   </div>
@@ -284,6 +285,7 @@
         finalScore: document.getElementById("finalScore"),
         finalWave: document.getElementById("finalWave"),
         finalHigh: document.getElementById("finalHigh"),
+        nextUniverse: document.getElementById("nextUniverse"),
         restart: document.getElementById("restart")
       };
 
@@ -370,6 +372,10 @@
         window.addEventListener("pointermove", onPointer);
         window.addEventListener("pointerup", () => { pointer.active = false; });
         ui.restart.addEventListener("click", restart);
+        ui.nextUniverse.addEventListener("click", () => {
+          sessionStorage.setItem("universe2ArcadeScore", String(state.score));
+          location.href = "universe-3.html?score=" + encodeURIComponent(String(state.score)) + "&rift=universe2";
+        });
 
         setTimeout(() => {
           ui.intro.classList.add("hide");
@@ -918,6 +924,7 @@
 
         if (state.score >= carriedScore + 5000 && !state.nextDimension) {
           state.nextDimension = true;
+          sessionStorage.setItem("universe2ArcadeScore", String(state.score));
           showMessage("BOYUTSAL BASINÇ ARTIYOR", 2400);
         }
         if (e.type === "boss") nextWave();
@@ -976,6 +983,8 @@
         ui.finalScore.textContent = "Skor: " + state.score;
         ui.finalWave.textContent = "Dalga: " + state.wave;
         ui.finalHigh.textContent = "En iyi skor: " + state.high;
+        sessionStorage.setItem("universe2ArcadeScore", String(state.score));
+        ui.nextUniverse.style.display = state.nextDimension ? "inline-block" : "none";
         ui.gameOver.classList.remove("hide");
       }
 

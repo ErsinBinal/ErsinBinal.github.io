@@ -90,6 +90,13 @@
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
+      "name": "Universe-3",
+      "short_name": "Universe-3",
+      "description": "Godot rift oyununu ac",
+      "url": "/universe-3.html",
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
       "name": "The Oracle",
       "short_name": "Oracle",
       "description": "The Oracle deneyimini aç",
