@@ -445,7 +445,7 @@
         <div class="hud" id="hud"></div>
         <canvas class="mini" id="mini" width="316" height="196" aria-hidden="true"></canvas>
         <div class="status-strip" id="status"></div>
-        <div class="hint">WASD/oklar hareket, mouse hedef, sol tık odak ateş, Space blink, X rift pulse, R yeniden başlat. Ankraj halkalarında kal, çekirdekleri topla, 3D Axiom Kapısı'nı aç.</div>
+        <div class="hint">WASD/oklar hareket, mouse hedef, sol tık odak ateş, Space blink, X rift pulse, R yeniden başlat. 4 ankrajı tara; çekirdekler seni güçlendirir, kapıyı açan ana koşul ankraj bütünlüğüdür.</div>
         <div class="noise" aria-hidden="true"></div>
         <div class="game-panel" id="panel">
           <div class="panel-box">
@@ -601,6 +601,14 @@
     function setStatus(text, seconds = 2.4) {
       state.status = text;
       state.statusTimer = seconds;
+    }
+
+    function nextAnchor() {
+      return anchors.find(anchor => !anchor.open) || anchors[anchors.length - 1];
+    }
+
+    function enemyLimit() {
+      return Math.min(18, 7 + state.wave * 2);
     }
 
     function buildScene() {
@@ -861,7 +869,10 @@
     }
 
     function firePlayer(focused = false) {
-      if (player.heat > 92) return;
+      if (player.heat > 92) {
+        if (state.statusTimer <= 0.15) setStatus('Silah ısısı kritik. Ateş hattı soğuyor.', 0.7);
+        return;
+      }
       const target = aimPoint();
       const dir = target.sub(player.pos).normalize();
       const shots = focused && state.stability >= 38 ? 2 : 1;
@@ -981,23 +992,27 @@
         if (!anchor.open && distance < 2.7) {
           nearAnchor = true;
           const pressure = enemies.filter(enemy => enemy.pos.distanceTo(anchor.pos) < 3.1).length;
+          if (pressure && state.statusTimer <= 0) setStatus(anchor.label + ' baskı altında. Taramayı hızlandırmak için alanı temizle.', 1.2);
           anchor.scanned = clamp(anchor.scanned + dt * (pressure ? 6 : 18 + state.cores * 0.06), 0, 100);
           player.scan = anchor.scanned;
           if (anchor.scanned >= 100) {
             anchor.open = true;
             state.scanned += 1;
             state.wave += 1;
-            state.stability = Math.max(state.stability, anchor.need);
+            state.stability = clamp(Math.max(state.stability, anchor.need) + 6, 0, 100);
+            if (state.scanned >= anchors.length) state.stability = 100;
             state.score += 800 + state.wave * 140;
             state.high = Math.max(state.high, state.score);
             burst(anchor.pos, mats.cyan, 44, 8);
-            setStatus(anchor.label + ' ankrajı tarandı. Kapı yükü yükseliyor.', 2.6);
+            setStatus(anchor.label + ' ankrajı tarandı. ' + (state.scanned >= anchors.length ? 'Axiom Kapısı açılıyor.' : 'Sıradaki ankraja ilerle.'), 2.6);
           }
+        } else if (!anchor.open && distance < 3.35 && state.statusTimer <= 0) {
+          setStatus(anchor.label + ' ankrajına biraz daha yaklaş.', 1.1);
         }
       });
       if (!nearAnchor) player.scan = Math.max(0, player.scan - dt * 32);
-      gate.charge = clamp((state.scanned / anchors.length) * 64 + state.stability * 0.36, 0, 100);
-      if (!gate.open && state.scanned >= anchors.length && state.stability >= 100) {
+      gate.charge = clamp((state.scanned / anchors.length) * 82 + state.stability * 0.18, 0, 100);
+      if (!gate.open && state.scanned >= anchors.length) {
         gate.open = true;
         burst(gate.pos, mats.green, 90, 11);
         endGame(true);
@@ -1113,7 +1128,7 @@
       const aim = aimPoint();
       const look = aim.sub(player.pos).normalize();
       player.mesh.position.copy(v3(player.pos, 0));
-      player.mesh.rotation.y = Math.atan2(look.x, look.y);
+      player.mesh.rotation.y = Math.atan2(-look.x, -look.y);
       player.mesh.visible = !(player.inv > 0 && Math.floor(state.time * 20) % 2 === 0);
       camera.position.set(Math.sin(state.time * 0.17) * 0.35 + (Math.random() - 0.5) * state.shake, 15, 18.5 + (Math.random() - 0.5) * state.shake);
       camera.lookAt(player.pos.x * 0.16, 0, player.pos.y * 0.08);
@@ -1130,7 +1145,7 @@
       enemies.forEach(enemy => {
         const dir = player.pos.clone().sub(enemy.pos).normalize();
         enemy.mesh.position.copy(v3(enemy.pos, 0.48 + Math.sin(state.time * 5 + enemy.phase) * 0.08));
-        enemy.mesh.rotation.y = Math.atan2(dir.x, dir.y);
+        enemy.mesh.rotation.y = Math.atan2(-dir.x, -dir.y);
         enemy.mesh.scale.setScalar(1 + (1 - enemy.hp / enemy.maxHp) * 0.16);
       });
       bullets.forEach(bullet => bullet.mesh.position.copy(v3(bullet.pos, 0.55)));
@@ -1143,6 +1158,9 @@
 
     function updateHud() {
       const heatColor = player.heat > 78 ? '#ff5c7a' : '#f2c96b';
+      const target = nextAnchor();
+      const targetProgress = target ? Math.floor(target.scanned) : 100;
+      const targetLabel = target && !target.open ? target.label + ' %' + targetProgress : 'Kapı açık';
       hud.innerHTML = [
         '<div class="hud-card">',
         '<div class="hud-top"><span>AXIOM-RIFT 3D</span><span>DALGA ' + state.wave + '</span></div>',
@@ -1155,7 +1173,7 @@
         barHtml('Stabilite', state.stability, '#f2c96b'),
         '</div>',
         '</div>',
-        '<div class="objectives"><strong>Görev</strong>' + state.scanned + '/' + anchors.length + ' ankraj tarandı · ' + state.cores + ' çekirdek toplandı<br>Axiom Kapısı: %' + Math.floor(gate.charge) + ' · High: ' + Math.floor(state.high).toLocaleString('tr-TR') + '</div>'
+        '<div class="objectives"><strong>Görev</strong>' + state.scanned + '/' + anchors.length + ' ankraj tarandı · hedef: ' + targetLabel + '<br>Axiom Kapısı: %' + Math.floor(gate.charge) + ' · çekirdek: ' + state.cores + ' · High: ' + Math.floor(state.high).toLocaleString('tr-TR') + '</div>'
       ].join('');
       status.textContent = state.mode === 'intro' ? 'SPACE / TIKLA: 3D AXIOM RIFT’E GIR' : state.status;
       status.classList.toggle('is-visible', state.mode === 'intro' || state.mode === 'over' || state.statusTimer > 0);
@@ -1211,8 +1229,10 @@
       }
       if (state.spawn <= 0) {
         state.spawn = Math.max(0.21, 0.95 - state.wave * 0.052 - state.stability * 0.003);
-        spawnEnemy();
-        if (state.wave >= 4 && Math.random() < 0.16) spawnEnemy();
+        if (enemies.length < enemyLimit()) {
+          spawnEnemy();
+          if (state.wave >= 4 && enemies.length < enemyLimit() && Math.random() < 0.16) spawnEnemy();
+        }
       }
       updateAnchors(dt);
       updateBullets(dt);
@@ -1262,9 +1282,12 @@
         player.inv = Math.max(player.inv, 0.38);
         burst(player.pos, mats.text, 28, 8);
       } else if (state.mode === 'play' && k === 'x') {
+        if (player.pulse < 100) setStatus('Pulse henüz dolmadı: %' + Math.floor(player.pulse), 0.9);
         usePulse();
       } else if (state.mode === 'play' && k === 'r') {
         startGame(true);
+      } else if (state.mode === 'play' && k === ' ' && player.energy < 28) {
+        setStatus('Blink için enerji gerekiyor: %' + Math.floor(player.energy), 0.9);
       }
     });
     window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase() === ' ' ? 'space' : e.key.toLowerCase()));

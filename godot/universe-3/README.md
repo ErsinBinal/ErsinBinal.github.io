@@ -11,8 +11,8 @@ Godot 4 kaynak projesi. Universe-2'de kalan skor ve filo basinci artik sanatsal 
 
 ## Oyun dongusu
 
-- Ankraj halkasinin icinde kalarak tarama ilerletilir.
-- Dusmanlar cekirdek dusurur; cekirdekler stabilite, enerji ve pulse kazandirir.
+- 4 ankraj halkasinin icinde kalarak tarama tamamlanir; ana kazanma kosulu ankraj butunlugudur.
+- Dusmanlar cekirdek dusurur; cekirdekler stabilite, enerji ve pulse kazandirir ama ilerleme kilidini tek basina acmaz.
 - Sol tik odak atesi daha gucludur ama isiyi hizli yukseltir.
 - Space blink enerji harcar ve kisa sure dokunulmazlik verir.
 - X pulse hazir oldugunda dusman mermilerini temizler ve yakin basinci kirar.

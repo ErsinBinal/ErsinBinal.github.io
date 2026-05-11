@@ -381,6 +381,15 @@ func _set_status(text: String, seconds: float) -> void:
 	status = text
 	status_timer = seconds
 
+func _enemy_limit() -> int:
+	return min(18, 7 + wave * 2)
+
+func _next_anchor_text() -> String:
+	for anchor in anchors:
+		if not anchor.open:
+			return "%s %02d%%" % [anchor.label, int(anchor.scan)]
+	return "KAPI ACIK"
+
 func _update_play(delta: float) -> void:
 	player.invuln = max(0.0, player.invuln - delta)
 	player.blink = max(0.0, player.blink - delta)
@@ -398,9 +407,10 @@ func _update_play(delta: float) -> void:
 		_fire_player(focused)
 	if spawn_timer <= 0.0:
 		spawn_timer = max(0.21, 0.95 - wave * 0.052 - stability * 0.003)
-		_spawn_enemy()
-		if wave >= 4 and rng.randf() < 0.16:
+		if enemies.size() < _enemy_limit():
 			_spawn_enemy()
+			if wave >= 4 and enemies.size() < _enemy_limit() and rng.randf() < 0.16:
+				_spawn_enemy()
 
 	_update_anchors(delta)
 	_update_bullets(delta)
@@ -410,6 +420,8 @@ func _update_play(delta: float) -> void:
 
 	if Input.is_action_just_pressed("pulse") and player.pulse >= 100.0:
 		_use_pulse()
+	elif Input.is_action_just_pressed("pulse"):
+		_set_status("PULSE HENUZ DOLMADI: %d%%" % int(player.pulse), 0.9)
 	if Input.is_action_just_pressed("restart"):
 		_reset_run()
 	if player.hp <= 0.0:
@@ -423,6 +435,8 @@ func _move_player(delta: float) -> void:
 		player.blink = 0.62
 		player.invuln = max(player.invuln, 0.38)
 		_burst(player.pos, COL_TEXT, 28, 8.0)
+	elif Input.is_action_just_pressed("dash") and player.energy < 28.0:
+		_set_status("BLINK ICIN ENERJI GEREKIYOR: %d%%" % int(player.energy), 0.9)
 	else:
 		var speed := 5.4 + stability * 0.025
 		player.vel = player.vel.move_toward(input.normalized() * speed, 52.0 * delta)
@@ -432,6 +446,8 @@ func _move_player(delta: float) -> void:
 
 func _fire_player(focused: bool) -> void:
 	if player.heat > 92.0:
+		if status_timer <= 0.15:
+			_set_status("SILAH ISISI KRITIK. ATES HATTI SOGUYOR.", 0.7)
 		return
 	var target := _aim_on_plane()
 	var dir := (target - player.pos).normalized()
@@ -567,15 +583,22 @@ func _update_anchors(delta: float) -> void:
 				anchor.open = true
 				scanned += 1
 				wave += 1
-				stability = max(stability, anchor.need)
+				stability = clamp(max(stability, anchor.need) + 6.0, 0.0, 100.0)
+				if scanned >= anchors.size():
+					stability = 100.0
 				score += 800 + wave * 140
 				high_score = max(high_score, score)
 				_burst(anchor.pos, COL_CYAN, 44, 8.0)
-				_set_status("%s ANKRAJI TARANDI. KAPI YUKU YUKSELIYOR." % anchor.label, 2.6)
+				var next_text := "AXIOM KAPISI ACILIYOR." if scanned >= anchors.size() else "SIRADAKI ANKRAJA ILERLE."
+				_set_status("%s ANKRAJI TARANDI. %s" % [anchor.label, next_text], 2.6)
+			elif pressure > 0 and status_timer <= 0.0:
+				_set_status("%s BASKI ALTINDA. TARAMAYI HIZLANDIRMAK ICIN ALANI TEMIZLE." % anchor.label, 1.2)
+		elif not anchor.open and distance < 3.35 and status_timer <= 0.0:
+			_set_status("%s ANKRAJINA BIRAZ DAHA YAKLAS." % anchor.label, 1.1)
 	if not near_anchor:
 		player.scan = max(0.0, player.scan - delta * 32.0)
-	gate_charge = clamp((float(scanned) / float(anchors.size())) * 64.0 + stability * 0.36, 0.0, 100.0)
-	if scanned >= anchors.size() and stability >= 100.0:
+	gate_charge = clamp((float(scanned) / float(anchors.size())) * 82.0 + stability * 0.18, 0.0, 100.0)
+	if scanned >= anchors.size():
 		_burst(Vector2(0, -7.0), COL_GREEN, 90, 11.0)
 		_finish_run(true)
 
@@ -802,7 +825,7 @@ func _update_models(_delta: float) -> void:
 	var target := _aim_on_plane()
 	var look := (target - player.pos).normalized()
 	player_model.position = _to_world(player.pos, 0.0)
-	player_model.rotation.y = atan2(look.x, look.y)
+	player_model.rotation.y = atan2(-look.x, -look.y)
 	player_model.visible = not (player.invuln > 0.0 and int(time_alive * 20.0) % 2 == 0)
 	camera.position = Vector3(sin(time_alive * 0.17) * 0.35, 15.0, 18.5) + Vector3(rng.randf_range(-shake, shake), 0, rng.randf_range(-shake, shake))
 	camera.look_at(Vector3(player.pos.x * 0.16, 0, player.pos.y * 0.08), Vector3.UP)
@@ -825,7 +848,7 @@ func _update_models(_delta: float) -> void:
 		var node: Node3D = e.node
 		node.position = _to_world(e.pos, 0.48 + sin(time_alive * 5.0 + e.phase) * 0.08)
 		var dir := (player.pos - e.pos).normalized()
-		node.rotation.y = atan2(dir.x, dir.y)
+		node.rotation.y = atan2(-dir.x, -dir.y)
 		node.scale = Vector3.ONE * (1.0 + (1.0 - e.hp / e.max_hp) * 0.16)
 	for b in bullets:
 		b.node.position = _to_world(b.pos, 0.55)
@@ -840,7 +863,7 @@ func _update_hud() -> void:
 	var line1 := "UNIVERSE-3 / AXIOM RIFT 3D\n"
 	var line2 := "SKOR %d   HIGH %d   DALGA %d\n" % [score, high_score, wave]
 	var line3 := "GOVDE %02d%%   ENERJI %02d%%   ISI %02d%%\n" % [int(player.hp), int(player.energy), int(player.heat)]
-	var line4 := "PULSE %02d%%   STABILITE %02d%%   ANKRAJ %d/%d   CEKIRDEK %d" % [int(player.pulse), int(stability), scanned, anchors.size(), core_count]
+	var line4 := "PULSE %02d%%   STABILITE %02d%%   ANKRAJ %d/%d   HEDEF %s   CEKIRDEK %d" % [int(player.pulse), int(stability), scanned, anchors.size(), _next_anchor_text(), core_count]
 	hud_label.text = line1 + line2 + line3 + line4
 	status_label.text = status if status_timer > 0.0 or mode == "over" else ""
 	if mode == "intro":
