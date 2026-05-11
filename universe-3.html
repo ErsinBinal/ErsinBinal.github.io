@@ -493,7 +493,8 @@
     const startButton = document.getElementById('start');
     const status = document.getElementById('status');
     const params = new URLSearchParams(location.search);
-    const carried = Math.max(0, Number(params.get('score') || sessionStorage.getItem('universe2ArcadeScore') || 0) || 0);
+    const entryRift = params.get('rift') || '';
+    const carried = Math.max(0, Number(params.get('score') || sessionStorage.getItem('universe2ArcadeScore') || sessionStorage.getItem('cyberpunkLogicScore') || 0) || 0);
     const ARENA = { w: 32, h: 18 };
     const keys = new Set();
     const pointer = { x: 0, y: 0, down: false, active: false };
@@ -770,7 +771,9 @@
       } else {
         panelKicker.textContent = 'Three.js fallback + Godot 3D kaynak';
         panelTitle.textContent = 'Axiom Rift 3D';
-        panelCopy.textContent = 'Prosedürel gemi, ankraj kuleleri, ışıklı çekirdekler ve düşman modelleriyle Universe-3 artık 3D rift arenası olarak çalışıyor.';
+        panelCopy.textContent = entryRift === 'logic'
+          ? 'Cyberpunk Logic terminalinden gelen skor Axiom haritasına işlendi. Node çözümü artık başlangıç basıncını belirliyor; ankrajları tara ve kapıyı stabilize et.'
+          : 'Prosedürel gemi, ankraj kuleleri, ışıklı çekirdekler ve düşman modelleriyle Universe-3 artık 3D rift arenası olarak çalışıyor.';
         startButton.textContent = '3D Göreve Başla';
       }
     }

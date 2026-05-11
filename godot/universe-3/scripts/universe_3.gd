@@ -75,7 +75,7 @@ func _read_entry_state() -> void:
 	high_score = max(_load_int("universe3AxiomHigh", 0), _load_int("universe3RiftHigh", 0))
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
 		var js = Engine.get_singleton("JavaScriptBridge")
-		var raw = js.eval("(new URLSearchParams(location.search)).get('score') || sessionStorage.getItem('universe2ArcadeScore') || '0'", true)
+		var raw = js.eval("(new URLSearchParams(location.search)).get('score') || sessionStorage.getItem('universe2ArcadeScore') || sessionStorage.getItem('cyberpunkLogicScore') || '0'", true)
 		carried_score = max(0, int(str(raw)))
 	else:
 		carried_score = 0

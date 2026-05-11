@@ -128,11 +128,33 @@
             left: 20px;
             font-size: 24px;
         }
+
+        #run-meta {
+            position: absolute;
+            top: 54px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--terminal-blue);
+            font-size: 14px;
+            pointer-events: none;
+        }
         
         #question {
             font-size: 24px;
             margin-bottom: 30px;
             margin-top: 60px;
+        }
+
+        #feedback {
+            min-height: 54px;
+            margin: 18px auto 0;
+            max-width: 680px;
+            color: var(--terminal-blue);
+            line-height: 1.45;
+            text-align: center;
         }
         
         #options {
@@ -184,6 +206,31 @@
         #final-score {
             font-size: 72px;
             animation: pulse 1.5s infinite;
+        }
+
+        .result-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 22px;
+        }
+
+        .terminal-button {
+            padding: 10px 18px;
+            font-size: 1.05em;
+            background: #111;
+            color: var(--terminal-green);
+            border: 2px solid var(--terminal-blue);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .terminal-button:hover {
+            color: #000;
+            background: var(--terminal-green);
+            box-shadow: 0 0 14px var(--terminal-blue);
         }
         
         @keyframes pulse {
@@ -292,6 +339,11 @@
         font-size: 18px;
     }
 
+    #run-meta {
+        top: 46px;
+        font-size: 12px;
+    }
+
     #question {
         font-size: 18px;
     }
@@ -310,6 +362,11 @@
 
     #score, #timer {
         font-size: 14px;
+    }
+
+    #run-meta {
+        top: 40px;
+        font-size: 11px;
     }
 
     #question {
@@ -377,7 +434,8 @@
         <div class="scan-line"></div>
         
         <div id="score">PUAN: 0</div>
-        <div id="timer">SÜRE: 10:00</div>
+        <div id="timer">SÜRE: 01:30</div>
+        <div id="run-meta"><span id="trace">TRACE: 00%</span><span id="streak">STREAK: 0</span></div>
         
         <div id="intro-animation">
             <h1>SİSTEM BAŞLATILIYOR...</h1>
@@ -390,12 +448,18 @@
         <div id="question-container">
             <div id="question"></div>
             <div id="options"></div>
+            <div id="feedback" aria-live="polite"></div>
         </div>
         
         <div id="results">
             <h1>TEST TAMAMLANDI</h1>
             <h2>TOPLAM PUANINIZ:</h2>
             <div id="final-score">0</div>
+            <div id="result-summary"></div>
+            <div class="result-actions">
+                <button id="retry-game" class="terminal-button" type="button">Tekrar Dene</button>
+                <button id="go-universe3" class="terminal-button" type="button">Skoru Universe-3'e Aktar</button>
+            </div>
             <div id="scoreboard-entry" style="margin-top:32px; display:none;">
                 <label for="player-initials" style="font-size:1.2em;">3 Harfli İsminizi Girin:</label><br>
                 <input id="player-initials" maxlength="3" style="text-transform:uppercase; font-size:2em; width:80px; text-align:center; background:#000; color:#0f8; border:2px solid #08f; margin:12px 0;" autofocus>
@@ -427,16 +491,24 @@
     </div>
     
     <script>
+        const QUESTION_TIME = 90;
+        const TRACE_LIMIT = 100;
+
         // Store game state
         const gameState = {
             currentQuestion: 0,
             score: 0,
-            timeRemaining: 600, // 10 minutes in seconds
+            streak: 0,
+            bestStreak: 0,
+            trace: 0,
+            timeRemaining: QUESTION_TIME,
             timer: null,
             answerTime: 0, // When the answer was submitted
             questions: [
                 {
                     question: "8 tane bilardo topunuz var; bu toplardan biri diğerlerinden daha ağır. Elinizde sadece bir eşit kollu terazi (ağırlık terazisi) olduğunu düşünün. Ağır olan topu kesin olarak bulmak için en az kaç tartım yapmanız gerekir?",
+                    answer: 0,
+                    explanation: "8 topu 3-3-2 diye ayırınca ilk tartım grubu daraltır, ikinci tartım ağır topu kesinleştirir.",
                     options: [
                         { text: "A) 2 denemede" },
                         { text: "B) 3 denemede" },
@@ -447,6 +519,8 @@
                 },
                 {
                     question: "Aşağıdaki sayı dizisini devam ettirdiğimizde bir sonraki sayı ne olur? 2, 3, 5, 8, 13, 21, ...",
+                    answer: 2,
+                    explanation: "Dizi Fibonacci akışında ilerler; 13 + 21 = 34.",
                     options: [
                         { text: "A) 26" },
                         { text: "B) 29" },
@@ -457,6 +531,8 @@
                 },
                 {
                     question: "127 oyuncunun katılacağı bir tenis turnuvasında 63 maçta karşılaşacak olan 126 oyuncu ve maç yapmadan tur atlayacak tek bir oyuncu var. Bir sonraki turda 64 oyuncu 32 tur yapacak şampiyonu belirlemek için toplam kaç tane maç yapılmalı?",
+                    answer: 0,
+                    explanation: "Tek elemede her maç bir oyuncuyu eler; 127 oyuncudan 1 şampiyon kalması için 126 maç gerekir.",
                     options: [
                         { text: "A) 126" },
                         { text: "B) 127" },
@@ -467,6 +543,8 @@
                 },
                 {
                     question: "Size dönük bir silah var ve içinde 6 ihtimalde 4 boş 2 dolu mermi var. Birkez tetik çekildi ve silah patlamadı. İkinci kez tetik çekilmeden önce mermilerin yerlerinin değişmesi için çevrilmesinimi seçersini yoksa düzen değişmeden yeniden tetiğe basılmasınımı istersiniz? ",
+                    answer: 0,
+                    explanation: "Tekrar çevirince risk 2/6 olur; çevirmeden devam edersen bilinen boş hazneden sonra kalan olasılık 2/5'e çıkar.",
                     options: [
                         { text: "A) Yeniden Çevir" },
                         { text: "B) Çevirmeden tetiğe bas" },
@@ -475,6 +553,8 @@
                 },
                 {
                     question: "Etkisi en az olacak şıkkı seçin?",
+                    answer: 4,
+                    explanation: "Bu node bir tuzak: en düşük etki, soruya cevap üretmeyip atlayarak sistemi beslememek.",
                     options: [
                         { text: "A) 1 Ton" },
                         { text: "B) 3 G-Kuvvet" },
@@ -497,27 +577,19 @@
         const optionsElement = document.getElementById('options');
         const timerElement = document.getElementById('timer');
         const scoreElement = document.getElementById('score');
+        const traceElement = document.getElementById('trace');
+        const streakElement = document.getElementById('streak');
+        const feedbackElement = document.getElementById('feedback');
         const resultsElement = document.getElementById('results');
         const finalScoreElement = document.getElementById('final-score');
+        const resultSummaryElement = document.getElementById('result-summary');
 
-        // Obfuscated answers: base64 blob of bytes where each byte = (correctIndex XOR _SALT)
-        const _SALT = 0x5a;
-        const _OBF_B64 = 'WlhaWqU='; // base64 encoded bytes [0x5A,0x58,0x5A,0x5A,0xA5]
-        // decode to array of numbers
-        const obfAnswers = (function(b64){
-            try {
-                const raw = atob(b64);
-                const arr = [];
-                for(let i=0;i<raw.length;i++) arr.push(raw.charCodeAt(i));
-                return arr;
-            } catch(e){ return []; }
-        })(_OBF_B64);
         // Yükleme sırasında sırayla gösterilecek metinler
         const loadingMessages = [
     "Mantık protokolleri yükleniyor...",
-    "Ölçüm parametreleri ayarlanıyor...",
-    "Bulmaca algoritmaları hazırlanıyor...",
-    "Terminal arayüzü aktif ediliyor..."
+    "Firewall trace sensörleri ayarlanıyor...",
+    "Axiom node kilitleri taranıyor...",
+    "Universe-3 aktarım kanalı beklemeye alındı..."
 ];
 
 let currentMessageIndex = 0;
@@ -596,14 +668,8 @@ function showNextLoadingMessage() {
             
             if (gameState.timeRemaining <= 0) {
                 clearInterval(gameState.timer);
-                // Add glitching effect when time runs out
-                document.getElementById('terminal').classList.add('glitching');
-                document.getElementById('terminal').setAttribute('data-text', document.getElementById('terminal').innerText);
-                
-                setTimeout(() => {
-                    document.getElementById('terminal').classList.remove('glitching');
-                    nextQuestion();
-                }, 1000);
+                handleTimeout();
+                return;
             }
             
             gameState.timeRemaining--;
@@ -612,6 +678,8 @@ function showNextLoadingMessage() {
         // Update score display
         function updateScore() {
             scoreElement.textContent = `PUAN: ${gameState.score}`;
+            traceElement.textContent = `TRACE: ${gameState.trace.toString().padStart(2, '0')}%`;
+            streakElement.textContent = `STREAK: ${gameState.streak}`;
         }
         
         // Show the current question
@@ -622,7 +690,8 @@ function showNextLoadingMessage() {
             }
             
             const question = gameState.questions[gameState.currentQuestion];
-            questionElement.textContent = question.question;
+            questionElement.textContent = `NODE ${gameState.currentQuestion + 1}/${gameState.questions.length}: ${question.question}`;
+            feedbackElement.textContent = '';
             
             // Clear previous options
             optionsElement.innerHTML = '';
@@ -637,7 +706,7 @@ function showNextLoadingMessage() {
             });
             
             // Reset and start timer
-            gameState.timeRemaining = 600; // 10 minutes
+            gameState.timeRemaining = QUESTION_TIME;
             updateTimer();
             clearInterval(gameState.timer);
             gameState.timer = setInterval(updateTimer, 1000);
@@ -659,61 +728,55 @@ function showNextLoadingMessage() {
             
             // Calculate elapsed time in minutes
             const elapsedTime = (Date.now() - gameState.answerTime) / 1000 / 60;
-            
-// Eğer "Etkisi en az olacak şıkkı seçin?" sorusundaysak
-const currentQuestion = gameState.questions[gameState.currentQuestion];
+            const correctIndex = question.answer;
 
-if (option.text === "Bu soruyu geç" && currentQuestion.question === "Etkisi en az olacak şıkkı seçin?") {
-    optionElements[index].classList.add('correct'); // Doğru olarak işaretle
-    
-    // Zamana göre puan hesaplama
-    const elapsedTime = (Date.now() - gameState.answerTime) / 1000 / 60;
-    let pointsEarned = 0;
-
-    if (elapsedTime <= 2) {
-        pointsEarned = 10; // 2 dakika içinde cevaplandıysa
-    } else if (elapsedTime <= 5) {
-        pointsEarned = 8; // 2-5 dakika arasında cevaplandıysa
-    } else {
-        pointsEarned = 5; // 5 dakika sonrasında cevaplandıysa
-    }
-
-    gameState.score += pointsEarned; // Puan ekle
-    updateScore();
-    setTimeout(nextQuestion, 1000);
-    return;
-}
-
-// Eğer bu özel soru değilse, eski mantıkla devam et
-if (option.skip) {
-    optionElements[index].classList.add('skip');
-    setTimeout(nextQuestion, 1000);
-    return;
-}
-            
-            // Determine correct index using obfuscated answers
-            const obf = obfAnswers[gameState.currentQuestion];
-            const correctIndex = (typeof obf === 'number') ? (obf ^ _SALT) : null;
-
-            if (correctIndex !== null && index === correctIndex) {
+            if (index === correctIndex) {
                 optionElements[index].classList.add('correct');
                 // Point calculation based on time
                 let pointsEarned = 0;
-                if (elapsedTime <= 2) {
-                    pointsEarned = 10; // Full points if answered within 2 minutes
-                } else if (elapsedTime <= 5) {
-                    pointsEarned = 8; // 8 points if answered between 2-5 minutes
+                if (elapsedTime <= 0.5) {
+                    pointsEarned = 14;
+                } else if (elapsedTime <= 1) {
+                    pointsEarned = 11;
                 } else {
-                    pointsEarned = 5; // 5 points if answered after 5 minutes
+                    pointsEarned = 8;
                 }
+                gameState.streak += 1;
+                gameState.bestStreak = Math.max(gameState.bestStreak, gameState.streak);
+                gameState.trace = Math.max(0, gameState.trace - 8);
                 gameState.score += pointsEarned;
+                feedbackElement.textContent = `NODE AÇILDI +${pointsEarned}. ${question.explanation}`;
             } else {
-                optionElements[index].classList.add('incorrect');
-                gameState.score -= 2; // Penalty for wrong answer
+                optionElements[index].classList.add(option.skip ? 'skip' : 'incorrect');
+                optionElements[correctIndex]?.classList.add('correct');
+                gameState.streak = 0;
+                gameState.trace = Math.min(TRACE_LIMIT, gameState.trace + (option.skip ? 10 : 18));
+                gameState.score -= option.skip ? 1 : 2;
+                feedbackElement.textContent = `${option.skip ? 'NODE PAS GEÇİLDİ' : 'TRACE YÜKSELDİ'}. ${question.explanation}`;
             }
             
             updateScore();
-            setTimeout(nextQuestion, 1000);
+            setTimeout(nextQuestion, 1900);
+        }
+
+        function handleTimeout() {
+            const question = gameState.questions[gameState.currentQuestion];
+            const optionElements = document.querySelectorAll('.option');
+            optionElements.forEach(opt => {
+                opt.style.pointerEvents = 'none';
+            });
+            optionElements[question.answer]?.classList.add('correct');
+            gameState.streak = 0;
+            gameState.trace = Math.min(TRACE_LIMIT, gameState.trace + 22);
+            gameState.score -= 3;
+            updateScore();
+            feedbackElement.textContent = `SÜRE DOLDU. ${question.explanation}`;
+            document.getElementById('terminal').classList.add('glitching');
+            document.getElementById('terminal').setAttribute('data-text', document.getElementById('terminal').innerText);
+            setTimeout(() => {
+                document.getElementById('terminal').classList.remove('glitching');
+                nextQuestion();
+            }, 1500);
         }
         
         // Move to the next question
@@ -728,6 +791,7 @@ if (option.skip) {
             questionContainer.style.display = 'none';
             resultsElement.style.display = 'flex';
             finalScoreElement.textContent = gameState.score;
+            resultSummaryElement.textContent = `Trace ${gameState.trace}% | En iyi streak ${gameState.bestStreak} | Universe-3 aktarım kanalı hazır.`;
             clearInterval(gameState.timer);
 
             // Bitirme süresini hesapla
@@ -828,10 +892,27 @@ if (option.skip) {
         
         // Start the game
         function startGame() {
+            gameState.currentQuestion = 0;
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.bestStreak = 0;
+            gameState.trace = 0;
+            gameState.timeRemaining = QUESTION_TIME;
             gameState.startTime = Date.now();
+            questionContainer.style.display = 'block';
+            resultsElement.style.display = 'none';
+            document.getElementById('scoreboard-entry').style.display = 'none';
+            document.getElementById('scoreboard').style.display = 'none';
             updateScore();
             showQuestion();
         }
+
+        document.getElementById('retry-game').addEventListener('click', startGame);
+        document.getElementById('go-universe3').addEventListener('click', () => {
+            sessionStorage.setItem('cyberpunkLogicScore', String(gameState.score));
+            sessionStorage.setItem('universe2ArcadeScore', String(Math.max(0, gameState.score)));
+            location.href = `universe-3.html?score=${encodeURIComponent(String(Math.max(0, gameState.score)))}&rift=logic`;
+        });
         
         // Initialize on load
         window.onload = startIntro;
