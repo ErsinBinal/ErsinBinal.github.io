@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universe-3: Axiom Rift | Convivium</title>
-  <meta name="description" content="Universe-2 sonrasinda Godot kaynakli, modern rift haritalama aksiyon oyunu. Export varsa Godot build'i, yoksa gelismis web surumu acilir.">
+  <title>Universe-3: Axiom Rift 3D | Convivium</title>
+  <meta name="description" content="Universe-2 sonrasinda Godot kaynakli, 3D rift haritalama aksiyon oyunu. Export varsa Godot build'i, yoksa Three.js web surumu acilir.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/universe-3.html">
   <style>
     :root {
       color-scheme: dark;
       --bg: #07080c;
-      --surface: rgba(12, 15, 22, 0.78);
-      --surface-strong: rgba(18, 22, 31, 0.92);
+      --surface: rgba(12, 15, 22, 0.76);
+      --surface-strong: rgba(18, 22, 31, 0.94);
       --line: rgba(218, 232, 255, 0.16);
       --text: #f2f6ff;
       --muted: #aab5c5;
@@ -39,17 +39,13 @@
       user-select: none;
     }
 
-    body {
-      background:
-        linear-gradient(180deg, #080a0f 0%, #050609 100%);
-    }
-
     .shell {
       position: fixed;
       inset: 0;
       display: grid;
       grid-template-rows: auto 1fr;
       overflow: hidden;
+      background: #050609;
     }
 
     header {
@@ -60,7 +56,7 @@
       gap: 18px;
       padding: 12px clamp(14px, 2vw, 24px);
       border-bottom: 1px solid var(--line);
-      background: rgba(7, 8, 12, 0.82);
+      background: rgba(7, 8, 12, 0.84);
       backdrop-filter: blur(18px);
       z-index: 10;
     }
@@ -98,7 +94,7 @@
       font-size: clamp(18px, 2.2vw, 25px);
       line-height: 1.05;
       letter-spacing: 0;
-      font-weight: 800;
+      font-weight: 850;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -138,7 +134,7 @@
       color: var(--text);
       font: inherit;
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 740;
       cursor: pointer;
       transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
     }
@@ -156,11 +152,7 @@
       display: grid;
       place-items: center;
       overflow: hidden;
-      background:
-        linear-gradient(90deg, rgba(68, 215, 208, 0.04) 1px, transparent 1px),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-        #07080c;
-      background-size: 54px 54px, 54px 54px, auto;
+      background: #050609;
     }
 
     iframe {
@@ -172,16 +164,16 @@
 
     .fallback-game {
       position: relative;
-      width: min(100vw, calc((100vh - 68px) * 1.7778));
-      height: min(calc(100vh - 68px), calc(100vw * 0.5625));
-      min-height: 320px;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: #050609;
-      box-shadow: var(--shadow);
       isolation: isolate;
     }
 
-    canvas {
+    #game3d {
+      position: absolute;
+      inset: 0;
       display: block;
       width: 100%;
       height: 100%;
@@ -190,9 +182,10 @@
 
     .hud {
       position: absolute;
-      inset: 14px auto auto 14px;
+      left: 14px;
+      top: 14px;
       z-index: 3;
-      width: min(332px, calc(100% - 28px));
+      width: min(350px, calc(100% - 28px));
       display: grid;
       gap: 9px;
       pointer-events: none;
@@ -201,7 +194,8 @@
     .hud-card,
     .objectives,
     .mini,
-    .hint {
+    .hint,
+    .status-strip {
       border: 1px solid var(--line);
       border-radius: 8px;
       background: var(--surface);
@@ -225,7 +219,7 @@
 
     .hud-score {
       color: var(--text);
-      font-size: 26px;
+      font-size: 27px;
       line-height: 1;
       font-weight: 850;
       margin-bottom: 10px;
@@ -238,7 +232,7 @@
 
     .bar {
       display: grid;
-      grid-template-columns: 68px 1fr 44px;
+      grid-template-columns: 70px 1fr 44px;
       align-items: center;
       gap: 9px;
       font-size: 11px;
@@ -289,9 +283,9 @@
     .hint {
       position: absolute;
       right: 14px;
-      bottom: 58px;
+      bottom: 14px;
       z-index: 3;
-      width: min(520px, calc(100% - 28px));
+      width: min(560px, calc(100% - 28px));
       padding: 10px 12px;
       color: rgba(242, 246, 255, 0.78);
       font-size: 12px;
@@ -303,20 +297,15 @@
     .status-strip {
       position: absolute;
       left: 50%;
-      bottom: 14px;
+      bottom: 58px;
       z-index: 3;
       transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      max-width: min(460px, calc(100% - 28px));
-      padding: 8px 10px;
-      border: 1px solid rgba(242, 201, 107, 0.28);
-      border-radius: 8px;
-      background: rgba(31, 24, 11, 0.72);
+      max-width: min(560px, calc(100% - 28px));
+      padding: 9px 12px;
       color: #ffe6aa;
       font-size: 12px;
       line-height: 1.35;
+      text-align: center;
       pointer-events: none;
       opacity: 0;
       transition: opacity 160ms ease;
@@ -334,9 +323,9 @@
       z-index: 6;
       padding: 22px;
       background:
-        linear-gradient(180deg, rgba(5, 6, 9, 0.36), rgba(5, 6, 9, 0.86)),
-        rgba(5, 6, 9, 0.35);
-      backdrop-filter: blur(6px);
+        linear-gradient(180deg, rgba(5, 6, 9, 0.16), rgba(5, 6, 9, 0.76)),
+        rgba(5, 6, 9, 0.12);
+      backdrop-filter: blur(5px);
     }
 
     .game-panel.is-hidden {
@@ -344,7 +333,7 @@
     }
 
     .panel-box {
-      width: min(760px, calc(100vw - 36px));
+      width: min(790px, calc(100vw - 36px));
       padding: clamp(22px, 4vw, 38px);
       border: 1px solid rgba(218, 232, 255, 0.2);
       border-radius: 10px;
@@ -362,7 +351,7 @@
 
     .panel-box h2 {
       margin: 0;
-      max-width: 12ch;
+      max-width: 14ch;
       font-size: clamp(40px, 8vw, 78px);
       line-height: 0.94;
       letter-spacing: 0;
@@ -371,7 +360,7 @@
 
     .panel-box p {
       margin: 14px 0 0;
-      max-width: 64ch;
+      max-width: 66ch;
       color: var(--muted);
       line-height: 1.55;
       font-size: 15px;
@@ -395,7 +384,7 @@
       inset: 0;
       z-index: 4;
       pointer-events: none;
-      opacity: 0.18;
+      opacity: 0.13;
       mix-blend-mode: soft-light;
       background-image:
         linear-gradient(rgba(255, 255, 255, 0.04) 50%, rgba(0, 0, 0, 0.08) 50%);
@@ -409,11 +398,6 @@
         flex-direction: column;
       }
 
-      .fallback-game {
-        width: 100vw;
-        height: calc(100vh - 108px);
-      }
-
       .subtitle,
       .hint {
         display: none;
@@ -425,7 +409,7 @@
       }
 
       .hud {
-        width: min(290px, calc(100% - 28px));
+        width: min(292px, calc(100% - 28px));
       }
 
       .hud-score {
@@ -433,7 +417,7 @@
       }
 
       .bar {
-        grid-template-columns: 58px 1fr 36px;
+        grid-template-columns: 60px 1fr 36px;
       }
     }
   </style>
@@ -444,8 +428,8 @@
       <div class="brand">
         <div class="mark" aria-hidden="true"></div>
         <div>
-          <h1>Universe-3: Axiom Rift</h1>
-          <div class="subtitle">Godot kaynaklı rift haritalama oyunu</div>
+          <h1>Universe-3: Axiom Rift 3D</h1>
+          <div class="subtitle">Godot kaynaklı prosedürel 3D rift haritalama oyunu</div>
         </div>
       </div>
       <nav aria-label="Universe rotaları">
@@ -456,20 +440,20 @@
     </header>
 
     <main id="mount" aria-live="polite">
-      <section class="fallback-game" aria-label="Universe-3 oynanabilir web surumu">
-        <canvas id="game" width="1280" height="720"></canvas>
+      <section class="fallback-game" aria-label="Universe-3 3D oynanabilir web surumu">
+        <canvas id="game3d"></canvas>
         <div class="hud" id="hud"></div>
         <canvas class="mini" id="mini" width="316" height="196" aria-hidden="true"></canvas>
         <div class="status-strip" id="status"></div>
-        <div class="hint">WASD/oklar hareket, mouse hedef, sol tık odak ateş, Space blink, X rift pulse, R yeniden başlat. Ankrajları tara, çekirdekleri topla, Axiom Kapısı'nı aç.</div>
+        <div class="hint">WASD/oklar hareket, mouse hedef, sol tık odak ateş, Space blink, X rift pulse, R yeniden başlat. Ankraj halkalarında kal, çekirdekleri topla, 3D Axiom Kapısı'nı aç.</div>
         <div class="noise" aria-hidden="true"></div>
         <div class="game-panel" id="panel">
           <div class="panel-box">
-            <p class="panel-kicker" id="panelKicker">Godot destekli web fallback</p>
-            <h2 id="panelTitle">Axiom Rift</h2>
-            <p id="panelCopy">Universe-2'nin ardından filo kayıtları kırıldı ve geçit basıncı canlı bir haritaya dönüştü. Ankrajları tarayıp çekirdekleri topla; düşman rezonansını yönet, enerjini yakmadan Axiom Kapısı'nı stabilize et.</p>
+            <p class="panel-kicker" id="panelKicker">Three.js fallback + Godot 3D kaynak</p>
+            <h2 id="panelTitle">Axiom Rift 3D</h2>
+            <p id="panelCopy">Universe-2'nin ardından geçit basıncı artık üç boyutlu bir harita gibi davranıyor. Prosedürel gemi, düşmanlar, ankraj kuleleri ve ışıklı kapı halkalarıyla rift arenasına gir.</p>
             <div class="button-row">
-              <button class="game-button primary" id="start" type="button">Göreve Başla</button>
+              <button class="game-button primary" id="start" type="button">3D Göreve Başla</button>
               <a class="game-button" href="godot/universe-3/project.godot">Godot Kaynağı</a>
             </div>
           </div>
@@ -481,898 +465,829 @@
   <script>
     (() => {
       const mount = document.getElementById('mount');
-      fetch('games/universe-3/index.html', { method: 'HEAD', cache: 'no-store' })
+      window.__universe3GodotReady = fetch('games/universe-3/index.html', { method: 'HEAD', cache: 'no-store' })
         .then(response => {
-          if (!response.ok) return;
+          if (!response.ok) return false;
           const query = location.search || '';
-          mount.innerHTML = '<iframe title="Universe-3 Godot game" src="games/universe-3/index.html' + query.replace(/"/g, '') + '" allow="autoplay; fullscreen; gamepad"></iframe>';
+          mount.innerHTML = '<iframe title="Universe-3 Godot 3D game" src="games/universe-3/index.html' + query.replace(/"/g, '') + '" allow="autoplay; fullscreen; gamepad"></iframe>';
+          return true;
         })
-        .catch(() => {});
+        .catch(() => false);
     })();
   </script>
 
-  <script>
-    (() => {
-      const canvas = document.getElementById('game');
-      const ctx = canvas.getContext('2d');
-      const mini = document.getElementById('mini');
-      const mctx = mini.getContext('2d');
-      const hud = document.getElementById('hud');
-      const panel = document.getElementById('panel');
-      const panelKicker = document.getElementById('panelKicker');
-      const panelTitle = document.getElementById('panelTitle');
-      const panelCopy = document.getElementById('panelCopy');
-      const startButton = document.getElementById('start');
-      const status = document.getElementById('status');
-      const W = canvas.width;
-      const H = canvas.height;
-      const params = new URLSearchParams(location.search);
-      const carried = Math.max(0, Number(params.get('score') || sessionStorage.getItem('universe2ArcadeScore') || 0) || 0);
-      const keys = new Set();
-      const pointer = { x: W * 0.5, y: H * 0.38, active: false, down: false };
-      const player = {
-        x: W * 0.5,
-        y: H * 0.72,
-        vx: 0,
-        vy: 0,
-        hp: 100,
-        energy: 100,
-        heat: 0,
-        inv: 0,
-        blink: 0,
-        pulse: 28,
-        scan: 0
-      };
-      const state = {
-        mode: 'intro',
-        score: carried,
-        high: Math.max(Number(localStorage.getItem('universe3AxiomHigh') || localStorage.getItem('universe3RiftHigh') || 0), carried),
-        wave: 1,
-        stability: 0,
-        cores: 0,
-        scanned: 0,
-        fire: 0,
-        spawn: 0.45,
-        time: 0,
-        shake: 0,
-        status: 'Axiom kapısı kilitli. İlk ankrajı tara.',
-        statusTimer: 5
-      };
-      const bullets = [];
-      const enemies = [];
-      const cores = [];
-      const particles = [];
-      const damageTexts = [];
-      const trails = [];
-      const stars = Array.from({ length: 230 }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        s: 0.8 + Math.random() * 2.5,
-        v: 12 + Math.random() * 92,
-        a: 0.18 + Math.random() * 0.56,
-        hue: Math.random()
-      }));
-      const dust = Array.from({ length: 54 }, () => ({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: 18 + Math.random() * 80,
-        a: 0.015 + Math.random() * 0.055
-      }));
-      const anchors = [
-        { x: 188, y: 158, need: 18, scanned: 0, open: false, label: 'N-01' },
-        { x: 535, y: 104, need: 34, scanned: 0, open: false, label: 'K-17' },
-        { x: 1004, y: 176, need: 52, scanned: 0, open: false, label: 'V-08' },
-        { x: 720, y: 354, need: 72, scanned: 0, open: false, label: 'A-00' }
-      ];
-      const gate = { x: W * 0.5, y: 104, charge: 0, open: false };
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
-      function clamp(v, min, max) {
-        return Math.max(min, Math.min(max, v));
+    const usingGodot = await (window.__universe3GodotReady || Promise.resolve(false));
+    if (usingGodot) await new Promise(() => {});
+
+    const canvas = document.getElementById('game3d');
+    const mini = document.getElementById('mini');
+    const mctx = mini.getContext('2d');
+    const hud = document.getElementById('hud');
+    const panel = document.getElementById('panel');
+    const panelKicker = document.getElementById('panelKicker');
+    const panelTitle = document.getElementById('panelTitle');
+    const panelCopy = document.getElementById('panelCopy');
+    const startButton = document.getElementById('start');
+    const status = document.getElementById('status');
+    const params = new URLSearchParams(location.search);
+    const carried = Math.max(0, Number(params.get('score') || sessionStorage.getItem('universe2ArcadeScore') || 0) || 0);
+    const ARENA = { w: 32, h: 18 };
+    const keys = new Set();
+    const pointer = { x: 0, y: 0, down: false, active: false };
+    const raycaster = new THREE.Raycaster();
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const player = {
+      pos: new THREE.Vector2(0, 5.9),
+      vel: new THREE.Vector2(),
+      hp: 100,
+      energy: 100,
+      heat: 0,
+      inv: 0,
+      blink: 0,
+      pulse: 28,
+      scan: 0
+    };
+    const state = {
+      mode: 'intro',
+      score: carried,
+      high: Math.max(Number(localStorage.getItem('universe3AxiomHigh') || localStorage.getItem('universe3RiftHigh') || 0), carried),
+      wave: 1,
+      stability: 0,
+      cores: 0,
+      scanned: 0,
+      fire: 0,
+      spawn: 0.45,
+      time: 0,
+      shake: 0,
+      status: 'Axiom kapısı kilitli. İlk ankrajı tara.',
+      statusTimer: 5
+    };
+    const bullets = [];
+    const enemies = [];
+    const cores = [];
+    const particles = [];
+    const anchors = [
+      { pos: new THREE.Vector2(-11.3, -4.7), need: 18, scanned: 0, open: false, label: 'N-01' },
+      { pos: new THREE.Vector2(-2.6, -6.0), need: 34, scanned: 0, open: false, label: 'K-17' },
+      { pos: new THREE.Vector2(9.1, -4.2), need: 52, scanned: 0, open: false, label: 'V-08' },
+      { pos: new THREE.Vector2(3.4, 0.8), need: 72, scanned: 0, open: false, label: 'A-00' }
+    ];
+    const gate = { pos: new THREE.Vector2(0, -7), charge: 0, open: false };
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setClearColor(0x050609, 1);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x07080c, 0.045);
+    const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 90);
+    const world = new THREE.Group();
+    const enemyGroup = new THREE.Group();
+    const bulletGroup = new THREE.Group();
+    const coreGroup = new THREE.Group();
+    const fxGroup = new THREE.Group();
+    scene.add(world, enemyGroup, bulletGroup, coreGroup, fxGroup);
+
+    const mats = {
+      floor: mat(0x080a11, 0, 0.72),
+      lineCyan: mat(0x2a8b92, 0.18, 0.5, true),
+      lineViolet: mat(0x493481, 0.12, 0.5, true),
+      text: mat(0xf2f6ff, 0.08, 0.24),
+      cyan: mat(0x44d7d0, 0.85, 0.22),
+      green: mat(0x8bea77, 0.85, 0.22),
+      gold: mat(0xf2c96b, 0.9, 0.2),
+      red: mat(0xff5c7a, 0.8, 0.28),
+      violet: mat(0xb894ff, 0.8, 0.24),
+      dark: mat(0x050609, 0, 0.4),
+      glassCyan: mat(0x44d7d0, 1.1, 0.16, true, 0.42),
+      glassGold: mat(0xf2c96b, 1.15, 0.16, true, 0.46)
+    };
+
+    function mat(color, emissive = 0, roughness = 0.35, transparent = false, opacity = 1) {
+      const material = new THREE.MeshStandardMaterial({
+        color,
+        roughness,
+        metalness: 0.18,
+        transparent,
+        opacity
+      });
+      if (emissive) {
+        material.emissive = new THREE.Color(color);
+        material.emissiveIntensity = emissive;
       }
+      return material;
+    }
 
-      function colorAlpha(hex, alpha) {
-        const n = parseInt(hex.slice(1), 16);
-        return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alpha + ')';
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function v3(pos, y = 0) {
+      return new THREE.Vector3(pos.x, y, pos.y);
+    }
+
+    function disposeObject(object) {
+      object.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+      });
+      object.parent?.remove(object);
+    }
+
+    function setStatus(text, seconds = 2.4) {
+      state.status = text;
+      state.statusTimer = seconds;
+    }
+
+    function buildScene() {
+      camera.position.set(0, 15, 18.5);
+      camera.lookAt(0, 0, 0);
+      scene.add(new THREE.HemisphereLight(0xc8f8ff, 0x151020, 1.1));
+      const sun = new THREE.DirectionalLight(0xffffff, 2.4);
+      sun.position.set(-6, 12, 7);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      scene.add(sun);
+      const cyan = new THREE.PointLight(0x44d7d0, 28, 22, 2);
+      cyan.position.set(-5, 5, -3);
+      scene.add(cyan);
+      const gold = new THREE.PointLight(0xf2c96b, 18, 18, 2);
+      gold.position.set(6, 4, -7);
+      scene.add(gold);
+
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA.w, ARENA.h, 1, 1), mats.floor);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      world.add(floor);
+      for (let x = -16; x <= 16; x += 2) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.012, ARENA.h), mats.lineCyan);
+        line.position.set(x, 0.016, 0);
+        world.add(line);
       }
-
-      function setStatus(text, seconds = 2.4) {
-        state.status = text;
-        state.statusTimer = seconds;
+      for (let z = -9; z <= 9; z += 2) {
+        const line = new THREE.Mesh(new THREE.BoxGeometry(ARENA.w, 0.012, 0.018), mats.lineViolet);
+        line.position.set(0, 0.018, z);
+        world.add(line);
       }
+      const starGeo = new THREE.SphereGeometry(0.025, 8, 8);
+      for (let i = 0; i < 140; i++) {
+        const material = Math.random() > 0.72 ? mats.gold : Math.random() > 0.48 ? mats.violet : mats.cyan;
+        const star = new THREE.Mesh(starGeo, material);
+        star.position.set(Math.random() * 44 - 22, Math.random() * 9 + 2, Math.random() * 24 - 14);
+        star.scale.setScalar(Math.random() * 1.6 + 0.5);
+        world.add(star);
+      }
+      world.add(makeGate());
+      anchors.forEach(anchor => {
+        anchor.mesh = makeAnchor(anchor.label);
+        anchor.mesh.position.copy(v3(anchor.pos, 0.28));
+        world.add(anchor.mesh);
+      });
+      player.mesh = makeShip();
+      world.add(player.mesh);
+    }
 
-      function showPanel(kind) {
-        panel.classList.remove('is-hidden');
-        if (kind === 'win') {
-          panelKicker.textContent = 'Kapı açıldı';
-          panelTitle.textContent = 'Rota Canlı';
-          panelCopy.textContent = 'Axiom Kapısı stabilize edildi. Universe-3 haritası artık Godot export için hazır bir oyun döngüsüne sahip.';
-          startButton.textContent = 'Yeniden Başlat';
-        } else if (kind === 'over') {
-          panelKicker.textContent = 'Gövde kaybı';
-          panelTitle.textContent = 'Yarık Kapandı';
-          panelCopy.textContent = 'Harita kırıldı. Ankrajların yanında kalarak taramayı hızlandır, pulse biriktir ve ısıyı kontrol altında tut.';
-          startButton.textContent = 'Yeniden Başlat';
-        } else {
-          panelKicker.textContent = 'Godot destekli web fallback';
-          panelTitle.textContent = 'Axiom Rift';
-          panelCopy.textContent = 'Universe-2 sonrasında geçit basıncı canlı bir haritaya dönüştü. Ankrajları tarayıp çekirdekleri topla; enerjini yakmadan Axiom Kapısı’nı stabilize et.';
-          startButton.textContent = 'Göreve Başla';
+    function makeShip() {
+      const root = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.22, 1.12), mats.text);
+      body.castShadow = true;
+      body.position.y = 0.35;
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.68, 5), mats.cyan);
+      nose.position.set(0, 0.37, -0.68);
+      nose.rotation.x = -Math.PI / 2;
+      const wings = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.08, 0.34), mats.red);
+      wings.position.set(0, 0.25, 0.34);
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.18, 18, 12), mats.gold);
+      core.position.set(0, 0.52, -0.06);
+      root.add(body, nose, wings, core);
+      return root;
+    }
+
+    function makeGate() {
+      const root = new THREE.Group();
+      root.name = 'AxiomGate';
+      root.position.copy(v3(gate.pos, 0.55));
+      gate.rings = [];
+      for (let i = 0; i < 3; i++) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(1.25 + i * 0.43, 0.038, 12, 96), i === 0 ? mats.glassCyan : mats.violet);
+        ring.rotation.x = Math.PI / 2;
+        root.add(ring);
+        gate.rings.push(ring);
+      }
+      const core = new THREE.Mesh(new THREE.SphereGeometry(0.42, 24, 18), mats.glassGold);
+      root.add(core);
+      gate.mesh = root;
+      return root;
+    }
+
+    function makeAnchor(label) {
+      const root = new THREE.Group();
+      root.name = `Anchor_${label}`;
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.18, 0.72), mat(0x252b38, 0.05, 0.34));
+      base.castShadow = true;
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.025, 10, 64), mats.glassCyan);
+      ring.rotation.x = Math.PI / 2;
+      const needle = new THREE.Mesh(new THREE.ConeGeometry(0.15, 1.1, 5), mats.gold);
+      needle.position.y = 0.58;
+      const crown = new THREE.Mesh(new THREE.OctahedronGeometry(0.25), mats.cyan);
+      crown.position.y = 1.14;
+      root.add(base, ring, needle, crown);
+      return root;
+    }
+
+    function makeEnemy(type) {
+      const root = new THREE.Group();
+      const material = type === 'warden' ? mats.green : type === 'lancer' ? mats.gold : type === 'mine' ? mats.violet : mats.red;
+      const body = new THREE.Mesh(new THREE.SphereGeometry(0.46, 18, 12), material);
+      body.scale.set(1, 0.68, 1);
+      body.castShadow = true;
+      root.add(body);
+      if (type === 'lancer') {
+        const spear = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 1.18), mats.gold);
+        spear.position.z = -0.42;
+        root.add(spear);
+      } else if (type === 'mine') {
+        for (let i = 0; i < 6; i++) {
+          const spike = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.52, 5), mats.violet);
+          const a = i / 6 * Math.PI * 2;
+          spike.position.set(Math.cos(a) * 0.34, 0, Math.sin(a) * 0.34);
+          spike.rotation.z = Math.PI / 2;
+          spike.rotation.y = -a;
+          root.add(spike);
         }
+      } else if (type === 'warden') {
+        const halo = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.035, 10, 64), mats.green);
+        halo.rotation.x = Math.PI / 2;
+        root.add(halo);
       }
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 8), mats.dark);
+      eye.position.set(0, 0.1, -0.45);
+      root.add(eye);
+      return root;
+    }
 
-      function startGame(reset = false) {
-        if (reset) resetRun();
-        state.mode = 'play';
-        panel.classList.add('is-hidden');
-        setStatus('Yakındaki ankrajlara gir ve tarama halkasının içinde kal.', 3.2);
+    function makeCore() {
+      const root = new THREE.Group();
+      const gem = new THREE.Mesh(new THREE.OctahedronGeometry(0.32), mats.green);
+      gem.scale.y = 1.35;
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.014, 8, 48), mats.cyan);
+      ring.rotation.x = Math.PI / 2;
+      root.add(gem, ring);
+      return root;
+    }
+
+    function makeBullet(focused, friendly) {
+      const material = friendly ? (focused ? mats.gold : mats.cyan) : mats.red;
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(focused ? 0.18 : 0.13, 12, 8), material);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    function showPanel(kind) {
+      panel.classList.remove('is-hidden');
+      if (kind === 'win') {
+        panelKicker.textContent = 'Kapı açıldı';
+        panelTitle.textContent = '3D Rota Canlı';
+        panelCopy.textContent = 'Axiom Kapısı üç boyutlu rift haritasını stabilize etti. Godot 3D kaynak ve web fallback aynı tasarım diline taşındı.';
+        startButton.textContent = 'Yeniden Başlat';
+      } else if (kind === 'over') {
+        panelKicker.textContent = 'Gövde kaybı';
+        panelTitle.textContent = 'Yarık Kapandı';
+        panelCopy.textContent = '3D basınç haritası kırıldı. Ankrajların yanında kal, düşman baskısını pulse ile temizle ve ısıyı kontrol et.';
+        startButton.textContent = 'Yeniden Başlat';
+      } else {
+        panelKicker.textContent = 'Three.js fallback + Godot 3D kaynak';
+        panelTitle.textContent = 'Axiom Rift 3D';
+        panelCopy.textContent = 'Prosedürel gemi, ankraj kuleleri, ışıklı çekirdekler ve düşman modelleriyle Universe-3 artık 3D rift arenası olarak çalışıyor.';
+        startButton.textContent = '3D Göreve Başla';
       }
+    }
 
-      function resetRun() {
-        player.x = W * 0.5;
-        player.y = H * 0.72;
-        player.vx = 0;
-        player.vy = 0;
-        player.hp = 100;
-        player.energy = 100;
-        player.heat = 0;
-        player.inv = 1.3;
-        player.blink = 0;
-        player.pulse = 28;
-        player.scan = 0;
-        state.score = carried;
-        state.wave = 1;
-        state.stability = 0;
-        state.cores = 0;
-        state.scanned = 0;
-        state.fire = 0;
-        state.spawn = 0.45;
-        state.shake = 0;
-        gate.charge = 0;
-        gate.open = false;
-        anchors.forEach(a => {
-          a.scanned = 0;
-          a.open = false;
-        });
-        bullets.length = 0;
-        enemies.length = 0;
-        cores.length = 0;
-        particles.length = 0;
-        damageTexts.length = 0;
-        trails.length = 0;
-      }
+    function resetRun() {
+      [...enemies, ...bullets, ...cores, ...particles].forEach(item => disposeObject(item.mesh));
+      enemies.length = 0;
+      bullets.length = 0;
+      cores.length = 0;
+      particles.length = 0;
+      player.pos.set(0, 5.9);
+      player.vel.set(0, 0);
+      player.hp = 100;
+      player.energy = 100;
+      player.heat = 0;
+      player.inv = 1.3;
+      player.blink = 0;
+      player.pulse = 28;
+      player.scan = 0;
+      state.score = carried;
+      state.wave = 1;
+      state.stability = 0;
+      state.cores = 0;
+      state.scanned = 0;
+      state.fire = 0;
+      state.spawn = 0.45;
+      state.shake = 0;
+      gate.charge = 0;
+      gate.open = false;
+      anchors.forEach(anchor => {
+        anchor.scanned = 0;
+        anchor.open = false;
+        anchor.mesh.scale.setScalar(1);
+      });
+    }
 
-      function endGame(win) {
-        state.mode = 'over';
-        if (win) {
-          state.score += 2800 + Math.floor(state.stability * 34);
-          state.high = Math.max(state.high, state.score);
-        }
-        localStorage.setItem('universe3AxiomHigh', String(Math.floor(state.high)));
-        showPanel(win ? 'win' : 'over');
-      }
+    function startGame(reset = false) {
+      if (reset) resetRun();
+      state.mode = 'play';
+      panel.classList.add('is-hidden');
+      setStatus('3D ankraj halkalarına gir ve tarama alanında kal.', 3.2);
+    }
 
-      function toCanvas(e) {
-        const r = canvas.getBoundingClientRect();
-        pointer.x = clamp((e.clientX - r.left) / r.width * W, 0, W);
-        pointer.y = clamp((e.clientY - r.top) / r.height * H, 0, H);
-        pointer.active = true;
-      }
-
-      function burst(x, y, color, count, speed = 260) {
-        for (let i = 0; i < count; i++) {
-          const a = Math.random() * Math.PI * 2;
-          const spd = 30 + Math.random() * speed;
-          particles.push({
-            x,
-            y,
-            vx: Math.cos(a) * spd,
-            vy: Math.sin(a) * spd,
-            life: 0.25 + Math.random() * 0.75,
-            max: 0.75,
-            color,
-            size: 1.6 + Math.random() * 5
-          });
-        }
-      }
-
-      function floatingText(x, y, text, color) {
-        damageTexts.push({ x, y, text, color, life: 0.8 });
-      }
-
-      function spawnEnemy() {
-        const side = Math.floor(Math.random() * 4);
-        let x = Math.random() * W;
-        let y = -36;
-        if (side === 1) { x = W + 36; y = 70 + Math.random() * (H - 140); }
-        if (side === 2) { x = Math.random() * W; y = H + 36; }
-        if (side === 3) { x = -36; y = 70 + Math.random() * (H - 140); }
-        let type = 'seeker';
-        const roll = Math.random();
-        if (state.wave >= 4 && roll < 0.14) type = 'warden';
-        else if (state.wave >= 3 && roll < 0.32) type = 'mine';
-        else if (state.wave >= 2 && roll < 0.62) type = 'lancer';
-        const cfg = {
-          seeker: { hp: 3 + state.wave, speed: 94, radius: 17, color: '#ff5c7a' },
-          lancer: { hp: 4 + state.wave, speed: 70, radius: 19, color: '#f2c96b' },
-          mine: { hp: 2 + Math.ceil(state.wave * 0.6), speed: 52, radius: 15, color: '#b894ff' },
-          warden: { hp: 10 + state.wave * 2, speed: 44, radius: 25, color: '#8bea77' }
-        }[type];
-        enemies.push({
-          type,
-          x,
-          y,
-          vx: 0,
-          vy: 0,
-          hp: cfg.hp,
-          maxHp: cfg.hp,
-          speed: cfg.speed,
-          radius: cfg.radius,
-          color: cfg.color,
-          fire: 0.45 + Math.random() * 1.3,
-          phase: Math.random() * 10,
-          arm: 0
-        });
-      }
-
-      function firePlayer(focused = false) {
-        if (player.heat > 92) return;
-        const dx = pointer.x - player.x;
-        const dy = pointer.y - player.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const heat = focused ? 4.4 : 2.15;
-        const spread = focused ? 0.045 : 0.018;
-        const shots = focused && state.stability >= 38 ? 2 : 1;
-        player.heat = clamp(player.heat + heat, 0, 100);
-        for (let i = 0; i < shots; i++) {
-          const turn = (i - (shots - 1) * 0.5) * spread;
-          const nx = dx / len * Math.cos(turn) - dy / len * Math.sin(turn);
-          const ny = dx / len * Math.sin(turn) + dy / len * Math.cos(turn);
-          bullets.push({
-            x: player.x + nx * 28,
-            y: player.y + ny * 28,
-            vx: nx * (focused ? 850 : 710),
-            vy: ny * (focused ? 850 : 710),
-            friendly: true,
-            life: focused ? 0.62 : 0.82,
-            damage: focused ? 2 + Math.floor(state.stability / 34) : 1 + Math.floor(state.stability / 48),
-            color: focused ? '#f2c96b' : '#44d7d0',
-            radius: focused ? 5.2 : 4.4
-          });
-        }
-      }
-
-      function enemyShot(e, speed = 230, spread = 0) {
-        const dx = player.x - e.x;
-        const dy = player.y - e.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const base = Math.atan2(dy, dx);
-        const angle = base + spread;
-        bullets.push({
-          x: e.x + Math.cos(angle) * (e.radius + 6),
-          y: e.y + Math.sin(angle) * (e.radius + 6),
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          friendly: false,
-          life: 3.1,
-          damage: e.type === 'warden' ? 16 : 10,
-          color: e.color,
-          radius: e.type === 'warden' ? 8 : 6
-        });
-      }
-
-      function killEnemy(index, drop = true) {
-        const e = enemies[index];
-        const value = e.type === 'warden' ? 280 : e.type === 'lancer' ? 150 : e.type === 'mine' ? 120 : 95;
-        state.score += value * state.wave;
+    function endGame(win) {
+      state.mode = 'over';
+      if (win) {
+        state.score += 2800 + Math.floor(state.stability * 34);
         state.high = Math.max(state.high, state.score);
-        burst(e.x, e.y, e.color, e.type === 'warden' ? 34 : 18, e.type === 'warden' ? 360 : 250);
-        floatingText(e.x, e.y - 10, '+' + value, e.color);
-        if (drop || Math.random() < 0.48) {
-          const amount = e.type === 'warden' ? 3 : e.type === 'lancer' ? 2 : 1;
-          for (let i = 0; i < amount; i++) {
-            cores.push({
-              x: e.x + Math.random() * 18 - 9,
-              y: e.y + Math.random() * 18 - 9,
-              vx: -50 + Math.random() * 100,
-              vy: -50 + Math.random() * 100,
-              life: 13,
-              value: e.type === 'warden' ? 3 : 1
-            });
-          }
-        }
-        if (e.type === 'mine') {
-          for (let i = 0; i < 8; i++) enemyShot(e, 205, (i / 8) * Math.PI * 2);
-        }
-        enemies.splice(index, 1);
       }
+      localStorage.setItem('universe3AxiomHigh', String(Math.floor(state.high)));
+      showPanel(win ? 'win' : 'over');
+    }
 
-      function hurtPlayer(amount) {
-        if (player.inv > 0) return;
-        player.hp = clamp(player.hp - amount, 0, 100);
-        player.inv = 0.72;
-        state.shake = Math.max(state.shake, 12);
-        burst(player.x, player.y, '#ff5c7a', 24, 320);
-        setStatus('Gövde hasarı: ' + amount + '. Enerji kalkanı tekrar toplanıyor.', 1.4);
-        if (player.hp <= 0) endGame(false);
-      }
+    function aimPoint() {
+      raycaster.setFromCamera(pointer, camera);
+      const hit = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, hit);
+      return new THREE.Vector2(hit.x, hit.z);
+    }
 
-      function usePulse() {
-        if (player.pulse < 100) return;
-        player.pulse = 0;
-        player.heat = clamp(player.heat - 34, 0, 100);
-        state.shake = 14;
-        for (let i = enemies.length - 1; i >= 0; i--) {
-          enemies[i].hp -= 5 + state.wave;
-          enemies[i].vx += (enemies[i].x - player.x) * 1.8;
-          enemies[i].vy += (enemies[i].y - player.y) * 1.8;
-          if (enemies[i].hp <= 0) killEnemy(i);
-        }
-        for (let i = bullets.length - 1; i >= 0; i--) {
-          if (!bullets[i].friendly) bullets.splice(i, 1);
-        }
-        burst(player.x, player.y, '#ffffff', 72, 520);
-        setStatus('Rift pulse düşman basıncını temizledi.', 1.8);
-      }
-
-      function updatePlayer(dt) {
-        player.inv = Math.max(0, player.inv - dt);
-        player.blink = Math.max(0, player.blink - dt);
-        player.energy = clamp(player.energy + dt * (18 + state.stability * 0.08) - (pointer.down ? dt * 6 : 0), 0, 100);
-        const heatDrain = player.heat > 68 ? 18 : 30;
-        player.heat = clamp(player.heat - dt * heatDrain, 0, 100);
-        player.pulse = clamp(player.pulse + dt * (3.8 + state.cores * 0.03), 0, 100);
-
-        let ax = 0;
-        let ay = 0;
-        if (keys.has('arrowleft') || keys.has('a')) ax -= 1;
-        if (keys.has('arrowright') || keys.has('d')) ax += 1;
-        if (keys.has('arrowup') || keys.has('w')) ay -= 1;
-        if (keys.has('arrowdown') || keys.has('s')) ay += 1;
-        const len = Math.hypot(ax, ay) || 1;
-        const speed = 278 + state.stability * 1.25;
-        player.vx += (ax / len * speed - player.vx) * Math.min(1, dt * 13);
-        player.vy += (ay / len * speed - player.vy) * Math.min(1, dt * 13);
-        player.x = clamp(player.x + player.vx * dt, 34, W - 34);
-        player.y = clamp(player.y + player.vy * dt, 42, H - 34);
-        trails.push({ x: player.x, y: player.y + 16, life: 0.35, vx: -player.vx * 0.05, vy: -player.vy * 0.05 });
-      }
-
-      function updateAnchors(dt) {
-        let nearAnchor = false;
-        anchors.forEach(anchor => {
-          const d = Math.hypot(anchor.x - player.x, anchor.y - player.y);
-          if (!anchor.open && d < 108) {
-            nearAnchor = true;
-            const pressure = enemies.filter(e => Math.hypot(e.x - anchor.x, e.y - anchor.y) < 125).length;
-            const rate = pressure ? 6 : 18 + state.cores * 0.06;
-            anchor.scanned = clamp(anchor.scanned + dt * rate, 0, 100);
-            player.scan = anchor.scanned;
-            if (anchor.scanned >= 100) {
-              anchor.open = true;
-              state.scanned += 1;
-              state.wave += 1;
-              state.stability = Math.max(state.stability, anchor.need);
-              state.score += 800 + state.wave * 140;
-              state.high = Math.max(state.high, state.score);
-              burst(anchor.x, anchor.y, '#44d7d0', 44, 380);
-              setStatus(anchor.label + ' ankrajı tarandı. Kapı yükü yükseliyor.', 2.6);
-            }
-          }
+    function burst(pos, material, count, speed = 7) {
+      for (let i = 0; i < count; i++) {
+        const mesh = new THREE.Mesh(new THREE.SphereGeometry(Math.random() * 0.08 + 0.04, 8, 6), material);
+        mesh.position.copy(v3(pos, 0.55));
+        fxGroup.add(mesh);
+        const a = Math.random() * Math.PI * 2;
+        particles.push({
+          pos: pos.clone(),
+          vel: new THREE.Vector2(Math.cos(a), Math.sin(a)).multiplyScalar(Math.random() * speed + 0.5),
+          life: Math.random() * 0.5 + 0.28,
+          mesh
         });
-        if (!nearAnchor) player.scan = Math.max(0, player.scan - dt * 32);
-        gate.charge = clamp((state.scanned / anchors.length) * 64 + state.stability * 0.36, 0, 100);
-        if (!gate.open && state.scanned >= anchors.length && state.stability >= 100) {
-          gate.open = true;
-          burst(gate.x, gate.y, '#8bea77', 90, 520);
-          endGame(true);
+      }
+    }
+
+    function spawnEnemy() {
+      const side = Math.floor(Math.random() * 4);
+      let pos = new THREE.Vector2(Math.random() * ARENA.w - ARENA.w / 2, -ARENA.h / 2 - 1.1);
+      if (side === 1) pos.set(ARENA.w / 2 + 1.1, Math.random() * ARENA.h * 0.78 - ARENA.h * 0.35);
+      if (side === 2) pos.set(Math.random() * ARENA.w - ARENA.w / 2, ARENA.h / 2 + 1.1);
+      if (side === 3) pos.set(-ARENA.w / 2 - 1.1, Math.random() * ARENA.h * 0.78 - ARENA.h * 0.35);
+      let type = 'seeker';
+      const roll = Math.random();
+      if (state.wave >= 4 && roll < 0.14) type = 'warden';
+      else if (state.wave >= 3 && roll < 0.32) type = 'mine';
+      else if (state.wave >= 2 && roll < 0.62) type = 'lancer';
+      const cfg = {
+        seeker: { hp: 3 + state.wave, speed: 1.95, radius: 0.46 },
+        lancer: { hp: 4 + state.wave, speed: 1.48, radius: 0.52 },
+        mine: { hp: 2 + Math.ceil(state.wave * 0.6), speed: 1.18, radius: 0.42 },
+        warden: { hp: 10 + state.wave * 2, speed: 1.0, radius: 0.72 }
+      }[type];
+      const mesh = makeEnemy(type);
+      enemyGroup.add(mesh);
+      enemies.push({ type, pos, vel: new THREE.Vector2(), hp: cfg.hp, maxHp: cfg.hp, speed: cfg.speed, radius: cfg.radius, fire: Math.random() * 1.3 + 0.55, phase: Math.random() * 10, mesh });
+    }
+
+    function firePlayer(focused = false) {
+      if (player.heat > 92) return;
+      const target = aimPoint();
+      const dir = target.sub(player.pos).normalize();
+      const shots = focused && state.stability >= 38 ? 2 : 1;
+      player.heat = clamp(player.heat + (focused ? 4.4 : 2.15), 0, 100);
+      for (let i = 0; i < shots; i++) {
+        const turn = (i - (shots - 1) * 0.5) * (focused ? 0.045 : 0.018);
+        const out = dir.clone().rotateAround(new THREE.Vector2(), turn);
+        const mesh = makeBullet(focused, true);
+        bulletGroup.add(mesh);
+        bullets.push({
+          pos: player.pos.clone().add(out.clone().multiplyScalar(0.72)),
+          vel: out.multiplyScalar(focused ? 18 : 14),
+          friendly: true,
+          life: focused ? 0.76 : 0.94,
+          damage: focused ? 2 + Math.floor(state.stability / 34) : 1 + Math.floor(state.stability / 48),
+          radius: focused ? 0.15 : 0.13,
+          mesh
+        });
+      }
+    }
+
+    function enemyShot(enemy, speed = 4.8, spread = 0) {
+      const dir = player.pos.clone().sub(enemy.pos).normalize().rotateAround(new THREE.Vector2(), spread);
+      const mesh = makeBullet(false, false);
+      bulletGroup.add(mesh);
+      bullets.push({
+        pos: enemy.pos.clone().add(dir.clone().multiplyScalar(enemy.radius + 0.22)),
+        vel: dir.multiplyScalar(speed),
+        friendly: false,
+        life: 3.1,
+        damage: enemy.type === 'warden' ? 16 : 10,
+        radius: enemy.type === 'warden' ? 0.19 : 0.16,
+        mesh
+      });
+    }
+
+    function killEnemy(index, drop = true) {
+      const enemy = enemies[index];
+      const value = enemy.type === 'warden' ? 280 : enemy.type === 'lancer' ? 150 : enemy.type === 'mine' ? 120 : 95;
+      state.score += value * state.wave;
+      state.high = Math.max(state.high, state.score);
+      burst(enemy.pos, enemy.type === 'warden' ? mats.green : enemy.type === 'lancer' ? mats.gold : enemy.type === 'mine' ? mats.violet : mats.red, enemy.type === 'warden' ? 34 : 18);
+      if (drop || Math.random() < 0.48) {
+        const amount = enemy.type === 'warden' ? 3 : enemy.type === 'lancer' ? 2 : 1;
+        for (let i = 0; i < amount; i++) {
+          const mesh = makeCore();
+          coreGroup.add(mesh);
+          cores.push({
+            pos: enemy.pos.clone().add(new THREE.Vector2(Math.random() * 0.5 - 0.25, Math.random() * 0.5 - 0.25)),
+            vel: new THREE.Vector2(Math.random() * 2.2 - 1.1, Math.random() * 2.2 - 1.1),
+            life: 13,
+            value: enemy.type === 'warden' ? 3 : 1,
+            mesh
+          });
         }
       }
+      if (enemy.type === 'mine') {
+        for (let i = 0; i < 8; i++) enemyShot(enemy, 4.1, (i / 8) * Math.PI * 2);
+      }
+      disposeObject(enemy.mesh);
+      enemies.splice(index, 1);
+    }
 
-      function updateBullets(dt) {
-        bullets.forEach(b => {
-          b.x += b.vx * dt;
-          b.y += b.vy * dt;
-          b.life -= dt;
-        });
-        for (let i = bullets.length - 1; i >= 0; i--) {
-          const b = bullets[i];
-          if (b.life <= 0 || b.x < -70 || b.x > W + 70 || b.y < -80 || b.y > H + 80) {
-            bullets.splice(i, 1);
-            continue;
-          }
-          if (b.friendly) {
-            for (let j = enemies.length - 1; j >= 0; j--) {
-              const e = enemies[j];
-              if (Math.hypot(b.x - e.x, b.y - e.y) < e.radius + b.radius) {
-                e.hp -= b.damage;
-                bullets.splice(i, 1);
-                burst(b.x, b.y, b.color, 4, 120);
-                if (e.hp <= 0) killEnemy(j);
-                break;
-              }
-            }
-          } else if (Math.hypot(b.x - player.x, b.y - player.y) < 21 + b.radius) {
-            bullets.splice(i, 1);
-            hurtPlayer(b.damage);
-          }
+    function hurtPlayer(amount) {
+      if (player.inv > 0) return;
+      player.hp = clamp(player.hp - amount, 0, 100);
+      player.inv = 0.72;
+      state.shake = Math.max(state.shake, 0.35);
+      burst(player.pos, mats.red, 24, 7);
+      setStatus('Gövde hasarı: ' + amount + '. Enerji kalkanı tekrar toplanıyor.', 1.4);
+      if (player.hp <= 0) endGame(false);
+    }
+
+    function usePulse() {
+      if (player.pulse < 100) return;
+      player.pulse = 0;
+      player.heat = clamp(player.heat - 34, 0, 100);
+      state.shake = 0.42;
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].hp -= 5 + state.wave;
+        enemies[i].vel.add(enemies[i].pos.clone().sub(player.pos).multiplyScalar(1.8));
+        if (enemies[i].hp <= 0) killEnemy(i);
+      }
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        if (!bullets[i].friendly) {
+          disposeObject(bullets[i].mesh);
+          bullets.splice(i, 1);
         }
       }
+      burst(player.pos, mats.text, 72, 11);
+      setStatus('Rift pulse düşman basıncını temizledi.', 1.8);
+    }
 
-      function updateEnemies(dt) {
-        enemies.forEach(e => {
-          const dx = player.x - e.x;
-          const dy = player.y - e.y;
-          const d = Math.hypot(dx, dy) || 1;
-          e.phase += dt * 3.8;
-          e.arm += dt;
-          let tx = dx / d * e.speed;
-          let ty = dy / d * e.speed;
-          if (e.type === 'lancer') {
-            tx += Math.cos(e.phase) * 76;
-            ty += Math.sin(e.phase * 0.8) * 42;
-            e.fire -= dt;
-            if (e.fire <= 0) {
-              e.fire = 1.2 + Math.random() * 0.8;
-              enemyShot(e, 255 + state.wave * 8);
-            }
-          } else if (e.type === 'mine') {
-            if (d < 150) {
-              tx *= 1.8;
-              ty *= 1.8;
-            }
-          } else if (e.type === 'warden') {
-            tx += Math.cos(e.phase * 0.7) * 54;
-            ty += Math.sin(e.phase) * 54;
-            e.fire -= dt;
-            if (e.fire <= 0) {
-              e.fire = 1.55 + Math.random() * 0.6;
-              enemyShot(e, 190, -0.18);
-              enemyShot(e, 190, 0.18);
-            }
-          }
-          e.vx += (tx - e.vx) * Math.min(1, dt * 4.6);
-          e.vy += (ty - e.vy) * Math.min(1, dt * 4.6);
-          e.x += e.vx * dt;
-          e.y += e.vy * dt;
-        });
-        for (let i = enemies.length - 1; i >= 0; i--) {
-          const e = enemies[i];
-          if (Math.hypot(e.x - player.x, e.y - player.y) < e.radius + 20) {
-            const damage = e.type === 'warden' ? 18 : e.type === 'mine' ? 22 : 12;
-            killEnemy(i, false);
-            hurtPlayer(damage);
-          }
-        }
-      }
+    function updatePlayer(dt) {
+      player.inv = Math.max(0, player.inv - dt);
+      player.blink = Math.max(0, player.blink - dt);
+      player.energy = clamp(player.energy + dt * (18 + state.stability * 0.08) - (pointer.down ? dt * 6 : 0), 0, 100);
+      player.heat = clamp(player.heat - dt * (player.heat > 68 ? 18 : 30), 0, 100);
+      player.pulse = clamp(player.pulse + dt * (3.8 + state.cores * 0.03), 0, 100);
+      const move = new THREE.Vector2();
+      if (keys.has('arrowleft') || keys.has('a')) move.x -= 1;
+      if (keys.has('arrowright') || keys.has('d')) move.x += 1;
+      if (keys.has('arrowup') || keys.has('w')) move.y -= 1;
+      if (keys.has('arrowdown') || keys.has('s')) move.y += 1;
+      if (move.lengthSq() > 0) move.normalize();
+      const speed = 5.4 + state.stability * 0.025;
+      player.vel.lerp(move.multiplyScalar(speed), Math.min(1, dt * 13));
+      player.pos.add(player.vel.clone().multiplyScalar(dt));
+      player.pos.x = clamp(player.pos.x, -ARENA.w / 2 + 0.9, ARENA.w / 2 - 0.9);
+      player.pos.y = clamp(player.pos.y, -ARENA.h / 2 + 0.9, ARENA.h / 2 - 0.9);
+    }
 
-      function updateCores(dt) {
-        cores.forEach(c => {
-          c.life -= dt;
-          const dx = player.x - c.x;
-          const dy = player.y - c.y;
-          const d = Math.hypot(dx, dy) || 1;
-          if (d < 190) {
-            c.vx += dx / d * 600 * dt;
-            c.vy += dy / d * 600 * dt;
-          }
-          c.x += c.vx * dt;
-          c.y += c.vy * dt;
-          c.vx *= 0.982;
-          c.vy *= 0.982;
-        });
-        for (let i = cores.length - 1; i >= 0; i--) {
-          const c = cores[i];
-          if (c.life <= 0) cores.splice(i, 1);
-          else if (Math.hypot(c.x - player.x, c.y - player.y) < 30) {
-            cores.splice(i, 1);
-            const gain = 4 * c.value;
-            state.cores += c.value;
-            state.stability = clamp(state.stability + gain, 0, 100);
-            player.energy = clamp(player.energy + 14, 0, 100);
-            player.pulse = clamp(player.pulse + 10, 0, 100);
-            state.score += 70 * c.value;
+    function updateAnchors(dt) {
+      let nearAnchor = false;
+      anchors.forEach(anchor => {
+        const distance = anchor.pos.distanceTo(player.pos);
+        if (!anchor.open && distance < 2.7) {
+          nearAnchor = true;
+          const pressure = enemies.filter(enemy => enemy.pos.distanceTo(anchor.pos) < 3.1).length;
+          anchor.scanned = clamp(anchor.scanned + dt * (pressure ? 6 : 18 + state.cores * 0.06), 0, 100);
+          player.scan = anchor.scanned;
+          if (anchor.scanned >= 100) {
+            anchor.open = true;
+            state.scanned += 1;
+            state.wave += 1;
+            state.stability = Math.max(state.stability, anchor.need);
+            state.score += 800 + state.wave * 140;
             state.high = Math.max(state.high, state.score);
-            burst(player.x, player.y, '#8bea77', 9, 180);
+            burst(anchor.pos, mats.cyan, 44, 8);
+            setStatus(anchor.label + ' ankrajı tarandı. Kapı yükü yükseliyor.', 2.6);
           }
         }
+      });
+      if (!nearAnchor) player.scan = Math.max(0, player.scan - dt * 32);
+      gate.charge = clamp((state.scanned / anchors.length) * 64 + state.stability * 0.36, 0, 100);
+      if (!gate.open && state.scanned >= anchors.length && state.stability >= 100) {
+        gate.open = true;
+        burst(gate.pos, mats.green, 90, 11);
+        endGame(true);
       }
+    }
 
-      function updateParticles(dt) {
-        particles.forEach(p => {
-          p.x += p.vx * dt;
-          p.y += p.vy * dt;
-          p.vx *= 0.985;
-          p.vy *= 0.985;
-          p.life -= dt;
-        });
-        trails.forEach(t => {
-          t.x += t.vx * dt;
-          t.y += t.vy * dt;
-          t.life -= dt;
-        });
-        damageTexts.forEach(t => {
-          t.y -= dt * 34;
-          t.life -= dt;
-        });
-        for (let i = particles.length - 1; i >= 0; i--) if (particles[i].life <= 0) particles.splice(i, 1);
-        for (let i = trails.length - 1; i >= 0; i--) if (trails[i].life <= 0) trails.splice(i, 1);
-        for (let i = damageTexts.length - 1; i >= 0; i--) if (damageTexts[i].life <= 0) damageTexts.splice(i, 1);
-      }
-
-      function update(dt) {
-        state.time += dt;
-        state.shake = Math.max(0, state.shake - dt * 24);
-        state.statusTimer = Math.max(0, state.statusTimer - dt);
-        stars.forEach(star => {
-          star.y += star.v * dt * (1 + state.stability * 0.005);
-          if (star.y > H + 8) {
-            star.y = -8;
-            star.x = Math.random() * W;
-          }
-        });
-        if (state.mode !== 'play') {
-          updateParticles(dt);
-          return;
+    function updateBullets(dt) {
+      for (let i = bullets.length - 1; i >= 0; i--) {
+        const bullet = bullets[i];
+        bullet.pos.add(bullet.vel.clone().multiplyScalar(dt));
+        bullet.life -= dt;
+        if (bullet.life <= 0 || Math.abs(bullet.pos.x) > ARENA.w / 2 + 2 || Math.abs(bullet.pos.y) > ARENA.h / 2 + 2) {
+          disposeObject(bullet.mesh);
+          bullets.splice(i, 1);
+          continue;
         }
-
-        updatePlayer(dt);
-        state.fire -= dt;
-        state.spawn -= dt;
-        if (state.fire <= 0) {
-          state.fire = pointer.down ? 0.072 : Math.max(0.11, 0.18 - state.stability * 0.0018);
-          firePlayer(pointer.down);
-        }
-        if (state.spawn <= 0) {
-          state.spawn = Math.max(0.19, 0.92 - state.wave * 0.054 - state.stability * 0.003);
-          spawnEnemy();
-          if (state.wave >= 4 && Math.random() < 0.16) spawnEnemy();
-        }
-        updateAnchors(dt);
-        updateBullets(dt);
-        updateEnemies(dt);
-        updateCores(dt);
-        updateParticles(dt);
-      }
-
-      function drawGrid() {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(218,232,255,0.045)';
-        ctx.lineWidth = 1;
-        const offset = (state.time * 18) % 42;
-        for (let x = -42; x < W + 42; x += 42) {
-          ctx.beginPath();
-          ctx.moveTo(x + offset, 0);
-          ctx.lineTo(x + offset, H);
-          ctx.stroke();
-        }
-        for (let y = -42; y < H + 42; y += 42) {
-          ctx.beginPath();
-          ctx.moveTo(0, y + offset);
-          ctx.lineTo(W, y + offset);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      function drawBackground() {
-        const g = ctx.createLinearGradient(0, 0, 0, H);
-        g.addColorStop(0, '#080a10');
-        g.addColorStop(0.52, '#090712');
-        g.addColorStop(1, '#050609');
-        ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, H);
-        dust.forEach(d => {
-          const pulse = 0.5 + Math.sin(state.time * 0.7 + d.x) * 0.5;
-          const grd = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r);
-          grd.addColorStop(0, 'rgba(68,215,208,' + (d.a * pulse) + ')');
-          grd.addColorStop(1, 'rgba(68,215,208,0)');
-          ctx.fillStyle = grd;
-          ctx.fillRect(d.x - d.r, d.y - d.r, d.r * 2, d.r * 2);
-        });
-        stars.forEach(s => {
-          const col = s.hue > 0.7 ? '242,201,107' : s.hue > 0.42 ? '184,148,255' : '146,238,231';
-          ctx.fillStyle = 'rgba(' + col + ',' + s.a + ')';
-          ctx.fillRect(s.x, s.y, s.s, s.s);
-        });
-        drawGrid();
-      }
-
-      function drawGate() {
-        const p = gate.charge / 100;
-        ctx.save();
-        ctx.translate(gate.x, gate.y);
-        ctx.rotate(state.time * 0.18);
-        for (let i = 0; i < 3; i++) {
-          ctx.strokeStyle = i === 0 ? colorAlpha('#44d7d0', 0.45 + p * 0.3) : colorAlpha('#b894ff', 0.18 + p * 0.18);
-          ctx.lineWidth = 3 - i * 0.5;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, 92 + i * 26 + Math.sin(state.time * 2 + i) * 3, 28 + i * 10, i * 1.05, 0, Math.PI * 2 * Math.max(0.12, p));
-          ctx.stroke();
-        }
-        ctx.fillStyle = colorAlpha(gate.open ? '#8bea77' : '#f2c96b', 0.16 + p * 0.2);
-        ctx.beginPath();
-        ctx.arc(0, 0, 34 + p * 18, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      function drawAnchors() {
-        anchors.forEach((a, i) => {
-          const p = a.scanned / 100;
-          const r = 34 + Math.sin(state.time * 3 + i) * 3;
-          ctx.save();
-          ctx.translate(a.x, a.y);
-          ctx.strokeStyle = a.open ? '#8bea77' : '#44d7d0';
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * Math.max(0.03, p));
-          ctx.stroke();
-          ctx.strokeStyle = a.open ? 'rgba(139,234,119,0.22)' : 'rgba(242,201,107,0.22)';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.arc(0, 0, 106, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.fillStyle = a.open ? 'rgba(139,234,119,0.25)' : 'rgba(68,215,208,0.16)';
-          ctx.fillRect(-18, -18, 36, 36);
-          ctx.strokeStyle = 'rgba(242,246,255,0.72)';
-          ctx.strokeRect(-18, -18, 36, 36);
-          ctx.fillStyle = '#f2f6ff';
-          ctx.font = '700 13px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(a.label, 0, 54);
-          ctx.restore();
-        });
-      }
-
-      function drawEntities() {
-        trails.forEach(t => {
-          ctx.globalAlpha = clamp(t.life / 0.35, 0, 1) * 0.5;
-          ctx.fillStyle = '#44d7d0';
-          ctx.beginPath();
-          ctx.ellipse(t.x, t.y, 9, 4, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        });
-
-        cores.forEach(c => {
-          ctx.save();
-          ctx.translate(c.x, c.y);
-          ctx.rotate(state.time * 2.2 + c.x);
-          ctx.fillStyle = '#8bea77';
-          ctx.beginPath();
-          ctx.moveTo(0, -11);
-          ctx.lineTo(10, 0);
-          ctx.lineTo(0, 11);
-          ctx.lineTo(-10, 0);
-          ctx.closePath();
-          ctx.fill();
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(-2, -2, 4, 4);
-          ctx.restore();
-        });
-
-        bullets.forEach(b => {
-          ctx.fillStyle = b.color;
-          ctx.shadowColor = b.color;
-          ctx.shadowBlur = b.friendly ? 12 : 18;
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.shadowBlur = 0;
-        });
-
-        enemies.forEach(e => {
-          const hp = e.hp / e.maxHp;
-          ctx.save();
-          ctx.translate(e.x, e.y);
-          ctx.rotate(e.phase * 0.55);
-          ctx.fillStyle = colorAlpha(e.color, 0.88);
-          ctx.strokeStyle = colorAlpha(e.color, 0.42);
-          ctx.lineWidth = 2;
-          if (e.type === 'mine') {
-            ctx.beginPath();
-            for (let i = 0; i < 8; i++) {
-              const r = i % 2 ? e.radius * 0.72 : e.radius * 1.22;
-              const a = i / 8 * Math.PI * 2;
-              const px = Math.cos(a) * r;
-              const py = Math.sin(a) * r;
-              if (i === 0) ctx.moveTo(px, py);
-              else ctx.lineTo(px, py);
+        if (bullet.friendly) {
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            const enemy = enemies[j];
+            if (bullet.pos.distanceTo(enemy.pos) < enemy.radius + bullet.radius) {
+              enemy.hp -= bullet.damage;
+              burst(bullet.pos, mats.cyan, 4, 3.2);
+              disposeObject(bullet.mesh);
+              bullets.splice(i, 1);
+              if (enemy.hp <= 0) killEnemy(j);
+              break;
             }
-            ctx.closePath();
-            ctx.fill();
-          } else if (e.type === 'warden') {
-            ctx.fillRect(-e.radius, -e.radius * 0.82, e.radius * 2, e.radius * 1.64);
-            ctx.strokeRect(-e.radius, -e.radius * 0.82, e.radius * 2, e.radius * 1.64);
-          } else {
-            ctx.beginPath();
-            ctx.moveTo(0, -e.radius);
-            ctx.lineTo(e.radius, 0);
-            ctx.lineTo(0, e.radius);
-            ctx.lineTo(-e.radius, 0);
-            ctx.closePath();
-            ctx.fill();
           }
-          ctx.fillStyle = '#050609';
-          ctx.beginPath();
-          ctx.arc(0, 0, e.radius * 0.32, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.restore();
-          ctx.fillStyle = 'rgba(255,255,255,0.16)';
-          ctx.fillRect(e.x - e.radius, e.y + e.radius + 8, e.radius * 2, 3);
-          ctx.fillStyle = e.color;
-          ctx.fillRect(e.x - e.radius, e.y + e.radius + 8, e.radius * 2 * hp, 3);
-        });
-
-        particles.forEach(p => {
-          ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.size * clamp(p.life / p.max, 0.2, 1), 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = 1;
-        });
-
-        damageTexts.forEach(t => {
-          ctx.globalAlpha = clamp(t.life / 0.8, 0, 1);
-          ctx.fillStyle = t.color;
-          ctx.font = '800 18px Inter, system-ui, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.fillText(t.text, t.x, t.y);
-          ctx.globalAlpha = 1;
-        });
-      }
-
-      function drawPlayer() {
-        const angle = Math.atan2(pointer.y - player.y, pointer.x - player.x) + Math.PI / 2;
-        const blink = player.inv > 0 && Math.floor(state.time * 20) % 2 === 0;
-        ctx.save();
-        ctx.translate(player.x, player.y);
-        ctx.rotate(angle);
-        ctx.fillStyle = blink ? '#ffffff' : '#f2f6ff';
-        ctx.beginPath();
-        ctx.moveTo(0, -30);
-        ctx.lineTo(19, 18);
-        ctx.lineTo(0, 9);
-        ctx.lineTo(-19, 18);
-        ctx.closePath();
-        ctx.fill();
-        ctx.fillStyle = '#44d7d0';
-        ctx.fillRect(-5, -10, 10, 24);
-        ctx.fillStyle = '#ff5c7a';
-        ctx.fillRect(-17, 18, 34, 4);
-        ctx.restore();
-
-        if (player.pulse >= 100) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.42)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(player.x, player.y, 44 + Math.sin(state.time * 6) * 4, 0, Math.PI * 2);
-          ctx.stroke();
+        } else if (bullet.pos.distanceTo(player.pos) < 0.55 + bullet.radius) {
+          disposeObject(bullet.mesh);
+          bullets.splice(i, 1);
+          hurtPlayer(bullet.damage);
         }
       }
+    }
 
-      function drawIntroWorld() {
-        drawGate();
-        anchors.forEach(a => {
-          ctx.strokeStyle = 'rgba(68,215,208,0.16)';
-          ctx.beginPath();
-          ctx.arc(a.x, a.y, 36 + Math.sin(state.time * 2 + a.x) * 4, 0, Math.PI * 2);
-          ctx.stroke();
-        });
-        player.x += (W * 0.5 - player.x) * 0.03;
-        player.y += (H * 0.72 - player.y) * 0.03;
-        drawPlayer();
-      }
-
-      function drawHud() {
-        const heatColor = player.heat > 78 ? '#ff5c7a' : '#f2c96b';
-        hud.innerHTML = [
-          '<div class="hud-card">',
-          '<div class="hud-top"><span>AXIOM-RIFT</span><span>DALGA ' + state.wave + '</span></div>',
-          '<div class="hud-score">' + Math.floor(state.score).toLocaleString('tr-TR') + '</div>',
-          '<div class="bars">',
-          barHtml('Gövde', player.hp, '#8bea77'),
-          barHtml('Enerji', player.energy, '#44d7d0'),
-          barHtml('Isı', player.heat, heatColor),
-          barHtml('Pulse', player.pulse, '#b894ff'),
-          barHtml('Stabilite', state.stability, '#f2c96b'),
-          '</div>',
-          '</div>',
-          '<div class="objectives"><strong>Görev</strong>' + state.scanned + '/' + anchors.length + ' ankraj tarandı · ' + state.cores + ' çekirdek toplandı<br>Axiom Kapısı: %' + Math.floor(gate.charge) + ' · High: ' + Math.floor(state.high).toLocaleString('tr-TR') + '</div>'
-        ].join('');
-        status.textContent = state.status;
-        status.classList.toggle('is-visible', state.statusTimer > 0 && state.mode === 'play');
-      }
-
-      function barHtml(label, value, color) {
-        return '<div class="bar"><span>' + label + '</span><div class="track"><div class="fill" style="--value:' + Math.floor(value) + '%;--bar-color:' + color + '"></div></div><span>' + Math.floor(value) + '%</span></div>';
-      }
-
-      function drawMini() {
-        mctx.clearRect(0, 0, mini.width, mini.height);
-        mctx.fillStyle = 'rgba(12,15,22,0.78)';
-        mctx.fillRect(0, 0, mini.width, mini.height);
-        mctx.strokeStyle = 'rgba(218,232,255,0.18)';
-        mctx.strokeRect(0.5, 0.5, mini.width - 1, mini.height - 1);
-        const sx = mini.width / W;
-        const sy = mini.height / H;
-        anchors.forEach(a => {
-          mctx.fillStyle = a.open ? '#8bea77' : '#44d7d0';
-          mctx.fillRect(a.x * sx - 3, a.y * sy - 3, 6, 6);
-        });
-        enemies.forEach(e => {
-          mctx.fillStyle = e.color;
-          mctx.fillRect(e.x * sx - 2, e.y * sy - 2, 4, 4);
-        });
-        mctx.fillStyle = '#ffffff';
-        mctx.beginPath();
-        mctx.arc(player.x * sx, player.y * sy, 4, 0, Math.PI * 2);
-        mctx.fill();
-      }
-
-      function draw() {
-        const shakeX = (Math.random() - 0.5) * state.shake;
-        const shakeY = (Math.random() - 0.5) * state.shake;
-        ctx.save();
-        ctx.translate(shakeX, shakeY);
-        drawBackground();
-        if (state.mode === 'intro') {
-          drawIntroWorld();
-        } else {
-          drawGate();
-          drawAnchors();
-          drawEntities();
-          drawPlayer();
+    function updateEnemies(dt) {
+      enemies.forEach(enemy => {
+        const toPlayer = player.pos.clone().sub(enemy.pos).normalize();
+        enemy.phase += dt * 3.8;
+        const desired = toPlayer.multiplyScalar(enemy.speed);
+        if (enemy.type === 'lancer') {
+          desired.add(new THREE.Vector2(Math.cos(enemy.phase) * 1.5, Math.sin(enemy.phase * 0.8) * 0.82));
+          enemy.fire -= dt;
+          if (enemy.fire <= 0) {
+            enemy.fire = Math.random() * 0.8 + 1.2;
+            enemyShot(enemy, 5 + state.wave * 0.16);
+          }
+        } else if (enemy.type === 'mine' && enemy.pos.distanceTo(player.pos) < 3.7) {
+          desired.multiplyScalar(1.8);
+        } else if (enemy.type === 'warden') {
+          desired.add(new THREE.Vector2(Math.cos(enemy.phase * 0.7), Math.sin(enemy.phase)));
+          enemy.fire -= dt;
+          if (enemy.fire <= 0) {
+            enemy.fire = Math.random() * 0.6 + 1.55;
+            enemyShot(enemy, 4, -0.18);
+            enemyShot(enemy, 4, 0.18);
+          }
         }
-        ctx.restore();
-        drawHud();
+        enemy.vel.lerp(desired, Math.min(1, dt * 4.6));
+        enemy.pos.add(enemy.vel.clone().multiplyScalar(dt));
+      });
+      for (let i = enemies.length - 1; i >= 0; i--) {
+        const enemy = enemies[i];
+        if (enemy.pos.distanceTo(player.pos) < enemy.radius + 0.55) {
+          const damage = enemy.type === 'warden' ? 18 : enemy.type === 'mine' ? 22 : 12;
+          killEnemy(i, false);
+          hurtPlayer(damage);
+        }
+      }
+    }
+
+    function updateCores(dt) {
+      for (let i = cores.length - 1; i >= 0; i--) {
+        const core = cores[i];
+        core.life -= dt;
+        const toPlayer = player.pos.clone().sub(core.pos);
+        if (toPlayer.length() < 4.8) core.vel.lerp(toPlayer.normalize().multiplyScalar(6.6), Math.min(1, dt * 5));
+        else core.vel.multiplyScalar(0.982);
+        core.pos.add(core.vel.clone().multiplyScalar(dt));
+        if (core.life <= 0) {
+          disposeObject(core.mesh);
+          cores.splice(i, 1);
+        } else if (core.pos.distanceTo(player.pos) < 0.83) {
+          disposeObject(core.mesh);
+          cores.splice(i, 1);
+          state.cores += core.value;
+          state.stability = clamp(state.stability + 4 * core.value, 0, 100);
+          player.energy = clamp(player.energy + 14, 0, 100);
+          player.pulse = clamp(player.pulse + 10, 0, 100);
+          state.score += 70 * core.value;
+          state.high = Math.max(state.high, state.score);
+          burst(player.pos, mats.green, 9, 4);
+        }
+      }
+    }
+
+    function updateParticles(dt) {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+        particle.pos.add(particle.vel.clone().multiplyScalar(dt));
+        particle.vel.multiplyScalar(0.985);
+        particle.life -= dt;
+        particle.mesh.scale.multiplyScalar(0.982);
+        if (particle.life <= 0) {
+          disposeObject(particle.mesh);
+          particles.splice(i, 1);
+        }
+      }
+    }
+
+    function updateModels() {
+      const aim = aimPoint();
+      const look = aim.sub(player.pos).normalize();
+      player.mesh.position.copy(v3(player.pos, 0));
+      player.mesh.rotation.y = Math.atan2(look.x, look.y);
+      player.mesh.visible = !(player.inv > 0 && Math.floor(state.time * 20) % 2 === 0);
+      camera.position.set(Math.sin(state.time * 0.17) * 0.35 + (Math.random() - 0.5) * state.shake, 15, 18.5 + (Math.random() - 0.5) * state.shake);
+      camera.lookAt(player.pos.x * 0.16, 0, player.pos.y * 0.08);
+      gate.mesh.position.copy(v3(gate.pos, 0.55 + Math.sin(state.time * 2) * 0.08));
+      gate.rings.forEach((ring, i) => {
+        ring.rotation.z = state.time * (0.18 + i * 0.07);
+        ring.scale.setScalar(0.75 + gate.charge / 100 * 0.34 + i * 0.05);
+      });
+      anchors.forEach(anchor => {
+        anchor.mesh.position.copy(v3(anchor.pos, 0.28 + Math.sin(state.time * 2 + anchor.pos.x) * 0.035));
+        anchor.mesh.rotation.y += 0.012;
+        anchor.mesh.scale.setScalar(anchor.open ? 1.24 : 1 + anchor.scanned / 100 * 0.18);
+      });
+      enemies.forEach(enemy => {
+        const dir = player.pos.clone().sub(enemy.pos).normalize();
+        enemy.mesh.position.copy(v3(enemy.pos, 0.48 + Math.sin(state.time * 5 + enemy.phase) * 0.08));
+        enemy.mesh.rotation.y = Math.atan2(dir.x, dir.y);
+        enemy.mesh.scale.setScalar(1 + (1 - enemy.hp / enemy.maxHp) * 0.16);
+      });
+      bullets.forEach(bullet => bullet.mesh.position.copy(v3(bullet.pos, 0.55)));
+      cores.forEach(core => {
+        core.mesh.position.copy(v3(core.pos, 0.42 + Math.sin(state.time * 5 + core.pos.x) * 0.08));
+        core.mesh.rotation.y += 0.05;
+      });
+      particles.forEach(particle => particle.mesh.position.copy(v3(particle.pos, 0.52)));
+    }
+
+    function updateHud() {
+      const heatColor = player.heat > 78 ? '#ff5c7a' : '#f2c96b';
+      hud.innerHTML = [
+        '<div class="hud-card">',
+        '<div class="hud-top"><span>AXIOM-RIFT 3D</span><span>DALGA ' + state.wave + '</span></div>',
+        '<div class="hud-score">' + Math.floor(state.score).toLocaleString('tr-TR') + '</div>',
+        '<div class="bars">',
+        barHtml('Gövde', player.hp, '#8bea77'),
+        barHtml('Enerji', player.energy, '#44d7d0'),
+        barHtml('Isı', player.heat, heatColor),
+        barHtml('Pulse', player.pulse, '#b894ff'),
+        barHtml('Stabilite', state.stability, '#f2c96b'),
+        '</div>',
+        '</div>',
+        '<div class="objectives"><strong>Görev</strong>' + state.scanned + '/' + anchors.length + ' ankraj tarandı · ' + state.cores + ' çekirdek toplandı<br>Axiom Kapısı: %' + Math.floor(gate.charge) + ' · High: ' + Math.floor(state.high).toLocaleString('tr-TR') + '</div>'
+      ].join('');
+      status.textContent = state.mode === 'intro' ? 'SPACE / TIKLA: 3D AXIOM RIFT’E GIR' : state.status;
+      status.classList.toggle('is-visible', state.mode === 'intro' || state.mode === 'over' || state.statusTimer > 0);
+    }
+
+    function barHtml(label, value, color) {
+      return '<div class="bar"><span>' + label + '</span><div class="track"><div class="fill" style="--value:' + Math.floor(value) + '%;--bar-color:' + color + '"></div></div><span>' + Math.floor(value) + '%</span></div>';
+    }
+
+    function drawMini() {
+      mctx.clearRect(0, 0, mini.width, mini.height);
+      mctx.fillStyle = 'rgba(12,15,22,0.78)';
+      mctx.fillRect(0, 0, mini.width, mini.height);
+      mctx.strokeStyle = 'rgba(218,232,255,0.18)';
+      mctx.strokeRect(0.5, 0.5, mini.width - 1, mini.height - 1);
+      const sx = mini.width / ARENA.w;
+      const sy = mini.height / ARENA.h;
+      const map = p => ({ x: (p.x + ARENA.w / 2) * sx, y: (p.y + ARENA.h / 2) * sy });
+      anchors.forEach(anchor => {
+        const p = map(anchor.pos);
+        mctx.fillStyle = anchor.open ? '#8bea77' : '#44d7d0';
+        mctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+      });
+      enemies.forEach(enemy => {
+        const p = map(enemy.pos);
+        mctx.fillStyle = enemy.type === 'warden' ? '#8bea77' : enemy.type === 'lancer' ? '#f2c96b' : enemy.type === 'mine' ? '#b894ff' : '#ff5c7a';
+        mctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+      });
+      const p = map(player.pos);
+      mctx.fillStyle = '#ffffff';
+      mctx.beginPath();
+      mctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      mctx.fill();
+    }
+
+    function update(dt) {
+      state.time += dt;
+      state.shake = Math.max(0, state.shake - dt * 0.8);
+      state.statusTimer = Math.max(0, state.statusTimer - dt);
+      if (state.mode !== 'play') {
+        updateParticles(dt);
+        updateModels();
+        updateHud();
         drawMini();
+        return;
       }
-
-      let last = performance.now();
-      function loop(now) {
-        const dt = Math.min(0.033, (now - last) / 1000);
-        last = now;
-        update(dt);
-        draw();
-        requestAnimationFrame(loop);
+      updatePlayer(dt);
+      state.fire -= dt;
+      state.spawn -= dt;
+      if (state.fire <= 0) {
+        state.fire = pointer.down ? 0.074 : Math.max(0.12, 0.19 - state.stability * 0.0018);
+        firePlayer(pointer.down);
       }
+      if (state.spawn <= 0) {
+        state.spawn = Math.max(0.21, 0.95 - state.wave * 0.052 - state.stability * 0.003);
+        spawnEnemy();
+        if (state.wave >= 4 && Math.random() < 0.16) spawnEnemy();
+      }
+      updateAnchors(dt);
+      updateBullets(dt);
+      updateEnemies(dt);
+      updateCores(dt);
+      updateParticles(dt);
+      updateModels();
+      updateHud();
+      drawMini();
+    }
 
-      window.addEventListener('keydown', e => {
-        const k = e.key.toLowerCase();
-        if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'x', 'w', 'a', 's', 'd', 'r'].includes(k)) e.preventDefault();
-        keys.add(k === ' ' ? 'space' : k);
-        if (state.mode === 'intro' && (k === ' ' || k === 'enter')) startGame(false);
-        else if (state.mode === 'over' && (k === 'r' || k === ' ')) startGame(true);
-        else if (state.mode === 'play' && k === ' ' && player.blink <= 0 && player.energy >= 28) {
-          const dx = (keys.has('arrowright') || keys.has('d') ? 1 : 0) - (keys.has('arrowleft') || keys.has('a') ? 1 : 0);
-          const dy = (keys.has('arrowdown') || keys.has('s') ? 1 : 0) - (keys.has('arrowup') || keys.has('w') ? 1 : 0);
-          const len = Math.hypot(dx, dy) || 1;
-          player.vx = dx / len * 850;
-          player.vy = dy / len * 850;
-          player.energy -= 28;
-          player.blink = 0.62;
-          player.inv = Math.max(player.inv, 0.38);
-          burst(player.x, player.y, '#ffffff', 28, 360);
-        } else if (state.mode === 'play' && k === 'x') {
-          usePulse();
-        } else if (state.mode === 'play' && k === 'r') {
-          startGame(true);
-        }
-      });
-      window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase() === ' ' ? 'space' : e.key.toLowerCase()));
-      canvas.addEventListener('pointerdown', e => {
-        toCanvas(e);
-        pointer.down = true;
-        if (state.mode === 'intro') startGame(false);
-      });
-      window.addEventListener('pointerup', () => { pointer.down = false; });
-      canvas.addEventListener('pointermove', toCanvas);
-      startButton.addEventListener('click', () => state.mode === 'over' ? startGame(true) : startGame(false));
-      showPanel('intro');
+    function resize() {
+      const w = canvas.clientWidth || window.innerWidth;
+      const h = canvas.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+      resize();
+      update(dt);
+      renderer.render(scene, camera);
       requestAnimationFrame(loop);
-    })();
+    }
+
+    window.addEventListener('keydown', e => {
+      const k = e.key.toLowerCase();
+      if (['arrowleft', 'arrowright', 'arrowup', 'arrowdown', ' ', 'x', 'w', 'a', 's', 'd', 'r'].includes(k)) e.preventDefault();
+      keys.add(k === ' ' ? 'space' : k);
+      if (state.mode === 'intro' && (k === ' ' || k === 'enter')) startGame(false);
+      else if (state.mode === 'over' && (k === 'r' || k === ' ')) startGame(true);
+      else if (state.mode === 'play' && k === ' ' && player.blink <= 0 && player.energy >= 28) {
+        const move = new THREE.Vector2();
+        if (keys.has('arrowright') || keys.has('d')) move.x += 1;
+        if (keys.has('arrowleft') || keys.has('a')) move.x -= 1;
+        if (keys.has('arrowdown') || keys.has('s')) move.y += 1;
+        if (keys.has('arrowup') || keys.has('w')) move.y -= 1;
+        if (move.lengthSq() === 0) move.y = -1;
+        move.normalize();
+        player.vel.copy(move.multiplyScalar(18));
+        player.energy -= 28;
+        player.blink = 0.62;
+        player.inv = Math.max(player.inv, 0.38);
+        burst(player.pos, mats.text, 28, 8);
+      } else if (state.mode === 'play' && k === 'x') {
+        usePulse();
+      } else if (state.mode === 'play' && k === 'r') {
+        startGame(true);
+      }
+    });
+    window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase() === ' ' ? 'space' : e.key.toLowerCase()));
+    canvas.addEventListener('pointermove', e => {
+      const r = canvas.getBoundingClientRect();
+      pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+      pointer.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
+      pointer.active = true;
+    });
+    canvas.addEventListener('pointerdown', e => {
+      const r = canvas.getBoundingClientRect();
+      pointer.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+      pointer.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
+      pointer.down = true;
+      if (state.mode === 'intro') startGame(false);
+    });
+    window.addEventListener('pointerup', () => { pointer.down = false; });
+    startButton.addEventListener('click', () => state.mode === 'over' ? startGame(true) : startGame(false));
+
+    buildScene();
+    resize();
+    showPanel('intro');
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>

@@ -1,6 +1,13 @@
-# Universe-3: Axiom Rift
+# Universe-3: Axiom Rift 3D
 
-Godot 4 kaynak projesi. Universe-2'de kalan skor ve filo basinci artik daha modern bir arena/haritalama dongusune tasindi: oyuncu Axiom Rift icinde ankrajlari tarar, dusmanlardan cekirdek toplar, isi ve enerjiyi yonetir, son olarak Axiom Kapisi'ni stabilize eder.
+Godot 4 kaynak projesi. Universe-2'de kalan skor ve filo basinci artik sanatsal bir 3D arena/haritalama dongusune tasindi: oyuncu Axiom Rift icinde ankrajlari tarar, dusmanlardan cekirdek toplar, isi ve enerjiyi yonetir, son olarak isikli Axiom Kapisi'ni stabilize eder.
+
+## 3D tasarim dili
+
+- Gemi, dusmanlar, cekirdekler, ankraj kuleleri ve kapi halkalari prosedurel mesh parcalarindan kurulur.
+- Arena XZ duzleminde oynanir; kamera yukaridan egimli taktik bakis verir.
+- Cyan, gold, violet ve green isik katmanlari rift hissini tasir.
+- Godot sahnesi `Node3D` tabanlidir; modeller script icinde uretildigi icin dis asset zorunlu degildir.
 
 ## Oyun dongusu
 
@@ -24,7 +31,7 @@ Export preset hazir. Godot editorunde `Project > Export > Web > Export Project` 
 games/universe-3/index.html
 ```
 
-Godot web export dosyalari ayni klasorde `index.html`, `.js`, `.pck`, `.wasm` ve splash `.png` olarak durmali. Root'taki `universe-3.html` bu export hazir oldugunda oyunu otomatik olarak iframe icinde acar; export yoksa gelismis canvas fallback oynanir.
+Godot web export dosyalari ayni klasorde `index.html`, `.js`, `.pck`, `.wasm` ve splash `.png` olarak durmali. Root'taki `universe-3.html` bu export hazir oldugunda oyunu otomatik olarak iframe icinde acar; export yoksa Three.js tabanli 3D fallback oynanir.
 
 ## Kontroller
 
