@@ -9,7 +9,7 @@
     <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
 
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
     <!-- OpenGraph Meta Tags -->
     <meta property="og:site_name" content="Convivium">
@@ -79,6 +79,7 @@
                     <input id="search" class="search" type="search" placeholder="Ara... (baslik veya icerik)" aria-label="Makale ara">
                 </div>
             </div>
+            <p id="contentSourceStatus" class="content-source-status" aria-live="polite"></p>
 
             <section id="articles" class="article-grid" aria-live="polite"></section>
 
@@ -102,6 +103,9 @@
     <script src="/assets/js/lazy-load.js" defer></script>
     <script src="/assets/js/theme.js" defer></script>
     <script src="/assets/js/utils.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/assets/js/supabase-config.js" defer></script>
+    <script src="/assets/js/supabase-client.js" defer></script>
 
     <script>
     // Guvenli, temiz makale verisi
@@ -250,6 +254,11 @@
         container.innerHTML = '';
         const tpl = document.getElementById('article-template');
 
+        if (!list.length) {
+            container.innerHTML = '<p class="system-status">Eslesen makale bulunamadi.</p>';
+            return;
+        }
+
         list.forEach(article => {
             const node = tpl.content.cloneNode(true);
             const art = node.querySelector('article');
@@ -297,16 +306,54 @@
         });
     }
 
+    function mergeArticles(primary, fallback, dynamic){
+        const seen = new Set();
+        const merged = [];
+
+        [...primary, ...fallback, ...dynamic].forEach(article => {
+            const key = article.slug || article.id || article.title;
+            if (!key || seen.has(key)) return;
+            seen.add(key);
+            merged.push(article);
+        });
+
+        return merged;
+    }
+
+    function setContentSourceStatus(message){
+        const el = document.getElementById('contentSourceStatus');
+        if (el) el.textContent = message;
+    }
+
     // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const dyn = loadDynamicArticles();
-        const all = [...staticArticles, ...dyn.map((a,i)=>({
+        const localDrafts = dyn.map((a,i)=>({
             id:'dyn-'+i,
             title:a.title,
+            slug:'local-'+i,
             date:a.date,
             summary:a.content.replace(/<[^>]+>/g,'').slice(0,120),
             content: a.content
-        }))];
+        }));
+
+        let remoteArticles = [];
+        if (window.ConviviumBackend && window.ConviviumBackend.isConfigured()) {
+            setContentSourceStatus('Veritabani baglantisi kontrol ediliyor...');
+            try {
+                remoteArticles = await window.ConviviumBackend.fetchPublishedArticles();
+                setContentSourceStatus(remoteArticles.length
+                    ? `Veritabanindan ${remoteArticles.length} yayin yuklendi.`
+                    : 'Veritabani bagli; henuz yayinlanmis makale yok.');
+            } catch (error) {
+                console.warn('[Convivium] Remote article load failed:', error);
+                setContentSourceStatus('Veritabani okunamadi; statik arsiv gosteriliyor.');
+            }
+        } else {
+            setContentSourceStatus('Veritabani henuz bagli degil; statik arsiv gosteriliyor.');
+        }
+
+        const all = mergeArticles(remoteArticles, staticArticles, localDrafts);
 
         renderArticles(all);
 

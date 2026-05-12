@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uyelik - Convivium</title>
+  <meta name="description" content="Convivium uyelik ve oturum sayfasi.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/auth.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta name="theme-color" content="#00ff00">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Icerigi atla</a>
+
+  <div class="site">
+    <header class="site-header" role="banner">
+      <h1>Uyelik</h1>
+      <p>Convivium hesap girisi ve profil oturumu.</p>
+      <nav role="navigation" aria-label="Site navigasyonu" style="margin-top: 12px;">
+        <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
+        <a href="admin.html" class="btn">Admin Paneli</a>
+      </nav>
+    </header>
+
+    <main id="content" class="auth-layout" role="main">
+      <section class="system-status" aria-live="polite">
+        <strong>Durum</strong>
+        <p id="authStatus">Yukleniyor...</p>
+      </section>
+
+      <section id="sessionPanel" class="system-status" hidden>
+        <strong>Aktif Oturum</strong>
+        <p id="sessionInfo"></p>
+        <button id="signOutButton" class="btn" type="button">Oturumu Kapat</button>
+      </section>
+
+      <div class="auth-grid">
+        <form id="signInForm" class="form-panel">
+          <h2>Giris</h2>
+          <label>
+            E-posta
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            Sifre
+            <input name="password" type="password" autocomplete="current-password" required minlength="6">
+          </label>
+          <button class="btn btn-primary" type="submit">Giris Yap</button>
+        </form>
+
+        <form id="signUpForm" class="form-panel">
+          <h2>Yeni Uyelik</h2>
+          <label>
+            Gorunen ad
+            <input name="display_name" type="text" autocomplete="name" maxlength="80">
+          </label>
+          <label>
+            E-posta
+            <input name="email" type="email" autocomplete="email" required>
+          </label>
+          <label>
+            Sifre
+            <input name="password" type="password" autocomplete="new-password" required minlength="6">
+          </label>
+          <button class="btn btn-primary" type="submit">Uyelik Olustur</button>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/auth.js" defer></script>
+</body>
+</html>

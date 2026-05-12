@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Icerik Yonetimi - Convivium</title>
+  <meta name="description" content="Convivium icerik yonetimi paneli.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/admin.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta name="theme-color" content="#00ff00">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">Icerigi atla</a>
+
+  <div class="site site-wide">
+    <header class="site-header" role="banner">
+      <h1>Icerik Yonetimi</h1>
+      <p>Makaleleri veritabanina tasiyan admin paneli.</p>
+      <nav role="navigation" aria-label="Site navigasyonu" style="margin-top: 12px;">
+        <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
+        <a href="makaleler.html" class="btn">Makaleler</a>
+        <a href="auth.html" class="btn">Uyelik</a>
+      </nav>
+    </header>
+
+    <main id="content" role="main" class="admin-layout">
+      <section id="adminGate" class="system-status" aria-live="polite">Yukleniyor...</section>
+
+      <section id="adminWorkspace" hidden>
+        <div class="admin-toolbar">
+          <div>
+            <h2>Makale Havuzu</h2>
+            <p id="adminStatus" aria-live="polite">Hazir.</p>
+          </div>
+          <button id="clearForm" class="btn" type="button">Yeni Makale</button>
+        </div>
+
+        <div class="content-admin-grid">
+          <aside class="content-list-panel" aria-label="Makale listesi">
+            <ul id="articleList" class="content-list"></ul>
+          </aside>
+
+          <form id="articleForm" class="form-panel editor-panel">
+            <input type="hidden" name="id">
+
+            <label>
+              Baslik
+              <input id="title" name="title" type="text" required maxlength="160">
+            </label>
+
+            <label>
+              Slug
+              <input id="slug" name="slug" type="text" required maxlength="96" pattern="[a-z0-9-]+">
+            </label>
+
+            <label>
+              Ozet
+              <textarea name="summary" rows="3" required maxlength="320"></textarea>
+            </label>
+
+            <div class="form-row">
+              <label>
+                Durum
+                <select name="status">
+                  <option value="draft">Taslak</option>
+                  <option value="published">Yayinda</option>
+                  <option value="archived">Arsiv</option>
+                </select>
+              </label>
+
+              <label>
+                Yayin zamani
+                <input name="published_at" type="datetime-local">
+              </label>
+            </div>
+
+            <label>
+              Icerik HTML
+              <textarea id="content_html" name="content_html" rows="16" required></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">Kaydet</button>
+              <button id="deleteArticle" class="btn" type="button" disabled>Sil</button>
+            </div>
+          </form>
+
+          <section class="preview-panel" aria-label="Makale onizleme">
+            <h2>Onizleme</h2>
+            <div id="articlePreview" class="full active">
+              <p>Onizleme burada gorunur.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/admin.js" defer></script>
+</body>
+</html>

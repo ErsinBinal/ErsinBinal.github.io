@@ -1804,6 +1804,7 @@
                 <a class="action-link" href="makaleler.html">Dossier</a>
                 <a class="action-link" href="ozgecmisim.html">Persona</a>
                 <a class="action-link" href="TheOracle.html">Oracle</a>
+                <a class="action-link" href="auth.html">Access</a>
                 <button class="action-link" id="command-launch" type="button">Command</button>
               </nav>
             </div>
@@ -1826,6 +1827,10 @@
           <a class="terminal-command" href="ozgecmisim.html" data-action="TRACE">
             <span>&gt; persona</span>
             Ünvan değil; karar izi.
+          </a>
+          <a class="terminal-command" href="auth.html" data-action="LOGIN">
+            <span>&gt; access</span>
+            Üyelik, oturum ve içerik yetkisi.
           </a>
         </section>
 
@@ -2180,6 +2185,9 @@
         'flow': () => { location.href = 'neon-river.html'; },
         'trace persona': () => { location.href = 'ozgecmisim.html'; },
         'persona': () => { location.href = 'ozgecmisim.html'; },
+        'access': () => { location.href = 'auth.html'; },
+        'login': () => { location.href = 'auth.html'; },
+        'admin': () => { location.href = 'admin.html'; },
         'unlock hidden': () => {
           const gate = document.getElementById('hidden');
           gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -2188,8 +2196,8 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / trace persona / unlock hidden',
-        '?': () => 'keyboard: D dossier, O oracle, L logic, F flow, P persona, ? command shell, ESC close'
+        'help': () => 'commands: open dossier / query oracle / run logic / trace persona / access / admin / unlock hidden',
+        '?': () => 'keyboard: D dossier, O oracle, L logic, F flow, P persona, A access, ? command shell, ESC close'
       };
 
       const normalizeOracleAnswer = (answer) => answer
@@ -2314,6 +2322,7 @@
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
         else if (key === 'f') location.href = 'neon-river.html';
         else if (key === 'p') location.href = 'ozgecmisim.html';
+        else if (key === 'a') location.href = 'auth.html';
       });
 
       document.querySelectorAll('a, button').forEach(item => {

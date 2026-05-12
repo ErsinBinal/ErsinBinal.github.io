@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v8';
+const CACHE_NAME = 'convivium-v9';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -14,6 +14,8 @@ const PRECACHE_ASSETS = [
   '/universe-2.html',
   '/universe-3.html',
   '/makaleler.html',
+  '/auth.html',
+  '/admin.html',
   '/ozgecmisim.html',
   '/assets/css/common.css',
   '/assets/css/animations.css',
@@ -21,6 +23,9 @@ const PRECACHE_ASSETS = [
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
   '/assets/js/utils.js',
+  '/assets/js/supabase-client.js',
+  '/assets/js/auth.js',
+  '/assets/js/admin.js',
   '/manifest.json'
 ];
 
@@ -72,6 +77,12 @@ self.addEventListener('fetch', (event) => {
 
   // Chrome extension isteklerini atla
   if (event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
+
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin === self.location.origin && requestUrl.pathname === '/assets/js/supabase-config.js') {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }));
     return;
   }
 
