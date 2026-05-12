@@ -15,33 +15,48 @@
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css">
 </head>
-<body>
+<body class="auth-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
 
+  <div class="auth-atmosphere" aria-hidden="true">
+    <span class="auth-gridline auth-gridline-a"></span>
+    <span class="auth-gridline auth-gridline-b"></span>
+    <span class="auth-gridline auth-gridline-c"></span>
+  </div>
+
   <div class="site">
-    <header class="site-header" role="banner">
-      <h1>Uyelik</h1>
-      <p>Convivium hesap girisi ve profil oturumu.</p>
-      <nav role="navigation" aria-label="Site navigasyonu" style="margin-top: 12px;">
+    <header class="site-header auth-hero" role="banner">
+      <div>
+        <p class="auth-kicker">CONVIVIUM ACCESS</p>
+        <h1>Uyelik</h1>
+        <p>Hesap girisi, profil oturumu ve yetki gecidi.</p>
+      </div>
+      <nav class="auth-nav" role="navigation" aria-label="Site navigasyonu">
         <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
         <a href="admin.html" class="btn">Admin Paneli</a>
       </nav>
     </header>
 
     <main id="content" class="auth-layout" role="main">
-      <section class="system-status" aria-live="polite">
-        <strong>Durum</strong>
-        <p id="authStatus">Yukleniyor...</p>
-      </section>
+      <section class="auth-status-row" aria-label="Oturum durumu">
+        <div class="system-status auth-status-card" aria-live="polite">
+          <span class="auth-status-pulse" aria-hidden="true"></span>
+          <div>
+            <strong>Durum</strong>
+            <p id="authStatus">Yukleniyor...</p>
+          </div>
+        </div>
 
-      <section id="sessionPanel" class="system-status" hidden>
-        <strong>Aktif Oturum</strong>
-        <p id="sessionInfo"></p>
-        <button id="signOutButton" class="btn" type="button">Oturumu Kapat</button>
+        <section id="sessionPanel" class="system-status auth-session-card" hidden>
+          <strong>Aktif Oturum</strong>
+          <p id="sessionInfo"></p>
+          <button id="signOutButton" class="btn" type="button">Oturumu Kapat</button>
+        </section>
       </section>
 
       <div class="auth-grid">
         <form id="signInForm" class="form-panel">
+          <span class="auth-panel-tag">01</span>
           <h2>Giris</h2>
           <label>
             E-posta
@@ -55,6 +70,7 @@
         </form>
 
         <form id="signUpForm" class="form-panel">
+          <span class="auth-panel-tag">02</span>
           <h2>Yeni Uyelik</h2>
           <label>
             Gorunen ad
@@ -68,6 +84,9 @@
             Sifre
             <input name="password" type="password" autocomplete="new-password" required minlength="6">
           </label>
+          <div class="auth-strength" aria-hidden="true">
+            <span></span>
+          </div>
           <button class="btn btn-primary" type="submit">Uyelik Olustur</button>
         </form>
       </div>

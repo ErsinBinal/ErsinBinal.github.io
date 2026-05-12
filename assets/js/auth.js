@@ -8,6 +8,8 @@
   const signInForm = document.getElementById('signInForm');
   const signUpForm = document.getElementById('signUpForm');
   const signOutButton = document.getElementById('signOutButton');
+  const signUpPassword = signUpForm.querySelector('input[name="password"]');
+  const strengthMeter = signUpForm.querySelector('.auth-strength');
   const params = new URLSearchParams(window.location.search);
   const returnTo = params.get('returnTo');
 
@@ -25,6 +27,28 @@
   function formData(form) {
     const data = new FormData(form);
     return Object.fromEntries(data.entries());
+  }
+
+  function setFormBusy(form, busy) {
+    form.classList.toggle('is-busy', busy);
+    Array.from(form.elements).forEach((element) => {
+      if (element.tagName === 'BUTTON') element.disabled = busy;
+    });
+  }
+
+  function passwordStrength(value) {
+    let score = 0;
+    if (value.length >= 6) score += 25;
+    if (value.length >= 10) score += 25;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 20;
+    if (/\d/.test(value)) score += 15;
+    if (/[^A-Za-z0-9]/.test(value)) score += 15;
+    return Math.min(score, 100);
+  }
+
+  function updatePasswordStrength() {
+    if (!strengthMeter || !signUpPassword) return;
+    strengthMeter.style.setProperty('--strength', `${passwordStrength(signUpPassword.value)}%`);
   }
 
   async function refreshSession() {
@@ -56,6 +80,7 @@
     event.preventDefault();
     const data = formData(signInForm);
     setStatus('Giris yapiliyor...', 'info');
+    setFormBusy(signInForm, true);
 
     try {
       await backend.signIn(data.email, data.password);
@@ -65,6 +90,8 @@
       if (target) window.location.href = target;
     } catch (error) {
       setStatus(error.message, 'error');
+    } finally {
+      setFormBusy(signInForm, false);
     }
   });
 
@@ -72,14 +99,18 @@
     event.preventDefault();
     const data = formData(signUpForm);
     setStatus('Uyelik olusturuluyor...', 'info');
+    setFormBusy(signUpForm, true);
 
     try {
       await backend.signUp(data.email, data.password, data.display_name);
       signUpForm.reset();
+      updatePasswordStrength();
       await refreshSession();
       setStatus('Uyelik istegi alindi. E-posta dogrulamasi aciksa gelen kutunuzu kontrol edin.', 'success');
     } catch (error) {
       setStatus(error.message, 'error');
+    } finally {
+      setFormBusy(signUpForm, false);
     }
   });
 
@@ -93,5 +124,8 @@
     }
   });
 
+  if (signUpPassword) {
+    signUpPassword.addEventListener('input', updatePasswordStrength);
+  }
   document.addEventListener('DOMContentLoaded', refreshSession);
 })();
