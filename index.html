@@ -2211,7 +2211,7 @@
         if (!button) return;
         const unlocked = gate.classList.contains('is-unlocked');
         const open = gate.classList.contains('is-open');
-        button.textContent = !authState.granted ? 'Login' : open ? 'Collapse' : 'Open';
+        button.textContent = !authState.granted ? 'Access Denied' : open ? 'Collapse' : 'Open';
         button.setAttribute('aria-expanded', String(open));
       };
 
@@ -2231,7 +2231,7 @@
       };
 
       document.querySelectorAll('.gate-toggle').forEach(button => {
-        button.textContent = 'Login';
+        button.textContent = 'Access Denied';
         button.addEventListener('click', () => {
           const gate = button.closest('.journey-gate');
           if (!requireAccess()) return;
