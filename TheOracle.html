@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>The Oracle | Convivium</title>
-  <meta name="description" content="The Oracle - şansı ve rastgeleliği yorumlayan Convivium ritüel motoru.">
+  <meta name="description" content="The Oracle - kapalı işaretler, entropi ve kısa okuma motoru.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/TheOracle.html">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';">
   <meta property="og:site_name" content="Convivium">
   <meta property="og:title" content="The Oracle | Convivium">
-  <meta property="og:description" content="Şans, ritüel ve yorum motoru.">
+  <meta property="og:description" content="Kapalı işaretler, entropi ve yalın kehanet motoru.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#050505">
   <link rel="manifest" href="/manifest.json">
@@ -474,6 +474,162 @@
       background: var(--ink);
     }
 
+    .question-matrix {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid rgba(242, 239, 228, 0.14);
+      background: rgba(5, 5, 5, 0.58);
+    }
+
+    .question-matrix::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(240, 193, 95, 0.12), transparent 24%),
+        linear-gradient(110deg, transparent 0 42%, rgba(125, 233, 255, 0.08) 50%, transparent 58%);
+      opacity: 0;
+      transform: translateX(-18%);
+      transition: opacity 220ms ease, transform 520ms ease;
+    }
+
+    .ritual-panel.is-reading .question-matrix::after {
+      opacity: 1;
+      transform: translateX(18%);
+    }
+
+    .matrix-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--dim);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+    }
+
+    .matrix-head strong {
+      color: var(--cyan);
+      font-weight: 500;
+    }
+
+    .matrix-note {
+      margin: 0;
+      color: var(--dim);
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    .seer-session {
+      overflow: hidden;
+    }
+
+    .seer-transcript {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .seer-message {
+      display: grid;
+      gap: 4px;
+      padding: 10px;
+      border: 1px solid rgba(242, 239, 228, 0.1);
+      background: rgba(5, 5, 5, 0.48);
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.48;
+    }
+
+    .seer-message strong {
+      color: var(--cyan);
+      font-weight: 500;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+    }
+
+    .seer-message.user strong {
+      color: var(--amber);
+    }
+
+    .seer-current {
+      position: relative;
+      z-index: 1;
+      min-height: 62px;
+      display: grid;
+      align-content: center;
+      padding: 12px;
+      border: 1px solid rgba(125, 233, 255, 0.22);
+      background:
+        linear-gradient(90deg, rgba(125, 233, 255, 0.08), transparent),
+        rgba(5, 5, 5, 0.66);
+      color: var(--ink);
+      line-height: 1.55;
+    }
+
+    .seer-input-row {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+    }
+
+    .seer-input {
+      width: 100%;
+      min-height: 74px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      background: rgba(5, 5, 5, 0.74);
+      color: var(--ink);
+      padding: 11px 12px;
+      outline: none;
+      font: inherit;
+      line-height: 1.45;
+    }
+
+    .seer-input:focus {
+      border-color: rgba(125, 233, 255, 0.64);
+      box-shadow: 0 0 0 3px rgba(125, 233, 255, 0.08);
+    }
+
+    .seer-input::placeholder {
+      color: rgba(159, 155, 139, 0.58);
+    }
+
+    .seer-send {
+      min-width: 86px;
+      min-height: 74px;
+      border: 1px solid rgba(240, 193, 95, 0.38);
+      background: rgba(5, 5, 5, 0.68);
+      color: var(--amber);
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+    }
+
+    .seer-send:hover,
+    .seer-send:focus-visible {
+      color: var(--ink);
+      border-color: var(--amber);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .seer-send:disabled,
+    .seer-input:disabled {
+      opacity: 0.52;
+      cursor: not-allowed;
+    }
+
     .action-row {
       position: relative;
       z-index: 1;
@@ -503,6 +659,16 @@
     .ghost-btn {
       min-height: 56px;
       text-transform: uppercase;
+    }
+
+    .ritual-panel.is-reading .sigil-stage {
+      border-color: rgba(240, 193, 95, 0.46);
+      box-shadow: 0 0 34px rgba(240, 193, 95, 0.14), inset 0 0 28px rgba(125, 233, 255, 0.08);
+      animation: omenPulse 920ms ease-in-out infinite;
+    }
+
+    .ritual-panel.is-reading .sigil-core {
+      animation: oracleLock 760ms steps(4, end) infinite;
     }
 
     .reading-grid {
@@ -717,6 +883,17 @@
       100% { filter: blur(0); transform: translate(0, 0); }
     }
 
+    @keyframes omenPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.24); }
+    }
+
+    @keyframes oracleLock {
+      0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+      50% { transform: translate(-50%, -50%) rotate(1deg) scale(1.04); }
+      100% { transform: translate(-50%, -50%) rotate(-1deg) scale(1); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       *,
       *::before,
@@ -748,6 +925,7 @@
       .protocol-strip,
       .signal-readout,
       .lens-row,
+      .seer-input-row,
       .action-row,
       .post-actions {
         grid-template-columns: 1fr;
@@ -802,25 +980,25 @@
   <main class="oracle-shell">
     <header class="topbar">
       <a class="back-link" href="index.html" aria-label="Convivium ana sayfasına dön">[ < ] Convivium</a>
-      <div class="system-stamp" id="system-stamp">chance channel idle</div>
+      <div class="system-stamp" id="system-stamp">avuç kapalı</div>
     </header>
 
     <section class="hero" aria-labelledby="oracle-title">
       <div class="terminal-panel">
-        <div class="kicker">closed circuit oracle</div>
+        <div class="kicker">kapalı okuma</div>
         <h1 id="oracle-title">The Oracle</h1>
         <p class="subline">
-          Bu makine bilgi bilmez. <strong>Şansın hangi tarafa eğildiğini</strong> sahneye çıkarır.
-          Cevap, rastgeleliğin kendisi değil; senin ona verdiğin tepkidir.
+          Aklındaki şeyi açık etmek zorunda değilsin. <strong>Kısa cevaplar ver</strong>;
+          Oracle kelimelerin ritmini, kaçındığın yeri ve entropiyi okuyup net bir tahmin çıkarır.
         </p>
         <div class="protocol-strip" aria-label="Oracle protokolu">
-          <span>01 <strong>Entropy</strong></span>
-          <span>02 <strong>Symbol</strong></span>
-          <span>03 <strong>Countermove</strong></span>
+          <span>01 <strong>İtiraf</strong></span>
+          <span>02 <strong>Entropi</strong></span>
+          <span>03 <strong>Kehanet</strong></span>
         </div>
       </div>
 
-      <aside class="ritual-panel" aria-label="Rituel kontrol paneli">
+      <aside class="ritual-panel" aria-label="Tahmin kontrol paneli">
         <div class="sigil-stage" id="sigil-stage">
           <canvas id="sigil-canvas" aria-hidden="true"></canvas>
           <div class="sigil-core" aria-hidden="true">
@@ -830,75 +1008,89 @@
 
         <div class="signal-readout">
           <div class="meter">
-            <span>Entropy</span>
+            <span>İz</span>
             <strong id="entropy-value">00</strong>
             <div class="bar"><i id="entropy-bar"></i></div>
           </div>
           <div class="meter">
-            <span>Luck Bias</span>
-            <strong id="luck-value">neutral</strong>
+            <span>Yön</span>
+            <strong id="luck-value">bekliyor</strong>
             <div class="bar"><i id="luck-bar"></i></div>
           </div>
           <div class="meter">
-            <span>Rarity</span>
-            <strong id="rarity-value">sealed</strong>
+            <span>Entropi</span>
+            <strong id="rarity-value">kapalı</strong>
             <div class="bar"><i id="rarity-bar"></i></div>
           </div>
         </div>
 
         <div class="focus-line">
-          <label for="focus-input">Gerilim hattı</label>
-          <input id="focus-input" type="text" maxlength="96" autocomplete="off" spellcheck="false" placeholder="Bir isim, risk veya tek cümle. Boş bırakmak serbest.">
+          <label for="focus-input">Aklındaki iz</label>
+          <input id="focus-input" type="text" maxlength="96" autocomplete="off" spellcheck="false" placeholder="Bir kelime yeter. Boş da kalabilir.">
         </div>
 
-        <div class="lens-row" aria-label="Rituel mercegi">
-          <button class="lens-btn is-active" type="button" data-lens="control">Kontrol</button>
-          <button class="lens-btn" type="button" data-lens="desire">Arzu</button>
-          <button class="lens-btn" type="button" data-lens="exit">Çıkış</button>
-          <button class="lens-btn" type="button" data-lens="return">Dönüş</button>
+        <div class="lens-row" aria-label="Bakış açısı">
+          <button class="lens-btn is-active" type="button" data-lens="control">Avuç</button>
+          <button class="lens-btn" type="button" data-lens="desire">Ateş</button>
+          <button class="lens-btn" type="button" data-lens="exit">Eşik</button>
+          <button class="lens-btn" type="button" data-lens="return">Yankı</button>
+        </div>
+
+        <div class="question-matrix seer-session" aria-label="Kapalı okuma sohbeti">
+          <div class="matrix-head">
+            <span>Okuma hattı</span>
+            <strong id="matrix-progress">0/4</strong>
+          </div>
+          <div class="seer-transcript" id="seer-transcript" aria-live="polite"></div>
+          <div class="seer-current" id="seer-current">Aklındaki şeyi söyleme. Sadece onun sende bıraktığı ilk hissi yaz.</div>
+          <div class="seer-input-row">
+            <textarea class="seer-input" id="seer-input" maxlength="180" autocomplete="off" spellcheck="false" placeholder="Kısa yaz. Bir cümle yeter."></textarea>
+            <button class="seer-send" id="seer-send" type="button">Gönder</button>
+          </div>
+          <p class="matrix-note">Oracle cevapların içeriğinden çok gerilimi, tekrarları ve kaçındığın noktayı tartar.</p>
         </div>
 
         <div class="action-row">
-          <button class="action-btn" id="draw-btn" type="button">Signal Draw</button>
-          <button class="ghost-btn" id="stir-btn" type="button">Stir Chance</button>
+          <button class="action-btn" id="draw-btn" type="button">Kehaneti Aç</button>
+          <button class="ghost-btn" id="stir-btn" type="button">Külleri Karıştır</button>
         </div>
       </aside>
     </section>
 
-    <section class="reading-grid" aria-label="Oracle ciktilari">
+    <section class="reading-grid" aria-label="Oracle çıktıları">
       <article class="reading-panel" aria-live="polite">
         <div class="panel-head">
-          <span>reading buffer</span>
-          <strong class="rarity" id="result-rarity">unopened</strong>
+          <span>okuma sonucu</span>
+          <strong class="rarity" id="result-rarity">kapalı</strong>
         </div>
 
         <div class="result-hero">
-          <div class="result-code" id="result-code">NO SIGNAL</div>
+          <div class="result-code" id="result-code">HAT KAPALI</div>
           <div class="result-name" id="result-name">Beklemede</div>
-          <div class="result-line" id="result-line">Şans henüz taraf tutmadı.</div>
+          <div class="result-line" id="result-line">Oracle birkaç kısa cevap bekliyor.</div>
         </div>
 
         <div class="oracle-output" id="oracle-output">
           <div class="oracle-row is-visible">
-            <span>status</span>
-            <p>Ritüel hazır. Hareket, zamanlama ve seçim aynı havuza düşüyor.</p>
+            <span>durum</span>
+            <p>Hat açık. Oracle açık bilgiden çok cevapların gölgesini okuyacak.</p>
           </div>
         </div>
 
         <div class="post-actions" id="post-actions">
-          <button class="history-btn" type="button" id="accept-btn">Accept</button>
-          <button class="history-btn" type="button" id="refuse-btn">Refuse</button>
-          <button class="history-btn" type="button" id="copy-btn">Copy</button>
+          <button class="history-btn" type="button" id="accept-btn">Kabul Et</button>
+          <button class="history-btn" type="button" id="refuse-btn">Uymadı</button>
+          <button class="history-btn" type="button" id="copy-btn">Kopyala</button>
         </div>
       </article>
 
       <aside class="history-panel">
         <div class="panel-head">
-          <span>local trace</span>
+          <span>yerel kayıt</span>
           <strong id="trace-count">0</strong>
         </div>
         <div class="history-list" id="history-list">
-          <p class="empty-state">Henüz iz yok. Oracle ilk sonucu hafızada tutacak.</p>
+          <p class="empty-state">Henüz kayıt yok. İlk okuma burada saklanacak.</p>
         </div>
       </aside>
     </section>
@@ -917,6 +1109,158 @@
         exit: 47,
         return: 73
       };
+
+      const axisLabels = {
+        control: 'avuç',
+        desire: 'ateş',
+        exit: 'eşik',
+        returning: 'yankı'
+      };
+
+      const lensAxisBias = {
+        control: { control: 3, clarity: 2, evidence: 1 },
+        desire: { desire: 3, urgency: 1, risk: 1 },
+        exit: { exit: 3, clarity: 1, risk: 1 },
+        return: { returning: 3, relation: 2, evidence: 1 }
+      };
+
+      const scoreKeys = ['control', 'desire', 'exit', 'returning', 'risk', 'clarity', 'urgency', 'relation', 'evidence'];
+      const axisKeys = ['control', 'desire', 'exit', 'returning'];
+
+      const dialogueSteps = [
+        'Aklındaki şeyi söyleme. Sadece onun sende bıraktığı ilk hissi yaz.',
+        'O his yaklaşınca bedenin ne yapmak istiyor: tutmak mı, gitmek mi, beklemek mi?',
+        'Bu konuda seni en çok susturan şey ne? Bir kişi, bir zaman, bir korku ya da bir istek olabilir.',
+        'Son cevap: İçinden geçen en dürüst cümleyi yaz. Süsleme, açıklama yapma.'
+      ];
+
+      const keywordScores = [
+        { words: ['net', 'karar', 'kontrol', 'plan', 'emin', 'kanıt', 'bilgi', 'düzen', 'sınır'], score: { control: 2, clarity: 2, evidence: 1 } },
+        { words: ['istiyorum', 'arzu', 'çekim', 'heyecan', 'fırsat', 'hemen', 'yakın', 'devam', 'evet'], score: { desire: 2, urgency: 2, risk: 1 } },
+        { words: ['gitmek', 'bırakmak', 'bitirmek', 'hayır', 'uzak', 'yoruldum', 'kapanış', 'kopmak'], score: { exit: 3, clarity: 1, risk: 1 } },
+        { words: ['geri', 'özledim', 'konuşmak', 'bağ', 'kişi', 'geçmiş', 'tekrar', 'dönmek', 'yarım'], score: { returning: 3, relation: 2, evidence: 1 } },
+        { words: ['korku', 'risk', 'kaybetmek', 'belirsiz', 'bulanık', 'şüphe', 'gizli', 'saklı'], score: { risk: 2, clarity: 0, evidence: 1 } },
+        { words: ['beklemek', 'zaman', 'sabır', 'yavaş', 'henüz', 'sonra'], score: { returning: 1, urgency: 0, clarity: 2 } }
+      ];
+
+      function mergeProfile(base, adjust = {}) {
+        return scoreKeys.reduce((profile, key) => {
+          profile[key] = Math.max(0, Math.min(5, (base[key] || 0) + (adjust[key] || 0)));
+          return profile;
+        }, {});
+      }
+
+      const answerThemes = [
+        { key: 'clarity', title: 'Netlik', axis: 'control', glyph: '□', profile: { control: 5, desire: 1, exit: 1, returning: 1, risk: 1, clarity: 5, urgency: 2, relation: 1, evidence: 4 }, signal: 'Konu netlik istiyor.', action: 'soruyu tek cümleye indir', reward: 'Karar alanın daralır' },
+        { key: 'boundary', title: 'Sınır', axis: 'exit', glyph: '◇', profile: { control: 3, desire: 0, exit: 5, returning: 1, risk: 3, clarity: 4, urgency: 2, relation: 3, evidence: 2 }, signal: 'Burada sınır çizmek gerekiyor.', action: 'neyi kabul etmeyeceğini yaz', reward: 'Yük azalır' },
+        { key: 'courage', title: 'Cesaret', axis: 'desire', glyph: '✦', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 4, clarity: 3, urgency: 4, relation: 2, evidence: 1 }, signal: 'İstek güçlü ama çekingenlik var.', action: 'istediğin şeyi açık söyle', reward: 'Bekleme basıncı düşer' },
+        { key: 'patience', title: 'Sabır', axis: 'returning', glyph: '◌', profile: { control: 3, desire: 1, exit: 1, returning: 5, risk: 1, clarity: 3, urgency: 0, relation: 3, evidence: 3 }, signal: 'Bu konu hemen zorlanmamalı.', action: 'biraz zaman tanı', reward: 'Gerçek eğilim görünür' },
+        { key: 'evidence', title: 'Kanıt', axis: 'control', glyph: '⌖', profile: { control: 5, desire: 0, exit: 1, returning: 1, risk: 2, clarity: 4, urgency: 1, relation: 1, evidence: 5 }, signal: 'Duygu değil, kanıt belirleyici olmalı.', action: 'elindeki veriyi ayır', reward: 'Yanlış yorum riski azalır' },
+        { key: 'talk', title: 'Konuşma', axis: 'returning', glyph: '⌬', profile: { control: 2, desire: 2, exit: 0, returning: 5, risk: 2, clarity: 3, urgency: 2, relation: 5, evidence: 2 }, signal: 'Bu düğüm konuşmadan çözülmez.', action: 'kısa ve net bir konuşma aç', reward: 'Belirsizlik azalır' },
+        { key: 'test', title: 'Küçük Deneme', axis: 'desire', glyph: '△', profile: { control: 4, desire: 4, exit: 1, returning: 1, risk: 1, clarity: 3, urgency: 3, relation: 1, evidence: 4 }, signal: 'Büyük karar yerine küçük deneme daha uygun.', action: 'düşük riskli bir test kur', reward: 'Cevap pratikte görünür' },
+        { key: 'closure', title: 'Kapanış', axis: 'exit', glyph: '●', profile: { control: 3, desire: 0, exit: 5, returning: 0, risk: 4, clarity: 5, urgency: 3, relation: 2, evidence: 3 }, signal: 'Bu konu kapanış istiyor.', action: 'açık kapıyı azalt', reward: 'Zihinsel alan açılır' },
+        { key: 'repair', title: 'Onarım', axis: 'returning', glyph: '◈', profile: { control: 2, desire: 2, exit: 1, returning: 5, risk: 2, clarity: 3, urgency: 1, relation: 5, evidence: 3 }, signal: 'Tam kopuş değil, onarım ihtimali var.', action: 'eski hatayı adlandır', reward: 'Aynı döngü zayıflar' },
+        { key: 'opportunity', title: 'Fırsat', axis: 'desire', glyph: '⟡', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 3, clarity: 3, urgency: 5, relation: 1, evidence: 2 }, signal: 'Fırsat penceresi açık ama kısa.', action: 'gecikmeden küçük bir hamle yap', reward: 'Avantaj kaybolmadan yakalanır' }
+      ];
+
+      const answerForms = [
+        {
+          label: 'İlk adım',
+          adjust: { urgency: 1 },
+          signal: (theme) => `${theme.signal} Büyük karar değil, ilk adım önemli.`,
+          move: (theme) => `Bugün ${theme.action}. Sonra sonucu gözle.`,
+          trap: () => 'Her şeyi aynı anda çözmeye çalışmak.',
+          reward: (theme) => `${theme.reward}.`
+        },
+        {
+          label: 'Net koşul',
+          adjust: { control: 1, clarity: 1 },
+          signal: (theme) => `${theme.signal} Cevap bir koşula bağlanmalı.`,
+          move: (theme) => `${theme.action} ve kabul edeceğin koşulu yaz.`,
+          trap: () => 'Koşulsuz evet demek.',
+          reward: () => 'Pazarlık gücün korunur.'
+        },
+        {
+          label: 'Bekleme payı',
+          adjust: { urgency: -1, risk: -1 },
+          signal: (theme) => `${theme.signal} Acele etmek sonucu bulanıklaştırır.`,
+          move: (theme) => `Bir gün bekle, sonra ${theme.action}.`,
+          trap: () => 'Beklemeyi kaçışa çevirmek.',
+          reward: () => 'Daha sakin karar verirsin.'
+        },
+        {
+          label: 'Kısa konuşma',
+          adjust: { relation: 1, returning: 1 },
+          signal: (theme) => `${theme.signal} Konuşma kısa kalırsa işe yarar.`,
+          move: () => 'Tek bir cümleyle ne istediğini söyle.',
+          trap: () => 'Eski tartışmayı yeniden açmak.',
+          reward: () => 'Karşı tarafın gerçek tavrı görünür.'
+        },
+        {
+          label: 'Ölç ve bak',
+          adjust: { evidence: 1, control: 1 },
+          signal: (theme) => `${theme.signal} Tahmin yerine ölçüm daha doğru.`,
+          move: () => 'Küçük bir deneme yap ve sonucu yaz.',
+          trap: () => 'Hissi tek kanıt saymak.',
+          reward: () => 'Cevap soyut olmaktan çıkar.'
+        },
+        {
+          label: 'Şimdilik hayır',
+          adjust: { exit: 1, risk: -1 },
+          signal: (theme) => `${theme.signal} Şimdilik hayır demek alan açar.`,
+          move: () => 'Hayır de, ama kapıyı tamamen yakma.',
+          trap: () => 'Suçluluk yüzünden kabul etmek.',
+          reward: () => 'Kendi sınırını daha net görürsün.'
+        },
+        {
+          label: 'Sınırlı evet',
+          adjust: { desire: 1, risk: 1 },
+          signal: (theme) => `${theme.signal} Evet varsa sınırıyla birlikte gelmeli.`,
+          move: () => 'Evet de, ama süreyi ve sınırı baştan söyle.',
+          trap: () => 'Heyecanla bütün kontrolü bırakmak.',
+          reward: () => 'İstek zarar vermeden ilerler.'
+        },
+        {
+          label: 'Dış göz',
+          adjust: { evidence: 1, clarity: 1 },
+          signal: (theme) => `${theme.signal} Dışarıdan bakış kararı temizler.`,
+          move: () => 'Güvendiğin bir kişiden sadece bir geri bildirim al.',
+          trap: () => 'Herkese sorup kafanı dağıtmak.',
+          reward: () => 'Kör nokta azalır.'
+        },
+        {
+          label: 'Eski iz',
+          adjust: { returning: 1, evidence: 1 },
+          signal: (theme) => `${theme.signal} Geçmişteki benzer durum ipucu veriyor.`,
+          move: () => 'Benzer bir eski olayı hatırla ve oradaki sonucu yaz.',
+          trap: () => 'Aynı hatayı yeni isimle tekrarlamak.',
+          reward: () => 'Döngüyü daha erken fark edersin.'
+        },
+        {
+          label: 'Son kontrol',
+          adjust: { clarity: 1, risk: 1 },
+          signal: (theme) => `${theme.signal} Karardan önce son kontrol gerekiyor.`,
+          move: () => 'Maliyet, zaman ve insan etkisini üç satırda yaz.',
+          trap: () => 'Sadece iyi ihtimali düşünmek.',
+          reward: () => 'Karar daha gerçekçi olur.'
+        }
+      ];
+
+      const answerBank = answerThemes.flatMap((theme, themeIndex) => answerForms.map((form, formIndex) => {
+        const index = themeIndex * answerForms.length + formIndex + 1;
+        return {
+          code: `A-${String(index).padStart(3, '0')}`,
+          name: `${theme.title}: ${form.label}`,
+          axis: theme.axis,
+          glyph: theme.glyph,
+          profile: mergeProfile(theme.profile, form.adjust),
+          signal: form.signal(theme),
+          move: form.move(theme),
+          trap: form.trap(theme),
+          reward: form.reward(theme),
+          counter: `Bu cevap uymuyorsa önce "${theme.title}" yönünü değil, seçtiğin işaretleri değiştir. Sorun büyük ihtimalle orada kaydı.`
+        };
+      }));
 
       const symbols = [
         {
@@ -1107,6 +1451,9 @@
         entropy: 0,
         events: 0,
         lens: 'control',
+        answers: [],
+        step: 0,
+        stirOffset: 0,
         busy: false,
         current: null,
         accepted: false,
@@ -1119,6 +1466,7 @@
         body: document.body,
         noise: document.getElementById('noise-canvas'),
         sigilCanvas: document.getElementById('sigil-canvas'),
+        ritualPanel: document.querySelector('.ritual-panel'),
         sigilStage: document.getElementById('sigil-stage'),
         sigilMark: document.getElementById('sigil-mark'),
         entropyValue: document.getElementById('entropy-value'),
@@ -1129,6 +1477,11 @@
         rarityBar: document.getElementById('rarity-bar'),
         focus: document.getElementById('focus-input'),
         lensButtons: Array.from(document.querySelectorAll('.lens-btn')),
+        transcript: document.getElementById('seer-transcript'),
+        seerCurrent: document.getElementById('seer-current'),
+        seerInput: document.getElementById('seer-input'),
+        seerSend: document.getElementById('seer-send'),
+        matrixProgress: document.getElementById('matrix-progress'),
         draw: document.getElementById('draw-btn'),
         stir: document.getElementById('stir-btn'),
         stamp: document.getElementById('system-stamp'),
@@ -1167,81 +1520,205 @@
         return hash >>> 0;
       };
 
-      const cryptoSalt = () => {
-        if (window.crypto && crypto.getRandomValues) {
-          const data = new Uint32Array(2);
-          crypto.getRandomValues(data);
-          return data[0] ^ data[1];
-        }
-        return Math.floor(Math.random() * 0xffffffff);
+      const blankScore = () => scoreKeys.reduce((score, key) => {
+        score[key] = 0;
+        return score;
+      }, {});
+
+      const addScores = (target, source = {}) => {
+        scoreKeys.forEach((key) => {
+          target[key] += source[key] || 0;
+        });
+        return target;
       };
 
-      const mixEntropy = (value, weight = 1) => {
-        const mixed = Math.abs(Math.floor(value)) ^ cryptoSalt() ^ Math.floor(performance.now() * 1000);
-        state.entropy = (state.entropy + Math.abs(mixed % 997) * weight) % 1000003;
-        state.events = Math.min(99, state.events + weight);
+      const isMatrixComplete = () => state.answers.length >= dialogueSteps.length;
+
+      const scaleValue = (value, max) => Math.max(0, Math.min(5, Math.round((value / Math.max(1, max)) * 5)));
+
+      const confidenceMeta = (confidence) => {
+        if (confidence >= 84) return { rarity: 'eclipse', label: 'keskin' };
+        if (confidence >= 68) return { rarity: 'rare', label: 'belirgin' };
+        return { rarity: 'common', label: 'bulanık' };
+      };
+
+      const joinClues = (clues) => {
+        const clean = clues.filter(Boolean);
+        if (clean.length <= 1) return clean[0] || 'boş iz';
+        if (clean.length === 2) return `${clean[0]} ve ${clean[1]}`;
+        return `${clean.slice(0, -1).join(', ')} ve ${clean[clean.length - 1]}`;
+      };
+
+      const explainEntropy = (matrix, seed, answer, clues) => {
+        const seedMark = String(seed % 997).padStart(3, '0');
+        const frontClues = clues.slice(0, 3);
+        return `Entropi ${seedMark}: ${joinClues(frontClues)} aynı hatta düştü. Kelime ağırlığı ${axisLabels[matrix.dominant.key]} yönünü yükseltti; ${axisLabels[matrix.second.key]} arkada kaldı. Bu yüzden ${answer.name.toLocaleLowerCase('tr-TR')} cevabı seçildi.`;
+      };
+
+      const normalizeText = (text) => text
+        .toLocaleLowerCase('tr-TR')
+        .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const extractClue = (text) => {
+        const words = normalizeText(text).split(' ').filter((word) => word.length > 2);
+        return words.sort((a, b) => b.length - a.length)[0] || text.trim().slice(0, 18) || 'sessizlik';
+      };
+
+      const analyzeAnswer = (answer, index) => {
+        const normalized = normalizeText(answer);
+        const score = blankScore();
+        const matched = [];
+        keywordScores.forEach((rule) => {
+          const hits = rule.words.filter((word) => normalized.includes(word));
+          if (!hits.length) return;
+          addScores(score, rule.score);
+          matched.push(...hits.slice(0, 2));
+        });
+
+        if (answer.length < 18) addScores(score, { exit: 1, clarity: 1 });
+        if (answer.length > 90) addScores(score, { relation: 1, risk: 1, returning: 1 });
+        if (/[?!]/.test(answer)) addScores(score, { risk: 1, urgency: 1 });
+        if (/(ama|fakat|belki|sanki|galiba|emin değil)/i.test(answer)) addScores(score, { risk: 1, evidence: 1 });
+        if (index === 0) addScores(score, { clarity: 1 });
+        if (index === 1) addScores(score, { urgency: 1 });
+        if (index === 2) addScores(score, { relation: 1, risk: 1 });
+        if (index === 3) addScores(score, { evidence: 1, control: 1 });
+        if (!matched.length) addScores(score, { control: 1, evidence: 1 });
+
+        return { score, clue: matched[0] || extractClue(answer) };
+      };
+
+      const calculateMatrix = () => {
+        const totals = blankScore();
+        addScores(totals, lensAxisBias[state.lens] || {});
+        const analyses = state.answers.map((answer, index) => analyzeAnswer(answer, index));
+        analyses.forEach((analysis) => addScores(totals, analysis.score));
+
+        const answered = state.answers.length;
+        const completion = Math.round((answered / dialogueSteps.length) * 100);
+        const axes = axisKeys
+          .map((key) => ({ key, value: totals[key] }))
+          .sort((a, b) => b.value - a.value);
+        const dominant = axes[0] || { key: 'control', value: 0 };
+        const second = axes[1] || { key: 'desire', value: 0 };
+        const axisTotal = Math.max(1, axes.reduce((sum, item) => sum + item.value, 0));
+        const spread = Math.max(0, dominant.value - second.value);
+        const target = {
+          risk: scaleValue(totals.risk, 10),
+          clarity: scaleValue(totals.clarity, 12),
+          urgency: scaleValue(totals.urgency, 10),
+          relation: scaleValue(totals.relation, 12),
+          evidence: scaleValue(totals.evidence, 12)
+        };
+        const confidence = Math.min(99, Math.round(
+          completion * 0.55 +
+          Math.min(30, spread * 6) +
+          target.clarity * 3 +
+          target.evidence * 2
+        ));
+        const signature = state.answers.map((answer, index) => `${index}:${normalizeText(answer)}`).join('|');
+        const clues = analyses.map((analysis) => analysis.clue);
+
+        return { totals, answered, completion, axes, dominant, second, axisTotal, target, confidence, signature, clues };
+      };
+
+      const addTranscript = (speaker, text) => {
+        const item = document.createElement('div');
+        const label = document.createElement('strong');
+        const copy = document.createElement('span');
+        item.className = `seer-message ${speaker}`;
+        label.textContent = speaker === 'user' ? 'sen' : 'oracle';
+        copy.textContent = text;
+        item.append(label, copy);
+        els.transcript.append(item);
+        els.transcript.scrollTop = els.transcript.scrollHeight;
+      };
+
+      const renderSession = () => {
+        els.matrixProgress.textContent = `${state.answers.length}/${dialogueSteps.length}`;
+        els.seerCurrent.textContent = dialogueSteps[Math.min(state.step, dialogueSteps.length - 1)];
+        els.seerInput.disabled = isMatrixComplete();
+        els.seerSend.disabled = isMatrixComplete();
+        if (isMatrixComplete()) {
+          els.seerCurrent.textContent = 'Yeterli iz toplandı. Şimdi kehaneti açabilirsin.';
+          els.seerInput.placeholder = 'Hat doldu.';
+        }
         updateMeters();
       };
 
-      const rarityScore = (seed) => {
-        const score = seed % 100;
-        if (score >= 96) return 'eclipse';
-        if (score >= 82) return 'rare';
-        return 'common';
-      };
-
-      const poolForRarity = (rarity) => symbols.filter((symbol) => symbol.rarity === rarity);
-
-      const luckLabel = (bias) => {
-        if (bias === 'with') return 'with you';
-        if (bias === 'against') return 'against you';
-        return 'split';
-      };
-
-      const rarityWeight = (rarity) => {
-        if (rarity === 'eclipse') return 100;
-        if (rarity === 'rare') return 72;
-        return 38;
-      };
-
       const updateMeters = () => {
-        const entropyPercent = Math.min(100, Math.round(state.events * 2.1 + (state.entropy % 19)));
-        const luck = (state.entropy + lensBias[state.lens]) % 100;
-        const rarity = rarityScore(state.entropy + lensBias[state.lens] + hashText(els.focus.value));
-        els.entropyValue.textContent = String(Math.min(99, state.events)).padStart(2, '0');
-        els.entropyBar.style.width = `${entropyPercent}%`;
-        els.luckValue.textContent = luck > 57 ? 'with you' : luck < 38 ? 'against you' : 'split';
-        els.luckBar.style.width = `${Math.max(12, luck)}%`;
-        els.rarityValue.textContent = rarity;
-        els.rarityBar.style.width = `${rarityWeight(rarity)}%`;
+        const matrix = calculateMatrix();
+        const dominantShare = Math.round((matrix.dominant.value / matrix.axisTotal) * 100);
+        const meta = confidenceMeta(matrix.confidence);
+        const complete = matrix.answered === dialogueSteps.length;
+
+        els.matrixProgress.textContent = `${matrix.answered}/${dialogueSteps.length}`;
+        els.entropyValue.textContent = `${matrix.completion}%`;
+        els.entropyBar.style.width = `${Math.max(4, matrix.completion)}%`;
+        els.luckValue.textContent = matrix.answered ? axisLabels[matrix.dominant.key] : 'bekliyor';
+        els.luckBar.style.width = `${Math.max(8, dominantShare)}%`;
+        els.rarityValue.textContent = matrix.answered ? meta.label : 'kapalı';
+        els.rarityBar.style.width = `${matrix.answered ? Math.max(8, matrix.confidence) : 0}%`;
+        els.draw.disabled = state.busy || !complete;
       };
+
+      const answerFit = (answer, matrix, seed) => {
+        const closeness = (key) => 5 - Math.abs((answer.profile[key] || 0) - (matrix.target[key] || 0));
+        let score = 0;
+        if (answer.axis === matrix.dominant.key) score += 42;
+        if (answer.axis === matrix.second.key) score += 18;
+        score += Math.min(12, answer.profile[matrix.dominant.key] * 3);
+        score += closeness('risk') * 5;
+        score += closeness('clarity') * 6;
+        score += closeness('urgency') * 4;
+        score += closeness('relation') * 4;
+        score += closeness('evidence') * 5;
+        score += (hashText(`${seed}|${answer.code}`) % 1000) / 1000;
+        return score;
+      };
+
+      const pickAnswer = (matrix, seed) => answerBank.reduce((best, answer) => {
+        const score = answerFit(answer, matrix, seed);
+        if (!best || score > best.score) return { answer, score };
+        return best;
+      }, null).answer;
 
       const createReading = () => {
-        const focus = els.focus.value.trim();
-        const seedBase = [
-          state.entropy,
-          state.events,
+        const matrix = calculateMatrix();
+        const focus = els.focus.value.trim() || 'isimsiz konu';
+        const clues = matrix.clues;
+        const seed = hashText([
+          focus.toLocaleLowerCase('tr-TR'),
           state.lens,
-          focus,
-          Date.now(),
-          cryptoSalt(),
-          navigator.userAgent.length,
-          screen.width,
-          screen.height
-        ].join('|');
-        const seed = hashText(seedBase);
-        const rarity = rarityScore(seed + state.events * 13);
-        const pool = poolForRarity(rarity);
-        const symbol = pool[(seed + lensBias[state.lens]) % pool.length];
-        const tension = focus || 'isimsiz gerilim';
+          matrix.signature,
+          state.stirOffset,
+          lensBias[state.lens]
+        ].join('|'));
+        const answer = pickAnswer(matrix, seed);
+        const meta = confidenceMeta(matrix.confidence);
+        state.entropy = seed % 1000003;
+        state.events = matrix.answered;
+
         return {
-          id: `${symbol.code}-${Date.now().toString(36)}`,
+          id: `${answer.code}-${seed.toString(36)}-${Date.now().toString(36)}`,
           createdAt: new Date().toISOString(),
           lens: state.lens,
-          focus: tension,
+          lensLabel: axisLabels[matrix.dominant.key],
+          focus,
           seed,
           accepted: null,
-          ...symbol
+          rarity: meta.rarity,
+          rarityLabel: meta.label,
+          confidence: matrix.confidence,
+          axis: matrix.dominant.key,
+          secondAxis: matrix.second.key,
+          clues,
+          clueLine: `${joinClues(clues)} aynı cümle ailesine düştü. Oracle bunu rastgele değil, aynı yere dönen bir düşünce izi olarak okudu.`,
+          entropyLine: explainEntropy(matrix, seed, answer, clues),
+          matrixSummary: `${axisLabels[matrix.dominant.key]} baskın. İkinci gölge: ${axisLabels[matrix.second.key]}. Okuma netliği: ${matrix.confidence}%.`,
+          ...answer
         };
       };
 
@@ -1259,45 +1736,57 @@
       const revealRows = (rows) => {
         els.output.replaceChildren(...rows);
         rows.forEach((item, index) => {
-          window.setTimeout(() => item.classList.add('is-visible'), 170 + index * 230);
+          window.setTimeout(() => item.classList.add('is-visible'), 140 + index * 180);
         });
       };
 
       const setHero = (reading) => {
-        els.resultRarity.textContent = reading.rarity;
-        els.resultRarity.className = `rarity ${reading.rarity}`;
-        els.resultCode.textContent = `${reading.code} / ${reading.lens}`;
+        const label = reading.rarityLabel || reading.rarity || 'kayıt';
+        const axis = axisLabels[reading.axis] || reading.lensLabel || reading.lens || 'genel';
+        els.resultRarity.textContent = label;
+        els.resultRarity.className = `rarity ${reading.rarity || 'common'}`;
+        els.resultCode.textContent = `${reading.code} / ${axis}`;
         els.resultName.textContent = reading.name;
         els.resultLine.textContent = reading.signal;
-        els.sigilMark.textContent = reading.glyph;
+        els.sigilMark.textContent = reading.glyph || '◇';
         els.resultName.classList.remove('scramble');
         void els.resultName.offsetWidth;
         els.resultName.classList.add('scramble');
       };
 
-      const readingRows = (reading) => [
-        row('luck', `Şans: ${luckLabel(reading.bias)}. ${reading.focus} kaydı bu eğilime bağlandı.`),
-        row('trap', reading.trap),
-        row('move', reading.move),
-        row('price', reading.price),
-        row('reward', reading.reward)
-      ];
+      const readingRows = (reading) => {
+        const axis = axisLabels[reading.axis] || reading.lensLabel || reading.lens || 'belirsiz';
+        const summary = reading.matrixSummary || `${reading.focus || 'Bu konu'} için ana yön: ${axis}.`;
+        return [
+          row('kehanet', reading.signal || 'Cevap net değil. İşaretleri yeniden seç.'),
+          row('izler', reading.clueLine || summary),
+          row('entropi', reading.entropyLine || summary),
+          row('hamle', reading.move || 'Tek küçük adım seç.'),
+          row('sakın', reading.trap || 'Aynı anda çok şey çözmeye çalışma.')
+        ];
+      };
 
       const drawReading = () => {
         if (state.busy) return;
+        if (!isMatrixComplete()) {
+          showToast('Oracle hâlâ iki üç iz daha bekliyor.');
+          return;
+        }
+
         state.busy = true;
         state.accepted = false;
-        els.draw.disabled = true;
+        updateMeters();
         els.postActions.classList.remove('is-visible');
-        els.stamp.textContent = 'chance channel active';
-        mixEntropy(hashText(els.focus.value + state.lens), 6);
+        els.ritualPanel?.classList.add('is-reading');
+        els.stamp.textContent = 'işaretler ısınıyor';
+        const matrix = calculateMatrix();
+        const clues = matrix.clues;
 
-        const prelude = [
-          row('entropy', 'Hareket, zaman ve seçim aynı havuzda eziliyor.'),
-          row('cut', 'Sistem bilgi iddiası kurmuyor. Sadece şansın tavrını gösteriyor.'),
-          row('draw', 'Sembol çekiliyor.')
-        ];
-        revealRows(prelude);
+        revealRows([
+          row('avuç', `${joinClues(clues.slice(0, 2))} ilk izi bıraktı.`),
+          row('gölge', `${axisLabels[matrix.dominant.key]} ağır basıyor; ${axisLabels[matrix.second.key]} geriden geliyor.`),
+          row('entropi', `${answerBank.length} kapalı cevap içinden aynı titreşime en yakın olan aranıyor.`)
+        ]);
 
         window.setTimeout(() => {
           const reading = createReading();
@@ -1305,13 +1794,15 @@
           setHero(reading);
           revealRows(readingRows(reading));
           els.postActions.classList.add('is-visible');
-          els.draw.disabled = false;
-          els.stamp.textContent = reading.rarity === 'eclipse' ? 'eclipse signal logged' : 'chance channel resolved';
           state.busy = false;
+          els.ritualPanel?.classList.remove('is-reading');
+          updateMeters();
+          els.stamp.textContent = `okuma açıldı: ${reading.confidence}%`;
           persistReading(reading, null);
           updateProtocol(reading);
           renderHistory();
-        }, 1120);
+          drawNoise();
+        }, 760);
       };
 
       const persistReading = (reading, accepted) => {
@@ -1331,15 +1822,15 @@
           saveStore(store);
           revealRows([
             ...readingRows(state.current),
-            row('refusal', state.current.counter)
+            row('uyarlama', state.current.counter)
           ]);
-          showToast('Oracle reddi kaydetti. Karşı hamle açıldı.');
+          showToast('Uymadı olarak kaydedildi. Karşı iz açıldı.');
         } else {
           revealRows([
             ...readingRows(state.current),
-            row('seal', 'Sinyal kabul edildi. Ana sayfadaki protokol hafızası güncellendi.')
+            row('kayıt', 'Okuma kabul edildi. Ana sayfadaki protokol hafızası güncellendi.')
           ]);
-          showToast('Sinyal kabul edildi.');
+          showToast('Okuma kabul edildi.');
         }
         renderHistory();
       };
@@ -1353,6 +1844,7 @@
             code: reading.code,
             name: reading.name,
             rarity: reading.rarity,
+            confidence: reading.confidence,
             at: reading.createdAt
           };
           protocol.lastSignal = reading.name;
@@ -1367,21 +1859,25 @@
         const store = loadStore();
         els.traceCount.textContent = String(store.readings.length);
         if (!store.readings.length) {
-          els.history.innerHTML = '<p class="empty-state">Henüz iz yok. Oracle ilk sonucu hafızada tutacak.</p>';
+          els.history.innerHTML = '<p class="empty-state">Henüz kayıt yok. İlk okuma burada saklanacak.</p>';
           return;
         }
         els.history.replaceChildren(...store.readings.map((reading) => {
           const button = document.createElement('button');
+          const title = document.createElement('strong');
+          const meta = document.createElement('span');
           button.type = 'button';
           button.className = 'history-item';
-          const status = reading.accepted === true ? 'accepted' : reading.accepted === false ? 'refused' : 'unsealed';
-          button.innerHTML = `<strong>${reading.name}</strong><span>${reading.code} / ${reading.rarity} / ${status}</span>`;
+          const status = reading.accepted === true ? 'kabul' : reading.accepted === false ? 'uymadı' : 'açık';
+          title.textContent = reading.name;
+          meta.textContent = `${reading.code} / ${reading.rarityLabel || reading.rarity || 'kayıt'} / ${status}`;
+          button.append(title, meta);
           button.addEventListener('click', () => {
             state.current = reading;
             setHero(reading);
             revealRows(readingRows(reading));
             els.postActions.classList.add('is-visible');
-            showToast('Eski sinyal tekrar açıldı.');
+          showToast('Eski okuma tekrar açıldı.');
           });
           return button;
         }));
@@ -1392,16 +1888,18 @@
         const reading = state.current;
         const text = [
           `THE ORACLE / ${reading.code}`,
-          `SIGNAL: ${reading.name}`,
-          `LUCK: ${luckLabel(reading.bias)}`,
-          `TRAP: ${reading.trap}`,
-          `MOVE: ${reading.move}`,
-          `PRICE: ${reading.price}`,
-          `REWARD: ${reading.reward}`
+          `CEVAP: ${reading.name}`,
+          `TUTARLILIK: ${reading.confidence || '-'}%`,
+          `KONU: ${reading.focus || '-'}`,
+          `IZLER: ${reading.clueLine || '-'}`,
+          `ENTROPI: ${reading.entropyLine || '-'}`,
+          `ADIM: ${reading.move || '-'}`,
+          `DIKKAT: ${reading.trap || '-'}`,
+          `SONUC: ${reading.reward || '-'}`
         ].join('\n');
         try {
           await navigator.clipboard.writeText(text);
-          showToast('Sinyal panoya kopyalandı.');
+          showToast('Okuma panoya kopyalandı.');
         } catch (error) {
           showToast('Kopyalama engellendi. Tarayıcı izni yok.');
         }
@@ -1417,28 +1915,43 @@
       };
 
       const stirChance = () => {
-        const stamp = Date.now() ^ cryptoSalt() ^ hashText(els.focus.value);
-        mixEntropy(stamp, 12);
-        els.sigilMark.textContent = glyphs[(state.entropy + state.events) % glyphs.length];
-        els.stamp.textContent = 'chance stirred';
-        showToast('Şans havuzu karıştırıldı.');
+        state.stirOffset = (state.stirOffset + 1) % answerBank.length;
+        state.entropy = (state.entropy + 137 + state.stirOffset) % 1000003;
+        els.sigilMark.textContent = glyphs[(state.entropy + state.stirOffset) % glyphs.length];
+        els.stamp.textContent = 'kül hareket etti';
+        showToast('Kül karıştı. Yeni sesi duymak için tekrar Oku.');
+      };
+
+      const submitSeerAnswer = () => {
+        const answer = els.seerInput.value.trim();
+        if (!answer) {
+          showToast('Boşluk da bir izdir ama önce bir kelime bırak.');
+          return;
+        }
+        if (isMatrixComplete()) {
+          showToast('Hat doldu. Artık kehaneti aç.');
+          return;
+        }
+
+        addTranscript('oracle', dialogueSteps[state.step]);
+        addTranscript('user', answer);
+        state.answers.push(answer.slice(0, 180));
+        state.step = Math.min(dialogueSteps.length, state.step + 1);
+        state.stirOffset = 0;
+        state.entropy = (state.entropy + hashText(answer) + state.step * 41) % 1000003;
+        els.seerInput.value = '';
+        els.sigilMark.textContent = glyphs[(state.entropy + state.step) % glyphs.length];
+        els.stamp.textContent = isMatrixComplete() ? 'okuma hazır' : 'iz alındı';
+        renderSession();
       };
 
       const bindEvents = () => {
         window.addEventListener('pointermove', (event) => {
           state.pointer.x = event.clientX / Math.max(1, window.innerWidth);
           state.pointer.y = event.clientY / Math.max(1, window.innerHeight);
-          if (Math.random() > 0.68) {
-            mixEntropy(event.clientX * 31 + event.clientY * 17, 1);
-          }
-        }, { passive: true });
-
-        window.addEventListener('pointerdown', (event) => {
-          mixEntropy(event.clientX * event.clientY + event.button * 101, 4);
         }, { passive: true });
 
         window.addEventListener('keydown', (event) => {
-          mixEntropy(event.key.charCodeAt(0) || event.keyCode, 2);
           if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
             event.preventDefault();
             drawReading();
@@ -1446,7 +1959,16 @@
         });
 
         els.focus.addEventListener('input', () => {
-          mixEntropy(hashText(els.focus.value), 1);
+          state.stirOffset = 0;
+          updateMeters();
+        });
+
+        els.seerSend.addEventListener('click', submitSeerAnswer);
+        els.seerInput.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            submitSeerAnswer();
+          }
         });
 
         els.lensButtons.forEach((button) => {
@@ -1454,8 +1976,9 @@
             els.lensButtons.forEach((item) => item.classList.remove('is-active'));
             button.classList.add('is-active');
             state.lens = button.dataset.lens;
-            mixEntropy(lensBias[state.lens], 3);
-            els.stamp.textContent = `${state.lens} lens armed`;
+            state.stirOffset = 0;
+            updateMeters();
+            els.stamp.textContent = `${button.textContent.trim()} seçildi`;
           });
         });
 
@@ -1533,12 +2056,13 @@
       };
 
       const init = () => {
+        state.entropy = hashText(`${navigator.language}-${screen.width}-${screen.height}`) % 1000003;
+        renderSession();
         bindEvents();
         renderHistory();
         updateMeters();
         drawNoise();
         drawSigil();
-        mixEntropy(hashText(`${Date.now()}-${navigator.language}-${screen.width}`), 5);
         window.addEventListener('resize', () => {
           drawNoise();
         });

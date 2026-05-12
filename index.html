@@ -1732,6 +1732,109 @@
       border-color: rgba(245, 255, 107, 0.42);
     }
 
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.06) 0 1px, transparent 1px 7px),
+        linear-gradient(135deg, rgba(0, 234, 255, 0.12), transparent 32%),
+        linear-gradient(315deg, rgba(255, 46, 166, 0.1), transparent 34%),
+        #000;
+      color: var(--journey-text);
+      pointer-events: auto;
+      animation: loader-auto-exit 0.5s ease 3.2s forwards;
+    }
+
+    .page-loader.is-hidden {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      animation: none;
+      transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+    }
+
+    .loader-terminal {
+      position: relative;
+      width: min(520px, 100%);
+      min-height: 178px;
+      padding: 22px;
+      border: 1px solid rgba(0, 234, 255, 0.46);
+      border-left: 3px solid var(--journey-green);
+      background:
+        linear-gradient(180deg, rgba(0, 255, 102, 0.07), rgba(0, 0, 0, 0.86)),
+        rgba(0, 0, 0, 0.92);
+      box-shadow: 0 0 42px rgba(0, 234, 255, 0.18), inset 0 0 36px rgba(0, 255, 102, 0.04);
+      font-family: var(--font-display);
+      overflow: hidden;
+    }
+
+    .loader-terminal::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.14), transparent);
+      transform: translateX(-115%);
+      animation: loader-sweep 1.8s ease-in-out 0.35s forwards;
+      pointer-events: none;
+    }
+
+    .loader-prompt {
+      display: block;
+      color: var(--journey-cyan);
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .loader-word {
+      display: inline-block;
+      box-sizing: content-box;
+      width: 0;
+      max-width: 9ch;
+      border-right: 0.08em solid var(--journey-cyan);
+      color: #ddffe6;
+      font-size: clamp(3rem, 11vw, 5.8rem);
+      line-height: 0.95;
+      white-space: nowrap;
+      overflow: hidden;
+      text-shadow: 0 0 24px rgba(0, 255, 102, 0.42);
+      animation:
+        loader-type 1.35s steps(9, end) 0.35s forwards,
+        loader-caret 0.75s step-end infinite;
+    }
+
+    .loader-status {
+      display: block;
+      margin-top: 18px;
+      color: var(--journey-muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+    }
+
+    @keyframes loader-type {
+      to { width: 9ch; }
+    }
+
+    @keyframes loader-caret {
+      50% { border-color: transparent; }
+    }
+
+    @keyframes loader-sweep {
+      to { transform: translateX(115%); }
+    }
+
+    @keyframes loader-auto-exit {
+      to {
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+
     @media (max-width: 760px) {
       .system-hud {
         display: none;
@@ -1742,9 +1845,33 @@
         display: none;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .page-loader {
+        animation: loader-auto-exit 0.001ms linear 0.25s forwards !important;
+      }
+
+      .loader-terminal::before {
+        animation: none !important;
+      }
+
+      .loader-word {
+        width: 9ch;
+        border-right-color: var(--journey-cyan);
+        animation: none !important;
+      }
+    }
   </style>
 </head>
 <body class="scanline-effect">
+  <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
+    <div class="loader-terminal" aria-hidden="true">
+      <span class="loader-prompt">&gt; boot sequence</span>
+      <span class="loader-word">Convivium</span>
+      <span class="loader-status">signal initializing...</span>
+    </div>
+  </div>
+
   <!-- Skip Link for Accessibility -->
   <a class="skip-link" href="#main-content">İçeriği atla</a>
 
@@ -2011,6 +2138,26 @@
   <!-- Journey Interaction Layer -->
   <script>
     (() => {
+      const pageLoader = document.getElementById('page-loader');
+      const loaderStart = performance.now();
+
+      const hidePageLoader = () => {
+        pageLoader?.classList.add('is-hidden');
+      };
+
+      if (pageLoader) {
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const minimumVisible = reduceMotion ? 250 : 1900;
+        const finishLoader = () => {
+          const elapsed = performance.now() - loaderStart;
+          window.setTimeout(hidePageLoader, Math.max(0, minimumVisible - elapsed));
+        };
+
+        if (document.readyState === 'complete') finishLoader();
+        else window.addEventListener('load', finishLoader, { once: true });
+        window.setTimeout(hidePageLoader, reduceMotion ? 700 : 3600);
+      }
+
       document.body.classList.add('js');
 
       const stages = [...document.querySelectorAll('.stage[id]')];
