@@ -28,6 +28,14 @@ where user_id = '<your-auth-user-id>';
 8. `admin.html` sayfasindan makale ekleyip `published` durumuna al.
 9. `makaleler.html` sayfasi artik veritabanindaki yayinlanmis makaleleri de okur.
 
+## Mevcut Kuruluma Faz 2 Ekleme
+
+Daha once ilk SQL semasini calistirdiyseniz tum dosyayi tekrar calistirmak yerine:
+
+1. `docs/database/2026-05-12-game-scores.sql` dosyasini SQL Editor'de calistirin.
+2. `cyberpunk-logic-game.html` uzerinden giris yapmis bir kullaniciyla skor kaydedin.
+3. Skor kaydi basarili olursa oyun `GLOBAL SCOREBOARD` listesini gosterir.
+
 ## Guvenlik Notlari
 
 - `anonKey` gizli degildir; tarayiciya konabilir.
@@ -38,6 +46,6 @@ where user_id = '<your-auth-user-id>';
 ## Gelecek Plan
 
 - Faz 1: Makaleler, uyelik, admin paneli.
-- Faz 2: Yorumlar, favoriler, oyun skor kayitlari.
+- Faz 2: Oyun skor kayitlari ve global leaderboard.
 - Faz 3: Dosya/gorsel yukleme icin Supabase Storage ve RLS.
 - Faz 4: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.

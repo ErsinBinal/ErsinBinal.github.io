@@ -198,6 +198,46 @@
     if (error) throw new Error(toMessage(error));
   }
 
+  async function saveGameScore(score) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Global skor icin once giris yapmalisiniz.');
+
+    const payload = {
+      game_key: score.game_key || 'cyberpunk-logic',
+      user_id: user.id,
+      initials: String(score.initials || '').trim().toUpperCase().slice(0, 3),
+      score: Number(score.score) || 0,
+      duration_seconds: Math.max(0, Number(score.duration_seconds) || 0),
+      trace: Math.max(0, Math.min(100, Number(score.trace) || 0)),
+      best_streak: Math.max(0, Number(score.best_streak) || 0)
+    };
+
+    const { data, error } = await client
+      .from('game_scores')
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function fetchGameLeaderboard(gameKey = 'cyberpunk-logic', limit = 10) {
+    const client = await requireClient();
+    const { data, error } = await client
+      .from('game_scores')
+      .select('id, initials, score, duration_seconds, trace, best_streak, created_at')
+      .eq('game_key', gameKey)
+      .order('score', { ascending: false })
+      .order('duration_seconds', { ascending: true })
+      .order('created_at', { ascending: true })
+      .limit(limit);
+
+    if (error) throw new Error(toMessage(error));
+    return data || [];
+  }
+
   window.ConviviumBackend = {
     isConfigured,
     getClient,
@@ -212,6 +252,8 @@
     fetchManagedArticles,
     saveArticle,
     deleteArticle,
+    saveGameScore,
+    fetchGameLeaderboard,
     slugify
   };
 })();

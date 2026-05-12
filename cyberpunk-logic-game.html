@@ -9,7 +9,7 @@
     <link rel="canonical" href="https://ersinbinal.github.io/cyberpunk-logic-game.html">
 
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
     <!-- OpenGraph -->
     <meta property="og:site_name" content="Convivium">
@@ -464,6 +464,7 @@
                 <label for="player-initials" style="font-size:1.2em;">3 Harfli İsminizi Girin:</label><br>
                 <input id="player-initials" maxlength="3" style="text-transform:uppercase; font-size:2em; width:80px; text-align:center; background:#000; color:#0f8; border:2px solid #08f; margin:12px 0;" autofocus>
                 <button id="submit-score" style="padding:8px 18px; font-size:1.1em; background:#111; color:#0f8; border:2px solid #08f; border-radius:6px; cursor:pointer;">Kaydet</button>
+                <div id="score-save-status" style="min-height:1.5em;color:#08f;margin-top:8px;"></div>
             </div>
             <!-- Magic word guard (görsel uyarı) -->
             <div id="magic-guard"> 
@@ -475,7 +476,7 @@
                 </div>
             </div>
             <div id="scoreboard" style="margin-top:40px; display:none;">
-                <h2 style="font-family:'Courier New',monospace;color:#08f;">SCOREBOARD</h2>
+                <h2 id="scoreboard-title" style="font-family:'Courier New',monospace;color:#08f;">SCOREBOARD</h2>
                 <table style="width:100%;border-collapse:collapse;">
                     <thead>
                         <tr style="color:#0f8;font-size:1.1em;border-bottom:2px solid #08f;">
@@ -489,7 +490,10 @@
             </div>
         </div>
     </div>
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/assets/js/supabase-config.js" defer></script>
+    <script src="/assets/js/supabase-client.js" defer></script>
+
     <script>
         const QUESTION_TIME = 90;
         const TRACE_LIMIT = 100;
@@ -703,6 +707,8 @@
         const resultsElement = document.getElementById('results');
         const finalScoreElement = document.getElementById('final-score');
         const resultSummaryElement = document.getElementById('result-summary');
+        const scoreSaveStatusElement = document.getElementById('score-save-status');
+        const scoreboardTitleElement = document.getElementById('scoreboard-title');
 
         // Yükleme sırasında sırayla gösterilecek metinler
         const loadingMessages = [
@@ -780,6 +786,11 @@ function showNextLoadingMessage() {
             const minutes = Math.floor(seconds / 60);
             const remainingSeconds = seconds % 60;
             return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatScoreDuration(score) {
+            if (typeof score.duration_seconds === 'number') return formatTime(score.duration_seconds);
+            return score.duration || '00:00';
         }
         
         // Update the timer display
@@ -922,11 +933,65 @@ function showNextLoadingMessage() {
             document.getElementById('scoreboard-entry').style.display = 'block';
             document.getElementById('scoreboard').style.display = 'none';
             document.getElementById('player-initials').value = '';
+            scoreSaveStatusElement.textContent = window.ConviviumBackend && window.ConviviumBackend.isConfigured()
+                ? 'Global skor icin oturum gerekli. Giris yoksa skor bu cihazda saklanir.'
+                : 'Veritabani baglantisi yok; skor bu cihazda saklanir.';
             document.getElementById('player-initials').focus();
         }
 
+        function getLocalScores() {
+            try {
+                return JSON.parse(localStorage.getItem('cyberpunk_scores') || '[]');
+            } catch(e) {
+                return [];
+            }
+        }
+
+        function saveLocalScore(score) {
+            let scores = getLocalScores();
+            scores.push(score);
+            scores.sort((a,b) => b.score - a.score);
+            scores = scores.slice(0,10);
+            localStorage.setItem('cyberpunk_scores', JSON.stringify(scores));
+            return scores;
+        }
+
+        function renderScoreboard(scores, title) {
+            const tbodyElement = document.getElementById('scoreboard-body');
+            tbodyElement.innerHTML = '';
+            scoreboardTitleElement.textContent = title || 'SCOREBOARD';
+
+            scores.forEach(s => {
+                const row = document.createElement('tr');
+                row.style.cssText = 'font-size:1.2em;border-bottom:1px solid #222;';
+
+                const nameCell = document.createElement('td');
+                nameCell.style.cssText = 'color:#0f8;padding:8px 24px 8px 8px;text-align:left;';
+                nameCell.textContent = s.initials || s.name;
+
+                const scoreCell = document.createElement('td');
+                scoreCell.style.cssText = 'color:#fff;padding:8px 24px;text-align:center;';
+                scoreCell.textContent = s.score;
+
+                const durationCell = document.createElement('td');
+                durationCell.style.cssText = 'color:#08f;padding:8px 24px 8px 8px;text-align:right;';
+                durationCell.textContent = formatScoreDuration(s);
+
+                row.append(nameCell, scoreCell, durationCell);
+                tbodyElement.appendChild(row);
+            });
+
+            document.getElementById('scoreboard').style.display = 'block';
+            document.getElementById('scoreboard-entry').style.display = 'none';
+        }
+
+        async function loadRemoteLeaderboard() {
+            if (!window.ConviviumBackend || !window.ConviviumBackend.isConfigured()) return null;
+            return window.ConviviumBackend.fetchGameLeaderboard('cyberpunk-logic', 10);
+        }
+
         // Skor kaydetme ve tabloyu gösterme (gelişmiş kötü amaçlı isim filtresi içerir)
-        document.getElementById('submit-score').onclick = function() {
+        document.getElementById('submit-score').onclick = async function() {
             let initialsInput = document.getElementById('player-initials');
             let raw = initialsInput.value || '';
 
@@ -978,36 +1043,34 @@ function showNextLoadingMessage() {
                 return;
             }
             initialsInput.style.borderColor = '#08f';
-            // Skoru localStorage'a ekle
-            let scores = [];
-            try {
-                scores = JSON.parse(localStorage.getItem('cyberpunk_scores') || '[]');
-            } catch(e) { scores = []; }
+
             // Süreyi dakika:saniye formatına çevir
             // Eğer finishDuration daha önce ayarlanmadıysa (beklenmeyen durum), hesapla
             let duration = typeof gameState.finishDuration === 'number' ? gameState.finishDuration : Math.max(0, Math.floor((Date.now() - (gameState.startTime || Date.now())) / 1000));
-            let min = Math.floor(duration/60);
-            let sec = duration%60;
-            let durationStr = `${min.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;
-            scores.push({ name: initials, score: gameState.score, duration: durationStr });
-            // En yüksekten en düşüğe sırala
-            scores.sort((a,b) => b.score - a.score);
-            // Sadece ilk 10 skoru tut
-            scores = scores.slice(0,10);
-            localStorage.setItem('cyberpunk_scores', JSON.stringify(scores));
+            const localScore = { name: initials, score: gameState.score, duration: formatTime(duration) };
+            const localScores = saveLocalScore(localScore);
 
-            // Skor tablosunu doldur
-            let tbody = '';
-            scores.forEach(s => {
-                tbody += `<tr style='font-size:1.2em;border-bottom:1px solid #222;'>
-                    <td style='color:#0f8;padding:8px 24px 8px 8px;text-align:left;'>${s.name}</td>
-                    <td style='color:#fff;padding:8px 24px;text-align:center;'>${s.score}</td>
-                    <td style='color:#08f;padding:8px 24px 8px 8px;text-align:right;'>${s.duration}</td>
-                </tr>`;
-            });
-            document.getElementById('scoreboard-body').innerHTML = tbody;
-            document.getElementById('scoreboard').style.display = 'block';
-            document.getElementById('scoreboard-entry').style.display = 'none';
+            if (!window.ConviviumBackend || !window.ConviviumBackend.isConfigured()) {
+                renderScoreboard(localScores, 'LOCAL SCOREBOARD');
+                return;
+            }
+
+            try {
+                scoreSaveStatusElement.textContent = 'Global skor kaydediliyor...';
+                await window.ConviviumBackend.saveGameScore({
+                    game_key: 'cyberpunk-logic',
+                    initials,
+                    score: gameState.score,
+                    duration_seconds: duration,
+                    trace: gameState.trace,
+                    best_streak: gameState.bestStreak
+                });
+                const remoteScores = await loadRemoteLeaderboard();
+                renderScoreboard(remoteScores || localScores, 'GLOBAL SCOREBOARD');
+            } catch (error) {
+                scoreSaveStatusElement.textContent = `${error.message} Yerel skor tablosu gosteriliyor.`;
+                renderScoreboard(localScores, 'LOCAL SCOREBOARD');
+            }
         };
         
         // Start the game
