@@ -1,0 +1,30 @@
+name: AI News Digest
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Collect AI news
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_NEWS_MODEL: ${{ vars.OPENAI_NEWS_MODEL || 'gpt-5.5' }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL || 'https://airmhxfgtslsgrdhvfin.supabase.co' }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          AI_NEWS_MAX_ITEMS: '5'
+        run: node scripts/ai-news-ingest.mjs

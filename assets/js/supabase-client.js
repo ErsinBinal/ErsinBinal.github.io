@@ -238,6 +238,18 @@
     return data || [];
   }
 
+  async function fetchAiNewsItems(limit = 12) {
+    const client = await requireClient();
+    const { data, error } = await client
+      .from('ai_news_items')
+      .select('id, category, title, summary, body_html, primary_source_name, primary_source_url, source_published_at, significance, collected_at')
+      .order('collected_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw new Error(toMessage(error));
+    return data || [];
+  }
+
   window.ConviviumBackend = {
     isConfigured,
     getClient,
@@ -254,6 +266,7 @@
     deleteArticle,
     saveGameScore,
     fetchGameLeaderboard,
+    fetchAiNewsItems,
     slugify
   };
 })();

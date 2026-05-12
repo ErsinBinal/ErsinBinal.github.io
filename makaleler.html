@@ -73,8 +73,18 @@
         </header>
 
         <main id="content" role="main" aria-labelledby="page-title">
+            <section class="ai-news-section" aria-labelledby="ai-news-title">
+                <div class="controls">
+                    <div>
+                        <h2 id="ai-news-title">AI Gündem</h2>
+                        <p class="content-source-status">Finans, akademi ve yazılım alanında birincil kaynaklardan derlenen son kayıtlar.</p>
+                    </div>
+                </div>
+                <div data-ai-news-target="full" data-limit="5" aria-live="polite"></div>
+            </section>
+
             <div class="controls">
-                <h2 id="page-title">Makaleler</h2>
+                <h2 id="page-title">Arşiv Makaleler</h2>
                 <div>
                     <input id="search" class="search" type="search" placeholder="Ara... (baslik veya icerik)" aria-label="Makale ara">
                 </div>
@@ -106,6 +116,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="/assets/js/supabase-config.js" defer></script>
     <script src="/assets/js/supabase-client.js" defer></script>
+    <script src="/assets/js/ai-news.js" defer></script>
 
     <script>
     // Guvenli, temiz makale verisi
