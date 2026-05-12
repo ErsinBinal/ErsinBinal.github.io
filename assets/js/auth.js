@@ -8,6 +8,14 @@
   const signInForm = document.getElementById('signInForm');
   const signUpForm = document.getElementById('signUpForm');
   const signOutButton = document.getElementById('signOutButton');
+  const params = new URLSearchParams(window.location.search);
+  const returnTo = params.get('returnTo');
+
+  function safeReturnTo() {
+    if (!returnTo || !returnTo.startsWith('/')) return '';
+    if (returnTo.startsWith('//')) return '';
+    return returnTo;
+  }
 
   function setStatus(message, type) {
     status.textContent = message || '';
@@ -53,6 +61,8 @@
       await backend.signIn(data.email, data.password);
       signInForm.reset();
       await refreshSession();
+      const target = safeReturnTo();
+      if (target) window.location.href = target;
     } catch (error) {
       setStatus(error.message, 'error');
     }

@@ -10,7 +10,7 @@
   <link rel="canonical" href="https://ersinbinal.github.io/">
 
   <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://text.pollinations.ai;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://text.pollinations.ai https://*.supabase.co wss://*.supabase.co;">
 
   <!-- OpenGraph Meta Tags -->
   <meta property="og:site_name" content="Convivium">
@@ -1636,7 +1636,7 @@
     .access-chip {
       position: fixed;
       left: 18px;
-      bottom: 18px;
+      top: 18px;
       z-index: 130;
       display: flex;
       gap: 10px;
@@ -1647,11 +1647,32 @@
       background: rgba(0, 0, 0, 0.72);
       color: var(--journey-muted);
       font-size: 0.74rem;
+      cursor: pointer;
     }
 
     .access-chip strong {
       color: var(--journey-green);
       font-weight: 400;
+    }
+
+    .access-chip:hover,
+    .access-chip:focus-visible {
+      border-color: rgba(0, 234, 255, 0.58);
+      color: var(--journey-cyan);
+      box-shadow: 0 0 18px rgba(0, 234, 255, 0.12);
+    }
+
+    body.auth-granted .access-chip {
+      border-color: rgba(0, 255, 102, 0.5);
+      box-shadow: 0 0 18px rgba(0, 255, 102, 0.12);
+    }
+
+    body.auth-pending .access-chip strong {
+      color: var(--journey-cyan);
+    }
+
+    body.auth-granted .hud-line:first-child {
+      border-color: rgba(0, 255, 102, 0.42);
     }
 
     .sound-toggle {
@@ -1668,8 +1689,7 @@
       display: none;
     }
 
-    body.access-initiate .secret-node,
-    body.access-operator .secret-node {
+    body.auth-granted .secret-node {
       display: grid;
     }
 
@@ -1746,7 +1766,9 @@
     <div class="hud-line oracle-pulse"><span>Oracle</span><strong class="hud-value" id="micro-oracle">wait for signal</strong></div>
   </aside>
 
-  <div class="access-chip" aria-hidden="true">ACCESS <strong id="access-chip">GUEST</strong></div>
+  <button class="access-chip" id="access-chip-button" type="button" aria-label="Erisim durumunu ac">
+    ACCESS <strong id="access-chip">INITIATE</strong>
+  </button>
   <button class="sound-toggle" type="button" id="sound-toggle" aria-pressed="false">audio off</button>
 
   <section class="command-shell" id="command-shell" aria-label="Komut satırı" aria-hidden="true">
@@ -1982,6 +2004,9 @@
   <script src="/assets/js/lazy-load.js" defer></script>
   <script src="/assets/js/theme.js" defer></script>
   <script src="/assets/js/utils.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/supabase-client.js"></script>
 
   <!-- Journey Interaction Layer -->
   <script>
@@ -1996,6 +2021,7 @@
       const hudRoute = document.getElementById('hud-route');
       const microOracle = document.getElementById('micro-oracle');
       const accessChip = document.getElementById('access-chip');
+      const accessChipButton = document.getElementById('access-chip-button');
       const commandShell = document.getElementById('command-shell');
       const commandInput = document.getElementById('command-input');
       const commandOutput = document.getElementById('command-output');
@@ -2047,6 +2073,12 @@
       let commandInFlight = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
+      const authState = {
+        checked: false,
+        granted: false,
+        label: 'INITIATE',
+        user: null
+      };
 
       const persist = () => localStorage.setItem(stateKey, JSON.stringify(state));
 
@@ -2066,11 +2098,89 @@
       };
 
       const updateAccess = () => {
-        const level = levels[Math.min(state.level, levels.length - 1)];
+        const localLevel = levels[Math.min(state.level, levels.length - 1)];
         document.body.classList.toggle('access-operator', state.level >= 2);
         document.body.classList.toggle('access-initiate', state.level >= 3);
-        if (hudAccess) hudAccess.textContent = level;
-        if (accessChip) accessChip.textContent = level;
+        document.body.classList.toggle('auth-granted', authState.granted);
+        document.body.classList.toggle('auth-pending', !authState.checked);
+        if (hudAccess) hudAccess.textContent = authState.label;
+        if (accessChip) accessChip.textContent = authState.label;
+        if (accessChipButton) {
+          accessChipButton.setAttribute('aria-label', authState.granted
+            ? `Access granted: ${authState.user?.email || localLevel}`
+            : 'Access initiate: giris ekranina git');
+          accessChipButton.title = authState.granted
+            ? `Oturum aktif: ${authState.user?.email || 'user'}`
+            : 'Giris yapmak icin tikla';
+        }
+      };
+
+      const updateAllGateButtons = () => {
+        document.querySelectorAll('.journey-gate').forEach(updateGateButton);
+      };
+
+      const restoreUnlockedGates = () => {
+        if (!authState.granted) return;
+        state.unlocked?.forEach(id => {
+          const gate = document.getElementById(id);
+          if (gate) {
+            gate.classList.add('is-unlocked');
+            updateGateButton(gate);
+          }
+        });
+        state.opened?.forEach(id => document.getElementById(id)?.classList.add('is-visited'));
+      };
+
+      const loginHref = () => `auth.html?returnTo=${encodeURIComponent(`${location.pathname}${location.hash}`)}`;
+
+      const requestLogin = () => {
+        if (consoleLine) consoleLine.textContent = 'access initiate: login required';
+        if (microOracle) microOracle.textContent = 'auth gate waiting';
+        pulse(160, 0.08);
+        location.href = loginHref();
+      };
+
+      const requireAccess = () => {
+        if (authState.granted) return true;
+        requestLogin();
+        return false;
+      };
+
+      const refreshAuthState = async () => {
+        authState.checked = false;
+        authState.granted = false;
+        authState.label = 'CHECKING';
+        updateAccess();
+
+        if (!window.ConviviumBackend || !window.ConviviumBackend.isConfigured()) {
+          authState.checked = true;
+          authState.label = 'INITIATE';
+          updateAccess();
+          updateAllGateButtons();
+          return;
+        }
+
+        try {
+          const session = await window.ConviviumBackend.getSession();
+          authState.checked = true;
+          authState.granted = Boolean(session);
+          authState.user = session?.user || null;
+          authState.label = session ? 'GRANTED' : 'INITIATE';
+          if (session) {
+            award(3);
+            restoreUnlockedGates();
+            if (consoleLine) consoleLine.textContent = 'access granted';
+            if (microOracle) microOracle.textContent = session.user.email || 'authenticated';
+          }
+        } catch (error) {
+          authState.checked = true;
+          authState.granted = false;
+          authState.label = 'INITIATE';
+          if (consoleLine) consoleLine.textContent = 'auth check failed';
+        }
+
+        updateAccess();
+        updateAllGateButtons();
       };
 
       const award = (amount = 1) => {
@@ -2101,7 +2211,7 @@
         if (!button) return;
         const unlocked = gate.classList.contains('is-unlocked');
         const open = gate.classList.contains('is-open');
-        button.textContent = !unlocked ? 'Request' : open ? 'Collapse' : 'Open';
+        button.textContent = !authState.granted ? 'Login' : open ? 'Collapse' : 'Open';
         button.setAttribute('aria-expanded', String(open));
       };
 
@@ -2121,9 +2231,10 @@
       };
 
       document.querySelectorAll('.gate-toggle').forEach(button => {
-        button.textContent = 'Request';
+        button.textContent = 'Login';
         button.addEventListener('click', () => {
           const gate = button.closest('.journey-gate');
+          if (!requireAccess()) return;
           if (!gate.classList.contains('is-unlocked')) {
             unlockGate(gate, true);
             return;
@@ -2189,6 +2300,7 @@
         'login': () => { location.href = 'auth.html'; },
         'admin': () => { location.href = 'admin.html'; },
         'unlock hidden': () => {
+          if (!requireAccess()) return 'login required';
           const gate = document.getElementById('hidden');
           gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           unlockGate(gate, true);
@@ -2289,6 +2401,13 @@
 
       commandLaunch?.addEventListener('click', openCommand);
       commandClose?.addEventListener('click', closeCommand);
+      accessChipButton?.addEventListener('click', () => {
+        if (!authState.granted) {
+          requestLogin();
+          return;
+        }
+        location.href = 'auth.html';
+      });
 
       soundToggle?.addEventListener('click', () => {
         audioEnabled = !audioEnabled;
@@ -2376,7 +2495,7 @@
       if (state.unlocked?.length) {
         state.unlocked.forEach(id => {
           const gate = document.getElementById(id);
-          if (gate) {
+          if (gate && authState.granted) {
             gate.classList.add('is-unlocked');
             updateGateButton(gate);
           }
@@ -2390,6 +2509,7 @@
       resizeCanvas();
       drawMap();
       window.addEventListener('resize', resizeCanvas);
+      refreshAuthState();
     })();
   </script>
 
