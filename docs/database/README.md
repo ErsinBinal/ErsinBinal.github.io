@@ -36,20 +36,6 @@ Daha once ilk SQL semasini calistirdiyseniz tum dosyayi tekrar calistirmak yerin
 2. `cyberpunk-logic-game.html` uzerinden giris yapmis bir kullaniciyla skor kaydedin.
 3. Skor kaydi basarili olursa oyun `GLOBAL SCOREBOARD` listesini gosterir.
 
-## Mevcut Kuruluma Faz 3 AI Gundem Ekleme
-
-1. `docs/database/2026-05-12-ai-news.sql` dosyasini SQL Editor'de calistirin.
-2. GitHub repo ayarlarinda `Settings > Secrets and variables > Actions` bolumune gidin.
-3. `Secrets` altina sunlari ekleyin:
-   - `OPENAI_API_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-4. `Variables` altina opsiyonel olarak sunlari ekleyebilirsiniz:
-   - `SUPABASE_URL` = Supabase proje URL'i
-   - `OPENAI_NEWS_MODEL` = varsayilan `gpt-5.5`
-5. `.github/workflows/ai-news-digest.yml` workflow'u 6 saatte bir calisir. Elle test etmek icin GitHub Actions ekranindan `Run workflow` kullanin.
-
-Not: `SUPABASE_SERVICE_ROLE_KEY` gizlidir. Tarayiciya, HTML'e veya public JS dosyasina yazilmaz.
-
 ## Guvenlik Notlari
 
 - `anonKey` gizli degildir; tarayiciya konabilir.
@@ -61,6 +47,5 @@ Not: `SUPABASE_SERVICE_ROLE_KEY` gizlidir. Tarayiciya, HTML'e veya public JS dos
 
 - Faz 1: Makaleler, uyelik, admin paneli.
 - Faz 2: Oyun skor kayitlari ve global leaderboard.
-- Faz 3: Birincil kaynaklardan AI gundem otomasyonu.
-- Faz 4: Dosya/gorsel yukleme icin Supabase Storage ve RLS.
-- Faz 5: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.
+- Faz 3: Dosya/gorsel yukleme icin Supabase Storage ve RLS.
+- Faz 4: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.

@@ -38,21 +38,6 @@ create table if not exists public.game_scores (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.ai_news_items (
-  id uuid primary key default gen_random_uuid(),
-  content_hash text not null unique,
-  category text not null check (category in ('finance', 'academic', 'software')),
-  title text not null,
-  summary text not null,
-  body_html text not null,
-  primary_source_name text not null,
-  primary_source_url text not null,
-  source_published_at timestamptz,
-  significance text not null default '',
-  collected_at timestamptz not null default now(),
-  created_at timestamptz not null default now()
-);
-
 create index if not exists articles_status_published_at_idx
   on public.articles (status, published_at desc);
 
@@ -64,12 +49,6 @@ create index if not exists game_scores_leaderboard_idx
 
 create index if not exists game_scores_user_id_idx
   on public.game_scores (user_id);
-
-create index if not exists ai_news_items_collected_at_idx
-  on public.ai_news_items (collected_at desc);
-
-create index if not exists ai_news_items_category_idx
-  on public.ai_news_items (category, collected_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -130,7 +109,6 @@ grant execute on function public.is_admin() to anon, authenticated;
 alter table public.profiles enable row level security;
 alter table public.articles enable row level security;
 alter table public.game_scores enable row level security;
-alter table public.ai_news_items enable row level security;
 
 drop policy if exists "Profiles visible to self and admins" on public.profiles;
 create policy "Profiles visible to self and admins"
@@ -203,20 +181,6 @@ with check (user_id = auth.uid());
 drop policy if exists "Admins delete game scores" on public.game_scores;
 create policy "Admins delete game scores"
 on public.game_scores
-for delete
-to authenticated
-using (public.is_admin());
-
-drop policy if exists "AI news is readable" on public.ai_news_items;
-create policy "AI news is readable"
-on public.ai_news_items
-for select
-to anon, authenticated
-using (true);
-
-drop policy if exists "Admins delete AI news" on public.ai_news_items;
-create policy "Admins delete AI news"
-on public.ai_news_items
 for delete
 to authenticated
 using (public.is_admin());
