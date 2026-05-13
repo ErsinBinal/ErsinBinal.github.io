@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v17';
+const CACHE_NAME = 'convivium-v18';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
