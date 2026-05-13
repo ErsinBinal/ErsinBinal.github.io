@@ -508,7 +508,7 @@
 
   <aside class="hud-panel" aria-live="polite">
     <strong id="hud-title">KUL HATTI // READY</strong>
-    <span>WASD/Ok: hareket · J: itis · K/E: kaldir/firlat · L: silah sarj</span>
+    <span>WASD/Ok: hareket · J: alev buyusu · K/E: kaldir/firlat · L: silah sarj</span>
     <div class="health-row" aria-label="Karakter hasari">
       <span>HP</span>
       <div class="health-meter"><div class="health-fill" id="health-fill"></div></div>
@@ -664,6 +664,8 @@
       fire(charge = 0) { this.tone(520 + charge * 260, 0.08 + charge * 0.08, "sawtooth", 0.1, -160); }
       enemyFire() { this.tone(180, 0.07, "square", 0.055, -52); }
       limb() { this.noise(0.12, 0.12); this.tone(146, 0.08, "triangle", 0.08, -44); }
+      spell() { this.tone(196, 0.08, "sine", 0.08); setTimeout(() => this.tone(392, 0.13, "sawtooth", 0.11, 160), 55); }
+      cooldown() { this.tone(112, 0.05, "square", 0.04, -24); }
       start() { this.tone(220, 0.08, "triangle", 0.1); setTimeout(() => this.tone(330, 0.1, "triangle", 0.1), 80); }
     }
 
@@ -692,7 +694,8 @@
       }
 
       label(time) {
-        const live = this.queue.filter(item => time - item.time <= this.windowMs).map(item => item.action);
+        const names = { punch: "buyu", lift: "kaldir" };
+        const live = this.queue.filter(item => time - item.time <= this.windowMs).map(item => names[item.action] || item.action);
         return live.length ? live.join(",") : "clear";
       }
     }
@@ -877,6 +880,10 @@
       });
       makeTexture(scene, "hero-shot-heavy", 14, 8, px => {
         px(1, 2, 10, 4, 0xffd36b); px(7, 1, 5, 6, 0x53d5ff); px(12, 3, 2, 2, 0xdff7ff);
+      });
+      makeTexture(scene, "flame-wave", 18, 14, px => {
+        px(2, 5, 8, 5, 0xffd36b); px(7, 3, 7, 8, 0xffb000); px(12, 5, 4, 5, 0xf05a4a);
+        px(4, 7, 5, 2, 0xfff0a2); px(1, 8, 3, 2, 0x53d5ff, 0.6);
       });
       makeTexture(scene, "enemy-shot", 7, 4, px => {
         px(0, 1, 5, 2, 0xf05a4a); px(5, 0, 2, 4, 0xffb000);
@@ -1344,6 +1351,63 @@
       }
     }
 
+    class FlameWave extends Actor {
+      constructor(scene, x, y, floor, direction) {
+        super(scene, x, y, "flame-wave");
+        this.floor = floor;
+        this.direction = direction || 1;
+        this.speed = 188;
+        this.life = 0.82;
+        this.hitSet = new Set();
+        this.z = 12;
+        this.sprite.setFlipX(this.direction < 0);
+        this.sync();
+      }
+
+      update(dt) {
+        if (this.dead) return;
+        this.life -= dt;
+        this.x += this.direction * this.speed * dt;
+        this.z = 10 + Math.sin(this.scene.clock * 20) * 3;
+        this.scene.updateActorFloor(this);
+        this.checkHits();
+        this.sprite.setAlpha(clamp(this.life * 1.8, 0, 1));
+        this.sync();
+        if (this.life <= 0 || this.x < 0 || this.x > WORLD_W) this.destroy();
+      }
+
+      checkHits() {
+        this.scene.drones.forEach(drone => {
+          if (drone.defeated || drone.floor !== this.floor || this.hitSet.has(drone)) return;
+          const dx = drone.x - this.x;
+          const dy = drone.y - this.y;
+          if (Math.sign(dx || this.direction) === this.direction && Math.abs(dx) < 38 && Math.abs(dy) < 24) {
+            this.hitSet.add(drone);
+            drone.disable(this.direction, 1.18, "spell");
+            this.scene.addScore(80, "buyu");
+            this.scene.impactAt(drone.x, drone.y, 0.22);
+          }
+        });
+        this.scene.props.forEach(prop => {
+          if (!prop.breakable || prop.broken || prop.state !== "ground" || prop.floor !== this.floor || this.hitSet.has(prop)) return;
+          const dx = prop.x - this.x;
+          const dy = prop.y - this.y;
+          if (Math.sign(dx || this.direction) === this.direction && Math.abs(dx) < 28 && Math.abs(dy) < 18) {
+            this.hitSet.add(prop);
+            prop.damage(1, "spell");
+            this.scene.addScore(22, "buyu kasa");
+          }
+        });
+      }
+
+      destroy() {
+        if (this.dead) return;
+        this.dead = true;
+        this.sprite.destroy();
+        this.shadow.destroy();
+      }
+    }
+
     class RoadHazard {
       constructor(scene, x, y) {
         this.scene = scene;
@@ -1555,6 +1619,8 @@
         this.fireCharge = 0;
         this.maxFireCharge = 2;
         this.fireCooldown = 0;
+        this.spellCooldown = 0;
+        this.spellCooldownMax = 3;
         this.fsm = new StateMachine(this, {
           idle: {
             enter() { this.walkPhase = 0; this.sprite.setTexture("hero"); },
@@ -1577,14 +1643,14 @@
               if (Math.abs(this.moveX) + Math.abs(this.moveY) <= 0.1) this.fsm.change("idle");
             }
           },
-          shove: {
-            enter() { this.hitDone = false; this.sprite.setTexture("hero"); },
+          spell: {
+            enter() { this.spellDone = false; this.sprite.setTexture("hero"); },
             update(dt, time, elapsed) {
-              if (!this.hitDone && elapsed > 0.055) {
-                this.hitDone = true;
-                this.scene.tryShove(this);
+              if (!this.spellDone && elapsed > 0.065) {
+                this.spellDone = true;
+                this.scene.castFlameWave(this);
               }
-              if (elapsed > 0.16) this.fsm.change(this.carried ? "carry" : "idle");
+              if (elapsed > 0.2) this.fsm.change(this.carried ? "carry" : "idle");
             }
           },
           lift: {
@@ -1662,7 +1728,12 @@
 
       readActions(time) {
         if (this.scene.inputBuffer.consume("punch", time) && !this.carried) {
-          this.fsm.change("shove");
+          if (this.spellCooldown <= 0) {
+            this.fsm.change("spell");
+          } else {
+            this.scene.lastLoot = `buyu yukleniyor / ${this.spellCooldown.toFixed(1)}s`;
+            audio.cooldown();
+          }
           return;
         }
         if (this.scene.inputBuffer.consume("lift", time)) {
@@ -1727,6 +1798,7 @@
 
       update(dt, time) {
         this.invuln = Math.max(0, this.invuln - dt);
+        this.spellCooldown = Math.max(0, this.spellCooldown - dt);
         if (this.invuln > 0 && Math.floor(this.invuln * 18) % 2 === 0) this.sprite.setTint(0xffd36b);
         else if (this.fsm.name !== "stagger") this.sprite.clearTint();
         this.updateWeapon(dt);
@@ -1847,6 +1919,7 @@
           new WeaponPickup(this, 1722, 160, 0)
         ];
         this.projectiles = [];
+        this.flameWaves = [];
         this.limbs = [];
         this.streetClues = [
           new StreetClue(this, 318, 138, "cocuklar kuzey rampasini isaretledi", 0),
@@ -1872,7 +1945,7 @@
         this.lastLoot = "dosya acik";
         this.particles = new ParticlePool(this);
         this.cameraRig = new PixelPerfectCamera(this, this.player);
-        this.helpText = this.add.text(8, 201, "L basili tut sarj · 2 sn tam guc · K hurda · R reset", {
+        this.helpText = this.add.text(8, 201, "J alev buyusu · 3 sn bekleme · L sarj · K hurda", {
           fontFamily: "monospace",
           fontSize: "8px",
           color: "#f5e8be"
@@ -2238,6 +2311,16 @@
         audio.enemyFire();
       }
 
+      castFlameWave(player) {
+        if (player.spellCooldown > 0 || player.health <= 0) return;
+        player.spellCooldown = player.spellCooldownMax;
+        this.flameWaves.push(new FlameWave(this, player.x + player.facing * 18, player.y - 2, player.floor, player.facing));
+        this.particles.burst(player.x + player.facing * 12, player.y - 18, 8);
+        this.lastLoot = "alev buyusu / 3 sn yuklenme";
+        this.cameraRig.shake(0.18);
+        audio.spell();
+      }
+
       updateHud() {
         const healthFill = document.getElementById("health-fill");
         const healthValue = document.getElementById("health-value");
@@ -2250,7 +2333,9 @@
         if (lootState) lootState.textContent = `LOOT: ${this.lastLoot || "sandik kir"}`;
         if (weaponState) {
           const charge = Math.round(clamp(this.player.fireCharge / this.player.maxFireCharge, 0, 1) * 100);
-          weaponState.textContent = this.player.hasWeapon ? `SILAH: hazir · sarj ${charge}%` : "SILAH: yok · modul ara";
+          const spell = this.player.spellCooldown > 0 ? `${this.player.spellCooldown.toFixed(1)}s` : "hazir";
+          const weapon = this.player.hasWeapon ? `silah ${charge}%` : "silah yok";
+          weaponState.textContent = `BUYU: ${spell} · ${weapon}`;
         }
         if (caseState) {
           const chainLabel = this.chain > 0 ? `x${this.chain}` : "x1";
@@ -2359,38 +2444,6 @@
         return best;
       }
 
-      tryShove(player) {
-        let connected = false;
-        this.drones.forEach(drone => {
-          if (drone.defeated) return;
-          if (drone.floor !== player.floor) return;
-          const dx = drone.x - player.x;
-          const dy = drone.y - player.y;
-          if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 31 && Math.abs(dy) < 18 && drone.stun <= 0.05) {
-            connected = true;
-            drone.disable(player.facing, 0.85);
-            this.addScore(40, "itis");
-            this.impactAt(drone.x, drone.y, 0.28);
-            this.hitStop(68);
-          }
-        });
-        this.props.forEach(prop => {
-          if (!prop.breakable || prop.broken || prop.state !== "ground") return;
-          if (prop.floor !== player.floor) return;
-          const dx = prop.x - player.x;
-          const dy = prop.y - player.y;
-          if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 32 && Math.abs(dy) < 18) {
-            connected = true;
-            prop.damage(1, "hit");
-            this.addScore(18, "sandik");
-            this.hitStop(45);
-          }
-        });
-        if (!connected) {
-          audio.tone(180, 0.05, "square", 0.05, -40);
-        }
-      }
-
       updateInput(time) {
         if (Phaser.Input.Keyboard.JustDown(this.keys.punch) || Phaser.Input.Keyboard.JustDown(this.keys.punch2)) {
           this.inputBuffer.press("punch", time);
@@ -2475,6 +2528,8 @@
       updateProjectiles(dt) {
         this.projectiles.forEach(projectile => projectile.update(dt));
         this.projectiles = this.projectiles.filter(projectile => !projectile.dead);
+        this.flameWaves.forEach(wave => wave.update(dt));
+        this.flameWaves = this.flameWaves.filter(wave => !wave.dead);
         this.limbs.forEach(limb => limb.update(dt));
         this.limbs = this.limbs.filter(limb => !limb.dead);
       }
