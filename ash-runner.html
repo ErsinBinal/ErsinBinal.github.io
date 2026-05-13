@@ -263,7 +263,7 @@
     }
 
     .actions {
-      grid-template-columns: 58px 58px;
+      grid-template-columns: 58px 58px 58px;
       grid-template-rows: 58px;
       align-items: end;
     }
@@ -317,19 +317,21 @@
 
   <aside class="hud-panel" aria-live="polite">
     <strong id="hud-title">KUL HATTI // READY</strong>
-    <span>WASD/Ok: hareket · J: itis · K/E: kaldir/firlat</span>
+    <span>WASD/Ok: hareket · J: itis · K/E: kaldir/firlat · L: silah sarj</span>
     <div class="health-row" aria-label="Karakter hasari">
       <span>HP</span>
       <div class="health-meter"><div class="health-fill" id="health-fill"></div></div>
       <span id="health-value">100</span>
     </div>
     <span id="loot-state">LOOT: sandik kir · yemek/mucevher topla</span>
+    <span id="weapon-state">SILAH: yok · sarj 0%</span>
+    <span id="case-state">DOSYA: iz 0/0 · zincir x1</span>
     <span id="hud-state">FSM: boot · buffer: clear</span>
   </aside>
 
   <section class="boot-card" id="boot-card">
     <h1>Kül Hattı: Scrap Run</h1>
-    <p>Çökmüş servis yolunda ilerle, ağır hurdaları kaldır, taşı ve droneları şiddet göstermeden devre dışı bırakacak kadar güçlü darbeler yarat.</p>
+    <p>Çökmüş servis yolunda ilerle, ağır hurdaları kaldır, silah modüllerini al, röleleri hurdayla patlat, sokak izlerini topla ve droneları şiddet göstermeden devre dışı bırakacak kadar güçlü darbeler yarat.</p>
     <div class="boot-actions">
       <button id="start-run" type="button">Oyuna Başla</button>
       <button id="mute-toggle" type="button" aria-pressed="false">Ses Açık</button>
@@ -345,6 +347,8 @@
       <div><span>Bölüm bonusu</span><strong id="level-bonus">0</strong></div>
       <div><span>Kalan HP</span><strong id="level-health">100</strong></div>
       <div><span>Devre dışı</span><strong id="level-defeated">0</strong></div>
+      <div><span>Dosya izleri</span><strong id="level-clues">0/0</strong></div>
+      <div><span>En iyi zincir</span><strong id="level-chain">x1</strong></div>
     </div>
     <button id="next-level" type="button">Devam Et</button>
   </section>
@@ -359,6 +363,7 @@
     <div class="touch-cluster actions">
       <div class="pad-btn" data-control="punch">J</div>
       <div class="pad-btn" data-control="lift">K</div>
+      <div class="pad-btn" data-control="fire">L</div>
     </div>
   </nav>
 
@@ -462,6 +467,12 @@
       gem() { this.tone(760, 0.05, "sine", 0.08); setTimeout(() => this.tone(1120, 0.09, "sine", 0.08), 55); }
       break() { this.noise(0.12, 0.14); this.tone(118, 0.08, "square", 0.08, -36); }
       buffer() { this.tone(680, 0.04, "square", 0.045, -100); }
+      clue() { this.tone(520, 0.06, "triangle", 0.08); setTimeout(() => this.tone(840, 0.08, "sine", 0.07), 70); }
+      relay() { this.noise(0.16, 0.12); this.tone(92, 0.12, "sawtooth", 0.11, 180); }
+      pickup() { this.tone(340, 0.06, "square", 0.08); setTimeout(() => this.tone(560, 0.07, "square", 0.07), 62); }
+      fire(charge = 0) { this.tone(520 + charge * 260, 0.08 + charge * 0.08, "sawtooth", 0.1, -160); }
+      enemyFire() { this.tone(180, 0.07, "square", 0.055, -52); }
+      limb() { this.noise(0.12, 0.12); this.tone(146, 0.08, "triangle", 0.08, -44); }
       start() { this.tone(220, 0.08, "triangle", 0.1); setTimeout(() => this.tone(330, 0.1, "triangle", 0.1), 80); }
     }
 
@@ -650,6 +661,38 @@
         px(4, 0, 5, 2, 0xffd36b); px(2, 2, 9, 3, 0xf05a4a); px(1, 5, 11, 2, 0xb8322e);
         px(3, 7, 7, 3, 0x7a211f); px(5, 10, 3, 2, 0xffd36b);
       });
+      makeTexture(scene, "street-note", 13, 15, px => {
+        px(2, 1, 8, 12, 0xe8dcb8); px(10, 3, 1, 9, 0x9b8f75);
+        px(4, 4, 5, 1, 0x2a2d35); px(4, 7, 4, 1, 0x2a2d35);
+        px(3, 10, 6, 1, 0x53d5ff); px(1, 13, 10, 1, 0x4d3b2c);
+      });
+      makeTexture(scene, "relay-idle", 20, 26, px => {
+        px(5, 2, 10, 3, 0x57606f); px(3, 5, 14, 16, 0x242a31);
+        px(5, 7, 10, 5, 0x53d5ff, 0.72); px(6, 14, 3, 3, 0xffb000);
+        px(11, 14, 3, 3, 0xf05a4a); px(4, 21, 12, 3, 0x111216);
+      });
+      makeTexture(scene, "relay-hot", 20, 26, px => {
+        px(5, 2, 10, 3, 0xffb000); px(3, 5, 14, 16, 0x3a1f24);
+        px(5, 7, 10, 5, 0xffd36b); px(6, 14, 3, 3, 0x53d5ff);
+        px(11, 14, 3, 3, 0xfff0a2); px(4, 21, 12, 3, 0x111216);
+      });
+      makeTexture(scene, "scrap-rifle", 24, 12, px => {
+        px(2, 5, 14, 4, 0x6f7786); px(14, 4, 7, 2, 0x53d5ff);
+        px(6, 2, 5, 3, 0x2a2d35); px(4, 9, 5, 2, 0x7c5134);
+        px(19, 5, 4, 1, 0xffb000); px(1, 6, 2, 2, 0x111216);
+      });
+      makeTexture(scene, "hero-shot", 8, 4, px => {
+        px(0, 1, 6, 2, 0xffd36b); px(5, 0, 3, 4, 0x53d5ff);
+      });
+      makeTexture(scene, "hero-shot-heavy", 14, 8, px => {
+        px(1, 2, 10, 4, 0xffd36b); px(7, 1, 5, 6, 0x53d5ff); px(12, 3, 2, 2, 0xdff7ff);
+      });
+      makeTexture(scene, "enemy-shot", 7, 4, px => {
+        px(0, 1, 5, 2, 0xf05a4a); px(5, 0, 2, 4, 0xffb000);
+      });
+      makeTexture(scene, "limb-scrap", 9, 7, px => {
+        px(1, 2, 6, 3, 0x848d96); px(6, 1, 2, 5, 0x2a2d35); px(2, 5, 4, 1, 0xffb000);
+      });
       makeTexture(scene, "reservoir-open", 34, 17, (px, g) => {
         g.fillStyle(0x050507, 0.92);
         g.fillEllipse(17, 9, 32, 14);
@@ -702,18 +745,21 @@
         this.y = y;
         this.z = 0;
         this.floor = scene.getInitialFloor ? scene.getInitialFloor(x, y) : 0;
+        this.visualElevation = scene.getElevation ? scene.getElevation(x, y, this) : 0;
         this.sprite = scene.add.image(x, y, texture).setOrigin(0.5, 1);
         this.shadow = scene.add.image(x, y + 1, "shadow").setOrigin(0.5, 0.5);
       }
 
       sync() {
         const elevation = this.scene.getElevation ? this.scene.getElevation(this.x, this.y, this) : 0;
-        const visualZ = this.z + elevation;
+        const diff = elevation - this.visualElevation;
+        this.visualElevation = Math.abs(diff) < 0.5 ? elevation : this.visualElevation + diff * 0.18;
+        const visualZ = this.z + this.visualElevation;
         this.sprite.setPosition(Math.round(this.x), Math.round(this.y - visualZ));
-        this.shadow.setPosition(Math.round(this.x), Math.round(this.y - elevation + 1));
+        this.shadow.setPosition(Math.round(this.x), Math.round(this.y - this.visualElevation + 1));
         const squash = clamp(1 - this.z / 120, 0.42, 1);
         this.shadow.setScale(squash, squash);
-        const depth = Math.round(this.y * 10 + elevation * 16);
+        const depth = Math.round(this.y * 10 + this.visualElevation * 16);
         this.shadow.setDepth(depth - 2);
         this.sprite.setDepth(depth + Math.round(this.z));
       }
@@ -846,7 +892,7 @@
           player.heal(this.heal);
           audio.heal();
         } else {
-          this.scene.score += this.value;
+          this.scene.addScore(this.value, "ganimet");
           audio.gem();
         }
         this.scene.lastLoot = this.type === "food" ? `+${this.heal} HP` : `+${this.value} PUAN`;
@@ -880,6 +926,232 @@
       gem: { texture: "gem", score: 350, life: 20 },
       "gem-red": { texture: "gem-red", score: 850, life: 20 }
     };
+
+    class StreetClue extends Actor {
+      constructor(scene, x, y, message, floor = 0) {
+        super(scene, x, y, "street-note");
+        this.message = message;
+        this.floor = floor;
+        this.float = Math.random() * Math.PI * 2;
+        this.collected = false;
+        this.sprite.setDepth(9050);
+        this.sync();
+      }
+
+      collect() {
+        if (this.collected) return;
+        this.collected = true;
+        this.scene.collectStreetClue(this);
+        this.sprite.destroy();
+        this.shadow.destroy();
+      }
+
+      update(dt, player) {
+        if (this.collected) return;
+        this.float += dt * 4;
+        this.z = 6 + Math.sin(this.float) * 2;
+        if (this.floor === player.floor && Math.abs(this.x - player.x) < 17 && Math.abs(this.y - player.y) < 15) {
+          this.collect();
+          return;
+        }
+        this.sync();
+      }
+    }
+
+    class SignalRelay extends Actor {
+      constructor(scene, x, y, message, floor = 0) {
+        super(scene, x, y, "relay-idle");
+        this.message = message;
+        this.floor = floor;
+        this.charged = true;
+        this.radius = 122;
+        this.pulse = 0;
+        this.sync();
+      }
+
+      activate(direction = 1) {
+        if (!this.charged) return false;
+        this.charged = false;
+        this.pulse = 0.72;
+        this.sprite.setTexture("relay-hot");
+        this.scene.impactAt(this.x, this.y, 0.48);
+        this.scene.particles.burst(this.x, this.y - 14, 18);
+        audio.relay();
+        const elevation = this.scene.getElevation(this.x, this.y, this);
+        const ring = this.scene.add.circle(this.x, this.y - elevation, 18).setStrokeStyle(2, 0x53d5ff, 0.72).setDepth(9060);
+        this.scene.tweens.add({
+          targets: ring,
+          scale: this.radius / 18,
+          alpha: 0,
+          duration: 420,
+          ease: "Quad.easeOut",
+          onComplete: () => ring.destroy()
+        });
+
+        let affected = 0;
+        this.scene.drones.forEach(drone => {
+          if (drone.defeated || drone.floor !== this.floor) return;
+          const dist = Math.hypot(drone.x - this.x, (drone.y - this.y) * 1.7);
+          if (dist > this.radius) return;
+          affected += 1;
+          drone.disable(Math.sign(drone.x - this.x || direction), 1.75);
+        });
+
+        this.scene.addScore(240 + affected * 160, "role");
+        this.scene.collectStreetClue({ message: this.message, score: 420, relay: true });
+        this.scene.lastLoot = `role patladi / ${affected} hedef sustu`;
+        return true;
+      }
+
+      update(dt) {
+        if (this.pulse > 0) {
+          this.pulse = Math.max(0, this.pulse - dt);
+          const scale = 1 + (0.72 - this.pulse) * 0.7;
+          this.sprite.setScale(scale, 1);
+          if (this.pulse <= 0) this.sprite.setScale(1);
+        } else if (this.charged) {
+          this.sprite.setTint(Math.sin(this.scene.clock * 8 + this.x) > 0.35 ? 0xdff7ff : 0xffffff);
+        } else {
+          this.sprite.clearTint();
+          this.sprite.setAlpha(0.72);
+        }
+        this.sync();
+      }
+    }
+
+    class WeaponPickup extends Actor {
+      constructor(scene, x, y, floor = 0) {
+        super(scene, x, y, "scrap-rifle");
+        this.floor = floor;
+        this.float = Math.random() * Math.PI * 2;
+        this.collected = false;
+        this.sync();
+      }
+
+      collect(player) {
+        if (this.collected) return;
+        this.collected = true;
+        player.hasWeapon = true;
+        this.scene.lastLoot = "silah modulu alindi / L basili tut";
+        this.scene.addScore(180, "silah", false);
+        audio.pickup();
+        this.sprite.destroy();
+        this.shadow.destroy();
+      }
+
+      update(dt, player) {
+        if (this.collected) return;
+        this.float += dt * 5;
+        this.z = 7 + Math.sin(this.float) * 2;
+        if (this.floor === player.floor && Math.abs(this.x - player.x) < 18 && Math.abs(this.y - player.y) < 15) {
+          this.collect(player);
+          return;
+        }
+        this.sync();
+      }
+    }
+
+    class LimbScrap extends Actor {
+      constructor(scene, x, y, direction, floor = 0) {
+        super(scene, x, y, "limb-scrap");
+        this.floor = floor;
+        this.vx = direction * (45 + Math.random() * 42);
+        this.vy = -18 - Math.random() * 18;
+        this.vz = 95 + Math.random() * 30;
+        this.life = 2.2;
+      }
+
+      update(dt) {
+        this.life -= dt;
+        this.x += this.vx * dt;
+        this.y = this.scene.clampActorY(this.x, this.y + this.vy * dt, 4, 2, this);
+        this.z += this.vz * dt;
+        this.vz -= GRAVITY_Z * 0.72 * dt;
+        this.vx *= 0.985;
+        this.vy *= 0.96;
+        if (this.z <= 0) {
+          this.z = 0;
+          this.vz *= -0.22;
+        }
+        this.sprite.setAlpha(clamp(this.life, 0, 1));
+        this.sync();
+        if (this.life <= 0) {
+          this.sprite.destroy();
+          this.shadow.destroy();
+          this.dead = true;
+        }
+      }
+    }
+
+    class Projectile extends Actor {
+      constructor(scene, x, y, floor, direction, owner, charge = 0) {
+        const heavy = owner === "player" && charge >= 0.98;
+        super(scene, x, y, owner === "player" ? (heavy ? "hero-shot-heavy" : "hero-shot") : "enemy-shot");
+        this.floor = floor;
+        this.direction = direction || 1;
+        this.owner = owner;
+        this.charge = charge;
+        this.heavy = heavy;
+        this.speed = owner === "player" ? 245 + charge * 85 : 150;
+        this.damage = owner === "player" ? (heavy ? 1.85 : 1) : 9;
+        this.radius = heavy ? 58 : 18;
+        this.life = owner === "player" ? 1.35 : 1.8;
+        this.z = owner === "player" ? 15 : 12;
+        this.sprite.setFlipX(this.direction < 0);
+        this.sync();
+      }
+
+      update(dt) {
+        if (this.dead) return;
+        this.life -= dt;
+        this.x += this.direction * this.speed * dt;
+        this.updateActorFloor();
+        this.sync();
+        if (this.owner === "player") this.checkPlayerShot();
+        else this.checkEnemyShot();
+        if (this.life <= 0 || this.x < 0 || this.x > WORLD_W) this.destroy();
+      }
+
+      updateActorFloor() {
+        this.scene.updateActorFloor(this);
+      }
+
+      checkPlayerShot() {
+        let hit = false;
+        this.scene.drones.forEach(drone => {
+          if (drone.defeated || drone.floor !== this.floor) return;
+          const dx = drone.x - this.x;
+          const dy = drone.y - this.y;
+          const range = this.heavy ? this.radius : 22;
+          if (Math.abs(dx) < range && Math.abs(dy) < (this.heavy ? 36 : 18)) {
+            hit = true;
+            drone.disable(Math.sign(this.direction), this.damage, this.heavy ? "charged-shot" : "shot");
+          }
+        });
+        if (!hit) return;
+        this.scene.impactAt(this.x, this.y, this.heavy ? 0.46 : 0.2);
+        this.scene.addScore(this.heavy ? 120 : 55, this.heavy ? "tam sarj" : "atis");
+        if (this.heavy) this.scene.areaPulse(this.x, this.y, this.radius, 0x53d5ff);
+        this.destroy();
+      }
+
+      checkEnemyShot() {
+        const player = this.scene.player;
+        if (player.floor !== this.floor || player.invuln > 0 || player.health <= 0) return;
+        if (Math.abs(player.x - this.x) < 16 && Math.abs(player.y - this.y) < 15) {
+          player.takeDamage(this.damage, Math.sign(this.x - player.x || this.direction));
+          this.scene.lastLoot = `robot atesi / -${this.damage} HP`;
+          this.destroy();
+        }
+      }
+
+      destroy() {
+        if (this.dead) return;
+        this.dead = true;
+        this.sprite.destroy();
+        this.shadow.destroy();
+      }
+    }
 
     class RoadHazard {
       constructor(scene, x, y) {
@@ -919,8 +1191,12 @@
         this.stun = 0;
         this.hp = data.hp;
         this.maxHp = data.hp;
+        this.hitCount = 0;
+        this.maxHits = 3;
+        this.limbDropped = false;
         this.defeated = false;
         this.cooldown = Math.random() * 1.4;
+        this.fireCooldown = 0.8 + Math.random() * 1.3;
         this.sprite.setScale(data.scale || 1);
         this.sync();
       }
@@ -947,6 +1223,11 @@
           this.x += clamp(tx - this.x, -1, 1) * speed * dt;
           this.y = this.scene.clampActorY(this.x, this.y + clamp(ty - this.y, -1, 1) * speed * 0.62 * dt, 8, 2, this);
           this.cooldown -= dt;
+          this.fireCooldown -= dt;
+          if (active && this.fireCooldown <= 0 && Math.abs(dx) < this.data.fireRange && Math.abs(dy) < this.data.fireLane) {
+            this.fireCooldown = this.data.fireCooldown + Math.random() * 0.55 + this.hitCount * 0.2;
+            this.scene.spawnEnemyShot(this, Math.sign(dx || 1));
+          }
           if (active && Math.abs(dx) < this.data.attackRange && Math.abs(dy) < this.data.attackLane && this.cooldown <= 0 && player.fsm.name !== "stagger") {
             this.cooldown = this.data.cooldown;
             player.takeDamage(this.data.damage, Math.sign(dx || 1));
@@ -956,25 +1237,35 @@
         this.sync();
       }
 
-      disable(direction, strength = 1) {
+      disable(direction, strength = 1, source = "impact") {
         if (this.defeated) return false;
-        const damage = Math.max(1, Math.round(strength * this.data.damageTaken));
-        this.hp -= damage;
+        const hitUnits = 1;
+        this.hitCount = Math.min(this.maxHits, this.hitCount + hitUnits);
+        this.hp = Math.max(0, this.maxHits - this.hitCount);
         this.vx = direction * (110 + strength * 70);
         this.vy = (Math.random() - 0.5) * 46;
         this.stun = 0.78 + strength * 0.26;
-        this.scene.score += Math.round(this.data.score * 0.35 * strength);
-        if (this.hp <= 0) {
+        this.scene.addScore(Math.round(this.data.score * 0.35 * strength), "temas");
+        if (!this.limbDropped) this.dropLimb(direction);
+        if (this.hitCount >= this.maxHits) {
           this.defeat(direction);
           return true;
         }
         return false;
       }
 
+      dropLimb(direction) {
+        this.limbDropped = true;
+        this.scene.limbs.push(new LimbScrap(this.scene, this.x + direction * 7, this.y - 2, direction, this.floor));
+        this.scene.particles.burst(this.x + direction * 6, this.y - 12, 8);
+        this.scene.lastLoot = "robot uzvu dustu / 3. vurusta imha";
+        audio.limb();
+      }
+
       defeat(direction) {
         if (this.defeated) return;
         this.defeated = true;
-        this.scene.score += this.data.score;
+        this.scene.addScore(this.data.score, "devre disi");
         this.scene.impactAt(this.x, this.y, this.data.strong ? 0.46 : 0.28);
         this.scene.particles.burst(this.x, this.y - 12, this.data.strong ? 18 : 10);
         if (this.data.gem) this.scene.spawnCollectible(this.x + direction * 8, this.y, this.data.gem, this.data.strong ? 1.2 : 1, this.floor);
@@ -986,23 +1277,28 @@
     Drone.DATA = {
       skitter: {
         texture: "drone", hp: 2, speed: 26, patrolSpeed: 12, sense: 180,
-        attackRange: 18, attackLane: 13, cooldown: 1.6, damage: 8, damageTaken: 1.1, score: 90
+        attackRange: 18, attackLane: 13, cooldown: 1.6, damage: 8, damageTaken: 1.1, score: 90,
+        fireRange: 150, fireLane: 16, fireCooldown: 2.4
       },
       dart: {
         texture: "drone-fast", hp: 1, speed: 48, patrolSpeed: 18, sense: 230,
-        attackRange: 16, attackLane: 11, cooldown: 1.05, damage: 6, damageTaken: 1.3, score: 120
+        attackRange: 16, attackLane: 11, cooldown: 1.05, damage: 6, damageTaken: 1.3, score: 120,
+        fireRange: 170, fireLane: 13, fireCooldown: 1.9
       },
       shield: {
         texture: "drone-shield", hp: 3, speed: 18, patrolSpeed: 9, sense: 165,
-        attackRange: 21, attackLane: 15, cooldown: 1.85, damage: 12, damageTaken: 0.78, score: 180, gem: "gem"
+        attackRange: 21, attackLane: 15, cooldown: 1.85, damage: 12, damageTaken: 0.78, score: 180, gem: "gem",
+        fireRange: 145, fireLane: 17, fireCooldown: 2.7
       },
       walker: {
         texture: "robot-humanoid", hp: 4, speed: 23, patrolSpeed: 10, sense: 205,
-        attackRange: 22, attackLane: 16, cooldown: 1.55, damage: 11, damageTaken: 0.95, score: 230, gem: "gem"
+        attackRange: 22, attackLane: 16, cooldown: 1.55, damage: 11, damageTaken: 0.95, score: 230, gem: "gem",
+        fireRange: 190, fireLane: 18, fireCooldown: 2.2
       },
       brute: {
         texture: "drone-heavy", hp: 5, speed: 16, patrolSpeed: 7, sense: 210,
-        attackRange: 24, attackLane: 17, cooldown: 2.25, damage: 18, damageTaken: 0.72, score: 320, gem: "gem-red", strong: true
+        attackRange: 24, attackLane: 17, cooldown: 2.25, damage: 18, damageTaken: 0.72, score: 320, gem: "gem-red", strong: true,
+        fireRange: 180, fireLane: 20, fireCooldown: 3.1
       }
     };
 
@@ -1062,6 +1358,12 @@
         this.hitDone = false;
         this.stepTimer = 0;
         this.walkPhase = 0;
+        this.hasWeapon = false;
+        this.fireHeld = false;
+        this.wasFireHeld = false;
+        this.fireCharge = 0;
+        this.maxFireCharge = 2;
+        this.fireCooldown = 0;
         this.fsm = new StateMachine(this, {
           idle: {
             enter() { this.walkPhase = 0; this.sprite.setTexture("hero"); },
@@ -1158,6 +1460,7 @@
         if (this.invuln > 0 || this.health <= 0) return;
         this.health = clamp(this.health - amount, 0, this.maxHealth);
         this.invuln = 0.72;
+        this.scene.registerDamage(amount);
         this.scene.updateHud();
         if (this.health <= 0) {
           this.scene.playerDown();
@@ -1179,6 +1482,27 @@
             if (target) this.fsm.change("lift", { target });
           }
         }
+      }
+
+      setFireHeld(down) {
+        this.fireHeld = Boolean(down);
+      }
+
+      updateWeapon(dt) {
+        this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+        const canCharge = this.hasWeapon && !this.carried && this.health > 0 && this.fsm.name !== "stagger";
+        if (this.fireHeld && canCharge) {
+          this.fireCharge = clamp(this.fireCharge + dt, 0, this.maxFireCharge);
+        }
+        if (this.wasFireHeld && !this.fireHeld && this.fireCharge > 0 && canCharge && this.fireCooldown <= 0) {
+          const ratio = clamp(this.fireCharge / this.maxFireCharge, 0, 1);
+          this.scene.spawnPlayerShot(this, ratio);
+          this.fireCooldown = 0.18;
+          this.fireCharge = 0;
+        } else if (!this.fireHeld && this.fireCharge > 0 && !canCharge) {
+          this.fireCharge = 0;
+        }
+        this.wasFireHeld = this.fireHeld;
       }
 
       setMove(x, y) {
@@ -1214,6 +1538,7 @@
         this.invuln = Math.max(0, this.invuln - dt);
         if (this.invuln > 0 && Math.floor(this.invuln * 18) % 2 === 0) this.sprite.setTint(0xffd36b);
         else if (this.fsm.name !== "stagger") this.sprite.clearTint();
+        this.updateWeapon(dt);
         this.fsm.update(dt, time);
         this.sync();
       }
@@ -1234,6 +1559,13 @@
         this.score = data.score ?? saved.score ?? 0;
         this.levelStartScore = this.score;
         this.levelBonus = 0;
+        this.chain = 0;
+        this.chainTimer = 0;
+        this.maxChain = 0;
+        this.storyClues = 0;
+        this.clueGoal = 0;
+        this.routeNotes = [];
+        this.damageTaken = 0;
       }
 
       preload() {
@@ -1260,7 +1592,7 @@
         this.keys = this.input.keyboard.addKeys({
           left: "A", right: "D", up: "W", down: "S",
           left2: "LEFT", right2: "RIGHT", up2: "UP", down2: "DOWN",
-          punch: "J", punch2: "SPACE", lift: "K", lift2: "E", restart: "R"
+          punch: "J", punch2: "SPACE", lift: "K", lift2: "E", fire: "L", restart: "R"
         });
         this.player = new Player(this, 70, 156);
         this.props = [
@@ -1318,10 +1650,38 @@
           );
         }
         this.collectibles = [];
-        this.lastLoot = "hazir";
+        this.weaponPickups = [
+          new WeaponPickup(this, 214, 152, 0),
+          new WeaponPickup(this, 1502, 104, 1),
+          new WeaponPickup(this, 1722, 160, 0)
+        ];
+        this.projectiles = [];
+        this.limbs = [];
+        this.streetClues = [
+          new StreetClue(this, 318, 138, "cocuklar kuzey rampasini isaretledi", 0),
+          new StreetClue(this, 758, 104, "mavi vitrin arkasinda sessiz bir gecit var", 1),
+          new StreetClue(this, 1168, 176, "brute ayni ritme iki kez kanmiyor", 0),
+          new StreetClue(this, 1626, 102, "ust yol cikista daha kisa ama daha dar", 1)
+        ];
+        if (this.level >= 2) {
+          this.streetClues.push(
+            new StreetClue(this, 548, 164, "eski kurye roleyi kasa sesiyle uyandirirdi", 0),
+            new StreetClue(this, 1976, 154, "son blokta gozler degil ayak sesi sayilir", 0)
+          );
+        }
+        this.relays = [
+          new SignalRelay(this, 672, 166, "ilk role mahalle hattini yeniden konusturdu", 0),
+          new SignalRelay(this, 1396, 101, "ust kattaki kisa dalga drone dilini bozdu", 1),
+          new SignalRelay(this, 1908, 164, "cikis oncesi son sinyal herkesi susturdu", 0)
+        ];
+        if (this.level >= 3) {
+          this.relays.push(new SignalRelay(this, 1014, 152, "ucuncu hatta sokak kendi adini fisildadi", 0));
+        }
+        this.clueGoal = this.streetClues.length + this.relays.length;
+        this.lastLoot = "dosya acik";
         this.particles = new ParticlePool(this);
         this.cameraRig = new PixelPerfectCamera(this, this.player);
-        this.helpText = this.add.text(8, 201, "K hurda kaldirir/firlatir · W rampalarda ust yola cikar · R reset", {
+        this.helpText = this.add.text(8, 201, "L basili tut sarj · 2 sn tam guc · K hurda · R reset", {
           fontFamily: "monospace",
           fontSize: "8px",
           color: "#f5e8be"
@@ -1409,12 +1769,14 @@
       }
 
       getElevation(x, y, actor = null) {
+        const inClimb = Boolean(this.getClimbZoneAt(x));
+        if (inClimb) {
+          const climbRatio = clamp((LANE_TOP - y) / (LANE_TOP - UPPER_LANE_TOP), 0, 1);
+          return Math.round(climbRatio * UPPER_ELEVATION);
+        }
         if (actor?.floor === 1 && (this.getUpperRouteAt(x) || y <= UPPER_LANE_BOTTOM)) return UPPER_ELEVATION;
         if (this.isOnUpperDeck(x, y)) return UPPER_ELEVATION;
-        const inClimb = Boolean(this.getClimbZoneAt(x));
-        if (!inClimb) return 0;
-        const climbRatio = clamp((LANE_TOP - y) / (LANE_TOP - UPPER_LANE_TOP), 0, 1);
-        return Math.round(climbRatio * UPPER_ELEVATION);
+        return 0;
       }
 
       updateActorFloor(actor) {
@@ -1452,6 +1814,44 @@
         return clamp(y, top + topPad, bottom - bottomPad);
       }
 
+      addScore(amount, reason = "puan", chainable = true) {
+        if (!amount) return 0;
+        let gained = Math.round(amount);
+        if (chainable) {
+          this.chain = clamp(this.chain + 1, 1, 9);
+          this.maxChain = Math.max(this.maxChain, this.chain);
+          this.chainTimer = 3.1;
+          gained = Math.round(gained * (1 + Math.min(this.chain - 1, 5) * 0.14));
+        }
+        this.score += gained;
+        if (reason) this.lastLoot = `${reason}: +${gained}`;
+        return gained;
+      }
+
+      updateChain(dt) {
+        if (this.chain <= 0) return;
+        this.chainTimer -= dt;
+        if (this.chainTimer <= 0) {
+          this.chain = 0;
+          this.chainTimer = 0;
+        }
+      }
+
+      registerDamage(amount) {
+        this.damageTaken += amount;
+        if (this.chain > 1) this.lastLoot = `zincir kirildi / -${amount} HP`;
+        this.chain = 0;
+        this.chainTimer = 0;
+      }
+
+      collectStreetClue(clue) {
+        this.storyClues += 1;
+        this.routeNotes.push(clue.message);
+        this.addScore(clue.score || 300, clue.relay ? "role izi" : "sokak izi");
+        this.lastLoot = `iz ${this.storyClues}/${this.clueGoal}: ${clue.message}`;
+        audio.clue();
+      }
+
       setupKeyboard() {
         const actionForEvent = event => {
           const key = event.key.toLowerCase();
@@ -1461,6 +1861,7 @@
           if (key === "s" || event.code === "ArrowDown") return "down";
           if (key === "j" || event.code === "Space") return "punch";
           if (key === "k" || key === "e") return "lift";
+          if (key === "l") return "fire";
           if (key === "r") return "restart";
           return "";
         };
@@ -1555,14 +1956,54 @@
         this.particles.burst(x, y - 10, 10);
       }
 
+      areaPulse(x, y, radius, color = 0xffb000) {
+        const elevation = this.getElevation(x, y);
+        const ring = this.add.circle(x, y - elevation, 10).setStrokeStyle(2, color, 0.78).setDepth(9065);
+        this.tweens.add({
+          targets: ring,
+          scale: radius / 10,
+          alpha: 0,
+          duration: 360,
+          ease: "Quad.easeOut",
+          onComplete: () => ring.destroy()
+        });
+      }
+
+      spawnPlayerShot(player, charge) {
+        if (!player.hasWeapon) return;
+        const x = player.x + player.facing * 18;
+        const y = player.y - 2;
+        this.projectiles.push(new Projectile(this, x, y, player.floor, player.facing, "player", charge));
+        this.lastLoot = charge >= 0.98 ? "tam sarj atis / alan hasari" : `atis / sarj ${Math.round(charge * 100)}%`;
+        this.cameraRig.shake(charge >= 0.98 ? 0.34 : 0.12);
+        audio.fire(charge);
+      }
+
+      spawnEnemyShot(drone, direction) {
+        this.projectiles.push(new Projectile(this, drone.x + direction * 15, drone.y - 4, drone.floor, direction, "enemy", 0));
+        this.particles.burst(drone.x + direction * 10, drone.y - 12, 4);
+        audio.enemyFire();
+      }
+
       updateHud() {
         const healthFill = document.getElementById("health-fill");
         const healthValue = document.getElementById("health-value");
         const lootState = document.getElementById("loot-state");
+        const weaponState = document.getElementById("weapon-state");
+        const caseState = document.getElementById("case-state");
         const ratio = clamp(this.player.health / this.player.maxHealth, 0, 1);
         if (healthFill) healthFill.style.transform = `scaleX(${ratio})`;
         if (healthValue) healthValue.textContent = String(Math.round(this.player.health));
         if (lootState) lootState.textContent = `LOOT: ${this.lastLoot || "sandik kir"}`;
+        if (weaponState) {
+          const charge = Math.round(clamp(this.player.fireCharge / this.player.maxFireCharge, 0, 1) * 100);
+          weaponState.textContent = this.player.hasWeapon ? `SILAH: hazir · sarj ${charge}%` : "SILAH: yok · modul ara";
+        }
+        if (caseState) {
+          const chainLabel = this.chain > 0 ? `x${this.chain}` : "x1";
+          const timeLabel = this.chainTimer > 0 ? ` · ${this.chainTimer.toFixed(1)}s` : "";
+          caseState.textContent = `DOSYA: iz ${this.storyClues}/${this.clueGoal} · zincir ${chainLabel}${timeLabel}`;
+        }
       }
 
       playerDown() {
@@ -1586,7 +2027,9 @@
         const defeated = this.drones.filter(drone => drone.defeated).length;
         const healthBonus = Math.round(this.player.health * 9);
         const clearBonus = defeated * 110;
-        const levelBonus = 900 + this.level * 250 + healthBonus + clearBonus;
+        const clueBonus = this.storyClues * 320 + (this.storyClues >= this.clueGoal ? 700 + this.level * 120 : 0);
+        const chainBonus = this.maxChain * 95;
+        const levelBonus = 900 + this.level * 250 + healthBonus + clearBonus + clueBonus + chainBonus;
         this.levelBonus = levelBonus;
         this.score += levelBonus;
         window.ashRunnerProgress = { level: this.level, score: this.score };
@@ -1601,6 +2044,13 @@
         document.getElementById("level-bonus").textContent = `+${levelBonus}`;
         document.getElementById("level-health").textContent = String(Math.round(this.player.health));
         document.getElementById("level-defeated").textContent = `${defeated}/${this.drones.length}`;
+        document.getElementById("level-clues").textContent = `${this.storyClues}/${this.clueGoal}`;
+        document.getElementById("level-chain").textContent = `x${Math.max(1, this.maxChain)}`;
+        const lastNote = this.routeNotes[this.routeNotes.length - 1];
+        const copy = lastNote
+          ? `Çıkış kapısı güvenli. Son iz: ${lastNote}.`
+          : "Çıkış kapısı güvenli. Sokak bu koşuda sessiz kaldı.";
+        document.getElementById("level-copy").textContent = copy;
         const card = document.getElementById("level-card");
         card?.classList.add("is-open");
         card?.setAttribute("aria-hidden", "false");
@@ -1666,7 +2116,7 @@
           if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 31 && Math.abs(dy) < 18 && drone.stun <= 0.05) {
             connected = true;
             drone.disable(player.facing, 0.85);
-            this.score += 40;
+            this.addScore(40, "itis");
             this.impactAt(drone.x, drone.y, 0.28);
             this.hitStop(68);
           }
@@ -1679,7 +2129,7 @@
           if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 32 && Math.abs(dy) < 18) {
             connected = true;
             prop.damage(1, "hit");
-            this.score += 18;
+            this.addScore(18, "sandik");
             this.hitStop(45);
           }
         });
@@ -1704,14 +2154,27 @@
         const left = Boolean(this.keys.left.isDown || this.keys.left2.isDown || this.virtualInput.left || this.heldInput.left);
         const down = Boolean(this.keys.down.isDown || this.keys.down2.isDown || this.virtualInput.down || this.heldInput.down);
         const up = Boolean(this.keys.up.isDown || this.keys.up2.isDown || this.virtualInput.up || this.heldInput.up);
+        const fire = Boolean(this.keys.fire.isDown || this.virtualInput.fire || this.heldInput.fire);
         const x = Number(right) - Number(left);
         const y = Number(down) - Number(up);
         this.player.setMove(x, y);
+        this.player.setFireHeld(fire);
       }
 
       checkThrownHits() {
         this.props.forEach(prop => {
           if (prop.broken || prop.state !== "thrown" || prop.z > 52) return;
+          this.relays.forEach(relay => {
+            if (!relay.charged || relay.floor !== prop.floor) return;
+            const dx = relay.x - prop.x;
+            const dy = relay.y - prop.y;
+            if (Math.abs(dx) < 30 && Math.abs(dy) < 24) {
+              relay.activate(Math.sign(prop.vx || this.player.facing || 1));
+              prop.vx *= -0.16;
+              prop.vz = 118 / prop.mass;
+              this.hitStop(96);
+            }
+          });
           this.drones.forEach(drone => {
             if (drone.defeated || drone.stun > 0.1) return;
             if (drone.floor !== prop.floor) return;
@@ -1725,7 +2188,7 @@
                 prop.vx *= -0.22;
                 prop.vz = 86 / prop.mass;
               }
-              this.score += Math.round(130 * prop.mass);
+              this.addScore(Math.round(130 * prop.mass), "hurda isabet");
               this.impactAt(drone.x, drone.y, 0.42);
               this.hitStop(92);
             }
@@ -1739,7 +2202,7 @@
               target.damage(2, "throw");
               prop.vx *= -0.18;
               prop.vz = 72 / prop.mass;
-              this.score += 35;
+              this.addScore(35, "sekme");
               this.hitStop(58);
             }
           });
@@ -1751,6 +2214,24 @@
         this.collectibles = this.collectibles.filter(item => !item.collected);
       }
 
+      updateWeapons(dt) {
+        this.weaponPickups.forEach(item => item.update(dt, this.player));
+        this.weaponPickups = this.weaponPickups.filter(item => !item.collected);
+      }
+
+      updateProjectiles(dt) {
+        this.projectiles.forEach(projectile => projectile.update(dt));
+        this.projectiles = this.projectiles.filter(projectile => !projectile.dead);
+        this.limbs.forEach(limb => limb.update(dt));
+        this.limbs = this.limbs.filter(limb => !limb.dead);
+      }
+
+      updateStreetLayer(dt) {
+        this.streetClues.forEach(clue => clue.update(dt, this.player));
+        this.streetClues = this.streetClues.filter(clue => !clue.collected);
+        this.relays.forEach(relay => relay.update(dt));
+      }
+
       update(time, delta) {
         const dt = Math.min(delta / 1000, 0.034);
         this.clock += dt;
@@ -1760,6 +2241,7 @@
         }
         this.inputBuffer.purge(time);
         this.updateInput(time);
+        this.updateChain(dt);
 
         if (this.hitStopMs > 0) {
           this.hitStopMs -= delta;
@@ -1774,6 +2256,9 @@
         this.drones.forEach(drone => drone.update(dt, this.player));
         this.checkThrownHits();
         this.updateCollectibles(dt);
+        this.updateWeapons(dt);
+        this.updateProjectiles(dt);
+        this.updateStreetLayer(dt);
         this.particles.update(dt);
         this.cameraRig.update(dt);
 
@@ -1844,6 +2329,7 @@
       if (scene && scene.virtualInput) {
         scene.virtualInput = Object.create(null);
         scene.heldInput = Object.create(null);
+        if (scene.player) scene.player.setFireHeld(false);
       }
     });
   </script>
