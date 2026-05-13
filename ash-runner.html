@@ -143,12 +143,17 @@
     .boot-card {
       position: fixed;
       inset: auto 18px 22px auto;
-      z-index: 9;
+      z-index: 14;
       width: min(430px, calc(100vw - 36px));
       border: 1px solid rgba(83, 213, 255, 0.46);
       background: rgba(6, 7, 10, 0.92);
       padding: 14px;
       box-shadow: 0 0 34px rgba(83, 213, 255, 0.12);
+    }
+
+    .boot-card.is-hidden {
+      display: none;
+      pointer-events: none;
     }
 
     .level-card {
@@ -224,6 +229,10 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
+    }
+
+    #start-run {
+      flex: 1 1 170px;
     }
 
     .boot-actions button,
@@ -412,6 +421,12 @@
         padding: 12px;
         background: rgba(6, 7, 10, 0.82);
         backdrop-filter: blur(12px);
+      }
+
+      #start-run {
+        flex-basis: 100%;
+        min-height: 52px;
+        font-size: 0.95rem;
       }
     }
 
@@ -2148,8 +2163,9 @@
       }
 
       startRun() {
-        if (this.completed) return;
+        if (this.started || this.completed) return;
         this.started = true;
+        document.getElementById("boot-card")?.classList.add("is-hidden");
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level}`;
         this.game.canvas.setAttribute("tabindex", "0");
@@ -2160,6 +2176,7 @@
       restartRun() {
         const data = { level: this.level || 1, score: this.levelStartScore || 0 };
         window.ashRunnerProgress = data;
+        document.getElementById("boot-card")?.classList.add("is-hidden");
         document.getElementById("level-card")?.classList.remove("is-open");
         document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
         this.scene.restart(data);
@@ -2172,6 +2189,7 @@
       nextLevel() {
         const data = { level: this.level + 1, score: this.score };
         window.ashRunnerProgress = data;
+        document.getElementById("boot-card")?.classList.add("is-hidden");
         document.getElementById("level-card")?.classList.remove("is-open");
         document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
         this.scene.restart(data);
@@ -2549,12 +2567,19 @@
     const muteButton = document.getElementById("mute-toggle");
     const nextLevelButton = document.getElementById("next-level");
 
-    startButton.addEventListener("click", () => {
+    function beginRunFromBoot() {
       audio.init();
       const scene = game.scene.keys.PlayScene;
       if (scene) scene.startRun();
-      bootCard.style.display = "none";
+      bootCard.classList.add("is-hidden");
       startButton.blur();
+    }
+
+    startButton.addEventListener("click", beginRunFromBoot);
+    bootCard.addEventListener("pointerup", event => {
+      if (event.target.closest("#mute-toggle, a")) return;
+      event.preventDefault();
+      beginRunFromBoot();
     });
 
     muteButton.addEventListener("click", () => {
