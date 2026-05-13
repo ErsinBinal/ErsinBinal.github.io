@@ -499,7 +499,7 @@
       }
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script src="assets/js/phaser.min.js"></script>
 </head>
 <body>
   <main id="game-shell" aria-label="Kül Hattı arcade oyun alanı">
@@ -2670,7 +2670,11 @@
       const viewport = window.visualViewport;
       const height = viewport ? viewport.height : window.innerHeight;
       document.documentElement.style.setProperty("--vh", `${height * 0.01}px`);
-      if (game.scale) game.scale.refresh();
+      try {
+        if (game.scale && typeof game.scale.refresh === "function") game.scale.refresh();
+      } catch (error) {
+        console.warn("Scale refresh skipped", error);
+      }
     }
 
     syncViewport();
@@ -2682,19 +2686,31 @@
     const startButton = document.getElementById("start-run");
     const muteButton = document.getElementById("mute-toggle");
     const nextLevelButton = document.getElementById("next-level");
+    let bootStartRequested = false;
 
     function beginRunFromBoot() {
+      if (bootStartRequested) return;
+      bootStartRequested = true;
       audio.init();
       const scene = game.scene.keys.PlayScene;
-      if (scene) scene.startRun();
+      if (scene && scene.player) {
+        scene.startRun();
+      } else {
+        bootStartRequested = false;
+        setTimeout(beginRunFromBoot, 60);
+        return;
+      }
       bootCard.classList.add("is-hidden");
       startButton.blur();
     }
 
     startButton.addEventListener("click", beginRunFromBoot);
-    bootCard.addEventListener("pointerup", event => {
-      if (event.target.closest("#mute-toggle, a")) return;
+    startButton.addEventListener("pointerdown", event => {
       event.preventDefault();
+      beginRunFromBoot();
+    });
+    bootCard.addEventListener("click", event => {
+      if (event.target.closest("#start-run, #mute-toggle, a")) return;
       beginRunFromBoot();
     });
 
