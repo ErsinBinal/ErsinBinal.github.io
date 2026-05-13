@@ -666,6 +666,7 @@
       limb() { this.noise(0.12, 0.12); this.tone(146, 0.08, "triangle", 0.08, -44); }
       spell() { this.tone(196, 0.08, "sine", 0.08); setTimeout(() => this.tone(392, 0.13, "sawtooth", 0.11, 160), 55); }
       cooldown() { this.tone(112, 0.05, "square", 0.04, -24); }
+      explode() { this.noise(0.2, 0.24); this.tone(64, 0.14, "sawtooth", 0.16, -28); setTimeout(() => this.tone(144, 0.08, "square", 0.1, 80), 55); }
       start() { this.tone(220, 0.08, "triangle", 0.1); setTimeout(() => this.tone(330, 0.1, "triangle", 0.1), 80); }
     }
 
@@ -890,6 +891,16 @@
       });
       makeTexture(scene, "limb-scrap", 9, 7, px => {
         px(1, 2, 6, 3, 0x848d96); px(6, 1, 2, 5, 0x2a2d35); px(2, 5, 4, 1, 0xffb000);
+      });
+      makeTexture(scene, "blast-core", 24, 24, (px, g) => {
+        g.fillStyle(0xfff0a2, 0.94);
+        g.fillCircle(12, 12, 5);
+        g.fillStyle(0xffb000, 0.72);
+        g.fillCircle(12, 12, 10);
+        g.fillStyle(0xf05a4a, 0.42);
+        g.fillCircle(12, 12, 12);
+        px(2, 11, 20, 2, 0xffd36b, 0.9);
+        px(11, 2, 2, 20, 0xffd36b, 0.9);
       });
       makeTexture(scene, "reservoir-open", 34, 17, (px, g) => {
         g.fillStyle(0x050507, 0.92);
@@ -1521,8 +1532,7 @@
         if (this.defeated) return;
         this.defeated = true;
         this.scene.addScore(this.data.score, "devre disi");
-        this.scene.impactAt(this.x, this.y, this.data.strong ? 0.46 : 0.28);
-        this.scene.particles.burst(this.x, this.y - 12, this.data.strong ? 18 : 10);
+        this.scene.explodeDrone(this, direction);
         if (this.data.gem) this.scene.spawnCollectible(this.x + direction * 8, this.y, this.data.gem, this.data.strong ? 1.2 : 1, this.floor);
         this.sprite.setVisible(false);
         this.shadow.setVisible(false);
@@ -1593,9 +1603,25 @@
           p.img.setPosition(Math.round(p.x), Math.round(p.y)).setAlpha(clamp(p.life * 3, 0, 1));
           if (p.life <= 0) {
             p.live = false;
-            p.img.setVisible(false);
+            p.img.clearTint().setVisible(false);
           }
         });
+      }
+
+      explosion(x, y, count = 26) {
+        for (let i = 0; i < count; i += 1) {
+          const p = this.pool.find(item => !item.live);
+          if (!p) return;
+          const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.45;
+          const speed = 58 + Math.random() * 120;
+          p.live = true;
+          p.x = x;
+          p.y = y;
+          p.vx = Math.cos(angle) * speed;
+          p.vy = Math.sin(angle) * speed - 45;
+          p.life = 0.34 + Math.random() * 0.34;
+          p.img.setVisible(true).setAlpha(1).setTint(Math.random() < 0.42 ? 0xf05a4a : 0xffd36b);
+        }
       }
     }
 
@@ -2280,6 +2306,41 @@
         audio.impact();
         this.cameraRig.shake(shake);
         this.particles.burst(x, y - 10, 10);
+      }
+
+      explodeDrone(drone, direction = 1) {
+        const strong = Boolean(drone.data.strong);
+        const elevation = this.getElevation(drone.x, drone.y, drone);
+        const blastY = drone.y - elevation - 12;
+        this.cameraRig.shake(strong ? 0.72 : 0.5);
+        this.hitStop(strong ? 120 : 86);
+        this.particles.explosion(drone.x, blastY, strong ? 38 : 28);
+        audio.explode();
+
+        const core = this.add.image(drone.x, blastY, "blast-core").setDepth(9200).setBlendMode(Phaser.BlendModes.ADD);
+        const ring = this.add.circle(drone.x, drone.y - elevation - 4, 12).setStrokeStyle(2, strong ? 0xf05a4a : 0xffd36b, 0.86).setDepth(9190);
+        this.tweens.add({
+          targets: core,
+          scale: strong ? 2.15 : 1.55,
+          alpha: 0,
+          duration: strong ? 300 : 240,
+          ease: "Quad.easeOut",
+          onComplete: () => core.destroy()
+        });
+        this.tweens.add({
+          targets: ring,
+          scale: strong ? 4.2 : 3.2,
+          alpha: 0,
+          duration: strong ? 380 : 300,
+          ease: "Cubic.easeOut",
+          onComplete: () => ring.destroy()
+        });
+
+        for (let i = 0; i < (strong ? 4 : 3); i += 1) {
+          const spread = direction * (i % 2 ? -1 : 1);
+          this.limbs.push(new LimbScrap(this, drone.x + (Math.random() - 0.5) * 12, drone.y - 5, spread || 1, drone.floor));
+        }
+        this.lastLoot = "robot patladi / parca yagmuru";
       }
 
       areaPulse(x, y, radius, color = 0xffb000) {
