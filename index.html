@@ -1715,6 +1715,12 @@
       color: var(--journey-amber);
     }
 
+    .project-row[data-artifact="ash"]:hover {
+      background:
+        linear-gradient(90deg, rgba(255, 176, 0, 0.16), rgba(0, 0, 0, 0.52)),
+        rgba(0, 0, 0, 0.52);
+    }
+
     .dossier-tree {
       display: grid;
       gap: 6px;
@@ -2035,7 +2041,8 @@
               <a class="project-row" href="neon-river.html" data-artifact="river"><span>01</span><strong>Neon River</strong><em>run / reflex</em></a>
               <a class="project-row" href="Bartender.html" data-artifact="bar"><span>02</span><strong>Bartender</strong><em>mix / ritual</em></a>
               <a class="project-row" href="Barista.html" data-artifact="coffee"><span>03</span><strong>Cyber Barista</strong><em>brew / terminal</em></a>
-              <a class="project-row" href="Paradox_Terminal.html" data-artifact="logic"><span>04</span><strong>Paradoks Terminal</strong><em>fold / logic</em></a>
+              <a class="project-row" href="ash-runner.html" data-artifact="ash"><span>04</span><strong>Kül Hattı</strong><em>scrap / brawler</em></a>
+              <a class="project-row" href="Paradox_Terminal.html" data-artifact="logic"><span>05</span><strong>Paradoks Terminal</strong><em>fold / logic</em></a>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab gizli menüsü">
@@ -2444,6 +2451,10 @@
         'oracle': () => { location.href = 'TheOracle.html'; },
         'run logic': () => { location.href = 'cyberpunk-logic-game.html'; },
         'logic': () => { location.href = 'cyberpunk-logic-game.html'; },
+        'run ash': () => { location.href = 'ash-runner.html'; },
+        'ash': () => { location.href = 'ash-runner.html'; },
+        'scrap': () => { location.href = 'ash-runner.html'; },
+        'brawler': () => { location.href = 'ash-runner.html'; },
         'run flow': () => { location.href = 'neon-river.html'; },
         'flow': () => { location.href = 'neon-river.html'; },
         'trace persona': () => { location.href = 'ozgecmisim.html'; },
@@ -2460,8 +2471,8 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / trace persona / access / admin / unlock hidden',
-        '?': () => 'keyboard: D dossier, O oracle, L logic, F flow, P persona, A access, ? command shell, ESC close'
+        'help': () => 'commands: open dossier / query oracle / run logic / run ash / trace persona / access / admin / unlock hidden',
+        '?': () => 'keyboard: D dossier, O oracle, L logic, B ash, F flow, P persona, A access, ? command shell, ESC close'
       };
 
       const normalizeOracleAnswer = (answer) => answer
@@ -2591,6 +2602,7 @@
         } else if (key === 'd') location.href = 'makaleler.html';
         else if (key === 'o') location.href = 'TheOracle.html';
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
+        else if (key === 'b') location.href = 'ash-runner.html';
         else if (key === 'f') location.href = 'neon-river.html';
         else if (key === 'p') location.href = 'ozgecmisim.html';
         else if (key === 'a') location.href = 'auth.html';

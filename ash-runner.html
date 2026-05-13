@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kül Hattı: Scrap Run | Convivium</title>
+  <meta name="description" content="16-bit ruhlu, sahte Z eksenli, parallax kaydırmalı ve nesne fırlatma odaklı özgün retro arcade aksiyon oyunu.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/ash-runner.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';">
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Kül Hattı: Scrap Run | Convivium">
+  <meta property="og:description" content="Post-apokaliptik arcade ritmini özgün piksel mimarisiyle yeniden kuran oynanabilir prototip.">
+  <meta property="og:type" content="game">
+  <meta property="og:locale" content="tr_TR">
+  <meta name="theme-color" content="#101014">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <style>
+    :root {
+      --bg: #050507;
+      --ink: #f5e8be;
+      --muted: #9b8f75;
+      --accent: #ffb000;
+      --cyan: #53d5ff;
+      --red: #f05a4a;
+      --panel: rgba(7, 8, 10, 0.86);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Courier New", Courier, monospace;
+      touch-action: none;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 4px),
+        radial-gradient(circle at 50% 50%, transparent 0 54%, rgba(0, 0, 0, 0.38) 100%);
+      mix-blend-mode: screen;
+      opacity: 0.58;
+    }
+
+    #game-shell {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(180deg, #17111a 0%, #0a0a0c 48%, #030305 100%);
+    }
+
+    #game-container {
+      width: 100vw;
+      height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      outline: 0;
+      box-shadow: 0 0 54px rgba(255, 176, 0, 0.1);
+    }
+
+    .hud-panel {
+      position: fixed;
+      left: 16px;
+      top: 14px;
+      z-index: 8;
+      display: grid;
+      gap: 4px;
+      min-width: 210px;
+      padding: 10px 12px;
+      border: 1px solid rgba(255, 176, 0, 0.42);
+      background: var(--panel);
+      color: var(--ink);
+      text-transform: uppercase;
+      box-shadow: inset 0 0 18px rgba(255, 176, 0, 0.08);
+    }
+
+    .hud-panel strong {
+      color: var(--accent);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .hud-panel span {
+      color: var(--muted);
+      font-size: 0.74rem;
+      line-height: 1.35;
+    }
+
+    .health-row {
+      display: grid;
+      grid-template-columns: 42px minmax(120px, 1fr) 34px;
+      gap: 8px;
+      align-items: center;
+      margin-top: 2px;
+      color: var(--ink);
+      font-size: 0.72rem;
+    }
+
+    .health-meter {
+      height: 10px;
+      border: 1px solid rgba(245, 232, 190, 0.38);
+      background: rgba(240, 90, 74, 0.16);
+      overflow: hidden;
+    }
+
+    .health-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #f05a4a, #ffb000, #8dff7a);
+      transform-origin: left center;
+      transition: transform 0.16s ease;
+    }
+
+    .boot-card {
+      position: fixed;
+      inset: auto 18px 22px auto;
+      z-index: 9;
+      width: min(430px, calc(100vw - 36px));
+      border: 1px solid rgba(83, 213, 255, 0.46);
+      background: rgba(6, 7, 10, 0.92);
+      padding: 14px;
+      box-shadow: 0 0 34px rgba(83, 213, 255, 0.12);
+    }
+
+    .level-card {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 12;
+      display: none;
+      width: min(440px, calc(100vw - 34px));
+      border: 1px solid rgba(255, 176, 0, 0.62);
+      background: rgba(6, 7, 10, 0.94);
+      padding: 16px;
+      color: var(--ink);
+      box-shadow: 0 0 42px rgba(255, 176, 0, 0.15), inset 0 0 20px rgba(255, 176, 0, 0.06);
+      transform: translate(-50%, -50%);
+    }
+
+    .level-card.is-open {
+      display: block;
+    }
+
+    .level-card h2 {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 1.12rem;
+      text-transform: uppercase;
+    }
+
+    .level-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .level-summary div {
+      min-height: 42px;
+      border: 1px solid rgba(245, 232, 190, 0.2);
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.42);
+    }
+
+    .level-summary span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+    }
+
+    .level-summary strong {
+      color: var(--ink);
+      font-size: 1rem;
+    }
+
+    .boot-card h1 {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 1.15rem;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .boot-card p,
+    .level-card p {
+      margin: 0 0 12px;
+      color: var(--ink);
+      font-size: 0.82rem;
+      line-height: 1.48;
+    }
+
+    .boot-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .boot-actions button,
+    .level-card button,
+    .boot-actions a {
+      min-height: 38px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 176, 0, 0.68);
+      border-radius: 0;
+      background: #101014;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+
+    .boot-actions button:hover,
+    .level-card button:hover,
+    .boot-actions a:hover {
+      background: var(--accent);
+      color: #090909;
+    }
+
+    .touch-pad {
+      position: fixed;
+      inset: auto 14px 14px 14px;
+      z-index: 10;
+      display: none;
+      justify-content: space-between;
+      align-items: end;
+      pointer-events: none;
+    }
+
+    .touch-cluster {
+      display: grid;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .dpad {
+      grid-template-columns: 44px 44px 44px;
+      grid-template-rows: 44px 44px 44px;
+    }
+
+    .actions {
+      grid-template-columns: 58px 58px;
+      grid-template-rows: 58px;
+      align-items: end;
+    }
+
+    .pad-btn {
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(245, 232, 190, 0.42);
+      background: rgba(9, 9, 12, 0.64);
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .pad-btn.is-down {
+      background: rgba(255, 176, 0, 0.78);
+      color: #050507;
+      transform: translateY(1px);
+    }
+
+    .pad-up { grid-column: 2; grid-row: 1; }
+    .pad-left { grid-column: 1; grid-row: 2; }
+    .pad-right { grid-column: 3; grid-row: 2; }
+    .pad-down { grid-column: 2; grid-row: 3; }
+
+    @media (pointer: coarse), (max-width: 820px) {
+      .touch-pad {
+        display: flex;
+      }
+
+      .hud-panel {
+        left: 10px;
+        top: 10px;
+        min-width: 178px;
+        padding: 8px 10px;
+      }
+
+      .boot-card {
+        inset: 132px 10px auto auto;
+        width: min(360px, calc(100vw - 20px));
+      }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+  <main id="game-shell" aria-label="Kül Hattı arcade oyun alanı">
+    <div id="game-container"></div>
+  </main>
+
+  <aside class="hud-panel" aria-live="polite">
+    <strong id="hud-title">KUL HATTI // READY</strong>
+    <span>WASD/Ok: hareket · J: itis · K/E: kaldir/firlat</span>
+    <div class="health-row" aria-label="Karakter hasari">
+      <span>HP</span>
+      <div class="health-meter"><div class="health-fill" id="health-fill"></div></div>
+      <span id="health-value">100</span>
+    </div>
+    <span id="loot-state">LOOT: sandik kir · yemek/mucevher topla</span>
+    <span id="hud-state">FSM: boot · buffer: clear</span>
+  </aside>
+
+  <section class="boot-card" id="boot-card">
+    <h1>Kül Hattı: Scrap Run</h1>
+    <p>Çökmüş servis yolunda ilerle, ağır hurdaları kaldır, taşı ve droneları şiddet göstermeden devre dışı bırakacak kadar güçlü darbeler yarat.</p>
+    <div class="boot-actions">
+      <button id="start-run" type="button">Oyuna Başla</button>
+      <button id="mute-toggle" type="button" aria-pressed="false">Ses Açık</button>
+      <a href="index.html">Index</a>
+    </div>
+  </section>
+
+  <section class="level-card" id="level-card" aria-live="polite" aria-hidden="true">
+    <h2 id="level-title">Bölüm tamamlandı</h2>
+    <p id="level-copy">Çıkış kapısı güvenli. Bir sonraki hatta geçmeden önce koşu değerlendirmesi.</p>
+    <div class="level-summary">
+      <div><span>Toplam puan</span><strong id="level-score">000000</strong></div>
+      <div><span>Bölüm bonusu</span><strong id="level-bonus">0</strong></div>
+      <div><span>Kalan HP</span><strong id="level-health">100</strong></div>
+      <div><span>Devre dışı</span><strong id="level-defeated">0</strong></div>
+    </div>
+    <button id="next-level" type="button">Devam Et</button>
+  </section>
+
+  <nav class="touch-pad" aria-label="Dokunmatik oyun kontrolleri">
+    <div class="touch-cluster dpad">
+      <div class="pad-btn pad-up" data-control="up">▲</div>
+      <div class="pad-btn pad-left" data-control="left">◀</div>
+      <div class="pad-btn pad-right" data-control="right">▶</div>
+      <div class="pad-btn pad-down" data-control="down">▼</div>
+    </div>
+    <div class="touch-cluster actions">
+      <div class="pad-btn" data-control="punch">J</div>
+      <div class="pad-btn" data-control="lift">K</div>
+    </div>
+  </nav>
+
+  <script>
+    const GAME_W = 384;
+    const GAME_H = 216;
+    const WORLD_W = 2300;
+    const LANE_TOP = 118;
+    const LANE_BOTTOM = 188;
+    const UPPER_LANE_TOP = 88;
+    const UPPER_LANE_BOTTOM = 128;
+    const UPPER_ELEVATION = 48;
+    const GRAVITY_Z = 760;
+
+    const clamp = Phaser.Math.Clamp;
+
+    class ChipAudio {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.master = null;
+        this.channels = 0;
+        this.maxChannels = 4;
+      }
+
+      init() {
+        if (this.ctx) {
+          if (this.ctx.state === "suspended") this.ctx.resume();
+          return;
+        }
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) {
+          this.enabled = false;
+          return;
+        }
+
+        this.ctx = new AudioContext();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = 0.24;
+        this.master.connect(this.ctx.destination);
+      }
+
+      tone(freq, duration, type = "square", volume = 0.18, slide = 0) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx || this.channels >= this.maxChannels) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const quantized = Math.round(freq / 8) * 8;
+
+        this.channels += 1;
+        osc.type = type;
+        osc.frequency.setValueAtTime(quantized, now);
+        if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(24, quantized + slide), now + duration);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(volume, now + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.master);
+        osc.start(now);
+        osc.stop(now + duration + 0.02);
+        osc.onended = () => { this.channels = Math.max(0, this.channels - 1); };
+      }
+
+      noise(duration = 0.12, volume = 0.18) {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx || this.channels >= this.maxChannels) return;
+
+        const now = this.ctx.currentTime;
+        const buffer = this.ctx.createBuffer(1, Math.floor(this.ctx.sampleRate * duration), this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i += 1) {
+          data[i] = (Math.random() * 2 - 1) * (i % 2 ? 0.7 : 1);
+        }
+        const source = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        this.channels += 1;
+        source.buffer = buffer;
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(1700, now);
+        gain.gain.setValueAtTime(volume, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.master);
+        source.start(now);
+        source.stop(now + duration);
+        source.onended = () => { this.channels = Math.max(0, this.channels - 1); };
+      }
+
+      step() { this.tone(96, 0.045, "triangle", 0.05, -18); }
+      lift() { this.tone(132, 0.09, "square", 0.12, -40); }
+      throw() { this.tone(260, 0.12, "sawtooth", 0.13, -120); }
+      impact() { this.noise(0.09, 0.18); this.tone(72, 0.08, "square", 0.1, -20); }
+      heal() { this.tone(420, 0.06, "triangle", 0.08); setTimeout(() => this.tone(620, 0.08, "triangle", 0.08), 55); }
+      gem() { this.tone(760, 0.05, "sine", 0.08); setTimeout(() => this.tone(1120, 0.09, "sine", 0.08), 55); }
+      break() { this.noise(0.12, 0.14); this.tone(118, 0.08, "square", 0.08, -36); }
+      buffer() { this.tone(680, 0.04, "square", 0.045, -100); }
+      start() { this.tone(220, 0.08, "triangle", 0.1); setTimeout(() => this.tone(330, 0.1, "triangle", 0.1), 80); }
+    }
+
+    const audio = new ChipAudio();
+
+    class InputBuffer {
+      constructor(windowMs = 150) {
+        this.windowMs = windowMs;
+        this.queue = [];
+      }
+
+      press(action, time) {
+        this.queue.push({ action, time });
+        if (action === "punch" || action === "lift") audio.buffer();
+      }
+
+      consume(action, time) {
+        const index = this.queue.findIndex(item => item.action === action && time - item.time <= this.windowMs);
+        if (index === -1) return false;
+        this.queue.splice(index, 1);
+        return true;
+      }
+
+      purge(time) {
+        this.queue = this.queue.filter(item => time - item.time <= this.windowMs);
+      }
+
+      label(time) {
+        const live = this.queue.filter(item => time - item.time <= this.windowMs).map(item => item.action);
+        return live.length ? live.join(",") : "clear";
+      }
+    }
+
+    class StateMachine {
+      constructor(owner, states, initial) {
+        this.owner = owner;
+        this.states = states;
+        this.name = "";
+        this.time = 0;
+        this.change(initial);
+      }
+
+      change(name, payload = {}) {
+        if (this.name === name) return;
+        const previous = this.states[this.name];
+        if (previous && previous.exit) previous.exit.call(this.owner, payload);
+        this.name = name;
+        this.time = 0;
+        const next = this.states[this.name];
+        if (next && next.enter) next.enter.call(this.owner, payload);
+      }
+
+      update(dt, time) {
+        this.time += dt;
+        const state = this.states[this.name];
+        if (state && state.update) state.update.call(this.owner, dt, time, this.time);
+      }
+    }
+
+    class PixelPerfectCamera {
+      constructor(scene, target) {
+        this.scene = scene;
+        this.target = target;
+        this.scrollX = 0;
+        this.trauma = 0;
+        this.seed = 0;
+        scene.cameras.main.setBounds(0, 0, WORLD_W, GAME_H);
+        scene.cameras.main.roundPixels = true;
+      }
+
+      shake(amount) {
+        this.trauma = clamp(this.trauma + amount, 0, 1);
+      }
+
+      update(dt) {
+        this.seed += dt * 60;
+        this.trauma = Math.max(0, this.trauma - dt * 1.8);
+        const strength = this.trauma * this.trauma;
+        const sx = Math.round((Math.sin(this.seed * 17.31) + Math.sin(this.seed * 7.11)) * 2.5 * strength);
+        const sy = Math.round((Math.cos(this.seed * 19.73) + Math.sin(this.seed * 5.41)) * 1.8 * strength);
+        this.scrollX = clamp(Math.round(this.target.x - GAME_W * 0.42), 0, WORLD_W - GAME_W);
+        this.scene.cameras.main.setScroll(this.scrollX + sx, sy);
+        this.scene.layers.forEach(layer => {
+          layer.sprite.tilePositionX = Math.round(this.scrollX * layer.factor);
+        });
+      }
+    }
+
+    function makeTexture(scene, key, w, h, draw) {
+      const g = scene.make.graphics({ x: 0, y: 0, add: false });
+      const px = (x, y, width, height, color, alpha = 1) => {
+        g.fillStyle(color, alpha);
+        g.fillRect(x, y, width, height);
+      };
+      draw(px, g);
+      g.generateTexture(key, w, h);
+      g.destroy();
+    }
+
+    function makeAssets(scene) {
+      makeTexture(scene, "hero", 28, 34, px => {
+        px(11, 0, 7, 4, 0x272129); px(9, 4, 11, 5, 0xe0c37d);
+        px(8, 9, 13, 4, 0x5c2f32); px(6, 13, 17, 9, 0x2e8a88);
+        px(9, 22, 5, 9, 0x32343d); px(16, 22, 5, 9, 0x32343d);
+        px(4, 14, 4, 11, 0xd7b071); px(23, 14, 4, 11, 0xd7b071);
+        px(7, 31, 7, 3, 0x15161a); px(16, 31, 7, 3, 0x15161a);
+        px(12, 5, 2, 2, 0x101014); px(17, 5, 2, 2, 0x101014);
+      });
+      makeTexture(scene, "hero-walk-1", 28, 34, px => {
+        px(11, 0, 7, 4, 0x272129); px(9, 4, 11, 5, 0xe0c37d);
+        px(8, 9, 13, 4, 0x5c2f32); px(6, 13, 17, 9, 0x2e8a88);
+        px(8, 22, 5, 8, 0x32343d); px(17, 22, 5, 10, 0x32343d);
+        px(4, 14, 4, 11, 0xd7b071); px(23, 14, 4, 11, 0xd7b071);
+        px(5, 30, 8, 3, 0x15161a); px(17, 32, 8, 2, 0x15161a);
+        px(12, 5, 2, 2, 0x101014); px(17, 5, 2, 2, 0x101014);
+      });
+      makeTexture(scene, "hero-walk-2", 28, 34, px => {
+        px(11, 0, 7, 4, 0x272129); px(9, 4, 11, 5, 0xe0c37d);
+        px(8, 9, 13, 4, 0x5c2f32); px(6, 13, 17, 9, 0x2e8a88);
+        px(10, 22, 5, 10, 0x32343d); px(15, 22, 5, 8, 0x32343d);
+        px(4, 14, 4, 11, 0xd7b071); px(23, 14, 4, 11, 0xd7b071);
+        px(8, 32, 8, 2, 0x15161a); px(16, 30, 8, 3, 0x15161a);
+        px(12, 5, 2, 2, 0x101014); px(17, 5, 2, 2, 0x101014);
+      });
+      makeTexture(scene, "hero-carry", 30, 36, px => {
+        px(10, 1, 9, 4, 0x272129); px(9, 5, 12, 5, 0xe0c37d);
+        px(6, 10, 18, 13, 0x225f74); px(3, 8, 5, 9, 0xd7b071); px(24, 8, 5, 9, 0xd7b071);
+        px(9, 23, 5, 10, 0x32343d); px(17, 23, 5, 10, 0x32343d);
+        px(7, 33, 7, 3, 0x15161a); px(17, 33, 7, 3, 0x15161a);
+      });
+      makeTexture(scene, "hero-carry-walk-1", 30, 36, px => {
+        px(10, 1, 9, 4, 0x272129); px(9, 5, 12, 5, 0xe0c37d);
+        px(6, 10, 18, 13, 0x225f74); px(3, 8, 5, 9, 0xd7b071); px(24, 8, 5, 9, 0xd7b071);
+        px(8, 23, 5, 9, 0x32343d); px(18, 23, 5, 11, 0x32343d);
+        px(5, 32, 8, 3, 0x15161a); px(18, 34, 8, 2, 0x15161a);
+      });
+      makeTexture(scene, "hero-carry-walk-2", 30, 36, px => {
+        px(10, 1, 9, 4, 0x272129); px(9, 5, 12, 5, 0xe0c37d);
+        px(6, 10, 18, 13, 0x225f74); px(3, 8, 5, 9, 0xd7b071); px(24, 8, 5, 9, 0xd7b071);
+        px(10, 23, 5, 11, 0x32343d); px(16, 23, 5, 9, 0x32343d);
+        px(8, 34, 8, 2, 0x15161a); px(16, 32, 8, 3, 0x15161a);
+      });
+      makeTexture(scene, "drone", 26, 20, px => {
+        px(5, 5, 16, 8, 0x57606f); px(2, 8, 4, 4, 0x2a2d35); px(21, 8, 4, 4, 0x2a2d35);
+        px(9, 7, 3, 3, 0x53d5ff); px(15, 7, 3, 3, 0xffb000);
+        px(7, 14, 12, 3, 0x1a1b21); px(0, 3, 5, 2, 0xb9c7c5); px(21, 3, 5, 2, 0xb9c7c5);
+      });
+      makeTexture(scene, "drone-fast", 24, 18, px => {
+        px(5, 5, 14, 7, 0x38586f); px(1, 7, 5, 3, 0x53d5ff); px(18, 7, 5, 3, 0x53d5ff);
+        px(9, 7, 2, 2, 0xdff7ff); px(14, 7, 2, 2, 0xdff7ff); px(7, 13, 11, 2, 0x172431);
+        px(0, 3, 7, 1, 0xdff7ff); px(17, 3, 7, 1, 0xdff7ff);
+      });
+      makeTexture(scene, "drone-heavy", 32, 25, px => {
+        px(5, 6, 22, 11, 0x6d4d42); px(2, 10, 5, 5, 0x332722); px(26, 10, 5, 5, 0x332722);
+        px(9, 9, 4, 4, 0xffb000); px(19, 9, 4, 4, 0xf05a4a); px(8, 18, 17, 4, 0x181416);
+        px(0, 4, 8, 2, 0xb9c7c5); px(24, 4, 8, 2, 0xb9c7c5);
+      });
+      makeTexture(scene, "drone-shield", 28, 23, px => {
+        px(5, 5, 18, 10, 0x4e5f72); px(2, 8, 4, 5, 0x202a36); px(23, 8, 4, 5, 0x202a36);
+        px(8, 7, 12, 2, 0x9ceaff); px(10, 10, 3, 3, 0x53d5ff); px(16, 10, 3, 3, 0xffb000);
+        px(6, 17, 16, 3, 0x18202a); px(3, 3, 22, 2, 0x9ceaff);
+      });
+      makeTexture(scene, "robot-humanoid", 26, 36, px => {
+        px(9, 1, 8, 6, 0xb9c7c5); px(8, 7, 10, 3, 0x2a2d35);
+        px(7, 10, 12, 11, 0x57606f); px(9, 12, 8, 3, 0x53d5ff);
+        px(3, 11, 4, 13, 0x848d96); px(19, 11, 4, 13, 0x848d96);
+        px(9, 21, 4, 11, 0x343b44); px(15, 21, 4, 11, 0x343b44);
+        px(6, 32, 8, 3, 0x181a1f); px(15, 32, 8, 3, 0x181a1f);
+        px(10, 4, 2, 2, 0xffb000); px(15, 4, 2, 2, 0xf05a4a);
+      });
+      makeTexture(scene, "crate", 24, 20, px => {
+        px(1, 3, 22, 16, 0x7c5134); px(3, 5, 18, 12, 0xa36f3f);
+        px(5, 7, 4, 8, 0x513522); px(15, 7, 4, 8, 0x513522); px(2, 16, 20, 2, 0x3e281c);
+      });
+      makeTexture(scene, "food-can", 11, 12, px => {
+        px(2, 1, 7, 2, 0xe8dcb8); px(1, 3, 9, 7, 0xf05a4a); px(3, 5, 5, 2, 0xffd36b); px(2, 10, 7, 1, 0xb9c7c5);
+      });
+      makeTexture(scene, "food-burger", 15, 11, px => {
+        px(2, 1, 11, 3, 0xffc66d); px(1, 4, 13, 2, 0x8dff7a); px(2, 6, 11, 2, 0x7c5134); px(3, 8, 9, 2, 0xffc66d);
+      });
+      makeTexture(scene, "gem", 13, 12, px => {
+        px(4, 0, 5, 2, 0xdff7ff); px(2, 2, 9, 3, 0x53d5ff); px(1, 5, 11, 2, 0x00a6d6);
+        px(3, 7, 7, 3, 0x007ca6); px(5, 10, 3, 2, 0xdff7ff);
+      });
+      makeTexture(scene, "gem-red", 13, 12, px => {
+        px(4, 0, 5, 2, 0xffd36b); px(2, 2, 9, 3, 0xf05a4a); px(1, 5, 11, 2, 0xb8322e);
+        px(3, 7, 7, 3, 0x7a211f); px(5, 10, 3, 2, 0xffd36b);
+      });
+      makeTexture(scene, "reservoir-open", 34, 17, (px, g) => {
+        g.fillStyle(0x050507, 0.92);
+        g.fillEllipse(17, 9, 32, 14);
+        g.lineStyle(2, 0xffb000, 0.72);
+        g.strokeEllipse(17, 9, 32, 14);
+        px(6, 6, 22, 2, 0x352a22, 0.9); px(8, 10, 18, 2, 0x1a1718, 1);
+        px(11, 4, 2, 10, 0xf05a4a, 0.55); px(21, 4, 2, 10, 0xf05a4a, 0.55);
+      });
+      makeTexture(scene, "engine", 28, 18, px => {
+        px(2, 4, 22, 10, 0x39404a); px(5, 2, 11, 4, 0x6f7786); px(18, 7, 8, 5, 0xb84939);
+        px(6, 7, 4, 4, 0xffb000); px(12, 7, 4, 4, 0x53d5ff); px(3, 14, 19, 3, 0x16181d);
+      });
+      makeTexture(scene, "sign", 18, 28, px => {
+        px(8, 9, 2, 17, 0x656565); px(2, 2, 14, 9, 0xf0c24b); px(4, 4, 10, 5, 0x22252b); px(6, 24, 7, 3, 0x303030);
+      });
+      makeTexture(scene, "spark", 3, 3, px => {
+        px(1, 0, 1, 3, 0xfff0a2); px(0, 1, 3, 1, 0xffb000);
+      });
+      makeTexture(scene, "shadow", 28, 8, (px, g) => {
+        g.fillStyle(0x000000, 0.42);
+        g.fillEllipse(14, 4, 28, 8);
+      });
+      makeTexture(scene, "road-tile", 64, 64, px => {
+        px(0, 0, 64, 64, 0x242226); px(0, 35, 64, 29, 0x2d2b30);
+        px(0, 39, 64, 2, 0x444047); px(8, 53, 14, 2, 0x605b52); px(38, 48, 9, 2, 0x545055);
+      });
+      makeTexture(scene, "far-ruins", 256, 92, px => {
+        px(0, 0, 256, 92, 0x12131a);
+        for (let x = 0; x < 256; x += 28) {
+          const h = 24 + ((x * 7) % 38);
+          px(x, 92 - h, 18 + (x % 3) * 5, h, 0x20202a);
+          px(x + 4, 96 - h, 3, 4, 0x443b35); px(x + 12, 102 - h, 3, 4, 0x443b35);
+        }
+      });
+      makeTexture(scene, "mid-ruins", 192, 94, px => {
+        px(0, 0, 192, 94, 0x000000, 0);
+        for (let x = 0; x < 192; x += 38) {
+          const h = 18 + ((x * 11) % 24);
+          px(x, 94 - h, 24, h, 0x302a2a);
+          px(x + 25, 100 - h, 7, h - 6, 0x3a332e);
+          px(x + 5, 99 - h, 6, 3, 0xf05a4a, 0.55);
+        }
+      });
+    }
+
+    class Actor {
+      constructor(scene, x, y, texture) {
+        this.scene = scene;
+        this.x = x;
+        this.y = y;
+        this.z = 0;
+        this.floor = scene.getInitialFloor ? scene.getInitialFloor(x, y) : 0;
+        this.sprite = scene.add.image(x, y, texture).setOrigin(0.5, 1);
+        this.shadow = scene.add.image(x, y + 1, "shadow").setOrigin(0.5, 0.5);
+      }
+
+      sync() {
+        const elevation = this.scene.getElevation ? this.scene.getElevation(this.x, this.y, this) : 0;
+        const visualZ = this.z + elevation;
+        this.sprite.setPosition(Math.round(this.x), Math.round(this.y - visualZ));
+        this.shadow.setPosition(Math.round(this.x), Math.round(this.y - elevation + 1));
+        const squash = clamp(1 - this.z / 120, 0.42, 1);
+        this.shadow.setScale(squash, squash);
+        const depth = Math.round(this.y * 10 + elevation * 16);
+        this.shadow.setDepth(depth - 2);
+        this.sprite.setDepth(depth + Math.round(this.z));
+      }
+    }
+
+    class ScrapObject extends Actor {
+      constructor(scene, x, y, type) {
+        const data = ScrapObject.DATA[type];
+        super(scene, x, y, data.texture);
+        this.type = type;
+        this.mass = data.mass;
+        this.hp = data.hp || 1;
+        this.breakable = Boolean(data.breakable);
+        this.loot = data.loot || null;
+        this.state = "ground";
+        this.vx = 0;
+        this.vy = 0;
+        this.vz = 0;
+        this.carrier = null;
+        this.bounces = 0;
+        this.broken = false;
+        this.sync();
+      }
+
+      carryBy(player) {
+        this.state = "carried";
+        this.carrier = player;
+        this.vx = 0;
+        this.vy = 0;
+        this.vz = 0;
+      }
+
+      throwFrom(player) {
+        const power = 235 / this.mass;
+        this.state = "thrown";
+        this.carrier = null;
+        this.vx = player.facing * (power + 120);
+        this.vy = player.moveY * 36;
+        this.vz = 245 / Math.sqrt(this.mass);
+        this.bounces = 0;
+        audio.throw();
+      }
+
+      damage(amount = 1, source = "hit") {
+        if (!this.breakable || this.broken) return false;
+        this.hp -= amount;
+        this.sprite.setTint(0xffd36b);
+        this.scene.time.delayedCall(90, () => {
+          if (!this.broken) this.sprite.clearTint();
+        });
+        if (this.hp > 0) return false;
+        this.breakOpen(source);
+        return true;
+      }
+
+      breakOpen(source = "hit") {
+        if (this.broken) return;
+        this.broken = true;
+        this.state = "broken";
+        this.scene.impactAt(this.x, this.y, 0.22);
+        this.scene.particles.burst(this.x, this.y - 12, 14);
+        audio.break();
+        this.sprite.setVisible(false);
+        this.shadow.setVisible(false);
+        if (this.loot) this.scene.spawnCollectible(this.x, this.y - 4, this.loot, source === "throw" ? 1 : 0.55, this.floor);
+      }
+
+      update(dt) {
+        if (this.broken) return;
+        if (this.state === "carried" && this.carrier) {
+          this.x = this.carrier.x + this.carrier.facing * 14;
+          this.y = this.carrier.y - 3;
+          this.floor = this.carrier.floor;
+          this.z = 25;
+          this.sprite.setDepth(Math.round(this.carrier.y * 10) + 16);
+          this.sync();
+          return;
+        }
+
+        if (this.state === "thrown") {
+          this.scene.applyThrowAssist(this, dt);
+          this.x += this.vx * dt;
+          this.y = this.scene.clampActorY(this.x, this.y + this.vy * dt, 6, 4, this);
+          this.z += this.vz * dt;
+          this.vz -= GRAVITY_Z * dt;
+          this.vx *= 0.995;
+          if (this.z <= 0) {
+            this.z = 0;
+            if (this.bounces < 1 && Math.abs(this.vx) > 90) {
+              this.bounces += 1;
+              this.vx *= 0.48;
+              this.vz = 120 / this.mass;
+              this.scene.impactAt(this.x, this.y, 0.18);
+            } else {
+              this.state = "ground";
+              this.vx = 0;
+              this.vy = 0;
+              this.vz = 0;
+            }
+          }
+          this.scene.updateActorFloor(this);
+        }
+        this.x = clamp(this.x, 18, WORLD_W - 24);
+        this.sync();
+      }
+    }
+
+    ScrapObject.DATA = {
+      crate: { texture: "crate", mass: 1.25, hp: 2, breakable: true, loot: "food" },
+      engine: { texture: "engine", mass: 1.7 },
+      sign: { texture: "sign", mass: 0.95 }
+    };
+
+    class Collectible extends Actor {
+      constructor(scene, x, y, type, bonus = 1) {
+        const data = Collectible.DATA[type];
+        super(scene, x, y, data.texture);
+        this.type = type;
+        this.data = data;
+        this.float = Math.random() * Math.PI * 2;
+        this.life = data.life || 18;
+        this.value = Math.round((data.score || 0) * bonus);
+        this.heal = Math.round((data.heal || 0) * bonus);
+        this.sprite.setDepth(9000);
+        this.sync();
+      }
+
+      collect(player) {
+        if (this.heal > 0) {
+          player.heal(this.heal);
+          audio.heal();
+        } else {
+          this.scene.score += this.value;
+          audio.gem();
+        }
+        this.scene.lastLoot = this.type === "food" ? `+${this.heal} HP` : `+${this.value} PUAN`;
+        this.sprite.destroy();
+        this.shadow.destroy();
+        this.collected = true;
+      }
+
+      update(dt, player) {
+        if (this.collected) return;
+        this.life -= dt;
+        this.float += dt * 5;
+        this.z = 5 + Math.sin(this.float) * 3;
+        if (this.floor === player.floor && Math.abs(this.x - player.x) < 18 && Math.abs(this.y - player.y) < 16) {
+          this.collect(player);
+          return;
+        }
+        if (this.life <= 0) {
+          this.sprite.destroy();
+          this.shadow.destroy();
+          this.collected = true;
+          return;
+        }
+        this.sync();
+      }
+    }
+
+    Collectible.DATA = {
+      food: { texture: "food-can", heal: 24, life: 16 },
+      burger: { texture: "food-burger", heal: 42, life: 16 },
+      gem: { texture: "gem", score: 350, life: 20 },
+      "gem-red": { texture: "gem-red", score: 850, life: 20 }
+    };
+
+    class RoadHazard {
+      constructor(scene, x, y) {
+        this.scene = scene;
+        this.x = x;
+        this.y = y;
+        this.cooldown = 0;
+        this.sprite = scene.add.image(x, y, "reservoir-open").setOrigin(0.5, 0.5);
+        this.sprite.setDepth(Math.round(y * 10) - 8);
+      }
+
+      update(dt, player) {
+        this.cooldown = Math.max(0, this.cooldown - dt);
+        if (player.floor > 0) return;
+        if (this.cooldown > 0 || player.z > 2 || player.fsm.name === "stagger") return;
+        const dx = player.x - this.x;
+        const dy = player.y - this.y;
+        if (Math.abs(dx) < 16 && Math.abs(dy) < 10) {
+          this.cooldown = 1.25;
+          this.scene.lastLoot = "-14 HP / acik rezervuar";
+          player.takeDamage(14, Math.sign(dx || 1));
+          this.scene.particles.burst(this.x, this.y - 6, 8);
+        }
+      }
+    }
+
+    class Drone extends Actor {
+      constructor(scene, x, y, type = "skitter") {
+        const data = Drone.DATA[type];
+        super(scene, x, y, data.texture);
+        this.type = type;
+        this.data = data;
+        this.homeX = x;
+        this.homeY = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.stun = 0;
+        this.hp = data.hp;
+        this.maxHp = data.hp;
+        this.defeated = false;
+        this.cooldown = Math.random() * 1.4;
+        this.sprite.setScale(data.scale || 1);
+        this.sync();
+      }
+
+      update(dt, player) {
+        if (this.defeated) return;
+        if (this.stun > 0) {
+          this.stun -= dt;
+          this.x += this.vx * dt;
+          this.y = this.scene.clampActorY(this.x, this.y + this.vy * dt, 8, 2, this);
+          this.vx *= 0.9;
+          this.vy *= 0.9;
+          this.sprite.setTint(0xffd36b);
+        } else {
+          this.sprite.clearTint();
+          const dx = player.x - this.x;
+          const dy = player.y - this.y;
+          const sameFloor = player.floor === this.floor;
+          const active = sameFloor && Math.abs(dx) < this.data.sense;
+          const speed = active ? this.data.speed : this.data.patrolSpeed;
+          const offset = this.data.attackRange + 18;
+          const tx = active ? player.x - Math.sign(dx || 1) * offset : this.homeX + Math.sin(this.scene.clock * 0.8 + this.homeX) * 28;
+          const ty = active ? player.y + (this.data.laneBias || 0) : this.homeY;
+          this.x += clamp(tx - this.x, -1, 1) * speed * dt;
+          this.y = this.scene.clampActorY(this.x, this.y + clamp(ty - this.y, -1, 1) * speed * 0.62 * dt, 8, 2, this);
+          this.cooldown -= dt;
+          if (active && Math.abs(dx) < this.data.attackRange && Math.abs(dy) < this.data.attackLane && this.cooldown <= 0 && player.fsm.name !== "stagger") {
+            this.cooldown = this.data.cooldown;
+            player.takeDamage(this.data.damage, Math.sign(dx || 1));
+          }
+        }
+        this.scene.updateActorFloor(this);
+        this.sync();
+      }
+
+      disable(direction, strength = 1) {
+        if (this.defeated) return false;
+        const damage = Math.max(1, Math.round(strength * this.data.damageTaken));
+        this.hp -= damage;
+        this.vx = direction * (110 + strength * 70);
+        this.vy = (Math.random() - 0.5) * 46;
+        this.stun = 0.78 + strength * 0.26;
+        this.scene.score += Math.round(this.data.score * 0.35 * strength);
+        if (this.hp <= 0) {
+          this.defeat(direction);
+          return true;
+        }
+        return false;
+      }
+
+      defeat(direction) {
+        if (this.defeated) return;
+        this.defeated = true;
+        this.scene.score += this.data.score;
+        this.scene.impactAt(this.x, this.y, this.data.strong ? 0.46 : 0.28);
+        this.scene.particles.burst(this.x, this.y - 12, this.data.strong ? 18 : 10);
+        if (this.data.gem) this.scene.spawnCollectible(this.x + direction * 8, this.y, this.data.gem, this.data.strong ? 1.2 : 1, this.floor);
+        this.sprite.setVisible(false);
+        this.shadow.setVisible(false);
+      }
+    }
+
+    Drone.DATA = {
+      skitter: {
+        texture: "drone", hp: 2, speed: 26, patrolSpeed: 12, sense: 180,
+        attackRange: 18, attackLane: 13, cooldown: 1.6, damage: 8, damageTaken: 1.1, score: 90
+      },
+      dart: {
+        texture: "drone-fast", hp: 1, speed: 48, patrolSpeed: 18, sense: 230,
+        attackRange: 16, attackLane: 11, cooldown: 1.05, damage: 6, damageTaken: 1.3, score: 120
+      },
+      shield: {
+        texture: "drone-shield", hp: 3, speed: 18, patrolSpeed: 9, sense: 165,
+        attackRange: 21, attackLane: 15, cooldown: 1.85, damage: 12, damageTaken: 0.78, score: 180, gem: "gem"
+      },
+      walker: {
+        texture: "robot-humanoid", hp: 4, speed: 23, patrolSpeed: 10, sense: 205,
+        attackRange: 22, attackLane: 16, cooldown: 1.55, damage: 11, damageTaken: 0.95, score: 230, gem: "gem"
+      },
+      brute: {
+        texture: "drone-heavy", hp: 5, speed: 16, patrolSpeed: 7, sense: 210,
+        attackRange: 24, attackLane: 17, cooldown: 2.25, damage: 18, damageTaken: 0.72, score: 320, gem: "gem-red", strong: true
+      }
+    };
+
+    class ParticlePool {
+      constructor(scene) {
+        this.scene = scene;
+        this.pool = [];
+        for (let i = 0; i < 48; i += 1) {
+          this.pool.push({
+            live: false,
+            img: scene.add.image(-999, -999, "spark").setVisible(false).setDepth(9000),
+            x: 0, y: 0, vx: 0, vy: 0, life: 0
+          });
+        }
+      }
+
+      burst(x, y, count = 8) {
+        for (let i = 0; i < count; i += 1) {
+          const p = this.pool.find(item => !item.live);
+          if (!p) return;
+          p.live = true;
+          p.x = x; p.y = y;
+          p.vx = (Math.random() * 2 - 1) * 78;
+          p.vy = -30 - Math.random() * 60;
+          p.life = 0.25 + Math.random() * 0.2;
+          p.img.setVisible(true).setAlpha(1);
+        }
+      }
+
+      update(dt) {
+        this.pool.forEach(p => {
+          if (!p.live) return;
+          p.life -= dt;
+          p.x += p.vx * dt;
+          p.y += p.vy * dt;
+          p.vy += 240 * dt;
+          p.img.setPosition(Math.round(p.x), Math.round(p.y)).setAlpha(clamp(p.life * 3, 0, 1));
+          if (p.life <= 0) {
+            p.live = false;
+            p.img.setVisible(false);
+          }
+        });
+      }
+    }
+
+    class Player extends Actor {
+      constructor(scene, x, y) {
+        super(scene, x, y, "hero");
+        this.facing = 1;
+        this.speed = 86;
+        this.maxHealth = 100;
+        this.health = this.maxHealth;
+        this.invuln = 0;
+        this.moveX = 0;
+        this.moveY = 0;
+        this.carried = null;
+        this.hitDone = false;
+        this.stepTimer = 0;
+        this.walkPhase = 0;
+        this.fsm = new StateMachine(this, {
+          idle: {
+            enter() { this.walkPhase = 0; this.sprite.setTexture("hero"); },
+            update(dt, time) {
+              this.readActions(time);
+              if (Math.abs(this.moveX) + Math.abs(this.moveY) > 0.1) this.fsm.change("walk");
+            }
+          },
+          walk: {
+            enter() { this.sprite.setTexture("hero"); },
+            update(dt, time) {
+              this.readActions(time);
+              this.move(dt, this.speed);
+              this.animateWalk(dt, false);
+              this.stepTimer -= dt;
+              if (this.stepTimer <= 0) {
+                this.stepTimer = 0.22;
+                audio.step();
+              }
+              if (Math.abs(this.moveX) + Math.abs(this.moveY) <= 0.1) this.fsm.change("idle");
+            }
+          },
+          shove: {
+            enter() { this.hitDone = false; this.sprite.setTexture("hero"); },
+            update(dt, time, elapsed) {
+              if (!this.hitDone && elapsed > 0.055) {
+                this.hitDone = true;
+                this.scene.tryShove(this);
+              }
+              if (elapsed > 0.16) this.fsm.change(this.carried ? "carry" : "idle");
+            }
+          },
+          lift: {
+            enter(payload) { this.liftTarget = payload.target; audio.lift(); },
+            update(dt, time, elapsed) {
+              if (elapsed > 0.2) {
+                if (this.liftTarget && this.liftTarget.state === "ground") {
+                  this.carried = this.liftTarget;
+                  this.carried.carryBy(this);
+                  this.sprite.setTexture("hero-carry");
+                  this.fsm.change("carry");
+                } else {
+                  this.fsm.change("idle");
+                }
+              }
+            }
+          },
+          carry: {
+            enter() { this.sprite.setTexture("hero-carry"); },
+            update(dt, time) {
+              this.readActions(time);
+              this.move(dt, this.speed * 0.72);
+              this.animateWalk(dt, true);
+            }
+          },
+          throw: {
+            enter() { this.throwDone = false; },
+            update(dt, time, elapsed) {
+              if (!this.throwDone && elapsed > 0.07 && this.carried) {
+                this.throwDone = true;
+                this.carried.throwFrom(this);
+                this.carried = null;
+                this.scene.cameraRig.shake(0.18);
+              }
+              if (elapsed > 0.16) this.fsm.change("idle");
+            }
+          },
+          stagger: {
+            enter(payload) {
+              this.staggerVx = -payload.direction * 72;
+              this.sprite.setTint(0xffd36b);
+              this.scene.hitStop(50);
+              this.scene.impactAt(this.x, this.y - 10, 0.15);
+            },
+            update(dt, time, elapsed) {
+              this.x = clamp(this.x + this.staggerVx * dt, 18, WORLD_W - 24);
+              this.staggerVx *= 0.88;
+              if (elapsed > 0.22) {
+                this.sprite.clearTint();
+                this.fsm.change(this.carried ? "carry" : "idle");
+              }
+            }
+          }
+        }, "idle");
+      }
+
+      heal(amount) {
+        if (this.health <= 0) return;
+        this.health = clamp(this.health + amount, 0, this.maxHealth);
+        this.scene.updateHud();
+      }
+
+      takeDamage(amount, direction) {
+        if (this.invuln > 0 || this.health <= 0) return;
+        this.health = clamp(this.health - amount, 0, this.maxHealth);
+        this.invuln = 0.72;
+        this.scene.updateHud();
+        if (this.health <= 0) {
+          this.scene.playerDown();
+          return;
+        }
+        this.bump(direction);
+      }
+
+      readActions(time) {
+        if (this.scene.inputBuffer.consume("punch", time) && !this.carried) {
+          this.fsm.change("shove");
+          return;
+        }
+        if (this.scene.inputBuffer.consume("lift", time)) {
+          if (this.carried) {
+            this.fsm.change("throw");
+          } else {
+            const target = this.scene.findPickup(this);
+            if (target) this.fsm.change("lift", { target });
+          }
+        }
+      }
+
+      setMove(x, y) {
+        const length = Math.hypot(x, y) || 1;
+        this.moveX = x / length;
+        this.moveY = y / length;
+        if (Math.abs(x) > 0.1) this.facing = Math.sign(x);
+        this.sprite.setFlipX(this.facing < 0);
+      }
+
+      animateWalk(dt, carrying) {
+        if (Math.abs(this.moveX) + Math.abs(this.moveY) <= 0.1) {
+          this.sprite.setTexture(carrying ? "hero-carry" : "hero");
+          return;
+        }
+        this.walkPhase += dt * 8.5;
+        const frame = Math.floor(this.walkPhase) % 2 ? "2" : "1";
+        this.sprite.setTexture(carrying ? `hero-carry-walk-${frame}` : `hero-walk-${frame}`);
+      }
+
+      move(dt, speed) {
+        const nextX = clamp(this.x + this.moveX * speed * dt, 18, WORLD_W - 28);
+        this.x = nextX;
+        this.y = this.scene.clampActorY(nextX, this.y + this.moveY * speed * 0.58 * dt, 0, 0, this);
+        this.scene.updateActorFloor(this);
+      }
+
+      bump(direction) {
+        this.fsm.change("stagger", { direction });
+      }
+
+      update(dt, time) {
+        this.invuln = Math.max(0, this.invuln - dt);
+        if (this.invuln > 0 && Math.floor(this.invuln * 18) % 2 === 0) this.sprite.setTint(0xffd36b);
+        else if (this.fsm.name !== "stagger") this.sprite.clearTint();
+        this.fsm.update(dt, time);
+        this.sync();
+      }
+    }
+
+    class PlayScene extends Phaser.Scene {
+      constructor() {
+        super("PlayScene");
+      }
+
+      init(data = {}) {
+        const saved = window.ashRunnerProgress || { level: 1, score: 0 };
+        this.clock = 0;
+        this.hitStopMs = 0;
+        this.started = false;
+        this.completed = false;
+        this.level = data.level || saved.level || 1;
+        this.score = data.score ?? saved.score ?? 0;
+        this.levelStartScore = this.score;
+        this.levelBonus = 0;
+      }
+
+      preload() {
+        makeAssets(this);
+      }
+
+      create() {
+        this.layers = [];
+        this.upperRoutes = [
+          { x1: 555, x2: 870, y: 101 },
+          { x1: 1368, x2: 1706, y: 98 }
+        ];
+        this.climbZones = [
+          { x1: 488, x2: 594 },
+          { x1: 830, x2: 930 },
+          { x1: 1302, x2: 1412 },
+          { x1: 1666, x2: 1770 }
+        ];
+        this.createParallax();
+        this.createTraversalGeometry();
+        this.inputBuffer = new InputBuffer(170);
+        this.virtualInput = Object.create(null);
+        this.heldInput = Object.create(null);
+        this.keys = this.input.keyboard.addKeys({
+          left: "A", right: "D", up: "W", down: "S",
+          left2: "LEFT", right2: "RIGHT", up2: "UP", down2: "DOWN",
+          punch: "J", punch2: "SPACE", lift: "K", lift2: "E", restart: "R"
+        });
+        this.player = new Player(this, 70, 156);
+        this.props = [
+          new ScrapObject(this, 154, 162, "crate"),
+          new ScrapObject(this, 236, 176, "crate"),
+          new ScrapObject(this, 292, 146, "engine"),
+          new ScrapObject(this, 404, 158, "crate"),
+          new ScrapObject(this, 492, 171, "sign"),
+          new ScrapObject(this, 642, 144, "crate"),
+          new ScrapObject(this, 730, 151, "crate"),
+          new ScrapObject(this, 704, 104, "crate"),
+          new ScrapObject(this, 990, 165, "engine"),
+          new ScrapObject(this, 1084, 146, "crate"),
+          new ScrapObject(this, 1280, 145, "sign"),
+          new ScrapObject(this, 1454, 176, "crate"),
+          new ScrapObject(this, 1540, 102, "crate"),
+          new ScrapObject(this, 1650, 170, "crate")
+        ];
+        if (this.level >= 2) {
+          this.props.push(
+            new ScrapObject(this, 552, 158, "crate"),
+            new ScrapObject(this, 1360, 158, "engine"),
+            new ScrapObject(this, 1988, 154, "crate")
+          );
+        }
+        this.drones = [
+          new Drone(this, 360, 150, "skitter"),
+          new Drone(this, 610, 170, "dart"),
+          new Drone(this, 890, 142, "shield"),
+          new Drone(this, 1038, 154, "walker"),
+          new Drone(this, 1180, 176, "skitter"),
+          new Drone(this, 1510, 150, "brute"),
+          new Drone(this, 1608, 102, "walker"),
+          new Drone(this, 1740, 142, "dart"),
+          new Drone(this, 1880, 168, "shield")
+        ];
+        if (this.level >= 2) {
+          this.drones.push(
+            new Drone(this, 760, 160, "dart"),
+            new Drone(this, 1320, 150, this.level >= 3 ? "brute" : "shield"),
+            new Drone(this, 1488, 102, "walker"),
+            new Drone(this, 2050, 170, "skitter")
+          );
+        }
+        this.hazards = [
+          new RoadHazard(this, 456, 178),
+          new RoadHazard(this, 964, 154),
+          new RoadHazard(this, 1232, 180),
+          new RoadHazard(this, 1835, 170)
+        ];
+        if (this.level >= 2) {
+          this.hazards.push(
+            new RoadHazard(this, 694, 176),
+            new RoadHazard(this, 1998, 158)
+          );
+        }
+        this.collectibles = [];
+        this.lastLoot = "hazir";
+        this.particles = new ParticlePool(this);
+        this.cameraRig = new PixelPerfectCamera(this, this.player);
+        this.helpText = this.add.text(8, 201, "K hurda kaldirir/firlatir · W rampalarda ust yola cikar · R reset", {
+          fontFamily: "monospace",
+          fontSize: "8px",
+          color: "#f5e8be"
+        }).setScrollFactor(0).setDepth(10000);
+        this.scoreText = this.add.text(282, 8, "000000", {
+          fontFamily: "monospace",
+          fontSize: "12px",
+          color: "#ffb000"
+        }).setScrollFactor(0).setDepth(10000);
+        this.updateHud();
+        this.setupKeyboard();
+        this.setupTouch();
+        window.ashRunnerScene = this;
+      }
+
+      createParallax() {
+        const sky = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x17111a).setOrigin(0).setScrollFactor(0).setDepth(-100);
+        const sun = this.add.circle(315, 58, 28, 0xffb000, 0.18).setScrollFactor(0).setDepth(-99);
+        const far = this.add.tileSprite(0, 31, GAME_W, 92, "far-ruins").setOrigin(0).setScrollFactor(0).setDepth(-90);
+        const mid = this.add.tileSprite(0, 76, GAME_W, 94, "mid-ruins").setOrigin(0).setScrollFactor(0).setDepth(-80);
+        const road = this.add.tileSprite(0, 116, GAME_W, 100, "road-tile").setOrigin(0).setScrollFactor(0).setDepth(-70);
+        this.layers.push({ sprite: far, factor: 0.18 }, { sprite: mid, factor: 0.38 }, { sprite: road, factor: 1 });
+        this.add.rectangle(0, LANE_TOP - 3, WORLD_W, 1, 0xffb000, 0.18).setOrigin(0).setDepth(-40);
+        this.add.rectangle(0, LANE_BOTTOM + 3, WORLD_W, 1, 0x53d5ff, 0.16).setOrigin(0).setDepth(-40);
+        this.add.rectangle(WORLD_W - 90, 92, 54, 96, 0x322327).setOrigin(0).setDepth(-38);
+        this.add.text(WORLD_W - 82, 104, "EXIT", { fontFamily: "monospace", fontSize: "10px", color: "#53d5ff" }).setDepth(-37);
+        this.sky = sky;
+        this.sun = sun;
+      }
+
+      createTraversalGeometry() {
+        this.upperRoutes.forEach(route => {
+          const width = route.x2 - route.x1;
+          const deckY = route.y - UPPER_ELEVATION;
+          this.add.rectangle(route.x1, deckY - 10, width, 26, 0x15171d, 0.98).setOrigin(0).setDepth(-39);
+          this.add.rectangle(route.x1, deckY + 16, width, 6, 0x09090c, 0.72).setOrigin(0).setDepth(-39);
+          this.add.rectangle(route.x1, deckY - 11, width, 2, 0x53d5ff, 0.5).setOrigin(0).setDepth(-38);
+          this.add.rectangle(route.x1, deckY + 14, width, 2, 0xffb000, 0.36).setOrigin(0).setDepth(-38);
+          this.add.rectangle(route.x1, LANE_TOP + 2, width, 5, 0x000000, 0.28).setOrigin(0).setDepth(-42);
+          for (let x = route.x1 + 18; x < route.x2; x += 42) {
+            this.add.rectangle(x, deckY + 11, 20, 2, 0x605b52, 0.75).setOrigin(0).setDepth(-37);
+            this.add.rectangle(x + 6, deckY + 16, 4, LANE_TOP - deckY - 9, 0x2a2423, 0.78).setOrigin(0).setDepth(-41);
+          }
+          this.add.text(route.x1 + 12, deckY - 7, "UPPER ROUTE", {
+            fontFamily: "monospace",
+            fontSize: "7px",
+            color: "#53d5ff"
+          }).setDepth(-36);
+        });
+
+        this.climbZones.forEach((zone, index) => {
+          const direction = index % 2 === 0 ? 1 : -1;
+          const startX = direction > 0 ? zone.x1 : zone.x2;
+          const width = zone.x2 - zone.x1;
+          for (let step = 0; step < 9; step += 1) {
+            const x = startX + direction * step * (width / 9);
+            const y = LANE_TOP - step * 5.5;
+            this.add.rectangle(x, y, 28, 3, 0x7c5134, 0.9).setDepth(-36);
+            this.add.rectangle(x + direction * 3, y + 3, 16, 2, 0x2a1f1b, 0.82).setDepth(-37);
+          }
+          this.add.rectangle(zone.x1, UPPER_LANE_BOTTOM - 2, width, 1, 0xffb000, 0.28).setOrigin(0).setDepth(-35);
+        });
+      }
+
+      canUseUpperPath(x) {
+        return this.upperRoutes.some(route => x >= route.x1 && x <= route.x2)
+          || this.climbZones.some(zone => x >= zone.x1 && x <= zone.x2);
+      }
+
+      getUpperRouteAt(x) {
+        return this.upperRoutes.find(route => x >= route.x1 && x <= route.x2) || null;
+      }
+
+      getClimbZoneAt(x) {
+        return this.climbZones.find(zone => x >= zone.x1 && x <= zone.x2) || null;
+      }
+
+      getInitialFloor(x, y) {
+        return this.getUpperRouteAt(x) && y <= UPPER_LANE_BOTTOM ? 1 : 0;
+      }
+
+      isOnUpperDeck(x, y) {
+        return y <= UPPER_LANE_BOTTOM
+          && Boolean(this.getUpperRouteAt(x));
+      }
+
+      getElevation(x, y, actor = null) {
+        if (actor?.floor === 1 && (this.getUpperRouteAt(x) || y <= UPPER_LANE_BOTTOM)) return UPPER_ELEVATION;
+        if (this.isOnUpperDeck(x, y)) return UPPER_ELEVATION;
+        const inClimb = Boolean(this.getClimbZoneAt(x));
+        if (!inClimb) return 0;
+        const climbRatio = clamp((LANE_TOP - y) / (LANE_TOP - UPPER_LANE_TOP), 0, 1);
+        return Math.round(climbRatio * UPPER_ELEVATION);
+      }
+
+      updateActorFloor(actor) {
+        const climbZone = this.getClimbZoneAt(actor.x);
+        const upperRoute = this.getUpperRouteAt(actor.x);
+        const wasUpper = actor.floor === 1;
+
+        if (!wasUpper && climbZone && actor.y <= UPPER_LANE_BOTTOM) {
+          actor.floor = 1;
+          if (actor === this.player) this.lastLoot = "ust kat / rampadan cikildi";
+        } else if (wasUpper && climbZone && actor.y >= LANE_TOP - 2) {
+          actor.floor = 0;
+          if (actor === this.player) this.lastLoot = "alt kat / rampa inildi";
+        } else if (wasUpper && !climbZone && !upperRoute) {
+          actor.floor = 0;
+          actor.y = Math.max(actor.y, LANE_TOP);
+        }
+
+        return actor.floor;
+      }
+
+      clampActorY(x, y, topPad = 0, bottomPad = 0, actor = null) {
+        const climbZone = this.getClimbZoneAt(x);
+        const upperRoute = this.getUpperRouteAt(x);
+        let top = LANE_TOP;
+        let bottom = LANE_BOTTOM;
+
+        if (actor?.floor === 1) {
+          top = UPPER_LANE_TOP;
+          bottom = upperRoute && !climbZone ? UPPER_LANE_BOTTOM : LANE_TOP;
+        } else if (climbZone) {
+          top = UPPER_LANE_TOP;
+        }
+
+        return clamp(y, top + topPad, bottom - bottomPad);
+      }
+
+      setupKeyboard() {
+        const actionForEvent = event => {
+          const key = event.key.toLowerCase();
+          if (key === "a" || event.code === "ArrowLeft") return "left";
+          if (key === "d" || event.code === "ArrowRight") return "right";
+          if (key === "w" || event.code === "ArrowUp") return "up";
+          if (key === "s" || event.code === "ArrowDown") return "down";
+          if (key === "j" || event.code === "Space") return "punch";
+          if (key === "k" || key === "e") return "lift";
+          if (key === "r") return "restart";
+          return "";
+        };
+
+        this.onWindowKeyDown = event => {
+          const action = actionForEvent(event);
+          if (!action) return;
+          event.preventDefault();
+          if (!this.started && action !== "restart") return;
+          if (!this.heldInput[action] && (action === "punch" || action === "lift")) {
+            this.inputBuffer.press(action, this.time.now);
+          }
+          if (action === "restart") {
+            this.restartRun();
+            return;
+          }
+          this.heldInput[action] = true;
+        };
+
+        this.onWindowKeyUp = event => {
+          const action = actionForEvent(event);
+          if (!action) return;
+          event.preventDefault();
+          this.heldInput[action] = false;
+        };
+
+        window.addEventListener("keydown", this.onWindowKeyDown, { passive: false });
+        window.addEventListener("keyup", this.onWindowKeyUp, { passive: false });
+        this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+          window.removeEventListener("keydown", this.onWindowKeyDown);
+          window.removeEventListener("keyup", this.onWindowKeyUp);
+        });
+      }
+
+      setupTouch() {
+        document.querySelectorAll("[data-control]").forEach(button => {
+          const control = button.getAttribute("data-control");
+          const set = down => {
+            this.virtualInput[control] = down;
+            button.classList.toggle("is-down", down);
+            if (down && !this.started && !this.completed) this.startRun();
+            if (down && (control === "punch" || control === "lift")) this.inputBuffer.press(control, this.time.now);
+          };
+          button.onpointerdown = event => { event.preventDefault(); set(true); };
+          button.onpointerup = event => { event.preventDefault(); set(false); };
+          button.onpointercancel = () => set(false);
+          button.onpointerleave = () => set(false);
+        });
+      }
+
+      startRun() {
+        if (this.completed) return;
+        this.started = true;
+        const hudTitle = document.getElementById("hud-title");
+        if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level}`;
+        this.game.canvas.setAttribute("tabindex", "0");
+        this.game.canvas.focus({ preventScroll: true });
+        audio.start();
+      }
+
+      restartRun() {
+        const data = { level: this.level || 1, score: this.levelStartScore || 0 };
+        window.ashRunnerProgress = data;
+        document.getElementById("level-card")?.classList.remove("is-open");
+        document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
+        this.scene.restart(data);
+        setTimeout(() => {
+          const scene = this.game.scene.keys.PlayScene;
+          if (scene) scene.startRun();
+        }, 0);
+      }
+
+      nextLevel() {
+        const data = { level: this.level + 1, score: this.score };
+        window.ashRunnerProgress = data;
+        document.getElementById("level-card")?.classList.remove("is-open");
+        document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
+        this.scene.restart(data);
+        setTimeout(() => {
+          const scene = this.game.scene.keys.PlayScene;
+          if (scene) scene.startRun();
+        }, 0);
+      }
+
+      hitStop(ms) {
+        this.hitStopMs = Math.max(this.hitStopMs, ms);
+      }
+
+      impactAt(x, y, shake = 0.24) {
+        audio.impact();
+        this.cameraRig.shake(shake);
+        this.particles.burst(x, y - 10, 10);
+      }
+
+      updateHud() {
+        const healthFill = document.getElementById("health-fill");
+        const healthValue = document.getElementById("health-value");
+        const lootState = document.getElementById("loot-state");
+        const ratio = clamp(this.player.health / this.player.maxHealth, 0, 1);
+        if (healthFill) healthFill.style.transform = `scaleX(${ratio})`;
+        if (healthValue) healthValue.textContent = String(Math.round(this.player.health));
+        if (lootState) lootState.textContent = `LOOT: ${this.lastLoot || "sandik kir"}`;
+      }
+
+      playerDown() {
+        this.started = false;
+        this.player.sprite.setTint(0xf05a4a);
+        this.helpText.setText("Sistem dustu · R ile tekrar baslat");
+        const hudTitle = document.getElementById("hud-title");
+        if (hudTitle) hudTitle.textContent = "KUL HATTI // DOWN";
+        this.cameraRig.shake(0.55);
+        this.hitStop(120);
+      }
+
+      completeLevel() {
+        if (this.completed) return;
+        this.completed = true;
+        this.started = false;
+        this.heldInput = Object.create(null);
+        this.virtualInput = Object.create(null);
+        document.querySelectorAll(".pad-btn").forEach(button => button.classList.remove("is-down"));
+
+        const defeated = this.drones.filter(drone => drone.defeated).length;
+        const healthBonus = Math.round(this.player.health * 9);
+        const clearBonus = defeated * 110;
+        const levelBonus = 900 + this.level * 250 + healthBonus + clearBonus;
+        this.levelBonus = levelBonus;
+        this.score += levelBonus;
+        window.ashRunnerProgress = { level: this.level, score: this.score };
+
+        this.helpText.setText("Bolum tamamlandi · Devam Et ile yeni hatta gec");
+        this.scoreText.setText(String(Math.floor(this.score)).padStart(6, "0"));
+        const hudTitle = document.getElementById("hud-title");
+        if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level} OK`;
+
+        document.getElementById("level-title").textContent = `Bölüm ${this.level} tamamlandı`;
+        document.getElementById("level-score").textContent = String(Math.floor(this.score)).padStart(6, "0");
+        document.getElementById("level-bonus").textContent = `+${levelBonus}`;
+        document.getElementById("level-health").textContent = String(Math.round(this.player.health));
+        document.getElementById("level-defeated").textContent = `${defeated}/${this.drones.length}`;
+        const card = document.getElementById("level-card");
+        card?.classList.add("is-open");
+        card?.setAttribute("aria-hidden", "false");
+        this.cameraRig.shake(0.22);
+        audio.gem();
+      }
+
+      spawnCollectible(x, y, type, bonus = 1, floor = null) {
+        let actualType = type;
+        if (type === "food") actualType = Math.random() < 0.24 ? "burger" : "food";
+        const item = new Collectible(this, x, this.clampActorY(x, y, 8, 2), actualType, bonus);
+        item.floor = floor ?? this.getInitialFloor(item.x, item.y);
+        this.collectibles.push(item);
+        return item;
+      }
+
+      applyThrowAssist(prop, dt) {
+        const forward = Math.sign(prop.vx || this.player.facing || 1);
+        let target = null;
+        let best = Infinity;
+        this.drones.forEach(drone => {
+          if (drone.defeated) return;
+          if (drone.floor !== prop.floor) return;
+          const dx = drone.x - prop.x;
+          const dy = drone.y - prop.y;
+          if (Math.sign(dx || forward) !== forward) return;
+          if (Math.abs(dx) > 118 || Math.abs(dy) > 42) return;
+          const score = Math.abs(dx) + Math.abs(dy) * 2.1;
+          if (score < best) {
+            best = score;
+            target = drone;
+          }
+        });
+        if (!target) return;
+        prop.vy += clamp(target.y - prop.y, -1, 1) * 135 * dt;
+        prop.vy = clamp(prop.vy, -88, 88);
+      }
+
+      findPickup(player) {
+        let best = null;
+        let bestScore = Infinity;
+        this.props.forEach(prop => {
+          if (prop.state !== "ground") return;
+          if (prop.floor !== player.floor) return;
+          const dx = prop.x - player.x;
+          const dy = prop.y - player.y;
+          const dist = Math.abs(dx) + Math.abs(dy) * 1.4;
+          if (dist < bestScore && Math.abs(dx) < 34 && Math.abs(dy) < 18) {
+            best = prop;
+            bestScore = dist;
+          }
+        });
+        return best;
+      }
+
+      tryShove(player) {
+        let connected = false;
+        this.drones.forEach(drone => {
+          if (drone.defeated) return;
+          if (drone.floor !== player.floor) return;
+          const dx = drone.x - player.x;
+          const dy = drone.y - player.y;
+          if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 31 && Math.abs(dy) < 18 && drone.stun <= 0.05) {
+            connected = true;
+            drone.disable(player.facing, 0.85);
+            this.score += 40;
+            this.impactAt(drone.x, drone.y, 0.28);
+            this.hitStop(68);
+          }
+        });
+        this.props.forEach(prop => {
+          if (!prop.breakable || prop.broken || prop.state !== "ground") return;
+          if (prop.floor !== player.floor) return;
+          const dx = prop.x - player.x;
+          const dy = prop.y - player.y;
+          if (Math.sign(dx || player.facing) === player.facing && Math.abs(dx) < 32 && Math.abs(dy) < 18) {
+            connected = true;
+            prop.damage(1, "hit");
+            this.score += 18;
+            this.hitStop(45);
+          }
+        });
+        if (!connected) {
+          audio.tone(180, 0.05, "square", 0.05, -40);
+        }
+      }
+
+      updateInput(time) {
+        if (Phaser.Input.Keyboard.JustDown(this.keys.punch) || Phaser.Input.Keyboard.JustDown(this.keys.punch2)) {
+          this.inputBuffer.press("punch", time);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.lift) || Phaser.Input.Keyboard.JustDown(this.keys.lift2)) {
+          this.inputBuffer.press("lift", time);
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.keys.restart)) {
+          this.restartRun();
+          return;
+        }
+
+        const right = Boolean(this.keys.right.isDown || this.keys.right2.isDown || this.virtualInput.right || this.heldInput.right);
+        const left = Boolean(this.keys.left.isDown || this.keys.left2.isDown || this.virtualInput.left || this.heldInput.left);
+        const down = Boolean(this.keys.down.isDown || this.keys.down2.isDown || this.virtualInput.down || this.heldInput.down);
+        const up = Boolean(this.keys.up.isDown || this.keys.up2.isDown || this.virtualInput.up || this.heldInput.up);
+        const x = Number(right) - Number(left);
+        const y = Number(down) - Number(up);
+        this.player.setMove(x, y);
+      }
+
+      checkThrownHits() {
+        this.props.forEach(prop => {
+          if (prop.broken || prop.state !== "thrown" || prop.z > 52) return;
+          this.drones.forEach(drone => {
+            if (drone.defeated || drone.stun > 0.1) return;
+            if (drone.floor !== prop.floor) return;
+            const dx = drone.x - prop.x;
+            const dy = drone.y - prop.y;
+            if (Math.abs(dx) < 40 && Math.abs(dy) < 27) {
+              drone.disable(Math.sign(prop.vx || 1), prop.mass + 0.3);
+              if (prop.breakable) {
+                prop.damage(2, "throw");
+              } else {
+                prop.vx *= -0.22;
+                prop.vz = 86 / prop.mass;
+              }
+              this.score += Math.round(130 * prop.mass);
+              this.impactAt(drone.x, drone.y, 0.42);
+              this.hitStop(92);
+            }
+          });
+          this.props.forEach(target => {
+            if (target === prop || !target.breakable || target.broken || target.state !== "ground") return;
+            if (target.floor !== prop.floor) return;
+            const dx = target.x - prop.x;
+            const dy = target.y - prop.y;
+            if (Math.abs(dx) < 28 && Math.abs(dy) < 20) {
+              target.damage(2, "throw");
+              prop.vx *= -0.18;
+              prop.vz = 72 / prop.mass;
+              this.score += 35;
+              this.hitStop(58);
+            }
+          });
+        });
+      }
+
+      updateCollectibles(dt) {
+        this.collectibles.forEach(item => item.update(dt, this.player));
+        this.collectibles = this.collectibles.filter(item => !item.collected);
+      }
+
+      update(time, delta) {
+        const dt = Math.min(delta / 1000, 0.034);
+        this.clock += dt;
+        if (!this.started) {
+          this.cameraRig.update(dt);
+          return;
+        }
+        this.inputBuffer.purge(time);
+        this.updateInput(time);
+
+        if (this.hitStopMs > 0) {
+          this.hitStopMs -= delta;
+          this.cameraRig.update(dt);
+          this.particles.update(dt);
+          return;
+        }
+
+        this.player.update(dt, time);
+        this.hazards.forEach(hazard => hazard.update(dt, this.player));
+        this.props.forEach(prop => prop.update(dt));
+        this.drones.forEach(drone => drone.update(dt, this.player));
+        this.checkThrownHits();
+        this.updateCollectibles(dt);
+        this.particles.update(dt);
+        this.cameraRig.update(dt);
+
+        if (this.player.x > WORLD_W - 120) this.completeLevel();
+
+        this.scoreText.setText(String(Math.floor(this.score)).padStart(6, "0"));
+        const hudState = document.getElementById("hud-state");
+        if (hudState) {
+          const activeEnemies = this.drones.filter(drone => !drone.defeated).length;
+          hudState.textContent = `FSM: ${this.player.fsm.name} · kat: ${this.player.floor ? "ust" : "alt"} · buffer: ${this.inputBuffer.label(time)} · dusman: ${activeEnemies}`;
+        }
+        this.updateHud();
+      }
+    }
+
+    const game = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: "game-container",
+      width: GAME_W,
+      height: GAME_H,
+      pixelArt: true,
+      roundPixels: true,
+      backgroundColor: "#050507",
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: GAME_W,
+        height: GAME_H
+      },
+      render: {
+        antialias: false,
+        pixelArt: true,
+        roundPixels: true,
+        powerPreference: "high-performance"
+      },
+      scene: [PlayScene]
+    });
+
+    const bootCard = document.getElementById("boot-card");
+    const startButton = document.getElementById("start-run");
+    const muteButton = document.getElementById("mute-toggle");
+    const nextLevelButton = document.getElementById("next-level");
+
+    startButton.addEventListener("click", () => {
+      audio.init();
+      const scene = game.scene.keys.PlayScene;
+      if (scene) scene.startRun();
+      bootCard.style.display = "none";
+      startButton.blur();
+    });
+
+    muteButton.addEventListener("click", () => {
+      audio.enabled = !audio.enabled;
+      muteButton.textContent = audio.enabled ? "Ses Açık" : "Ses Kapalı";
+      muteButton.setAttribute("aria-pressed", String(!audio.enabled));
+      if (audio.enabled) audio.tone(520, 0.08, "square", 0.08);
+    });
+
+    nextLevelButton.addEventListener("click", () => {
+      const scene = game.scene.keys.PlayScene;
+      if (scene) scene.nextLevel();
+      nextLevelButton.blur();
+    });
+
+    window.addEventListener("blur", () => {
+      document.querySelectorAll(".pad-btn").forEach(button => button.classList.remove("is-down"));
+      const scene = game.scene.keys.PlayScene;
+      if (scene && scene.virtualInput) {
+        scene.virtualInput = Object.create(null);
+        scene.heldInput = Object.create(null);
+      }
+    });
+  </script>
+</body>
+</html>
