@@ -508,7 +508,7 @@
 
   <aside class="hud-panel" aria-live="polite">
     <strong id="hud-title">KUL HATTI // READY</strong>
-    <span>WASD/Ok: hareket · J: alev buyusu · K/E: kaldir/firlat · L: silah sarj</span>
+    <span>WASD/Ok: hareket · W/↑: jet zipla · J: alev buyusu · K/E: kaldir/firlat · L: silah sarj</span>
     <div class="health-row" aria-label="Karakter hasari">
       <span>HP</span>
       <div class="health-meter"><div class="health-fill" id="health-fill"></div></div>
@@ -561,7 +561,7 @@
   <script>
     const GAME_W = 384;
     const GAME_H = 216;
-    const WORLD_W = 2300;
+    const WORLD_W = 3000;
     const LANE_TOP = 118;
     const LANE_BOTTOM = 188;
     const UPPER_LANE_TOP = 88;
@@ -651,6 +651,7 @@
       }
 
       step() { this.tone(96, 0.045, "triangle", 0.05, -18); }
+      jump() { this.tone(180, 0.06, "sawtooth", 0.07, 120); this.noise(0.07, 0.08); }
       lift() { this.tone(132, 0.09, "square", 0.12, -40); }
       throw() { this.tone(260, 0.12, "sawtooth", 0.13, -120); }
       impact() { this.noise(0.09, 0.18); this.tone(72, 0.08, "square", 0.1, -20); }
@@ -884,6 +885,15 @@
       });
       makeTexture(scene, "hero-hand", 5, 5, px => {
         px(1, 0, 3, 1, 0xe0c37d); px(0, 1, 5, 3, 0xd7b071); px(1, 4, 3, 1, 0xa8754d);
+      });
+      makeTexture(scene, "jet-pack", 9, 13, px => {
+        px(2, 1, 5, 9, 0x343b44); px(1, 3, 7, 5, 0x57606f);
+        px(3, 0, 3, 2, 0xb9c7c5); px(2, 10, 2, 2, 0x2a2d35); px(5, 10, 2, 2, 0x2a2d35);
+        px(3, 5, 3, 2, 0x53d5ff);
+      });
+      makeTexture(scene, "jet-flame", 8, 12, px => {
+        px(3, 0, 2, 4, 0xdff7ff); px(2, 3, 4, 5, 0xffd36b);
+        px(1, 6, 6, 4, 0xffb000); px(3, 9, 2, 3, 0xf05a4a);
       });
       makeTexture(scene, "hero-shot", 8, 4, px => {
         px(0, 1, 6, 2, 0xffd36b); px(5, 0, 3, 4, 0x53d5ff);
@@ -1476,6 +1486,46 @@
       }
     }
 
+    class RoadGap {
+      constructor(scene, x, width = 42) {
+        this.scene = scene;
+        this.x = x;
+        this.width = width;
+        this.left = x - width / 2;
+        this.right = x + width / 2;
+        this.cooldown = 0;
+        this.body = scene.add.rectangle(x, (LANE_TOP + LANE_BOTTOM) / 2, width, LANE_BOTTOM - LANE_TOP + 12, 0x050507, 0.94)
+          .setOrigin(0.5, 0.5)
+          .setDepth(-34);
+        this.edgeA = scene.add.rectangle(this.left, (LANE_TOP + LANE_BOTTOM) / 2, 3, LANE_BOTTOM - LANE_TOP + 9, 0xffb000, 0.34)
+          .setOrigin(0.5, 0.5)
+          .setDepth(-33);
+        this.edgeB = scene.add.rectangle(this.right, (LANE_TOP + LANE_BOTTOM) / 2, 3, LANE_BOTTOM - LANE_TOP + 9, 0x53d5ff, 0.3)
+          .setOrigin(0.5, 0.5)
+          .setDepth(-33);
+        for (let y = LANE_TOP + 7; y < LANE_BOTTOM; y += 14) {
+          scene.add.rectangle(x + (Math.sin(y) * width * 0.18), y, width - 8, 1, 0x2d2b30, 0.72)
+            .setOrigin(0.5, 0.5)
+            .setDepth(-32);
+        }
+      }
+
+      update(dt, player) {
+        this.cooldown = Math.max(0, this.cooldown - dt);
+        if (player.floor > 0 || player.health <= 0) return;
+        if (player.z > 10 || this.cooldown > 0 || player.fsm.name === "stagger") return;
+        const inGap = player.x > this.left && player.x < this.right && player.y > LANE_TOP - 4 && player.y < LANE_BOTTOM + 4;
+        if (!inGap) return;
+        this.cooldown = 0.95;
+        const fromLeft = player.x < this.x;
+        player.x = fromLeft ? this.left - 10 : this.right + 10;
+        this.scene.lastLoot = "-22 HP / yarik";
+        player.takeDamage(22, fromLeft ? 1 : -1);
+        this.scene.particles.burst(player.x, player.y - 8, 12);
+        this.scene.cameraRig.shake(0.32);
+      }
+    }
+
     class Drone extends Actor {
       constructor(scene, x, y, type = "skitter") {
         const data = Drone.DATA[type];
@@ -1667,6 +1717,7 @@
         this.invuln = 0;
         this.moveX = 0;
         this.moveY = 0;
+        this.vz = 0;
         this.carried = null;
         this.hitDone = false;
         this.stepTimer = 0;
@@ -1679,6 +1730,12 @@
           .setVisible(false);
         this.weaponHand = scene.add.image(x, y, "hero-hand")
           .setOrigin(0.5, 0.5)
+          .setVisible(false);
+        this.jetPack = scene.add.image(x, y, "jet-pack")
+          .setOrigin(0.5, 0.5)
+          .setVisible(false);
+        this.jetFlame = scene.add.image(x, y, "jet-flame")
+          .setOrigin(0.5, 0)
           .setVisible(false);
         this.weaponKickTimer = 0;
         this.fireHeld = false;
@@ -1817,6 +1874,30 @@
         this.fireHeld = Boolean(down);
       }
 
+      jump() {
+        if (this.health <= 0 || this.z > 1 || this.fsm.name === "stagger") return;
+        this.z = 1;
+        this.vz = 335;
+        this.scene.lastLoot = "jet ziplamasi";
+        this.scene.particles.burst(this.x - this.facing * 7, this.y - 9, 7);
+        audio.jump();
+      }
+
+      updateJump(dt) {
+        if (this.z <= 0 && this.vz <= 0) {
+          this.z = 0;
+          this.vz = 0;
+          return;
+        }
+        this.z += this.vz * dt;
+        this.vz -= GRAVITY_Z * 0.86 * dt;
+        if (this.z <= 0) {
+          this.z = 0;
+          this.vz = 0;
+          this.scene.particles.burst(this.x, this.y - 4, 5);
+        }
+      }
+
       updateWeapon(dt) {
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
         this.weaponKickTimer = Math.max(0, this.weaponKickTimer - dt);
@@ -1899,6 +1980,7 @@
         this.spellCooldown = Math.max(0, this.spellCooldown - dt);
         if (this.invuln > 0 && Math.floor(this.invuln * 18) % 2 === 0) this.sprite.setTint(0xffd36b);
         else if (this.fsm.name !== "stagger") this.sprite.clearTint();
+        this.updateJump(dt);
         this.updateWeapon(dt);
         this.fsm.update(dt, time);
         this.sync();
@@ -1906,6 +1988,7 @@
 
       sync() {
         super.sync();
+        this.syncJetSprite();
         this.syncWeaponSprite();
       }
 
@@ -1955,6 +2038,27 @@
             .setAlpha(aiming ? 1 : 0.95);
         }
       }
+
+      syncJetSprite() {
+        if (!this.jetPack || !this.jetFlame) return;
+        const airborne = this.z > 2 && this.health > 0;
+        this.jetPack.setVisible(airborne);
+        this.jetFlame.setVisible(airborne);
+        if (!airborne) return;
+        const direction = this.facing || 1;
+        const packX = this.x - direction * 8;
+        const packY = this.y - this.visualElevation - this.z - 17;
+        this.jetPack
+          .setPosition(Math.round(packX), Math.round(packY))
+          .setFlipX(direction < 0)
+          .setDepth(this.sprite.depth - 1);
+        this.jetFlame
+          .setPosition(Math.round(packX), Math.round(packY + 7))
+          .setFlipX(direction < 0)
+          .setScale(1, 0.82 + Math.sin(this.scene.clock * 32) * 0.18)
+          .setDepth(this.sprite.depth - 2)
+          .setAlpha(clamp(this.z / 24, 0.45, 1));
+      }
     }
 
     class PlayScene extends Phaser.Scene {
@@ -1989,13 +2093,16 @@
         this.layers = [];
         this.upperRoutes = [
           { x1: 555, x2: 870, y: 101 },
-          { x1: 1368, x2: 1706, y: 98 }
+          { x1: 1368, x2: 1706, y: 98 },
+          { x1: 2195, x2: 2590, y: 100 }
         ];
         this.climbZones = [
           { x1: 488, x2: 594 },
           { x1: 830, x2: 930 },
           { x1: 1302, x2: 1412 },
-          { x1: 1666, x2: 1770 }
+          { x1: 1666, x2: 1770 },
+          { x1: 2134, x2: 2240 },
+          { x1: 2544, x2: 2648 }
         ];
         this.createParallax();
         this.createTraversalGeometry();
@@ -2022,7 +2129,11 @@
           new ScrapObject(this, 1280, 145, "sign"),
           new ScrapObject(this, 1454, 176, "crate"),
           new ScrapObject(this, 1540, 102, "crate"),
-          new ScrapObject(this, 1650, 170, "crate")
+          new ScrapObject(this, 1650, 170, "crate"),
+          new ScrapObject(this, 2118, 162, "engine"),
+          new ScrapObject(this, 2286, 106, "crate"),
+          new ScrapObject(this, 2442, 156, "sign"),
+          new ScrapObject(this, 2688, 174, "crate")
         ];
         if (this.level >= 2) {
           this.props.push(
@@ -2040,7 +2151,12 @@
           new Drone(this, 1510, 150, "brute"),
           new Drone(this, 1608, 102, "walker"),
           new Drone(this, 1740, 142, "dart"),
-          new Drone(this, 1880, 168, "shield")
+          new Drone(this, 1880, 168, "shield"),
+          new Drone(this, 2058, 156, "skitter"),
+          new Drone(this, 2216, 104, "dart"),
+          new Drone(this, 2388, 166, "walker"),
+          new Drone(this, 2586, 150, "shield"),
+          new Drone(this, 2790, 170, "brute")
         ];
         if (this.level >= 2) {
           this.drones.push(
@@ -2054,7 +2170,9 @@
           new RoadHazard(this, 456, 178),
           new RoadHazard(this, 964, 154),
           new RoadHazard(this, 1232, 180),
-          new RoadHazard(this, 1835, 170)
+          new RoadHazard(this, 1835, 170),
+          new RoadHazard(this, 2350, 164),
+          new RoadHazard(this, 2706, 178)
         ];
         if (this.level >= 2) {
           this.hazards.push(
@@ -2062,11 +2180,19 @@
             new RoadHazard(this, 1998, 158)
           );
         }
+        this.gaps = [
+          new RoadGap(this, 740, 42),
+          new RoadGap(this, 1468, 48),
+          new RoadGap(this, 2168, 44),
+          new RoadGap(this, 2632, 50)
+        ];
         this.collectibles = [];
         this.weaponPickups = [
           new WeaponPickup(this, 214, 152, 0),
           new WeaponPickup(this, 1502, 104, 1),
-          new WeaponPickup(this, 1722, 160, 0)
+          new WeaponPickup(this, 1722, 160, 0),
+          new WeaponPickup(this, 2346, 106, 1),
+          new WeaponPickup(this, 2728, 160, 0)
         ];
         this.projectiles = [];
         this.flameWaves = [];
@@ -2075,7 +2201,9 @@
           new StreetClue(this, 318, 138, "cocuklar kuzey rampasini isaretledi", 0),
           new StreetClue(this, 758, 104, "mavi vitrin arkasinda sessiz bir gecit var", 1),
           new StreetClue(this, 1168, 176, "brute ayni ritme iki kez kanmiyor", 0),
-          new StreetClue(this, 1626, 102, "ust yol cikista daha kisa ama daha dar", 1)
+          new StreetClue(this, 1626, 102, "ust yol cikista daha kisa ama daha dar", 1),
+          new StreetClue(this, 2264, 102, "yariklar jet sicramasiyla gecilir", 1),
+          new StreetClue(this, 2828, 158, "arkadan gelen ses azdir ama acele ettirir", 0)
         ];
         if (this.level >= 2) {
           this.streetClues.push(
@@ -2086,7 +2214,8 @@
         this.relays = [
           new SignalRelay(this, 672, 166, "ilk role mahalle hattini yeniden konusturdu", 0),
           new SignalRelay(this, 1396, 101, "ust kattaki kisa dalga drone dilini bozdu", 1),
-          new SignalRelay(this, 1908, 164, "cikis oncesi son sinyal herkesi susturdu", 0)
+          new SignalRelay(this, 1908, 164, "cikis oncesi son sinyal herkesi susturdu", 0),
+          new SignalRelay(this, 2522, 104, "uzayan hatta son role yankiyi kapatti", 1)
         ];
         if (this.level >= 3) {
           this.relays.push(new SignalRelay(this, 1014, 152, "ucuncu hatta sokak kendi adini fisildadi", 0));
@@ -2095,7 +2224,9 @@
         this.lastLoot = "dosya acik";
         this.particles = new ParticlePool(this);
         this.cameraRig = new PixelPerfectCamera(this, this.player);
-        this.helpText = this.add.text(8, 201, "J alev buyusu · 3 sn bekleme · L sarj · K hurda", {
+        this.rearAmbushes = [660, 1510, 2380];
+        this.rearAmbushIndex = 0;
+        this.helpText = this.add.text(8, 201, "W/↑ jet zipla · J buyu · L sarj · K hurda", {
           fontFamily: "monospace",
           fontSize: "8px",
           color: "#f5e8be"
@@ -2538,6 +2669,8 @@
         this.player.sprite.setTint(0xf05a4a);
         if (this.player.weaponSprite) this.player.weaponSprite.setVisible(false);
         if (this.player.weaponHand) this.player.weaponHand.setVisible(false);
+        if (this.player.jetPack) this.player.jetPack.setVisible(false);
+        if (this.player.jetFlame) this.player.jetFlame.setVisible(false);
         this.helpText.setText("Sistem dustu · R ile tekrar baslat");
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = "KUL HATTI // DOWN";
@@ -2635,6 +2768,23 @@
         return best;
       }
 
+      updateRearAmbushes() {
+        if (!this.rearAmbushes || this.rearAmbushIndex >= this.rearAmbushes.length) return;
+        const triggerX = this.rearAmbushes[this.rearAmbushIndex];
+        if (this.player.x < triggerX) return;
+        const spawnX = clamp(this.player.x - 155, 34, WORLD_W - 60);
+        const spawnY = this.clampActorY(spawnX, this.player.y + (this.rearAmbushIndex % 2 ? 12 : -10), 8, 2, this.player);
+        const type = this.rearAmbushIndex === 1 ? "dart" : "skitter";
+        const drone = new Drone(this, spawnX, spawnY, type);
+        drone.floor = this.player.floor;
+        drone.homeX = spawnX;
+        drone.homeY = spawnY;
+        drone.fireCooldown = 0.45;
+        this.drones.push(drone);
+        this.lastLoot = "arkadan drone sesi";
+        this.rearAmbushIndex += 1;
+      }
+
       updateInput(time) {
         if (Phaser.Input.Keyboard.JustDown(this.keys.punch) || Phaser.Input.Keyboard.JustDown(this.keys.punch2)) {
           this.inputBuffer.press("punch", time);
@@ -2652,6 +2802,8 @@
         const down = Boolean(this.keys.down.isDown || this.keys.down2.isDown || this.virtualInput.down || this.heldInput.down);
         const up = Boolean(this.keys.up.isDown || this.keys.up2.isDown || this.virtualInput.up || this.heldInput.up);
         const fire = Boolean(this.keys.fire.isDown || this.virtualInput.fire || this.heldInput.fire);
+        if (up && !this.prevJumpInput) this.player.jump();
+        this.prevJumpInput = up;
         const x = Number(right) - Number(left);
         const y = Number(down) - Number(up);
         this.player.setMove(x, y);
@@ -2741,6 +2893,7 @@
         this.inputBuffer.purge(time);
         this.updateInput(time);
         this.updateChain(dt);
+        this.updateRearAmbushes();
 
         if (this.hitStopMs > 0) {
           this.hitStopMs -= delta;
@@ -2750,6 +2903,7 @@
         }
 
         this.player.update(dt, time);
+        this.gaps.forEach(gap => gap.update(dt, this.player));
         this.hazards.forEach(hazard => hazard.update(dt, this.player));
         this.props.forEach(prop => prop.update(dt));
         this.drones.forEach(drone => drone.update(dt, this.player));
