@@ -975,6 +975,18 @@
         px(2, 4, 22, 10, 0x39404a); px(5, 2, 11, 4, 0x6f7786); px(18, 7, 8, 5, 0xb84939);
         px(6, 7, 4, 4, 0xffb000); px(12, 7, 4, 4, 0x53d5ff); px(3, 14, 19, 3, 0x16181d);
       });
+      makeTexture(scene, "field-hut", 44, 32, px => {
+        px(3, 13, 38, 15, 0x475240); px(0, 9, 44, 6, 0x2e3b2f);
+        px(5, 16, 10, 9, 0x232923); px(19, 16, 7, 5, 0xffb000, 0.65);
+        px(30, 15, 7, 13, 0x24302a); px(2, 28, 39, 3, 0x171b17);
+        px(8, 10, 28, 2, 0x8a6f39, 0.7);
+      });
+      makeTexture(scene, "earth-bunker", 50, 25, px => {
+        px(2, 10, 46, 11, 0x4a4639); px(7, 5, 36, 8, 0x6a6048);
+        px(11, 12, 28, 4, 0x151713); px(15, 13, 5, 2, 0xf05a4a);
+        px(0, 20, 50, 4, 0x2f241d); px(5, 3, 12, 2, 0x8dff7a, 0.35);
+        px(33, 3, 10, 2, 0x8dff7a, 0.35);
+      });
       makeTexture(scene, "sign", 18, 28, px => {
         px(8, 9, 2, 17, 0x656565); px(2, 2, 14, 9, 0xf0c24b); px(4, 4, 10, 5, 0x22252b); px(6, 24, 7, 3, 0x303030);
       });
@@ -990,22 +1002,24 @@
         px(0, 39, 64, 2, 0x444047); px(8, 53, 14, 2, 0x605b52); px(38, 48, 9, 2, 0x545055);
       });
       makeTexture(scene, "base-road-tile", 64, 64, px => {
-        px(0, 0, 64, 64, 0x1b2024); px(0, 28, 64, 36, 0x252b30);
-        px(0, 33, 64, 2, 0x59636f); px(0, 52, 64, 2, 0xffb000, 0.55);
-        px(7, 43, 12, 2, 0x3b454d); px(35, 39, 18, 2, 0x3b454d); px(56, 10, 3, 45, 0x111216, 0.35);
+        px(0, 0, 64, 64, 0x2f241d); px(0, 27, 64, 37, 0x4a3324);
+        px(0, 35, 64, 4, 0x6c4a31, 0.85); px(0, 52, 64, 3, 0x2a1b16, 0.7);
+        px(8, 43, 13, 2, 0x8a6f39, 0.55); px(32, 46, 20, 2, 0x6f5a36, 0.5);
+        px(5, 30, 3, 3, 0x8dff7a, 0.32); px(46, 33, 4, 2, 0x8dff7a, 0.28);
       });
       makeTexture(scene, "base-far", 256, 92, px => {
-        px(0, 0, 256, 92, 0x10151a);
-        for (let x = 0; x < 256; x += 46) {
-          px(x, 58, 30, 34, 0x1f2a30); px(x + 7, 48, 16, 10, 0x2d3840);
-          px(x + 11, 53, 8, 2, 0xf05a4a, 0.6);
+        px(0, 0, 256, 92, 0x211735);
+        for (let x = 0; x < 256; x += 34) {
+          px(x + 8, 44, 4, 48, 0x14251e); px(x, 54, 20, 8, 0x1e4434);
+          px(x + 14, 37, 16, 10, 0x24523e); px(x + 4, 65, 27, 5, 0x13261e);
         }
       });
       makeTexture(scene, "base-mid", 192, 94, px => {
         px(0, 0, 192, 94, 0x000000, 0);
-        for (let x = 0; x < 192; x += 32) {
-          px(x, 74, 22, 20, 0x2b3238); px(x + 6, 62, 10, 12, 0x424c55);
-          px(x + 3, 80, 15, 2, 0xffb000, 0.45);
+        for (let x = 0; x < 192; x += 28) {
+          px(x + 4, 51, 3, 43, 0x162019); px(x + 17, 48, 3, 46, 0x162019);
+          px(x, 58, 24, 3, 0xb9c7c5, 0.38); px(x, 73, 24, 3, 0xb9c7c5, 0.3);
+          px(x + 6, 44, 16, 8, 0x2f6a45, 0.72);
         }
       });
       makeTexture(scene, "far-ruins", 256, 92, px => {
@@ -1159,7 +1173,9 @@
     ScrapObject.DATA = {
       crate: { texture: "crate", mass: 1.25, hp: 2, breakable: true, loot: "food" },
       engine: { texture: "engine", mass: 1.7 },
-      sign: { texture: "sign", mass: 0.95 }
+      sign: { texture: "sign", mass: 0.95 },
+      hut: { texture: "field-hut", mass: 2.4, hp: 4, breakable: true, loot: "food" },
+      bunker: { texture: "earth-bunker", mass: 3.1, hp: 6, breakable: true, loot: "gem" }
     };
 
     class Collectible extends Actor {
@@ -1433,6 +1449,17 @@
           if (Math.abs(dx) < range && Math.abs(dy) < lane) {
             hit = true;
             drone.disable(Math.sign(this.direction), this.damage, this.rocket ? "rocket" : (this.heavy ? "charged-shot" : "shot"));
+          }
+        });
+        this.scene.props.forEach(prop => {
+          if (prop.broken || prop.floor !== this.floor || !prop.breakable) return;
+          const dx = prop.x - this.x;
+          const dy = prop.y - this.y;
+          const range = this.rocket ? this.radius : (this.heavy ? 42 : 18);
+          const lane = this.rocket ? 46 : (this.heavy ? 26 : 16);
+          if (Math.abs(dx) < range && Math.abs(dy) < lane) {
+            hit = true;
+            prop.damage(this.rocket ? 4 : (this.heavy ? 2 : 1), this.rocket ? "rocket" : "shot");
           }
         });
         if (!hit) return;
@@ -2190,6 +2217,7 @@
         this.hitStopMs = 0;
         this.started = false;
         this.completed = false;
+        this.autoStart = Boolean(data.autoStart);
         this.level = data.level || saved.level || 1;
         this.score = data.score ?? saved.score ?? 0;
         this.levelStartScore = this.score;
@@ -2364,6 +2392,7 @@
         this.setupKeyboard();
         this.setupTouch();
         window.ashRunnerScene = this;
+        if (this.autoStart) this.startRun();
       }
 
       destroySceneObjects(items) {
@@ -2391,14 +2420,15 @@
         this.player.weaponType = "rifle";
 
         this.props = [
-          new ScrapObject(this, 186, 164, "crate"),
+          new ScrapObject(this, 186, 164, "hut"),
           new ScrapObject(this, 328, 146, "engine"),
-          new ScrapObject(this, 520, 172, "sign"),
+          new ScrapObject(this, 520, 172, "bunker"),
+          new ScrapObject(this, 820, 160, "hut"),
           new ScrapObject(this, 980, 158, "crate"),
-          new ScrapObject(this, 1350, 106, "crate"),
-          new ScrapObject(this, 1740, 168, "engine"),
+          new ScrapObject(this, 1350, 106, "bunker"),
+          new ScrapObject(this, 1740, 168, "hut"),
           new ScrapObject(this, 2150, 104, "sign"),
-          new ScrapObject(this, 2468, 160, "crate")
+          new ScrapObject(this, 2468, 160, "bunker")
         ];
         this.drones = [
           new Drone(this, 410, 160, "turret"),
@@ -2499,6 +2529,7 @@
         this.add.rectangle(0, LANE_TOP - 3, WORLD_W, 1, 0xffb000, 0.18).setOrigin(0).setDepth(-40);
         this.add.rectangle(0, LANE_BOTTOM + 3, WORLD_W, 1, 0x53d5ff, 0.16).setOrigin(0).setDepth(-40);
         if (baseLevel) {
+          this.createBaseSetDressing();
           this.add.rectangle(WORLD_W - 168, 84, 132, 96, 0x11161c, 0.94).setOrigin(0).setDepth(-38);
           this.add.rectangle(WORLD_W - 154, 100, 104, 54, 0x252d35, 0.96).setOrigin(0).setDepth(-37);
           this.add.rectangle(WORLD_W - 138, 118, 72, 22, 0x090b0f, 0.9).setOrigin(0).setDepth(-36);
@@ -2514,6 +2545,25 @@
         }
         this.sky = sky;
         this.sun = sun;
+      }
+
+      createBaseSetDressing() {
+        for (let x = 44; x < WORLD_W - 190; x += 38) {
+          this.add.rectangle(x, LANE_TOP - 20, 3, 36, 0x2a2d35, 0.88).setOrigin(0.5, 0).setDepth(-46);
+          this.add.rectangle(x + 18, LANE_TOP - 14, 38, 2, 0xb9c7c5, 0.36).setOrigin(0.5, 0.5).setDepth(-45);
+          this.add.rectangle(x + 18, LANE_TOP - 4, 38, 2, 0xb9c7c5, 0.28).setOrigin(0.5, 0.5).setDepth(-45);
+        }
+        for (let x = 120; x < WORLD_W - 240; x += 310) {
+          this.add.rectangle(x, 78, 5, 55, 0x13261e, 0.88).setOrigin(0.5, 1).setDepth(-55);
+          this.add.circle(x - 9, 43, 13, 0x2f6a45, 0.5).setDepth(-56);
+          this.add.circle(x + 8, 38, 17, 0x24523e, 0.46).setDepth(-56);
+          this.add.circle(x + 20, 52, 11, 0x8dff7a, 0.16).setDepth(-56);
+        }
+        for (let x = 360; x < WORLD_W - 260; x += 520) {
+          this.add.rectangle(x, LANE_BOTTOM + 1, 84, 6, 0x241812, 0.72).setOrigin(0.5, 0).setDepth(-44);
+          this.add.rectangle(x - 32, LANE_BOTTOM - 4, 10, 10, 0x6a6048, 0.8).setDepth(-43);
+          this.add.rectangle(x + 24, LANE_BOTTOM - 6, 16, 12, 0x475240, 0.72).setDepth(-43);
+        }
       }
 
       createTraversalGeometry() {
@@ -2787,29 +2837,21 @@
       }
 
       restartRun() {
-        const data = { level: this.level || 1, score: this.levelStartScore || 0 };
+        const data = { level: this.level || 1, score: this.levelStartScore || 0, autoStart: true };
         window.ashRunnerProgress = data;
         document.getElementById("boot-card")?.classList.add("is-hidden");
         document.getElementById("level-card")?.classList.remove("is-open");
         document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
         this.scene.restart(data);
-        setTimeout(() => {
-          const scene = this.game.scene.keys.PlayScene;
-          if (scene) scene.startRun();
-        }, 0);
       }
 
       nextLevel() {
-        const data = { level: this.level + 1, score: this.score };
+        const data = { level: this.level + 1, score: this.score, autoStart: true };
         window.ashRunnerProgress = data;
         document.getElementById("boot-card")?.classList.add("is-hidden");
         document.getElementById("level-card")?.classList.remove("is-open");
         document.getElementById("level-card")?.setAttribute("aria-hidden", "true");
         this.scene.restart(data);
-        setTimeout(() => {
-          const scene = this.game.scene.keys.PlayScene;
-          if (scene) scene.startRun();
-        }, 0);
       }
 
       hitStop(ms) {
