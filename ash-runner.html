@@ -570,9 +570,6 @@
     const WORLD_W = 3000;
     const LANE_TOP = 118;
     const LANE_BOTTOM = 188;
-    const UPPER_LANE_TOP = 88;
-    const UPPER_LANE_BOTTOM = 128;
-    const UPPER_ELEVATION = 48;
     const GRAVITY_Z = 760;
 
     const clamp = Phaser.Math.Clamp;
@@ -583,7 +580,7 @@
         this.enabled = true;
         this.master = null;
         this.channels = 0;
-        this.maxChannels = 4;
+        this.maxChannels = 6;
       }
 
       init() {
@@ -657,23 +654,30 @@
       }
 
       step() { this.tone(96, 0.045, "triangle", 0.05, -18); }
-      jump() { this.tone(180, 0.06, "sawtooth", 0.07, 120); this.noise(0.07, 0.08); }
+      jump() { this.tone(176, 0.08, "sawtooth", 0.08, 180); this.noise(0.08, 0.09); }
+      land() { this.noise(0.06, 0.1); this.tone(88, 0.055, "triangle", 0.07, -24); }
       lift() { this.tone(132, 0.09, "square", 0.12, -40); }
       throw() { this.tone(260, 0.12, "sawtooth", 0.13, -120); }
       impact() { this.noise(0.09, 0.18); this.tone(72, 0.08, "square", 0.1, -20); }
+      playerHit() { this.noise(0.12, 0.2); this.tone(116, 0.11, "sawtooth", 0.12, -62); setTimeout(() => this.tone(72, 0.08, "square", 0.08, -24), 45); }
+      enemyHit(strength = 1) { this.tone(300 + strength * 50, 0.055, "square", 0.09, -120); this.noise(0.045, 0.07); }
+      structureHit() { this.noise(0.08, 0.15); this.tone(104, 0.06, "triangle", 0.09, -30); }
       heal() { this.tone(420, 0.06, "triangle", 0.08); setTimeout(() => this.tone(620, 0.08, "triangle", 0.08), 55); }
       gem() { this.tone(760, 0.05, "sine", 0.08); setTimeout(() => this.tone(1120, 0.09, "sine", 0.08), 55); }
-      break() { this.noise(0.12, 0.14); this.tone(118, 0.08, "square", 0.08, -36); }
+      break() { this.noise(0.16, 0.2); this.tone(118, 0.08, "square", 0.1, -36); setTimeout(() => this.tone(184, 0.06, "sawtooth", 0.08, -70), 35); }
       buffer() { this.tone(680, 0.04, "square", 0.045, -100); }
       clue() { this.tone(520, 0.06, "triangle", 0.08); setTimeout(() => this.tone(840, 0.08, "sine", 0.07), 70); }
       relay() { this.noise(0.16, 0.12); this.tone(92, 0.12, "sawtooth", 0.11, 180); }
       pickup() { this.tone(340, 0.06, "square", 0.08); setTimeout(() => this.tone(560, 0.07, "square", 0.07), 62); }
-      fire(charge = 0) { this.tone(520 + charge * 260, 0.08 + charge * 0.08, "sawtooth", 0.1, -160); }
-      enemyFire() { this.tone(180, 0.07, "square", 0.055, -52); }
+      fire(charge = 0) { this.tone(520 + charge * 260, 0.08 + charge * 0.08, "sawtooth", 0.1, -160); this.noise(0.035, 0.045 + charge * 0.04); }
+      rocketFire(charge = 0) { this.noise(0.16, 0.22); this.tone(132 + charge * 80, 0.16, "sawtooth", 0.15, -86); setTimeout(() => this.tone(76, 0.1, "square", 0.09, -28), 55); }
+      enemyFire() { this.tone(180, 0.07, "square", 0.065, -52); this.tone(312, 0.045, "triangle", 0.035, -80); }
+      turretRise() { this.tone(92, 0.12, "sawtooth", 0.09, 190); this.noise(0.08, 0.08); }
       limb() { this.noise(0.12, 0.12); this.tone(146, 0.08, "triangle", 0.08, -44); }
       spell() { this.tone(196, 0.08, "sine", 0.08); setTimeout(() => this.tone(392, 0.13, "sawtooth", 0.11, 160), 55); }
       cooldown() { this.tone(112, 0.05, "square", 0.04, -24); }
-      explode() { this.noise(0.2, 0.24); this.tone(64, 0.14, "sawtooth", 0.16, -28); setTimeout(() => this.tone(144, 0.08, "square", 0.1, 80), 55); }
+      explode() { this.noise(0.24, 0.28); this.tone(64, 0.15, "sawtooth", 0.17, -28); setTimeout(() => this.tone(144, 0.09, "square", 0.11, 80), 55); }
+      bossExplode() { this.noise(0.32, 0.32); this.tone(48, 0.22, "sawtooth", 0.2, -18); setTimeout(() => this.tone(112, 0.16, "square", 0.14, 110), 80); }
       start() { this.tone(220, 0.08, "triangle", 0.1); setTimeout(() => this.tone(330, 0.1, "triangle", 0.1), 80); }
     }
 
@@ -1109,6 +1113,7 @@
       damage(amount = 1, source = "hit") {
         if (!this.breakable || this.broken) return false;
         this.hp -= amount;
+        audio.structureHit();
         this.sprite.setTint(0xffd36b);
         this.scene.time.delayedCall(90, () => {
           if (!this.broken) this.sprite.clearTint();
@@ -1606,14 +1611,14 @@
           this.scene.lastLoot = "yarik yaklasiyor / W ile jet zipla";
           this.scene.areaPulse(this.x, (LANE_TOP + LANE_BOTTOM) / 2, 34, 0xffb000);
         }
-        const crossedForward = player.prevX <= this.left && player.x >= this.right;
-        const crossedBackward = player.prevX >= this.right && player.x <= this.left;
-        if (!this.cleared && player.z > 10 && (crossedForward || crossedBackward)) {
+        const crossedForward = player.prevX <= this.left + 8 && player.x >= this.right - 8;
+        const crossedBackward = player.prevX >= this.right - 8 && player.x <= this.left + 8;
+        if (!this.cleared && player.z > 5 && (crossedForward || crossedBackward)) {
           this.cleared = true;
           this.scene.addScore(70, "temiz atlayis");
           this.scene.areaPulse(this.x, player.y, 30, 0x53d5ff);
         }
-        if (player.z > 10 || this.cooldown > 0 || player.fsm.name === "stagger") return;
+        if (player.z > 5 || this.cooldown > 0 || player.fsm.name === "stagger") return;
         const inGap = player.x > this.left && player.x < this.right && player.y > LANE_TOP - 4 && player.y < LANE_BOTTOM + 4;
         if (!inGap) return;
         this.cooldown = 0.95;
@@ -1662,6 +1667,7 @@
             this.scene.lastLoot = "zemin savunmasi acildi";
             this.scene.particles.burst(this.x, this.y - 10, 10);
             this.scene.areaPulse(this.x, this.y, 34, 0xf05a4a);
+            audio.turretRise();
           } else {
             this.sync();
             return;
@@ -1709,6 +1715,7 @@
         this.vx = direction * (110 + strength * 70);
         this.vy = (Math.random() - 0.5) * 46;
         this.stun = 0.78 + strength * 0.26;
+        audio.enemyHit(strength);
         this.scene.addScore(Math.round(this.data.score * 0.35 * strength), "temas");
         if (!this.limbDropped) this.dropLimb(direction);
         if (this.hitCount >= this.maxHits) {
@@ -1983,6 +1990,7 @@
         this.invuln = 0.72;
         this.scene.registerDamage(amount);
         this.scene.updateHud();
+        audio.playerHit();
         if (this.health <= 0) {
           this.scene.playerDown();
           return;
@@ -2017,7 +2025,8 @@
       jump() {
         if (this.health <= 0 || this.z > 1 || this.fsm.name === "stagger") return;
         this.z = 1;
-        this.vz = 335;
+        this.vz = 405;
+        this.x = clamp(this.x + (this.facing || 1) * 8, 18, WORLD_W - 28);
         this.scene.lastLoot = "jet ziplamasi";
         this.scene.particles.burst(this.x - this.facing * 7, this.y - 9, 7);
         audio.jump();
@@ -2030,11 +2039,12 @@
           return;
         }
         this.z += this.vz * dt;
-        this.vz -= GRAVITY_Z * 0.86 * dt;
+        this.vz -= GRAVITY_Z * 0.66 * dt;
         if (this.z <= 0) {
           this.z = 0;
           this.vz = 0;
           this.scene.particles.burst(this.x, this.y - 4, 5);
+          audio.land();
         }
       }
 
@@ -2239,19 +2249,8 @@
 
       create() {
         this.layers = [];
-        this.upperRoutes = [
-          { x1: 555, x2: 870, y: 101 },
-          { x1: 1368, x2: 1706, y: 98 },
-          { x1: 2195, x2: 2590, y: 100 }
-        ];
-        this.climbZones = [
-          { x1: 488, x2: 594 },
-          { x1: 830, x2: 930 },
-          { x1: 1302, x2: 1412 },
-          { x1: 1666, x2: 1770 },
-          { x1: 2134, x2: 2240 },
-          { x1: 2544, x2: 2648 }
-        ];
+        this.upperRoutes = [];
+        this.climbZones = [];
         this.createParallax();
         this.createTraversalGeometry();
         this.inputBuffer = new InputBuffer(170);
@@ -2271,15 +2270,15 @@
           new ScrapObject(this, 492, 171, "sign"),
           new ScrapObject(this, 642, 144, "crate"),
           new ScrapObject(this, 730, 151, "crate"),
-          new ScrapObject(this, 704, 104, "crate"),
+          new ScrapObject(this, 704, 144, "crate"),
           new ScrapObject(this, 990, 165, "engine"),
           new ScrapObject(this, 1084, 146, "crate"),
           new ScrapObject(this, 1280, 145, "sign"),
           new ScrapObject(this, 1454, 176, "crate"),
-          new ScrapObject(this, 1540, 102, "crate"),
+          new ScrapObject(this, 1540, 152, "crate"),
           new ScrapObject(this, 1650, 170, "crate"),
           new ScrapObject(this, 2118, 162, "engine"),
-          new ScrapObject(this, 2286, 106, "crate"),
+          new ScrapObject(this, 2286, 156, "crate"),
           new ScrapObject(this, 2442, 156, "sign"),
           new ScrapObject(this, 2688, 174, "crate")
         ];
@@ -2297,11 +2296,11 @@
           new Drone(this, 1038, 154, "walker"),
           new Drone(this, 1180, 176, "skitter"),
           new Drone(this, 1510, 150, "brute"),
-          new Drone(this, 1608, 102, "walker"),
+          new Drone(this, 1608, 162, "walker"),
           new Drone(this, 1740, 142, "dart"),
           new Drone(this, 1880, 168, "shield"),
           new Drone(this, 2058, 156, "skitter"),
-          new Drone(this, 2216, 104, "dart"),
+          new Drone(this, 2216, 154, "dart"),
           new Drone(this, 2388, 166, "walker"),
           new Drone(this, 2586, 150, "shield"),
           new Drone(this, 2790, 170, "brute")
@@ -2310,7 +2309,7 @@
           this.drones.push(
             new Drone(this, 760, 160, "dart"),
             new Drone(this, 1320, 150, this.level >= 3 ? "brute" : "shield"),
-            new Drone(this, 1488, 102, "walker"),
+            new Drone(this, 1488, 152, "walker"),
             new Drone(this, 2050, 170, "skitter")
           );
         }
@@ -2329,17 +2328,17 @@
           );
         }
         this.gaps = [
-          new RoadGap(this, 740, 42),
-          new RoadGap(this, 1468, 48),
-          new RoadGap(this, 2168, 44),
-          new RoadGap(this, 2632, 50)
+          new RoadGap(this, 740, 34),
+          new RoadGap(this, 1468, 38),
+          new RoadGap(this, 2168, 36),
+          new RoadGap(this, 2632, 40)
         ];
         this.collectibles = [];
         this.weaponPickups = [
           new WeaponPickup(this, 214, 152, 0),
-          new WeaponPickup(this, 1502, 104, 1),
+          new WeaponPickup(this, 1502, 154, 0),
           new WeaponPickup(this, 1722, 160, 0),
-          new WeaponPickup(this, 2346, 106, 1),
+          new WeaponPickup(this, 2346, 156, 0),
           new WeaponPickup(this, 2728, 160, 0)
         ];
         this.projectiles = [];
@@ -2347,10 +2346,10 @@
         this.limbs = [];
         this.streetClues = [
           new StreetClue(this, 318, 138, "cocuklar kuzey rampasini isaretledi", 0),
-          new StreetClue(this, 758, 104, "mavi vitrin arkasinda sessiz bir gecit var", 1),
+          new StreetClue(this, 758, 154, "mavi vitrin arkasinda sessiz bir gecit var", 0),
           new StreetClue(this, 1168, 176, "brute ayni ritme iki kez kanmiyor", 0),
-          new StreetClue(this, 1626, 102, "ust yol cikista daha kisa ama daha dar", 1),
-          new StreetClue(this, 2264, 102, "yariklar jet sicramasiyla gecilir", 1),
+          new StreetClue(this, 1626, 154, "servis yolu artik tek hat uzerinde", 0),
+          new StreetClue(this, 2264, 154, "yariklar jet sicramasiyla gecilir", 0),
           new StreetClue(this, 2828, 158, "arkadan gelen ses azdir ama acele ettirir", 0)
         ];
         if (this.level >= 2) {
@@ -2361,9 +2360,9 @@
         }
         this.relays = [
           new SignalRelay(this, 672, 166, "ilk role mahalle hattini yeniden konusturdu", 0),
-          new SignalRelay(this, 1396, 101, "ust kattaki kisa dalga drone dilini bozdu", 1),
+          new SignalRelay(this, 1396, 161, "kisa dalga drone dilini bozdu", 0),
           new SignalRelay(this, 1908, 164, "cikis oncesi son sinyal herkesi susturdu", 0),
-          new SignalRelay(this, 2522, 104, "uzayan hatta son role yankiyi kapatti", 1)
+          new SignalRelay(this, 2522, 160, "uzayan hatta son role yankiyi kapatti", 0)
         ];
         if (this.level >= 3) {
           this.relays.push(new SignalRelay(this, 1014, 152, "ucuncu hatta sokak kendi adini fisildadi", 0));
@@ -2425,18 +2424,18 @@
           new ScrapObject(this, 520, 172, "bunker"),
           new ScrapObject(this, 820, 160, "hut"),
           new ScrapObject(this, 980, 158, "crate"),
-          new ScrapObject(this, 1350, 106, "bunker"),
+          new ScrapObject(this, 1350, 156, "bunker"),
           new ScrapObject(this, 1740, 168, "hut"),
-          new ScrapObject(this, 2150, 104, "sign"),
+          new ScrapObject(this, 2150, 154, "sign"),
           new ScrapObject(this, 2468, 160, "bunker")
         ];
         this.drones = [
           new Drone(this, 410, 160, "turret"),
           new Drone(this, 690, 146, "tower"),
           new Drone(this, 940, 172, "dart"),
-          new Drone(this, 1190, 104, "turret"),
+          new Drone(this, 1190, 154, "turret"),
           new Drone(this, 1450, 154, "trex"),
-          new Drone(this, 1665, 102, "tower"),
+          new Drone(this, 1665, 152, "tower"),
           new Drone(this, 1900, 174, "turret"),
           new Drone(this, 2188, 152, "trex"),
           new Drone(this, 2528, 160, "tower"),
@@ -2448,23 +2447,23 @@
           new RoadHazard(this, 2380, 164)
         ];
         this.gaps = [
-          new RoadGap(this, 1040, 46),
-          new RoadGap(this, 2050, 52)
+          new RoadGap(this, 1040, 38),
+          new RoadGap(this, 2050, 42)
         ];
         this.weaponPickups = [
           new WeaponPickup(this, 284, 152, 0, "rocket"),
-          new WeaponPickup(this, 1324, 104, 1),
+          new WeaponPickup(this, 1324, 154, 0),
           new WeaponPickup(this, 2324, 160, 0, "rocket")
         ];
         this.streetClues = [
           new StreetClue(this, 252, 150, "askeri kapinin ardinda robot uretim hatti var", 0),
-          new StreetClue(this, 1048, 104, "kuleler govdeden vurulunca yikiliyor", 1),
+          new StreetClue(this, 1048, 154, "kuleler govdeden vurulunca yikiliyor", 0),
           new StreetClue(this, 1768, 162, "trex yuruyus sesi saldiri ritmini ele verir", 0),
           new StreetClue(this, 2620, 152, "hangar son kacis icin acik tutulmus", 0)
         ];
         this.relays = [
           new SignalRelay(this, 840, 166, "kislada ilk alarm sustu", 0),
-          new SignalRelay(this, 1590, 104, "ust platformdaki kule agi kirildi", 1),
+          new SignalRelay(this, 1590, 154, "kule agi kirildi", 0),
           new SignalRelay(this, 2420, 164, "hangar kalkis izni cozuldu", 0)
         ];
         this.rearAmbushes = [1120, 2060];
@@ -2567,103 +2566,41 @@
       }
 
       createTraversalGeometry() {
-        this.upperRoutes.forEach(route => {
-          const width = route.x2 - route.x1;
-          const deckY = route.y - UPPER_ELEVATION;
-          this.add.rectangle(route.x1, deckY - 10, width, 26, 0x15171d, 0.98).setOrigin(0).setDepth(-39);
-          this.add.rectangle(route.x1, deckY + 16, width, 6, 0x09090c, 0.72).setOrigin(0).setDepth(-39);
-          this.add.rectangle(route.x1, deckY - 11, width, 2, 0x53d5ff, 0.5).setOrigin(0).setDepth(-38);
-          this.add.rectangle(route.x1, deckY + 14, width, 2, 0xffb000, 0.36).setOrigin(0).setDepth(-38);
-          this.add.rectangle(route.x1, LANE_TOP + 2, width, 5, 0x000000, 0.28).setOrigin(0).setDepth(-42);
-          for (let x = route.x1 + 18; x < route.x2; x += 42) {
-            this.add.rectangle(x, deckY + 11, 20, 2, 0x605b52, 0.75).setOrigin(0).setDepth(-37);
-            this.add.rectangle(x + 6, deckY + 16, 4, LANE_TOP - deckY - 9, 0x2a2423, 0.78).setOrigin(0).setDepth(-41);
-          }
-          this.add.text(route.x1 + 12, deckY - 7, "UPPER ROUTE", {
-            fontFamily: "monospace",
-            fontSize: "7px",
-            color: "#53d5ff"
-          }).setDepth(-36);
-        });
-
-        this.climbZones.forEach((zone, index) => {
-          const direction = index % 2 === 0 ? 1 : -1;
-          const startX = direction > 0 ? zone.x1 : zone.x2;
-          const width = zone.x2 - zone.x1;
-          for (let step = 0; step < 9; step += 1) {
-            const x = startX + direction * step * (width / 9);
-            const y = LANE_TOP - step * 5.5;
-            this.add.rectangle(x, y, 28, 3, 0x7c5134, 0.9).setDepth(-36);
-            this.add.rectangle(x + direction * 3, y + 3, 16, 2, 0x2a1f1b, 0.82).setDepth(-37);
-          }
-          this.add.rectangle(zone.x1, UPPER_LANE_BOTTOM - 2, width, 1, 0xffb000, 0.28).setOrigin(0).setDepth(-35);
-        });
+        this.add.rectangle(0, LANE_TOP - 2, WORLD_W, 1, 0xffb000, 0.12).setOrigin(0).setDepth(-40);
       }
 
       canUseUpperPath(x) {
-        return this.upperRoutes.some(route => x >= route.x1 && x <= route.x2)
-          || this.climbZones.some(zone => x >= zone.x1 && x <= zone.x2);
+        return false;
       }
 
       getUpperRouteAt(x) {
-        return this.upperRoutes.find(route => x >= route.x1 && x <= route.x2) || null;
+        return null;
       }
 
       getClimbZoneAt(x) {
-        return this.climbZones.find(zone => x >= zone.x1 && x <= zone.x2) || null;
+        return null;
       }
 
       getInitialFloor(x, y) {
-        return this.getUpperRouteAt(x) && y <= UPPER_LANE_BOTTOM ? 1 : 0;
+        return 0;
       }
 
       isOnUpperDeck(x, y) {
-        return y <= UPPER_LANE_BOTTOM
-          && Boolean(this.getUpperRouteAt(x));
+        return false;
       }
 
       getElevation(x, y, actor = null) {
-        const inClimb = Boolean(this.getClimbZoneAt(x));
-        if (inClimb) {
-          const climbRatio = clamp((LANE_TOP - y) / (LANE_TOP - UPPER_LANE_TOP), 0, 1);
-          return Math.round(climbRatio * UPPER_ELEVATION);
-        }
-        if (actor?.floor === 1 && (this.getUpperRouteAt(x) || y <= UPPER_LANE_BOTTOM)) return UPPER_ELEVATION;
-        if (this.isOnUpperDeck(x, y)) return UPPER_ELEVATION;
         return 0;
       }
 
       updateActorFloor(actor) {
-        const climbZone = this.getClimbZoneAt(actor.x);
-        const upperRoute = this.getUpperRouteAt(actor.x);
-        const wasUpper = actor.floor === 1;
-
-        if (!wasUpper && climbZone && actor.y <= UPPER_LANE_BOTTOM) {
-          actor.floor = 1;
-          if (actor === this.player) this.lastLoot = "ust kat / rampadan cikildi";
-        } else if (wasUpper && climbZone && actor.y >= LANE_TOP - 2) {
-          actor.floor = 0;
-          if (actor === this.player) this.lastLoot = "alt kat / rampa inildi";
-        } else if (wasUpper && !climbZone && !upperRoute) {
-          actor.floor = 0;
-          actor.y = Math.max(actor.y, LANE_TOP);
-        }
-
+        actor.floor = 0;
         return actor.floor;
       }
 
       clampActorY(x, y, topPad = 0, bottomPad = 0, actor = null) {
-        const climbZone = this.getClimbZoneAt(x);
-        const upperRoute = this.getUpperRouteAt(x);
         let top = LANE_TOP;
         let bottom = LANE_BOTTOM;
-
-        if (actor?.floor === 1) {
-          top = UPPER_LANE_TOP;
-          bottom = upperRoute && !climbZone ? UPPER_LANE_BOTTOM : LANE_TOP;
-        } else if (climbZone) {
-          top = UPPER_LANE_TOP;
-        }
 
         return clamp(y, top + topPad, bottom - bottomPad);
       }
@@ -2871,7 +2808,8 @@
         this.cameraRig.shake(strong ? 0.72 : 0.5);
         this.hitStop(strong ? 120 : 86);
         this.particles.explosion(drone.x, blastY, strong ? 38 : 28);
-        audio.explode();
+        if (drone.data.boss) audio.bossExplode();
+        else audio.explode();
 
         const core = this.add.image(drone.x, blastY, "blast-core").setDepth(9200).setBlendMode(Phaser.BlendModes.ADD);
         const ring = this.add.circle(drone.x, drone.y - elevation - 4, 12).setStrokeStyle(2, strong ? 0xf05a4a : 0xffd36b, 0.86).setDepth(9190);
@@ -2922,7 +2860,8 @@
           ? `roket atildi / sarj ${Math.round(charge * 100)}%`
           : (charge >= 0.98 ? "tam sarj atis / alan hasari" : `atis / sarj ${Math.round(charge * 100)}%`);
         this.cameraRig.shake(weaponType === "rocket" ? 0.42 : (charge >= 0.98 ? 0.34 : 0.12));
-        audio.fire(charge);
+        if (weaponType === "rocket") audio.rocketFire(charge);
+        else audio.fire(charge);
       }
 
       spawnEnemyShot(drone, direction) {
@@ -3082,10 +3021,7 @@
         if (!this.rearAmbushes || this.rearAmbushIndex >= this.rearAmbushes.length) return;
         const triggerX = this.rearAmbushes[this.rearAmbushIndex];
         if (this.player.x < triggerX) return;
-        const upperRoute = this.player.floor === 1 ? this.getUpperRouteAt(this.player.x) : null;
-        const spawnX = upperRoute
-          ? clamp(this.player.x - 122, upperRoute.x1 + 18, upperRoute.x2 - 18)
-          : clamp(this.player.x - 155, 34, WORLD_W - 60);
+        const spawnX = clamp(this.player.x - 155, 34, WORLD_W - 60);
         const spawnY = this.clampActorY(spawnX, this.player.y + (this.rearAmbushIndex % 2 ? 12 : -10), 8, 2, this.player);
         const type = this.rearAmbushIndex === 1 ? "dart" : "skitter";
         const drone = new Drone(this, spawnX, spawnY, type);
@@ -3248,7 +3184,7 @@
         const hudState = document.getElementById("hud-state");
         if (hudState) {
           const activeEnemies = this.drones.filter(drone => !drone.defeated).length;
-          hudState.textContent = `FSM: ${this.player.fsm.name} · kat: ${this.player.floor ? "ust" : "alt"} · buffer: ${this.inputBuffer.label(time)} · dusman: ${activeEnemies}`;
+          hudState.textContent = `FSM: ${this.player.fsm.name} · zip: ${Math.round(this.player.z)} · buffer: ${this.inputBuffer.label(time)} · dusman: ${activeEnemies}`;
         }
         this.updateHud();
       }
