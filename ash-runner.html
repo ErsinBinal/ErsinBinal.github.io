@@ -876,11 +876,25 @@
         px(6, 2, 5, 3, 0x2a2d35); px(4, 9, 5, 2, 0x7c5134);
         px(19, 5, 4, 1, 0xffb000); px(1, 6, 2, 2, 0x111216);
       });
+      makeTexture(scene, "rocket-launcher", 30, 14, px => {
+        px(4, 5, 20, 5, 0x5d6674); px(22, 4, 5, 7, 0x2a2d35);
+        px(2, 6, 4, 3, 0x111216); px(8, 2, 12, 3, 0x8a4d36);
+        px(10, 10, 5, 3, 0x7c5134); px(24, 6, 5, 3, 0xffb000);
+        px(13, 6, 7, 2, 0x53d5ff);
+      });
+      makeTexture(scene, "hero-hand", 5, 5, px => {
+        px(1, 0, 3, 1, 0xe0c37d); px(0, 1, 5, 3, 0xd7b071); px(1, 4, 3, 1, 0xa8754d);
+      });
       makeTexture(scene, "hero-shot", 8, 4, px => {
         px(0, 1, 6, 2, 0xffd36b); px(5, 0, 3, 4, 0x53d5ff);
       });
       makeTexture(scene, "hero-shot-heavy", 14, 8, px => {
         px(1, 2, 10, 4, 0xffd36b); px(7, 1, 5, 6, 0x53d5ff); px(12, 3, 2, 2, 0xdff7ff);
+      });
+      makeTexture(scene, "rocket-shot", 17, 7, px => {
+        px(2, 2, 10, 3, 0x9aa4b1); px(11, 1, 4, 5, 0xf05a4a);
+        px(0, 1, 3, 5, 0x2a2d35); px(1, 0, 3, 2, 0xffb000);
+        px(1, 5, 3, 2, 0xffd36b); px(15, 3, 2, 1, 0xdff7ff);
       });
       makeTexture(scene, "flame-wave", 18, 14, px => {
         px(2, 5, 8, 5, 0xffd36b); px(7, 3, 7, 8, 0xffb000); px(12, 5, 4, 5, 0xf05a4a);
@@ -1229,9 +1243,12 @@
     }
 
     class WeaponPickup extends Actor {
-      constructor(scene, x, y, floor = 0) {
-        super(scene, x, y, "scrap-rifle");
+      constructor(scene, x, y, floor = 0, type = WeaponPickup.randomType()) {
+        const data = WeaponPickup.DATA[type] || WeaponPickup.DATA.rifle;
+        super(scene, x, y, data.texture);
         this.floor = floor;
+        this.type = data.type;
+        this.label = data.label;
         this.float = Math.random() * Math.PI * 2;
         this.collected = false;
         this.sync();
@@ -1241,8 +1258,10 @@
         if (this.collected) return;
         this.collected = true;
         player.hasWeapon = true;
-        this.scene.lastLoot = "silah modulu alindi / L basili tut";
-        this.scene.addScore(180, "silah", false);
+        player.weaponType = this.type;
+        this.scene.lastLoot = `${this.label} alindi / L basili tut`;
+        this.scene.addScore(this.type === "rocket" ? 260 : 180, this.label, false);
+        this.scene.updateHud();
         audio.pickup();
         this.sprite.destroy();
         this.shadow.destroy();
@@ -1259,6 +1278,15 @@
         this.sync();
       }
     }
+
+    WeaponPickup.DATA = {
+      rifle: { type: "rifle", texture: "scrap-rifle", label: "tufek" },
+      rocket: { type: "rocket", texture: "rocket-launcher", label: "roketatar" }
+    };
+
+    WeaponPickup.randomType = function randomType() {
+      return Math.random() < 0.32 ? "rocket" : "rifle";
+    };
 
     class LimbScrap extends Actor {
       constructor(scene, x, y, direction, floor = 0) {
@@ -1293,19 +1321,22 @@
     }
 
     class Projectile extends Actor {
-      constructor(scene, x, y, floor, direction, owner, charge = 0) {
+      constructor(scene, x, y, floor, direction, owner, charge = 0, weaponType = "rifle") {
         const heavy = owner === "player" && charge >= 0.98;
-        super(scene, x, y, owner === "player" ? (heavy ? "hero-shot-heavy" : "hero-shot") : "enemy-shot");
+        const rocket = owner === "player" && weaponType === "rocket";
+        super(scene, x, y, owner === "player" ? (rocket ? "rocket-shot" : (heavy ? "hero-shot-heavy" : "hero-shot")) : "enemy-shot");
         this.floor = floor;
         this.direction = direction || 1;
         this.owner = owner;
+        this.weaponType = weaponType;
         this.charge = charge;
         this.heavy = heavy;
-        this.speed = owner === "player" ? 245 + charge * 85 : 150;
-        this.damage = owner === "player" ? (heavy ? 1.85 : 1) : 9;
-        this.radius = heavy ? 58 : 18;
-        this.life = owner === "player" ? 1.35 : 1.8;
-        this.z = owner === "player" ? 15 : 12;
+        this.rocket = rocket;
+        this.speed = owner === "player" ? (rocket ? 205 + charge * 45 : 245 + charge * 85) : 150;
+        this.damage = owner === "player" ? (rocket ? 4.4 + charge * 1.4 : (heavy ? 1.85 : 1)) : 9;
+        this.radius = rocket ? 76 + charge * 20 : (heavy ? 58 : 18);
+        this.life = owner === "player" ? (rocket ? 1.55 : 1.35) : 1.8;
+        this.z = owner === "player" ? (rocket ? 16 : 15) : 12;
         this.sprite.setFlipX(this.direction < 0);
         this.sync();
       }
@@ -1331,16 +1362,17 @@
           if (drone.defeated || drone.floor !== this.floor) return;
           const dx = drone.x - this.x;
           const dy = drone.y - this.y;
-          const range = this.heavy ? this.radius : 22;
-          if (Math.abs(dx) < range && Math.abs(dy) < (this.heavy ? 36 : 18)) {
+          const range = this.rocket || this.heavy ? this.radius : 22;
+          const lane = this.rocket ? 48 : (this.heavy ? 36 : 18);
+          if (Math.abs(dx) < range && Math.abs(dy) < lane) {
             hit = true;
-            drone.disable(Math.sign(this.direction), this.damage, this.heavy ? "charged-shot" : "shot");
+            drone.disable(Math.sign(this.direction), this.damage, this.rocket ? "rocket" : (this.heavy ? "charged-shot" : "shot"));
           }
         });
         if (!hit) return;
-        this.scene.impactAt(this.x, this.y, this.heavy ? 0.46 : 0.2);
-        this.scene.addScore(this.heavy ? 120 : 55, this.heavy ? "tam sarj" : "atis");
-        if (this.heavy) this.scene.areaPulse(this.x, this.y, this.radius, 0x53d5ff);
+        this.scene.impactAt(this.x, this.y, this.rocket ? 0.62 : (this.heavy ? 0.46 : 0.2));
+        this.scene.addScore(this.rocket ? 180 : (this.heavy ? 120 : 55), this.rocket ? "roket" : (this.heavy ? "tam sarj" : "atis"));
+        if (this.rocket || this.heavy) this.scene.areaPulse(this.x, this.y, this.radius, this.rocket ? 0xffb000 : 0x53d5ff);
         this.destroy();
       }
 
@@ -1505,7 +1537,7 @@
 
       disable(direction, strength = 1, source = "impact") {
         if (this.defeated) return false;
-        const hitUnits = 1;
+        const hitUnits = source === "rocket" ? Math.max(3, Math.ceil(strength)) : 1;
         this.hitCount = Math.min(this.maxHits, this.hitCount + hitUnits);
         this.hp = Math.max(0, this.maxHits - this.hitCount);
         this.vx = direction * (110 + strength * 70);
@@ -1640,9 +1672,13 @@
         this.stepTimer = 0;
         this.walkPhase = 0;
         this.hasWeapon = false;
+        this.weaponType = "rifle";
         this.weaponSprite = scene.add.image(x, y, "scrap-rifle")
-          .setOrigin(0.12, 0.55)
+          .setOrigin(0.28, 0.72)
           .setScale(0.82)
+          .setVisible(false);
+        this.weaponHand = scene.add.image(x, y, "hero-hand")
+          .setOrigin(0.5, 0.5)
           .setVisible(false);
         this.weaponKickTimer = 0;
         this.fireHeld = false;
@@ -1795,7 +1831,7 @@
           const ratio = clamp(this.fireCharge / this.maxFireCharge, 0, 1);
           this.weaponKickTimer = 0.16;
           this.scene.spawnPlayerShot(this, ratio);
-          this.fireCooldown = 0.18;
+          this.fireCooldown = this.weaponType === "rocket" ? 0.78 : 0.18;
           this.fireCharge = 0;
         } else if (!this.fireHeld && this.fireCharge > 0 && !canCharge) {
           this.fireCharge = 0;
@@ -1877,13 +1913,20 @@
         if (!this.weaponSprite) return;
         const visible = this.hasWeapon && !this.carried && this.health > 0;
         this.weaponSprite.setVisible(visible);
+        if (this.weaponHand) this.weaponHand.setVisible(visible);
         if (!visible) return;
 
         const aiming = this.fireHeld || this.fireCharge > 0 || this.weaponKickTimer > 0;
         const direction = this.facing || 1;
+        const isRocket = this.weaponType === "rocket";
+        const texture = isRocket ? "rocket-launcher" : "scrap-rifle";
+        if (this.weaponSprite.texture.key !== texture) this.weaponSprite.setTexture(texture);
+        this.weaponSprite
+          .setOrigin(isRocket ? 0.34 : 0.28, isRocket ? 0.78 : 0.72)
+          .setScale(isRocket ? 0.76 : 0.82);
         const recoil = this.weaponKickTimer > 0 ? 3 * (this.weaponKickTimer / 0.16) : 0;
-        const handX = this.x + direction * (aiming ? 6 - recoil : 8);
-        const handY = this.y - this.visualElevation - (aiming ? 17 : 13);
+        const handX = this.x + direction * (aiming ? 11 - recoil : 12);
+        const handY = this.y - this.visualElevation - (aiming ? 17 : 15);
         let angle = direction > 0 ? -0.06 : 0.06;
 
         if (aiming) {
@@ -1905,6 +1948,12 @@
           .setRotation(direction < 0 ? angle - Math.PI : angle)
           .setDepth(this.sprite.depth + 1)
           .setAlpha(aiming ? 1 : 0.92);
+        if (this.weaponHand) {
+          this.weaponHand
+            .setPosition(Math.round(handX), Math.round(handY))
+            .setDepth(this.sprite.depth + 2)
+            .setAlpha(aiming ? 1 : 0.95);
+        }
       }
     }
 
@@ -2435,9 +2484,12 @@
         if (!player.hasWeapon) return;
         const x = player.x + player.facing * 18;
         const y = player.y - 2;
-        this.projectiles.push(new Projectile(this, x, y, player.floor, player.facing, "player", charge));
-        this.lastLoot = charge >= 0.98 ? "tam sarj atis / alan hasari" : `atis / sarj ${Math.round(charge * 100)}%`;
-        this.cameraRig.shake(charge >= 0.98 ? 0.34 : 0.12);
+        const weaponType = player.weaponType || "rifle";
+        this.projectiles.push(new Projectile(this, x, y, player.floor, player.facing, "player", charge, weaponType));
+        this.lastLoot = weaponType === "rocket"
+          ? `roket atildi / sarj ${Math.round(charge * 100)}%`
+          : (charge >= 0.98 ? "tam sarj atis / alan hasari" : `atis / sarj ${Math.round(charge * 100)}%`);
+        this.cameraRig.shake(weaponType === "rocket" ? 0.42 : (charge >= 0.98 ? 0.34 : 0.12));
         audio.fire(charge);
       }
 
@@ -2470,7 +2522,8 @@
         if (weaponState) {
           const charge = Math.round(clamp(this.player.fireCharge / this.player.maxFireCharge, 0, 1) * 100);
           const spell = this.player.spellCooldown > 0 ? `${this.player.spellCooldown.toFixed(1)}s` : "hazir";
-          const weapon = this.player.hasWeapon ? `silah ${charge}%` : "silah yok";
+          const weaponName = this.player.weaponType === "rocket" ? "roketatar" : "tufek";
+          const weapon = this.player.hasWeapon ? `${weaponName} ${charge}%` : "silah yok";
           weaponState.textContent = `BUYU: ${spell} · ${weapon}`;
         }
         if (caseState) {
@@ -2484,6 +2537,7 @@
         this.started = false;
         this.player.sprite.setTint(0xf05a4a);
         if (this.player.weaponSprite) this.player.weaponSprite.setVisible(false);
+        if (this.player.weaponHand) this.player.weaponHand.setVisible(false);
         this.helpText.setText("Sistem dustu · R ile tekrar baslat");
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = "KUL HATTI // DOWN";
