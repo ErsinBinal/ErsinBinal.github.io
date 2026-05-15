@@ -224,6 +224,11 @@
       line-height: 1.48;
     }
 
+    .level-card .level-achievements {
+      color: #ffde7a;
+      font-size: 0.74rem;
+    }
+
     .boot-actions {
       display: flex;
       gap: 8px;
@@ -541,6 +546,7 @@
       <div><span>Dosya izleri</span><strong id="level-clues">0/0</strong></div>
       <div><span>En iyi zincir</span><strong id="level-chain">x1</strong></div>
     </div>
+    <p class="level-achievements" id="level-achievements">Başarılar: değerlendirme bekleniyor.</p>
     <button id="next-level" type="button">Devam Et</button>
   </section>
 
@@ -839,6 +845,37 @@
         px(6, 32, 8, 3, 0x181a1f); px(15, 32, 8, 3, 0x181a1f);
         px(10, 4, 2, 2, 0xffb000); px(15, 4, 2, 2, 0xf05a4a);
       });
+      makeTexture(scene, "base-turret", 24, 24, px => {
+        px(3, 15, 18, 6, 0x343b44); px(6, 10, 12, 6, 0x57606f);
+        px(10, 5, 5, 7, 0x848d96); px(13, 6, 10, 3, 0xf05a4a);
+        px(8, 17, 8, 2, 0x53d5ff); px(2, 21, 20, 2, 0x15161a);
+      });
+      makeTexture(scene, "base-tower", 26, 48, px => {
+        px(9, 5, 8, 36, 0x4e5f72); px(6, 38, 14, 5, 0x2a2d35);
+        px(5, 0, 16, 8, 0x6f7786); px(8, 2, 10, 2, 0xf05a4a);
+        px(11, 9, 4, 25, 0xffb000, 0.45); px(4, 43, 18, 3, 0x111216);
+      });
+      makeTexture(scene, "robo-trex", 48, 34, px => {
+        px(8, 9, 24, 10, 0x59636f); px(29, 4, 14, 9, 0x848d96);
+        px(39, 7, 3, 2, 0xf05a4a); px(3, 13, 9, 4, 0x343b44);
+        px(13, 19, 5, 11, 0x2a2d35); px(27, 19, 5, 11, 0x2a2d35);
+        px(11, 30, 9, 3, 0x111216); px(25, 30, 10, 3, 0x111216);
+        px(31, 13, 8, 3, 0x53d5ff); px(35, 15, 5, 2, 0xdff7ff);
+      });
+      makeTexture(scene, "walker-mech", 54, 48, px => {
+        px(12, 5, 30, 16, 0x6d737d); px(8, 13, 38, 12, 0x343b44);
+        px(17, 9, 6, 4, 0xf05a4a); px(31, 9, 6, 4, 0xf05a4a);
+        px(2, 17, 12, 5, 0x848d96); px(40, 17, 12, 5, 0x848d96);
+        px(16, 25, 7, 17, 0x2a2d35); px(31, 25, 7, 17, 0x2a2d35);
+        px(10, 42, 15, 4, 0x111216); px(29, 42, 15, 4, 0x111216);
+        px(23, 22, 8, 4, 0xffb000);
+      });
+      makeTexture(scene, "drop-ship", 58, 30, px => {
+        px(8, 10, 38, 10, 0x59636f); px(16, 5, 24, 8, 0x343b44);
+        px(3, 13, 9, 5, 0x2a2d35); px(45, 13, 10, 5, 0x2a2d35);
+        px(19, 8, 6, 3, 0x53d5ff); px(29, 8, 6, 3, 0x53d5ff);
+        px(10, 21, 10, 3, 0xffb000); px(35, 21, 10, 3, 0xffb000);
+      });
       makeTexture(scene, "crate", 24, 20, px => {
         px(1, 3, 22, 16, 0x7c5134); px(3, 5, 18, 12, 0xa36f3f);
         px(5, 7, 4, 8, 0x513522); px(15, 7, 4, 8, 0x513522); px(2, 16, 20, 2, 0x3e281c);
@@ -951,6 +988,25 @@
       makeTexture(scene, "road-tile", 64, 64, px => {
         px(0, 0, 64, 64, 0x242226); px(0, 35, 64, 29, 0x2d2b30);
         px(0, 39, 64, 2, 0x444047); px(8, 53, 14, 2, 0x605b52); px(38, 48, 9, 2, 0x545055);
+      });
+      makeTexture(scene, "base-road-tile", 64, 64, px => {
+        px(0, 0, 64, 64, 0x1b2024); px(0, 28, 64, 36, 0x252b30);
+        px(0, 33, 64, 2, 0x59636f); px(0, 52, 64, 2, 0xffb000, 0.55);
+        px(7, 43, 12, 2, 0x3b454d); px(35, 39, 18, 2, 0x3b454d); px(56, 10, 3, 45, 0x111216, 0.35);
+      });
+      makeTexture(scene, "base-far", 256, 92, px => {
+        px(0, 0, 256, 92, 0x10151a);
+        for (let x = 0; x < 256; x += 46) {
+          px(x, 58, 30, 34, 0x1f2a30); px(x + 7, 48, 16, 10, 0x2d3840);
+          px(x + 11, 53, 8, 2, 0xf05a4a, 0.6);
+        }
+      });
+      makeTexture(scene, "base-mid", 192, 94, px => {
+        px(0, 0, 192, 94, 0x000000, 0);
+        for (let x = 0; x < 192; x += 32) {
+          px(x, 74, 22, 20, 0x2b3238); px(x + 6, 62, 10, 12, 0x424c55);
+          px(x + 3, 80, 15, 2, 0xffb000, 0.45);
+        }
       });
       makeTexture(scene, "far-ruins", 256, 92, px => {
         px(0, 0, 256, 92, 0x12131a);
@@ -1496,6 +1552,7 @@
         this.cooldown = 0;
         this.warned = false;
         this.cleared = false;
+        this.parts = [];
         this.body = scene.add.rectangle(x, (LANE_TOP + LANE_BOTTOM) / 2, width, LANE_BOTTOM - LANE_TOP + 12, 0x050507, 0.94)
           .setOrigin(0.5, 0.5)
           .setDepth(-34);
@@ -1505,10 +1562,11 @@
         this.edgeB = scene.add.rectangle(this.right, (LANE_TOP + LANE_BOTTOM) / 2, 3, LANE_BOTTOM - LANE_TOP + 9, 0x53d5ff, 0.3)
           .setOrigin(0.5, 0.5)
           .setDepth(-33);
+        this.parts.push(this.body, this.edgeA, this.edgeB);
         for (let y = LANE_TOP + 7; y < LANE_BOTTOM; y += 14) {
-          scene.add.rectangle(x + (Math.sin(y) * width * 0.18), y, width - 8, 1, 0x2d2b30, 0.72)
+          this.parts.push(scene.add.rectangle(x + (Math.sin(y) * width * 0.18), y, width - 8, 1, 0x2d2b30, 0.72)
             .setOrigin(0.5, 0.5)
-            .setDepth(-32);
+            .setDepth(-32));
         }
       }
 
@@ -1555,17 +1613,33 @@
         this.hp = data.hp;
         this.maxHp = data.hp;
         this.hitCount = 0;
-        this.maxHits = 3;
+        this.maxHits = data.hp || 3;
         this.limbDropped = false;
+        this.emerged = !data.emerge;
         this.defeated = false;
         this.cooldown = Math.random() * 1.4;
         this.fireCooldown = 0.8 + Math.random() * 1.3;
         this.sprite.setScale(data.scale || 1);
+        if (!this.emerged) this.sprite.setAlpha(0.28);
         this.sync();
       }
 
       update(dt, player) {
         if (this.defeated) return;
+        if (!this.emerged) {
+          const dx = player.x - this.x;
+          const dy = player.y - this.y;
+          if (player.floor === this.floor && Math.abs(dx) < this.data.sense && Math.abs(dy) < 42) {
+            this.emerged = true;
+            this.sprite.setAlpha(1);
+            this.scene.lastLoot = "zemin savunmasi acildi";
+            this.scene.particles.burst(this.x, this.y - 10, 10);
+            this.scene.areaPulse(this.x, this.y, 34, 0xf05a4a);
+          } else {
+            this.sync();
+            return;
+          }
+        }
         if (this.stun > 0) {
           this.stun -= dt;
           this.x += this.vx * dt;
@@ -1628,11 +1702,12 @@
       defeat(direction) {
         if (this.defeated) return;
         this.defeated = true;
-        this.scene.addScore(this.data.score, "devre disi");
+        this.scene.addScore(this.data.score, this.data.boss ? "ana mech dustu" : "devre disi");
         this.scene.explodeDrone(this, direction);
         if (this.data.gem) this.scene.spawnCollectible(this.x + direction * 8, this.y, this.data.gem, this.data.strong ? 1.2 : 1, this.floor);
         this.sprite.setVisible(false);
         this.shadow.setVisible(false);
+        if (this.data.boss) this.scene.onBossDefeated(this);
       }
     }
 
@@ -1661,6 +1736,26 @@
         texture: "drone-heavy", hp: 5, speed: 16, patrolSpeed: 7, sense: 210,
         attackRange: 24, attackLane: 17, cooldown: 2.25, damage: 18, damageTaken: 0.72, score: 320, gem: "gem-red", strong: true,
         fireRange: 180, fireLane: 20, fireCooldown: 3.1
+      },
+      turret: {
+        texture: "base-turret", hp: 3, speed: 0, patrolSpeed: 0, sense: 155,
+        attackRange: 0, attackLane: 0, cooldown: 2.4, damage: 0, score: 170, emerge: true,
+        fireRange: 185, fireLane: 26, fireCooldown: 1.45
+      },
+      tower: {
+        texture: "base-tower", hp: 4, speed: 0, patrolSpeed: 0, sense: 220,
+        attackRange: 0, attackLane: 0, cooldown: 2.2, damage: 0, score: 260, strong: true,
+        fireRange: 230, fireLane: 32, fireCooldown: 1.75
+      },
+      trex: {
+        texture: "robo-trex", hp: 6, speed: 32, patrolSpeed: 14, sense: 245,
+        attackRange: 30, attackLane: 19, cooldown: 1.25, damage: 22, score: 410, gem: "gem-red", strong: true,
+        fireRange: 120, fireLane: 18, fireCooldown: 2.9, scale: 1.04
+      },
+      mech: {
+        texture: "walker-mech", hp: 10, speed: 18, patrolSpeed: 4, sense: 285,
+        attackRange: 34, attackLane: 22, cooldown: 1.45, damage: 28, score: 1300, gem: "gem-red", strong: true, boss: true,
+        fireRange: 260, fireLane: 34, fireCooldown: 1.25, scale: 1.08
       }
     };
 
@@ -1952,8 +2047,7 @@
           const lanePenalty = Math.abs(dy) * 1.9;
           let score = Math.abs(dx) + lanePenalty;
           if (Math.abs(dx) > 12 && side !== desiredDirection) score += this.aimIntentX ? 360 : 120;
-          if (drone.isRearAmbush && rearThreat) score -= 520;
-          if (drone.isRearAmbush && side !== this.facing) score -= 120;
+          if (drone.isRearAmbush && rearThreat && side === desiredDirection) score -= 260;
           if (Math.abs(dy) > 34) score += 90;
           if (score < best) {
             best = score;
@@ -1966,12 +2060,6 @@
       faceWeaponTarget() {
         const target = this.findWeaponTarget();
         this.weaponTarget = target;
-        if (!target) return;
-        const dx = target.x - this.x;
-        if (Math.abs(dx) > 3) {
-          this.facing = Math.sign(dx);
-          this.sprite.setFlipX(this.facing < 0);
-        }
       }
 
       setMove(x, y) {
@@ -2113,6 +2201,8 @@
         this.clueGoal = 0;
         this.routeNotes = [];
         this.damageTaken = 0;
+        this.bossDefeated = false;
+        this.shipLaunching = false;
       }
 
       preload() {
@@ -2250,14 +2340,17 @@
         if (this.level >= 3) {
           this.relays.push(new SignalRelay(this, 1014, 152, "ucuncu hatta sokak kendi adini fisildadi", 0));
         }
+        if (this.level >= 2) this.configureBaseLevel();
         this.clueGoal = this.streetClues.length + this.relays.length;
-        this.lastLoot = "dosya acik";
+        this.lastLoot = this.level >= 2 ? "askeri kisla / robot ussu" : "dosya acik";
         this.particles = new ParticlePool(this);
         this.cameraRig = new PixelPerfectCamera(this, this.player);
-        this.rearAmbushes = [660, 1510, 2380];
-        this.rearAmbushIndex = 0;
-        this.rearThreatTimer = 0;
-        this.helpText = this.add.text(8, 201, "W/↑ jet zipla · J buyu · L sarj · K hurda", {
+        if (this.level < 2) {
+          this.rearAmbushes = [660, 1510, 2380];
+          this.rearAmbushIndex = 0;
+          this.rearThreatTimer = 0;
+        }
+        this.helpText = this.add.text(8, 201, this.level >= 2 ? "US: kuleleri yik · bossu indir · hangara kos" : "W/↑ jet zipla · J buyu · L sarj · K hurda", {
           fontFamily: "monospace",
           fontSize: "8px",
           color: "#f5e8be"
@@ -2273,17 +2366,152 @@
         window.ashRunnerScene = this;
       }
 
+      destroySceneObjects(items) {
+        items.forEach(item => {
+          if (!item) return;
+          if (item.parts) item.parts.forEach(part => part?.destroy?.());
+          item.sprite?.destroy?.();
+          item.shadow?.destroy?.();
+        });
+      }
+
+      configureBaseLevel() {
+        this.destroySceneObjects(this.props);
+        this.destroySceneObjects(this.drones);
+        this.destroySceneObjects(this.hazards);
+        this.destroySceneObjects(this.gaps);
+        this.destroySceneObjects(this.weaponPickups);
+        this.destroySceneObjects(this.streetClues);
+        this.destroySceneObjects(this.relays);
+
+        this.player.x = 70;
+        this.player.y = 158;
+        this.player.floor = 0;
+        this.player.hasWeapon = true;
+        this.player.weaponType = "rifle";
+
+        this.props = [
+          new ScrapObject(this, 186, 164, "crate"),
+          new ScrapObject(this, 328, 146, "engine"),
+          new ScrapObject(this, 520, 172, "sign"),
+          new ScrapObject(this, 980, 158, "crate"),
+          new ScrapObject(this, 1350, 106, "crate"),
+          new ScrapObject(this, 1740, 168, "engine"),
+          new ScrapObject(this, 2150, 104, "sign"),
+          new ScrapObject(this, 2468, 160, "crate")
+        ];
+        this.drones = [
+          new Drone(this, 410, 160, "turret"),
+          new Drone(this, 690, 146, "tower"),
+          new Drone(this, 940, 172, "dart"),
+          new Drone(this, 1190, 104, "turret"),
+          new Drone(this, 1450, 154, "trex"),
+          new Drone(this, 1665, 102, "tower"),
+          new Drone(this, 1900, 174, "turret"),
+          new Drone(this, 2188, 152, "trex"),
+          new Drone(this, 2528, 160, "tower"),
+          new Drone(this, 2780, 166, "mech")
+        ];
+        this.hazards = [
+          new RoadHazard(this, 770, 178),
+          new RoadHazard(this, 1825, 170),
+          new RoadHazard(this, 2380, 164)
+        ];
+        this.gaps = [
+          new RoadGap(this, 1040, 46),
+          new RoadGap(this, 2050, 52)
+        ];
+        this.weaponPickups = [
+          new WeaponPickup(this, 284, 152, 0, "rocket"),
+          new WeaponPickup(this, 1324, 104, 1),
+          new WeaponPickup(this, 2324, 160, 0, "rocket")
+        ];
+        this.streetClues = [
+          new StreetClue(this, 252, 150, "askeri kapinin ardinda robot uretim hatti var", 0),
+          new StreetClue(this, 1048, 104, "kuleler govdeden vurulunca yikiliyor", 1),
+          new StreetClue(this, 1768, 162, "trex yuruyus sesi saldiri ritmini ele verir", 0),
+          new StreetClue(this, 2620, 152, "hangar son kacis icin acik tutulmus", 0)
+        ];
+        this.relays = [
+          new SignalRelay(this, 840, 166, "kislada ilk alarm sustu", 0),
+          new SignalRelay(this, 1590, 104, "ust platformdaki kule agi kirildi", 1),
+          new SignalRelay(this, 2420, 164, "hangar kalkis izni cozuldu", 0)
+        ];
+        this.rearAmbushes = [1120, 2060];
+        this.rearAmbushIndex = 0;
+        this.rearThreatTimer = 0;
+        this.lastLoot = "askeri kisla / robot ussu";
+      }
+
+      onBossDefeated() {
+        this.bossDefeated = true;
+        this.lastLoot = "agir guvenlik mech dustu / hangara kos";
+        this.revealDropShip();
+      }
+
+      revealDropShip() {
+        if (!this.dropShip || this.dropShip.visible) return;
+        this.dropShip.setVisible(true).setAlpha(0).setScale(0.9);
+        this.tweens.add({
+          targets: this.dropShip,
+          alpha: 1,
+          scale: 1,
+          duration: 420,
+          ease: "Quad.easeOut"
+        });
+        this.areaPulse(WORLD_W - 102, 146, 58, 0x53d5ff);
+      }
+
+      beginShipLaunch() {
+        if (this.shipLaunching) return;
+        this.shipLaunching = true;
+        this.started = false;
+        this.player.sprite.setVisible(false);
+        if (this.player.weaponSprite) this.player.weaponSprite.setVisible(false);
+        if (this.player.weaponHand) this.player.weaponHand.setVisible(false);
+        if (!this.dropShip) {
+          this.completeLevel();
+          return;
+        }
+        this.dropShip.setVisible(true).setAlpha(1).setDepth(9300);
+        this.lastLoot = "uzay gemisi kalkiyor";
+        this.helpText.setText("Kalkis basladi · yörüngeye cikiliyor");
+        this.cameraRig.shake(0.45);
+        this.particles.explosion(this.dropShip.x, this.dropShip.y + 10, 26);
+        this.tweens.add({
+          targets: this.dropShip,
+          y: -38,
+          scale: 0.62,
+          duration: 1350,
+          ease: "Cubic.easeIn",
+          onComplete: () => this.completeLevel()
+        });
+      }
+
       createParallax() {
-        const sky = this.add.rectangle(0, 0, GAME_W, GAME_H, 0x17111a).setOrigin(0).setScrollFactor(0).setDepth(-100);
-        const sun = this.add.circle(315, 58, 28, 0xffb000, 0.18).setScrollFactor(0).setDepth(-99);
-        const far = this.add.tileSprite(0, 31, GAME_W, 92, "far-ruins").setOrigin(0).setScrollFactor(0).setDepth(-90);
-        const mid = this.add.tileSprite(0, 76, GAME_W, 94, "mid-ruins").setOrigin(0).setScrollFactor(0).setDepth(-80);
-        const road = this.add.tileSprite(0, 116, GAME_W, 100, "road-tile").setOrigin(0).setScrollFactor(0).setDepth(-70);
+        const baseLevel = this.level >= 2;
+        const sky = this.add.rectangle(0, 0, GAME_W, GAME_H, baseLevel ? 0x0d1117 : 0x17111a).setOrigin(0).setScrollFactor(0).setDepth(-100);
+        const sun = this.add.circle(315, 58, baseLevel ? 18 : 28, baseLevel ? 0x53d5ff : 0xffb000, baseLevel ? 0.12 : 0.18).setScrollFactor(0).setDepth(-99);
+        const far = this.add.tileSprite(0, 31, GAME_W, 92, baseLevel ? "base-far" : "far-ruins").setOrigin(0).setScrollFactor(0).setDepth(-90);
+        const mid = this.add.tileSprite(0, 76, GAME_W, 94, baseLevel ? "base-mid" : "mid-ruins").setOrigin(0).setScrollFactor(0).setDepth(-80);
+        const road = this.add.tileSprite(0, 116, GAME_W, 100, baseLevel ? "base-road-tile" : "road-tile").setOrigin(0).setScrollFactor(0).setDepth(-70);
         this.layers.push({ sprite: far, factor: 0.18 }, { sprite: mid, factor: 0.38 }, { sprite: road, factor: 1 });
         this.add.rectangle(0, LANE_TOP - 3, WORLD_W, 1, 0xffb000, 0.18).setOrigin(0).setDepth(-40);
         this.add.rectangle(0, LANE_BOTTOM + 3, WORLD_W, 1, 0x53d5ff, 0.16).setOrigin(0).setDepth(-40);
-        this.add.rectangle(WORLD_W - 90, 92, 54, 96, 0x322327).setOrigin(0).setDepth(-38);
-        this.add.text(WORLD_W - 82, 104, "EXIT", { fontFamily: "monospace", fontSize: "10px", color: "#53d5ff" }).setDepth(-37);
+        if (baseLevel) {
+          this.add.rectangle(WORLD_W - 168, 84, 132, 96, 0x11161c, 0.94).setOrigin(0).setDepth(-38);
+          this.add.rectangle(WORLD_W - 154, 100, 104, 54, 0x252d35, 0.96).setOrigin(0).setDepth(-37);
+          this.add.rectangle(WORLD_W - 138, 118, 72, 22, 0x090b0f, 0.9).setOrigin(0).setDepth(-36);
+          this.add.text(WORLD_W - 148, 91, "LAUNCH BAY", { fontFamily: "monospace", fontSize: "8px", color: "#ffb000" }).setDepth(-35);
+          this.dropShip = this.add.image(WORLD_W - 102, 128, "drop-ship").setDepth(-34).setVisible(false).setAlpha(0);
+        } else {
+          this.add.rectangle(WORLD_W - 134, 88, 94, 100, 0x1c2425, 0.98).setOrigin(0).setDepth(-38);
+          this.add.rectangle(WORLD_W - 118, 104, 62, 76, 0x2b3431, 0.96).setOrigin(0).setDepth(-37);
+          this.add.rectangle(WORLD_W - 127, 96, 8, 88, 0xffb000, 0.55).setOrigin(0).setDepth(-36);
+          this.add.rectangle(WORLD_W - 54, 96, 8, 88, 0xffb000, 0.55).setOrigin(0).setDepth(-36);
+          this.add.text(WORLD_W - 124, 103, "ASKERI\nBOLGE", { fontFamily: "monospace", fontSize: "8px", color: "#53d5ff", lineSpacing: 1 }).setDepth(-35);
+          this.add.text(WORLD_W - 123, 150, "KISLA-02", { fontFamily: "monospace", fontSize: "7px", color: "#ffb000" }).setDepth(-35);
+        }
         this.sky = sky;
         this.sun = sun;
       }
@@ -2552,7 +2780,7 @@
         this.started = true;
         document.getElementById("boot-card")?.classList.add("is-hidden");
         const hudTitle = document.getElementById("hud-title");
-        if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level}`;
+        if (hudTitle) hudTitle.textContent = this.level >= 2 ? "KUL HATTI // ASKERI KISLA" : `KUL HATTI // BOLUM ${this.level}`;
         this.game.canvas.setAttribute("tabindex", "0");
         this.game.canvas.focus({ preventScroll: true });
         audio.start();
@@ -2727,23 +2955,32 @@
         this.score += levelBonus;
         window.ashRunnerProgress = { level: this.level, score: this.score };
 
-        this.helpText.setText("Bolum tamamlandi · Devam Et ile yeni hatta gec");
+        this.helpText.setText(this.level >= 2 ? "Kalkis tamamlandi · Devam Et" : "Askeri kapı acildi · Devam Et ile kislaya gir");
         this.scoreText.setText(String(Math.floor(this.score)).padStart(6, "0"));
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level} OK`;
 
-        document.getElementById("level-title").textContent = `Bölüm ${this.level} tamamlandı`;
+        document.getElementById("level-title").textContent = this.level >= 2 ? "Robot üssü temizlendi" : `Bölüm ${this.level} tamamlandı`;
         document.getElementById("level-score").textContent = String(Math.floor(this.score)).padStart(6, "0");
         document.getElementById("level-bonus").textContent = `+${levelBonus}`;
         document.getElementById("level-health").textContent = String(Math.round(this.player.health));
         document.getElementById("level-defeated").textContent = `${defeated}/${this.drones.length}`;
         document.getElementById("level-clues").textContent = `${this.storyClues}/${this.clueGoal}`;
         document.getElementById("level-chain").textContent = `x${Math.max(1, this.maxChain)}`;
+        const achievementText = this.level >= 2
+          ? `Başarılar: ${defeated} savunma sistemi devre dışı, ana mech indirildi, ${this.storyClues}/${this.clueGoal} üs izi toplandı, gemi kalkışı başlatıldı.`
+          : `Başarılar: ${defeated} robot devre dışı, ${this.storyClues}/${this.clueGoal} iz toplandı, en iyi zincir x${Math.max(1, this.maxChain)}, askeri kışla yolu açıldı.`;
+        const achievements = document.getElementById("level-achievements");
+        if (achievements) achievements.textContent = achievementText;
         const lastNote = this.routeNotes[this.routeNotes.length - 1];
-        const copy = lastNote
-          ? `Çıkış kapısı güvenli. Son iz: ${lastNote}.`
-          : "Çıkış kapısı güvenli. Sokak bu koşuda sessiz kaldı.";
+        const copy = this.level >= 2
+          ? "İki bacaklı ağır güvenlik mech devrildi. Hangardaki gemi kalkışa geçti; rota artık atmosferin dışında."
+          : (lastNote
+            ? `Askeri bölge kapısı açıldı. Son iz: ${lastNote}. Sıradaki hat robotların kışla üssü.`
+            : "Askeri bölge kapısı açıldı. Sıradaki hat robotların kışla üssü.");
         document.getElementById("level-copy").textContent = copy;
+        const nextButton = document.getElementById("next-level");
+        if (nextButton) nextButton.textContent = this.level >= 2 ? "Yörüngeye Devam Et" : "Kışlaya Gir";
         const card = document.getElementById("level-card");
         card?.classList.add("is-open");
         card?.setAttribute("aria-hidden", "false");
@@ -2953,7 +3190,17 @@
         this.particles.update(dt);
         this.cameraRig.update(dt);
 
-        if (this.player.x > WORLD_W - 120) this.completeLevel();
+        if (this.player.x > WORLD_W - 120) {
+          if (this.level >= 2) {
+            if (this.bossDefeated) this.beginShipLaunch();
+            else {
+              this.lastLoot = "hangar kilitli / once ana mech";
+              this.player.x = WORLD_W - 126;
+            }
+          } else {
+            this.completeLevel();
+          }
+        }
 
         this.scoreText.setText(String(Math.floor(this.score)).padStart(6, "0"));
         const hudState = document.getElementById("hud-state");
