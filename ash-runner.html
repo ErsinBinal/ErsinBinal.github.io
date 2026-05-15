@@ -1640,6 +1640,11 @@
         this.stepTimer = 0;
         this.walkPhase = 0;
         this.hasWeapon = false;
+        this.weaponSprite = scene.add.image(x, y, "scrap-rifle")
+          .setOrigin(0.12, 0.55)
+          .setScale(0.82)
+          .setVisible(false);
+        this.weaponKickTimer = 0;
         this.fireHeld = false;
         this.wasFireHeld = false;
         this.fireCharge = 0;
@@ -1778,12 +1783,17 @@
 
       updateWeapon(dt) {
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+        this.weaponKickTimer = Math.max(0, this.weaponKickTimer - dt);
         const canCharge = this.hasWeapon && !this.carried && this.health > 0 && this.fsm.name !== "stagger";
+        if ((this.fireHeld || this.fireCharge > 0 || this.weaponKickTimer > 0) && canCharge) {
+          this.faceWeaponTarget();
+        }
         if (this.fireHeld && canCharge) {
           this.fireCharge = clamp(this.fireCharge + dt, 0, this.maxFireCharge);
         }
         if (this.wasFireHeld && !this.fireHeld && this.fireCharge > 0 && canCharge && this.fireCooldown <= 0) {
           const ratio = clamp(this.fireCharge / this.maxFireCharge, 0, 1);
+          this.weaponKickTimer = 0.16;
           this.scene.spawnPlayerShot(this, ratio);
           this.fireCooldown = 0.18;
           this.fireCharge = 0;
@@ -1791,6 +1801,32 @@
           this.fireCharge = 0;
         }
         this.wasFireHeld = this.fireHeld;
+      }
+
+      findWeaponTarget() {
+        let target = null;
+        let best = Infinity;
+        this.scene.drones.forEach(drone => {
+          if (drone.defeated || drone.floor !== this.floor) return;
+          const dx = drone.x - this.x;
+          const dy = (drone.y - 12) - (this.y - 18);
+          const distance = Math.hypot(dx, dy * 1.55);
+          if (distance < best) {
+            best = distance;
+            target = drone;
+          }
+        });
+        return target;
+      }
+
+      faceWeaponTarget() {
+        const target = this.findWeaponTarget();
+        if (!target) return;
+        const dx = target.x - this.x;
+        if (Math.abs(dx) > 3) {
+          this.facing = Math.sign(dx);
+          this.sprite.setFlipX(this.facing < 0);
+        }
       }
 
       setMove(x, y) {
@@ -1830,6 +1866,45 @@
         this.updateWeapon(dt);
         this.fsm.update(dt, time);
         this.sync();
+      }
+
+      sync() {
+        super.sync();
+        this.syncWeaponSprite();
+      }
+
+      syncWeaponSprite() {
+        if (!this.weaponSprite) return;
+        const visible = this.hasWeapon && !this.carried && this.health > 0;
+        this.weaponSprite.setVisible(visible);
+        if (!visible) return;
+
+        const aiming = this.fireHeld || this.fireCharge > 0 || this.weaponKickTimer > 0;
+        const direction = this.facing || 1;
+        const recoil = this.weaponKickTimer > 0 ? 3 * (this.weaponKickTimer / 0.16) : 0;
+        const handX = this.x + direction * (aiming ? 6 - recoil : 8);
+        const handY = this.y - this.visualElevation - (aiming ? 17 : 13);
+        let angle = direction > 0 ? -0.06 : 0.06;
+
+        if (aiming) {
+          const target = this.findWeaponTarget();
+          if (target) {
+            const targetElevation = this.scene.getElevation ? this.scene.getElevation(target.x, target.y, target) : 0;
+            angle = Math.atan2(
+              target.y - targetElevation - 13 - handY,
+              target.x - handX
+            );
+          } else {
+            angle = direction > 0 ? -0.24 : 0.24;
+          }
+        }
+
+        this.weaponSprite
+          .setPosition(Math.round(handX), Math.round(handY))
+          .setFlipX(direction < 0)
+          .setRotation(direction < 0 ? angle - Math.PI : angle)
+          .setDepth(this.sprite.depth + 1)
+          .setAlpha(aiming ? 1 : 0.92);
       }
     }
 
@@ -2408,6 +2483,7 @@
       playerDown() {
         this.started = false;
         this.player.sprite.setTint(0xf05a4a);
+        if (this.player.weaponSprite) this.player.weaponSprite.setVisible(false);
         this.helpText.setText("Sistem dustu · R ile tekrar baslat");
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = "KUL HATTI // DOWN";
