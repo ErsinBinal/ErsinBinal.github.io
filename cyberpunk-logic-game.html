@@ -458,7 +458,7 @@
             <div id="result-summary"></div>
             <div class="result-actions">
                 <button id="retry-game" class="terminal-button" type="button">Tekrar Dene</button>
-                <button id="go-universe3" class="terminal-button" type="button">Skoru Universe-3'e Aktar</button>
+                <button id="go-dashboard" class="terminal-button" type="button">Dashboard'a Git</button>
             </div>
             <div id="scoreboard-entry" style="margin-top:32px; display:none;">
                 <label for="player-initials" style="font-size:1.2em;">3 Harfli İsminizi Girin:</label><br>
@@ -716,7 +716,7 @@
     "Mantık protokolleri yükleniyor...",
     "Firewall trace sensörleri ayarlanıyor...",
     "Axiom node kilitleri taranıyor...",
-    "Universe-3 aktarım kanalı beklemeye alındı..."
+    "Dashboard kayıt kanalı beklemeye alındı..."
 ];
 
 let currentMessageIndex = 0;
@@ -923,7 +923,7 @@ function showNextLoadingMessage() {
             questionContainer.style.display = 'none';
             resultsElement.style.display = 'flex';
             finalScoreElement.textContent = gameState.score;
-            resultSummaryElement.textContent = `Trace ${gameState.trace}% | En iyi streak ${gameState.bestStreak} | Universe-3 aktarım kanalı hazır.`;
+            resultSummaryElement.textContent = `Trace ${gameState.trace}% | En iyi streak ${gameState.bestStreak} | Dashboard kayıt kanalı hazır.`;
             clearInterval(gameState.timer);
 
             // Bitirme süresini hesapla
@@ -1092,10 +1092,9 @@ function showNextLoadingMessage() {
         }
 
         document.getElementById('retry-game').addEventListener('click', startGame);
-        document.getElementById('go-universe3').addEventListener('click', () => {
+        document.getElementById('go-dashboard').addEventListener('click', () => {
             sessionStorage.setItem('cyberpunkLogicScore', String(gameState.score));
-            sessionStorage.setItem('universe2ArcadeScore', String(Math.max(0, gameState.score)));
-            location.href = `universe-3.html?score=${encodeURIComponent(String(Math.max(0, gameState.score)))}&rift=logic`;
+            location.href = 'dashboard.html';
         });
         
         // Initialize on load

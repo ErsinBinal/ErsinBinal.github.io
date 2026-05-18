@@ -283,7 +283,7 @@
       <p id="finalScore">Skor: 0</p>
       <p id="finalWave">Dalga: 1</p>
       <p id="finalHigh">En iyi skor: 0</p>
-      <button id="nextUniverse" type="button" style="display:none;">EVREN-3'E GEÇ</button>
+      <button id="nextUniverse" type="button" style="display:none;">DASHBOARD'A DÖN</button>
       <button id="restart" type="button">YENİDEN BAŞLAT</button>
     </div>
   </div>
@@ -424,8 +424,7 @@
           e.stopPropagation();
         });
         ui.nextUniverse.addEventListener("click", () => {
-          sessionStorage.setItem("universe2ArcadeScore", String(state.score));
-          location.href = "universe-3.html?score=" + encodeURIComponent(String(state.score)) + "&rift=universe2";
+          location.href = "dashboard.html";
         });
 
         setTimeout(() => {

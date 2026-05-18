@@ -13,7 +13,6 @@
     'cyberpunk-logic': 'Cyberpunk Logic',
     'neon-river': 'Neon River',
     'universe-2': 'Universe-2',
-    'universe-3': 'Universe-3',
     'ash-runner': 'Kul Hatti'
   };
 
