@@ -12,12 +12,34 @@
   let sessionUser = null;
   let lastSessionWrite = 0;
 
+  function lockPage() {
+    document.documentElement.classList.add('auth-locking');
+    if (!document.getElementById('auth-lock-style')) {
+      const style = document.createElement('style');
+      style.id = 'auth-lock-style';
+      style.textContent = [
+        'html.auth-locking body>*:not(#auth-required-gate){visibility:hidden!important;pointer-events:none!important}',
+        'html.auth-locking #auth-required-gate{visibility:visible!important;pointer-events:auto!important}'
+      ].join('');
+      document.head.appendChild(style);
+    }
+  }
+
+  function unlockPage() {
+    document.documentElement.classList.remove('auth-locking');
+  }
+
   function loginUrl() {
     const returnTo = `${location.pathname}${location.search}${location.hash}`;
     return `/auth.html?returnTo=${encodeURIComponent(returnTo)}`;
   }
 
   function setGateMessage(message) {
+    if (!document.body) {
+      document.addEventListener('DOMContentLoaded', () => setGateMessage(message), { once: true });
+      return;
+    }
+
     let gate = document.getElementById('auth-required-gate');
     if (!gate) {
       gate = document.createElement('section');
@@ -38,6 +60,8 @@
       document.body.appendChild(gate);
     }
 
+    document.body.style.visibility = 'visible';
+    document.body.style.pointerEvents = 'auto';
     gate.innerHTML = [
       '<div style="max-width:520px;border:1px solid #00ff00;padding:22px;background:#050505;box-shadow:0 0 18px rgba(0,255,0,.22)">',
       '<strong style="display:block;color:#00ff00;font-size:1.1rem;margin-bottom:8px">Uyelik gerekli</strong>',
@@ -62,8 +86,16 @@
         return null;
       }
 
-      document.body.classList.add('auth-granted');
-      document.body.dataset.authUser = session.user.email || session.user.id;
+      unlockPage();
+      if (document.body) {
+        document.body.classList.add('auth-granted');
+        document.body.dataset.authUser = session.user.email || session.user.id;
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          document.body.classList.add('auth-granted');
+          document.body.dataset.authUser = session.user.email || session.user.id;
+        }, { once: true });
+      }
       return session;
     } catch (error) {
       setGateMessage(error.message || 'Oturum kontrolu yapilamadi.');
@@ -136,6 +168,8 @@
     }
   };
 
+  lockPage();
+
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') recordSession(true);
   });
@@ -146,9 +180,5 @@
     });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGate, { once: true });
-  } else {
-    initGate();
-  }
+  initGate();
 })();
