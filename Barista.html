@@ -9,7 +9,7 @@
     <link rel="canonical" href="https://ersinbinal.github.io/Barista.html">
 
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: https://*.supabase.co wss://*.supabase.co;">
 
     <!-- OpenGraph -->
     <meta property="og:site_name" content="Convivium">
@@ -23,6 +23,10 @@
     <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
 
     <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/assets/js/supabase-config.js" defer></script>
+    <script src="/assets/js/supabase-client.js" defer></script>
+    <script src="/assets/js/auth-gate.js" defer data-item-key="cyber-barista" data-item-type="app" data-item-title="Cyber Barista"></script>
 
     <style>
         /* ============================
@@ -512,6 +516,18 @@
             coffee.playlist.forEach(song => { plBox.innerHTML += `<div class="song-item"><span class="song-icon">♪</span> ${song}</div>`; });
 
             dialogue.textContent = "Hazır. Mükemmel sıcaklıkta.";
+            window.ConviviumActivity?.recordRecommendation({
+                recommendation_title: coffee.name,
+                recommendation_summary: `${coffee.brand} / ${coffee.temp === "hot" ? "Sıcak" : "Soğuk"} / ${coffee.desc}`,
+                recommendation_meta: {
+                    brand: coffee.brand,
+                    temp: coffee.temp,
+                    mood: userPrefs.mood,
+                    calories: coffee.cal,
+                    recipe: coffee.content,
+                    tip: coffee.tip
+                }
+            });
             
             const ytLink = document.createElement('div');
             ytLink.style.marginTop = "15px";

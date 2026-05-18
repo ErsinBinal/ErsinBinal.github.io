@@ -7,7 +7,7 @@
   <meta name="description" content="The Oracle - kapalı işaretler, entropi ve kısa okuma motoru.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/TheOracle.html">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
   <meta property="og:site_name" content="Convivium">
   <meta property="og:title" content="The Oracle | Convivium">
   <meta property="og:description" content="Kapalı işaretler, entropi ve yalın kehanet motoru.">
@@ -15,6 +15,10 @@
   <meta name="theme-color" content="#050505">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/auth-gate.js" defer data-item-key="oracle" data-item-type="app" data-item-title="The Oracle"></script>
   <style>
     :root {
       color-scheme: dark;
@@ -1799,6 +1803,17 @@
           updateMeters();
           els.stamp.textContent = `okuma açıldı: ${reading.confidence}%`;
           persistReading(reading, null);
+          window.ConviviumActivity?.recordRecommendation({
+            recommendation_title: reading.name || reading.code || 'Oracle okuması',
+            recommendation_summary: reading.signal || reading.move || reading.matrixSummary || '',
+            recommendation_meta: {
+              code: reading.code,
+              axis: reading.axis,
+              confidence: reading.confidence,
+              move: reading.move,
+              trap: reading.trap
+            }
+          });
           updateProtocol(reading);
           renderHistory();
           drawNoise();

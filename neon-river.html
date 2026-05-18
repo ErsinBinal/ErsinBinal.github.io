@@ -12,6 +12,10 @@
         .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%); background-size: 100% 4px; pointer-events: none; z-index: 100; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <script src="/assets/js/supabase-config.js" defer></script>
+    <script src="/assets/js/supabase-client.js" defer></script>
+    <script src="/assets/js/auth-gate.js" defer data-item-key="neon-river" data-item-type="game" data-item-title="Neon River"></script>
 </head>
 <body>
 
@@ -589,6 +593,11 @@ class GameScene extends Phaser.Scene {
 
         // Skoru kaydet
         this.saveHighScore();
+        window.ConviviumActivity?.recordGameScore({
+            game_key: 'neon-river',
+            score: this.score,
+            duration_seconds: window.ConviviumActivity.getElapsedSeconds()
+        });
 
         // Game Over Ekranı
         let bg = this.add.rectangle(this.W/2, this.H/2, 400, 250, 0x000000, 0.9).setStrokeStyle(4, 0xff0000);

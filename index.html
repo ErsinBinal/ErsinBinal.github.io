@@ -1960,6 +1960,7 @@
                 <a class="action-link" href="ozgecmisim.html">Persona</a>
                 <a class="action-link" href="TheOracle.html">Oracle</a>
                 <a class="action-link" href="auth.html">Access</a>
+                <a class="action-link" href="dashboard.html">Dashboard</a>
                 <button class="action-link" id="command-launch" type="button">Command</button>
               </nav>
             </div>
@@ -1986,6 +1987,10 @@
           <a class="terminal-command" href="auth.html" data-action="LOGIN">
             <span>&gt; access</span>
             Üyelik, oturum ve içerik yetkisi.
+          </a>
+          <a class="terminal-command" href="dashboard.html" data-action="DASH">
+            <span>&gt; dashboard</span>
+            Skorlar, sureler ve son oneriler.
           </a>
         </section>
 
@@ -2461,6 +2466,8 @@
         'persona': () => { location.href = 'ozgecmisim.html'; },
         'access': () => { location.href = 'auth.html'; },
         'login': () => { location.href = 'auth.html'; },
+        'dashboard': () => { location.href = 'dashboard.html'; },
+        'dash': () => { location.href = 'dashboard.html'; },
         'admin': () => { location.href = 'admin.html'; },
         'unlock hidden': () => {
           if (!requireAccess()) return 'login required';
@@ -2471,7 +2478,7 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / run ash / trace persona / access / admin / unlock hidden',
+        'help': () => 'commands: open dossier / query oracle / run logic / run ash / trace persona / access / dashboard / admin / unlock hidden',
         '?': () => 'keyboard: D dossier, O oracle, L logic, B ash, F flow, P persona, A access, ? command shell, ESC close'
       };
 

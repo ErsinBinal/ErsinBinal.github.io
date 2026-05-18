@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Universe-2: Akıntı Filosu | Convivium</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/auth-gate.js" defer data-item-key="universe-2" data-item-type="game" data-item-title="Universe-2"></script>
   <meta name="description" content="Neon River sonrası başlayan dikey arcade shooter.">
   <meta name="author" content="Ersin Binal">
   <style>
@@ -1095,6 +1099,12 @@
         state.ejectAvailable = false;
         ui.ejectButton.classList.remove("show");
         localStorage.setItem("universe2ArcadeHigh", String(state.high));
+        window.ConviviumActivity?.recordGameScore({
+          game_key: "universe-2",
+          score: state.score,
+          duration_seconds: window.ConviviumActivity.getElapsedSeconds(),
+          best_streak: state.wave
+        });
         ui.finalScore.textContent = "Skor: " + state.score;
         ui.finalWave.textContent = "Dalga: " + state.wave;
         ui.finalHigh.textContent = "En iyi skor: " + state.high;

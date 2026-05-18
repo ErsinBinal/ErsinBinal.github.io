@@ -7,7 +7,7 @@
   <meta name="description" content="16-bit ruhlu, sahte Z eksenli, parallax kaydırmalı ve nesne fırlatma odaklı özgün retro arcade aksiyon oyunu.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/ash-runner.html">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';">
   <meta property="og:site_name" content="Convivium">
   <meta property="og:title" content="Kül Hattı: Scrap Run | Convivium">
   <meta property="og:description" content="Post-apokaliptik arcade ritmini özgün piksel mimarisiyle yeniden kuran oynanabilir prototip.">
@@ -505,6 +505,10 @@
     }
   </style>
   <script src="assets/js/phaser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/auth-gate.js" defer data-item-key="ash-runner" data-item-type="game" data-item-title="Kul Hatti"></script>
 </head>
 <body>
   <main id="game-shell" aria-label="Kül Hattı arcade oyun alanı">
@@ -2948,6 +2952,14 @@
         document.getElementById("level-defeated").textContent = `${defeated}/${this.drones.length}`;
         document.getElementById("level-clues").textContent = `${this.storyClues}/${this.clueGoal}`;
         document.getElementById("level-chain").textContent = `x${Math.max(1, this.maxChain)}`;
+        if (this.level >= 2) {
+          window.ConviviumActivity?.recordGameScore({
+            game_key: "ash-runner",
+            score: Math.floor(this.score),
+            duration_seconds: window.ConviviumActivity.getElapsedSeconds(),
+            best_streak: Math.max(1, this.maxChain)
+          });
+        }
         const achievementText = this.level >= 2
           ? `Başarılar: ${defeated} savunma sistemi devre dışı, ana mech indirildi, ${this.storyClues}/${this.clueGoal} üs izi toplandı, gemi kalkışı başlatıldı.`
           : `Başarılar: ${defeated} robot devre dışı, ${this.storyClues}/${this.clueGoal} iz toplandı, en iyi zincir x${Math.max(1, this.maxChain)}, askeri kışla yolu açıldı.`;

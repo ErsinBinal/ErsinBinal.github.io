@@ -9,7 +9,7 @@
 <link rel="canonical" href="https://ersinbinal.github.io/Barista_V2.html">
 
 <!-- Content Security Policy -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
 <!-- OpenGraph -->
 <meta property="og:site_name" content="Convivium">
@@ -21,6 +21,10 @@
 <meta name="theme-color" content="#d4af37">
 <link rel="manifest" href="/manifest.json">
 <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="/assets/js/supabase-config.js" defer></script>
+<script src="/assets/js/supabase-client.js" defer></script>
+<script src="/assets/js/auth-gate.js" defer data-item-key="cyber-barista-v2" data-item-type="app" data-item-title="Cyber Barista V2"></script>
 
 <style>
 :root{
@@ -241,6 +245,17 @@ function calculate(){
   c.playlist.forEach(p=>pl.innerHTML+=`♪ ${p}<br>`);
 
   document.getElementById("result").style.display="block";
+  window.ConviviumActivity?.recordRecommendation({
+    recommendation_title: c.name,
+    recommendation_summary: `${prefs.brand} / ${prefs.temp} / ${c.desc}`,
+    recommendation_meta: {
+      brand: prefs.brand,
+      temp: prefs.temp,
+      mood: prefs.mood,
+      recipe: c.recipe[prefs.temp],
+      tip: c.tip
+    }
+  });
 }
 
 renderStep();

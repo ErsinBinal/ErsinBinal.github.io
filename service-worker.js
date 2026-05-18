@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v18';
+const CACHE_NAME = 'convivium-v19';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -17,6 +17,7 @@ const PRECACHE_ASSETS = [
   '/makaleler.html',
   '/auth.html',
   '/admin.html',
+  '/dashboard.html',
   '/ozgecmisim.html',
   '/assets/css/common.css',
   '/assets/css/animations.css',
@@ -25,8 +26,10 @@ const PRECACHE_ASSETS = [
   '/assets/js/theme.js',
   '/assets/js/utils.js',
   '/assets/js/supabase-client.js',
+  '/assets/js/auth-gate.js',
   '/assets/js/auth.js',
   '/assets/js/admin.js',
+  '/assets/js/dashboard.js',
   '/manifest.json'
 ];
 

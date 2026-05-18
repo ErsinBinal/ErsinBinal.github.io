@@ -9,7 +9,7 @@
   <link rel="canonical" href="https://ersinbinal.github.io/Paradox_Terminal.html">
 
   <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
   <!-- OpenGraph -->
   <meta property="og:site_name" content="Convivium">
@@ -25,6 +25,10 @@
   <meta name="theme-color" content="#00ff00">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js" defer></script>
+  <script src="/assets/js/auth-gate.js" defer data-item-key="paradox-terminal" data-item-type="app" data-item-title="Paradoks Terminal"></script>
 
   <!-- Preconnect -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,6 +319,11 @@
           descEl.textContent = px.desc;
           cycleMetaphors(px.metaphors);
           btnNext.disabled = false;
+          window.ConviviumActivity?.recordRecommendation({
+            recommendation_title: px.title,
+            recommendation_summary: px.meta,
+            recommendation_meta: { metaphor: px.metaphors[0] }
+          });
         }
       }
       stepLoader();

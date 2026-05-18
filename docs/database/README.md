@@ -36,6 +36,14 @@ Daha once ilk SQL semasini calistirdiyseniz tum dosyayi tekrar calistirmak yerin
 2. `cyberpunk-logic-game.html` uzerinden giris yapmis bir kullaniciyla skor kaydedin.
 3. Skor kaydi basarili olursa oyun `GLOBAL SCOREBOARD` listesini gosterir.
 
+## Mevcut Kuruluma Faz 3 Ekleme
+
+Dashboard, oyun/uygulama erisim kapisi ve uygulama onerisi kayitlari icin:
+
+1. `docs/database/2026-05-18-dashboard-activity.sql` dosyasini SQL Editor'de calistirin.
+2. `dashboard.html` sayfasina giris yapmis bir kullaniciyla gidin.
+3. Bir oyun bitirin ya da Barista/Bartender/Oracle gibi bir uygulamada sonuc uretin; dashboard son skor ve onerileri gosterir.
+
 ## Guvenlik Notlari
 
 - `anonKey` gizli degildir; tarayiciya konabilir.
