@@ -237,7 +237,7 @@
         phase: 'cloud',
         start: now,
         until: now + 760,
-        x: clamp(sheep.x - 28, 8, window.innerWidth - 112),
+        x: clamp(sheep.x - 38, 8, window.innerWidth - 136),
         y: clamp(sheep.y - 118, 24, window.innerHeight * 0.54)
       };
       neonStorm.style.setProperty('--storm-x', `${Math.round(sheep.effect.x)}px`);
@@ -259,7 +259,7 @@
         phase: 'spin',
         start: now,
         until: now + 1900,
-        x: clamp(sheep.x + petWidth / 2 - 36, 10, window.innerWidth - 84),
+        x: clamp(sheep.x + petWidth / 2 - 52, 10, window.innerWidth - 108),
         y: groundY() - 50,
         vx: 0,
         vy: 0,

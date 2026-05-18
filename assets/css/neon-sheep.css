@@ -302,13 +302,14 @@
   left: 0;
   top: 0;
   z-index: 151;
-  width: 112px;
-  height: 138px;
+  width: 136px;
+  height: 158px;
   pointer-events: none;
   opacity: 0;
   transform: translate3d(var(--storm-x), var(--storm-y), 0);
   transition: opacity 0.16s ease;
-  filter: drop-shadow(0 0 12px rgba(0, 234, 255, 0.5));
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 10px rgba(0, 234, 255, 0.52));
 }
 
 .neon-storm.is-active {
@@ -317,46 +318,105 @@
 
 .neon-storm__cloud {
   position: absolute;
-  left: 14px;
-  top: 8px;
-  width: 78px;
-  height: 30px;
-  border: 2px solid rgba(183, 255, 208, 0.74);
-  background:
-    radial-gradient(circle at 22% 45%, rgba(0, 234, 255, 0.28) 0 18px, transparent 19px),
-    radial-gradient(circle at 50% 26%, rgba(255, 46, 166, 0.2) 0 19px, transparent 20px),
-    radial-gradient(circle at 77% 48%, rgba(0, 255, 102, 0.22) 0 17px, transparent 18px),
-    rgba(0, 0, 0, 0.86);
-  box-shadow: inset 0 0 14px rgba(0, 234, 255, 0.18), 0 0 18px rgba(0, 234, 255, 0.22);
+  left: 24px;
+  top: 10px;
+  width: 88px;
+  height: 54px;
+  background: transparent;
+  filter:
+    drop-shadow(0 3px 0 #021112)
+    drop-shadow(3px 0 0 #021112)
+    drop-shadow(-3px 0 0 #021112)
+    drop-shadow(0 0 9px rgba(0, 234, 255, 0.52));
+}
+
+.neon-storm__cloud::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 18px;
+  width: 14px;
+  height: 14px;
+  background: #c9ffd6;
+  box-shadow:
+    14px -14px 0 #c9ffd6,
+    28px -28px 0 #c9ffd6,
+    42px -28px 0 #9bf4ff,
+    56px -14px 0 #c9ffd6,
+    70px 0 0 #c9ffd6,
+    0 14px 0 #82dfff,
+    14px 0 0 #82dfff,
+    14px 14px 0 #82dfff,
+    28px -14px 0 #c9ffd6,
+    28px 0 0 #82dfff,
+    28px 14px 0 #82dfff,
+    42px -14px 0 #c9ffd6,
+    42px 0 0 #82dfff,
+    42px 14px 0 #82dfff,
+    56px 0 0 #82dfff,
+    56px 14px 0 #82dfff,
+    70px 14px 0 #82dfff;
+}
+
+.neon-storm__cloud::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 48px;
+  width: 56px;
+  height: 3px;
+  background: rgba(255, 46, 166, 0.82);
+  box-shadow: 0 0 8px rgba(255, 46, 166, 0.72);
 }
 
 .neon-storm__rain {
   position: absolute;
-  left: 25px;
-  top: 45px;
-  width: 58px;
-  height: 76px;
+  left: 34px;
+  top: 62px;
+  width: 72px;
+  height: 74px;
   opacity: 0;
-  background:
-    repeating-linear-gradient(105deg, rgba(0, 234, 255, 0.85) 0 2px, transparent 2px 12px);
-  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  background: transparent;
+}
+
+.neon-storm__rain::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0;
+  width: 4px;
+  height: 16px;
+  background: #00eaff;
+  box-shadow:
+    16px 10px 0 #00eaff,
+    32px 0 0 #00eaff,
+    48px 12px 0 #00eaff,
+    64px 2px 0 #00eaff,
+    8px 34px 0 #00eaff,
+    26px 42px 0 #00eaff,
+    44px 34px 0 #00eaff,
+    60px 46px 0 #00eaff;
+  transform: skewX(-18deg);
+  filter: drop-shadow(0 0 5px rgba(0, 234, 255, 0.8));
 }
 
 .neon-storm.is-raining .neon-storm__rain {
   opacity: 1;
-  animation: bugy-rain 0.26s linear infinite;
+  animation: bugy-rain 0.34s steps(2, end) infinite;
 }
 
 .neon-storm__lightning {
   position: absolute;
-  left: 47px;
-  top: 42px;
-  width: 22px;
-  height: 76px;
+  left: 54px;
+  top: 60px;
+  width: 32px;
+  height: 86px;
   opacity: 0;
   background: var(--journey-amber, #f5ff6b);
-  clip-path: polygon(48% 0, 100% 0, 64% 34%, 100% 34%, 28% 100%, 42% 52%, 0 52%);
-  box-shadow: 0 0 20px rgba(245, 255, 107, 0.96);
+  clip-path: polygon(50% 0, 100% 0, 70% 33%, 100% 33%, 28% 100%, 42% 56%, 0 56%, 34% 24%, 18% 24%);
+  box-shadow:
+    0 0 0 4px rgba(20, 12, 0, 0.9),
+    0 0 22px rgba(245, 255, 107, 0.96);
 }
 
 .neon-storm.is-lightning .neon-storm__lightning {
@@ -371,33 +431,75 @@
   left: 0;
   top: 0;
   z-index: 144;
-  width: 76px;
-  height: 126px;
+  width: 104px;
+  height: 142px;
   pointer-events: none;
   opacity: 0;
   transform: translate3d(var(--tornado-x), var(--tornado-y), 0);
   transition: opacity 0.16s ease;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 11px rgba(0, 234, 255, 0.48));
 }
 
 .neon-tornado.is-active {
   opacity: 1;
+  animation: bugy-tornado-sway 0.62s steps(3, end) infinite;
+}
+
+.neon-tornado::before {
+  content: '';
+  position: absolute;
+  left: 18px;
+  top: 6px;
+  width: 68px;
+  height: 112px;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(201, 255, 214, 0.9) 0 8px,
+      rgba(0, 234, 255, 0.78) 8px 16px,
+      rgba(255, 46, 166, 0.72) 16px 22px
+    );
+  clip-path: polygon(4% 0, 96% 0, 78% 24%, 64% 48%, 58% 72%, 48% 100%, 30% 100%, 38% 72%, 28% 48%, 18% 24%);
+  opacity: 0.86;
+  filter:
+    drop-shadow(3px 0 0 rgba(0, 0, 0, 0.86))
+    drop-shadow(-3px 0 0 rgba(0, 0, 0, 0.86))
+    drop-shadow(0 0 12px rgba(0, 234, 255, 0.58));
+  animation: bugy-tornado-funnel 0.3s steps(2, end) infinite;
+}
+
+.neon-tornado::after {
+  content: '';
+  position: absolute;
+  left: 12px;
+  bottom: 0;
+  width: 84px;
+  height: 18px;
+  background:
+    linear-gradient(90deg, transparent 0 8px, rgba(245, 255, 107, 0.74) 8px 18px, transparent 18px 26px, rgba(0, 234, 255, 0.7) 26px 40px, transparent 40px 52px, rgba(255, 46, 166, 0.66) 52px 66px, transparent 66px);
+  box-shadow: 0 0 10px rgba(245, 255, 107, 0.34);
+  animation: bugy-dust-run 0.26s steps(2, end) infinite;
 }
 
 .neon-tornado span {
   position: absolute;
   left: 50%;
-  border: 2px solid rgba(0, 234, 255, 0.72);
-  border-left-color: rgba(255, 46, 166, 0.64);
-  border-right-color: rgba(0, 255, 102, 0.64);
-  border-radius: 50%;
+  z-index: 1;
+  height: 8px;
+  border: 0;
+  background: rgba(0, 0, 0, 0.72);
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 234, 255, 0.8),
+    0 0 9px rgba(0, 234, 255, 0.54);
   transform: translateX(-50%);
-  animation: bugy-tornado-spin 0.36s linear infinite;
+  animation: bugy-tornado-band 0.3s steps(2, end) infinite;
 }
 
-.neon-tornado span:nth-child(1) { top: 0; width: 70px; height: 18px; }
-.neon-tornado span:nth-child(2) { top: 28px; width: 54px; height: 15px; animation-duration: 0.28s; }
-.neon-tornado span:nth-child(3) { top: 55px; width: 38px; height: 12px; animation-duration: 0.22s; }
-.neon-tornado span:nth-child(4) { top: 80px; width: 20px; height: 9px; animation-duration: 0.18s; }
+.neon-tornado span:nth-child(1) { top: 14px; width: 92px; }
+.neon-tornado span:nth-child(2) { top: 42px; width: 68px; animation-delay: 0.08s; }
+.neon-tornado span:nth-child(3) { top: 72px; width: 44px; animation-delay: 0.16s; }
+.neon-tornado span:nth-child(4) { top: 101px; width: 24px; animation-delay: 0.24s; }
 
 .neon-portal {
   --portal-x: 120px;
@@ -455,8 +557,8 @@
 }
 
 @keyframes bugy-rain {
-  0% { background-position: 0 0; }
-  100% { background-position: -12px 18px; }
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-5px, 12px); }
 }
 
 @keyframes bugy-lightning {
@@ -464,9 +566,24 @@
   100% { filter: brightness(1.45); transform: translateX(2px); }
 }
 
-@keyframes bugy-tornado-spin {
-  0% { transform: translateX(-50%) rotate(0deg); }
-  100% { transform: translateX(-50%) rotate(360deg); }
+@keyframes bugy-tornado-sway {
+  0%, 100% { transform: translate3d(var(--tornado-x), var(--tornado-y), 0) translateX(0); }
+  50% { transform: translate3d(var(--tornado-x), var(--tornado-y), 0) translateX(6px); }
+}
+
+@keyframes bugy-tornado-funnel {
+  0% { transform: skewX(-4deg); }
+  100% { transform: skewX(5deg); }
+}
+
+@keyframes bugy-tornado-band {
+  0% { transform: translateX(-50%) translateX(-8px); }
+  100% { transform: translateX(-50%) translateX(8px); }
+}
+
+@keyframes bugy-dust-run {
+  0% { transform: translateX(-5px); opacity: 0.62; }
+  100% { transform: translateX(5px); opacity: 1; }
 }
 
 @keyframes bugy-portal-pulse {
