@@ -1722,6 +1722,18 @@
         rgba(0, 0, 0, 0.52);
     }
 
+    .project-row[data-artifact="oracle"]:hover {
+      background:
+        linear-gradient(90deg, rgba(255, 46, 166, 0.14), rgba(0, 0, 0, 0.52)),
+        rgba(0, 0, 0, 0.52);
+    }
+
+    .project-row[data-artifact="terminal"]:hover {
+      background:
+        linear-gradient(90deg, rgba(0, 255, 102, 0.12), rgba(0, 234, 255, 0.08)),
+        rgba(0, 0, 0, 0.52);
+    }
+
     .dossier-tree {
       display: grid;
       gap: 6px;
@@ -2036,12 +2048,21 @@
               <a class="project-row" href="neon-river.html" data-artifact="river"><span>01</span><strong>Neon River</strong><em>run / reflex</em></a>
               <a class="project-row" href="cyberpunk-logic-game.html" data-artifact="logic"><span>02</span><strong>Cyberpunk Logic</strong><em>run / circuit</em></a>
               <a class="project-row" href="ash-runner.html" data-artifact="ash"><span>03</span><strong>Kül Hattı</strong><em>scrap / brawler</em></a>
+              <a class="project-row" href="Bartender.html" data-artifact="bar"><span>04</span><strong>Bartender</strong><em>mix / cocktail</em></a>
+              <a class="project-row" href="Barista.html" data-artifact="coffee"><span>05</span><strong>Cyber Barista</strong><em>brew / mood</em></a>
+              <a class="project-row" href="Barista_V2.html" data-artifact="coffee"><span>06</span><strong>Cyber Barista V2</strong><em>brew / quick</em></a>
+              <a class="project-row" href="TheRealistsBar.html" data-artifact="bar"><span>07</span><strong>The Realists Bar</strong><em>mix / pragmatic</em></a>
+              <a class="project-row" href="TheOracle.html" data-artifact="oracle"><span>08</span><strong>The Oracle</strong><em>ask / signal</em></a>
+              <a class="project-row" href="Paradox_Terminal.html" data-artifact="terminal"><span>09</span><strong>Paradox Terminal</strong><em>run / paradox</em></a>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab gizli menüsü">
             <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
             <div class="drawer-menu">
               <h3>Lab extensions</h3>
+              <a class="drawer-link" href="Bartender.html"><span>bt</span>Bartender</a>
+              <a class="drawer-link" href="Barista.html"><span>cf</span>Cyber Barista</a>
+              <a class="drawer-link" href="TheOracle.html"><span>or</span>The Oracle</a>
               <a class="drawer-link" href="Candy_Pop/"><span>cp</span>Candy Pop</a>
               <a class="drawer-link secret-node" href="service-worker.js"><span>sw</span>Service Worker</a>
             </div>
@@ -2441,6 +2462,17 @@
         'brawler': () => { location.href = 'ash-runner.html'; },
         'run flow': () => { location.href = 'neon-river.html'; },
         'flow': () => { location.href = 'neon-river.html'; },
+        'bartender': () => { location.href = 'Bartender.html'; },
+        'bar': () => { location.href = 'Bartender.html'; },
+        'barista': () => { location.href = 'Barista.html'; },
+        'coffee': () => { location.href = 'Barista.html'; },
+        'barista v2': () => { location.href = 'Barista_V2.html'; },
+        'realists bar': () => { location.href = 'TheRealistsBar.html'; },
+        'the realists bar': () => { location.href = 'TheRealistsBar.html'; },
+        'oracle': () => { location.href = 'TheOracle.html'; },
+        'the oracle': () => { location.href = 'TheOracle.html'; },
+        'paradox': () => { location.href = 'Paradox_Terminal.html'; },
+        'paradox terminal': () => { location.href = 'Paradox_Terminal.html'; },
         'bu siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
         'bu siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
         'bu sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
@@ -2468,7 +2500,7 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / bu sayfayı kim yaptı / seni kim yaptı / run logic / run ash / access / dashboard / admin / unlock hidden',
+        'help': () => 'commands: open dossier / run logic / run ash / flow / bartender / barista / oracle / paradox / access / dashboard / unlock hidden',
         '?': () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, ESC close'
       };
 
