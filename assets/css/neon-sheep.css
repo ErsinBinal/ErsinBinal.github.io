@@ -21,24 +21,6 @@
   opacity: 0;
 }
 
-.neon-sheep::before {
-  content: 'bugy';
-  position: absolute;
-  left: 50%;
-  top: -17px;
-  padding: 2px 6px;
-  border: 1px solid rgba(0, 234, 255, 0.38);
-  background: rgba(0, 0, 0, 0.74);
-  color: var(--journey-cyan, #00eaff);
-  font-family: var(--font-display, monospace);
-  font-size: 0.62rem;
-  line-height: 1;
-  text-transform: lowercase;
-  text-shadow: 0 0 7px rgba(0, 234, 255, 0.82);
-  transform: translateX(-50%) scaleX(var(--pet-face));
-  transform-origin: 50% 50%;
-}
-
 .neon-sheep__body,
 .neon-sheep__head,
 .neon-sheep__ear,
