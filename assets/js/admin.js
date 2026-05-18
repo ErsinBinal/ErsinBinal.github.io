@@ -20,11 +20,13 @@
   const bugySkinSelect = document.getElementById('bugySkinSelect');
   const arcadeStatus = document.getElementById('arcadeKitStatus');
   const arcadePaletteSelect = document.getElementById('arcadePaletteSelect');
+  const arcadeCharacterSelect = document.getElementById('arcadeCharacterSelect');
   const arcadeDemoMount = document.getElementById('arcadeDemoMount');
   let activeId = '';
   let articles = [];
   let arcadeStage = null;
   let arcadeSprite = null;
+  let arcadeCharacter = null;
   let arcadeSpriteIndex = 0;
 
   function setStatus(message, type) {
@@ -204,6 +206,19 @@
     });
   }
 
+  function spawnArcadeCharacter(model) {
+    if (!arcadeStage || !window.ConviviumArcadeKit) return;
+    arcadeCharacter?.remove();
+    arcadeCharacter = window.ConviviumArcadeKit.createCharacter(arcadeStage, {
+      model,
+      pose: 'idle',
+      x: 210,
+      y: 108,
+      scale: model === 'boss' ? 1 : 1.08,
+      label: `arcade character ${model}`
+    });
+  }
+
   function bootArcadeKitControls() {
     if (!arcadeDemoMount) return;
     const waitForArcade = window.setInterval(() => {
@@ -216,6 +231,7 @@
         minHeight: 190
       });
       spawnArcadeSprite('hero');
+      spawnArcadeCharacter(arcadeCharacterSelect?.value || 'mascot');
       kit.fx.popup(arcadeStage, 'READY', { x: 18, y: 18 });
       kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 12 });
       setArcadeStatus(`Arcade Kit ${kit.version} aktif.`, 'success');
@@ -230,6 +246,11 @@
       if (!arcadeStage) return;
       arcadeStage.setPalette(arcadePaletteSelect.value);
       setArcadeStatus(`Palet secildi: ${arcadePaletteSelect.value}`, 'success');
+    });
+
+    arcadeCharacterSelect?.addEventListener('change', () => {
+      spawnArcadeCharacter(arcadeCharacterSelect.value);
+      setArcadeStatus(`Karakter modeli: ${arcadeCharacterSelect.value}`, 'success');
     });
 
     document.querySelectorAll('[data-arcade-demo]').forEach((button) => {
@@ -250,6 +271,17 @@
           arcadeSpriteIndex += 1;
           spawnArcadeSprite(forms[arcadeSpriteIndex % forms.length]);
         }
+      });
+    });
+
+    document.querySelectorAll('[data-character-pose]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!arcadeCharacter) {
+          setArcadeStatus('Karakter modeli henuz hazir degil.', 'error');
+          return;
+        }
+        arcadeCharacter.pose(button.dataset.characterPose);
+        setArcadeStatus(`Pose: ${button.dataset.characterPose}`, 'success');
       });
     });
   }

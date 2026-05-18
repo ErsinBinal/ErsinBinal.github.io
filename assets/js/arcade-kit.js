@@ -8,6 +8,29 @@
     neogeo: ['#00ff99', '#00d9ff', '#ff005d', '#ffe14a'],
     mono: ['#0b0b0b', '#8f8f8f', '#cfcfcf', '#ffffff']
   };
+  const characterModels = {
+    mascot: {
+      label: 'Mascot',
+      parts: ['shadow', 'body', 'head', 'arm-l', 'arm-r', 'leg-l', 'leg-r', 'accent']
+    },
+    runner: {
+      label: 'Runner',
+      parts: ['shadow', 'body', 'head', 'arm-l', 'arm-r', 'leg-l', 'leg-r', 'backpack']
+    },
+    mech: {
+      label: 'Mech',
+      parts: ['shadow', 'body', 'head', 'arm-l', 'arm-r', 'leg-l', 'leg-r', 'antenna']
+    },
+    wisp: {
+      label: 'Wisp',
+      parts: ['shadow', 'body', 'head', 'arm-l', 'arm-r', 'tail', 'accent']
+    },
+    boss: {
+      label: 'Boss',
+      parts: ['shadow', 'body', 'head', 'arm-l', 'arm-r', 'leg-l', 'leg-r', 'crown']
+    }
+  };
+  const characterPoses = ['idle', 'walk', 'jump', 'hit', 'cast'];
 
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
   const pick = (items, index = Math.floor(Math.random() * items.length)) => items[index % items.length];
@@ -51,6 +74,9 @@
         stage.appendChild(sprite);
         return sprite;
       },
+      character(config) {
+        return createCharacter(stage, config);
+      },
       clear() {
         stage.replaceChildren();
       },
@@ -76,6 +102,60 @@
   function setSpritePosition(sprite, x, y) {
     sprite.style.setProperty('--sprite-x', `${Math.round(x)}px`);
     sprite.style.setProperty('--sprite-y', `${Math.round(y)}px`);
+  }
+
+  function createCharacter(stageRef, config = {}) {
+    const stage = stageRef.el || stageRef;
+    const character = document.createElement('div');
+    const model = characterModels[config.model] ? config.model : 'mascot';
+    character.className = `arcade-character ${config.className || ''}`.trim();
+    character.dataset.model = model;
+    character.dataset.pose = characterPoses.includes(config.pose) ? config.pose : 'idle';
+    character.style.setProperty('--char-x', `${config.x || 0}px`);
+    character.style.setProperty('--char-y', `${config.y || 0}px`);
+    character.style.setProperty('--char-scale', String(config.scale || 1));
+    character.style.setProperty('--char-face', String(config.face || 1));
+    character.setAttribute('aria-label', config.label || characterModels[model].label);
+
+    const build = nextModel => {
+      character.replaceChildren();
+      character.dataset.model = characterModels[nextModel] ? nextModel : 'mascot';
+      characterModels[character.dataset.model].parts.forEach(part => {
+        const node = document.createElement('span');
+        node.className = `arcade-character__part arcade-character__${part}`;
+        node.dataset.part = part;
+        character.appendChild(node);
+      });
+    };
+
+    build(model);
+    stage.appendChild(character);
+
+    return {
+      el: character,
+      moveTo(x, y) {
+        character.style.setProperty('--char-x', `${Math.round(x)}px`);
+        character.style.setProperty('--char-y', `${Math.round(y)}px`);
+        return this;
+      },
+      face(direction) {
+        character.style.setProperty('--char-face', direction < 0 ? '-1' : '1');
+        return this;
+      },
+      pose(nextPose) {
+        character.dataset.pose = characterPoses.includes(nextPose) ? nextPose : 'idle';
+        bus.emit('character:pose', { model: character.dataset.model, pose: character.dataset.pose, character });
+        return this;
+      },
+      model(nextModel) {
+        build(nextModel);
+        bus.emit('character:model', { model: character.dataset.model, character });
+        return this;
+      },
+      remove() {
+        character.remove();
+      }
+    };
   }
 
   function flash(target, options = {}) {
@@ -155,13 +235,16 @@
   }
 
   window.ConviviumArcadeKit = {
-    version: '0.1.0',
+    version: '0.2.0',
     palettes,
+    characterModels,
+    characterPoses,
     bus,
     clamp,
     pick,
     createStage,
     createSprite,
+    createCharacter,
     setSpritePosition,
     input: { create: createInput },
     fx: { flash, shake, popup, burst }
