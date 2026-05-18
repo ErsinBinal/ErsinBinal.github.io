@@ -459,6 +459,135 @@
   margin-top: 12px;
 }
 
+.bugy-v1-muted #neon-sheep,
+.bugy-v1-muted #neon-ufo,
+.bugy-v1-muted #neon-storm,
+.bugy-v1-muted #neon-tornado,
+.bugy-v1-muted #neon-portal {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.bugy-v2-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  pointer-events: none;
+}
+
+.bugy-v2-stage {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.bugy-v2-stage::after {
+  display: none;
+}
+
+.bugy-v2-actor {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.bugy-v2-actor[data-skin="matrix"] {
+  filter: drop-shadow(0 0 11px rgba(139, 172, 15, 0.7));
+}
+
+.bugy-v2-actor[data-skin="ember"] {
+  filter: drop-shadow(0 0 12px rgba(255, 119, 168, 0.62));
+}
+
+.bugy-v2-actor[data-skin="ghost"] {
+  opacity: 0.8;
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.7));
+}
+
+.bugy-v2-actor[data-skin="royal"] {
+  filter: drop-shadow(0 0 14px rgba(255, 225, 74, 0.7));
+}
+
+.bugy-v2-actor.is-v2-cloning {
+  animation: bugy-v2-glitch 180ms steps(2, end) infinite;
+}
+
+.bugy-v2-actor.is-v2-ashed {
+  filter: grayscale(1) brightness(0.7) drop-shadow(0 0 8px rgba(255, 255, 255, 0.25));
+}
+
+.bugy-v2-actor.is-v2-abducted {
+  filter: brightness(1.7) drop-shadow(0 0 18px rgba(0, 234, 255, 0.85));
+}
+
+.bugy-v2-clone {
+  opacity: 0.34;
+  transform:
+    translate3d(calc(var(--char-x, 0) + var(--clone-offset, 0px)), var(--char-y, 0), 0)
+    scaleX(var(--char-face, 1))
+    scale(var(--char-scale, 1));
+  animation: bugy-v2-clone-fade 980ms steps(5, end) forwards;
+}
+
+.bugy-v2-ufo {
+  position: absolute;
+  left: var(--ufo-x, 0);
+  top: var(--ufo-y, 0);
+  width: 118px;
+  height: 74px;
+  pointer-events: none;
+  z-index: 16;
+  image-rendering: pixelated;
+  animation: bugy-v2-ufo-hover 520ms steps(3, end) infinite;
+}
+
+.bugy-v2-ufo span {
+  position: absolute;
+  display: block;
+}
+
+.bugy-v2-ufo span:nth-child(1) {
+  left: 36px;
+  top: 0;
+  width: 46px;
+  height: 24px;
+  border: 3px solid #000;
+  background: var(--arcade-paper);
+  clip-path: polygon(18% 100%, 0 52%, 24% 0, 76% 0, 100% 52%, 82% 100%);
+}
+
+.bugy-v2-ufo span:nth-child(2) {
+  left: 10px;
+  top: 20px;
+  width: 98px;
+  height: 28px;
+  border: 4px solid #000;
+  background: var(--arcade-cyan);
+  clip-path: polygon(12% 0, 88% 0, 100% 50%, 88% 100%, 12% 100%, 0 50%);
+  box-shadow: inset 0 -8px 0 rgba(0, 0, 0, 0.28), 0 0 18px rgba(0, 234, 255, 0.5);
+}
+
+.bugy-v2-ufo span:nth-child(3) {
+  left: 32px;
+  top: 47px;
+  width: 54px;
+  height: 0;
+  opacity: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-top: 92px solid rgba(0, 234, 255, 0.32);
+}
+
+.bugy-v2-ufo.is-beaming span:nth-child(3) {
+  opacity: 1;
+  animation: bugy-v2-beam 180ms steps(2, end) infinite;
+}
+
 @keyframes arcade-particle-pop {
   to {
     opacity: 0;
@@ -499,6 +628,29 @@
 @keyframes arcade-tornado-spin {
   50% { transform: skewX(-8deg) translateX(5px); }
   100% { transform: skewX(8deg) translateX(-5px); }
+}
+
+@keyframes bugy-v2-glitch {
+  50% { transform: translate3d(calc(var(--char-x, 0) + 4px), var(--char-y, 0), 0) scaleX(var(--char-face, 1)) scale(var(--char-scale, 1)); }
+  100% { transform: translate3d(calc(var(--char-x, 0) - 4px), var(--char-y, 0), 0) scaleX(var(--char-face, 1)) scale(var(--char-scale, 1)); }
+}
+
+@keyframes bugy-v2-clone-fade {
+  to {
+    opacity: 0;
+    transform:
+      translate3d(calc(var(--char-x, 0) + var(--clone-offset, 0px)), calc(var(--char-y, 0) - 28px), 0)
+      scaleX(var(--char-face, 1))
+      scale(var(--char-scale, 1));
+  }
+}
+
+@keyframes bugy-v2-ufo-hover {
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes bugy-v2-beam {
+  50% { opacity: 0.54; }
 }
 
 @keyframes arcade-stage-shake {

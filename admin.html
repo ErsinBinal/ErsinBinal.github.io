@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css?v=29">
-  <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=32">
+  <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=33">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=29">
 </head>
 <body class="bugy-debug">
@@ -96,6 +96,13 @@
             <p id="bugyStatus" aria-live="polite">Bugy hazirlaniyor...</p>
           </div>
           <div class="bugy-toggle-row">
+            <label class="bugy-skin-select">
+              Motor
+              <select id="bugyEngineSelect">
+                <option value="v1">Bugy V1</option>
+                <option value="v2">Bugy V2</option>
+              </select>
+            </label>
             <label class="bugy-skin-select">
               Skin
               <select id="bugySkinSelect">
@@ -200,6 +207,7 @@
   <script src="/assets/js/supabase-client.js?v=21" defer></script>
   <script src="/assets/js/arcade-kit.js?v=32" defer></script>
   <script src="/assets/js/neon-sheep.js?v=29" defer></script>
-  <script src="/assets/js/admin.js?v=32" defer></script>
+  <script src="/assets/js/bugy-v2.js?v=1" defer></script>
+  <script src="/assets/js/admin.js?v=33" defer></script>
 </body>
 </html>

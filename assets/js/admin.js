@@ -16,6 +16,7 @@
   const bugyStatus = document.getElementById('bugyStatus');
   const bugySummon = document.getElementById('bugySummon');
   const bugyNextAction = document.getElementById('bugyNextAction');
+  const bugyEngineSelect = document.getElementById('bugyEngineSelect');
   const bugyRandomToggle = document.getElementById('bugyRandomToggle');
   const bugySkinSelect = document.getElementById('bugySkinSelect');
   const arcadeStatus = document.getElementById('arcadeKitStatus');
@@ -31,6 +32,7 @@
   let arcadeSprite = null;
   let arcadeCharacter = null;
   let arcadeSpriteIndex = 0;
+  const bugyEngineKey = 'convivium.bugy.engine';
 
   function setStatus(message, type) {
     status.textContent = message || '';
@@ -93,15 +95,17 @@
 
   function renderBugyStatus() {
     if (!bugyStatus) return;
-    if (!window.Bugy) {
+    const engine = getBugyEngine();
+    if (!engine) {
       bugyStatus.textContent = 'Bugy motoru yuklenmedi.';
       bugyStatus.dataset.type = 'error';
       return;
     }
 
-    const state = window.Bugy.getState();
-    bugyStatus.textContent = `Durum: ${state.state} / skin: ${state.skin} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
+    const state = engine.getState();
+    bugyStatus.textContent = `Motor: ${state.engine || getSelectedBugyEngine().toUpperCase()} / Durum: ${state.state} / skin: ${state.skin} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
     bugyStatus.dataset.type = 'success';
+    if (bugyEngineSelect) bugyEngineSelect.value = getSelectedBugyEngine();
     if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
     if (bugySkinSelect) bugySkinSelect.value = state.skin;
   }
@@ -113,23 +117,47 @@
   }
 
   function runBugyAction(action) {
-    if (!window.Bugy) {
+    const engine = getBugyEngine();
+    if (!engine) {
       renderBugyStatus();
       return;
     }
 
-    window.Bugy.summon();
+    engine.summon();
     window.setTimeout(() => {
-      const ok = window.Bugy.trigger(action);
+      const ok = engine.trigger(action);
       setBugyMessage(ok ? `Aksiyon baslatildi: ${action}` : `Aksiyon baslatilamadi: ${action}`, ok ? 'success' : 'error');
       window.setTimeout(renderBugyStatus, 900);
     }, 120);
   }
 
+  function getSelectedBugyEngine() {
+    return localStorage.getItem(bugyEngineKey) === 'v2' ? 'v2' : 'v1';
+  }
+
+  function getBugyEngine() {
+    return getSelectedBugyEngine() === 'v2' ? window.BugyV2 : window.Bugy;
+  }
+
+  function setBugyEngine(version) {
+    const next = version === 'v2' ? 'v2' : 'v1';
+    localStorage.setItem(bugyEngineKey, next);
+    document.body.classList.toggle('bugy-v1-muted', next === 'v2');
+    if (next === 'v2') {
+      window.BugyV2?.activate?.();
+    } else {
+      window.BugyV2?.deactivate?.();
+      window.Bugy?.summon?.();
+    }
+    renderBugyStatus();
+    return next;
+  }
+
   function bootBugyControls() {
     const waitForBugy = window.setInterval(() => {
-      if (!window.Bugy) return;
+      if (!window.Bugy || (getSelectedBugyEngine() === 'v2' && !window.BugyV2)) return;
       window.clearInterval(waitForBugy);
+      setBugyEngine(getSelectedBugyEngine());
       renderBugyStatus();
     }, 120);
 
@@ -149,44 +177,55 @@
     });
 
     bugySummon?.addEventListener('click', () => {
-      if (!window.Bugy) {
+      const engine = getBugyEngine();
+      if (!engine) {
         renderBugyStatus();
         return;
       }
-      window.Bugy.summon();
+      engine.summon();
       renderBugyStatus();
     });
 
     bugyNextAction?.addEventListener('click', () => {
-      if (!window.Bugy) {
+      const engine = getBugyEngine();
+      if (!engine) {
         renderBugyStatus();
         return;
       }
-      window.Bugy.next();
+      engine.next();
       setBugyMessage('Siradaki aksiyon baslatildi.', 'success');
       window.setTimeout(renderBugyStatus, 900);
     });
 
+    bugyEngineSelect?.addEventListener('change', () => {
+      const next = setBugyEngine(bugyEngineSelect.value);
+      setBugyMessage(`Bugy motoru secildi: ${next.toUpperCase()}`, 'success');
+      window.setTimeout(renderBugyStatus, 700);
+    });
+
     bugyRandomToggle?.addEventListener('change', () => {
-      if (!window.Bugy) {
+      const engine = getBugyEngine();
+      if (!engine) {
         renderBugyStatus();
         return;
       }
-      window.Bugy.setRandom(bugyRandomToggle.checked);
+      engine.setRandom(bugyRandomToggle.checked);
       renderBugyStatus();
     });
 
     bugySkinSelect?.addEventListener('change', () => {
-      if (!window.Bugy) {
+      const engine = getBugyEngine();
+      if (!engine) {
         renderBugyStatus();
         return;
       }
-      const skin = window.Bugy.setSkin(bugySkinSelect.value);
+      const skin = engine.setSkin(bugySkinSelect.value);
       setBugyMessage(`Skin secildi: ${skin}`, 'success');
       window.setTimeout(renderBugyStatus, 700);
     });
 
     window.addEventListener('bugy:state', renderBugyStatus);
+    window.addEventListener('bugy-v2:state', renderBugyStatus);
     window.setInterval(renderBugyStatus, 1200);
   }
 
