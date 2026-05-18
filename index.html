@@ -1915,7 +1915,6 @@
       <span>open dossier</span>
       <span>query oracle</span>
       <span>run logic</span>
-      <span>trace persona</span>
       <span>unlock hidden</span>
       <span>level</span>
       <span>ask anything</span>
@@ -1957,7 +1956,6 @@
               </p>
               <nav class="primary-actions" aria-label="Birincil erişim">
                 <a class="action-link" href="makaleler.html">Dossier</a>
-                <a class="action-link" href="ozgecmisim.html">Persona</a>
                 <a class="action-link" href="TheOracle.html">Oracle</a>
                 <a class="action-link" href="auth.html">Access</a>
                 <a class="action-link" href="dashboard.html">Dashboard</a>
@@ -1979,10 +1977,6 @@
           <a class="terminal-command" href="TheOracle.html" data-action="QUERY">
             <span>&gt; oracle</span>
             Cevap değil; sapma üretir.
-          </a>
-          <a class="terminal-command" href="ozgecmisim.html" data-action="TRACE">
-            <span>&gt; persona</span>
-            Ünvan değil; karar izi.
           </a>
           <a class="terminal-command" href="auth.html" data-action="LOGIN">
             <span>&gt; access</span>
@@ -2087,7 +2081,6 @@
             <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
             <div class="drawer-menu">
               <h3>Trace files</h3>
-              <a class="drawer-link" href="ozgecmisim.html"><span>id</span>Persona</a>
               <a class="drawer-link" href="makaleler.html"><span>nt</span>Notes</a>
               <a class="drawer-link" href="sitemap.xml"><span>sm</span>Sitemap</a>
               <a class="drawer-link secret-node" href="robots.txt"><span>rb</span>Robots</a>
@@ -2462,8 +2455,13 @@
         'brawler': () => { location.href = 'ash-runner.html'; },
         'run flow': () => { location.href = 'neon-river.html'; },
         'flow': () => { location.href = 'neon-river.html'; },
-        'trace persona': () => { location.href = 'ozgecmisim.html'; },
-        'persona': () => { location.href = 'ozgecmisim.html'; },
+        'bu siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'bu siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
+        'siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
+        'site sahibi kim': () => { location.href = 'ozgecmisim.html'; },
+        'kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'kim yapti': () => { location.href = 'ozgecmisim.html'; },
         'access': () => { location.href = 'auth.html'; },
         'login': () => { location.href = 'auth.html'; },
         'dashboard': () => { location.href = 'dashboard.html'; },
@@ -2478,8 +2476,23 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / run ash / trace persona / access / dashboard / admin / unlock hidden',
-        '?': () => 'keyboard: D dossier, O oracle, L logic, B ash, F flow, P persona, A access, ? command shell, ESC close'
+        'help': () => 'commands: open dossier / query oracle / run logic / run ash / access / dashboard / admin / unlock hidden',
+        '?': () => 'keyboard: D dossier, O oracle, L logic, B ash, F flow, A access, ? command shell, ESC close'
+      };
+
+      const isCreatorQuery = (command) => {
+        const normalized = command
+          .replace(/ı/g, 'i')
+          .replace(/ğ/g, 'g')
+          .replace(/ü/g, 'u')
+          .replace(/ş/g, 's')
+          .replace(/ö/g, 'o')
+          .replace(/ç/g, 'c');
+        return (
+          /(bu\s+)?site(yi)?\s+kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized) ||
+          /site\s+sahibi\s+kim/.test(normalized) ||
+          /kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized)
+        );
       };
 
       const normalizeOracleAnswer = (answer) => answer
@@ -2531,6 +2544,11 @@
         if (action) {
           const result = action();
           if (commandOutput) commandOutput.textContent = result || `executing: ${command}`;
+          commandInput.value = '';
+          return;
+        }
+        if (isCreatorQuery(command)) {
+          location.href = 'ozgecmisim.html';
           commandInput.value = '';
           return;
         }
@@ -2611,7 +2629,6 @@
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
         else if (key === 'b') location.href = 'ash-runner.html';
         else if (key === 'f') location.href = 'neon-river.html';
-        else if (key === 'p') location.href = 'ozgecmisim.html';
         else if (key === 'a') location.href = 'auth.html';
       });
 
