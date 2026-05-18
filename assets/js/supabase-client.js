@@ -3,6 +3,7 @@
 
   const config = window.CONVIVIUM_SUPABASE || {};
   let cachedClient = null;
+  const storageKey = 'convivium-auth-session';
 
   function isConfigured() {
     return Boolean(
@@ -22,6 +23,8 @@
 
     cachedClient = window.supabase.createClient(config.url, config.anonKey, {
       auth: {
+        storage: window.sessionStorage,
+        storageKey,
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true
@@ -81,6 +84,26 @@
     return data.session;
   }
 
+  function clearLegacyAuthStorage() {
+    try {
+      const legacyPrefix = `sb-${new URL(config.url).hostname.split('.')[0]}-auth-token`;
+      [window.localStorage, window.sessionStorage].forEach((storage) => {
+        if (!storage) return;
+        Object.keys(storage).forEach((key) => {
+          if (
+            key === legacyPrefix ||
+            key === storageKey ||
+            key.startsWith('sb-') && key.endsWith('-auth-token')
+          ) {
+            storage.removeItem(key);
+          }
+        });
+      });
+    } catch (error) {
+      console.warn('[Convivium] Auth storage cleanup failed.', error);
+    }
+  }
+
   async function getUser() {
     const client = await requireClient();
     const { data, error } = await client.auth.getUser();
@@ -113,6 +136,7 @@
     const client = await requireClient();
     const { error } = await client.auth.signOut();
     if (error) throw new Error(toMessage(error));
+    clearLegacyAuthStorage();
   }
 
   async function getProfile() {
@@ -364,6 +388,7 @@
     signUp,
     signIn,
     signOut,
+    clearLegacyAuthStorage,
     fetchPublishedArticles,
     fetchManagedArticles,
     saveArticle,

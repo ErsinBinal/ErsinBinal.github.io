@@ -22,6 +22,14 @@
     status.dataset.type = type;
   }
 
+  function friendlyError(error) {
+    const message = error?.message || String(error || '');
+    if (/user_app_sessions|app_recommendations|relation .* does not exist/i.test(message)) {
+      return "Dashboard tablolari henuz Supabase tarafinda yok. docs/database/2026-05-18-dashboard-activity.sql dosyasini SQL Editor'de calistirin.";
+    }
+    return message || 'Dashboard yuklenemedi.';
+  }
+
   function formatDate(value) {
     if (!value) return '-';
     return new Intl.DateTimeFormat('tr-TR', {
@@ -147,7 +155,7 @@
       renderSessions(sessions);
       setStatus('Hazir.', 'success');
     } catch (error) {
-      setStatus(error.message || 'Dashboard yuklenemedi.', 'error');
+      setStatus(friendlyError(error), 'error');
     }
   }
 
