@@ -362,7 +362,7 @@
 
     const updateUfo = (now, dt) => {
       const petCenter = sheep.x + petWidth / 2;
-      const desiredX = clamp(petCenter - 58, 8, window.innerWidth - 124);
+      const desiredX = clamp(petCenter - 66, 8, window.innerWidth - 140);
 
       if (sheep.ufo.phase === 'approach') {
         sheep.ufo.x += (desiredX - sheep.ufo.x) * Math.min(1, dt / 520);

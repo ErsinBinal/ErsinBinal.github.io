@@ -220,18 +220,20 @@
   left: 0;
   top: 0;
   z-index: 150;
-  width: 116px;
-  height: 76px;
+  width: 132px;
+  height: 92px;
   pointer-events: none;
   opacity: 0;
   transform: translate3d(var(--ufo-x), var(--ufo-y), 0);
   transition: opacity 0.18s ease;
-  filter: drop-shadow(0 0 16px rgba(0, 234, 255, 0.58));
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 14px rgba(0, 234, 255, 0.58));
   will-change: transform;
 }
 
 .neon-ufo.is-active {
   opacity: 1;
+  animation: bugy-ufo-hover 0.72s steps(3, end) infinite;
 }
 
 .neon-ufo__dome,
@@ -244,53 +246,69 @@
 }
 
 .neon-ufo__dome {
-  top: 5px;
-  width: 48px;
-  height: 24px;
-  border: 2px solid rgba(183, 255, 208, 0.85);
-  border-bottom: 0;
-  border-radius: 48px 48px 0 0;
-  background: rgba(0, 234, 255, 0.1);
-  box-shadow: inset 0 0 14px rgba(0, 234, 255, 0.2);
+  top: 4px;
+  width: 52px;
+  height: 28px;
+  background: #c9ffd6;
+  clip-path: polygon(18% 100%, 18% 58%, 34% 18%, 66% 18%, 82% 58%, 82% 100%);
+  box-shadow:
+    inset 0 -8px 0 rgba(0, 234, 255, 0.58),
+    0 0 0 4px #020b0c,
+    0 0 12px rgba(201, 255, 214, 0.62);
 }
 
 .neon-ufo__hull {
-  top: 25px;
-  width: 96px;
-  height: 22px;
-  border: 2px solid rgba(0, 234, 255, 0.9);
-  background:
-    linear-gradient(90deg, rgba(255, 46, 166, 0.2), rgba(0, 255, 102, 0.18), rgba(0, 234, 255, 0.2)),
-    #030806;
-  box-shadow: 0 0 18px rgba(0, 234, 255, 0.35);
+  top: 28px;
+  width: 112px;
+  height: 34px;
+  background: #00eaff;
+  clip-path: polygon(8% 36%, 20% 12%, 80% 12%, 92% 36%, 82% 70%, 18% 70%);
+  box-shadow:
+    inset 0 -10px 0 rgba(0, 255, 102, 0.58),
+    inset 0 6px 0 rgba(201, 255, 214, 0.9),
+    0 0 0 4px #020b0c,
+    0 0 18px rgba(0, 234, 255, 0.5);
 }
 
 .neon-ufo__hull::before,
 .neon-ufo__hull::after {
   content: '';
   position: absolute;
-  top: 8px;
-  width: 6px;
-  height: 6px;
+  top: 16px;
+  width: 8px;
+  height: 8px;
   background: var(--journey-pink, #ff2ea6);
-  box-shadow: 0 0 8px var(--journey-pink, #ff2ea6);
+  box-shadow:
+    22px 0 0 var(--journey-amber, #f5ff6b),
+    44px 0 0 var(--journey-pink, #ff2ea6),
+    0 0 8px var(--journey-pink, #ff2ea6),
+    22px 0 8px rgba(245, 255, 107, 0.9),
+    44px 0 8px var(--journey-pink, #ff2ea6);
+  animation: bugy-ufo-lights 0.48s steps(2, end) infinite;
 }
 
 .neon-ufo__hull::before { left: 18px; }
-.neon-ufo__hull::after { right: 18px; }
+.neon-ufo__hull::after { display: none; }
 
 .neon-ufo__beam {
-  top: 45px;
-  width: 58px;
+  top: 56px;
+  width: 72px;
   height: 0;
   opacity: 0;
-  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
-  background: linear-gradient(180deg, rgba(0, 234, 255, 0.26), rgba(0, 255, 102, 0));
+  clip-path: polygon(34% 0, 66% 0, 100% 100%, 0 100%);
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 234, 255, 0.34) 0 8px,
+      rgba(201, 255, 214, 0.18) 8px 16px,
+      rgba(0, 255, 102, 0.08) 16px 24px
+    );
+  box-shadow: inset 0 0 18px rgba(0, 234, 255, 0.32);
   transition: height 0.28s ease, opacity 0.28s ease;
 }
 
 .neon-ufo.is-beaming .neon-ufo__beam {
-  height: 180px;
+  height: 190px;
   opacity: 1;
   animation: beam-pulse 0.34s steps(2, end) infinite;
 }
@@ -508,21 +526,57 @@
   left: 0;
   top: 0;
   z-index: 143;
-  width: 84px;
-  height: 28px;
+  width: 104px;
+  height: 38px;
   pointer-events: none;
   opacity: 0;
-  border: 2px solid rgba(255, 46, 166, 0.78);
-  border-radius: 50%;
+  border: 0;
+  border-radius: 0;
   background:
-    radial-gradient(ellipse at center, rgba(0, 234, 255, 0.34), rgba(255, 46, 166, 0.12) 52%, transparent 68%);
-  box-shadow: 0 0 20px rgba(255, 46, 166, 0.5), inset 0 0 12px rgba(0, 234, 255, 0.42);
+    linear-gradient(90deg, transparent 0 8px, rgba(255, 46, 166, 0.92) 8px 18px, rgba(0, 234, 255, 0.96) 18px 86px, rgba(255, 46, 166, 0.92) 86px 96px, transparent 96px),
+    linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.92) 22px 82px, transparent 82px);
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.92),
+    0 0 18px rgba(255, 46, 166, 0.62),
+    inset 0 0 12px rgba(0, 234, 255, 0.56);
   transform: translate3d(var(--portal-x), var(--portal-y), 0);
+  image-rendering: pixelated;
+}
+
+.neon-portal::before,
+.neon-portal::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  box-sizing: border-box;
+  transform: translate(-50%, -50%);
+}
+
+.neon-portal::before {
+  width: 78px;
+  height: 24px;
+  border: 4px solid rgba(245, 255, 107, 0.82);
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 46, 166, 0.8),
+    0 0 12px rgba(245, 255, 107, 0.44);
+}
+
+.neon-portal::after {
+  width: 42px;
+  height: 10px;
+  background:
+    linear-gradient(90deg, rgba(255, 46, 166, 0.9), rgba(0, 234, 255, 0.95), rgba(0, 255, 102, 0.74));
+  box-shadow:
+    -18px 0 0 rgba(0, 234, 255, 0.52),
+    18px 0 0 rgba(255, 46, 166, 0.48),
+    0 0 12px rgba(0, 234, 255, 0.74);
+  animation: bugy-portal-core 0.34s steps(2, end) infinite;
 }
 
 .neon-portal.is-active {
   opacity: 1;
-  animation: bugy-portal-pulse 0.5s ease-in-out infinite alternate;
+  animation: bugy-portal-pulse 0.5s steps(2, end) infinite alternate;
 }
 
 @keyframes sheep-step {
@@ -542,8 +596,18 @@
 }
 
 @keyframes beam-pulse {
-  0% { opacity: 0.72; }
-  100% { opacity: 0.36; }
+  0% { opacity: 0.86; filter: brightness(1); }
+  100% { opacity: 0.5; filter: brightness(1.5); }
+}
+
+@keyframes bugy-ufo-hover {
+  0%, 100% { transform: translate3d(var(--ufo-x), var(--ufo-y), 0) translateY(0); }
+  50% { transform: translate3d(var(--ufo-x), var(--ufo-y), 0) translateY(-4px); }
+}
+
+@keyframes bugy-ufo-lights {
+  0% { filter: hue-rotate(0deg) brightness(1); }
+  100% { filter: hue-rotate(120deg) brightness(1.35); }
 }
 
 @keyframes bugy-shock {
@@ -587,8 +651,13 @@
 }
 
 @keyframes bugy-portal-pulse {
-  0% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(0.88); }
-  100% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(1.12); }
+  0% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(0.92); filter: brightness(0.92); }
+  100% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(1.08); filter: brightness(1.28); }
+}
+
+@keyframes bugy-portal-core {
+  0% { transform: translate(-50%, -50%) translateX(-6px); }
+  100% { transform: translate(-50%, -50%) translateX(6px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
