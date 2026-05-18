@@ -1907,13 +1907,14 @@
   <section class="command-shell" id="command-shell" aria-label="Komut satırı" aria-hidden="true">
     <div class="command-row">
       <span class="command-prompt">&gt;</span>
-      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" placeholder="type: open dossier / query oracle / ask anything">
+      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" placeholder="type: open dossier / bu sayfayı kim yaptı / ask anything">
       <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
     <div class="command-output" id="command-output" aria-live="polite">press ? for command layer</div>
     <div class="command-help" aria-label="Komut örnekleri">
       <span>open dossier</span>
-      <span>query oracle</span>
+      <span>bu sayfayı kim yaptı</span>
+      <span>seni kim yaptı</span>
       <span>run logic</span>
       <span>unlock hidden</span>
       <span>level</span>
@@ -1956,7 +1957,6 @@
               </p>
               <nav class="primary-actions" aria-label="Birincil erişim">
                 <a class="action-link" href="makaleler.html">Dossier</a>
-                <a class="action-link" href="TheOracle.html">Oracle</a>
                 <a class="action-link" href="auth.html">Access</a>
                 <a class="action-link" href="dashboard.html">Dashboard</a>
                 <button class="action-link" id="command-launch" type="button">Command</button>
@@ -1973,10 +1973,6 @@
           <a class="terminal-command" href="makaleler.html" data-action="OPEN">
             <span>&gt; dossier</span>
             İş modeli, fiyat, platform, yapay zekâ.
-          </a>
-          <a class="terminal-command" href="TheOracle.html" data-action="QUERY">
-            <span>&gt; oracle</span>
-            Cevap değil; sapma üretir.
           </a>
           <a class="terminal-command" href="auth.html" data-action="LOGIN">
             <span>&gt; access</span>
@@ -2005,10 +2001,10 @@
                 <strong>Cyberpunk Logic</strong>
                 <em>run circuit</em>
               </a>
-              <a class="route-link" href="TheOracle.html">
-                <span class="route-kicker">Oracle</span>
-                <strong>The Oracle</strong>
-                <em>query signal</em>
+              <a class="route-link" href="dashboard.html">
+                <span class="route-kicker">Signal</span>
+                <strong>Dashboard</strong>
+                <em>read trace</em>
               </a>
             </div>
             <div class="dossier-tree" aria-label="Dossier OS dosya ağacı">
@@ -2022,8 +2018,6 @@
             <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
             <div class="drawer-menu">
               <h3>Subroutes</h3>
-              <a class="drawer-link" href="Paradox_Terminal.html"><span>α</span>Paradoks Terminal</a>
-              <a class="drawer-link" href="TheRealistsBar.html"><span>β</span>The Realists Bar</a>
               <a class="drawer-link" href="universe-3.html"><span>γ</span>Universe-3</a>
               <a class="drawer-link secret-node" href="manifest.json"><span>δ</span>Manifest Residue</a>
             </div>
@@ -2038,18 +2032,14 @@
             <p class="gate-copy">Oyun, içecek, terminal: küçük makineler aynı soruyu değişik kılıklarda sorar.</p>
             <div class="project-list">
               <a class="project-row" href="neon-river.html" data-artifact="river"><span>01</span><strong>Neon River</strong><em>run / reflex</em></a>
-              <a class="project-row" href="Bartender.html" data-artifact="bar"><span>02</span><strong>Bartender</strong><em>mix / ritual</em></a>
-              <a class="project-row" href="Barista.html" data-artifact="coffee"><span>03</span><strong>Cyber Barista</strong><em>brew / terminal</em></a>
-              <a class="project-row" href="ash-runner.html" data-artifact="ash"><span>04</span><strong>Kül Hattı</strong><em>scrap / brawler</em></a>
-              <a class="project-row" href="Paradox_Terminal.html" data-artifact="logic"><span>05</span><strong>Paradoks Terminal</strong><em>fold / logic</em></a>
+              <a class="project-row" href="cyberpunk-logic-game.html" data-artifact="logic"><span>02</span><strong>Cyberpunk Logic</strong><em>run / circuit</em></a>
+              <a class="project-row" href="ash-runner.html" data-artifact="ash"><span>03</span><strong>Kül Hattı</strong><em>scrap / brawler</em></a>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab gizli menüsü">
             <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
             <div class="drawer-menu">
               <h3>Lab extensions</h3>
-              <a class="drawer-link" href="Barista_V2.html"><span>v2</span>Cyber Barista V2</a>
-              <a class="drawer-link" href="TheRealistsBar.html"><span>rb</span>Realists Bar</a>
               <a class="drawer-link" href="Candy_Pop/"><span>cp</span>Candy Pop</a>
               <a class="drawer-link secret-node" href="service-worker.js"><span>sw</span>Service Worker</a>
             </div>
@@ -2095,11 +2085,6 @@
             <h2>Arka oda</h2>
             <p class="gate-copy">Her şey menüde olmak zorunda değil. Bazı kapılar yalnızca iz sürüldüğünde görünür.</p>
             <div class="route-grid">
-              <a class="route-link" href="TheRealistsBar.html">
-                <span class="route-kicker">Realism</span>
-                <strong>The Realists Bar</strong>
-                <em>enter room</em>
-              </a>
               <a class="route-link" href="universe-2.html">
                 <span class="route-kicker">Fiction</span>
                 <strong>Universe-2</strong>
@@ -2445,8 +2430,6 @@
       const commandMap = {
         'open dossier': () => { location.href = 'makaleler.html'; },
         'dossier': () => { location.href = 'makaleler.html'; },
-        'query oracle': () => { location.href = 'TheOracle.html'; },
-        'oracle': () => { location.href = 'TheOracle.html'; },
         'run logic': () => { location.href = 'cyberpunk-logic-game.html'; },
         'logic': () => { location.href = 'cyberpunk-logic-game.html'; },
         'run ash': () => { location.href = 'ash-runner.html'; },
@@ -2457,8 +2440,14 @@
         'flow': () => { location.href = 'neon-river.html'; },
         'bu siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
         'bu siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
+        'bu sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'bu sayfayi kim yapti': () => { location.href = 'ozgecmisim.html'; },
+        'seni kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'seni kim yapti': () => { location.href = 'ozgecmisim.html'; },
         'siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
         'siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
+        'sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
+        'sayfayi kim yapti': () => { location.href = 'ozgecmisim.html'; },
         'site sahibi kim': () => { location.href = 'ozgecmisim.html'; },
         'kim yaptı': () => { location.href = 'ozgecmisim.html'; },
         'kim yapti': () => { location.href = 'ozgecmisim.html'; },
@@ -2476,8 +2465,8 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / query oracle / run logic / run ash / access / dashboard / admin / unlock hidden',
-        '?': () => 'keyboard: D dossier, O oracle, L logic, B ash, F flow, A access, ? command shell, ESC close'
+        'help': () => 'commands: open dossier / bu sayfayı kim yaptı / seni kim yaptı / run logic / run ash / access / dashboard / admin / unlock hidden',
+        '?': () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, ESC close'
       };
 
       const isCreatorQuery = (command) => {
@@ -2490,6 +2479,8 @@
           .replace(/ç/g, 'c');
         return (
           /(bu\s+)?site(yi)?\s+kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized) ||
+          /(bu\s+)?sayfa(yi)?\s+kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized) ||
+          /seni\s+kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized) ||
           /site\s+sahibi\s+kim/.test(normalized) ||
           /kim\s+(yapti|hazirladi|kurdu|tasarladi)/.test(normalized)
         );
@@ -2625,7 +2616,6 @@
             updateGateButton(gate);
           });
         } else if (key === 'd') location.href = 'makaleler.html';
-        else if (key === 'o') location.href = 'TheOracle.html';
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
         else if (key === 'b') location.href = 'ash-runner.html';
         else if (key === 'f') location.href = 'neon-river.html';
