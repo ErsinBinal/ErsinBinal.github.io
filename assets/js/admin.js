@@ -21,10 +21,13 @@
   const arcadeStatus = document.getElementById('arcadeKitStatus');
   const arcadePaletteSelect = document.getElementById('arcadePaletteSelect');
   const arcadeCharacterSelect = document.getElementById('arcadeCharacterSelect');
+  const arcadeDebugToggle = document.getElementById('arcadeDebugToggle');
   const arcadeDemoMount = document.getElementById('arcadeDemoMount');
   let activeId = '';
   let articles = [];
   let arcadeStage = null;
+  let arcadeScene = null;
+  let arcadeTemplate = null;
   let arcadeSprite = null;
   let arcadeCharacter = null;
   let arcadeSpriteIndex = 0;
@@ -193,30 +196,60 @@
     arcadeStatus.dataset.type = type || 'info';
   }
 
+  function stopArcadeTemplate() {
+    arcadeTemplate?.destroy?.();
+    arcadeTemplate = null;
+  }
+
   function spawnArcadeSprite(form) {
-    if (!arcadeStage) return;
-    arcadeSprite?.remove();
-    arcadeSprite = arcadeStage.sprite({
+    if (!arcadeScene) return;
+    if (arcadeSprite) arcadeScene.remove(arcadeSprite);
+    arcadeSprite = arcadeScene.sprite({
       form,
       x: 130,
       y: 72,
       w: form === 'ship' ? 34 : 30,
       h: form === 'orb' ? 30 : 34,
+      hitbox: { x: 4, y: 4, w: form === 'ship' ? 24 : 22, h: form === 'orb' ? 22 : 26 },
       label: `arcade ${form}`
     });
   }
 
   function spawnArcadeCharacter(model) {
-    if (!arcadeStage || !window.ConviviumArcadeKit) return;
-    arcadeCharacter?.remove();
-    arcadeCharacter = window.ConviviumArcadeKit.createCharacter(arcadeStage, {
+    if (!arcadeScene) return;
+    if (arcadeCharacter) arcadeScene.remove(arcadeCharacter);
+    arcadeCharacter = arcadeScene.actor({
       model,
       pose: 'idle',
       x: 210,
       y: 108,
       scale: model === 'boss' ? 1 : 1.08,
+      tags: ['actor'],
       label: `arcade character ${model}`
     });
+  }
+
+  function bootArcadeStage(kit) {
+    stopArcadeTemplate();
+    arcadeStage?.destroy?.();
+    arcadeStage = kit.createStage({
+      mount: arcadeDemoMount,
+      palette: arcadePaletteSelect?.value || 'neon',
+      minHeight: 190
+    });
+    arcadeScene = kit.createScene({
+      stage: arcadeStage,
+      fps: 30,
+      debug: Boolean(arcadeDebugToggle?.checked)
+    });
+    spawnArcadeSprite('hero');
+    spawnArcadeCharacter(arcadeCharacterSelect?.value || 'mascot');
+    arcadeScene.onCollision('sprite', 'actor', () => {
+      kit.fx.flash(arcadeStage, { color: 'rgba(245,255,107,0.18)', duration: 80 });
+    });
+    arcadeScene.step();
+    kit.fx.popup(arcadeStage, 'READY', { x: 18, y: 18 });
+    kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 12 });
   }
 
   function bootArcadeKitControls() {
@@ -225,15 +258,7 @@
       if (!window.ConviviumArcadeKit) return;
       window.clearInterval(waitForArcade);
       const kit = window.ConviviumArcadeKit;
-      arcadeStage = kit.createStage({
-        mount: arcadeDemoMount,
-        palette: arcadePaletteSelect?.value || 'neon',
-        minHeight: 190
-      });
-      spawnArcadeSprite('hero');
-      spawnArcadeCharacter(arcadeCharacterSelect?.value || 'mascot');
-      kit.fx.popup(arcadeStage, 'READY', { x: 18, y: 18 });
-      kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 12 });
+      bootArcadeStage(kit);
       setArcadeStatus(`Arcade Kit ${kit.version} aktif.`, 'success');
     }, 120);
 
@@ -249,8 +274,15 @@
     });
 
     arcadeCharacterSelect?.addEventListener('change', () => {
+      stopArcadeTemplate();
       spawnArcadeCharacter(arcadeCharacterSelect.value);
+      arcadeScene?.step();
       setArcadeStatus(`Karakter modeli: ${arcadeCharacterSelect.value}`, 'success');
+    });
+
+    arcadeDebugToggle?.addEventListener('change', () => {
+      arcadeScene?.setDebug(arcadeDebugToggle.checked);
+      setArcadeStatus(`Hitbox debug: ${arcadeDebugToggle.checked ? 'acik' : 'kapali'}`, 'success');
     });
 
     document.querySelectorAll('[data-arcade-demo]').forEach((button) => {
@@ -266,10 +298,62 @@
         else if (action === 'flash') kit.fx.flash(arcadeStage, { color: 'rgba(245,255,107,0.42)' });
         else if (action === 'shake') kit.fx.shake(arcadeStage);
         else if (action === 'popup') kit.fx.popup(arcadeStage, 'INSERT COIN', { x: 76, y: 34 });
+        else if (action === 'timeline' || action === 'tornado' || action === 'portal') {
+          stopArcadeTemplate();
+          arcadeTemplate = kit.templates.petAction({
+            stage: arcadeStage,
+            model: arcadeCharacterSelect?.value || 'mascot'
+          });
+          arcadeCharacter = null;
+          arcadeSprite = null;
+          const timelineAction = action === 'timeline' ? 'storm' : action;
+          arcadeTemplate.runAction(timelineAction);
+          setArcadeStatus(`Timeline aksiyonu: ${timelineAction}`, 'success');
+        }
+        else if (action === 'shooter') {
+          stopArcadeTemplate();
+          arcadeScene?.stop();
+          arcadeStage?.clear();
+          arcadeTemplate = kit.templates.miniShooter({
+            stage: arcadeStage,
+            debug: Boolean(arcadeDebugToggle?.checked)
+          });
+          arcadeScene = arcadeTemplate.scene;
+          arcadeSprite = arcadeTemplate.player;
+          arcadeCharacter = null;
+          setArcadeStatus('Mini shooter template calisiyor.', 'success');
+        }
+        else if (action === 'canvas') {
+          stopArcadeTemplate();
+          arcadeScene?.stop();
+          arcadeStage?.clear();
+          const renderer = kit.renderers.canvas2d({
+            stage: arcadeStage,
+            width: 320,
+            height: 180
+          });
+          renderer
+            .clear('#050505')
+            .rect(38, 42, 48, 48, '#00eaff')
+            .outline(38, 42, 48, 48, '#f5ff6b')
+            .rect(124, 66, 72, 22, '#ff2ea6')
+            .rect(218, 36, 34, 84, '#00ff66')
+            .text('CANVAS2D READY', 82, 142, { color: '#c9ffd6', font: '12px monospace' });
+          arcadeTemplate = { destroy: () => renderer.destroy() };
+          setArcadeStatus('Canvas2D renderer hazir.', 'success');
+        }
+        else if (action === 'storage') {
+          const store = kit.storage.create('admin-lab');
+          const nextScore = store.best('highScore', Math.floor(1000 + Math.random() * 9000));
+          kit.fx.popup(arcadeStage, `HI ${nextScore}`, { x: 96, y: 26 });
+          setArcadeStatus(`Storage high score: ${nextScore}`, 'success');
+        }
         else if (action === 'sprite') {
+          stopArcadeTemplate();
           const forms = ['hero', 'ship', 'orb'];
           arcadeSpriteIndex += 1;
           spawnArcadeSprite(forms[arcadeSpriteIndex % forms.length]);
+          arcadeScene?.step();
         }
       });
     });
