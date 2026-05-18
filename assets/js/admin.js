@@ -93,6 +93,26 @@
     if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
   }
 
+  function setBugyMessage(message, type) {
+    if (!bugyStatus) return;
+    bugyStatus.textContent = message;
+    bugyStatus.dataset.type = type || 'info';
+  }
+
+  function runBugyAction(action) {
+    if (!window.Bugy) {
+      renderBugyStatus();
+      return;
+    }
+
+    window.Bugy.summon();
+    window.setTimeout(() => {
+      const ok = window.Bugy.trigger(action);
+      setBugyMessage(ok ? `Aksiyon baslatildi: ${action}` : `Aksiyon baslatilamadi: ${action}`, ok ? 'success' : 'error');
+      window.setTimeout(renderBugyStatus, 900);
+    }, 120);
+  }
+
   function bootBugyControls() {
     const waitForBugy = window.setInterval(() => {
       if (!window.Bugy) return;
@@ -111,9 +131,7 @@
           renderBugyStatus();
           return;
         }
-        const action = button.dataset.bugyAction;
-        window.Bugy.trigger(action);
-        renderBugyStatus();
+        runBugyAction(button.dataset.bugyAction);
       });
     });
 
@@ -132,7 +150,8 @@
         return;
       }
       window.Bugy.next();
-      renderBugyStatus();
+      setBugyMessage('Siradaki aksiyon baslatildi.', 'success');
+      window.setTimeout(renderBugyStatus, 900);
     });
 
     bugyRandomToggle?.addEventListener('change', () => {

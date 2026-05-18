@@ -1,5 +1,6 @@
 (() => {
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const isDebugSurface = () => document.body.classList.contains('bugy-debug') || Boolean(document.querySelector('.bugy-admin-panel'));
 
   const createLayer = () => {
     if (document.getElementById('neon-sheep')) return;
@@ -64,7 +65,7 @@
   };
 
   const startNeonSheep = () => {
-    if (prefersReducedMotion()) return;
+    if (prefersReducedMotion() && !isDebugSurface()) return;
     createLayer();
 
     const neonSheep = document.getElementById('neon-sheep');

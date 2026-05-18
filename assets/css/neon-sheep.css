@@ -482,4 +482,12 @@
   .neon-portal {
     display: none;
   }
+
+  body.bugy-debug .neon-sheep,
+  body.bugy-debug .neon-ufo,
+  body.bugy-debug .neon-storm,
+  body.bugy-debug .neon-tornado,
+  body.bugy-debug .neon-portal {
+    display: block;
+  }
 }
