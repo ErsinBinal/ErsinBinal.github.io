@@ -1,0 +1,259 @@
+.neon-sheep {
+  --pet-x: 120px;
+  --pet-y: calc(100vh - 84px);
+  --pet-face: 1;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 145;
+  width: 58px;
+  height: 42px;
+  pointer-events: none;
+  transform: translate3d(var(--pet-x), var(--pet-y), 0) scaleX(var(--pet-face));
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 0 8px rgba(0, 234, 255, 0.48));
+  transition: opacity 0.18s ease, filter 0.18s ease;
+  will-change: transform;
+}
+
+.neon-sheep[aria-hidden="true"] {
+  opacity: 0;
+}
+
+.neon-sheep__body,
+.neon-sheep__head,
+.neon-sheep__ear,
+.neon-sheep__eye,
+.neon-sheep__leg,
+.neon-sheep__tail {
+  position: absolute;
+  box-sizing: border-box;
+}
+
+.neon-sheep__body {
+  left: 8px;
+  top: 14px;
+  width: 34px;
+  height: 20px;
+  border: 2px solid rgba(183, 255, 208, 0.92);
+  background:
+    linear-gradient(135deg, rgba(0, 255, 102, 0.16), rgba(0, 234, 255, 0.1)),
+    #030806;
+  box-shadow:
+    inset 0 0 10px rgba(0, 255, 102, 0.22),
+    0 0 12px rgba(0, 255, 102, 0.22);
+}
+
+.neon-sheep__body::before,
+.neon-sheep__body::after {
+  content: '';
+  position: absolute;
+  top: -7px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 255, 102, 0.82);
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.neon-sheep__body::before { left: 3px; }
+.neon-sheep__body::after { right: 3px; }
+
+.neon-sheep__head {
+  right: 2px;
+  top: 8px;
+  width: 18px;
+  height: 20px;
+  border: 2px solid rgba(0, 234, 255, 0.92);
+  background: #03090b;
+  box-shadow: inset 0 0 8px rgba(0, 234, 255, 0.22);
+}
+
+.neon-sheep__ear {
+  right: 9px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid rgba(255, 46, 166, 0.8);
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.neon-sheep__eye {
+  right: 6px;
+  top: 15px;
+  width: 4px;
+  height: 4px;
+  background: var(--journey-pink, #ff2ea6);
+  box-shadow: 0 0 7px var(--journey-pink, #ff2ea6);
+}
+
+.neon-sheep__tail {
+  left: 2px;
+  top: 18px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid rgba(0, 255, 102, 0.86);
+  background: #020402;
+}
+
+.neon-sheep__leg {
+  bottom: 3px;
+  width: 4px;
+  height: 10px;
+  background: var(--journey-cyan, #00eaff);
+  box-shadow: 0 0 6px rgba(0, 234, 255, 0.72);
+  transform-origin: 50% 0;
+}
+
+.neon-sheep__leg:nth-of-type(5) { left: 14px; }
+.neon-sheep__leg:nth-of-type(6) { left: 25px; }
+.neon-sheep__leg:nth-of-type(7) { left: 36px; }
+.neon-sheep__leg:nth-of-type(8) { left: 45px; }
+
+.neon-sheep[data-state="walk"] .neon-sheep__leg,
+.neon-sheep[data-state="climb"] .neon-sheep__leg {
+  animation: sheep-step 0.32s steps(2, end) infinite;
+}
+
+.neon-sheep[data-state="walk"] .neon-sheep__leg:nth-of-type(even),
+.neon-sheep[data-state="climb"] .neon-sheep__leg:nth-of-type(even) {
+  animation-delay: 0.16s;
+}
+
+.neon-sheep[data-state="climb"] {
+  filter: drop-shadow(0 0 11px rgba(255, 46, 166, 0.58));
+}
+
+.neon-sheep[data-state="nap"] .neon-sheep__body {
+  animation: sheep-nap 1.4s ease-in-out infinite;
+}
+
+.neon-sheep[data-state="nap"]::after {
+  content: 'z z';
+  position: absolute;
+  left: 35px;
+  top: -13px;
+  color: var(--journey-cyan, #00eaff);
+  font-family: var(--font-display, monospace);
+  font-size: 0.68rem;
+  text-shadow: 0 0 8px rgba(0, 234, 255, 0.82);
+  animation: sheep-z 1.4s ease-in-out infinite;
+  transform: scaleX(var(--pet-face));
+}
+
+.neon-sheep[data-state="fall"] {
+  filter: drop-shadow(0 0 12px rgba(255, 46, 166, 0.72));
+}
+
+.neon-sheep[data-state="abduct"] {
+  filter: drop-shadow(0 0 16px rgba(201, 255, 214, 0.9));
+}
+
+.neon-ufo {
+  --ufo-x: -180px;
+  --ufo-y: 80px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 150;
+  width: 116px;
+  height: 76px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate3d(var(--ufo-x), var(--ufo-y), 0);
+  transition: opacity 0.18s ease;
+  filter: drop-shadow(0 0 16px rgba(0, 234, 255, 0.58));
+  will-change: transform;
+}
+
+.neon-ufo.is-active {
+  opacity: 1;
+}
+
+.neon-ufo__dome,
+.neon-ufo__hull,
+.neon-ufo__beam {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  box-sizing: border-box;
+}
+
+.neon-ufo__dome {
+  top: 5px;
+  width: 48px;
+  height: 24px;
+  border: 2px solid rgba(183, 255, 208, 0.85);
+  border-bottom: 0;
+  border-radius: 48px 48px 0 0;
+  background: rgba(0, 234, 255, 0.1);
+  box-shadow: inset 0 0 14px rgba(0, 234, 255, 0.2);
+}
+
+.neon-ufo__hull {
+  top: 25px;
+  width: 96px;
+  height: 22px;
+  border: 2px solid rgba(0, 234, 255, 0.9);
+  background:
+    linear-gradient(90deg, rgba(255, 46, 166, 0.2), rgba(0, 255, 102, 0.18), rgba(0, 234, 255, 0.2)),
+    #030806;
+  box-shadow: 0 0 18px rgba(0, 234, 255, 0.35);
+}
+
+.neon-ufo__hull::before,
+.neon-ufo__hull::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--journey-pink, #ff2ea6);
+  box-shadow: 0 0 8px var(--journey-pink, #ff2ea6);
+}
+
+.neon-ufo__hull::before { left: 18px; }
+.neon-ufo__hull::after { right: 18px; }
+
+.neon-ufo__beam {
+  top: 45px;
+  width: 58px;
+  height: 0;
+  opacity: 0;
+  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(0, 234, 255, 0.26), rgba(0, 255, 102, 0));
+  transition: height 0.28s ease, opacity 0.28s ease;
+}
+
+.neon-ufo.is-beaming .neon-ufo__beam {
+  height: 180px;
+  opacity: 1;
+  animation: beam-pulse 0.34s steps(2, end) infinite;
+}
+
+@keyframes sheep-step {
+  0% { transform: rotate(-18deg) translateY(0); }
+  100% { transform: rotate(18deg) translateY(1px); }
+}
+
+@keyframes sheep-nap {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(2px); }
+}
+
+@keyframes sheep-z {
+  0% { opacity: 0; transform: translate(0, 5px) scaleX(var(--pet-face)); }
+  35%, 70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(11px, -9px) scaleX(var(--pet-face)); }
+}
+
+@keyframes beam-pulse {
+  0% { opacity: 0.72; }
+  100% { opacity: 0.36; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .neon-sheep,
+  .neon-ufo {
+    display: none;
+  }
+}
