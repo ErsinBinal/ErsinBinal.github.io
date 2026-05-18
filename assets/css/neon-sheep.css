@@ -663,12 +663,15 @@
 .neon-storm__cloud::after {
   content: '';
   position: absolute;
-  left: 16px;
-  top: 48px;
-  width: 56px;
-  height: 3px;
-  background: rgba(255, 46, 166, 0.82);
-  box-shadow: 0 0 8px rgba(255, 46, 166, 0.72);
+  left: 10px;
+  top: 44px;
+  width: 68px;
+  height: 10px;
+  background:
+    linear-gradient(90deg, transparent 0 8px, rgba(255, 46, 166, 0.82) 8px 22px, transparent 22px 30px, rgba(0, 234, 255, 0.74) 30px 48px, transparent 48px 56px, rgba(245, 255, 107, 0.74) 56px 68px);
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, 0.38),
+    0 0 8px rgba(255, 46, 166, 0.72);
 }
 
 .neon-storm__rain {
@@ -810,20 +813,22 @@
   left: 0;
   top: 0;
   z-index: 143;
-  width: 104px;
-  height: 38px;
+  width: 112px;
+  height: 46px;
   pointer-events: none;
   opacity: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: 50%;
   background:
-    linear-gradient(90deg, transparent 0 8px, rgba(255, 46, 166, 0.92) 8px 18px, rgba(0, 234, 255, 0.96) 18px 86px, rgba(255, 46, 166, 0.92) 86px 96px, transparent 96px),
-    linear-gradient(90deg, transparent 0 22px, rgba(0, 0, 0, 0.92) 22px 82px, transparent 82px);
+    radial-gradient(ellipse at center, rgba(201, 255, 214, 0.96) 0 11%, transparent 12%),
+    radial-gradient(ellipse at center, rgba(0, 234, 255, 0.92) 0 25%, transparent 26%),
+    radial-gradient(ellipse at center, transparent 0 38%, #050505 39% 47%, rgba(255, 46, 166, 0.94) 48% 61%, #050505 62% 70%, rgba(0, 234, 255, 0.94) 71% 84%, transparent 85%);
   box-shadow:
-    0 0 0 3px rgba(0, 0, 0, 0.92),
+    0 7px 0 rgba(0, 0, 0, 0.46),
+    0 0 0 4px rgba(0, 0, 0, 0.92),
     0 0 18px rgba(255, 46, 166, 0.62),
     inset 0 0 12px rgba(0, 234, 255, 0.56);
-  transform: translate3d(var(--portal-x), var(--portal-y), 0);
+  transform: translate3d(var(--portal-x), var(--portal-y), 0) perspective(160px) rotateX(58deg);
   image-rendering: pixelated;
 }
 
@@ -838,17 +843,19 @@
 }
 
 .neon-portal::before {
-  width: 78px;
-  height: 24px;
-  border: 4px solid rgba(245, 255, 107, 0.82);
+  width: 82px;
+  height: 30px;
+  border: 5px solid rgba(245, 255, 107, 0.82);
+  border-radius: 50%;
   box-shadow:
-    inset 0 0 0 4px rgba(255, 46, 166, 0.8),
+    inset 0 0 0 5px rgba(255, 46, 166, 0.8),
     0 0 12px rgba(245, 255, 107, 0.44);
 }
 
 .neon-portal::after {
-  width: 42px;
-  height: 10px;
+  width: 46px;
+  height: 14px;
+  border-radius: 50%;
   background:
     linear-gradient(90deg, rgba(255, 46, 166, 0.9), rgba(0, 234, 255, 0.95), rgba(0, 255, 102, 0.74));
   box-shadow:
@@ -935,8 +942,8 @@
 }
 
 @keyframes bugy-portal-pulse {
-  0% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(0.92); filter: brightness(0.92); }
-  100% { transform: translate3d(var(--portal-x), var(--portal-y), 0) scaleX(1.08); filter: brightness(1.28); }
+  0% { transform: translate3d(var(--portal-x), var(--portal-y), 0) perspective(160px) rotateX(58deg) scaleX(0.92); filter: brightness(0.92); }
+  100% { transform: translate3d(var(--portal-x), var(--portal-y), 0) perspective(160px) rotateX(58deg) scaleX(1.08); filter: brightness(1.28); }
 }
 
 @keyframes bugy-portal-core {

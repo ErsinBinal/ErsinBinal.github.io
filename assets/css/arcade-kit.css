@@ -382,17 +382,59 @@
   width: var(--effect-w, 64px);
   height: var(--effect-h, 64px);
   z-index: 14;
+  overflow: visible;
 }
 
 .arcade-effect--rain {
+  width: max(var(--effect-w, 96px), 92px);
+  height: max(var(--effect-h, 92px), 86px);
   background:
-    linear-gradient(180deg, var(--arcade-cyan) 0 10px, transparent 10px),
-    linear-gradient(180deg, var(--arcade-paper) 0 8px, transparent 8px),
-    linear-gradient(180deg, var(--arcade-cyan) 0 12px, transparent 12px);
-  background-position: 4px 0, 22px 8px, 42px 3px;
-  background-size: 11px 26px, 13px 28px, 12px 30px;
-  opacity: 0.9;
-  animation: arcade-rain-fall 220ms steps(4, end) infinite;
+    linear-gradient(180deg, transparent 34px, rgba(0, 234, 255, 0.62) 34px 48px, transparent 48px 64px),
+    linear-gradient(180deg, transparent 42px, rgba(201, 255, 214, 0.72) 42px 55px, transparent 55px 72px),
+    linear-gradient(180deg, transparent 38px, rgba(0, 234, 255, 0.72) 38px 54px, transparent 54px 72px);
+  background-position: 7px 0, 33px 0, 61px 0;
+  background-size: 10px 70px, 12px 76px, 10px 72px;
+  background-repeat: repeat-y;
+  animation: arcade-rain-fall 240ms steps(4, end) infinite;
+}
+
+.arcade-effect--rain::before,
+.arcade-effect--rain::after {
+  content: '';
+  position: absolute;
+  display: block;
+}
+
+.arcade-effect--rain::before {
+  left: 4px;
+  top: 2px;
+  width: 78px;
+  height: 34px;
+  border: 4px solid #000;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0 8px, transparent 8px),
+    linear-gradient(180deg, var(--arcade-paper), #87b7c9 70%, #314f6b);
+  clip-path: polygon(8% 64%, 8% 42%, 20% 42%, 20% 24%, 35% 24%, 35% 8%, 58% 8%, 58% 20%, 76% 20%, 76% 40%, 92% 40%, 92% 66%, 82% 66%, 82% 82%, 20% 82%, 20% 66%);
+  box-shadow:
+    inset 0 -9px 0 rgba(0, 0, 0, 0.2),
+    8px 7px 0 rgba(0, 0, 0, 0.32),
+    0 0 16px rgba(0, 234, 255, 0.36);
+}
+
+.arcade-effect--rain::after {
+  left: 18px;
+  top: 34px;
+  width: 58px;
+  height: 46px;
+  background:
+    linear-gradient(180deg, var(--arcade-cyan) 0 14px, transparent 14px),
+    linear-gradient(180deg, var(--arcade-paper) 0 10px, transparent 10px),
+    linear-gradient(180deg, var(--arcade-cyan) 0 16px, transparent 16px),
+    linear-gradient(180deg, var(--arcade-cyan) 0 11px, transparent 11px);
+  background-position: 0 0, 17px 8px, 34px 2px, 50px 12px;
+  background-size: 7px 28px, 7px 24px, 7px 30px, 7px 25px;
+  background-repeat: repeat-y;
+  animation: arcade-rain-streak 180ms steps(3, end) infinite;
 }
 
 .arcade-effect--lightning {
@@ -404,38 +446,100 @@
 }
 
 .arcade-effect--portal {
-  border: 5px solid var(--arcade-pink);
-  border-left-color: var(--arcade-cyan);
-  border-right-color: var(--arcade-amber);
+  width: max(var(--effect-w, 76px), 76px);
+  height: max(var(--effect-h, 42px), 42px);
+  border: 0;
+  background:
+    radial-gradient(ellipse at center, rgba(201, 255, 214, 0.96) 0 12%, transparent 13%),
+    radial-gradient(ellipse at center, rgba(0, 234, 255, 0.92) 0 24%, transparent 25%),
+    radial-gradient(ellipse at center, transparent 0 38%, #000 39% 47%, var(--arcade-pink) 48% 60%, #000 61% 69%, var(--arcade-cyan) 70% 82%, transparent 83%);
   border-radius: 50%;
   box-shadow:
-    inset 0 0 0 4px #000,
-    0 0 18px rgba(255, 46, 166, 0.58),
-    0 0 26px rgba(0, 234, 255, 0.34);
-  transform: perspective(160px) rotateX(62deg);
-  animation: arcade-portal-spin 760ms steps(8, end) infinite;
+    0 8px 0 rgba(0, 0, 0, 0.42),
+    0 0 0 3px #000,
+    0 0 18px rgba(255, 46, 166, 0.72),
+    0 0 30px rgba(0, 234, 255, 0.44);
+  transform: perspective(180px) rotateX(62deg);
+  animation: arcade-portal-spin 700ms steps(8, end) infinite;
 }
 
 .arcade-effect--portal::after {
   content: '';
   position: absolute;
-  inset: 18%;
-  border: 3px solid var(--arcade-paper);
+  left: 13%;
+  top: 18%;
+  width: 74%;
+  height: 64%;
+  border: 4px solid var(--arcade-paper);
   border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 4px rgba(0, 0, 0, 0.62),
+    0 0 12px rgba(201, 255, 214, 0.58);
+}
+
+.arcade-effect--portal::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: -9px;
+  width: 10px;
+  height: 10px;
+  background: var(--arcade-amber);
+  box-shadow:
+    22px -10px 0 var(--arcade-cyan),
+    78px 4px 0 var(--arcade-pink),
+    94px 26px 0 var(--arcade-paper),
+    16px 42px 0 var(--arcade-cyan);
+  animation: arcade-portal-sparks 520ms steps(4, end) infinite;
 }
 
 .arcade-effect--tornado {
+  width: max(var(--effect-w, 86px), 84px);
+  height: max(var(--effect-h, 126px), 120px);
   background:
-    linear-gradient(92deg, transparent 0 18%, var(--arcade-paper) 18% 30%, transparent 30%),
-    linear-gradient(86deg, transparent 0 26%, var(--arcade-cyan) 26% 46%, transparent 46%),
-    linear-gradient(98deg, transparent 0 34%, var(--arcade-pink) 34% 62%, transparent 62%),
-    linear-gradient(88deg, transparent 0 44%, var(--arcade-amber) 44% 72%, transparent 72%);
-  background-size: 100% 22%, 100% 28%, 100% 32%, 100% 36%;
-  background-position: 0 0, 0 24%, 0 52%, 0 78%;
+    linear-gradient(94deg, transparent 0 13%, #000 13% 17%, var(--arcade-paper) 17% 42%, #000 42% 46%, transparent 46%),
+    linear-gradient(86deg, transparent 0 20%, #000 20% 24%, var(--arcade-cyan) 24% 58%, #000 58% 62%, transparent 62%),
+    linear-gradient(98deg, transparent 0 26%, #000 26% 30%, var(--arcade-pink) 30% 68%, #000 68% 72%, transparent 72%),
+    linear-gradient(88deg, transparent 0 36%, #000 36% 40%, var(--arcade-amber) 40% 76%, #000 76% 80%, transparent 80%),
+    linear-gradient(90deg, transparent 0 44%, rgba(201, 255, 214, 0.76) 44% 58%, transparent 58%);
+  background-size: 100% 18%, 100% 22%, 100% 28%, 100% 32%, 100% 100%;
+  background-position: 0 3%, 0 26%, 0 53%, 0 79%, 0 0;
   background-repeat: no-repeat;
-  clip-path: polygon(8% 0, 92% 0, 76% 30%, 62% 58%, 54% 100%, 38% 100%, 44% 62%, 28% 32%);
+  clip-path: polygon(4% 5%, 96% 0, 87% 20%, 73% 38%, 64% 58%, 57% 100%, 38% 100%, 44% 62%, 30% 43%, 16% 24%);
   filter: drop-shadow(0 0 12px rgba(0, 234, 255, 0.45));
   animation: arcade-tornado-spin 180ms steps(2, end) infinite;
+}
+
+.arcade-effect--tornado::before,
+.arcade-effect--tornado::after {
+  content: '';
+  position: absolute;
+  display: block;
+}
+
+.arcade-effect--tornado::before {
+  left: 3px;
+  top: 4px;
+  width: 76px;
+  height: 104px;
+  background:
+    radial-gradient(circle, var(--arcade-paper) 0 4px, transparent 5px),
+    radial-gradient(circle, var(--arcade-cyan) 0 4px, transparent 5px),
+    radial-gradient(circle, var(--arcade-amber) 0 3px, transparent 4px);
+  background-position: 2px 10px, 64px 44px, 14px 78px;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  opacity: 0.9;
+  animation: arcade-tornado-debris 360ms steps(4, end) infinite;
+}
+
+.arcade-effect--tornado::after {
+  left: 27px;
+  bottom: -4px;
+  width: 34px;
+  height: 13px;
+  background: rgba(0, 0, 0, 0.48);
+  clip-path: polygon(0 42%, 20% 14%, 80% 14%, 100% 42%, 78% 100%, 22% 100%);
 }
 
 .arcade-hitbox {
@@ -607,7 +711,11 @@
 }
 
 @keyframes arcade-rain-fall {
-  to { background-position: 4px 26px, 22px 36px, 42px 33px; }
+  to { background-position: 7px 70px, 33px 76px, 61px 72px; }
+}
+
+@keyframes arcade-rain-streak {
+  to { background-position: 0 28px, 17px 32px, 34px 32px, 50px 31px; }
 }
 
 @keyframes arcade-lightning-hit {
@@ -618,16 +726,34 @@
 
 @keyframes arcade-portal-spin {
   50% {
-    transform: perspective(160px) rotateX(62deg) rotateZ(180deg) scale(1.12);
+    transform: perspective(180px) rotateX(62deg) rotateZ(180deg) scale(1.12);
   }
   100% {
-    transform: perspective(160px) rotateX(62deg) rotateZ(360deg);
+    transform: perspective(180px) rotateX(62deg) rotateZ(360deg);
+  }
+}
+
+@keyframes arcade-portal-sparks {
+  50% {
+    transform: translate(6px, -4px);
+    opacity: 0.62;
   }
 }
 
 @keyframes arcade-tornado-spin {
-  50% { transform: skewX(-8deg) translateX(5px); }
-  100% { transform: skewX(8deg) translateX(-5px); }
+  50% {
+    transform: skewX(-8deg) translateX(5px);
+    background-position: 0 7%, 0 22%, 0 57%, 0 75%, 0 0;
+  }
+  100% {
+    transform: skewX(8deg) translateX(-5px);
+    background-position: 0 3%, 0 26%, 0 53%, 0 79%, 0 0;
+  }
+}
+
+@keyframes arcade-tornado-debris {
+  50% { transform: translate(8px, -6px); }
+  100% { transform: translate(-6px, 5px); }
 }
 
 @keyframes bugy-v2-glitch {
