@@ -110,6 +110,157 @@
 .neon-sheep__leg:nth-of-type(7) { left: 36px; }
 .neon-sheep__leg:nth-of-type(8) { left: 45px; }
 
+.neon-sheep[data-skin="matrix"] {
+  filter: drop-shadow(0 0 9px rgba(0, 255, 102, 0.62));
+}
+
+.neon-sheep[data-skin="matrix"] .neon-sheep__body {
+  border-color: rgba(0, 255, 102, 0.96);
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 255, 102, 0.2) 0 4px, transparent 4px 8px),
+    #020805;
+  box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.28), 0 0 13px rgba(0, 255, 102, 0.34);
+}
+
+.neon-sheep[data-skin="matrix"] .neon-sheep__body::before,
+.neon-sheep[data-skin="matrix"] .neon-sheep__body::after,
+.neon-sheep[data-skin="matrix"] .neon-sheep__tail {
+  border-color: rgba(0, 255, 102, 0.9);
+  background: #001f0b;
+}
+
+.neon-sheep[data-skin="matrix"] .neon-sheep__head {
+  border-color: rgba(183, 255, 208, 0.96);
+  background: #00180a;
+}
+
+.neon-sheep[data-skin="matrix"] .neon-sheep__ear,
+.neon-sheep[data-skin="matrix"] .neon-sheep__leg {
+  border-color: rgba(0, 255, 102, 0.9);
+  background: #00ff66;
+  box-shadow: 0 0 7px rgba(0, 255, 102, 0.82);
+}
+
+.neon-sheep[data-skin="matrix"] .neon-sheep__eye {
+  background: #f5ff6b;
+  box-shadow: 0 0 8px rgba(245, 255, 107, 0.9);
+}
+
+.neon-sheep[data-skin="ember"] {
+  filter: drop-shadow(0 0 9px rgba(255, 128, 0, 0.64));
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__body {
+  border-color: rgba(245, 255, 107, 0.86);
+  background:
+    linear-gradient(135deg, rgba(255, 46, 46, 0.34), rgba(245, 255, 107, 0.2)),
+    #160603;
+  box-shadow: inset 0 0 12px rgba(255, 128, 0, 0.28), 0 0 14px rgba(255, 128, 0, 0.36);
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__body::before,
+.neon-sheep[data-skin="ember"] .neon-sheep__body::after {
+  top: -9px;
+  width: 10px;
+  height: 14px;
+  border-color: rgba(255, 46, 46, 0.84);
+  background: #260700;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__head {
+  border-color: rgba(255, 153, 0, 0.95);
+  background: #1b0802;
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__ear,
+.neon-sheep[data-skin="ember"] .neon-sheep__tail {
+  border-color: rgba(245, 255, 107, 0.9);
+  background: #2b0d00;
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__leg {
+  background: #ff9900;
+  box-shadow: 0 0 8px rgba(255, 153, 0, 0.86);
+}
+
+.neon-sheep[data-skin="ember"] .neon-sheep__eye {
+  background: #f5ff6b;
+  box-shadow: 0 0 8px rgba(245, 255, 107, 0.9);
+}
+
+.neon-sheep[data-skin="ghost"] {
+  opacity: 0.86;
+  filter: drop-shadow(0 0 10px rgba(201, 255, 214, 0.58));
+}
+
+.neon-sheep[data-skin="ghost"] .neon-sheep__body {
+  border-color: rgba(201, 255, 214, 0.82);
+  background:
+    linear-gradient(135deg, rgba(201, 255, 214, 0.18), rgba(0, 234, 255, 0.12)),
+    rgba(1, 12, 12, 0.68);
+}
+
+.neon-sheep[data-skin="ghost"] .neon-sheep__body::before,
+.neon-sheep[data-skin="ghost"] .neon-sheep__body::after,
+.neon-sheep[data-skin="ghost"] .neon-sheep__head,
+.neon-sheep[data-skin="ghost"] .neon-sheep__ear,
+.neon-sheep[data-skin="ghost"] .neon-sheep__tail {
+  border-color: rgba(201, 255, 214, 0.78);
+  background: rgba(0, 20, 20, 0.58);
+}
+
+.neon-sheep[data-skin="ghost"] .neon-sheep__leg {
+  background: rgba(201, 255, 214, 0.9);
+  box-shadow: 0 0 8px rgba(201, 255, 214, 0.72);
+}
+
+.neon-sheep[data-skin="ghost"] .neon-sheep__eye {
+  background: #00eaff;
+  box-shadow: 0 0 9px rgba(0, 234, 255, 0.9);
+}
+
+.neon-sheep[data-skin="royal"] {
+  filter: drop-shadow(0 0 10px rgba(255, 46, 166, 0.58));
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__body {
+  border-color: rgba(245, 255, 107, 0.9);
+  background:
+    linear-gradient(135deg, rgba(255, 46, 166, 0.26), rgba(0, 234, 255, 0.12)),
+    #100315;
+  box-shadow: inset 0 0 11px rgba(255, 46, 166, 0.24), 0 0 14px rgba(255, 46, 166, 0.32);
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__body::before,
+.neon-sheep[data-skin="royal"] .neon-sheep__body::after {
+  top: -10px;
+  border-color: rgba(245, 255, 107, 0.9);
+  background: #210529;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__head {
+  border-color: rgba(255, 46, 166, 0.92);
+  background: #12051a;
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__ear,
+.neon-sheep[data-skin="royal"] .neon-sheep__tail {
+  border-color: rgba(0, 234, 255, 0.9);
+  background: #16061d;
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__leg {
+  background: #f5ff6b;
+  box-shadow: 0 0 8px rgba(245, 255, 107, 0.8);
+}
+
+.neon-sheep[data-skin="royal"] .neon-sheep__eye {
+  background: #00eaff;
+  box-shadow: 0 0 8px rgba(0, 234, 255, 0.9);
+}
+
 .neon-sheep[data-state="walk"] .neon-sheep__leg,
 .neon-sheep[data-state="climb"] .neon-sheep__leg {
   animation: sheep-step 0.32s steps(2, end) infinite;

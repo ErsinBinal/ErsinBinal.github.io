@@ -1,6 +1,8 @@
 (() => {
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const isDebugSurface = () => document.body.classList.contains('bugy-debug') || Boolean(document.querySelector('.bugy-admin-panel'));
+  const skinKey = 'convivium.bugy.skin';
+  const skins = ['classic', 'matrix', 'ember', 'ghost', 'royal'];
 
   const createLayer = () => {
     if (document.getElementById('neon-sheep')) return;
@@ -45,6 +47,7 @@
     sheep.className = 'neon-sheep';
     sheep.id = 'neon-sheep';
     sheep.dataset.state = 'walk';
+    sheep.dataset.skin = skins.includes(localStorage.getItem(skinKey)) ? localStorage.getItem(skinKey) : 'classic';
     sheep.setAttribute('aria-hidden', 'true');
     sheep.setAttribute('aria-label', 'bugy aksiyon tetikle');
     sheep.setAttribute('role', 'button');
@@ -129,9 +132,23 @@
       window.dispatchEvent(new CustomEvent('bugy:state', {
         detail: {
           state,
+          skin: neonSheep.dataset.skin || 'classic',
           randomEnabled: randomEncountersEnabled
         }
       }));
+    };
+    const setSkin = (skin) => {
+      const nextSkin = skins.includes(skin) ? skin : 'classic';
+      neonSheep.dataset.skin = nextSkin;
+      localStorage.setItem(skinKey, nextSkin);
+      window.dispatchEvent(new CustomEvent('bugy:state', {
+        detail: {
+          state: sheep.state,
+          skin: nextSkin,
+          randomEnabled: randomEncountersEnabled
+        }
+      }));
+      return nextSkin;
     };
     const clearEffects = () => {
       neonStorm.classList.remove('is-active', 'is-raining', 'is-lightning');
@@ -649,14 +666,18 @@
         window.dispatchEvent(new CustomEvent('bugy:state', {
           detail: {
             state: sheep.state,
+            skin: neonSheep.dataset.skin || 'classic',
             randomEnabled: randomEncountersEnabled
           }
         }));
         return randomEncountersEnabled;
       },
+      setSkin,
       getState() {
         return {
           state: sheep.state,
+          skin: neonSheep.dataset.skin || 'classic',
+          skins: [...skins],
           randomEnabled: randomEncountersEnabled,
           x: Math.round(sheep.x),
           y: Math.round(sheep.y)

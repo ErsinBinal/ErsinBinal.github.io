@@ -17,6 +17,7 @@
   const bugySummon = document.getElementById('bugySummon');
   const bugyNextAction = document.getElementById('bugyNextAction');
   const bugyRandomToggle = document.getElementById('bugyRandomToggle');
+  const bugySkinSelect = document.getElementById('bugySkinSelect');
   let activeId = '';
   let articles = [];
 
@@ -88,9 +89,10 @@
     }
 
     const state = window.Bugy.getState();
-    bugyStatus.textContent = `Durum: ${state.state} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
+    bugyStatus.textContent = `Durum: ${state.state} / skin: ${state.skin} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
     bugyStatus.dataset.type = 'success';
     if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
+    if (bugySkinSelect) bugySkinSelect.value = state.skin;
   }
 
   function setBugyMessage(message, type) {
@@ -161,6 +163,16 @@
       }
       window.Bugy.setRandom(bugyRandomToggle.checked);
       renderBugyStatus();
+    });
+
+    bugySkinSelect?.addEventListener('change', () => {
+      if (!window.Bugy) {
+        renderBugyStatus();
+        return;
+      }
+      const skin = window.Bugy.setSkin(bugySkinSelect.value);
+      setBugyMessage(`Skin secildi: ${skin}`, 'success');
+      window.setTimeout(renderBugyStatus, 700);
     });
 
     window.addEventListener('bugy:state', renderBugyStatus);

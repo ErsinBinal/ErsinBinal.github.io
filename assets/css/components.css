@@ -594,7 +594,8 @@ img.responsive:hover {
   justify-content: flex-end;
 }
 
-.bugy-random-toggle {
+.bugy-random-toggle,
+.bugy-skin-select {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -608,6 +609,16 @@ img.responsive:hover {
 
 .bugy-random-toggle input {
   accent-color: var(--color-primary, #00ff00);
+}
+
+.bugy-skin-select select {
+  min-height: 28px;
+  border: 1px solid var(--color-primary-dim, #007700);
+  background: #050505;
+  color: var(--color-primary, #00ff00);
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 4px 8px;
 }
 
 /* Auth screen */
