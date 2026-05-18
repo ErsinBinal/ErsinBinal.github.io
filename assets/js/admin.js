@@ -13,6 +13,10 @@
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content_html');
   const preview = document.getElementById('articlePreview');
+  const bugyStatus = document.getElementById('bugyStatus');
+  const bugySummon = document.getElementById('bugySummon');
+  const bugyNextAction = document.getElementById('bugyNextAction');
+  const bugyRandomToggle = document.getElementById('bugyRandomToggle');
   let activeId = '';
   let articles = [];
 
@@ -73,6 +77,75 @@
       item.appendChild(button);
       list.appendChild(item);
     });
+  }
+
+  function renderBugyStatus() {
+    if (!bugyStatus) return;
+    if (!window.Bugy) {
+      bugyStatus.textContent = 'Bugy motoru yuklenmedi.';
+      bugyStatus.dataset.type = 'error';
+      return;
+    }
+
+    const state = window.Bugy.getState();
+    bugyStatus.textContent = `Durum: ${state.state} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
+    bugyStatus.dataset.type = 'success';
+    if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
+  }
+
+  function bootBugyControls() {
+    const waitForBugy = window.setInterval(() => {
+      if (!window.Bugy) return;
+      window.clearInterval(waitForBugy);
+      renderBugyStatus();
+    }, 120);
+
+    window.setTimeout(() => {
+      window.clearInterval(waitForBugy);
+      renderBugyStatus();
+    }, 4000);
+
+    document.querySelectorAll('[data-bugy-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!window.Bugy) {
+          renderBugyStatus();
+          return;
+        }
+        const action = button.dataset.bugyAction;
+        window.Bugy.trigger(action);
+        renderBugyStatus();
+      });
+    });
+
+    bugySummon?.addEventListener('click', () => {
+      if (!window.Bugy) {
+        renderBugyStatus();
+        return;
+      }
+      window.Bugy.summon();
+      renderBugyStatus();
+    });
+
+    bugyNextAction?.addEventListener('click', () => {
+      if (!window.Bugy) {
+        renderBugyStatus();
+        return;
+      }
+      window.Bugy.next();
+      renderBugyStatus();
+    });
+
+    bugyRandomToggle?.addEventListener('change', () => {
+      if (!window.Bugy) {
+        renderBugyStatus();
+        return;
+      }
+      window.Bugy.setRandom(bugyRandomToggle.checked);
+      renderBugyStatus();
+    });
+
+    window.addEventListener('bugy:state', renderBugyStatus);
+    window.setInterval(renderBugyStatus, 1200);
   }
 
   async function loadArticles() {
@@ -160,5 +233,8 @@
     }
   });
 
-  document.addEventListener('DOMContentLoaded', boot);
+  document.addEventListener('DOMContentLoaded', () => {
+    bootBugyControls();
+    boot();
+  });
 })();

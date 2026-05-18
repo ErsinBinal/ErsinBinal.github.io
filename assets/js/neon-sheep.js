@@ -115,6 +115,7 @@
     const lockedStates = new Set(['abduct', 'storm', 'tornado', 'portal', 'clone', 'gravity']);
     const airborneStates = new Set(['climb', 'fall', 'abduct', 'storm', 'tornado', 'portal', 'gravity']);
     let clickEncounterIndex = 0;
+    let randomEncountersEnabled = true;
     const rand = (min, max) => min + Math.random() * (max - min);
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
     const groundY = () => window.innerHeight - petHeight - (window.innerWidth < 720 ? 18 : 28);
@@ -124,11 +125,18 @@
     const setState = (state) => {
       sheep.state = state;
       neonSheep.dataset.state = state;
+      window.dispatchEvent(new CustomEvent('bugy:state', {
+        detail: {
+          state,
+          randomEnabled: randomEncountersEnabled
+        }
+      }));
     };
     const clearEffects = () => {
       neonStorm.classList.remove('is-active', 'is-raining', 'is-lightning');
       neonTornado.classList.remove('is-active');
       neonPortal.classList.remove('is-active');
+      neonUfo.classList.remove('is-active', 'is-beaming');
       neonSheep.classList.remove('is-ashed', 'is-shocked', 'is-cloning');
       neonSheep.removeAttribute('aria-hidden');
     };
@@ -323,7 +331,6 @@
 
     const startEncounter = (type, now, forced = false) => {
       if (!forced && lockedStates.has(sheep.state)) return false;
-      if (lockedStates.has(sheep.state) && sheep.state !== 'nap' && sheep.state !== 'walk') return false;
       scheduleEncounter(now);
       if (type === 'storm') startStorm(now);
       else if (type === 'tornado') startTornado(now);
@@ -341,7 +348,7 @@
         return;
       }
 
-      if (now > sheep.encounterAt) {
+      if (randomEncountersEnabled && now > sheep.encounterAt) {
         startEncounter(randomEncounters[Math.floor(Math.random() * randomEncounters.length)], now);
         return;
       }
@@ -607,6 +614,54 @@
       event.preventDefault();
       triggerClickEncounter();
     });
+
+    window.Bugy = {
+      actions: ['storm', 'tornado', 'portal', 'clone', 'gravity', 'abduct'],
+      trigger(type) {
+        const now = performance.now();
+        if (type === 'abduct') {
+          scheduleEncounter(now);
+          startAbduction(now);
+          return true;
+        }
+        return startEncounter(type, now, true);
+      },
+      next() {
+        const type = clickEncounters[clickEncounterIndex % clickEncounters.length];
+        clickEncounterIndex += 1;
+        return this.trigger(type);
+      },
+      summon() {
+        const now = performance.now();
+        clearEffects();
+        sheep.x = clamp(window.innerWidth / 2 - petWidth / 2, 8, window.innerWidth - petWidth - 8);
+        sheep.y = groundY();
+        sheep.face = 1;
+        scheduleEncounter(now);
+        startWalk(now);
+        render();
+        return true;
+      },
+      setRandom(enabled) {
+        randomEncountersEnabled = Boolean(enabled);
+        scheduleEncounter(performance.now());
+        window.dispatchEvent(new CustomEvent('bugy:state', {
+          detail: {
+            state: sheep.state,
+            randomEnabled: randomEncountersEnabled
+          }
+        }));
+        return randomEncountersEnabled;
+      },
+      getState() {
+        return {
+          state: sheep.state,
+          randomEnabled: randomEncountersEnabled,
+          x: Math.round(sheep.x),
+          y: Math.round(sheep.y)
+        };
+      }
+    };
 
     neonSheep.removeAttribute('aria-hidden');
     startWalk(performance.now());

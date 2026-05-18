@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=23">
 </head>
 <body>
   <a class="skip-link" href="#content">Icerigi atla</a>
@@ -32,6 +33,32 @@
 
     <main id="content" role="main" class="admin-layout">
       <section id="adminGate" class="system-status" aria-live="polite">Yukleniyor...</section>
+
+      <section class="bugy-admin-panel" aria-labelledby="bugyAdminTitle">
+        <div class="admin-toolbar">
+          <div>
+            <h2 id="bugyAdminTitle">Bugy Kontrol</h2>
+            <p id="bugyStatus" aria-live="polite">Bugy hazirlaniyor...</p>
+          </div>
+          <div class="bugy-toggle-row">
+            <label class="bugy-random-toggle">
+              <input id="bugyRandomToggle" type="checkbox" checked>
+              Rastgele aksiyonlar
+            </label>
+            <button id="bugySummon" class="btn" type="button">Bugy'i Cagir</button>
+          </div>
+        </div>
+
+        <div class="bugy-control-grid" aria-label="Bugy aksiyonlari">
+          <button class="btn btn-primary" type="button" data-bugy-action="storm">Firtina + Yildirim</button>
+          <button class="btn btn-primary" type="button" data-bugy-action="tornado">Hortum + Firlat</button>
+          <button class="btn btn-primary" type="button" data-bugy-action="portal">Portal</button>
+          <button class="btn btn-primary" type="button" data-bugy-action="clone">Clone Glitch</button>
+          <button class="btn btn-primary" type="button" data-bugy-action="gravity">Dusuk Yercekimi</button>
+          <button class="btn btn-primary" type="button" data-bugy-action="abduct">UFO</button>
+          <button id="bugyNextAction" class="btn" type="button">Siradaki Aksiyon</button>
+        </div>
+      </section>
 
       <section id="adminWorkspace" hidden>
         <div class="admin-toolbar">
@@ -106,6 +133,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=21" defer></script>
+  <script src="/assets/js/neon-sheep.js?v=23" defer></script>
   <script src="/assets/js/admin.js" defer></script>
 </body>
 </html>

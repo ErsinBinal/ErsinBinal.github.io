@@ -448,7 +448,8 @@ img.responsive:hover {
 .system-status,
 .form-panel,
 .content-list-panel,
-.preview-panel {
+.preview-panel,
+.bugy-admin-panel {
   background: var(--color-bg-card, #0b0b0b);
   border: 1px solid var(--color-primary, #00ff00);
   border-radius: var(--border-radius-lg, 8px);
@@ -456,23 +457,27 @@ img.responsive:hover {
   padding: 16px;
 }
 
-.system-status {
+.system-status,
+.bugy-admin-panel {
   margin-bottom: 18px;
 }
 
 .system-status p,
-#adminStatus {
+#adminStatus,
+#bugyStatus {
   color: var(--color-text, #9fffb5);
   margin: 6px 0 0 0;
 }
 
 #authStatus[data-type="error"],
-#adminStatus[data-type="error"] {
+#adminStatus[data-type="error"],
+#bugyStatus[data-type="error"] {
   color: var(--color-accent-red, #ff2828);
 }
 
 #authStatus[data-type="success"],
-#adminStatus[data-type="success"] {
+#adminStatus[data-type="success"],
+#bugyStatus[data-type="success"] {
   color: var(--color-accent, #00f3ff);
 }
 
@@ -483,7 +488,8 @@ img.responsive:hover {
 
 .form-panel h2,
 .preview-panel h2,
-.admin-toolbar h2 {
+.admin-toolbar h2,
+.bugy-admin-panel h2 {
   margin: 0;
   color: var(--color-primary, #00ff00);
   font-size: 1.15rem;
@@ -567,6 +573,41 @@ img.responsive:hover {
 .content-list-button span {
   color: var(--color-text-dim, #00bb00);
   font-size: 0.82rem;
+}
+
+.bugy-control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.bugy-control-grid .btn {
+  width: 100%;
+  margin: 0;
+}
+
+.bugy-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.bugy-random-toggle {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-primary-dim, #007700);
+  border-radius: var(--border-radius-md, 6px);
+  color: var(--color-text, #9fffb5);
+  font-size: 0.86rem;
+}
+
+.bugy-random-toggle input {
+  accent-color: var(--color-primary, #00ff00);
 }
 
 /* Auth screen */
@@ -1146,7 +1187,8 @@ img.responsive:hover {
   }
 
   .form-row,
-  .admin-toolbar {
+  .admin-toolbar,
+  .bugy-toggle-row {
     align-items: stretch;
     flex-direction: column;
   }
