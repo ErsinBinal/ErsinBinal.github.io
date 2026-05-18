@@ -18,8 +18,14 @@
   const bugyNextAction = document.getElementById('bugyNextAction');
   const bugyRandomToggle = document.getElementById('bugyRandomToggle');
   const bugySkinSelect = document.getElementById('bugySkinSelect');
+  const arcadeStatus = document.getElementById('arcadeKitStatus');
+  const arcadePaletteSelect = document.getElementById('arcadePaletteSelect');
+  const arcadeDemoMount = document.getElementById('arcadeDemoMount');
   let activeId = '';
   let articles = [];
+  let arcadeStage = null;
+  let arcadeSprite = null;
+  let arcadeSpriteIndex = 0;
 
   function setStatus(message, type) {
     status.textContent = message || '';
@@ -179,6 +185,75 @@
     window.setInterval(renderBugyStatus, 1200);
   }
 
+  function setArcadeStatus(message, type) {
+    if (!arcadeStatus) return;
+    arcadeStatus.textContent = message;
+    arcadeStatus.dataset.type = type || 'info';
+  }
+
+  function spawnArcadeSprite(form) {
+    if (!arcadeStage) return;
+    arcadeSprite?.remove();
+    arcadeSprite = arcadeStage.sprite({
+      form,
+      x: 130,
+      y: 72,
+      w: form === 'ship' ? 34 : 30,
+      h: form === 'orb' ? 30 : 34,
+      label: `arcade ${form}`
+    });
+  }
+
+  function bootArcadeKitControls() {
+    if (!arcadeDemoMount) return;
+    const waitForArcade = window.setInterval(() => {
+      if (!window.ConviviumArcadeKit) return;
+      window.clearInterval(waitForArcade);
+      const kit = window.ConviviumArcadeKit;
+      arcadeStage = kit.createStage({
+        mount: arcadeDemoMount,
+        palette: arcadePaletteSelect?.value || 'neon',
+        minHeight: 190
+      });
+      spawnArcadeSprite('hero');
+      kit.fx.popup(arcadeStage, 'READY', { x: 18, y: 18 });
+      kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 12 });
+      setArcadeStatus(`Arcade Kit ${kit.version} aktif.`, 'success');
+    }, 120);
+
+    window.setTimeout(() => {
+      window.clearInterval(waitForArcade);
+      if (!window.ConviviumArcadeKit) setArcadeStatus('Arcade Kit yuklenmedi.', 'error');
+    }, 4000);
+
+    arcadePaletteSelect?.addEventListener('change', () => {
+      if (!arcadeStage) return;
+      arcadeStage.setPalette(arcadePaletteSelect.value);
+      setArcadeStatus(`Palet secildi: ${arcadePaletteSelect.value}`, 'success');
+    });
+
+    document.querySelectorAll('[data-arcade-demo]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!window.ConviviumArcadeKit || !arcadeStage) {
+          setArcadeStatus('Arcade Kit henuz hazir degil.', 'error');
+          return;
+        }
+
+        const kit = window.ConviviumArcadeKit;
+        const action = button.dataset.arcadeDemo;
+        if (action === 'burst') kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 22 });
+        else if (action === 'flash') kit.fx.flash(arcadeStage, { color: 'rgba(245,255,107,0.42)' });
+        else if (action === 'shake') kit.fx.shake(arcadeStage);
+        else if (action === 'popup') kit.fx.popup(arcadeStage, 'INSERT COIN', { x: 76, y: 34 });
+        else if (action === 'sprite') {
+          const forms = ['hero', 'ship', 'orb'];
+          arcadeSpriteIndex += 1;
+          spawnArcadeSprite(forms[arcadeSpriteIndex % forms.length]);
+        }
+      });
+    });
+  }
+
   async function loadArticles() {
     setStatus('Icerikler yukleniyor...', 'info');
     articles = await backend.fetchManagedArticles();
@@ -265,6 +340,7 @@
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    bootArcadeKitControls();
     bootBugyControls();
     boot();
   });

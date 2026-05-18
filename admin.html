@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css?v=29">
+  <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=30">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=29">
 </head>
 <body class="bugy-debug">
@@ -33,6 +34,35 @@
 
     <main id="content" role="main" class="admin-layout">
       <section id="adminGate" class="system-status" aria-live="polite">Yukleniyor...</section>
+
+      <section class="bugy-admin-panel" aria-labelledby="arcadeKitTitle">
+        <div class="admin-toolbar">
+          <div>
+            <h2 id="arcadeKitTitle">Arcade Kit Lab</h2>
+            <p id="arcadeKitStatus" aria-live="polite">Arcade cekirdegi hazirlaniyor...</p>
+          </div>
+          <div class="bugy-toggle-row">
+            <label class="bugy-skin-select">
+              Palet
+              <select id="arcadePaletteSelect">
+                <option value="neon">Neon</option>
+                <option value="gameboy">Game Boy</option>
+                <option value="famicom">Famicom</option>
+                <option value="neogeo">Neo Geo</option>
+                <option value="mono">Mono</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div id="arcadeDemoMount" class="arcade-demo-stage"></div>
+        <div class="arcade-control-grid" aria-label="Arcade Kit denemeleri">
+          <button class="btn btn-primary" type="button" data-arcade-demo="burst">Pixel Patlama</button>
+          <button class="btn btn-primary" type="button" data-arcade-demo="flash">Ekran Flash</button>
+          <button class="btn btn-primary" type="button" data-arcade-demo="shake">Sahne Sars</button>
+          <button class="btn btn-primary" type="button" data-arcade-demo="popup">Popup Yazı</button>
+          <button class="btn" type="button" data-arcade-demo="sprite">Sprite Değiştir</button>
+        </div>
+      </section>
 
       <section class="bugy-admin-panel" aria-labelledby="bugyAdminTitle">
         <div class="admin-toolbar">
@@ -143,7 +173,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=21" defer></script>
+  <script src="/assets/js/arcade-kit.js?v=30" defer></script>
   <script src="/assets/js/neon-sheep.js?v=29" defer></script>
-  <script src="/assets/js/admin.js?v=29" defer></script>
+  <script src="/assets/js/admin.js?v=30" defer></script>
 </body>
 </html>
