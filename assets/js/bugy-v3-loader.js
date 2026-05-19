@@ -19,7 +19,36 @@
     'clone-echo': 7,
     lightning: 8
   };
-  const cell = 96;
+  const effectCell = 96;
+  const characterTile = 16;
+  const characterStride = 17;
+  const characterCells = {
+    classic: {
+      label: 'Forest Bugy',
+      frames: [[0, 3], [1, 3]],
+      shadow: '#4f8a38'
+    },
+    matrix: {
+      label: 'Circuit Scout',
+      frames: [[0, 9], [1, 9]],
+      shadow: '#24d8c4'
+    },
+    ember: {
+      label: 'Ember Runner',
+      frames: [[0, 7], [1, 7]],
+      shadow: '#e87835'
+    },
+    ghost: {
+      label: 'Bone Glitch',
+      frames: [[0, 8], [1, 8]],
+      shadow: '#d8e8f0'
+    },
+    royal: {
+      label: 'Royal Courier',
+      frames: [[0, 5], [1, 5]],
+      shadow: '#d2aa58'
+    }
+  };
 
   const boot = async () => {
     if (window.BugyV3) return;
@@ -32,21 +61,36 @@
     const canvas = document.createElement('canvas');
     canvas.id = 'bugy-v3-canvas';
     canvas.className = 'bugy-v3-canvas';
-    canvas.width = 320;
-    canvas.height = 180;
     canvas.setAttribute('aria-label', 'Bugy V3 native canvas actor');
     layer.appendChild(canvas);
     document.body.appendChild(layer);
 
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
-    const atlas = new Image();
-    let atlasReady = false;
-    atlas.onload = () => {
-      atlasReady = true;
+    const resizeCanvas = () => {
+      const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      canvas.width = Math.floor(window.innerWidth * ratio);
+      canvas.height = Math.floor(window.innerHeight * ratio);
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.imageSmoothingEnabled = false;
+    };
+    resizeCanvas();
+    const effectAtlas = new Image();
+    let effectAtlasReady = false;
+    effectAtlas.onload = () => {
+      effectAtlasReady = true;
       renderAtlas();
     };
-    atlas.src = '/assets/sprites/bugy-v3-atlas.svg?v=1';
+    effectAtlas.src = '/assets/sprites/bugy-v3-atlas.svg?v=1';
+    const characterSheet = new Image();
+    let characterReady = false;
+    characterSheet.onload = () => {
+      characterReady = true;
+      renderAtlas();
+    };
+    characterSheet.src = '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1';
     let active = false;
     let randomEnabled = true;
     let last = 0;
@@ -55,6 +99,8 @@
     let nextRandom = performance.now() + 18000;
     let skin = skins.includes(localStorage.getItem(skinKey)) ? localStorage.getItem(skinKey) : 'classic';
     let core = null;
+    let behaviorMode = 'walk';
+    let behaviorUntil = 0;
 
     const dispatch = () => {
       window.dispatchEvent(new CustomEvent('bugy:state', { detail: api.getState() }));
@@ -63,6 +109,11 @@
 
     const scheduleRandom = () => {
       nextRandom = performance.now() + 18000 + Math.random() * 16000;
+    };
+    const scheduleBehavior = () => {
+      const roll = Math.random();
+      behaviorMode = roll < 0.22 ? 'idle' : roll < 0.44 ? 'hop' : roll < 0.64 ? 'peek' : 'walk';
+      behaviorUntil = performance.now() + 1200 + Math.random() * 3400;
     };
 
     const readExport = (exports, name) => exports[name] || exports[`_${name}`];
@@ -113,7 +164,9 @@
         face: 1,
         state: 0,
         skin: skinCodes[skin] || 0,
-        actionTime: 0
+        actionTime: 0,
+        targetX: 180,
+        speedBias: 1
       };
 
       return {
@@ -122,13 +175,29 @@
         update(dt) {
           const safeDt = Math.min(dt, 40);
           if (state.state === 0) {
-            state.x += state.vx * safeDt;
-            if (state.x < 12 || state.x > 266) {
-              state.vx *= -1;
-              state.face *= -1;
+            if (performance.now() > behaviorUntil) {
+              scheduleBehavior();
+              state.targetX = 18 + Math.random() * 260;
+              state.speedBias = 0.72 + Math.random() * 0.8;
             }
-            state.x = Math.max(12, Math.min(266, state.x));
-            state.y = 136;
+            const speed = behaviorMode === 'idle' ? 0 : behaviorMode === 'peek' ? 0.012 : behaviorMode === 'hop' ? 0.024 : 0.031;
+            const delta = state.targetX - state.x;
+            if (Math.abs(delta) > 5 && speed > 0) {
+              state.face = delta > 0 ? 1 : -1;
+              state.x += Math.sign(delta) * safeDt * speed * state.speedBias;
+            } else if (behaviorMode === 'walk') {
+              state.targetX = 18 + Math.random() * 260;
+            }
+            if (state.x < 12 || state.x > 286) {
+              state.face *= -1;
+              state.targetX = state.x < 12 ? 260 : 28;
+            }
+            state.x = Math.max(12, Math.min(286, state.x));
+            state.y = behaviorMode === 'hop'
+              ? 130 - Math.abs(Math.sin(performance.now() / 170)) * 8
+              : behaviorMode === 'peek'
+                ? 134 + Math.sin(performance.now() / 280) * 1.4
+              : 136;
           } else {
             state.actionTime += safeDt;
             if (state.state === 2) state.y = 120 - ((Math.floor(state.actionTime / 90) % 4) * 8);
@@ -149,7 +218,7 @@
           }
         },
         trigger(action) {
-          if (state.state !== 0) return 0;
+          if (state.state !== 0 || action < 0 || action >= actions.length) return 0;
           state.state = action + 1;
           state.actionTime = 0;
           state.vy = action === 4 ? -0.18 : 0;
@@ -165,44 +234,81 @@
         draw() {},
         x: () => Math.round(state.x),
         y: () => Math.round(state.y),
+        face: () => state.face,
         state: () => state.state,
         skin: () => state.skin
       };
     }
 
-    const clear = () => context.clearRect(0, 0, canvas.width, canvas.height);
+    const clear = () => context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    const screenX = x => 18 + (x / 320) * Math.max(1, window.innerWidth - 92);
+    const groundY = () => window.innerHeight - 82;
     const drawSprite = (name, x, y, scale = 1, alpha = 1) => {
-      if (!atlasReady) return;
+      if (!effectAtlasReady) return;
       const index = atlasCells[name];
       if (index === undefined) return;
       context.save();
       context.globalAlpha = alpha;
-      context.drawImage(atlas, index * cell, 0, cell, cell, Math.round(x), Math.round(y), cell * scale, cell * scale);
+      context.drawImage(effectAtlas, index * effectCell, 0, effectCell, effectCell, Math.round(x), Math.round(y), effectCell * scale, effectCell * scale);
       context.restore();
     };
     const frameBugy = () => {
       if (core?.state?.() !== 0) return 'bugy-idle';
       return Math.floor(performance.now() / 180) % 2 ? 'bugy-walk-a' : 'bugy-walk-b';
     };
+    const drawCharacterShadow = (x, y, scale, color, alpha = 0.28) => {
+      const width = characterTile * scale * 0.78;
+      context.save();
+      context.globalAlpha = alpha;
+      context.fillStyle = color;
+      context.beginPath();
+      context.ellipse(Math.round(x), Math.round(y - 2), width * 0.5, Math.max(3, scale * 1.2), 0, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+    };
+    const drawCharacter = (x, y, scale = 3, alpha = 1) => {
+      if (!characterReady) return false;
+      const skinName = skins[core?.skin?.() || 0] || skin;
+      const profile = characterCells[skinName] || characterCells.classic;
+      const fallbackStill = core?.mode === 'canvas-fallback' && (behaviorMode === 'idle' || behaviorMode === 'peek');
+      const moving = core?.state?.() === 0 && !fallbackStill;
+      const frameIndex = moving && Math.floor(performance.now() / 210) % 2 ? 1 : 0;
+      const frame = profile.frames[frameIndex] || profile.frames[0];
+      const sx = frame[0] * characterStride;
+      const sy = frame[1] * characterStride;
+      const size = characterTile * scale;
+      const face = typeof core?.face === 'function' ? core.face() : 1;
+      drawCharacterShadow(x, y, scale, profile.shadow, alpha * 0.3);
+      context.save();
+      context.globalAlpha = alpha;
+      context.translate(Math.round(x), Math.round(y - size));
+      context.scale(face < 0 ? -1 : 1, 1);
+      context.drawImage(characterSheet, sx, sy, characterTile, characterTile, Math.round(-size / 2), 0, size, size);
+      context.restore();
+      return true;
+    };
     const renderAtlas = () => {
       clear();
       if (!core) return;
-      const x = core.x();
-      const y = core.y();
+      const x = screenX(core.x());
+      const baseY = groundY();
+      const y = baseY + ((core.y() - 136) * 0.62);
       const state = core.state();
+      const actorScale = Math.max(2.45, Math.min(3.05, window.innerWidth / 560));
       if (state === 1) {
-        drawSprite('storm-cloud', x - 28, y - 132, 1);
-        if (Math.floor(performance.now() / 140) % 2) drawSprite('lightning', x - 8, y - 116, 0.9, 0.92);
+        drawSprite('storm-cloud', x - 30, y - 106, 0.72);
+        if (Math.floor(performance.now() / 140) % 2) drawSprite('lightning', x - 4, y - 88, 0.52, 0.92);
       } else if (state === 2) {
-        drawSprite('tornado', x - 30, y - 118, 1.08);
+        drawSprite('tornado', x - 26, y - 96, 0.72);
       } else if (state === 3) {
-        drawSprite('portal', x - 24, y - 24, 1);
+        drawSprite('portal', x - 29, y - 22, 0.62);
       } else if (state === 4) {
-        drawSprite('clone-echo', x - 30, y - 86, 1, 0.78);
+        drawSprite('clone-echo', x - 28, y - 58, 0.62, 0.78);
       } else if (state === 6) {
-        drawSprite('ufo', x - 26, y - 126, 1);
+        drawSprite('ufo', x - 28, y - 104, 0.72);
       }
-      drawSprite(frameBugy(), x - 26, y - 84, 1);
+      if (state === 4) drawCharacter(x + 12, y, actorScale, 0.48);
+      if (!drawCharacter(x, y, actorScale)) drawSprite(frameBugy(), x - 28, y - 54, 0.58);
     };
 
     try {
@@ -212,6 +318,7 @@
     }
     core.init();
     core.setSkin(skinCodes[skin] || 0);
+    scheduleBehavior();
 
     const loop = now => {
       if (!active) return;
@@ -233,8 +340,9 @@
     };
 
     const api = {
-      version: '3.0.0',
+      version: '3.1.0',
       actions: [...actions],
+      assetSource: 'Kenney Roguelike Characters',
       activate() {
         active = true;
         localStorage.setItem(engineKey, 'v3');
@@ -282,6 +390,7 @@
         skin = skins.includes(nextSkin) ? nextSkin : 'classic';
         localStorage.setItem(skinKey, skin);
         core.setSkin(skinCodes[skin]);
+        renderAtlas();
         dispatch();
         return skin;
       },
@@ -290,9 +399,11 @@
           engine: 'v3',
           version: this.version,
           mode: core?.mode || 'loading',
+          assetSource: this.assetSource,
           active,
           state: stateNames[core?.state?.() || 0] || 'walk',
           skin,
+          skinLabel: (characterCells[skin] || characterCells.classic).label,
           skins: [...skins],
           randomEnabled,
           x: core?.x?.() || 0,
@@ -307,6 +418,10 @@
       api.deactivate();
       window.Bugy?.summon?.();
     });
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      renderAtlas();
+    }, { passive: true });
 
     window.BugyV3 = api;
     if (localStorage.getItem(engineKey) === 'v3') api.activate();

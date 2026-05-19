@@ -103,7 +103,9 @@
     }
 
     const state = engine.getState();
-    bugyStatus.textContent = `Motor: ${state.engine || getSelectedBugyEngine().toUpperCase()} / Durum: ${state.state} / skin: ${state.skin} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}`;
+    const skinName = state.skinLabel || state.skin;
+    const source = state.assetSource ? ` / kaynak: ${state.assetSource}` : '';
+    bugyStatus.textContent = `Motor: ${state.engine || getSelectedBugyEngine().toUpperCase()} / Durum: ${state.state} / skin: ${skinName} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}${source}`;
     bugyStatus.dataset.type = 'success';
     if (bugyEngineSelect) bugyEngineSelect.value = getSelectedBugyEngine();
     if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
