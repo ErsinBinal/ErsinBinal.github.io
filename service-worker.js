@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v41';
+const CACHE_NAME = 'convivium-v42';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -28,13 +28,31 @@ const PRECACHE_ASSETS = [
   '/assets/js/arcade-kit.js?v=32',
   '/assets/js/neon-sheep.js?v=29',
   '/assets/js/bugy-v2.js?v=2',
-  '/assets/js/bugy-v3-loader.js?v=4',
-  '/assets/sprites/bugy-v3-atlas.svg?v=1',
+  '/assets/js/bugy-v3-loader.js?v=5',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/whitePuff00.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/whitePuff04.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/whitePuff08.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/whitePuff12.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/whitePuff16.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/blackSmoke00.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/blackSmoke04.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/blackSmoke08.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/blackSmoke12.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/blackSmoke16.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/flash00.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/flash02.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/flash04.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/flash06.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/flash08.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/explosion00.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
+  '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
   '/assets/js/supabase-client.js?v=21',
   '/assets/js/auth-gate.js?v=21',
   '/assets/js/auth.js',
-  '/assets/js/admin.js?v=34',
+  '/assets/js/admin.js?v=35',
   '/assets/js/dashboard.js?v=21',
   '/manifest.json'
 ];
