@@ -579,20 +579,25 @@
   pointer-events: none;
 }
 
-.bugy-v2-stage {
+.arcade-stage.bugy-v2-stage,
+.arcade-stage.bugy-v2-stage[data-palette] {
   position: absolute;
   inset: 0;
   width: 100vw;
   height: 100vh;
   min-height: 100vh;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: 0 !important;
   overflow: hidden;
 }
 
-.bugy-v2-stage::after {
-  display: none;
+.arcade-stage.bugy-v2-stage::after,
+.arcade-stage.bugy-v2-stage[data-palette]::after {
+  display: none !important;
+  background: transparent !important;
 }
 
 .bugy-v2-actor {

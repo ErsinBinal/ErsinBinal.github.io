@@ -29,6 +29,17 @@
       className: 'bugy-v2-stage',
       minHeight: window.innerHeight
     });
+    const hardenOverlay = () => {
+      Object.assign(stage.el.style, {
+        background: 'transparent',
+        border: '0',
+        boxShadow: 'none',
+        outline: '0',
+        pointerEvents: 'none'
+      });
+      layer.style.pointerEvents = 'none';
+    };
+    hardenOverlay();
     const scene = kit.createScene({
       stage,
       fps: 30,
@@ -91,6 +102,7 @@
       state.skin = nextSkin;
       localStorage.setItem(skinKey, nextSkin);
       stage.setPalette(spec.palette);
+      hardenOverlay();
       actor.model(spec.model);
       actor.el.dataset.skin = nextSkin;
       dispatch();
@@ -314,6 +326,11 @@
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
       triggerNext();
+    });
+    window.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || !state.active) return;
+      api.deactivate();
+      if (localStorage.getItem(engineKey) === 'v2') localStorage.setItem(engineKey, 'v1');
     });
     window.addEventListener('resize', () => {
       stage.el.style.minHeight = `${window.innerHeight}px`;

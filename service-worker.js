@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v36';
+const CACHE_NAME = 'convivium-v37';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -20,14 +20,14 @@ const PRECACHE_ASSETS = [
   '/assets/css/common.css',
   '/assets/css/animations.css',
   '/assets/css/components.css?v=29',
-  '/assets/css/arcade-kit.css?v=34',
+  '/assets/css/arcade-kit.css?v=35',
   '/assets/css/neon-sheep.css?v=30',
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
   '/assets/js/utils.js',
   '/assets/js/arcade-kit.js?v=32',
   '/assets/js/neon-sheep.js?v=29',
-  '/assets/js/bugy-v2.js?v=1',
+  '/assets/js/bugy-v2.js?v=2',
   '/assets/js/supabase-client.js?v=21',
   '/assets/js/auth-gate.js?v=21',
   '/assets/js/auth.js',
