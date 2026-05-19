@@ -8,15 +8,18 @@
   const stateNames = ['walk', 'storm', 'tornado', 'portal', 'clone', 'gravity', 'abduct'];
   const actionCodes = Object.fromEntries(actions.map((name, index) => [name, index]));
   const skinCodes = Object.fromEntries(skins.map((name, index) => [name, index]));
-
-  const rgba = (r, g, b, a = 255) => `rgba(${r},${g},${b},${a / 255})`;
-  const palettes = {
-    classic: ['#00eaff', '#00ff66', '#ff2ea6', '#f5ff6b', '#c9ffd6'],
-    matrix: ['#306230', '#8bac0f', '#0f380f', '#c4d43a', '#d9f06b'],
-    ember: ['#29adff', '#43d637', '#ff77a8', '#ffcc00', '#fff1e8'],
-    ghost: ['#00d9ff', '#00ff99', '#ff005d', '#ffe14a', '#f4f7ff'],
-    royal: ['#cfcfcf', '#f4f4f4', '#8f8f8f', '#ffffff', '#5c5c5c']
+  const atlasCells = {
+    'bugy-idle': 0,
+    'bugy-walk-a': 1,
+    'bugy-walk-b': 2,
+    'storm-cloud': 3,
+    tornado: 4,
+    portal: 5,
+    ufo: 6,
+    'clone-echo': 7,
+    lightning: 8
   };
+  const cell = 96;
 
   const boot = async () => {
     if (window.BugyV3) return;
@@ -37,7 +40,13 @@
 
     const context = canvas.getContext('2d');
     context.imageSmoothingEnabled = false;
-    let image = context.createImageData(canvas.width, canvas.height);
+    const atlas = new Image();
+    let atlasReady = false;
+    atlas.onload = () => {
+      atlasReady = true;
+      renderAtlas();
+    };
+    atlas.src = '/assets/sprites/bugy-v3-atlas.svg?v=1';
     let active = false;
     let randomEnabled = true;
     let last = 0;
@@ -70,7 +79,6 @@
         }
       });
       const exports = module.instance.exports;
-      const memory = exports.memory;
       const fn = name => {
         const exported = readExport(exports, name);
         if (typeof exported !== 'function') throw new Error(`WASM export eksik: ${name}`);
@@ -90,20 +98,7 @@
         y: fn('bugy_y'),
         state: fn('bugy_state'),
         skin: fn('bugy_skin'),
-        draw() {
-          const width = api.width();
-          const height = api.height();
-          if (canvas.width !== width || canvas.height !== height) {
-            canvas.width = width;
-            canvas.height = height;
-            image = context.createImageData(width, height);
-            context.imageSmoothingEnabled = false;
-          }
-          const ptr = api.framebuffer();
-          const source = new Uint8ClampedArray(memory.buffer, ptr, width * height * 4);
-          image.data.set(source);
-          context.putImageData(image, 0, 0);
-        }
+        draw() {}
       };
       api.init();
       return api;
@@ -121,91 +116,9 @@
         actionTime: 0
       };
 
-      const color = slot => palettes[skins[state.skin] || 'classic'][slot];
-      const rect = (x, y, w, h, fill) => {
-        context.fillStyle = fill;
-        context.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
-      };
-      const outlineRect = (x, y, w, h, fill) => {
-        rect(x - 1, y - 1, w + 2, h + 2, '#000');
-        rect(x, y, w, h, fill);
-      };
-      const pixel = (x, y, fill) => rect(x, y, 2, 2, fill);
-      const clear = () => context.clearRect(0, 0, canvas.width, canvas.height);
-
-      const drawBugy = () => {
-        const x = state.x;
-        const y = state.y;
-        rect(x + 3, y + 35, 34, 5, rgba(0, 0, 0, 118));
-        outlineRect(x + 7, y + 16, 25, 22, color(0));
-        rect(x + 10, y + 18, 20, 7, color(4));
-        outlineRect(x + 29, y + 10, 15, 18, color(4));
-        rect(x + (state.face > 0 ? 39 : 31), y + 17, 3, 3, '#000');
-        outlineRect(x + 14, y + 36, 5, 12, color(1));
-        outlineRect(x + 27, y + 36, 5, 12, color(1));
-        outlineRect(x + 2, y + 23, 8, 8, color(2));
-        if (state.skin === 4) {
-          rect(x + 31, y + 4, 12, 4, color(3));
-          pixel(x + 32, y + 2, color(3));
-          pixel(x + 37, y, color(3));
-          pixel(x + 42, y + 2, color(3));
-        }
-      };
-
-      const drawRain = (x, y) => {
-        outlineRect(x + 12, y + 5, 50, 14, color(4));
-        rect(x + 16, y + 22, 4, 18, color(0));
-        rect(x + 32, y + 28, 4, 18, color(0));
-        rect(x + 50, y + 22, 4, 18, color(0));
-        rect(x + 66, y + 30, 4, 18, color(0));
-      };
-      const drawLightning = (x, y) => {
-        rect(x + 14, y, 11, 26, color(3));
-        rect(x + 6, y + 22, 28, 10, color(3));
-        rect(x + 5, y + 30, 12, 34, color(3));
-        rect(x + 14, y + 48, 20, 10, color(3));
-      };
-      const drawTornado = (x, y) => {
-        rect(x + 3, y + 3, 68, 8, '#000');
-        rect(x + 7, y + 5, 58, 8, color(4));
-        rect(x + 11, y + 26, 54, 8, '#000');
-        rect(x + 16, y + 28, 42, 8, color(0));
-        rect(x + 21, y + 50, 42, 8, '#000');
-        rect(x + 26, y + 52, 29, 8, color(2));
-        rect(x + 28, y + 73, 30, 8, '#000');
-        rect(x + 33, y + 75, 19, 8, color(3));
-        rect(x + 37, y + 96, 16, 16, color(4));
-      };
-      const drawPortal = (x, y) => {
-        rect(x + 8, y + 8, 56, 6, color(2));
-        rect(x + 14, y + 14, 44, 6, color(0));
-        rect(x + 22, y + 19, 28, 5, color(4));
-        rect(x + 31, y + 22, 10, 3, color(3));
-      };
-      const drawUfo = (x, y) => {
-        outlineRect(x + 23, y, 28, 12, color(4));
-        outlineRect(x + 7, y + 11, 62, 16, color(0));
-        rect(x + 22, y + 28, 32, 48, rgba(0, 234, 255, 74));
-      };
-      const draw = () => {
-        clear();
-        if (state.state === 1) {
-          drawRain(state.x - 17, state.y - 80);
-          if (state.actionTime > 620) drawLightning(state.x + 6, state.y - 58);
-        } else if (state.state === 2) drawTornado(state.x - 22, state.y - 86);
-        else if (state.state === 3) drawPortal(state.x - 10, state.y + 33);
-        else if (state.state === 4) {
-          rect(state.x - 18, state.y + 16, 25, 22, rgba(0, 234, 255, 94));
-          rect(state.x + 30, state.y + 16, 25, 22, rgba(255, 46, 166, 94));
-        } else if (state.state === 6) drawUfo(state.x - 18, state.y - 92);
-        drawBugy();
-      };
-
       return {
         mode: 'canvas-fallback',
-        init() {
-          draw();
-        },
+        init() {},
         update(dt) {
           const safeDt = Math.min(dt, 40);
           if (state.state === 0) {
@@ -234,14 +147,12 @@
               state.y = 136;
             }
           }
-          draw();
         },
         trigger(action) {
           if (state.state !== 0) return 0;
           state.state = action + 1;
           state.actionTime = 0;
           state.vy = action === 4 ? -0.18 : 0;
-          draw();
           return 1;
         },
         next() {
@@ -250,15 +161,49 @@
         },
         setSkin(nextSkin) {
           state.skin = Math.max(0, Math.min(4, nextSkin));
-          draw();
         },
-        draw,
+        draw() {},
         x: () => Math.round(state.x),
         y: () => Math.round(state.y),
         state: () => state.state,
         skin: () => state.skin
       };
     }
+
+    const clear = () => context.clearRect(0, 0, canvas.width, canvas.height);
+    const drawSprite = (name, x, y, scale = 1, alpha = 1) => {
+      if (!atlasReady) return;
+      const index = atlasCells[name];
+      if (index === undefined) return;
+      context.save();
+      context.globalAlpha = alpha;
+      context.drawImage(atlas, index * cell, 0, cell, cell, Math.round(x), Math.round(y), cell * scale, cell * scale);
+      context.restore();
+    };
+    const frameBugy = () => {
+      if (core?.state?.() !== 0) return 'bugy-idle';
+      return Math.floor(performance.now() / 180) % 2 ? 'bugy-walk-a' : 'bugy-walk-b';
+    };
+    const renderAtlas = () => {
+      clear();
+      if (!core) return;
+      const x = core.x();
+      const y = core.y();
+      const state = core.state();
+      if (state === 1) {
+        drawSprite('storm-cloud', x - 28, y - 132, 1);
+        if (Math.floor(performance.now() / 140) % 2) drawSprite('lightning', x - 8, y - 116, 0.9, 0.92);
+      } else if (state === 2) {
+        drawSprite('tornado', x - 30, y - 118, 1.08);
+      } else if (state === 3) {
+        drawSprite('portal', x - 24, y - 24, 1);
+      } else if (state === 4) {
+        drawSprite('clone-echo', x - 30, y - 86, 1, 0.78);
+      } else if (state === 6) {
+        drawSprite('ufo', x - 26, y - 126, 1);
+      }
+      drawSprite(frameBugy(), x - 26, y - 84, 1);
+    };
 
     try {
       core = await createWasmCore();
@@ -273,7 +218,7 @@
       const dt = last ? now - last : 16;
       last = now;
       core.update(dt);
-      core.draw?.();
+      renderAtlas();
       if (randomEnabled && now > nextRandom && core.state() === 0) {
         core.trigger(Math.floor(Math.random() * actions.length));
         scheduleRandom();
