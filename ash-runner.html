@@ -884,6 +884,34 @@
         px(19, 8, 6, 3, 0x53d5ff); px(29, 8, 6, 3, 0x53d5ff);
         px(10, 21, 10, 3, 0xffb000); px(35, 21, 10, 3, 0xffb000);
       });
+      makeTexture(scene, "phase-drone", 34, 28, px => {
+        px(8, 7, 18, 12, 0x2b2448); px(5, 10, 6, 6, 0x11121f); px(24, 10, 6, 6, 0x11121f);
+        px(10, 5, 14, 3, 0x78f7ff); px(11, 11, 4, 4, 0xff42d0); px(19, 11, 4, 4, 0x7df7ff);
+        px(4, 21, 26, 3, 0x0b0d16); px(2, 4, 7, 2, 0xf7e36a); px(25, 4, 7, 2, 0xf7e36a);
+        px(13, 18, 8, 3, 0x9b6bff);
+      });
+      makeTexture(scene, "rift-oracle", 42, 44, px => {
+        px(13, 4, 16, 8, 0x9b6bff); px(10, 12, 22, 16, 0x211a3b);
+        px(7, 18, 7, 10, 0x53d5ff); px(28, 18, 7, 10, 0xff42d0);
+        px(15, 15, 4, 4, 0xf7e36a); px(24, 15, 4, 4, 0xf7e36a);
+        px(14, 28, 5, 12, 0x11121f); px(24, 28, 5, 12, 0x11121f);
+        px(10, 39, 12, 3, 0x53d5ff); px(22, 39, 12, 3, 0xff42d0);
+      });
+      makeTexture(scene, "rift-boss", 66, 58, px => {
+        px(14, 8, 38, 17, 0x302754); px(10, 20, 46, 16, 0x131724);
+        px(4, 24, 13, 7, 0x7df7ff); px(49, 24, 13, 7, 0xff42d0);
+        px(20, 13, 7, 5, 0xf7e36a); px(39, 13, 7, 5, 0xf7e36a);
+        px(23, 36, 7, 17, 0x151827); px(37, 36, 7, 17, 0x151827);
+        px(15, 52, 17, 4, 0x7df7ff); px(34, 52, 17, 4, 0xff42d0);
+        px(28, 25, 11, 5, 0xffb000); px(30, 27, 7, 2, 0xfff0a2);
+      });
+      makeTexture(scene, "rift-core", 36, 36, (px, g) => {
+        g.fillStyle(0x06070d, 0.95); g.fillEllipse(18, 19, 32, 25);
+        g.lineStyle(2, 0xff42d0, 0.9); g.strokeEllipse(18, 19, 31, 24);
+        g.lineStyle(2, 0x53d5ff, 0.78); g.strokeEllipse(18, 19, 21, 15);
+        px(15, 2, 6, 7, 0xf7e36a); px(5, 16, 6, 4, 0x53d5ff); px(25, 16, 6, 4, 0xff42d0);
+        px(14, 31, 8, 3, 0x111216);
+      });
       makeTexture(scene, "crate", 24, 20, px => {
         px(1, 3, 22, 16, 0x7c5134); px(3, 5, 18, 12, 0xa36f3f);
         px(5, 7, 4, 8, 0x513522); px(15, 7, 4, 8, 0x513522); px(2, 16, 20, 2, 0x3e281c);
@@ -1028,6 +1056,30 @@
           px(x + 4, 51, 3, 43, 0x162019); px(x + 17, 48, 3, 46, 0x162019);
           px(x, 58, 24, 3, 0xb9c7c5, 0.38); px(x, 73, 24, 3, 0xb9c7c5, 0.3);
           px(x + 6, 44, 16, 8, 0x2f6a45, 0.72);
+        }
+      });
+      makeTexture(scene, "rift-road-tile", 64, 64, px => {
+        px(0, 0, 64, 64, 0x11121b); px(0, 25, 64, 39, 0x1b1830);
+        px(0, 34, 64, 3, 0x53d5ff, 0.62); px(0, 52, 64, 2, 0xff42d0, 0.5);
+        px(6, 42, 18, 2, 0xf7e36a, 0.55); px(36, 45, 14, 2, 0x7df7ff, 0.5);
+        px(12, 29, 3, 3, 0xff42d0, 0.66); px(48, 31, 4, 3, 0x53d5ff, 0.62);
+      });
+      makeTexture(scene, "rift-far", 256, 92, px => {
+        px(0, 0, 256, 92, 0x0a0d24);
+        for (let x = 0; x < 256; x += 32) {
+          const h = 20 + ((x * 5) % 42);
+          px(x + 6, 92 - h, 16, h, 0x151a3a, 0.86);
+          px(x + 10, 94 - h, 2, h - 8, 0x53d5ff, 0.24);
+          px(x + 20, 100 - h, 2, h - 14, 0xff42d0, 0.22);
+        }
+        px(172, 12, 42, 3, 0xf7e36a, 0.34); px(185, 4, 3, 24, 0x53d5ff, 0.28);
+      });
+      makeTexture(scene, "rift-mid", 192, 94, px => {
+        px(0, 0, 192, 94, 0x000000, 0);
+        for (let x = 0; x < 192; x += 24) {
+          px(x + 2, 50, 4, 44, 0x20244a, 0.72); px(x + 18, 46, 3, 48, 0x20244a, 0.62);
+          px(x, 62, 25, 2, 0x7df7ff, 0.36); px(x + 4, 76, 18, 2, 0xff42d0, 0.28);
+          px(x + 8, 41, 10, 7, 0xf7e36a, 0.24);
         }
       });
       makeTexture(scene, "far-ruins", 256, 92, px => {
@@ -1184,7 +1236,8 @@
       engine: { texture: "engine", mass: 1.7 },
       sign: { texture: "sign", mass: 0.95 },
       hut: { texture: "field-hut", mass: 2.4, hp: 4, breakable: true, loot: "food" },
-      bunker: { texture: "earth-bunker", mass: 3.1, hp: 6, breakable: true, loot: "gem" }
+      bunker: { texture: "earth-bunker", mass: 3.1, hp: 6, breakable: true, loot: "gem" },
+      rift: { texture: "rift-core", mass: 2.2, hp: 5, breakable: true, loot: "gem-red" }
     };
 
     class Collectible extends Actor {
@@ -1635,6 +1688,44 @@
       }
     }
 
+    class RiftSurge {
+      constructor(scene, x, laneY, width = 58, phase = 0) {
+        this.scene = scene;
+        this.x = x;
+        this.y = laneY;
+        this.width = width;
+        this.phase = phase;
+        this.timer = phase;
+        this.cooldown = 0;
+        this.parts = [];
+        this.beam = scene.add.rectangle(x, laneY, width, 7, 0x53d5ff, 0.12).setDepth(-24);
+        this.edgeA = scene.add.rectangle(x - width / 2, laneY, 2, 54, 0xff42d0, 0.34).setDepth(-23);
+        this.edgeB = scene.add.rectangle(x + width / 2, laneY, 2, 54, 0xf7e36a, 0.3).setDepth(-23);
+        this.core = scene.add.rectangle(x, laneY, width - 10, 2, 0x7df7ff, 0.5).setDepth(-22);
+        this.parts.push(this.beam, this.edgeA, this.edgeB, this.core);
+      }
+
+      update(dt, player) {
+        this.timer += dt;
+        this.cooldown = Math.max(0, this.cooldown - dt);
+        const wave = (Math.sin(this.timer * 3.1) + 1) / 2;
+        const live = wave > 0.62;
+        const alpha = live ? 0.3 + wave * 0.36 : 0.1 + wave * 0.12;
+        this.beam.setAlpha(alpha).setScale(1, live ? 2.1 : 1);
+        this.core.setAlpha(live ? 0.88 : 0.38).setScale(1, live ? 3 : 1);
+        this.edgeA.setAlpha(live ? 0.72 : 0.28);
+        this.edgeB.setAlpha(live ? 0.58 : 0.22);
+        if (!live || this.cooldown > 0 || player.z > 18 || player.fsm.name === "stagger") return;
+        if (Math.abs(player.x - this.x) < this.width / 2 && Math.abs(player.y - this.y) < 34) {
+          this.cooldown = 1.25;
+          this.scene.lastLoot = "-18 HP / rift dalgasi";
+          player.takeDamage(18, Math.sign(player.x - this.x || 1));
+          this.scene.areaPulse(this.x, this.y, this.width, 0xff42d0);
+          this.scene.particles.burst(player.x, player.y - 10, 14);
+        }
+      }
+    }
+
     class Drone extends Actor {
       constructor(scene, x, y, type = "skitter") {
         const data = Drone.DATA[type];
@@ -1794,6 +1885,21 @@
         texture: "walker-mech", hp: 10, speed: 18, patrolSpeed: 4, sense: 285,
         attackRange: 34, attackLane: 22, cooldown: 1.45, damage: 28, score: 1300, gem: "gem-red", strong: true, boss: true,
         fireRange: 260, fireLane: 34, fireCooldown: 1.25, scale: 1.08
+      },
+      phase: {
+        texture: "phase-drone", hp: 3, speed: 42, patrolSpeed: 19, sense: 265,
+        attackRange: 20, attackLane: 16, cooldown: 1.12, damage: 13, score: 260, gem: "gem",
+        fireRange: 220, fireLane: 28, fireCooldown: 1.45, scale: 1.02, laneBias: -8
+      },
+      oracle: {
+        texture: "rift-oracle", hp: 5, speed: 24, patrolSpeed: 8, sense: 290,
+        attackRange: 27, attackLane: 21, cooldown: 1.35, damage: 20, score: 520, gem: "gem-red", strong: true,
+        fireRange: 285, fireLane: 34, fireCooldown: 1.1, scale: 1.03
+      },
+      riftBoss: {
+        texture: "rift-boss", hp: 13, speed: 22, patrolSpeed: 6, sense: 330,
+        attackRange: 40, attackLane: 24, cooldown: 1.18, damage: 32, score: 1800, gem: "gem-red", strong: true, boss: true,
+        fireRange: 300, fireLane: 40, fireCooldown: 0.95, scale: 1.08
       }
     };
 
@@ -2227,12 +2333,16 @@
 
       init(data = {}) {
         const saved = window.ashRunnerProgress || { level: 1, score: 0 };
+        const params = new URLSearchParams(window.location.search);
+        const debugLevel = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+          ? clamp(Number(params.get("level")) || 0, 0, 3)
+          : 0;
         this.clock = 0;
         this.hitStopMs = 0;
         this.started = false;
         this.completed = false;
-        this.autoStart = Boolean(data.autoStart);
-        this.level = data.level || saved.level || 1;
+        this.autoStart = Boolean(data.autoStart) || debugLevel > 0;
+        this.level = data.level || debugLevel || saved.level || 1;
         this.score = data.score ?? saved.score ?? 0;
         this.levelStartScore = this.score;
         this.levelBonus = 0;
@@ -2368,12 +2478,11 @@
           new SignalRelay(this, 1908, 164, "cikis oncesi son sinyal herkesi susturdu", 0),
           new SignalRelay(this, 2522, 160, "uzayan hatta son role yankiyi kapatti", 0)
         ];
-        if (this.level >= 3) {
-          this.relays.push(new SignalRelay(this, 1014, 152, "ucuncu hatta sokak kendi adini fisildadi", 0));
-        }
-        if (this.level >= 2) this.configureBaseLevel();
+        this.riftSurges = [];
+        if (this.level >= 3) this.configureRiftLevel();
+        else if (this.level >= 2) this.configureBaseLevel();
         this.clueGoal = this.streetClues.length + this.relays.length;
-        this.lastLoot = this.level >= 2 ? "askeri kisla / robot ussu" : "dosya acik";
+        this.lastLoot = this.level >= 3 ? "yorunge yarigi / cekirdek kilitli" : (this.level >= 2 ? "askeri kisla / robot ussu" : "dosya acik");
         this.particles = new ParticlePool(this);
         this.cameraRig = new PixelPerfectCamera(this, this.player);
         if (this.level < 2) {
@@ -2381,7 +2490,7 @@
           this.rearAmbushIndex = 0;
           this.rearThreatTimer = 0;
         }
-        this.helpText = this.add.text(8, 201, this.level >= 2 ? "US: kuleleri yik · bossu indir · hangara kos" : "W/↑ jet zipla · J buyu · L sarj · K hurda", {
+        this.helpText = this.add.text(8, 201, this.level >= 3 ? "YARIK: dalgalari zipla · rift bekcisini indir" : (this.level >= 2 ? "US: kuleleri yik · bossu indir · hangara kos" : "W/↑ jet zipla · J buyu · L sarj · K hurda"), {
           fontFamily: "monospace",
           fontSize: "8px",
           color: "#f5e8be"
@@ -2398,7 +2507,7 @@
         if (this.autoStart) this.startRun();
       }
 
-      destroySceneObjects(items) {
+      destroySceneObjects(items = []) {
         items.forEach(item => {
           if (!item) return;
           if (item.parts) item.parts.forEach(part => part?.destroy?.());
@@ -2412,6 +2521,7 @@
         this.destroySceneObjects(this.drones);
         this.destroySceneObjects(this.hazards);
         this.destroySceneObjects(this.gaps);
+        this.destroySceneObjects(this.riftSurges);
         this.destroySceneObjects(this.weaponPickups);
         this.destroySceneObjects(this.streetClues);
         this.destroySceneObjects(this.relays);
@@ -2476,8 +2586,103 @@
         this.lastLoot = "askeri kisla / robot ussu";
       }
 
+      configureRiftLevel() {
+        this.destroySceneObjects(this.props);
+        this.destroySceneObjects(this.drones);
+        this.destroySceneObjects(this.hazards);
+        this.destroySceneObjects(this.gaps);
+        this.destroySceneObjects(this.riftSurges);
+        this.destroySceneObjects(this.weaponPickups);
+        this.destroySceneObjects(this.streetClues);
+        this.destroySceneObjects(this.relays);
+
+        this.player.x = 70;
+        this.player.y = 156;
+        this.player.floor = 0;
+        this.player.hasWeapon = true;
+        this.player.weaponType = "rocket";
+        this.player.maxHealth = 115;
+        this.player.health = Math.max(this.player.health, 96);
+
+        this.props = [
+          new ScrapObject(this, 182, 162, "rift"),
+          new ScrapObject(this, 354, 150, "engine"),
+          new ScrapObject(this, 522, 172, "bunker"),
+          new ScrapObject(this, 728, 152, "rift"),
+          new ScrapObject(this, 992, 166, "crate"),
+          new ScrapObject(this, 1218, 148, "rift"),
+          new ScrapObject(this, 1512, 170, "engine"),
+          new ScrapObject(this, 1768, 154, "bunker"),
+          new ScrapObject(this, 2168, 162, "rift"),
+          new ScrapObject(this, 2494, 154, "bunker")
+        ];
+        this.drones = [
+          new Drone(this, 330, 156, "phase"),
+          new Drone(this, 560, 172, "dart"),
+          new Drone(this, 790, 148, "oracle"),
+          new Drone(this, 1010, 166, "phase"),
+          new Drone(this, 1266, 152, "tower"),
+          new Drone(this, 1492, 174, "phase"),
+          new Drone(this, 1710, 150, "oracle"),
+          new Drone(this, 1978, 162, "trex"),
+          new Drone(this, 2236, 148, "phase"),
+          new Drone(this, 2476, 172, "oracle"),
+          new Drone(this, 2788, 160, "riftBoss")
+        ];
+        this.hazards = [
+          new RoadHazard(this, 610, 178),
+          new RoadHazard(this, 1680, 170),
+          new RoadHazard(this, 2360, 164)
+        ];
+        this.gaps = [
+          new RoadGap(this, 900, 42),
+          new RoadGap(this, 1372, 46),
+          new RoadGap(this, 2108, 48)
+        ];
+        this.riftSurges = [
+          new RiftSurge(this, 448, 150, 64, 0.1),
+          new RiftSurge(this, 1128, 176, 72, 0.7),
+          new RiftSurge(this, 1884, 154, 76, 1.2),
+          new RiftSurge(this, 2592, 170, 82, 0.4)
+        ];
+        this.weaponPickups = [
+          new WeaponPickup(this, 292, 152, 0, "rocket"),
+          new WeaponPickup(this, 1148, 158, 0, "rifle"),
+          new WeaponPickup(this, 2024, 160, 0, "rocket")
+        ];
+        this.streetClues = [
+          new StreetClue(this, 244, 150, "hangar cikisi yildiz tozuna acildi", 0),
+          new StreetClue(this, 942, 154, "rift dalgasi yerde yakalar ziplamayan yanar", 0),
+          new StreetClue(this, 1548, 166, "mor bekciler roket sesine doner", 0),
+          new StreetClue(this, 2296, 152, "cekirdek kapanmadan kul hatti susmaz", 0)
+        ];
+        this.relays = [
+          new SignalRelay(this, 690, 166, "ilk yarik roleyi yuttu ama frekans geri dondu", 0),
+          new SignalRelay(this, 1596, 154, "ikinci role faz perdelerini kirdi", 0),
+          new SignalRelay(this, 2434, 164, "son role cekirdegin adini sildi", 0)
+        ];
+        this.rearAmbushes = [960, 1840, 2520];
+        this.rearAmbushIndex = 0;
+        this.rearThreatTimer = 0;
+        this.lastLoot = "yorunge yarigi / cekirdek kilitli";
+      }
+
       onBossDefeated() {
         this.bossDefeated = true;
+        if (this.level >= 3) {
+          this.lastLoot = "rift bekcisi dustu / cekirdege kos";
+          this.areaPulse(WORLD_W - 106, 128, 78, 0xff42d0);
+          if (this.riftExit) this.tweens.add({
+            targets: this.riftExit,
+            scale: 1.35,
+            alpha: 0.35,
+            duration: 460,
+            yoyo: true,
+            repeat: 2,
+            ease: "Sine.easeInOut"
+          });
+          return;
+        }
         this.lastLoot = "agir guvenlik mech dustu / hangara kos";
         this.revealDropShip();
       }
@@ -2522,16 +2727,31 @@
       }
 
       createParallax() {
-        const baseLevel = this.level >= 2;
-        const sky = this.add.rectangle(0, 0, GAME_W, GAME_H, baseLevel ? 0x0d1117 : 0x17111a).setOrigin(0).setScrollFactor(0).setDepth(-100);
-        const sun = this.add.circle(315, 58, baseLevel ? 18 : 28, baseLevel ? 0x53d5ff : 0xffb000, baseLevel ? 0.12 : 0.18).setScrollFactor(0).setDepth(-99);
-        const far = this.add.tileSprite(0, 31, GAME_W, 92, baseLevel ? "base-far" : "far-ruins").setOrigin(0).setScrollFactor(0).setDepth(-90);
-        const mid = this.add.tileSprite(0, 76, GAME_W, 94, baseLevel ? "base-mid" : "mid-ruins").setOrigin(0).setScrollFactor(0).setDepth(-80);
-        const road = this.add.tileSprite(0, 116, GAME_W, 100, baseLevel ? "base-road-tile" : "road-tile").setOrigin(0).setScrollFactor(0).setDepth(-70);
+        const riftLevel = this.level >= 3;
+        const baseLevel = this.level >= 2 && !riftLevel;
+        const skyColor = riftLevel ? 0x050818 : (baseLevel ? 0x0d1117 : 0x17111a);
+        const sunColor = riftLevel ? 0xff42d0 : (baseLevel ? 0x53d5ff : 0xffb000);
+        const farKey = riftLevel ? "rift-far" : (baseLevel ? "base-far" : "far-ruins");
+        const midKey = riftLevel ? "rift-mid" : (baseLevel ? "base-mid" : "mid-ruins");
+        const roadKey = riftLevel ? "rift-road-tile" : (baseLevel ? "base-road-tile" : "road-tile");
+        const sky = this.add.rectangle(0, 0, GAME_W, GAME_H, skyColor).setOrigin(0).setScrollFactor(0).setDepth(-100);
+        const sun = this.add.circle(315, 58, riftLevel ? 22 : (baseLevel ? 18 : 28), sunColor, riftLevel ? 0.2 : (baseLevel ? 0.12 : 0.18)).setScrollFactor(0).setDepth(-99);
+        const far = this.add.tileSprite(0, 31, GAME_W, 92, farKey).setOrigin(0).setScrollFactor(0).setDepth(-90);
+        const mid = this.add.tileSprite(0, 76, GAME_W, 94, midKey).setOrigin(0).setScrollFactor(0).setDepth(-80);
+        const road = this.add.tileSprite(0, 116, GAME_W, 100, roadKey).setOrigin(0).setScrollFactor(0).setDepth(-70);
         this.layers.push({ sprite: far, factor: 0.18 }, { sprite: mid, factor: 0.38 }, { sprite: road, factor: 1 });
-        this.add.rectangle(0, LANE_TOP - 3, WORLD_W, 1, 0xffb000, 0.18).setOrigin(0).setDepth(-40);
+        this.add.rectangle(0, LANE_TOP - 3, WORLD_W, 1, riftLevel ? 0xff42d0 : 0xffb000, 0.18).setOrigin(0).setDepth(-40);
         this.add.rectangle(0, LANE_BOTTOM + 3, WORLD_W, 1, 0x53d5ff, 0.16).setOrigin(0).setDepth(-40);
-        if (baseLevel) {
+        if (riftLevel) {
+          this.createRiftSetDressing();
+          this.add.rectangle(WORLD_W - 176, 76, 142, 104, 0x070a18, 0.95).setOrigin(0).setDepth(-38);
+          this.add.rectangle(WORLD_W - 154, 96, 96, 64, 0x151a3d, 0.82).setOrigin(0).setDepth(-37);
+          this.add.circle(WORLD_W - 106, 128, 32, 0xff42d0, 0.16).setDepth(-36);
+          this.add.circle(WORLD_W - 106, 128, 21, 0x53d5ff, 0.13).setDepth(-35);
+          this.add.rectangle(WORLD_W - 145, 164, 78, 5, 0xf7e36a, 0.42).setOrigin(0).setDepth(-34);
+          this.add.text(WORLD_W - 152, 86, "RIFT-03", { fontFamily: "monospace", fontSize: "8px", color: "#f7e36a" }).setDepth(-33);
+          this.riftExit = this.add.circle(WORLD_W - 106, 128, 34).setStrokeStyle(2, 0xff42d0, 0.68).setDepth(-32);
+        } else if (baseLevel) {
           this.createBaseSetDressing();
           this.add.rectangle(WORLD_W - 168, 84, 132, 96, 0x11161c, 0.94).setOrigin(0).setDepth(-38);
           this.add.rectangle(WORLD_W - 154, 100, 104, 54, 0x252d35, 0.96).setOrigin(0).setDepth(-37);
@@ -2548,6 +2768,21 @@
         }
         this.sky = sky;
         this.sun = sun;
+      }
+
+      createRiftSetDressing() {
+        for (let x = 80; x < WORLD_W - 220; x += 128) {
+          this.add.rectangle(x, 46, 3, 92, 0x53d5ff, 0.18).setOrigin(0.5, 0).setDepth(-58);
+          this.add.rectangle(x + 22, 64, 54, 2, 0xff42d0, 0.2).setOrigin(0.5, 0).setDepth(-57);
+          this.add.circle(x + 12, 54, 7, 0xf7e36a, 0.12).setDepth(-57);
+        }
+        for (let x = 180; x < WORLD_W - 260; x += 360) {
+          this.add.circle(x, 86, 22, 0x53d5ff, 0.08).setDepth(-59);
+          this.add.circle(x + 16, 92, 13, 0xff42d0, 0.1).setDepth(-58);
+          this.add.rectangle(x - 38, LANE_BOTTOM + 1, 92, 5, 0x06070d, 0.74).setOrigin(0.5, 0).setDepth(-44);
+          this.add.rectangle(x - 14, LANE_BOTTOM - 7, 12, 13, 0x2b2448, 0.82).setDepth(-43);
+          this.add.rectangle(x + 20, LANE_BOTTOM - 5, 18, 10, 0x151a3d, 0.82).setDepth(-43);
+        }
       }
 
       createBaseSetDressing() {
@@ -2771,7 +3006,7 @@
         this.started = true;
         document.getElementById("boot-card")?.classList.add("is-hidden");
         const hudTitle = document.getElementById("hud-title");
-        if (hudTitle) hudTitle.textContent = this.level >= 2 ? "KUL HATTI // ASKERI KISLA" : `KUL HATTI // BOLUM ${this.level}`;
+        if (hudTitle) hudTitle.textContent = this.level >= 3 ? "KUL HATTI // YORUNGE YARIGI" : (this.level >= 2 ? "KUL HATTI // ASKERI KISLA" : `KUL HATTI // BOLUM ${this.level}`);
         this.game.canvas.setAttribute("tabindex", "0");
         this.game.canvas.focus({ preventScroll: true });
         audio.start();
@@ -2787,7 +3022,8 @@
       }
 
       nextLevel() {
-        const data = { level: this.level + 1, score: this.score, autoStart: true };
+        const finishedCampaign = this.level >= 3;
+        const data = { level: finishedCampaign ? 1 : this.level + 1, score: finishedCampaign ? 0 : this.score, autoStart: true };
         window.ashRunnerProgress = data;
         document.getElementById("boot-card")?.classList.add("is-hidden");
         document.getElementById("level-card")?.classList.remove("is-open");
@@ -2940,12 +3176,12 @@
         this.score += levelBonus;
         window.ashRunnerProgress = { level: this.level, score: this.score };
 
-        this.helpText.setText(this.level >= 2 ? "Kalkis tamamlandi · Devam Et" : "Askeri kapı acildi · Devam Et ile kislaya gir");
+        this.helpText.setText(this.level >= 3 ? "Yarik sustu · kampanya tamamlandi" : (this.level >= 2 ? "Kalkis tamamlandi · Devam Et" : "Askeri kapı acildi · Devam Et ile kislaya gir"));
         this.scoreText.setText(String(Math.floor(this.score)).padStart(6, "0"));
         const hudTitle = document.getElementById("hud-title");
         if (hudTitle) hudTitle.textContent = `KUL HATTI // BOLUM ${this.level} OK`;
 
-        document.getElementById("level-title").textContent = this.level >= 2 ? "Robot üssü temizlendi" : `Bölüm ${this.level} tamamlandı`;
+        document.getElementById("level-title").textContent = this.level >= 3 ? "Yörünge yarığı mühürlendi" : (this.level >= 2 ? "Robot üssü temizlendi" : `Bölüm ${this.level} tamamlandı`);
         document.getElementById("level-score").textContent = String(Math.floor(this.score)).padStart(6, "0");
         document.getElementById("level-bonus").textContent = `+${levelBonus}`;
         document.getElementById("level-health").textContent = String(Math.round(this.player.health));
@@ -2960,20 +3196,26 @@
             best_streak: Math.max(1, this.maxChain)
           });
         }
-        const achievementText = this.level >= 2
-          ? `Başarılar: ${defeated} savunma sistemi devre dışı, ana mech indirildi, ${this.storyClues}/${this.clueGoal} üs izi toplandı, gemi kalkışı başlatıldı.`
-          : `Başarılar: ${defeated} robot devre dışı, ${this.storyClues}/${this.clueGoal} iz toplandı, en iyi zincir x${Math.max(1, this.maxChain)}, askeri kışla yolu açıldı.`;
+        const achievementText = this.level >= 3
+          ? `Başarılar: ${defeated} faz bekçisi devre dışı, ${this.storyClues}/${this.clueGoal} yörünge izi toplandı, en iyi zincir x${Math.max(1, this.maxChain)}, rift çekirdeği kapatıldı.`
+          : (this.level >= 2
+            ? `Başarılar: ${defeated} savunma sistemi devre dışı, ana mech indirildi, ${this.storyClues}/${this.clueGoal} üs izi toplandı, gemi kalkışı başlatıldı.`
+            : `Başarılar: ${defeated} robot devre dışı, ${this.storyClues}/${this.clueGoal} iz toplandı, en iyi zincir x${Math.max(1, this.maxChain)}, askeri kışla yolu açıldı.`);
         const achievements = document.getElementById("level-achievements");
         if (achievements) achievements.textContent = achievementText;
         const lastNote = this.routeNotes[this.routeNotes.length - 1];
-        const copy = this.level >= 2
-          ? "İki bacaklı ağır güvenlik mech devrildi. Hangardaki gemi kalkışa geçti; rota artık atmosferin dışında."
-          : (lastNote
-            ? `Askeri bölge kapısı açıldı. Son iz: ${lastNote}. Sıradaki hat robotların kışla üssü.`
-            : "Askeri bölge kapısı açıldı. Sıradaki hat robotların kışla üssü.");
+        const copy = this.level >= 3
+          ? (lastNote
+            ? `Yörünge yarığı kapandı. Son iz: ${lastNote}. Kül Hattı artık yalnızca arkada kalan bir yankı.`
+            : "Yörünge yarığı kapandı. Kül Hattı artık yalnızca arkada kalan bir yankı.")
+          : (this.level >= 2
+            ? "İki bacaklı ağır güvenlik mech devrildi. Hangardaki gemi kalkışa geçti; rota artık atmosferin dışında."
+            : (lastNote
+              ? `Askeri bölge kapısı açıldı. Son iz: ${lastNote}. Sıradaki hat robotların kışla üssü.`
+              : "Askeri bölge kapısı açıldı. Sıradaki hat robotların kışla üssü."));
         document.getElementById("level-copy").textContent = copy;
         const nextButton = document.getElementById("next-level");
-        if (nextButton) nextButton.textContent = this.level >= 2 ? "Yörüngeye Devam Et" : "Kışlaya Gir";
+        if (nextButton) nextButton.textContent = this.level >= 3 ? "Baştan Koş" : (this.level >= 2 ? "Yörünge Yarığına Gir" : "Kışlaya Gir");
         const card = document.getElementById("level-card");
         card?.classList.add("is-open");
         card?.setAttribute("aria-hidden", "false");
@@ -3035,7 +3277,7 @@
         if (this.player.x < triggerX) return;
         const spawnX = clamp(this.player.x - 155, 34, WORLD_W - 60);
         const spawnY = this.clampActorY(spawnX, this.player.y + (this.rearAmbushIndex % 2 ? 12 : -10), 8, 2, this.player);
-        const type = this.rearAmbushIndex === 1 ? "dart" : "skitter";
+        const type = this.level >= 3 ? (this.rearAmbushIndex === 1 ? "phase" : "dart") : (this.rearAmbushIndex === 1 ? "dart" : "skitter");
         const drone = new Drone(this, spawnX, spawnY, type);
         drone.floor = this.player.floor;
         drone.homeX = spawnX;
@@ -3044,8 +3286,8 @@
         drone.isRearAmbush = true;
         this.drones.push(drone);
         this.rearThreatTimer = 4.5;
-        this.areaPulse(spawnX, spawnY, 38, 0xf05a4a);
-        this.lastLoot = "arkadan drone sesi / sola don";
+        this.areaPulse(spawnX, spawnY, 38, this.level >= 3 ? 0xff42d0 : 0xf05a4a);
+        this.lastLoot = this.level >= 3 ? "faz izi arkadan kapandi / sola don" : "arkadan drone sesi / sola don";
         this.rearAmbushIndex += 1;
       }
 
@@ -3170,6 +3412,7 @@
         this.player.update(dt, time);
         this.gaps.forEach(gap => gap.update(dt, this.player));
         this.hazards.forEach(hazard => hazard.update(dt, this.player));
+        this.riftSurges?.forEach(surge => surge.update(dt, this.player));
         this.props.forEach(prop => prop.update(dt));
         this.drones.forEach(drone => drone.update(dt, this.player));
         this.checkThrownHits();
@@ -3181,7 +3424,13 @@
         this.cameraRig.update(dt);
 
         if (this.player.x > WORLD_W - 120) {
-          if (this.level >= 2) {
+          if (this.level >= 3) {
+            if (this.bossDefeated) this.completeLevel();
+            else {
+              this.lastLoot = "rift cekirdegi kilitli / once bekci";
+              this.player.x = WORLD_W - 126;
+            }
+          } else if (this.level >= 2) {
             if (this.bossDefeated) this.beginShipLaunch();
             else {
               this.lastLoot = "hangar kilitli / once ana mech";
