@@ -132,20 +132,29 @@
   }
 
   function getSelectedBugyEngine() {
-    return localStorage.getItem(bugyEngineKey) === 'v2' ? 'v2' : 'v1';
+    const engine = localStorage.getItem(bugyEngineKey);
+    return engine === 'v3' || engine === 'v2' ? engine : 'v1';
   }
 
   function getBugyEngine() {
-    return getSelectedBugyEngine() === 'v2' ? window.BugyV2 : window.Bugy;
+    const selected = getSelectedBugyEngine();
+    if (selected === 'v3') return window.BugyV3;
+    if (selected === 'v2') return window.BugyV2;
+    return window.Bugy;
   }
 
   function setBugyEngine(version) {
-    const next = version === 'v2' ? 'v2' : 'v1';
+    const next = version === 'v3' || version === 'v2' ? version : 'v1';
     localStorage.setItem(bugyEngineKey, next);
-    document.body.classList.toggle('bugy-v1-muted', next === 'v2');
-    if (next === 'v2') {
+    document.body.classList.toggle('bugy-v1-muted', next === 'v2' || next === 'v3');
+    if (next === 'v3') {
+      window.BugyV2?.deactivate?.();
+      window.BugyV3?.activate?.();
+    } else if (next === 'v2') {
+      window.BugyV3?.deactivate?.();
       window.BugyV2?.activate?.();
     } else {
+      window.BugyV3?.deactivate?.();
       window.BugyV2?.deactivate?.();
       window.Bugy?.summon?.();
     }
@@ -155,7 +164,9 @@
 
   function bootBugyControls() {
     const waitForBugy = window.setInterval(() => {
-      if (!window.Bugy || (getSelectedBugyEngine() === 'v2' && !window.BugyV2)) return;
+      if (!window.Bugy) return;
+      if (getSelectedBugyEngine() === 'v2' && !window.BugyV2) return;
+      if (getSelectedBugyEngine() === 'v3' && !window.BugyV3) return;
       window.clearInterval(waitForBugy);
       setBugyEngine(getSelectedBugyEngine());
       renderBugyStatus();
@@ -226,6 +237,7 @@
 
     window.addEventListener('bugy:state', renderBugyStatus);
     window.addEventListener('bugy-v2:state', renderBugyStatus);
+    window.addEventListener('bugy-v3:state', renderBugyStatus);
     window.setInterval(renderBugyStatus, 1200);
   }
 

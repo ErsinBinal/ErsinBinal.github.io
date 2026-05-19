@@ -697,6 +697,24 @@
   animation: bugy-v2-beam 180ms steps(2, end) infinite;
 }
 
+.bugy-v3-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 66;
+  pointer-events: none;
+}
+
+.bugy-v3-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
 @keyframes arcade-particle-pop {
   to {
     opacity: 0;
