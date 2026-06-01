@@ -44,6 +44,14 @@ Dashboard, oyun/uygulama erisim kapisi ve uygulama onerisi kayitlari icin:
 2. `dashboard.html` sayfasina giris yapmis bir kullaniciyla gidin.
 3. Bir oyun bitirin ya da Barista/Bartender/Oracle gibi bir uygulamada sonuc uretin; dashboard son skor ve onerileri gosterir.
 
+## Mevcut Kuruluma Faz 4 Ekleme
+
+Dart Skorbord maclari, iki oyunculu oturum ve detayli ok atisi istatistikleri icin:
+
+1. `docs/database/2026-06-01-dart-skorbord.sql` dosyasini SQL Editor'de calistirin.
+2. `dart-skorbord.html` sayfasinda kirmizi ve mavi oyuncuyu iki farkli hesapla giris yaptirin.
+3. Mac tamamlandiginda `dashboard.html` uzerinde Dart Istatistikleri paneli guncellenir.
+
 ## Guvenlik Notlari
 
 - `anonKey` gizli degildir; tarayiciya konabilir.
@@ -55,5 +63,6 @@ Dashboard, oyun/uygulama erisim kapisi ve uygulama onerisi kayitlari icin:
 
 - Faz 1: Makaleler, uyelik, admin paneli.
 - Faz 2: Oyun skor kayitlari ve global leaderboard.
-- Faz 3: Dosya/gorsel yukleme icin Supabase Storage ve RLS.
-- Faz 4: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.
+- Faz 3: Dashboard oturumlari ve uygulama onerileri.
+- Faz 4: Dart Skorbord mac ve atis istatistikleri.
+- Faz 5: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.

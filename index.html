@@ -51,7 +51,7 @@
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=29">
+  <link rel="stylesheet" href="/assets/css/components.css?v=30">
   <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
@@ -2055,6 +2055,7 @@
               <a class="project-row" href="TheRealistsBar.html" data-artifact="bar"><span>07</span><strong>The Realists Bar</strong><em>mix / pragmatic</em></a>
               <a class="project-row" href="TheOracle.html" data-artifact="oracle"><span>08</span><strong>The Oracle</strong><em>ask / signal</em></a>
               <a class="project-row" href="Paradox_Terminal.html" data-artifact="terminal"><span>09</span><strong>Paradox Terminal</strong><em>run / paradox</em></a>
+              <a class="project-row" href="dart-skorbord.html" data-artifact="logic"><span>10</span><strong>Dart Skorbord</strong><em>score / match</em></a>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab gizli menüsü">
@@ -2472,6 +2473,9 @@
         'the oracle': () => { location.href = 'TheOracle.html'; },
         'paradox': () => { location.href = 'Paradox_Terminal.html'; },
         'paradox terminal': () => { location.href = 'Paradox_Terminal.html'; },
+        'dart': () => { location.href = 'dart-skorbord.html'; },
+        'skorbord': () => { location.href = 'dart-skorbord.html'; },
+        'scoreboard': () => { location.href = 'dart-skorbord.html'; },
         'bu siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
         'bu siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
         'bu sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
@@ -2499,7 +2503,7 @@
           return 'hidden layer unlocked';
         },
         'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / run logic / run ash / flow / bartender / barista / oracle / paradox / access / dashboard / unlock hidden',
+        'help': () => 'commands: open dossier / run logic / run ash / flow / dart / bartender / barista / oracle / paradox / access / dashboard / unlock hidden',
         '?': () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, ESC close'
       };
 

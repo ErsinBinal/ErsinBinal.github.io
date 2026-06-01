@@ -3,6 +3,7 @@
 
   const config = window.CONVIVIUM_SUPABASE || {};
   let cachedClient = null;
+  const scopedClients = new Map();
   const storageKey = 'convivium-auth-session';
 
   function isConfigured() {
@@ -32,6 +33,30 @@
     });
 
     return cachedClient;
+  }
+
+  function createScopedClient(customStorageKey) {
+    if (!isConfigured()) return null;
+    const key = String(customStorageKey || '').trim();
+    if (!key) return getClient();
+    if (scopedClients.has(key)) return scopedClients.get(key);
+    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+      console.warn('[Convivium] Supabase SDK not loaded.');
+      return null;
+    }
+
+    const client = window.supabase.createClient(config.url, config.anonKey, {
+      auth: {
+        storage: window.sessionStorage,
+        storageKey: key,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false
+      }
+    });
+
+    scopedClients.set(key, client);
+    return client;
   }
 
   function toMessage(error) {
@@ -378,9 +403,145 @@
     return data || [];
   }
 
+  function dartPlayerSummary(summary, slot) {
+    const players = summary && typeof summary === 'object' ? summary.players || {} : {};
+    return players[slot] || {};
+  }
+
+  async function createDartMatchWithClient(client, match) {
+    if (!client) throw new Error('Dart mac kaydi icin Supabase oturumu gerekli.');
+    const payload = {
+      red_user_id: match.red_user_id,
+      blue_user_id: match.blue_user_id,
+      winner_user_id: match.winner_user_id || null,
+      winner_slot: match.winner_slot || null,
+      start_score: Math.max(1, Number(match.start_score) || 501),
+      duration_seconds: Math.max(0, Number(match.duration_seconds) || 0),
+      red_final_score: Math.max(0, Number(match.red_final_score) || 0),
+      blue_final_score: Math.max(0, Number(match.blue_final_score) || 0),
+      status: match.status === 'completed' ? 'completed' : 'in_progress',
+      summary: match.summary && typeof match.summary === 'object' ? match.summary : {},
+      completed_at: match.status === 'completed' ? (match.completed_at || new Date().toISOString()) : null
+    };
+
+    const { data, error } = await client
+      .from('dart_matches')
+      .insert(payload)
+      .select()
+      .single();
+
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function saveDartThrowsWithClient(client, throws) {
+    if (!client) throw new Error('Dart atis kaydi icin Supabase oturumu gerekli.');
+    const rows = (throws || []).map((throwRow) => ({
+      match_id: throwRow.match_id,
+      user_id: throwRow.user_id,
+      player_slot: throwRow.player_slot === 'BLUE' ? 'BLUE' : 'RED',
+      turn_number: Math.max(1, Number(throwRow.turn_number) || 1),
+      dart_number: Math.max(1, Math.min(3, Number(throwRow.dart_number) || 1)),
+      dart_value: Math.max(0, Math.min(60, Number(throwRow.dart_value) || 0)),
+      turn_total: Math.max(0, Number(throwRow.turn_total) || 0),
+      remaining_score: Math.max(0, Number(throwRow.remaining_score) || 0),
+      is_bust: Boolean(throwRow.is_bust),
+      is_winning_throw: Boolean(throwRow.is_winning_throw),
+      thrown_at: throwRow.thrown_at || new Date().toISOString()
+    }));
+
+    if (!rows.length) return [];
+
+    const { data, error } = await client
+      .from('dart_throws')
+      .insert(rows)
+      .select();
+
+    if (error) throw new Error(toMessage(error));
+    return data || [];
+  }
+
+  async function fetchUserDartStats(limit = 12) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Dart istatistikleri icin once giris yapmalisiniz.');
+    const recentLimit = Math.max(1, Number(limit) || 12);
+
+    const { data, error } = await client
+      .from('dart_matches')
+      .select('id, red_user_id, blue_user_id, winner_user_id, winner_slot, start_score, duration_seconds, red_final_score, blue_final_score, status, summary, completed_at, created_at')
+      .or(`red_user_id.eq.${user.id},blue_user_id.eq.${user.id}`)
+      .order('created_at', { ascending: false })
+      .limit(200);
+
+    if (error) throw new Error(toMessage(error));
+
+    const matches = data || [];
+    const totals = {
+      matches: matches.length,
+      wins: 0,
+      losses: 0,
+      darts: 0,
+      scored: 0,
+      highestTurn: 0,
+      oneEighties: 0,
+      busts: 0
+    };
+
+    const recent = matches.map((match) => {
+      const slot = match.red_user_id === user.id ? 'RED' : 'BLUE';
+      const opponentSlot = slot === 'RED' ? 'BLUE' : 'RED';
+      const own = dartPlayerSummary(match.summary, slot);
+      const opponent = dartPlayerSummary(match.summary, opponentSlot);
+      const won = match.winner_user_id === user.id;
+
+      if (match.status === 'completed') {
+        if (won) totals.wins += 1;
+        else totals.losses += 1;
+      }
+
+      totals.darts += Number(own.totalDarts || 0);
+      totals.scored += Number(own.totalScored || 0);
+      totals.highestTurn = Math.max(totals.highestTurn, Number(own.highestTurn || 0));
+      totals.oneEighties += Number(own.oneEighties || 0);
+      totals.busts += Number(own.busts || 0);
+
+      return {
+        id: match.id,
+        slot,
+        won,
+        status: match.status,
+        created_at: match.completed_at || match.created_at,
+        duration_seconds: match.duration_seconds,
+        own: {
+          label: own.label || (slot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
+          average: Number(own.average || 0),
+          highestTurn: Number(own.highestTurn || 0),
+          totalDarts: Number(own.totalDarts || 0),
+          busts: Number(own.busts || 0),
+          oneEighties: Number(own.oneEighties || 0),
+          finalScore: slot === 'RED' ? match.red_final_score : match.blue_final_score
+        },
+        opponent: {
+          label: opponent.label || (opponentSlot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
+          finalScore: opponentSlot === 'RED' ? match.red_final_score : match.blue_final_score
+        }
+      };
+    });
+
+    return {
+      totals: {
+        ...totals,
+        average: totals.darts > 0 ? Number(((totals.scored / totals.darts) * 3).toFixed(1)) : 0
+      },
+      recent: recent.slice(0, recentLimit)
+    };
+  }
+
   window.ConviviumBackend = {
     isConfigured,
     getClient,
+    createScopedClient,
     getSession,
     getUser,
     getProfile,
@@ -400,6 +561,9 @@
     fetchUserAppSessions,
     saveAppRecommendation,
     fetchUserAppRecommendations,
+    createDartMatchWithClient,
+    saveDartThrowsWithClient,
+    fetchUserDartStats,
     slugify
   };
 })();

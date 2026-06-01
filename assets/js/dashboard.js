@@ -7,6 +7,7 @@
   const gamesEl = document.getElementById('dashboardGames');
   const recommendationsEl = document.getElementById('dashboardRecommendations');
   const sessionsEl = document.getElementById('dashboardSessions');
+  const dartStatsEl = document.getElementById('dashboardDartStats');
   const signOutButton = document.getElementById('dashboardSignOut');
 
   const gameNames = {
@@ -23,6 +24,9 @@
 
   function friendlyError(error) {
     const message = error?.message || String(error || '');
+    if (/dart_matches|dart_throws/i.test(message)) {
+      return "Dart tablolari henuz Supabase tarafinda yok. docs/database/2026-06-01-dart-skorbord.sql dosyasini SQL Editor'de calistirin.";
+    }
     if (/user_app_sessions|app_recommendations|relation .* does not exist/i.test(message)) {
       return "Dashboard tablolari henuz Supabase tarafinda yok. docs/database/2026-05-18-dashboard-activity.sql dosyasini SQL Editor'de calistirin.";
     }
@@ -127,6 +131,60 @@
     `).join('');
   }
 
+  function renderDartStats(stats) {
+    if (!dartStatsEl) return;
+
+    if (!stats) {
+      empty(dartStatsEl, 'Dart istatistikleri henuz kullanilabilir degil.');
+      return;
+    }
+
+    if (stats.error) {
+      empty(dartStatsEl, friendlyError(stats.error));
+      return;
+    }
+
+    if (!stats.totals || !stats.totals.matches) {
+      empty(dartStatsEl, 'Henuz kaydedilmis dart maci yok.');
+      return;
+    }
+
+    const totals = stats.totals;
+    const recent = stats.recent || [];
+    const metrics = [
+      ['Mac', totals.matches],
+      ['G', totals.wins],
+      ['M', totals.losses],
+      ['Ort.', Number(totals.average || 0).toFixed(1)],
+      ['En yuksek', totals.highestTurn],
+      ['180', totals.oneEighties],
+      ['Bust', totals.busts]
+    ];
+
+    dartStatsEl.innerHTML = `
+      <div class="dashboard-stat-grid">
+        ${metrics.map(([label, value]) => `
+          <span>
+            <strong>${escapeHtml(value)}</strong>
+            <em>${escapeHtml(label)}</em>
+          </span>
+        `).join('')}
+      </div>
+      ${recent.slice(0, 6).map((match) => `
+        <article class="dashboard-row">
+          <div>
+            <strong>${match.won ? 'Galibiyet' : 'Maglubiyet'} / ${escapeHtml(match.opponent.label)}</strong>
+            <span>${formatDate(match.created_at)} / ${formatDuration(match.duration_seconds)}</span>
+          </div>
+          <div class="dashboard-metrics">
+            <span>Ort. ${Number(match.own.average || 0).toFixed(1)}</span>
+            <span>En yuksek ${Number(match.own.highestTurn || 0)}</span>
+          </div>
+        </article>
+      `).join('')}
+    `;
+  }
+
   async function init() {
     if (!backend || !backend.isConfigured()) {
       setStatus('Supabase baglantisi yapilandirilmadi.', 'error');
@@ -141,16 +199,20 @@
         return;
       }
 
-      const [profile, scores, recommendations, sessions] = await Promise.all([
+      const [profile, scores, recommendations, sessions, dartStats] = await Promise.all([
         backend.getProfile(),
         backend.fetchUserGameScores(40),
         backend.fetchUserAppRecommendations(30),
-        backend.fetchUserAppSessions(40)
+        backend.fetchUserAppSessions(40),
+        backend.fetchUserDartStats
+          ? backend.fetchUserDartStats(12).catch((error) => ({ error }))
+          : Promise.resolve(null)
       ]);
 
       renderProfile(session, profile);
       renderGames(scores);
       renderRecommendations(recommendations);
+      renderDartStats(dartStats);
       renderSessions(sessions);
       setStatus('Hazir.', 'success');
     } catch (error) {

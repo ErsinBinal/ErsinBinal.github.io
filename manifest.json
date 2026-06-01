@@ -95,6 +95,13 @@
       "description": "The Oracle deneyimini aç",
       "url": "/TheOracle.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Dart Skorbord",
+      "short_name": "Dart",
+      "description": "501 dart skorbordunu aç",
+      "url": "/dart-skorbord.html",
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
 }

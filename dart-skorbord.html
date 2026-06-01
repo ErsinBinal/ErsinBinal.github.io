@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dart Skorbord | Convivium</title>
+  <meta name="description" content="Iki kullanicili, Supabase istatistik destekli 501 dart skorbord deneyimi.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/dart-skorbord.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/dart-skorbord.css">
+</head>
+<body class="dart-page">
+  <a class="skip-link" href="#dartApp">Icerigi atla</a>
+
+  <header class="dart-shell dart-topbar" role="banner">
+    <div>
+      <p class="dart-kicker">CONVIVIUM MATCH ROOM</p>
+      <h1>Dart Skorbord</h1>
+    </div>
+    <nav class="dart-nav" aria-label="Site navigasyonu">
+      <a href="index.html">Ana Sayfa</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="auth.html">Uyelik</a>
+    </nav>
+  </header>
+
+  <main id="dartApp" class="dart-shell dart-app" role="main">
+    <section class="dart-status-panel" aria-live="polite">
+      <div>
+        <strong id="turnIndicator">Siradaki: Kirmizi Oyuncu</strong>
+        <span id="syncStatus">Misafir modu aktif. Iki oyuncu giris yaparsa mac istatistikleri kaydedilir.</span>
+      </div>
+      <button id="newMatchButton" type="button">Yeni Mac</button>
+    </section>
+
+    <section class="dart-auth-grid" aria-label="Oyuncu girisleri">
+      <article class="dart-auth-card dart-auth-red">
+        <div class="dart-card-head">
+          <span>Player 01</span>
+          <strong id="redAuthName">Kirmizi Oyuncu</strong>
+        </div>
+        <form id="redAuthForm" class="dart-login-form" data-slot="RED">
+          <input name="email" type="email" placeholder="E-posta" autocomplete="email">
+          <input name="password" type="password" placeholder="Sifre" autocomplete="current-password">
+          <button type="submit">Giris</button>
+          <button id="redSignOut" type="button">Cikis</button>
+        </form>
+        <p id="redAuthStatus" class="dart-auth-status">Misafir.</p>
+      </article>
+
+      <article class="dart-auth-card dart-auth-blue">
+        <div class="dart-card-head">
+          <span>Player 02</span>
+          <strong id="blueAuthName">Mavi Oyuncu</strong>
+        </div>
+        <form id="blueAuthForm" class="dart-login-form" data-slot="BLUE">
+          <input name="email" type="email" placeholder="E-posta" autocomplete="email">
+          <input name="password" type="password" placeholder="Sifre" autocomplete="current-password">
+          <button type="submit">Giris</button>
+          <button id="blueSignOut" type="button">Cikis</button>
+        </form>
+        <p id="blueAuthStatus" class="dart-auth-status">Misafir.</p>
+      </article>
+    </section>
+
+    <section class="dart-board" aria-label="Skor paneli">
+      <article id="cardRED" class="dart-player dart-player-red is-active">
+        <div class="dart-player-meta">
+          <span>RED</span>
+          <strong id="labelRED">Kirmizi Oyuncu</strong>
+        </div>
+        <div id="checkoutRED" class="dart-checkout"></div>
+        <div id="scoreRED" class="dart-score">501</div>
+        <div class="dart-metrics">
+          <span>Ortalama <strong id="avgRED">0.0</strong></span>
+          <span>Sira <strong id="turnsRED">0</strong></span>
+          <span>En Yuksek <strong id="highRED">0</strong></span>
+        </div>
+      </article>
+
+      <article id="cardBLUE" class="dart-player dart-player-blue">
+        <div class="dart-player-meta">
+          <span>BLUE</span>
+          <strong id="labelBLUE">Mavi Oyuncu</strong>
+        </div>
+        <div id="checkoutBLUE" class="dart-checkout"></div>
+        <div id="scoreBLUE" class="dart-score">501</div>
+        <div class="dart-metrics">
+          <span>Ortalama <strong id="avgBLUE">0.0</strong></span>
+          <span>Sira <strong id="turnsBLUE">0</strong></span>
+          <span>En Yuksek <strong id="highBLUE">0</strong></span>
+        </div>
+      </article>
+    </section>
+
+    <section class="dart-turn-panel" aria-label="Mevcut sira">
+      <div>
+        <span class="dart-panel-label">Mevcut atislar</span>
+        <div id="dartBadges" class="dart-badges"></div>
+      </div>
+      <div class="dart-turn-total">
+        <span>Set Toplami</span>
+        <strong id="turnTotal">0</strong>
+      </div>
+      <button id="undoButton" type="button">Geri Al</button>
+    </section>
+
+    <section class="dart-controls" aria-label="Skor girisi">
+      <form id="manualScoreForm" class="dart-manual-form">
+        <input id="keyboardInput" type="number" inputmode="numeric" min="0" max="60" placeholder="Ok skoru (0-60)">
+        <button type="submit">Onayla</button>
+      </form>
+      <div class="dart-keypad">
+        <button type="button" data-score="0">MISS</button>
+        <button type="button" data-score="1">1</button>
+        <button type="button" data-score="5">5</button>
+        <button type="button" data-score="20">20</button>
+        <button type="button" data-score="25">BULL</button>
+        <button type="button" data-score="40">D20</button>
+        <button type="button" data-score="50">D-BULL</button>
+        <button type="button" data-score="60">T20</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="dartOverlay" class="dart-overlay" hidden>
+    <div class="dart-overlay-card">
+      <strong id="overlayTitle">Mac</strong>
+      <p id="overlayText"></p>
+      <button id="overlayResetButton" type="button" hidden>Yeni Mac Baslat</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=22" defer></script>
+  <script src="/assets/js/dart-skorbord.js?v=1" defer></script>
+</body>
+</html>

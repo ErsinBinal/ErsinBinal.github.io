@@ -973,6 +973,32 @@ img.responsive:hover {
   color: var(--color-text-dim, #00bb00);
 }
 
+.dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+.dashboard-stat-grid span {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid rgba(0, 255, 0, 0.22);
+  border-radius: var(--border-radius-md, 6px);
+  background: rgba(0, 0, 0, 0.26);
+}
+
+.dashboard-stat-grid strong {
+  color: var(--color-primary, #00ff00);
+  font-size: 1.14rem;
+}
+
+.dashboard-stat-grid em {
+  color: var(--color-text-dim, #00bb00);
+  font-size: 0.8rem;
+  font-style: normal;
+}
+
 .auth-page .form-panel:nth-child(2) {
   animation-delay: 0.1s;
 }
