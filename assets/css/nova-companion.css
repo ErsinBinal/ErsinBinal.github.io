@@ -1,0 +1,152 @@
+/**
+ * NOVA Companion
+ * Canvas-based signal familiar for the Convivium home surface.
+ */
+
+.nova-companion-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 154;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.nova-companion-layer[hidden] {
+  display: none;
+}
+
+.nova-companion-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.nova-core-button {
+  --nova-x: 50vw;
+  --nova-y: 50vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 155;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(0, 234, 255, 0.72);
+  background:
+    linear-gradient(135deg, rgba(0, 255, 102, 0.16), rgba(255, 46, 166, 0.12)),
+    rgba(0, 0, 0, 0.78);
+  color: #eaffef;
+  font-family: var(--font-display, monospace);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translate3d(calc(var(--nova-x) - 24px), calc(var(--nova-y) - 24px), 0);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.82),
+    0 0 18px rgba(0, 234, 255, 0.4),
+    inset 0 0 16px rgba(0, 255, 102, 0.08);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  transition:
+    opacity 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  will-change: transform;
+}
+
+.nova-core-button[hidden] {
+  display: none;
+}
+
+.nova-core-button::before,
+.nova-core-button::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(245, 255, 107, 0.48);
+  transform: rotate(45deg);
+}
+
+.nova-core-button::after {
+  inset: 15px;
+  border-color: rgba(255, 46, 166, 0.58);
+  animation: nova-core-blink 1.8s steps(2, end) infinite;
+}
+
+.nova-core-button span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 0 8px rgba(0, 234, 255, 0.9);
+}
+
+.nova-core-button:hover,
+.nova-core-button:focus-visible {
+  border-color: rgba(245, 255, 107, 0.9);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.82),
+    0 0 24px rgba(245, 255, 107, 0.34),
+    0 0 38px rgba(255, 46, 166, 0.18),
+    inset 0 0 18px rgba(0, 234, 255, 0.12);
+}
+
+.nova-status-chip {
+  --nova-x: 50vw;
+  --nova-y: 50vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 155;
+  min-width: 118px;
+  max-width: 210px;
+  padding: 7px 9px;
+  border: 1px solid rgba(0, 255, 102, 0.22);
+  background: rgba(0, 0, 0, 0.72);
+  color: var(--journey-cyan, #00eaff);
+  font-family: var(--font-display, monospace);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  pointer-events: none;
+  transform: translate3d(calc(var(--nova-x) + 28px), calc(var(--nova-y) - 17px), 0);
+  box-shadow: 0 0 18px rgba(0, 234, 255, 0.12);
+  opacity: 0.86;
+}
+
+.nova-status-chip[hidden] {
+  display: none;
+}
+
+body.nova-active .neon-sheep,
+body.nova-active .neon-ufo,
+body.nova-active .neon-storm,
+body.nova-active .neon-tornado,
+body.nova-active .neon-portal,
+body.nova-active .bugy-v2-layer,
+body.nova-active .bugy-v3-layer {
+  display: none !important;
+}
+
+@keyframes nova-core-blink {
+  0% { opacity: 0.38; }
+  100% { opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  .nova-status-chip {
+    display: none;
+  }
+
+  .nova-core-button {
+    width: 42px;
+    height: 42px;
+    transform: translate3d(calc(var(--nova-x) - 21px), calc(var(--nova-y) - 21px), 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nova-companion-layer,
+  .nova-core-button,
+  .nova-status-chip {
+    display: none !important;
+  }
+}

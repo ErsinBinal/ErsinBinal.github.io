@@ -522,6 +522,29 @@
         return `random route: ${label}`;
       };
 
+      const novaCommand = (action = 'summon') => {
+        const nova = window.NovaCompanion;
+        if (!nova) return 'nova: module not ready';
+        if (action === 'summon') {
+          nova.summon();
+          return 'nova: companion online. click NOVA or type nova scan / nova rift / nova bloom / nova mirror.';
+        }
+        if (action === 'off') {
+          nova.deactivate();
+          return 'nova: offline. bugy channel restored.';
+        }
+        nova.trigger(action);
+        return `nova: ${action} protocol started`;
+      };
+
+      const bugyCommand = () => {
+        window.NovaCompanion?.deactivate?.();
+        window.BugyV3?.deactivate?.();
+        window.BugyV2?.deactivate?.();
+        window.Bugy?.summon?.();
+        return 'bugy: classic companion restored';
+      };
+
       const commandDefinitions = [
         {
           command: 'help',
@@ -576,6 +599,54 @@
           description: 'rastgele bir deneyim acar',
           aliases: ['shuffle', 'surprise', 'rastgele'],
           action: randomCommand
+        },
+        {
+          command: 'nova',
+          description: 'NOVA alternatif companion katmanini acar',
+          aliases: ['summon nova', 'nova summon', 'nova companion'],
+          action: () => novaCommand('summon')
+        },
+        {
+          command: 'nova scan',
+          description: 'NOVA aktif panelleri tarar',
+          aliases: ['scan nova'],
+          action: () => novaCommand('scan')
+        },
+        {
+          command: 'nova rift',
+          description: 'NOVA rota hafizasini katlar',
+          aliases: ['rift nova'],
+          action: () => novaCommand('rift')
+        },
+        {
+          command: 'nova bloom',
+          description: 'NOVA saha notlarini yukler',
+          aliases: ['bloom nova'],
+          action: () => novaCommand('bloom')
+        },
+        {
+          command: 'nova mirror',
+          description: 'NOVA imlec golgesini kopyalar',
+          aliases: ['mirror nova'],
+          action: () => novaCommand('mirror')
+        },
+        {
+          command: 'nova sleep',
+          description: 'NOVA sinyalini dusuk guce alir',
+          aliases: ['nova dim'],
+          action: () => novaCommand('sleep')
+        },
+        {
+          command: 'nova off',
+          description: 'NOVA katmanini kapatir',
+          aliases: ['dismiss nova'],
+          action: () => novaCommand('off')
+        },
+        {
+          command: 'bugy',
+          description: 'klasik gezinen pet katmanina doner',
+          aliases: ['classic bugy', 'pet classic'],
+          action: bugyCommand
         },
         {
           command: 'signal',
@@ -775,7 +846,7 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
         '',
         'system:',
-        'whoami, log, clear, random, level, access, dashboard',
+        'whoami, log, clear, random, level, access, dashboard, nova, bugy',
         '',
         'hidden:',
         'signal -> oracle -> manifest -> unlock hidden, clues',

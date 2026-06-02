@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v44';
+const CACHE_NAME = 'convivium-v45';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -24,6 +24,8 @@ const PRECACHE_ASSETS = [
   '/assets/css/dart-skorbord.css',
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
+  '/assets/css/nova-companion.css?v=1',
+  '/assets/css/home.css?v=2',
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
   '/assets/js/utils.js',
@@ -31,6 +33,9 @@ const PRECACHE_ASSETS = [
   '/assets/js/neon-sheep.js?v=29',
   '/assets/js/bugy-v2.js?v=2',
   '/assets/js/bugy-v3-loader.js?v=5',
+  '/assets/js/nova-companion.js?v=1',
+  '/assets/js/home-protocol.js?v=2',
+  '/assets/js/service-worker-register.js?v=2',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff00.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff04.png?v=1',
