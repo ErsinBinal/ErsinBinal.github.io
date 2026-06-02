@@ -538,11 +538,12 @@
       };
 
       const bugyCommand = () => {
-        window.NovaCompanion?.deactivate?.();
         window.BugyV3?.deactivate?.();
         window.BugyV2?.deactivate?.();
         window.Bugy?.summon?.();
-        return 'bugy: classic companion restored';
+        return window.NovaCompanion?.getState?.().active
+          ? 'bugy: classic companion restored / nova still online'
+          : 'bugy: classic companion restored';
       };
 
       const commandDefinitions = [

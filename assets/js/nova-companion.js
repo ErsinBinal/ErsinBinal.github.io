@@ -1,8 +1,8 @@
 (() => {
   'use strict';
 
-  const engineKey = 'convivium.bugy.engine';
   const stateKey = 'convivium.nova.state';
+  const activeKey = 'convivium.nova.active';
   const actions = ['scan', 'rift', 'bloom', 'mirror', 'perch', 'sleep'];
   const actionLines = {
     scan: 'nova scan: active panels mapped',
@@ -467,20 +467,14 @@
       document.body.classList.toggle('nova-active', state.active);
     };
 
-    const deactivateLegacy = () => {
-      window.BugyV2?.deactivate?.();
-      window.BugyV3?.deactivate?.();
-    };
-
     const api = {
       version: '1.0.0',
       actions: [...actions],
       activate() {
-        deactivateLegacy();
         state.active = true;
         state.mode = 'orbit';
         state.last = 0;
-        localStorage.setItem(engineKey, 'nova');
+        localStorage.setItem(activeKey, '1');
         syncVisibility();
         resize();
         choosePanelTarget();
@@ -496,7 +490,7 @@
         cancelAnimationFrame(state.raf);
         syncVisibility();
         context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        if (localStorage.getItem(engineKey) === 'nova') localStorage.setItem(engineKey, 'v1');
+        localStorage.removeItem(activeKey);
         persist();
         dispatch();
         return true;
@@ -558,7 +552,7 @@
 
     resize();
     window.NovaCompanion = api;
-    if (localStorage.getItem(engineKey) === 'nova') api.activate();
+    if (localStorage.getItem(activeKey) === '1') api.activate();
   };
 
   if (document.readyState === 'loading') {
