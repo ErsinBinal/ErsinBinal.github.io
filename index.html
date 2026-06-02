@@ -1925,11 +1925,12 @@
       <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" placeholder="type: open dossier / bu sayfayı kim yaptı / ask anything">
       <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
-    <div class="command-output" id="command-output" aria-live="polite">press ? for command layer</div>
+    <div class="command-output" id="command-output" aria-live="polite">type help for shortcuts</div>
     <div class="command-help" aria-label="Komut örnekleri">
+      <span>help</span>
       <span>open dossier</span>
       <span>bu sayfayı kim yaptı</span>
-      <span>seni kim yaptı</span>
+      <span>keys</span>
       <span>run logic</span>
       <span>unlock hidden</span>
       <span>level</span>
@@ -2451,61 +2452,211 @@
         commandShell.setAttribute('aria-hidden', 'true');
       };
 
-      const commandMap = {
-        'open dossier': () => { location.href = 'makaleler.html'; },
-        'dossier': () => { location.href = 'makaleler.html'; },
-        'run logic': () => { location.href = 'cyberpunk-logic-game.html'; },
-        'logic': () => { location.href = 'cyberpunk-logic-game.html'; },
-        'run ash': () => { location.href = 'ash-runner.html'; },
-        'ash': () => { location.href = 'ash-runner.html'; },
-        'scrap': () => { location.href = 'ash-runner.html'; },
-        'brawler': () => { location.href = 'ash-runner.html'; },
-        'run flow': () => { location.href = 'neon-river.html'; },
-        'flow': () => { location.href = 'neon-river.html'; },
-        'bartender': () => { location.href = 'Bartender.html'; },
-        'bar': () => { location.href = 'Bartender.html'; },
-        'barista': () => { location.href = 'Barista.html'; },
-        'coffee': () => { location.href = 'Barista.html'; },
-        'barista v2': () => { location.href = 'Barista_V2.html'; },
-        'realists bar': () => { location.href = 'TheRealistsBar.html'; },
-        'the realists bar': () => { location.href = 'TheRealistsBar.html'; },
-        'oracle': () => { location.href = 'TheOracle.html'; },
-        'the oracle': () => { location.href = 'TheOracle.html'; },
-        'paradox': () => { location.href = 'Paradox_Terminal.html'; },
-        'paradox terminal': () => { location.href = 'Paradox_Terminal.html'; },
-        'dart': () => { location.href = 'dart-skorbord.html'; },
-        'skorbord': () => { location.href = 'dart-skorbord.html'; },
-        'scoreboard': () => { location.href = 'dart-skorbord.html'; },
-        'bu siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'bu siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'bu sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'bu sayfayi kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'seni kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'seni kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'siteyi kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'siteyi kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'sayfayı kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'sayfayi kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'site sahibi kim': () => { location.href = 'ozgecmisim.html'; },
-        'kim yaptı': () => { location.href = 'ozgecmisim.html'; },
-        'kim yapti': () => { location.href = 'ozgecmisim.html'; },
-        'access': () => { location.href = 'auth.html'; },
-        'login': () => { location.href = 'auth.html'; },
-        'dashboard': () => { location.href = 'dashboard.html'; },
-        'dash': () => { location.href = 'dashboard.html'; },
-        'admin': () => { location.href = 'admin.html'; },
-        'unlock hidden': () => {
-          if (!requireAccess()) return 'login required';
-          const gate = document.getElementById('hidden');
-          gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          unlockGate(gate, true);
-          award(3);
-          return 'hidden layer unlocked';
-        },
-        'level': () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`,
-        'help': () => 'commands: open dossier / run logic / run ash / flow / dart / bartender / barista / oracle / paradox / access / dashboard / unlock hidden',
-        '?': () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, ESC close'
+      const normalizeCommand = (value) => value
+        .toLocaleLowerCase('tr-TR')
+        .trim()
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c')
+        .replace(/^[>\/\\]+/, '')
+        .replace(/[._-]+/g, ' ')
+        .replace(/[^\w\s?]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const goTo = (href) => () => {
+        location.href = href;
       };
+
+      const scrollToOrigin = () => {
+        document.getElementById('origin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveStep(0);
+        return 'origin selected';
+      };
+
+      const unlockHiddenCommand = () => {
+        if (!requireAccess()) return 'login required';
+        const gate = document.getElementById('hidden');
+        gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        unlockGate(gate, true);
+        award(3);
+        return 'hidden layer unlocked';
+      };
+
+      const commandDefinitions = [
+        {
+          command: 'help',
+          description: 'tum kisayol komutlarini listeler',
+          aliases: ['?', 'yardim', 'komutlar', 'commands', 'shortcuts'],
+          action: () => commandHelpText()
+        },
+        {
+          command: 'keys',
+          description: 'klavye kisayollarini gosterir',
+          aliases: ['keyboard', 'hotkeys', 'kisayollar', 'kısayollar'],
+          action: () => keyboardHelpText()
+        },
+        {
+          command: 'home',
+          description: 'anasayfa baslangicina doner',
+          aliases: ['origin', 'start', 'baslangic', 'başlangıç'],
+          action: scrollToOrigin
+        },
+        {
+          command: 'open dossier',
+          description: 'makaleler ve notlar',
+          aliases: ['dossier', 'makaleler', 'makale', 'articles', 'notes'],
+          action: goTo('makaleler.html')
+        },
+        {
+          command: 'run logic',
+          description: 'Cyberpunk Logic oyununu acar',
+          aliases: ['logic', 'cyberpunk logic', 'logic game', 'mantik', 'mantık'],
+          action: goTo('cyberpunk-logic-game.html')
+        },
+        {
+          command: 'run ash',
+          description: 'Ash Runner oyununu acar',
+          aliases: ['ash', 'ash runner', 'scrap', 'brawler'],
+          action: goTo('ash-runner.html')
+        },
+        {
+          command: 'run flow',
+          description: 'Neon River deneyimini acar',
+          aliases: ['flow', 'neon river', 'river'],
+          action: goTo('neon-river.html')
+        },
+        {
+          command: 'dart',
+          description: 'dart skorboard ekranini acar',
+          aliases: ['skorbord', 'scoreboard', 'dart skorbord', 'dart skor', 'scores'],
+          action: goTo('dart-skorbord.html')
+        },
+        {
+          command: 'bartender',
+          description: 'kokteyl asistani',
+          aliases: ['bar', 'cocktail', 'kokteyl'],
+          action: goTo('Bartender.html')
+        },
+        {
+          command: 'barista',
+          description: 'kahve asistani',
+          aliases: ['coffee', 'kahve'],
+          action: goTo('Barista.html')
+        },
+        {
+          command: 'barista v2',
+          description: 'ikinci kahve asistani',
+          aliases: ['barista 2', 'coffee v2', 'kahve v2'],
+          action: goTo('Barista_V2.html')
+        },
+        {
+          command: 'realists bar',
+          description: 'The Realists Bar sayfasi',
+          aliases: ['the realists bar', 'realists'],
+          action: goTo('TheRealistsBar.html')
+        },
+        {
+          command: 'oracle',
+          description: 'The Oracle deneyimi',
+          aliases: ['the oracle', 'kahin', 'kâhin'],
+          action: goTo('TheOracle.html')
+        },
+        {
+          command: 'paradox',
+          description: 'Paradox Terminal sayfasi',
+          aliases: ['paradox terminal', 'terminal'],
+          action: goTo('Paradox_Terminal.html')
+        },
+        {
+          command: 'about',
+          description: 'site sahibinin ozgecmisi',
+          aliases: [
+            'ozgecmis',
+            'özgeçmiş',
+            'cv',
+            'profile',
+            'bu siteyi kim yaptı',
+            'bu siteyi kim yapti',
+            'bu sayfayı kim yaptı',
+            'bu sayfayi kim yapti',
+            'seni kim yaptı',
+            'seni kim yapti',
+            'siteyi kim yaptı',
+            'siteyi kim yapti',
+            'sayfayı kim yaptı',
+            'sayfayi kim yapti',
+            'site sahibi kim',
+            'kim yaptı',
+            'kim yapti'
+          ],
+          action: goTo('ozgecmisim.html')
+        },
+        {
+          command: 'access',
+          description: 'giris ekranini acar',
+          aliases: ['login', 'auth', 'giris', 'giriş'],
+          action: goTo('auth.html')
+        },
+        {
+          command: 'dashboard',
+          description: 'dashboard ekranini acar',
+          aliases: ['dash', 'panel'],
+          action: goTo('dashboard.html')
+        },
+        {
+          command: 'admin',
+          description: 'admin ekranini acar',
+          aliases: ['manage', 'yonetim', 'yönetim'],
+          action: goTo('admin.html')
+        },
+        {
+          command: 'universe',
+          description: 'Universe-2 deneyimini acar',
+          aliases: ['universe 2', 'u2', 'evren'],
+          action: goTo('universe-2.html')
+        },
+        {
+          command: 'manifest',
+          description: 'site manifest dosyasini acar',
+          aliases: ['residue', 'manifest residue'],
+          action: goTo('manifest.json')
+        },
+        {
+          command: 'unlock hidden',
+          description: 'gizli katmani acar',
+          aliases: ['hidden', 'unlock', 'gizli', 'gizli katman'],
+          action: unlockHiddenCommand
+        },
+        {
+          command: 'level',
+          description: 'mevcut erisim seviyesini gosterir',
+          aliases: ['access level', 'seviye', 'status'],
+          action: () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`
+        }
+      ];
+
+      const keyboardHelpText = () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, Ctrl+K command shell, ESC close';
+
+      const commandHelpText = () => [
+        'shortcuts:',
+        ...commandDefinitions.map(item => {
+          const aliases = item.aliases?.length ? ` | ${item.aliases.join(', ')}` : '';
+          return `${item.command}${aliases} - ${item.description}`;
+        }),
+        '',
+        'Bilinmeyen metinler AI kanalina yonlendirilir.'
+      ].join('\n');
+
+      const commandMap = commandDefinitions.reduce((map, item) => {
+        [item.command, ...(item.aliases || [])].forEach(alias => {
+          map[normalizeCommand(alias)] = item.action;
+        });
+        return map;
+      }, Object.create(null));
 
       const isCreatorQuery = (command) => {
         const normalized = command
@@ -2563,7 +2714,7 @@
 
       const runCommand = async (raw) => {
         const query = raw.trim().slice(0, 520);
-        const command = query.toLowerCase();
+        const command = normalizeCommand(query);
         if (!query || commandInFlight) return;
         state.commands += 1;
         if (state.commands >= 3) award(2);
@@ -2572,7 +2723,7 @@
         const action = commandMap[command];
         if (action) {
           const result = action();
-          if (commandOutput) commandOutput.textContent = result || `executing: ${command}`;
+          if (commandOutput) commandOutput.textContent = result || `executing: ${query}`;
           commandInput.value = '';
           return;
         }
