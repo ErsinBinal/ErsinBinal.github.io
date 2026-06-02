@@ -1238,6 +1238,9 @@
       border: 1px solid rgba(0, 255, 102, 0.16);
       background: rgba(0, 0, 0, 0.48);
       color: var(--journey-text);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
       transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
     }
 
@@ -1316,6 +1319,135 @@
       text-transform: uppercase;
     }
 
+    .atlas-grid,
+    .note-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .atlas-node,
+    .archive-tree a,
+    .field-note {
+      border: 1px solid rgba(0, 255, 102, 0.18);
+      background: rgba(0, 0, 0, 0.48);
+      color: var(--journey-text);
+    }
+
+    .atlas-node,
+    .archive-tree a {
+      position: relative;
+      display: grid;
+      gap: 6px;
+      min-height: 88px;
+      padding: 12px;
+      text-decoration: none;
+      overflow: hidden;
+      transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .atlas-node::before,
+    .archive-tree a::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 0 42%, rgba(0, 234, 255, 0.15) 48%, transparent 56%);
+      transform: translateX(-120%);
+      transition: transform 0.45s ease;
+      z-index: 0;
+    }
+
+    .atlas-node:hover,
+    .archive-tree a:hover {
+      border-color: var(--journey-cyan);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(0, 234, 255, 0.16);
+      text-decoration: none;
+      transform: translate3d(3px, -2px, 0);
+    }
+
+    .atlas-node:hover::before,
+    .archive-tree a:hover::before {
+      transform: translateX(120%);
+    }
+
+    .atlas-node span,
+    .atlas-node strong,
+    .atlas-node em,
+    .archive-tree span,
+    .archive-tree strong,
+    .archive-tree em {
+      position: relative;
+      z-index: 1;
+      font-family: var(--font-display);
+      font-style: normal;
+      line-height: 1.15;
+    }
+
+    .atlas-node span,
+    .archive-tree span,
+    .field-note span {
+      color: var(--journey-cyan);
+      font-family: var(--font-display);
+      text-transform: uppercase;
+    }
+
+    .atlas-node strong,
+    .archive-tree strong {
+      color: var(--journey-green);
+      font-weight: 400;
+    }
+
+    .atlas-node em,
+    .archive-tree em {
+      color: var(--journey-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .atlas-node.is-visited {
+      border-color: rgba(0, 234, 255, 0.58);
+      box-shadow: inset 0 0 24px rgba(0, 234, 255, 0.08);
+    }
+
+    .atlas-node.is-visited em {
+      color: var(--journey-cyan);
+    }
+
+    .atlas-node.is-locked {
+      opacity: 0.56;
+      filter: grayscale(0.8);
+    }
+
+    .atlas-node.is-visited.is-locked {
+      opacity: 1;
+      filter: none;
+    }
+
+    .archive-tree {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .archive-tree a {
+      min-height: 72px;
+    }
+
+    .field-note {
+      min-height: 118px;
+      padding: 12px;
+    }
+
+    .field-note p {
+      margin: 8px 0 0;
+      color: var(--journey-text);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
     .status-line {
       display: flex;
       flex-wrap: wrap;
@@ -1351,7 +1483,7 @@
       }
 
       .rail-track {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(8, minmax(0, 1fr));
         margin: 0 14px;
       }
 
@@ -1389,7 +1521,10 @@
       .journey-gate,
       .command-deck,
       .route-grid,
-      .hypothesis-grid {
+      .hypothesis-grid,
+      .atlas-grid,
+      .archive-tree,
+      .note-grid {
         grid-template-columns: 1fr;
       }
 
@@ -1949,7 +2084,10 @@
           <a class="rail-link" href="#index" data-step="1"><span>01</span><em>Index</em></a>
           <a class="rail-link" href="#lab" data-step="2"><span>02</span><em>Lab</em></a>
           <a class="rail-link" href="#trace" data-step="3"><span>03</span><em>Trace</em></a>
-          <a class="rail-link" href="#hidden" data-step="4"><span>04</span><em>Hidden</em></a>
+          <a class="rail-link" href="#map" data-step="4"><span>04</span><em>Map</em></a>
+          <a class="rail-link" href="#archive" data-step="5"><span>05</span><em>Archive</em></a>
+          <a class="rail-link" href="#notes" data-step="6"><span>06</span><em>Notes</em></a>
+          <a class="rail-link" href="#hidden" data-step="7"><span>07</span><em>Hidden</em></a>
         </nav>
         <div class="rail-status">live route</div>
       </aside>
@@ -2104,8 +2242,99 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage" id="hidden" data-step="4">
+        <article class="journey-gate stage signal-atlas" id="map" data-step="4">
           <div class="gate-index">04</div>
+          <div class="gate-main">
+            <p class="gate-kicker">Signal Map / discovered routes</p>
+            <h2>Sinyal haritası</h2>
+            <p class="gate-copy">Sayfa artık yalnızca link listesi değil; gezildikçe parlayan bir rota ağı. Komut satırında <strong>map</strong> yazarak buraya dönebilirsin.</p>
+            <div class="atlas-grid" aria-label="Convivium sinyal haritası">
+              <a class="atlas-node" href="#origin" data-signal-node="origin"><span>00</span><strong>Origin</strong><em>entry</em></a>
+              <a class="atlas-node" href="#index" data-signal-node="index"><span>01</span><strong>Index</strong><em>dossier</em></a>
+              <a class="atlas-node" href="#lab" data-signal-node="lab"><span>02</span><strong>Lab</strong><em>play</em></a>
+              <a class="atlas-node" href="#trace" data-signal-node="trace"><span>03</span><strong>Trace</strong><em>thinking</em></a>
+              <a class="atlas-node" href="#archive" data-signal-node="archive"><span>05</span><strong>Archive</strong><em>files</em></a>
+              <a class="atlas-node" href="#notes" data-signal-node="notes"><span>06</span><strong>Notes</strong><em>micro</em></a>
+              <a class="atlas-node is-locked" href="#hidden" data-signal-node="hidden"><span>07</span><strong>Hidden</strong><em>locked</em></a>
+            </div>
+          </div>
+          <aside class="gate-drawer" aria-label="Sinyal haritası menüsü">
+            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
+            <div class="drawer-menu">
+              <h3>Map commands</h3>
+              <button class="drawer-link command-trigger" type="button" data-command="whoami"><span>id</span>whoami</button>
+              <button class="drawer-link command-trigger" type="button" data-command="log"><span>lg</span>log</button>
+              <button class="drawer-link command-trigger" type="button" data-command="random"><span>rd</span>random</button>
+            </div>
+          </aside>
+        </article>
+
+        <article class="journey-gate stage archive-room" id="archive" data-step="5">
+          <div class="gate-index">05</div>
+          <div class="gate-main">
+            <p class="gate-kicker">Archive Room / file system</p>
+            <h2>Arşiv odası</h2>
+            <p class="gate-copy">Projeler düz kartlar değil, klasörler gibi davranır. Her klasör başka bir dikkat biçimine açılır.</p>
+            <div class="archive-tree" aria-label="Convivium arşiv ağacı">
+              <a href="makaleler.html"><span>/notes</span><strong>pricing.strategy</strong><em>open dossier</em></a>
+              <a href="cyberpunk-logic-game.html"><span>/games</span><strong>cyberpunk.logic</strong><em>run logic</em></a>
+              <a href="ash-runner.html"><span>/games</span><strong>ash.runner</strong><em>run ash</em></a>
+              <a href="Bartender.html"><span>/rituals</span><strong>bartender.mix</strong><em>bar</em></a>
+              <a href="Barista.html"><span>/rituals</span><strong>barista.brew</strong><em>coffee</em></a>
+              <a href="TheOracle.html"><span>/signals</span><strong>oracle.ask</strong><em>open oracle</em></a>
+              <a href="Paradox_Terminal.html"><span>/terminals</span><strong>paradox.run</strong><em>paradox</em></a>
+              <a href="Candy_Pop/"><span>/commerce</span><strong>candy.pop</strong><em>builder</em></a>
+            </div>
+          </div>
+          <aside class="gate-drawer" aria-label="Arşiv gizli menüsü">
+            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
+            <div class="drawer-menu">
+              <h3>Archive commands</h3>
+              <button class="drawer-link command-trigger" type="button" data-command="archive"><span>ar</span>archive</button>
+              <button class="drawer-link command-trigger" type="button" data-command="ritual"><span>rt</span>ritual</button>
+              <button class="drawer-link command-trigger" type="button" data-command="quote"><span>qt</span>quote</button>
+            </div>
+          </aside>
+        </article>
+
+        <article class="journey-gate stage field-notes" id="notes" data-step="6">
+          <div class="gate-index">06</div>
+          <div class="gate-main">
+            <p class="gate-kicker">Field Notes / low latency thoughts</p>
+            <h2>Saha notları</h2>
+            <p class="gate-copy">Uzun yazıya dönüşmeden önce duran kısa fikirler. Komut satırında <strong>note</strong>, <strong>signal</strong> veya <strong>ritual</strong> yazınca bu katman cevap verir.</p>
+            <div class="note-grid" aria-label="Kısa saha notları">
+              <article class="field-note">
+                <span>pricing</span>
+                <p>Fiyat, ürünün değeri kadar müşterinin karar yorgunluğunu da taşır.</p>
+              </article>
+              <article class="field-note">
+                <span>ai workflow</span>
+                <p>İyi otomasyon, insanı sistemden silmez; yanlış anda yorulmasını engeller.</p>
+              </article>
+              <article class="field-note">
+                <span>interface</span>
+                <p>Bir arayüz, kullanıcıyı hızlandırmadan önce neyi önemseyeceğini öğretir.</p>
+              </article>
+              <article class="field-note">
+                <span>ritual</span>
+                <p>Kahve, kokteyl, oyun: küçük tekrarlar dikkati yeniden ayarlar.</p>
+              </article>
+            </div>
+          </div>
+          <aside class="gate-drawer" aria-label="Saha notları gizli menüsü">
+            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
+            <div class="drawer-menu">
+              <h3>Note commands</h3>
+              <button class="drawer-link command-trigger" type="button" data-command="note"><span>nt</span>note</button>
+              <button class="drawer-link command-trigger" type="button" data-command="signal"><span>sg</span>signal</button>
+              <button class="drawer-link command-trigger" type="button" data-command="clear"><span>cl</span>clear</button>
+            </div>
+          </aside>
+        </article>
+
+        <article class="journey-gate stage" id="hidden" data-step="7">
+          <div class="gate-index">07</div>
           <div class="gate-main">
             <p class="gate-kicker">Hidden / low frequency room</p>
             <h2>Arka oda</h2>
@@ -2135,7 +2364,7 @@
           </aside>
         </article>
 
-        <footer class="site-footer stage status-line" data-step="4">
+        <footer class="site-footer stage status-line" data-step="7">
           <span class="status-pill">STATUS</span>
           <p>selective / online / not optimized for everyone</p>
         </footer>
@@ -2211,7 +2440,7 @@
         'Bir sistem önce davranış üretir.',
         'Gizli kapı genelde menü değildir.'
       ];
-      const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'HIDDEN'];
+      const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'MAP', 'ARCHIVE', 'NOTES', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
       const oracleEndpoint = 'https://text.pollinations.ai/';
@@ -2232,6 +2461,11 @@
         'terminal hatta. cevabi bekliyorum...'
       ];
       const state = JSON.parse(localStorage.getItem(stateKey) || '{"visits":0,"level":0,"opened":[],"unlocked":[],"commands":0}');
+      state.opened = Array.isArray(state.opened) ? state.opened : [];
+      state.unlocked = Array.isArray(state.unlocked) ? state.unlocked : [];
+      state.commandLog = Array.isArray(state.commandLog) ? state.commandLog.slice(-8) : [];
+      state.rituals = Number.isFinite(state.rituals) ? state.rituals : 0;
+      state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       let signalIndex = 0;
@@ -2348,6 +2582,7 @@
 
         updateAccess();
         updateAllGateButtons();
+        renderProtocolSurfaces();
       };
 
       const award = (amount = 1) => {
@@ -2373,12 +2608,25 @@
         if (Number(step) > state.level) award(Number(step));
       };
 
+      const renderProtocolSurfaces = () => {
+        const opened = new Set(['origin', ...(state.opened || [])]);
+        const unlocked = new Set(state.unlocked || []);
+        document.querySelectorAll('[data-signal-node]').forEach(node => {
+          const id = node.dataset.signalNode;
+          const visible = opened.has(id) || unlocked.has(id);
+          node.classList.toggle('is-visited', visible);
+          node.classList.toggle('is-locked', id === 'hidden' && !unlocked.has('hidden'));
+          const label = node.querySelector('em');
+          if (label && visible) label.textContent = id === 'hidden' && !unlocked.has('hidden') ? 'seen' : 'online';
+        });
+      };
+
       const updateGateButton = (gate) => {
         const button = gate.querySelector('.gate-toggle');
         if (!button) return;
         const unlocked = gate.classList.contains('is-unlocked');
         const open = gate.classList.contains('is-open');
-        button.textContent = !authState.granted ? 'ACCESS DENIED' : open ? 'Collapse' : 'Open';
+        button.textContent = !authState.granted && !unlocked ? 'ACCESS DENIED' : open ? 'Collapse' : 'Open';
         button.setAttribute('aria-expanded', String(open));
       };
 
@@ -2391,6 +2639,7 @@
         if ((state.unlocked || []).length >= 3) award(3);
         else award(Math.max(state.level, 1));
         persist();
+        renderProtocolSurfaces();
         updateGateButton(gate);
         if (consoleLine) consoleLine.textContent = `${gate.id} access granted`;
         if (microOracle) microOracle.textContent = `${gate.id}: locked surface removed`;
@@ -2401,7 +2650,7 @@
         button.textContent = 'ACCESS DENIED';
         button.addEventListener('click', () => {
           const gate = button.closest('.journey-gate');
-          if (!requireAccess()) return;
+          if (!authState.granted && !gate.classList.contains('is-unlocked') && !requireAccess()) return;
           if (!gate.classList.contains('is-unlocked')) {
             unlockGate(gate, true);
             return;
@@ -2423,6 +2672,7 @@
             if (entry.target.id) {
               state.opened = [...new Set([...(state.opened || []), entry.target.id])];
               persist();
+              renderProtocolSurfaces();
             }
           });
         }, { threshold: 0.14, rootMargin: '-8% 0px -18% 0px' });
@@ -2471,19 +2721,147 @@
         location.href = href;
       };
 
+      const scrollToSection = (id, label = id) => {
+        const target = document.getElementById(id);
+        if (!target) return `${label} not found`;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        state.opened = [...new Set([...(state.opened || []), id])];
+        persist();
+        renderProtocolSurfaces();
+        setActiveStep(target.dataset.step || 0);
+        return `${label} selected`;
+      };
+
       const scrollToOrigin = () => {
-        document.getElementById('origin')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setActiveStep(0);
-        return 'origin selected';
+        return scrollToSection('origin', 'origin');
+      };
+
+      const quickSignals = [
+        'signal: karar gecikmesi dusuyor; once kucuk varsayimi test et.',
+        'signal: rota acik. Bir sonraki iyi hamle, fazla aciklama istemez.',
+        'signal: sistem cevap vermeden once davranisi gosterir.',
+        'signal: harita tamam degil; eksik nokta dikkatin girdigi yerdir.',
+        'signal: hiz iyi, ama sadece dogru soruyu tasiyorsa.'
+      ];
+
+      const fieldNoteLines = [
+        'note: Fiyatlandirma, musteriye neyi ertelemeyecegini soyleyen sessiz arayuzdur.',
+        'note: AI workflow degeri, guzel metinden cok karar tekrarini azaltmasinda.',
+        'note: Oyun, menuye sigmayan bir geri bildirim sistemidir.',
+        'note: Ritual, dikkati sifirlayan kucuk bir protokoldur.'
+      ];
+
+      const ritualLines = [
+        'ritual: Bir projeyi ac, 90 saniye bak, tek bir iyilestirme notu cikar.',
+        'ritual: Dossier oku; sonra ayni fikri bir oyun mekanigi gibi yeniden adlandir.',
+        'ritual: Oracle kanalina bir soru sor, cevaptan sadece bir fiil sec.',
+        'ritual: Dashboard ac; sayilardan cok hangi kararlarin eksik olduguna bak.',
+        'ritual: Bir kahve protokolu sec; bekleme suresince tek cumlelik saha notu yaz.'
+      ];
+
+      const quoteLines = [
+        'quote: "Bir sistem once davranis uretir."',
+        'quote: "Menu degil, esik."',
+        'quote: "Deger, karar gecikmesini dusurmesinde."',
+        'quote: "Her sey menude olmak zorunda degil."'
+      ];
+
+      const randomRoutes = [
+        ['makaleler.html', 'dossier'],
+        ['cyberpunk-logic-game.html', 'logic'],
+        ['ash-runner.html', 'ash runner'],
+        ['neon-river.html', 'neon river'],
+        ['Bartender.html', 'bartender'],
+        ['Barista.html', 'barista'],
+        ['TheOracle.html', 'oracle room'],
+        ['Paradox_Terminal.html', 'paradox terminal'],
+        ['dart-skorbord.html', 'dart skorbord']
+      ];
+
+      const sample = (items) => items[Math.floor(Math.random() * items.length)];
+
+      const registerProtocolStep = (step) => {
+        state.easterTrail = [...(state.easterTrail || []), step].slice(-4);
+        persist();
+      };
+
+      const hasEasterKey = () => {
+        const trail = (state.easterTrail || []).slice(-3).join('>');
+        return trail === 'signal>oracle>manifest';
       };
 
       const unlockHiddenCommand = () => {
-        if (!requireAccess()) return 'login required';
+        const ritualKeyAccepted = hasEasterKey();
+        registerProtocolStep('unlock');
+        if (!authState.granted && !ritualKeyAccepted) {
+          if (!requireAccess()) return 'login required';
+        }
         const gate = document.getElementById('hidden');
         gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         unlockGate(gate, true);
         award(3);
-        return 'hidden layer unlocked';
+        return ritualKeyAccepted ? 'hidden layer unlocked / ritual key accepted' : 'hidden layer unlocked';
+      };
+
+      const signalCommand = () => {
+        registerProtocolStep('signal');
+        const line = sample(quickSignals);
+        if (consoleLine) consoleLine.textContent = line.replace(/^signal: /, '');
+        if (microOracle) microOracle.textContent = 'signal captured';
+        return line;
+      };
+
+      const oracleCommand = () => {
+        registerProtocolStep('oracle');
+        const line = sample(oracleLines);
+        if (microOracle) microOracle.textContent = line;
+        return `oracle: ${line}`;
+      };
+
+      const manifestCommand = () => {
+        registerProtocolStep('manifest');
+        return 'manifest: residue indexed. devam etmek icin "unlock hidden" yaz veya "open manifest" ile dosyayi ac.';
+      };
+
+      const whoamiCommand = () => {
+        const level = levels[Math.min(state.level, levels.length - 1)];
+        const auth = authState.granted ? `granted / ${authState.user?.email || 'user'}` : authState.checked ? 'guest' : 'checking';
+        return [
+          `identity: ${auth}`,
+          `access level: ${level}`,
+          `visits: ${state.visits}`,
+          `commands: ${state.commands}`,
+          `opened: ${(state.opened || []).length} nodes`
+        ].join('\n');
+      };
+
+      const logCommand = () => {
+        const commands = (state.commandLog || []).slice(-6).map(item => `cmd/${item}`).join('\n') || 'cmd/empty';
+        const opened = (state.opened || []).slice(-6).map(item => `node/${item}`).join('\n') || 'node/origin';
+        return `recent commands:\n${commands}\n\nrecent nodes:\n${opened}`;
+      };
+
+      const clearCommand = () => {
+        if (commandOutput) commandOutput.textContent = '';
+        return '';
+      };
+
+      const ritualCommand = () => {
+        state.rituals += 1;
+        if (state.rituals >= 2) award(Math.max(state.level, 2));
+        persist();
+        return sample(ritualLines);
+      };
+
+      const noteCommand = () => {
+        scrollToSection('notes', 'field notes');
+        return sample(fieldNoteLines);
+      };
+
+      const randomCommand = () => {
+        const [href, label] = sample(randomRoutes);
+        location.href = href;
+        return `random route: ${label}`;
       };
 
       const commandDefinitions = [
@@ -2500,6 +2878,84 @@
           action: () => keyboardHelpText()
         },
         {
+          command: 'whoami',
+          description: 'ziyaretci, access ve node durumunu gosterir',
+          aliases: ['id', 'me', 'status'],
+          action: whoamiCommand
+        },
+        {
+          command: 'map',
+          description: 'sinyal haritasina gider',
+          aliases: ['signal map', 'harita', 'atlas'],
+          action: () => scrollToSection('map', 'signal map')
+        },
+        {
+          command: 'archive',
+          description: 'arsiv odasina gider',
+          aliases: ['archive room', 'arsiv', 'arşiv', 'files'],
+          action: () => scrollToSection('archive', 'archive room')
+        },
+        {
+          command: 'notes',
+          description: 'saha notlari katmanina gider',
+          aliases: ['field notes', 'notlar'],
+          action: () => scrollToSection('notes', 'field notes')
+        },
+        {
+          command: 'log',
+          description: 'son komutlari ve gezilen node listesini gosterir',
+          aliases: ['history', 'trace log'],
+          action: logCommand
+        },
+        {
+          command: 'clear',
+          description: 'komut ciktisini temizler',
+          aliases: ['cls', 'reset output'],
+          action: clearCommand
+        },
+        {
+          command: 'random',
+          description: 'rastgele bir deneyim acar',
+          aliases: ['shuffle', 'surprise', 'rastgele'],
+          action: randomCommand
+        },
+        {
+          command: 'signal',
+          description: 'kisa yerel sinyal uretir',
+          aliases: ['ping', 'pulse'],
+          action: signalCommand
+        },
+        {
+          command: 'oracle',
+          description: 'yerel oracle sinyali verir',
+          aliases: ['omen', 'kahin', 'kâhin'],
+          action: oracleCommand
+        },
+        {
+          command: 'manifest',
+          description: 'manifest izini terminalde indeksler',
+          aliases: ['residue', 'manifest residue'],
+          action: manifestCommand
+        },
+        {
+          command: 'ritual',
+          description: 'kucuk bir kesif gorevi verir',
+          aliases: ['gorev', 'görev', 'task'],
+          action: ritualCommand
+        },
+        {
+          command: 'quote',
+          description: 'Convivium tonunda kisa alinti verir',
+          aliases: ['alinti', 'alıntı'],
+          action: () => sample(quoteLines)
+        },
+        {
+          command: 'note',
+          description: 'rastgele saha notu verir',
+          aliases: ['field note', 'micro note'],
+          action: noteCommand
+        },
+        {
           command: 'home',
           description: 'anasayfa baslangicina doner',
           aliases: ['origin', 'start', 'baslangic', 'başlangıç'],
@@ -2508,7 +2964,7 @@
         {
           command: 'open dossier',
           description: 'makaleler ve notlar',
-          aliases: ['dossier', 'makaleler', 'makale', 'articles', 'notes'],
+          aliases: ['dossier', 'makaleler', 'makale', 'articles'],
           action: goTo('makaleler.html')
         },
         {
@@ -2560,9 +3016,9 @@
           action: goTo('TheRealistsBar.html')
         },
         {
-          command: 'oracle',
-          description: 'The Oracle deneyimi',
-          aliases: ['the oracle', 'kahin', 'kâhin'],
+          command: 'open oracle',
+          description: 'The Oracle deneyimini acar',
+          aliases: ['the oracle', 'oracle page'],
           action: goTo('TheOracle.html')
         },
         {
@@ -2620,9 +3076,9 @@
           action: goTo('universe-2.html')
         },
         {
-          command: 'manifest',
+          command: 'open manifest',
           description: 'site manifest dosyasini acar',
-          aliases: ['residue', 'manifest residue'],
+          aliases: ['manifest file'],
           action: goTo('manifest.json')
         },
         {
@@ -2634,12 +3090,12 @@
         {
           command: 'level',
           description: 'mevcut erisim seviyesini gosterir',
-          aliases: ['access level', 'seviye', 'status'],
+          aliases: ['access level', 'seviye'],
           action: () => `access level: ${levels[Math.min(state.level, levels.length - 1)]}`
         }
       ];
 
-      const keyboardHelpText = () => 'keyboard: D dossier, L logic, B ash, F flow, A access, ? command shell, Ctrl+K command shell, ESC close';
+      const keyboardHelpText = () => 'keyboard: D dossier, L logic, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, ESC close';
 
       const commandHelpText = () => [
         'shortcuts:',
@@ -2717,13 +3173,14 @@
         const command = normalizeCommand(query);
         if (!query || commandInFlight) return;
         state.commands += 1;
+        state.commandLog = [...(state.commandLog || []), query].slice(-8);
         if (state.commands >= 3) award(2);
         persist();
         pulse(390, 0.055);
         const action = commandMap[command];
         if (action) {
           const result = action();
-          if (commandOutput) commandOutput.textContent = result || `executing: ${query}`;
+          if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
           commandInput.value = '';
           return;
         }
@@ -2767,6 +3224,13 @@
         if (event.key === 'Escape') closeCommand();
       });
 
+      document.querySelectorAll('.command-trigger').forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          openCommand();
+          runCommand(trigger.dataset.command || '');
+        });
+      });
+
       commandLaunch?.addEventListener('click', openCommand);
       commandClose?.addEventListener('click', closeCommand);
       accessChipButton?.addEventListener('click', () => {
@@ -2808,6 +3272,8 @@
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
         else if (key === 'b') location.href = 'ash-runner.html';
         else if (key === 'f') location.href = 'neon-river.html';
+        else if (key === 'm') scrollToSection('map', 'signal map');
+        else if (key === 'n') scrollToSection('notes', 'field notes');
         else if (key === 'a') location.href = 'auth.html';
       });
 
@@ -2862,7 +3328,7 @@
       if (state.unlocked?.length) {
         state.unlocked.forEach(id => {
           const gate = document.getElementById(id);
-          if (gate && authState.granted) {
+          if (gate) {
             gate.classList.add('is-unlocked');
             updateGateButton(gate);
           }
@@ -2872,6 +3338,7 @@
         state.opened.forEach(id => document.getElementById(id)?.classList.add('is-visited'));
       }
       if (state.visits > 1 && consoleLine) consoleLine.textContent = 'returning signal detected';
+      renderProtocolSurfaces();
       persist();
       resizeCanvas();
       drawMap();
