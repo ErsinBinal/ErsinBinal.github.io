@@ -527,7 +527,7 @@
         if (!nova) return 'nova: module not ready';
         if (action === 'summon') {
           nova.summon();
-          return 'nova: companion online. click NOVA or type nova scan / nova rift / nova bloom / nova mirror.';
+          return 'nova: companion online. try nova scan / nova meteor / nova blackhole / nova deathstar.';
         }
         if (action === 'off') {
           nova.deactivate();
@@ -636,6 +636,24 @@
           description: 'NOVA sinyalini dusuk guce alir',
           aliases: ['nova dim'],
           action: () => novaCommand('sleep')
+        },
+        {
+          command: 'nova meteor',
+          description: 'NOVA meteor formuyla Bugy etkilesimi baslatir',
+          aliases: ['meteor nova', 'nova meteorit', 'nova asteroid', 'nova impact', 'nova carpis', 'nova çarpış'],
+          action: () => novaCommand('meteor')
+        },
+        {
+          command: 'nova blackhole',
+          description: 'NOVA karadelik formuyla Bugy etkilesimi baslatir',
+          aliases: ['nova black hole', 'blackhole nova', 'nova karadelik', 'nova kara delik', 'kara delik nova'],
+          action: () => novaCommand('blackhole')
+        },
+        {
+          command: 'nova deathstar',
+          description: 'NOVA orbital lazer sekansini baslatir',
+          aliases: ['nova death star', 'nova deatstar', 'deatstar nova', 'deathstar nova', 'nova laser', 'nova lazer', 'nova beam'],
+          action: () => novaCommand('deathstar')
         },
         {
           command: 'nova off',
@@ -848,6 +866,9 @@
         '',
         'system:',
         'whoami, log, clear, random, level, access, dashboard, nova, bugy',
+        '',
+        'nova ops:',
+        'nova scan, nova meteor, nova blackhole, nova deathstar, nova off',
         '',
         'hidden:',
         'signal -> oracle -> manifest -> unlock hidden, clues',

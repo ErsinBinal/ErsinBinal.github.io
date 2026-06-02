@@ -3,15 +3,19 @@
 
   const stateKey = 'convivium.nova.state';
   const activeKey = 'convivium.nova.active';
-  const actions = ['scan', 'rift', 'bloom', 'mirror', 'perch', 'sleep'];
+  const actions = ['scan', 'rift', 'bloom', 'mirror', 'perch', 'sleep', 'meteor', 'blackhole', 'deathstar'];
   const actionLines = {
     scan: 'nova scan: active panels mapped',
     rift: 'nova rift: route memory folded',
     bloom: 'nova bloom: field notes charged',
     mirror: 'nova mirror: cursor shadow copied',
     perch: 'nova perch: nearest gate selected',
-    sleep: 'nova sleep: signal dimmed'
+    sleep: 'nova sleep: signal dimmed',
+    meteor: 'nova meteor: impact vector locked on bugy',
+    blackhole: 'nova blackhole: event horizon opening',
+    deathstar: 'nova deathstar: orbital laser charging'
   };
+  const interactionActions = new Set(['meteor', 'blackhole', 'deathstar']);
 
   const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -81,6 +85,7 @@
       raf: 0,
       energy: 0.62,
       phase: Math.random() * Math.PI * 2,
+      sequence: null,
       particles: [],
       shards: Array.from({ length: 9 }, (_, index) => ({
         angle: (Math.PI * 2 * index) / 9,
@@ -198,7 +203,160 @@
       });
     };
 
+    const findBugyTarget = () => {
+      const elementSelectors = [
+        { selector: '#neon-sheep', engine: 'classic' },
+        { selector: '#bugy-v2-actor, .bugy-v2-actor', engine: 'v2' }
+      ];
+      for (const item of elementSelectors) {
+        const { selector, engine } = item;
+        const element = document.querySelector(selector);
+        if (!element || element.hidden) continue;
+        const rect = element.getBoundingClientRect();
+        if (rect.width < 8 || rect.height < 8) continue;
+        return {
+          engine,
+          element,
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          rect,
+          restore: {
+            opacity: element.style.opacity,
+            filter: element.style.filter,
+            transform: element.style.transform,
+            visibility: element.style.visibility,
+            ariaHidden: element.getAttribute('aria-hidden')
+          }
+        };
+      }
+
+      const v3 = window.BugyV3?.getState?.();
+      if (v3?.active) {
+        return {
+          engine: 'v3',
+          x: 18 + ((Number(v3.x) || 120) / 320) * Math.max(1, window.innerWidth - 92),
+          y: window.innerHeight - 82 + (((Number(v3.y) || 136) - 136) * 0.62),
+          restore: { wasActive: true }
+        };
+      }
+
+      window.Bugy?.summon?.();
+      const fallback = document.getElementById('neon-sheep');
+      if (fallback) {
+        const rect = fallback.getBoundingClientRect();
+        return {
+          engine: 'classic',
+          element: fallback,
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          rect,
+          restore: {
+            opacity: fallback.style.opacity,
+            filter: fallback.style.filter,
+            transform: fallback.style.transform,
+            visibility: fallback.style.visibility,
+            ariaHidden: fallback.getAttribute('aria-hidden')
+          }
+        };
+      }
+
+      return {
+        engine: 'virtual',
+        x: window.innerWidth * 0.5,
+        y: window.innerHeight - 82,
+        restore: {}
+      };
+    };
+
+    const setBugyHidden = (target, hidden = true) => {
+      if (target.engine === 'v3') {
+        if (hidden) window.BugyV3?.deactivate?.();
+        else window.BugyV3?.activate?.();
+        return;
+      }
+      if (!target.element) return;
+      target.element.style.opacity = hidden ? '0' : target.restore.opacity || '';
+      target.element.style.visibility = hidden ? 'hidden' : target.restore.visibility || '';
+      if (hidden) target.element.setAttribute('aria-hidden', 'true');
+      else if (target.restore.ariaHidden === null) target.element.removeAttribute('aria-hidden');
+      else target.element.setAttribute('aria-hidden', target.restore.ariaHidden);
+    };
+
+    const setBugyAsh = (target, ash = true) => {
+      if (!target.element) return;
+      target.element.classList.toggle('is-ashed', ash);
+      target.element.style.filter = ash
+        ? 'grayscale(1) brightness(0.48) drop-shadow(0 0 16px rgba(245, 255, 107, 0.42))'
+        : target.restore.filter || '';
+    };
+
+    const restoreBugy = (target) => {
+      if (!target) return;
+      if (target.engine === 'v3') {
+        if (target.restore.wasActive) window.BugyV3?.activate?.();
+        return;
+      }
+      if (!target.element) return;
+      target.element.classList.remove('is-ashed');
+      target.element.style.opacity = target.restore.opacity || '';
+      target.element.style.filter = target.restore.filter || '';
+      target.element.style.transform = target.restore.transform || '';
+      target.element.style.visibility = target.restore.visibility || '';
+      if (target.restore.ariaHidden === null) target.element.removeAttribute('aria-hidden');
+      else target.element.setAttribute('aria-hidden', target.restore.ariaHidden);
+    };
+
+    const burst = (x, y, count, colors, speed = 2, life = 900) => {
+      for (let index = 0; index < count; index += 1) {
+        const angle = (Math.PI * 2 * index) / count + rand(-0.18, 0.18);
+        const velocity = rand(0.18, 0.72) * speed;
+        state.particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * velocity,
+          vy: Math.sin(angle) * velocity,
+          life: rand(life * 0.48, life),
+          maxLife: life,
+          color: colors[index % colors.length],
+          size: rand(1.5, 5.6)
+        });
+      }
+    };
+
+    const startInteraction = (type) => {
+      const now = performance.now();
+      if (state.sequence) restoreBugy(state.sequence.target);
+      const target = findBugyTarget();
+      state.sequence = {
+        type,
+        start: now,
+        duration: type === 'blackhole' ? 4300 : type === 'deathstar' ? 3400 : 3000,
+        target,
+        impactDone: false,
+        hideDone: false,
+        restoreDone: false,
+        ashDone: false,
+        fromX: type === 'deathstar' ? clamp(target.x + 240, 88, window.innerWidth - 92) : clamp(target.x - 360, 52, window.innerWidth - 52),
+        fromY: type === 'meteor' ? -90 : clamp(target.y - 190, 56, window.innerHeight * 0.42),
+        stationX: clamp(target.x + 260, 96, window.innerWidth - 96),
+        stationY: clamp(target.y - 230, 72, window.innerHeight * 0.42),
+        shipX: -120,
+        shipY: clamp(target.y - 160, 64, window.innerHeight * 0.45)
+      };
+      state.mode = type;
+      state.modeUntil = now + state.sequence.duration;
+      state.energy = 1;
+      state.x = state.sequence.fromX;
+      state.y = state.sequence.fromY;
+      setStatus(`nova / ${type}`);
+      if (consoleLine) consoleLine.textContent = actionLines[type];
+      pushEcho(type.toUpperCase(), target.x, target.y - 54);
+      dispatch();
+      return true;
+    };
+
     const triggerMode = (mode, forced = false) => {
+      if (interactionActions.has(mode)) return startInteraction(mode);
       if (!forced && ['rift', 'bloom', 'mirror', 'scan'].includes(state.mode)) return false;
       state.mode = mode;
       state.modeUntil = performance.now() + (mode === 'sleep' ? 2600 : mode === 'perch' ? 1900 : 2300);
@@ -226,6 +384,7 @@
     };
 
     const updateTargets = (now) => {
+      if (state.sequence) return;
       const route = hudRoute?.textContent || 'ORIGIN';
       if (route !== state.lastRoute) {
         state.lastRoute = route;
@@ -262,6 +421,7 @@
     };
 
     const updatePhysics = (dt) => {
+      if (state.sequence) return;
       const pull = state.mode === 'sleep' ? 0.012 : state.mode === 'rift' ? 0.032 : 0.022;
       state.vx = ease(state.vx, (state.targetX - state.x) * pull, 0.08);
       state.vy = ease(state.vy, (state.targetY - state.y) * pull, 0.08);
@@ -271,6 +431,78 @@
       state.x = safe.x;
       state.y = safe.y;
       state.energy = clamp(state.energy - dt * 0.000035, 0.34, 1);
+    };
+
+    const updateSequence = (now) => {
+      if (!state.sequence) return;
+      const sequence = state.sequence;
+      const target = sequence.target;
+      const progress = clamp((now - sequence.start) / sequence.duration, 0, 1);
+
+      if (sequence.type === 'meteor') {
+        const impactPoint = 0.62;
+        if (progress < impactPoint) {
+          const p = progress / impactPoint;
+          const curve = p * p;
+          state.x = ease(sequence.fromX, target.x, curve);
+          state.y = ease(sequence.fromY, target.y, curve);
+          burst(state.x - state.vx * 4, state.y - state.vy * 4, 2, [palette.amber, '#ff5a1f', palette.pink], 0.75, 420);
+        } else {
+          state.x = target.x;
+          state.y = target.y;
+          if (!sequence.impactDone) {
+            sequence.impactDone = true;
+            setBugyAsh(target, true);
+            burst(target.x, target.y, 92, [palette.amber, '#ff6b1a', palette.pink, palette.cyan], 3.2, 1300);
+            pushEcho('IMPACT', target.x + 18, target.y - 48);
+            if (consoleLine) consoleLine.textContent = 'nova meteor impact: bugy blast radius reached';
+          }
+        }
+      } else if (sequence.type === 'blackhole') {
+        state.x = ease(sequence.fromX, target.x, clamp(progress * 2.1, 0, 1));
+        state.y = ease(sequence.fromY, target.y - 18, clamp(progress * 2.1, 0, 1));
+        if (progress > 0.28 && !sequence.hideDone) {
+          sequence.hideDone = true;
+          setBugyHidden(target, true);
+          burst(target.x, target.y, 70, [palette.cyan, palette.pink, '#050505', palette.green], 2.4, 1500);
+          if (consoleLine) consoleLine.textContent = 'event horizon swallowed bugy';
+        }
+        if (progress > 0.68) {
+          sequence.shipX = ease(sequence.shipX, target.x - 34, 0.045);
+          sequence.shipY = ease(sequence.shipY, target.y - 92, 0.035);
+        }
+        if (progress > 0.82 && !sequence.restoreDone) {
+          sequence.restoreDone = true;
+          setBugyHidden(target, false);
+          burst(target.x, target.y - 18, 58, [palette.green, palette.cyan, palette.amber], 1.8, 980);
+          pushEcho('RE-ENTRY', target.x + 22, target.y - 68);
+          if (consoleLine) consoleLine.textContent = 'bugy returned by nova shuttle';
+        }
+      } else if (sequence.type === 'deathstar') {
+        state.x = ease(state.x, sequence.stationX, 0.08);
+        state.y = ease(state.y, sequence.stationY, 0.08);
+        if (progress > 0.44 && progress < 0.62) {
+          burst(target.x, target.y, 3, [palette.pink, palette.amber, palette.cyan], 1.2, 520);
+        }
+        if (progress > 0.54 && !sequence.ashDone) {
+          sequence.ashDone = true;
+          setBugyAsh(target, true);
+          burst(target.x, target.y, 64, [palette.amber, '#d8d8d8', palette.pink], 2.1, 1200);
+          pushEcho('ASHED', target.x + 18, target.y - 44);
+          if (consoleLine) consoleLine.textContent = 'nova deathstar beam converted bugy to ash';
+        }
+      }
+
+      if (progress >= 1) {
+        restoreBugy(target);
+        state.sequence = null;
+        state.mode = 'orbit';
+        state.modeUntil = 0;
+        state.energy = 0.84;
+        setTarget(target.x + 86, target.y - 96);
+        setStatus('nova / orbit');
+        dispatch();
+      }
     };
 
     const updateParticles = (dt) => {
@@ -365,6 +597,286 @@
       context.restore();
     };
 
+    const drawImpactRings = (x, y, progress, colors, maxRadius = 190) => {
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+      colors.forEach((color, index) => {
+        const offset = index * 0.16;
+        const p = clamp((progress - offset) / (1 - offset), 0, 1);
+        if (!p) return;
+        context.globalAlpha = (1 - p) * 0.72;
+        context.strokeStyle = color;
+        context.lineWidth = 2 + index;
+        context.beginPath();
+        context.arc(x, y, 18 + p * maxRadius, 0, Math.PI * 2);
+        context.stroke();
+      });
+      context.restore();
+    };
+
+    const drawMeteorSequence = (sequence, progress) => {
+      const impactPoint = 0.62;
+      const p = clamp(progress / impactPoint, 0, 1);
+      const tailX = sequence.fromX + (state.x - sequence.fromX) * 0.34;
+      const tailY = sequence.fromY + (state.y - sequence.fromY) * 0.34;
+
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+
+      if (progress < impactPoint) {
+        const trail = context.createLinearGradient(tailX, tailY, state.x, state.y);
+        trail.addColorStop(0, 'rgba(255, 46, 166, 0)');
+        trail.addColorStop(0.42, 'rgba(245, 255, 107, 0.34)');
+        trail.addColorStop(1, 'rgba(255, 90, 31, 0.9)');
+        context.strokeStyle = trail;
+        context.lineWidth = 14 + p * 14;
+        context.lineCap = 'round';
+        context.shadowColor = '#ff5a1f';
+        context.shadowBlur = 28;
+        context.beginPath();
+        context.moveTo(tailX, tailY);
+        context.lineTo(state.x, state.y);
+        context.stroke();
+
+        context.save();
+        context.translate(state.x, state.y);
+        context.rotate(Math.atan2(state.y - tailY, state.x - tailX));
+        const fire = context.createRadialGradient(0, 0, 2, 0, 0, 42);
+        fire.addColorStop(0, '#f5ff6b');
+        fire.addColorStop(0.36, '#ff6b1a');
+        fire.addColorStop(1, 'rgba(255, 46, 166, 0)');
+        context.fillStyle = fire;
+        context.beginPath();
+        context.ellipse(0, 0, 42, 24, 0, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#1b1010';
+        context.strokeStyle = palette.amber;
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(20, 0);
+        context.lineTo(4, 16);
+        context.lineTo(-18, 8);
+        context.lineTo(-22, -10);
+        context.lineTo(5, -17);
+        context.closePath();
+        context.fill();
+        context.stroke();
+        context.restore();
+      } else {
+        const blast = clamp((progress - impactPoint) / (1 - impactPoint), 0, 1);
+        const flash = context.createRadialGradient(sequence.target.x, sequence.target.y, 4, sequence.target.x, sequence.target.y, 170);
+        flash.addColorStop(0, `rgba(245, 255, 107, ${0.72 * (1 - blast)})`);
+        flash.addColorStop(0.32, `rgba(255, 90, 31, ${0.38 * (1 - blast)})`);
+        flash.addColorStop(1, 'rgba(255, 46, 166, 0)');
+        context.fillStyle = flash;
+        context.beginPath();
+        context.arc(sequence.target.x, sequence.target.y, 170, 0, Math.PI * 2);
+        context.fill();
+        drawImpactRings(sequence.target.x, sequence.target.y, blast, [palette.amber, '#ff5a1f', palette.pink], 230);
+      }
+
+      context.restore();
+    };
+
+    const drawShuttle = (x, y, progress) => {
+      context.save();
+      context.translate(x, y + Math.sin(state.phase * 6) * 2);
+      context.globalCompositeOperation = 'lighter';
+      context.shadowColor = palette.cyan;
+      context.shadowBlur = 16;
+      context.fillStyle = 'rgba(0, 18, 18, 0.86)';
+      context.strokeStyle = palette.cyan;
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(38, 0);
+      context.lineTo(7, 18);
+      context.lineTo(-34, 10);
+      context.lineTo(-46, 0);
+      context.lineTo(-34, -10);
+      context.lineTo(7, -18);
+      context.closePath();
+      context.fill();
+      context.stroke();
+      context.fillStyle = palette.green;
+      context.fillRect(-12, -4, 24, 8);
+      context.strokeStyle = palette.amber;
+      context.beginPath();
+      context.moveTo(-42, 0);
+      context.lineTo(-64 - Math.sin(state.phase * 12) * 8, -8);
+      context.moveTo(-42, 0);
+      context.lineTo(-64 - Math.cos(state.phase * 10) * 8, 8);
+      context.stroke();
+      if (progress > 0.78 && progress < 0.94) {
+        const alpha = Math.sin(clamp((progress - 0.78) / 0.16, 0, 1) * Math.PI);
+        context.globalAlpha = alpha * 0.72;
+        context.strokeStyle = palette.green;
+        context.lineWidth = 4;
+        context.beginPath();
+        context.moveTo(0, 18);
+        context.lineTo(34, 94);
+        context.stroke();
+      }
+      context.restore();
+    };
+
+    const drawBlackholeSequence = (sequence, progress) => {
+      const radius = 26 + Math.sin(state.phase * 5) * 3 + clamp(progress * 2, 0, 1) * 28;
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+
+      for (let ring = 0; ring < 5; ring += 1) {
+        context.save();
+        context.translate(state.x, state.y);
+        context.rotate(state.phase * (ring % 2 ? -0.72 : 0.92) + ring);
+        context.globalAlpha = 0.42 - ring * 0.045;
+        context.strokeStyle = ring % 2 ? palette.pink : palette.cyan;
+        context.lineWidth = ring === 0 ? 4 : 1.5;
+        context.beginPath();
+        context.ellipse(0, 0, radius + ring * 14, radius * 0.34 + ring * 6, 0, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
+      }
+
+      const gravity = context.createRadialGradient(state.x, state.y, radius * 0.18, state.x, state.y, radius * 2.2);
+      gravity.addColorStop(0, '#000');
+      gravity.addColorStop(0.38, 'rgba(0, 0, 0, 0.96)');
+      gravity.addColorStop(0.64, 'rgba(0, 234, 255, 0.24)');
+      gravity.addColorStop(1, 'rgba(255, 46, 166, 0)');
+      context.fillStyle = gravity;
+      context.beginPath();
+      context.arc(state.x, state.y, radius * 2.2, 0, Math.PI * 2);
+      context.fill();
+
+      if (progress < 0.52) {
+        context.strokeStyle = palette.cyan;
+        context.lineWidth = 1;
+        for (let strand = 0; strand < 12; strand += 1) {
+          const angle = strand * 0.52 + state.phase * 1.8;
+          const pull = 18 + strand * 3;
+          context.globalAlpha = 0.12 + strand * 0.025;
+          context.beginPath();
+          context.moveTo(sequence.target.x + Math.cos(angle) * pull, sequence.target.y + Math.sin(angle) * pull);
+          context.quadraticCurveTo(
+            (sequence.target.x + state.x) / 2 + Math.sin(angle) * 38,
+            (sequence.target.y + state.y) / 2 + Math.cos(angle) * 32,
+            state.x,
+            state.y
+          );
+          context.stroke();
+        }
+      }
+
+      if (progress > 0.68) {
+        drawShuttle(sequence.shipX, sequence.shipY, progress);
+        if (progress > 0.78 && progress < 0.94) {
+          const beam = context.createLinearGradient(sequence.shipX, sequence.shipY, sequence.target.x, sequence.target.y);
+          beam.addColorStop(0, 'rgba(0, 255, 102, 0.06)');
+          beam.addColorStop(0.5, 'rgba(0, 234, 255, 0.42)');
+          beam.addColorStop(1, 'rgba(245, 255, 107, 0.12)');
+          context.globalAlpha = 0.9;
+          context.strokeStyle = beam;
+          context.lineWidth = 18;
+          context.beginPath();
+          context.moveTo(sequence.shipX, sequence.shipY + 18);
+          context.lineTo(sequence.target.x, sequence.target.y - 10);
+          context.stroke();
+        }
+      }
+
+      context.restore();
+    };
+
+    const drawDeathstarSequence = (sequence, progress) => {
+      const x = state.x;
+      const y = state.y;
+      const radius = 46;
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+
+      const sphere = context.createRadialGradient(x - 18, y - 18, 4, x, y, radius);
+      sphere.addColorStop(0, '#f2fff8');
+      sphere.addColorStop(0.34, '#6f8588');
+      sphere.addColorStop(0.74, '#1a2c31');
+      sphere.addColorStop(1, '#030708');
+      context.fillStyle = sphere;
+      context.shadowColor = palette.cyan;
+      context.shadowBlur = 18;
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.fill();
+
+      context.shadowBlur = 0;
+      context.strokeStyle = 'rgba(201, 255, 214, 0.34)';
+      context.lineWidth = 1;
+      for (let line = -22; line <= 22; line += 11) {
+        context.beginPath();
+        context.moveTo(x - 34, y + line);
+        context.lineTo(x + 34, y + line * 0.6);
+        context.stroke();
+      }
+      context.strokeStyle = palette.amber;
+      context.beginPath();
+      context.arc(x - 16, y - 12, 15, 0, Math.PI * 2);
+      context.stroke();
+      context.fillStyle = 'rgba(245, 255, 107, 0.46)';
+      context.beginPath();
+      context.arc(x - 16, y - 12, 5 + Math.sin(state.phase * 8) * 2, 0, Math.PI * 2);
+      context.fill();
+
+      if (progress > 0.28 && progress < 0.44) {
+        const charge = clamp((progress - 0.28) / 0.16, 0, 1);
+        context.strokeStyle = palette.green;
+        context.lineWidth = 2;
+        for (let ray = 0; ray < 8; ray += 1) {
+          const angle = (Math.PI * 2 * ray) / 8 + state.phase;
+          context.globalAlpha = charge * 0.74;
+          context.beginPath();
+          context.moveTo(x - 16 + Math.cos(angle) * 30, y - 12 + Math.sin(angle) * 30);
+          context.lineTo(x - 16, y - 12);
+          context.stroke();
+        }
+      }
+
+      if (progress >= 0.44 && progress <= 0.66) {
+        const beamPulse = Math.sin(clamp((progress - 0.44) / 0.22, 0, 1) * Math.PI);
+        const beam = context.createLinearGradient(x - 16, y - 12, sequence.target.x, sequence.target.y);
+        beam.addColorStop(0, palette.green);
+        beam.addColorStop(0.58, palette.cyan);
+        beam.addColorStop(1, palette.pink);
+        context.globalAlpha = 0.35 + beamPulse * 0.55;
+        context.strokeStyle = beam;
+        context.lineCap = 'round';
+        context.lineWidth = 8 + beamPulse * 8;
+        context.shadowColor = palette.green;
+        context.shadowBlur = 24;
+        context.beginPath();
+        context.moveTo(x - 16, y - 12);
+        context.lineTo(sequence.target.x, sequence.target.y);
+        context.stroke();
+        context.lineWidth = 2;
+        context.strokeStyle = palette.amber;
+        context.beginPath();
+        context.moveTo(x - 16, y - 12);
+        context.lineTo(sequence.target.x, sequence.target.y);
+        context.stroke();
+      }
+
+      if (progress > 0.54) {
+        const ash = clamp((progress - 0.54) / 0.46, 0, 1);
+        drawImpactRings(sequence.target.x, sequence.target.y, ash, [palette.cyan, '#d8d8d8', palette.amber], 132);
+      }
+
+      context.restore();
+    };
+
+    const drawInteraction = () => {
+      if (!state.sequence) return;
+      const progress = clamp((performance.now() - state.sequence.start) / state.sequence.duration, 0, 1);
+      if (state.sequence.type === 'meteor') drawMeteorSequence(state.sequence, progress);
+      if (state.sequence.type === 'blackhole') drawBlackholeSequence(state.sequence, progress);
+      if (state.sequence.type === 'deathstar') drawDeathstarSequence(state.sequence, progress);
+    };
+
     const drawNova = () => {
       const t = state.phase;
       const pulse = 1 + Math.sin(t * 2.7) * 0.08;
@@ -440,7 +952,8 @@
     const render = () => {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
       drawParticles();
-      drawNova();
+      drawInteraction();
+      if (!state.sequence) drawNova();
       drawEchoes();
       coreButton.style.setProperty('--nova-x', `${Math.round(state.x)}px`);
       coreButton.style.setProperty('--nova-y', `${Math.round(state.y)}px`);
@@ -453,6 +966,7 @@
       const dt = Math.min(42, state.last ? now - state.last : 16);
       state.last = now;
       state.phase += dt * 0.0016;
+      updateSequence(now);
       updateTargets(now);
       updatePhysics(dt);
       updateParticles(dt);
@@ -486,6 +1000,10 @@
         return true;
       },
       deactivate() {
+        if (state.sequence) {
+          restoreBugy(state.sequence.target);
+          state.sequence = null;
+        }
         state.active = false;
         cancelAnimationFrame(state.raf);
         syncVisibility();
