@@ -203,62 +203,59 @@
       });
     };
 
+    const v3ScreenTarget = (v3) => ({
+      engine: 'v3',
+      x: 18 + ((Number(v3.x) || 120) / 320) * Math.max(1, window.innerWidth - 92),
+      y: window.innerHeight - 82 + (((Number(v3.y) || 136) - 136) * 0.62),
+      restore: { wasActive: true }
+    });
+
+    const isUsableBugyElement = (element) => {
+      if (!element || element.hidden) return false;
+      const rect = element.getBoundingClientRect();
+      if (rect.width < 8 || rect.height < 8) return false;
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) <= 0.05) return false;
+      return true;
+    };
+
+    const domBugyTarget = (selector, engine) => {
+      const element = document.querySelector(selector);
+      if (!isUsableBugyElement(element)) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        engine,
+        element,
+        ashClass: engine === 'v2' ? 'is-v2-ashed' : 'is-ashed',
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        rect,
+        restore: {
+          opacity: element.style.opacity,
+          filter: element.style.filter,
+          transform: element.style.transform,
+          visibility: element.style.visibility,
+          ariaHidden: element.getAttribute('aria-hidden')
+        }
+      };
+    };
+
     const findBugyTarget = () => {
-      const elementSelectors = [
-        { selector: '#neon-sheep', engine: 'classic' },
-        { selector: '#bugy-v2-actor, .bugy-v2-actor', engine: 'v2' }
-      ];
-      for (const item of elementSelectors) {
-        const { selector, engine } = item;
-        const element = document.querySelector(selector);
-        if (!element || element.hidden) continue;
-        const rect = element.getBoundingClientRect();
-        if (rect.width < 8 || rect.height < 8) continue;
-        return {
-          engine,
-          element,
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-          rect,
-          restore: {
-            opacity: element.style.opacity,
-            filter: element.style.filter,
-            transform: element.style.transform,
-            visibility: element.style.visibility,
-            ariaHidden: element.getAttribute('aria-hidden')
-          }
-        };
+      const v3 = window.BugyV3?.getState?.();
+      if (v3?.active) return v3ScreenTarget(v3);
+
+      const v2 = window.BugyV2?.getState?.();
+      if (v2?.active) {
+        const target = domBugyTarget('#bugy-v2-actor, .bugy-v2-actor', 'v2');
+        if (target) return target;
       }
 
-      const v3 = window.BugyV3?.getState?.();
-      if (v3?.active) {
-        return {
-          engine: 'v3',
-          x: 18 + ((Number(v3.x) || 120) / 320) * Math.max(1, window.innerWidth - 92),
-          y: window.innerHeight - 82 + (((Number(v3.y) || 136) - 136) * 0.62),
-          restore: { wasActive: true }
-        };
-      }
+      const classic = domBugyTarget('#neon-sheep', 'classic');
+      if (classic) return classic;
 
       window.Bugy?.summon?.();
-      const fallback = document.getElementById('neon-sheep');
-      if (fallback) {
-        const rect = fallback.getBoundingClientRect();
-        return {
-          engine: 'classic',
-          element: fallback,
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-          rect,
-          restore: {
-            opacity: fallback.style.opacity,
-            filter: fallback.style.filter,
-            transform: fallback.style.transform,
-            visibility: fallback.style.visibility,
-            ariaHidden: fallback.getAttribute('aria-hidden')
-          }
-        };
-      }
+      const fallback = domBugyTarget('#neon-sheep', 'classic');
+      if (fallback) return fallback;
 
       return {
         engine: 'virtual',
@@ -284,7 +281,7 @@
 
     const setBugyAsh = (target, ash = true) => {
       if (!target.element) return;
-      target.element.classList.toggle('is-ashed', ash);
+      target.element.classList.toggle(target.ashClass || 'is-ashed', ash);
       target.element.style.filter = ash
         ? 'grayscale(1) brightness(0.48) drop-shadow(0 0 16px rgba(245, 255, 107, 0.42))'
         : target.restore.filter || '';
@@ -297,7 +294,7 @@
         return;
       }
       if (!target.element) return;
-      target.element.classList.remove('is-ashed');
+      target.element.classList.remove('is-ashed', 'is-v2-ashed');
       target.element.style.opacity = target.restore.opacity || '';
       target.element.style.filter = target.restore.filter || '';
       target.element.style.transform = target.restore.transform || '';
