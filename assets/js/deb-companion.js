@@ -89,13 +89,6 @@
       phase: Math.random() * Math.PI * 2,
       sequence: null,
       particles: [],
-      shards: Array.from({ length: 9 }, (_, index) => ({
-        angle: (Math.PI * 2 * index) / 9,
-        distance: rand(26, 58),
-        size: rand(3, 7),
-        spin: rand(-0.0024, 0.0024),
-        hue: index % 3
-      })),
       echoes: []
     };
 
@@ -106,6 +99,17 @@
       amber: '#f5ff6b',
       text: '#c9ffd6'
     };
+    const solarEpoch = Date.UTC(2000, 0, 1, 12);
+    const solarBodies = [
+      { key: 'mercury', a: 0.387, e: 0.2056, i: 7.0, period: 87.969, L: 252.251, peri: 77.456, color: '#b8b2a1', size: 2.2 },
+      { key: 'venus', a: 0.723, e: 0.0068, i: 3.39, period: 224.701, L: 181.98, peri: 131.532, color: '#f5d28a', size: 3.2 },
+      { key: 'earth', a: 1, e: 0.0167, i: 0, period: 365.256, L: 100.464, peri: 102.938, color: '#45d7ff', size: 3.4 },
+      { key: 'mars', a: 1.524, e: 0.0934, i: 1.85, period: 686.98, L: 355.453, peri: 336.041, color: '#ff7657', size: 3 },
+      { key: 'jupiter', a: 5.203, e: 0.0489, i: 1.3, period: 4332.589, L: 34.404, peri: 14.331, color: '#f0c17c', size: 4.8 },
+      { key: 'saturn', a: 9.537, e: 0.0565, i: 2.49, period: 10759.22, L: 49.944, peri: 93.057, color: '#d8c88f', size: 4.4, ring: true },
+      { key: 'uranus', a: 19.191, e: 0.0472, i: 0.77, period: 30685.4, L: 313.232, peri: 173.005, color: '#8be6e8', size: 3.8 },
+      { key: 'neptune', a: 30.07, e: 0.0086, i: 1.77, period: 60189, L: 304.88, peri: 48.124, color: '#5877ff', size: 3.8 }
+    ];
 
     const resize = () => {
       const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
@@ -549,6 +553,101 @@
       context.restore();
     };
 
+    const normalizeAngle = angle => {
+      const full = Math.PI * 2;
+      return ((angle % full) + full) % full;
+    };
+
+    const solveKepler = (meanAnomaly, eccentricity) => {
+      let anomaly = meanAnomaly;
+      for (let index = 0; index < 6; index += 1) {
+        anomaly -= (anomaly - eccentricity * Math.sin(anomaly) - meanAnomaly) / (1 - eccentricity * Math.cos(anomaly));
+      }
+      return anomaly;
+    };
+
+    const planetState = (body, days) => {
+      const meanLongitude = (body.L + (360 / body.period) * days) * Math.PI / 180;
+      const perihelion = body.peri * Math.PI / 180;
+      const meanAnomaly = normalizeAngle(meanLongitude - perihelion);
+      const eccentricAnomaly = solveKepler(meanAnomaly, body.e);
+      const trueAnomaly = 2 * Math.atan2(
+        Math.sqrt(1 + body.e) * Math.sin(eccentricAnomaly / 2),
+        Math.sqrt(1 - body.e) * Math.cos(eccentricAnomaly / 2)
+      );
+      const radius = body.a * (1 - body.e * Math.cos(eccentricAnomaly));
+      return {
+        angle: normalizeAngle(trueAnomaly + perihelion),
+        radiusRatio: radius / body.a
+      };
+    };
+
+    const drawSolarSystem = (modeColor) => {
+      const days = (Date.now() - solarEpoch) / 86400000;
+      const scale = clamp(Math.min(window.innerWidth, window.innerHeight) * 0.048, 22, 40);
+      const riftBoost = state.mode === 'rift' ? 1.18 : 1;
+      const tilt = -0.24 + Math.sin(state.phase * 0.2) * 0.035;
+
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+
+      solarBodies.forEach((body, index) => {
+        const orbitRadius = (18 + Math.sqrt(body.a) * scale) * riftBoost;
+        const flatten = 0.5 + Math.sin(body.i * Math.PI / 180) * 0.26;
+        const orbitCenterX = state.x - orbitRadius * body.e * 0.34;
+        const alpha = clamp(0.34 - index * 0.024 + state.energy * 0.08, 0.12, 0.38);
+
+        context.save();
+        context.translate(Math.round(orbitCenterX), Math.round(state.y));
+        context.rotate(tilt);
+        context.globalAlpha = alpha;
+        context.strokeStyle = index % 2 ? palette.green : modeColor;
+        context.lineWidth = index < 4 ? 1 : 0.75;
+        context.beginPath();
+        context.ellipse(0, 0, orbitRadius, orbitRadius * flatten, 0, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
+
+        const orbit = planetState(body, days);
+        const drawAngle = orbit.angle + tilt;
+        const radius = orbitRadius * orbit.radiusRatio;
+        const x = orbitCenterX + Math.cos(drawAngle) * radius;
+        const y = state.y + Math.sin(drawAngle) * radius * flatten;
+        const bodyPulse = 1 + Math.sin(state.phase * 2.2 + index) * 0.1;
+
+        context.save();
+        context.globalAlpha = 0.82;
+        context.fillStyle = body.color;
+        context.strokeStyle = body.key === 'earth' ? palette.green : 'rgba(201, 255, 214, 0.58)';
+        context.shadowColor = body.color;
+        context.shadowBlur = body.key === 'earth' ? 14 : 8;
+        context.beginPath();
+        context.arc(Math.round(x), Math.round(y), body.size * bodyPulse, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        if (body.ring) {
+          context.globalAlpha = 0.58;
+          context.lineWidth = 1;
+          context.beginPath();
+          context.ellipse(Math.round(x), Math.round(y), body.size * 2.4, body.size * 0.8, tilt, 0, Math.PI * 2);
+          context.stroke();
+        }
+        context.restore();
+      });
+
+      context.save();
+      context.globalAlpha = 0.42 + state.energy * 0.28;
+      context.fillStyle = palette.amber;
+      context.shadowColor = palette.amber;
+      context.shadowBlur = 18;
+      context.beginPath();
+      context.arc(Math.round(state.x), Math.round(state.y), 5.5 + Math.sin(state.phase * 3) * 1.2, 0, Math.PI * 2);
+      context.fill();
+      context.restore();
+
+      context.restore();
+    };
+
     const drawPanelLinks = () => {
       const panels = visiblePanels().slice(0, 5);
       context.save();
@@ -893,15 +992,7 @@
       context.globalCompositeOperation = 'lighter';
 
       drawPanelLinks();
-
-      state.shards.forEach((shard, index) => {
-        shard.angle += shard.spin * 16;
-        const distance = shard.distance * (state.mode === 'rift' ? 1.45 : 1) + Math.sin(t * 1.8 + index) * 6;
-        const x = state.x + Math.cos(shard.angle + t * 0.34) * distance;
-        const y = state.y + Math.sin(shard.angle + t * 0.28) * distance * 0.68;
-        const color = shard.hue === 0 ? palette.cyan : shard.hue === 1 ? palette.green : palette.pink;
-        drawDiamond(x, y, shard.size, color, 'rgba(0, 0, 0, 0.22)', 0.72, t + index);
-      });
+      drawSolarSystem(modeColor);
 
       context.save();
       context.globalAlpha = 0.22 + state.energy * 0.14;
@@ -983,7 +1074,7 @@
     };
 
     const api = {
-      version: '1.0.0',
+      version: '1.1.0',
       actions: [...actions],
       activate() {
         state.active = true;
@@ -1039,6 +1130,7 @@
           active: state.active,
           state: state.mode,
           randomEnabled: true,
+          orbitModel: 'solar-system-realtime',
           x: Math.round(state.x),
           y: Math.round(state.y),
           actions: [...actions]
