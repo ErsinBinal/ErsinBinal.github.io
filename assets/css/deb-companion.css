@@ -9,6 +9,14 @@
   z-index: 154;
   pointer-events: none;
   mix-blend-mode: screen;
+  transition: background 0.28s ease;
+}
+
+.nova-companion-layer.is-detail {
+  mix-blend-mode: normal;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 234, 255, 0.06), transparent 34%),
+    rgba(0, 0, 0, 0.2);
 }
 
 .nova-companion-layer[hidden] {
@@ -24,6 +32,7 @@
 .nova-core-button {
   --nova-x: 50vw;
   --nova-y: 50vh;
+  --deb-scale: 1;
   position: fixed;
   left: 0;
   top: 0;
@@ -42,7 +51,7 @@
   text-transform: uppercase;
   cursor: pointer;
   pointer-events: auto;
-  transform: translate3d(calc(var(--nova-x) - 24px), calc(var(--nova-y) - 24px), 0);
+  transform: translate3d(calc(var(--nova-x) - 24px), calc(var(--nova-y) - 24px), 0) scale(var(--deb-scale));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.82),
     0 0 18px rgba(0, 234, 255, 0.4),
@@ -129,7 +138,7 @@
   .nova-core-button {
     width: 42px;
     height: 42px;
-    transform: translate3d(calc(var(--nova-x) - 21px), calc(var(--nova-y) - 21px), 0);
+    transform: translate3d(calc(var(--nova-x) - 21px), calc(var(--nova-y) - 21px), 0) scale(var(--deb-scale));
   }
 }
 

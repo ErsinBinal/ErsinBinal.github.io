@@ -88,6 +88,9 @@
       energy: 0.62,
       phase: Math.random() * Math.PI * 2,
       sequence: null,
+      detailOpen: false,
+      detailProgress: 0,
+      detailTarget: 0,
       particles: [],
       echoes: []
     };
@@ -101,14 +104,14 @@
     };
     const solarEpoch = Date.UTC(2000, 0, 1, 12);
     const solarBodies = [
-      { key: 'mercury', a: 0.387, e: 0.2056, i: 7.0, period: 87.969, L: 252.251, peri: 77.456, color: '#b8b2a1', size: 2.2 },
-      { key: 'venus', a: 0.723, e: 0.0068, i: 3.39, period: 224.701, L: 181.98, peri: 131.532, color: '#f5d28a', size: 3.2 },
-      { key: 'earth', a: 1, e: 0.0167, i: 0, period: 365.256, L: 100.464, peri: 102.938, color: '#45d7ff', size: 3.4 },
-      { key: 'mars', a: 1.524, e: 0.0934, i: 1.85, period: 686.98, L: 355.453, peri: 336.041, color: '#ff7657', size: 3 },
-      { key: 'jupiter', a: 5.203, e: 0.0489, i: 1.3, period: 4332.589, L: 34.404, peri: 14.331, color: '#f0c17c', size: 4.8 },
-      { key: 'saturn', a: 9.537, e: 0.0565, i: 2.49, period: 10759.22, L: 49.944, peri: 93.057, color: '#d8c88f', size: 4.4, ring: true },
-      { key: 'uranus', a: 19.191, e: 0.0472, i: 0.77, period: 30685.4, L: 313.232, peri: 173.005, color: '#8be6e8', size: 3.8 },
-      { key: 'neptune', a: 30.07, e: 0.0086, i: 1.77, period: 60189, L: 304.88, peri: 48.124, color: '#5877ff', size: 3.8 }
+      { key: 'mercury', label: 'MERCURY', a: 0.387, e: 0.2056, i: 7.0, period: 87.969, L: 252.251, peri: 77.456, color: '#b8b2a1', size: 2.2, detailSize: 9, texture: 'crater' },
+      { key: 'venus', label: 'VENUS', a: 0.723, e: 0.0068, i: 3.39, period: 224.701, L: 181.98, peri: 131.532, color: '#f5d28a', size: 3.2, detailSize: 13, texture: 'cloud' },
+      { key: 'earth', label: 'EARTH', a: 1, e: 0.0167, i: 0, period: 365.256, L: 100.464, peri: 102.938, color: '#45d7ff', size: 3.4, detailSize: 14, texture: 'earth', moons: [{ key: 'moon', period: 27.322, distance: 2.1, size: 0.25, color: '#d6d3c6' }] },
+      { key: 'mars', label: 'MARS', a: 1.524, e: 0.0934, i: 1.85, period: 686.98, L: 355.453, peri: 336.041, color: '#ff7657', size: 3, detailSize: 12, texture: 'dust', moons: [{ key: 'phobos', period: 0.319, distance: 1.75, size: 0.14, color: '#b7977d' }, { key: 'deimos', period: 1.263, distance: 2.35, size: 0.11, color: '#c0a08a' }] },
+      { key: 'jupiter', label: 'JUPITER', a: 5.203, e: 0.0489, i: 1.3, period: 4332.589, L: 34.404, peri: 14.331, color: '#f0c17c', size: 4.8, detailSize: 29, texture: 'jupiter', moons: [{ key: 'io', period: 1.769, distance: 1.55, size: 0.14, color: '#f5d76e' }, { key: 'europa', period: 3.551, distance: 1.9, size: 0.13, color: '#e8e0c8' }, { key: 'ganymede', period: 7.155, distance: 2.28, size: 0.18, color: '#b6a58c' }, { key: 'callisto', period: 16.689, distance: 2.75, size: 0.17, color: '#8f8174' }] },
+      { key: 'saturn', label: 'SATURN', a: 9.537, e: 0.0565, i: 2.49, period: 10759.22, L: 49.944, peri: 93.057, color: '#d8c88f', size: 4.4, detailSize: 27, texture: 'saturn', ring: true, moons: [{ key: 'titan', period: 15.945, distance: 2.65, size: 0.2, color: '#d5a15b' }, { key: 'rhea', period: 4.518, distance: 2.1, size: 0.13, color: '#c9c7bb' }, { key: 'iapetus', period: 79.33, distance: 3.15, size: 0.12, color: '#a99b8a' }] },
+      { key: 'uranus', label: 'URANUS', a: 19.191, e: 0.0472, i: 0.77, period: 30685.4, L: 313.232, peri: 173.005, color: '#8be6e8', size: 3.8, detailSize: 20, texture: 'ice', moons: [{ key: 'titania', period: 8.706, distance: 2.1, size: 0.14, color: '#bdd1d4' }, { key: 'oberon', period: 13.463, distance: 2.55, size: 0.13, color: '#aebfc4' }] },
+      { key: 'neptune', label: 'NEPTUNE', a: 30.07, e: 0.0086, i: 1.77, period: 60189, L: 304.88, peri: 48.124, color: '#5877ff', size: 3.8, detailSize: 20, texture: 'storm', moons: [{ key: 'triton', period: 5.877, distance: 2.25, size: 0.15, color: '#d5d8e8' }] }
     ];
 
     const resize = () => {
@@ -390,6 +393,10 @@
 
     const updateTargets = (now) => {
       if (state.sequence) return;
+      if (state.detailTarget || state.detailProgress > 0.02) {
+        setTarget(window.innerWidth * 0.5, window.innerHeight * 0.5);
+        return;
+      }
       const route = hudRoute?.textContent || 'ORIGIN';
       if (route !== state.lastRoute) {
         state.lastRoute = route;
@@ -427,7 +434,13 @@
 
     const updatePhysics = (dt) => {
       if (state.sequence) return;
-      const pull = state.mode === 'sleep' ? 0.012 : state.mode === 'rift' ? 0.032 : 0.022;
+      const pull = state.detailTarget || state.detailProgress > 0.02
+        ? 0.058
+        : state.mode === 'sleep'
+          ? 0.012
+          : state.mode === 'rift'
+            ? 0.032
+            : 0.022;
       state.vx = ease(state.vx, (state.targetX - state.x) * pull, 0.08);
       state.vy = ease(state.vy, (state.targetY - state.y) * pull, 0.08);
       state.x += state.vx * dt * 0.06;
@@ -436,6 +449,13 @@
       state.x = safe.x;
       state.y = safe.y;
       state.energy = clamp(state.energy - dt * 0.000035, 0.34, 1);
+    };
+
+    const updateDetail = (dt) => {
+      const target = state.detailTarget;
+      state.detailProgress = ease(state.detailProgress, target, 1 - Math.pow(0.003, dt / 1000));
+      if (!target && state.detailProgress < 0.006) state.detailProgress = 0;
+      if (target && state.detailProgress > 0.994) state.detailProgress = 1;
     };
 
     const updateSequence = (now) => {
@@ -582,7 +602,173 @@
       };
     };
 
-    const drawSolarSystem = (modeColor) => {
+    const hashUnit = (seed) => {
+      const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+      return value - Math.floor(value);
+    };
+
+    const bodySeed = body => body.key.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+
+    const drawLitPlanet = (body, x, y, radius, detail = 0) => {
+      const seed = bodySeed(body);
+      const textureAlpha = 0.28 + detail * 0.58;
+      context.save();
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.clip();
+
+      const base = context.createRadialGradient(x - radius * 0.36, y - radius * 0.38, radius * 0.05, x, y, radius);
+      base.addColorStop(0, '#f7fff2');
+      base.addColorStop(0.1, body.color);
+      base.addColorStop(0.64, body.color);
+      base.addColorStop(1, '#05070b');
+      context.fillStyle = base;
+      context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+
+      if (body.texture === 'jupiter' || body.texture === 'saturn' || body.texture === 'cloud' || body.texture === 'ice' || body.texture === 'storm') {
+        const bands = body.texture === 'jupiter' ? 13 : body.texture === 'saturn' ? 10 : 8;
+        for (let band = 0; band < bands; band += 1) {
+          const yy = y - radius + (band + 0.5) * ((radius * 2) / bands);
+          const wave = Math.sin(state.phase * 0.8 + band * 1.7 + seed) * radius * 0.055 * detail;
+          context.globalAlpha = textureAlpha * (band % 2 ? 0.72 : 0.45);
+          context.fillStyle = band % 3 === 0
+            ? 'rgba(255,255,255,0.42)'
+            : band % 3 === 1
+              ? 'rgba(90,45,24,0.32)'
+              : 'rgba(255,210,130,0.28)';
+          if (body.texture === 'ice') context.fillStyle = band % 2 ? 'rgba(205,255,255,0.28)' : 'rgba(55,160,180,0.22)';
+          if (body.texture === 'storm') context.fillStyle = band % 2 ? 'rgba(65,110,255,0.34)' : 'rgba(10,24,96,0.26)';
+          context.fillRect(x - radius, yy + wave, radius * 2, Math.max(1, radius / bands * 1.6));
+        }
+      }
+
+      if (body.texture === 'earth') {
+        context.globalAlpha = 0.72 + detail * 0.18;
+        context.fillStyle = 'rgba(9, 74, 133, 0.92)';
+        context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+        for (let index = 0; index < 9; index += 1) {
+          const angle = hashUnit(seed + index * 3.1) * Math.PI * 2;
+          const dist = radius * (0.12 + hashUnit(seed + index * 4.7) * 0.64);
+          const lx = x + Math.cos(angle) * dist;
+          const ly = y + Math.sin(angle) * dist * 0.72;
+          context.globalAlpha = 0.56 + detail * 0.18;
+          context.fillStyle = index % 3 ? 'rgba(35, 122, 74, 0.86)' : 'rgba(126, 104, 54, 0.8)';
+          context.beginPath();
+          context.ellipse(lx, ly, radius * (0.18 + hashUnit(seed + index) * 0.18), radius * (0.08 + hashUnit(seed + index * 2) * 0.18), angle * 0.4, 0, Math.PI * 2);
+          context.fill();
+        }
+        for (let index = 0; index < 7; index += 1) {
+          context.globalAlpha = 0.22 + detail * 0.28;
+          context.strokeStyle = 'rgba(255,255,255,0.78)';
+          context.lineWidth = Math.max(1, radius * 0.035);
+          context.beginPath();
+          const yy = y - radius * 0.58 + index * radius * 0.18;
+          context.moveTo(x - radius * 0.72, yy);
+          context.bezierCurveTo(x - radius * 0.2, yy - radius * 0.2, x + radius * 0.18, yy + radius * 0.18, x + radius * 0.74, yy + Math.sin(index) * radius * 0.12);
+          context.stroke();
+        }
+      }
+
+      if (body.texture === 'crater' || body.texture === 'dust') {
+        for (let index = 0; index < 22; index += 1) {
+          const angle = hashUnit(seed + index * 5.3) * Math.PI * 2;
+          const dist = radius * Math.sqrt(hashUnit(seed + index * 9.2)) * 0.86;
+          const crater = radius * (0.035 + hashUnit(seed + index * 2.8) * 0.095) * (0.7 + detail);
+          context.globalAlpha = 0.16 + detail * 0.2;
+          context.strokeStyle = body.texture === 'dust' ? 'rgba(90, 37, 22, 0.58)' : 'rgba(20, 20, 20, 0.62)';
+          context.lineWidth = Math.max(1, crater * 0.24);
+          context.beginPath();
+          context.arc(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist, crater, 0, Math.PI * 2);
+          context.stroke();
+        }
+        if (body.texture === 'dust') {
+          context.globalAlpha = 0.45 + detail * 0.22;
+          context.fillStyle = 'rgba(245, 235, 211, 0.78)';
+          context.fillRect(x - radius * 0.2, y - radius * 0.96, radius * 0.4, radius * 0.12);
+          context.fillRect(x - radius * 0.17, y + radius * 0.84, radius * 0.34, radius * 0.1);
+        }
+      }
+
+      if (body.texture === 'jupiter') {
+        context.globalAlpha = 0.78;
+        context.fillStyle = 'rgba(192, 58, 42, 0.78)';
+        context.beginPath();
+        context.ellipse(x + radius * 0.34, y + radius * 0.18, radius * 0.24, radius * 0.13, -0.15, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      if (body.texture === 'storm') {
+        context.globalAlpha = 0.38 + detail * 0.25;
+        context.strokeStyle = 'rgba(180, 230, 255, 0.76)';
+        context.lineWidth = Math.max(1, radius * 0.05);
+        context.beginPath();
+        context.ellipse(x + radius * 0.18, y - radius * 0.18, radius * 0.22, radius * 0.09, 0.5, 0, Math.PI * 2);
+        context.stroke();
+      }
+
+      context.globalAlpha = 1;
+      const shade = context.createRadialGradient(x - radius * 0.58, y - radius * 0.56, radius * 0.1, x + radius * 0.38, y + radius * 0.34, radius * 1.18);
+      shade.addColorStop(0, 'rgba(255,255,255,0.2)');
+      shade.addColorStop(0.48, 'rgba(0,0,0,0)');
+      shade.addColorStop(1, 'rgba(0,0,0,0.72)');
+      context.fillStyle = shade;
+      context.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+      context.restore();
+
+      context.save();
+      context.globalAlpha = 0.7 + detail * 0.2;
+      context.strokeStyle = 'rgba(235,255,246,0.44)';
+      context.lineWidth = Math.max(1, radius * 0.035);
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.stroke();
+      context.restore();
+    };
+
+    const drawBodyRings = (body, x, y, radius, tilt, alpha = 1) => {
+      if (!body.ring) return;
+      context.save();
+      context.globalAlpha = alpha * 0.68;
+      context.globalCompositeOperation = 'lighter';
+      for (let ring = 0; ring < 4; ring += 1) {
+        context.strokeStyle = ring % 2 ? 'rgba(245, 230, 180, 0.52)' : 'rgba(170, 150, 110, 0.42)';
+        context.lineWidth = Math.max(1, radius * (0.035 + ring * 0.012));
+        context.beginPath();
+        context.ellipse(x, y, radius * (1.55 + ring * 0.16), radius * (0.38 + ring * 0.035), tilt, 0, Math.PI * 2);
+        context.stroke();
+      }
+      context.restore();
+    };
+
+    const drawMoons = (body, x, y, radius, days, detail = 0, alpha = 1) => {
+      if (!body.moons?.length) return;
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+      body.moons.forEach((moon, index) => {
+        const orbit = radius * moon.distance * (1 + detail * 0.18);
+        const angle = normalizeAngle((days / moon.period) * Math.PI * 2 + index * 0.9 + bodySeed(body) * 0.03);
+        const flatten = 0.42 + index * 0.025;
+        context.globalAlpha = alpha * (0.18 + detail * 0.42);
+        context.strokeStyle = 'rgba(201,255,214,0.32)';
+        context.lineWidth = 1;
+        context.beginPath();
+        context.ellipse(x, y, orbit, orbit * flatten, -0.24, 0, Math.PI * 2);
+        context.stroke();
+        const mx = x + Math.cos(angle) * orbit;
+        const my = y + Math.sin(angle) * orbit * flatten;
+        const moonRadius = clamp(radius * moon.size * (0.7 + detail * 0.7), 1.2, 7);
+        context.globalAlpha = alpha * (0.72 + detail * 0.18);
+        context.fillStyle = moon.color;
+        context.shadowColor = moon.color;
+        context.shadowBlur = 5 + detail * 6;
+        context.beginPath();
+        context.arc(mx, my, moonRadius, 0, Math.PI * 2);
+        context.fill();
+      });
+      context.restore();
+    };
+
+    const drawSolarSystem = (modeColor, alpha = 1) => {
       const days = (Date.now() - solarEpoch) / 86400000;
       const scale = clamp(Math.min(window.innerWidth, window.innerHeight) * 0.048, 22, 40);
       const riftBoost = state.mode === 'rift' ? 1.18 : 1;
@@ -590,6 +776,7 @@
 
       context.save();
       context.globalCompositeOperation = 'lighter';
+      context.globalAlpha = alpha;
 
       solarBodies.forEach((body, index) => {
         const orbitRadius = (18 + Math.sqrt(body.a) * scale) * riftBoost;
@@ -615,24 +802,9 @@
         const y = state.y + Math.sin(drawAngle) * radius * flatten;
         const bodyPulse = 1 + Math.sin(state.phase * 2.2 + index) * 0.1;
 
-        context.save();
-        context.globalAlpha = 0.82;
-        context.fillStyle = body.color;
-        context.strokeStyle = body.key === 'earth' ? palette.green : 'rgba(201, 255, 214, 0.58)';
-        context.shadowColor = body.color;
-        context.shadowBlur = body.key === 'earth' ? 14 : 8;
-        context.beginPath();
-        context.arc(Math.round(x), Math.round(y), body.size * bodyPulse, 0, Math.PI * 2);
-        context.fill();
-        context.stroke();
-        if (body.ring) {
-          context.globalAlpha = 0.58;
-          context.lineWidth = 1;
-          context.beginPath();
-          context.ellipse(Math.round(x), Math.round(y), body.size * 2.4, body.size * 0.8, tilt, 0, Math.PI * 2);
-          context.stroke();
-        }
-        context.restore();
+        drawBodyRings(body, Math.round(x), Math.round(y), body.size * bodyPulse, tilt, alpha);
+        drawLitPlanet(body, Math.round(x), Math.round(y), body.size * bodyPulse, 0.12);
+        if (index > 1 && alpha > 0.65) drawMoons(body, Math.round(x), Math.round(y), body.size * bodyPulse, days, 0, alpha * 0.45);
       });
 
       context.save();
@@ -643,6 +815,90 @@
       context.beginPath();
       context.arc(Math.round(state.x), Math.round(state.y), 5.5 + Math.sin(state.phase * 3) * 1.2, 0, Math.PI * 2);
       context.fill();
+      context.restore();
+
+      context.restore();
+    };
+
+    const drawDetailSolarSystem = (modeColor, progress) => {
+      if (progress <= 0.01) return;
+      const days = (Date.now() - solarEpoch) / 86400000;
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const minSide = Math.min(width, height);
+      const centerX = state.x;
+      const centerY = state.y;
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const maxOrbit = Math.min(width * 0.44, height * 0.39);
+      const sizeScale = clamp(minSide / 760, 0.58, 1.15);
+
+      context.save();
+      context.globalAlpha = eased;
+      context.fillStyle = 'rgba(0, 0, 0, 0.78)';
+      context.fillRect(0, 0, width, height);
+      const glow = context.createRadialGradient(centerX, centerY, 20, centerX, centerY, maxOrbit * 1.25);
+      glow.addColorStop(0, 'rgba(245,255,107,0.18)');
+      glow.addColorStop(0.34, 'rgba(0,234,255,0.08)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      context.fillStyle = glow;
+      context.fillRect(0, 0, width, height);
+      context.restore();
+
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+      context.globalAlpha = eased;
+      context.strokeStyle = 'rgba(0, 234, 255, 0.18)';
+      context.lineWidth = 1;
+
+      solarBodies.forEach((body, index) => {
+        const orbitRadius = 48 + (Math.sqrt(body.a) / Math.sqrt(30.07)) * maxOrbit;
+        const flatten = 0.5 + Math.sin(body.i * Math.PI / 180) * 0.24;
+        const orbit = planetState(body, days);
+        const orbitCenterX = centerX - orbitRadius * body.e * 0.3;
+        const angle = orbit.angle - 0.28;
+
+        context.save();
+        context.translate(orbitCenterX, centerY);
+        context.rotate(-0.19);
+        context.globalAlpha = eased * (0.22 + index * 0.025);
+        context.strokeStyle = index % 2 ? 'rgba(0,255,102,0.24)' : 'rgba(0,234,255,0.22)';
+        context.beginPath();
+        context.ellipse(0, 0, orbitRadius, orbitRadius * flatten, 0, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
+
+        const px = orbitCenterX + Math.cos(angle) * orbitRadius * orbit.radiusRatio;
+        const py = centerY + Math.sin(angle) * orbitRadius * orbit.radiusRatio * flatten;
+        const planetRadius = body.detailSize * sizeScale * (0.72 + eased * 0.62);
+        drawMoons(body, px, py, planetRadius, days, eased, eased);
+        drawBodyRings(body, px, py, planetRadius, -0.22, eased);
+        drawLitPlanet(body, px, py, planetRadius, eased);
+
+        if (eased > 0.58 && minSide > 520) {
+          context.save();
+          context.globalAlpha = (eased - 0.58) / 0.42;
+          context.font = '10px "Share Tech Mono", monospace';
+          context.textAlign = 'center';
+          context.textBaseline = 'top';
+          context.fillStyle = body.key === 'earth' ? palette.green : palette.text;
+          context.shadowColor = modeColor;
+          context.shadowBlur = 8;
+          context.fillText(body.label, px, py + planetRadius + 7);
+          context.restore();
+        }
+      });
+
+      context.save();
+      context.globalAlpha = eased;
+      context.fillStyle = palette.amber;
+      context.shadowColor = palette.amber;
+      context.shadowBlur = 28;
+      context.beginPath();
+      context.arc(centerX, centerY, 12 + eased * 15, 0, Math.PI * 2);
+      context.fill();
+      context.strokeStyle = modeColor;
+      context.lineWidth = 2;
+      context.stroke();
       context.restore();
 
       context.restore();
@@ -991,8 +1247,12 @@
       context.save();
       context.globalCompositeOperation = 'lighter';
 
-      drawPanelLinks();
-      drawSolarSystem(modeColor);
+      const detail = state.detailProgress;
+      if (detail < 0.82) {
+        if (detail < 0.42) drawPanelLinks();
+        drawSolarSystem(modeColor, 1 - detail);
+      }
+      drawDetailSolarSystem(modeColor, detail);
 
       context.save();
       context.globalAlpha = 0.22 + state.energy * 0.14;
@@ -1047,8 +1307,11 @@
       drawInteraction();
       if (!state.sequence) drawNova();
       drawEchoes();
+      layer.classList.toggle('is-detail', state.detailProgress > 0.04);
+      coreButton.style.setProperty('--deb-scale', `${(1 + state.detailProgress * 0.34).toFixed(3)}`);
       coreButton.style.setProperty('--nova-x', `${Math.round(state.x)}px`);
       coreButton.style.setProperty('--nova-y', `${Math.round(state.y)}px`);
+      chip.style.opacity = state.detailProgress > 0.72 ? '0' : '';
       chip.style.setProperty('--nova-x', `${Math.round(state.x)}px`);
       chip.style.setProperty('--nova-y', `${Math.round(state.y)}px`);
     };
@@ -1061,6 +1324,7 @@
       updateSequence(now);
       updateTargets(now);
       updatePhysics(dt);
+      updateDetail(dt);
       updateParticles(dt);
       render();
       state.raf = requestAnimationFrame(loop);
@@ -1073,8 +1337,24 @@
       document.body.classList.toggle('nova-active', state.active);
     };
 
+    const setDetailOpen = (open) => {
+      state.detailOpen = Boolean(open);
+      state.detailTarget = state.detailOpen ? 1 : 0;
+      state.energy = 1;
+      if (state.detailOpen) {
+        setTarget(window.innerWidth * 0.5, window.innerHeight * 0.5);
+        setStatus('deb / heliocentric');
+        if (consoleLine) consoleLine.textContent = 'deb solar system detail lock';
+      } else {
+        setStatus('deb / orbit');
+        if (consoleLine) consoleLine.textContent = 'deb compact orbit restored';
+      }
+      dispatch();
+      return state.detailOpen;
+    };
+
     const api = {
-      version: '1.1.0',
+      version: '1.2.0',
       actions: [...actions],
       activate() {
         state.active = true;
@@ -1098,6 +1378,9 @@
           state.sequence = null;
         }
         state.active = false;
+        state.detailOpen = false;
+        state.detailTarget = 0;
+        state.detailProgress = 0;
         cancelAnimationFrame(state.raf);
         syncVisibility();
         context.clearRect(0, 0, window.innerWidth, window.innerHeight);
@@ -1123,6 +1406,10 @@
         state.actionIndex += 1;
         return this.trigger(action);
       },
+      toggleDetail() {
+        if (!state.active) this.activate();
+        return setDetailOpen(!state.detailOpen);
+      },
       getState() {
         return {
           engine: 'deb',
@@ -1131,6 +1418,7 @@
           state: state.mode,
           randomEnabled: true,
           orbitModel: 'solar-system-realtime',
+          detailOpen: state.detailOpen,
           x: Math.round(state.x),
           y: Math.round(state.y),
           actions: [...actions]
@@ -1156,11 +1444,11 @@
       window.Bugy?.summon?.();
     });
 
-    coreButton.addEventListener('click', () => api.next());
+    coreButton.addEventListener('click', () => api.toggleDetail());
     coreButton.addEventListener('keydown', event => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
       event.preventDefault();
-      api.next();
+      api.toggleDetail();
     });
 
     resize();
