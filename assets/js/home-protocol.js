@@ -522,27 +522,27 @@
         return `random route: ${label}`;
       };
 
-      const novaCommand = (action = 'summon') => {
-        const nova = window.NovaCompanion;
-        if (!nova) return 'nova: module not ready';
+      const debCommand = (action = 'summon') => {
+        const deb = window.DebCompanion || window.NovaCompanion;
+        if (!deb) return 'deb: module not ready';
         if (action === 'summon') {
-          nova.summon();
-          return 'nova: companion online. try nova scan / nova meteor / nova blackhole / nova deathstar.';
+          deb.summon();
+          return 'deb: companion online. try deb scan / deb meteor / deb blackhole / deb deathstar.';
         }
         if (action === 'off') {
-          nova.deactivate();
-          return 'nova: offline. bugy channel restored.';
+          deb.deactivate();
+          return 'deb: offline. bugy channel restored.';
         }
-        nova.trigger(action);
-        return `nova: ${action} protocol started`;
+        deb.trigger(action);
+        return `deb: ${action} protocol started`;
       };
 
       const bugyCommand = () => {
         window.BugyV3?.deactivate?.();
         window.BugyV2?.deactivate?.();
         window.Bugy?.summon?.();
-        return window.NovaCompanion?.getState?.().active
-          ? 'bugy: classic companion restored / nova still online'
+        return (window.DebCompanion || window.NovaCompanion)?.getState?.().active
+          ? 'bugy: classic companion restored / deb still online'
           : 'bugy: classic companion restored';
       };
 
@@ -602,64 +602,64 @@
           action: randomCommand
         },
         {
-          command: 'nova',
-          description: 'NOVA alternatif companion katmanini acar',
-          aliases: ['summon nova', 'nova summon', 'nova companion'],
-          action: () => novaCommand('summon')
+          command: 'deb',
+          description: 'DEB alternatif companion katmanini acar',
+          aliases: ['summon deb', 'deb summon', 'deb companion', 'nova', 'summon nova', 'nova summon', 'nova companion'],
+          action: () => debCommand('summon')
         },
         {
-          command: 'nova scan',
-          description: 'NOVA aktif panelleri tarar',
-          aliases: ['scan nova'],
-          action: () => novaCommand('scan')
+          command: 'deb scan',
+          description: 'DEB aktif panelleri tarar',
+          aliases: ['scan deb', 'nova scan', 'scan nova'],
+          action: () => debCommand('scan')
         },
         {
-          command: 'nova rift',
-          description: 'NOVA rota hafizasini katlar',
-          aliases: ['rift nova'],
-          action: () => novaCommand('rift')
+          command: 'deb rift',
+          description: 'DEB rota hafizasini katlar',
+          aliases: ['rift deb', 'nova rift', 'rift nova'],
+          action: () => debCommand('rift')
         },
         {
-          command: 'nova bloom',
-          description: 'NOVA saha notlarini yukler',
-          aliases: ['bloom nova'],
-          action: () => novaCommand('bloom')
+          command: 'deb bloom',
+          description: 'DEB saha notlarini yukler',
+          aliases: ['bloom deb', 'nova bloom', 'bloom nova'],
+          action: () => debCommand('bloom')
         },
         {
-          command: 'nova mirror',
-          description: 'NOVA imlec golgesini kopyalar',
-          aliases: ['mirror nova'],
-          action: () => novaCommand('mirror')
+          command: 'deb mirror',
+          description: 'DEB imlec golgesini kopyalar',
+          aliases: ['mirror deb', 'nova mirror', 'mirror nova'],
+          action: () => debCommand('mirror')
         },
         {
-          command: 'nova sleep',
-          description: 'NOVA sinyalini dusuk guce alir',
-          aliases: ['nova dim'],
-          action: () => novaCommand('sleep')
+          command: 'deb sleep',
+          description: 'DEB sinyalini dusuk guce alir',
+          aliases: ['deb dim', 'nova sleep', 'nova dim'],
+          action: () => debCommand('sleep')
         },
         {
-          command: 'nova meteor',
-          description: 'NOVA meteor formuyla Bugy etkilesimi baslatir',
-          aliases: ['meteor nova', 'nova meteorit', 'nova asteroid', 'nova impact', 'nova carpis', 'nova çarpış'],
-          action: () => novaCommand('meteor')
+          command: 'deb meteor',
+          description: 'DEB meteor formuyla Bugy etkilesimi baslatir',
+          aliases: ['meteor deb', 'deb meteorit', 'deb asteroid', 'deb impact', 'deb carpis', 'deb çarpış', 'nova meteor', 'meteor nova', 'nova meteorit', 'nova asteroid', 'nova impact', 'nova carpis', 'nova çarpış'],
+          action: () => debCommand('meteor')
         },
         {
-          command: 'nova blackhole',
-          description: 'NOVA karadelik formuyla Bugy etkilesimi baslatir',
-          aliases: ['nova black hole', 'blackhole nova', 'nova karadelik', 'nova kara delik', 'kara delik nova'],
-          action: () => novaCommand('blackhole')
+          command: 'deb blackhole',
+          description: 'DEB karadelik formuyla Bugy etkilesimi baslatir',
+          aliases: ['deb black hole', 'blackhole deb', 'deb karadelik', 'deb kara delik', 'kara delik deb', 'nova blackhole', 'nova black hole', 'blackhole nova', 'nova karadelik', 'nova kara delik', 'kara delik nova'],
+          action: () => debCommand('blackhole')
         },
         {
-          command: 'nova deathstar',
-          description: 'NOVA orbital lazer sekansini baslatir',
-          aliases: ['nova death star', 'nova deatstar', 'deatstar nova', 'deathstar nova', 'nova laser', 'nova lazer', 'nova beam'],
-          action: () => novaCommand('deathstar')
+          command: 'deb deathstar',
+          description: 'DEB orbital lazer sekansini baslatir',
+          aliases: ['deb death star', 'deb deatstar', 'deatstar deb', 'deathstar deb', 'deb laser', 'deb lazer', 'deb beam', 'nova deathstar', 'nova death star', 'nova deatstar', 'deatstar nova', 'deathstar nova', 'nova laser', 'nova lazer', 'nova beam'],
+          action: () => debCommand('deathstar')
         },
         {
-          command: 'nova off',
-          description: 'NOVA katmanini kapatir',
-          aliases: ['dismiss nova'],
-          action: () => novaCommand('off')
+          command: 'deb off',
+          description: 'DEB katmanini kapatir',
+          aliases: ['dismiss deb', 'nova off', 'dismiss nova'],
+          action: () => debCommand('off')
         },
         {
           command: 'bugy',
@@ -865,10 +865,10 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
         '',
         'system:',
-        'whoami, log, clear, random, level, access, dashboard, nova, bugy',
+        'whoami, log, clear, random, level, access, dashboard, deb, bugy',
         '',
-        'nova ops:',
-        'nova scan, nova meteor, nova blackhole, nova deathstar, nova off',
+        'deb ops:',
+        'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
         '',
         'hidden:',
         'signal -> oracle -> manifest -> unlock hidden, clues',

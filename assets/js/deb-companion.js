@@ -1,19 +1,21 @@
 (() => {
   'use strict';
 
-  const stateKey = 'convivium.nova.state';
-  const activeKey = 'convivium.nova.active';
+  const stateKey = 'convivium.deb.state';
+  const activeKey = 'convivium.deb.active';
+  const legacyStateKey = 'convivium.nova.state';
+  const legacyActiveKey = 'convivium.nova.active';
   const actions = ['scan', 'rift', 'bloom', 'mirror', 'perch', 'sleep', 'meteor', 'blackhole', 'deathstar'];
   const actionLines = {
-    scan: 'nova scan: active panels mapped',
-    rift: 'nova rift: route memory folded',
-    bloom: 'nova bloom: field notes charged',
-    mirror: 'nova mirror: cursor shadow copied',
-    perch: 'nova perch: nearest gate selected',
-    sleep: 'nova sleep: signal dimmed',
-    meteor: 'nova meteor: impact vector locked on bugy',
-    blackhole: 'nova blackhole: event horizon opening',
-    deathstar: 'nova deathstar: orbital laser charging'
+    scan: 'deb scan: active panels mapped',
+    rift: 'deb rift: route memory folded',
+    bloom: 'deb bloom: field notes charged',
+    mirror: 'deb mirror: cursor shadow copied',
+    perch: 'deb perch: nearest gate selected',
+    sleep: 'deb sleep: signal dimmed',
+    meteor: 'deb meteor: impact vector locked on bugy',
+    blackhole: 'deb blackhole: event horizon opening',
+    deathstar: 'deb deathstar: orbital laser charging'
   };
   const interactionActions = new Set(['meteor', 'blackhole', 'deathstar']);
 
@@ -23,7 +25,7 @@
   const ease = (current, target, factor) => current + (target - current) * factor;
 
   const boot = () => {
-    if (window.NovaCompanion || prefersReducedMotion()) return;
+    if (window.DebCompanion || window.NovaCompanion || prefersReducedMotion()) return;
 
     const layer = document.createElement('div');
     layer.id = 'nova-companion-layer';
@@ -41,14 +43,14 @@
     coreButton.className = 'nova-core-button';
     coreButton.type = 'button';
     coreButton.hidden = true;
-    coreButton.setAttribute('aria-label', 'NOVA protokolunu tetikle');
-    coreButton.innerHTML = '<span>NOVA</span>';
+    coreButton.setAttribute('aria-label', 'DEB protokolunu tetikle');
+    coreButton.innerHTML = '<span>DEB</span>';
 
     const chip = document.createElement('div');
     chip.id = 'nova-status-chip';
     chip.className = 'nova-status-chip';
     chip.hidden = true;
-    chip.textContent = 'nova / dormant';
+    chip.textContent = 'deb / dormant';
 
     document.body.append(layer, coreButton, chip);
 
@@ -59,7 +61,7 @@
 
     const saved = (() => {
       try {
-        return JSON.parse(localStorage.getItem(stateKey) || '{}');
+        return JSON.parse(localStorage.getItem(stateKey) || localStorage.getItem(legacyStateKey) || '{}');
       } catch (error) {
         return {};
       }
@@ -120,9 +122,11 @@
         y: Math.round(state.y),
         mode: state.mode
       }));
+      localStorage.removeItem(legacyStateKey);
     };
 
     const dispatch = () => {
+      window.dispatchEvent(new CustomEvent('deb:state', { detail: api.getState() }));
       window.dispatchEvent(new CustomEvent('nova:state', { detail: api.getState() }));
       window.dispatchEvent(new CustomEvent('bugy:state', { detail: api.getState() }));
     };
@@ -177,7 +181,7 @@
 
     const setStatus = (line) => {
       chip.textContent = line;
-      if (microOracle) microOracle.textContent = line.replace(/^nova\s*\/\s*/i, '').slice(0, 42);
+      if (microOracle) microOracle.textContent = line.replace(/^(deb|nova)\s*\/\s*/i, '').slice(0, 42);
     };
 
     const pushParticle = (x, y, color, life = 720, speed = 1) => {
@@ -345,7 +349,7 @@
       state.energy = 1;
       state.x = state.sequence.fromX;
       state.y = state.sequence.fromY;
-      setStatus(`nova / ${type}`);
+      setStatus(`deb / ${type}`);
       if (consoleLine) consoleLine.textContent = actionLines[type];
       pushEcho(type.toUpperCase(), target.x, target.y - 54);
       dispatch();
@@ -358,8 +362,8 @@
       state.mode = mode;
       state.modeUntil = performance.now() + (mode === 'sleep' ? 2600 : mode === 'perch' ? 1900 : 2300);
       state.energy = mode === 'sleep' ? 0.28 : 1;
-      const line = actionLines[mode] || `nova ${mode}`;
-      setStatus(`nova / ${mode}`);
+      const line = actionLines[mode] || `deb ${mode}`;
+      setStatus(`deb / ${mode}`);
       if (consoleLine) consoleLine.textContent = line;
       pushEcho(mode.toUpperCase());
 
@@ -393,7 +397,7 @@
       if (state.modeUntil && now > state.modeUntil) {
         state.mode = state.energy < 0.42 ? 'drift' : 'orbit';
         state.modeUntil = 0;
-        setStatus(`nova / ${state.mode}`);
+        setStatus(`deb / ${state.mode}`);
       }
 
       if (state.mode === 'orbit') {
@@ -452,7 +456,7 @@
             setBugyAsh(target, true);
             burst(target.x, target.y, 92, [palette.amber, '#ff6b1a', palette.pink, palette.cyan], 3.2, 1300);
             pushEcho('IMPACT', target.x + 18, target.y - 48);
-            if (consoleLine) consoleLine.textContent = 'nova meteor impact: bugy blast radius reached';
+            if (consoleLine) consoleLine.textContent = 'deb meteor impact: bugy blast radius reached';
           }
         }
       } else if (sequence.type === 'blackhole') {
@@ -473,7 +477,7 @@
           setBugyHidden(target, false);
           burst(target.x, target.y - 18, 58, [palette.green, palette.cyan, palette.amber], 1.8, 980);
           pushEcho('RE-ENTRY', target.x + 22, target.y - 68);
-          if (consoleLine) consoleLine.textContent = 'bugy returned by nova shuttle';
+          if (consoleLine) consoleLine.textContent = 'bugy returned by deb shuttle';
         }
       } else if (sequence.type === 'deathstar') {
         state.x = ease(state.x, sequence.stationX, 0.08);
@@ -486,7 +490,7 @@
           setBugyAsh(target, true);
           burst(target.x, target.y, 64, [palette.amber, '#d8d8d8', palette.pink], 2.1, 1200);
           pushEcho('ASHED', target.x + 18, target.y - 44);
-          if (consoleLine) consoleLine.textContent = 'nova deathstar beam converted bugy to ash';
+          if (consoleLine) consoleLine.textContent = 'deb deathstar beam converted bugy to ash';
         }
       }
 
@@ -497,7 +501,7 @@
         state.modeUntil = 0;
         state.energy = 0.84;
         setTarget(target.x + 86, target.y - 96);
-        setStatus('nova / orbit');
+        setStatus('deb / orbit');
         dispatch();
       }
     };
@@ -986,11 +990,12 @@
         state.mode = 'orbit';
         state.last = 0;
         localStorage.setItem(activeKey, '1');
+        localStorage.removeItem(legacyActiveKey);
         syncVisibility();
         resize();
         choosePanelTarget();
-        setStatus('nova / online');
-        if (consoleLine) consoleLine.textContent = 'nova companion online';
+        setStatus('deb / online');
+        if (consoleLine) consoleLine.textContent = 'deb companion online';
         cancelAnimationFrame(state.raf);
         state.raf = requestAnimationFrame(loop);
         dispatch();
@@ -1006,6 +1011,7 @@
         syncVisibility();
         context.clearRect(0, 0, window.innerWidth, window.innerHeight);
         localStorage.removeItem(activeKey);
+        localStorage.removeItem(legacyActiveKey);
         persist();
         dispatch();
         return true;
@@ -1028,7 +1034,7 @@
       },
       getState() {
         return {
-          engine: 'nova',
+          engine: 'deb',
           version: this.version,
           active: state.active,
           state: state.mode,
@@ -1066,8 +1072,9 @@
     });
 
     resize();
+    window.DebCompanion = api;
     window.NovaCompanion = api;
-    if (localStorage.getItem(activeKey) === '1') api.activate();
+    if (localStorage.getItem(activeKey) === '1' || localStorage.getItem(legacyActiveKey) === '1') api.activate();
   };
 
   if (document.readyState === 'loading') {
