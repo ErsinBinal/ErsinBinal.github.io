@@ -29,7 +29,7 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css?v=31">
-  <link rel="stylesheet" href="/assets/css/articles.css?v=2">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=3">
 </head>
 <body class="articles-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
@@ -50,19 +50,19 @@
       <nav class="articles-nav" role="navigation" aria-label="Site navigasyonu">
         <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
         <a href="dashboard.html" class="btn">Dashboard</a>
-        <a href="admin.html" class="btn">Admin</a>
+        <a href="admin.html" class="btn">Yonetim</a>
       </nav>
 
       <div class="terminal-hero-grid">
         <div class="terminal-hero-copy">
-          <p class="terminal-kicker">CONVIVIUM / DOSSIER INDEX</p>
+          <p class="terminal-kicker">CONVIVIUM / READING ROOM</p>
           <h1>Makaleler</h1>
-          <p>Gelir modelleri, yapay zeka, platform mantigi ve dijital donusum icin terminal sertliginde, modern bir okuma alani.</p>
+          <p>Gelir modelleri, yapay zeka, platform mantigi ve dijital donusum uzerine okunabilir, gorsel ve sakin bir arastirma arsivi.</p>
         </div>
-        <div class="terminal-panel" aria-label="Makale merkezi durumu">
-          <div class="terminal-panel-row"><span>source</span><strong id="articleSource">booting</strong></div>
-          <div class="terminal-panel-row"><span>records</span><strong id="articleCount">0</strong></div>
-          <div class="terminal-panel-row"><span>mode</span><strong>reader</strong></div>
+        <div class="terminal-panel" aria-label="Makale merkezi ozeti">
+          <div class="terminal-panel-row"><span>Durum</span><strong id="articleSource">Hazirlaniyor</strong></div>
+          <div class="terminal-panel-row"><span>Yazi</span><strong id="articleCount">0</strong></div>
+          <div class="terminal-panel-row"><span>Okuma</span><strong>Odak modu</strong></div>
         </div>
       </div>
     </header>
@@ -74,13 +74,13 @@
           <input id="search" type="search" autocomplete="off" placeholder="Baslik, konu veya icerikte ara" aria-label="Makale ara">
         </div>
         <div class="console-filters" id="topicFilters" aria-label="Konu filtreleri"></div>
-        <p id="contentSourceStatus" class="content-source-status" aria-live="polite">Icerikler yukleniyor...</p>
+        <p id="contentSourceStatus" class="content-source-status" aria-live="polite">Arsiv hazirlaniyor...</p>
       </section>
 
       <section class="reader-shell" aria-label="Makale okuyucu">
         <aside class="article-stack-panel">
           <div class="stack-heading">
-            <span>ARSIV</span>
+            <span>YAZILAR</span>
             <strong id="visibleCount">0</strong>
           </div>
           <div id="articles" class="article-stack" aria-live="polite"></div>
@@ -113,7 +113,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=23" defer></script>
-  <script src="/assets/js/articles.js?v=2" defer></script>
+  <script src="/assets/js/articles.js?v=3" defer></script>
 
   <script>
   if ('serviceWorker' in navigator) {

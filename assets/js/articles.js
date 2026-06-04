@@ -280,6 +280,13 @@
     return merged.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   }
 
+  function latestDate(articles) {
+    return articles
+      .map((article) => article.date)
+      .filter(Boolean)
+      .sort((a, b) => String(b).localeCompare(String(a)))[0] || '';
+  }
+
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
@@ -323,6 +330,19 @@
     }).join('');
 
     return `<nav class="toc" aria-label="Makale icindekiler"><h4 class="toc-title">Icindekiler</h4><ul>${links}</ul></nav>${box.innerHTML}`;
+  }
+
+  function removeCoverMedia(html, media) {
+    if (!media?.image?.src) return html;
+    const box = document.createElement('div');
+    box.innerHTML = html;
+    const image = [...box.querySelectorAll('img[src]')]
+      .find((img) => img.getAttribute('src') === media.image.src);
+    if (image) {
+      const wrapper = image.closest('figure, .article-image, picture') || image;
+      wrapper.remove();
+    }
+    return box.innerHTML;
   }
 
   function renderFilters() {
@@ -407,7 +427,7 @@
 
     state.activeSlug = article.slug;
     const media = mediaFromContent(article.content);
-    const safeContent = generateToc(sanitizeHtml(article.content));
+    const safeContent = generateToc(removeCoverMedia(sanitizeHtml(article.content), media));
     const currentIndex = state.filtered.findIndex((item) => item.slug === article.slug);
     const previous = state.filtered[currentIndex - 1];
     const next = state.filtered[currentIndex + 1];
@@ -416,11 +436,10 @@
       .slice(0, 3);
 
     const mediaHtml = media.image
-      ? `<div class="reader-media"><img class="responsive" src="${escapeHtml(media.image.src)}" alt="${escapeHtml(media.image.alt || article.title)}" loading="lazy" decoding="async"></div>`
-      : `<div class="reader-media reader-media-fallback"><span>${escapeHtml(topicLabel(article.topic))}</span></div>`;
+      ? `<figure class="reader-media"><img class="responsive" src="${escapeHtml(media.image.src)}" alt="${escapeHtml(media.image.alt || article.title)}" loading="lazy" decoding="async"></figure>`
+      : '';
 
     reader.innerHTML = `
-      ${mediaHtml}
       <header class="reader-head">
         <div class="reader-meta">
           <span>${escapeHtml(article.date || 'Tarihsiz')}</span>
@@ -432,13 +451,27 @@
         <div class="reader-actions">
           <button class="btn" type="button" data-reader-jump="prev" ${previous ? '' : 'disabled'}>Onceki</button>
           <button class="btn btn-primary" type="button" data-reader-jump="next" ${next ? '' : 'disabled'}>Sonraki</button>
+          <button class="btn" type="button" data-reader-copy>Link</button>
         </div>
       </header>
+      ${mediaHtml}
       <div class="reader-content">${safeContent}${renderRelated(related)}</div>
     `;
 
     reader.querySelector('[data-reader-jump="prev"]')?.addEventListener('click', () => renderReader(previous));
     reader.querySelector('[data-reader-jump="next"]')?.addEventListener('click', () => renderReader(next));
+    reader.querySelector('[data-reader-copy]')?.addEventListener('click', async (event) => {
+      const url = `${window.location.origin}${window.location.pathname}#${article.slug}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        event.currentTarget.textContent = 'Kopyalandi';
+        window.setTimeout(() => {
+          event.currentTarget.textContent = 'Link';
+        }, 1200);
+      } catch (error) {
+        window.prompt('Makale linki', url);
+      }
+    });
     reader.querySelectorAll('[data-related-slug]').forEach((button) => {
       button.addEventListener('click', () => {
         const target = state.all.find((item) => item.slug === button.dataset.relatedSlug);
@@ -471,30 +504,32 @@
     let remoteArticles = [];
 
     if (backend?.isConfigured?.()) {
-      setText('articleSource', 'supabase');
-      setStatus('Veritabani baglantisi kontrol ediliyor...');
+      setText('articleSource', 'Hazirlaniyor');
+      setStatus('Yayin arsivi guncelleniyor...');
       try {
         remoteArticles = await withTimeout(
           backend.fetchPublishedArticles(),
           3500,
           'Veritabani yaniti zaman asimina ugradi.'
         );
+        setText('articleSource', remoteArticles.length ? 'Canli arsiv' : 'Yerel arsiv');
         setStatus(remoteArticles.length
-          ? `Veritabanindan ${remoteArticles.length} yayin yuklendi.`
-          : 'Veritabani bagli; yayinlanmis makale yok, statik arsiv gosteriliyor.');
+          ? `${remoteArticles.length} yayin okuma odasina alindi.`
+          : 'Henuz yayinlanmis yeni makale yok; secili arsiv gosteriliyor.');
       } catch (error) {
         console.warn('[Convivium] Remote article load failed:', error);
-        setText('articleSource', 'static');
-        setStatus('Veritabani okunamadi; statik arsiv gosteriliyor.');
+        setText('articleSource', 'Yerel arsiv');
+        setStatus('Canli arsive ulasilamadi; kayitli arsiv gosteriliyor.');
       }
     } else {
-      setText('articleSource', 'static');
-      setStatus('Veritabani henuz bagli degil; statik arsiv gosteriliyor.');
+      setText('articleSource', 'Yerel arsiv');
+      setStatus('Kayitli arsiv gosteriliyor.');
     }
 
     state.all = mergeArticles(remoteArticles, fallbackArticles, localArticles);
     state.filtered = [...state.all];
-    setText('articleCount', state.all.length);
+    const lastDate = latestDate(state.all);
+    setText('articleCount', `${state.all.length}${lastDate ? ` / ${lastDate}` : ''}`);
 
     const search = qs('#search');
     search?.addEventListener('input', (event) => {
