@@ -13,6 +13,10 @@
   const titleInput = document.getElementById('title');
   const contentInput = document.getElementById('content_html');
   const preview = document.getElementById('articlePreview');
+  const importFile = document.getElementById('articleImportFile');
+  const importStatus = document.getElementById('importStatus');
+  const pasteAsMarkdown = document.getElementById('pasteAsMarkdown');
+  const cleanHtml = document.getElementById('cleanHtml');
   const bugyStatus = document.getElementById('bugyStatus');
   const bugySummon = document.getElementById('bugySummon');
   const bugyNextAction = document.getElementById('bugyNextAction');
@@ -37,6 +41,12 @@
   function setStatus(message, type) {
     status.textContent = message || '';
     status.dataset.type = type || 'info';
+  }
+
+  function setImportStatus(message, type) {
+    if (!importStatus) return;
+    importStatus.textContent = message;
+    importStatus.dataset.type = type || 'info';
   }
 
   function setGate(message) {
@@ -64,7 +74,9 @@
   }
 
   function updatePreview() {
-    preview.innerHTML = contentInput.value.trim() || '<p>Onizleme burada gorunur.</p>';
+    const tools = window.ConviviumArticleTools;
+    const html = contentInput.value.trim() || '<p>Onizleme burada gorunur.</p>';
+    preview.innerHTML = tools?.sanitizeHtml ? tools.sanitizeHtml(html) : html;
   }
 
   function renderList() {
@@ -247,6 +259,186 @@
     if (!arcadeStatus) return;
     arcadeStatus.textContent = message;
     arcadeStatus.dataset.type = type || 'info';
+  }
+
+  function selectedText() {
+    return contentInput.value.slice(contentInput.selectionStart, contentInput.selectionEnd);
+  }
+
+  function replaceSelection(value) {
+    const start = contentInput.selectionStart;
+    const end = contentInput.selectionEnd;
+    const before = contentInput.value.slice(0, start);
+    const after = contentInput.value.slice(end);
+    contentInput.value = `${before}${value}${after}`;
+    contentInput.focus();
+    contentInput.selectionStart = start;
+    contentInput.selectionEnd = start + value.length;
+    updatePreview();
+  }
+
+  function escapeHtml(value) {
+    return window.ConviviumArticleTools?.escapeHtml
+      ? window.ConviviumArticleTools.escapeHtml(value)
+      : String(value || '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+  }
+
+  function sanitizeHtml(html) {
+    return window.ConviviumArticleTools?.sanitizeHtml
+      ? window.ConviviumArticleTools.sanitizeHtml(html)
+      : String(html || '');
+  }
+
+  function markdownToHtml(markdown) {
+    return window.ConviviumArticleTools?.markdownToHtml
+      ? window.ConviviumArticleTools.markdownToHtml(markdown)
+      : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+  }
+
+  function textToHtml(text) {
+    return String(text || '')
+      .split(/\n{2,}/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => `<p>${escapeHtml(part).replace(/\n/g, '<br>')}</p>`)
+      .join('\n');
+  }
+
+  function wrapSelection(tag) {
+    const text = selectedText().trim();
+    const defaults = {
+      h2: 'Yeni bolum basligi',
+      h3: 'Alt baslik',
+      strong: 'vurgulu metin',
+      blockquote: 'Alinti metni'
+    };
+    const content = escapeHtml(text || defaults[tag] || 'metin');
+    replaceSelection(`<${tag}>${content}</${tag}>`);
+  }
+
+  function toEmbedUrl(raw) {
+    const value = String(raw || '').trim();
+    if (!value) return '';
+    try {
+      const url = new URL(value);
+      if (url.hostname.includes('youtu.be')) {
+        return `https://www.youtube-nocookie.com/embed/${url.pathname.replace('/', '')}`;
+      }
+      if (url.hostname.includes('youtube.com')) {
+        const id = url.searchParams.get('v') || url.pathname.split('/').pop();
+        return id ? `https://www.youtube-nocookie.com/embed/${id}` : value;
+      }
+      if (url.hostname.includes('vimeo.com')) {
+        const id = url.pathname.split('/').filter(Boolean).pop();
+        return id ? `https://player.vimeo.com/video/${id}` : value;
+      }
+    } catch (error) {
+      return value;
+    }
+    return value;
+  }
+
+  function insertSnippet(type) {
+    if (type === 'image') {
+      const src = window.prompt('Gorsel URL');
+      if (!src) return;
+      const alt = window.prompt('Gorsel aciklamasi', 'Makale gorseli') || 'Makale gorseli';
+      const caption = window.prompt('Altyazi', '') || '';
+      replaceSelection(`<figure class="article-image">
+  <img class="responsive" src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">
+  ${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''}
+</figure>`);
+      return;
+    }
+
+    if (type === 'video') {
+      const src = toEmbedUrl(window.prompt('YouTube veya Vimeo URL'));
+      if (!src) return;
+      replaceSelection(`<figure class="article-video">
+  <iframe src="${escapeHtml(src)}" title="Makale videosu" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+</figure>`);
+      return;
+    }
+
+    if (type === 'link') {
+      const href = window.prompt('Link URL');
+      if (!href) return;
+      const text = selectedText().trim() || window.prompt('Link metni', 'Kaynak') || 'Kaynak';
+      replaceSelection(`<a href="${escapeHtml(href)}">${escapeHtml(text)}</a>`);
+      return;
+    }
+
+    if (type === 'list') {
+      const text = selectedText().trim();
+      const items = (text ? text.split(/\n+/) : ['Madde 1', 'Madde 2'])
+        .map((item) => `<li>${escapeHtml(item.replace(/^[-*]\s*/, '').trim())}</li>`)
+        .join('\n');
+      replaceSelection(`<ul>\n${items}\n</ul>`);
+    }
+  }
+
+  function applyImportedHtml(html, sourceName) {
+    const clean = sanitizeHtml(html);
+    if (!clean.trim()) {
+      setImportStatus('Dosyadan aktarilacak metin bulunamadi.', 'error');
+      return;
+    }
+
+    const hasContent = Boolean(contentInput.value.trim());
+    const shouldAppend = hasContent && window.confirm('Mevcut icerigin sonuna eklensin mi? Iptal derseniz editor icerigi degisir.');
+    contentInput.value = shouldAppend ? `${contentInput.value.trim()}\n\n${clean}` : clean;
+
+    if (!titleInput.value.trim() && sourceName) {
+      titleInput.value = sourceName.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+      if (!slugInput.value.trim()) slugInput.value = backend.slugify(titleInput.value);
+    }
+
+    updatePreview();
+    setImportStatus(`${sourceName || 'Dosya'} aktarildi.`, 'success');
+  }
+
+  async function importDocx(file) {
+    if (!window.mammoth) throw new Error('DOCX aktarim kutuphanesi yuklenemedi.');
+    const arrayBuffer = await file.arrayBuffer();
+    const result = await window.mammoth.convertToHtml({ arrayBuffer });
+    return result.value || '';
+  }
+
+  async function importPdf(file) {
+    if (!window.pdfjsLib) throw new Error('PDF aktarim kutuphanesi yuklenemedi.');
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await window.pdfjsLib.getDocument({ data }).promise;
+    const pages = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+      const page = await pdf.getPage(pageNumber);
+      const content = await page.getTextContent();
+      const text = content.items.map((item) => item.str).join(' ').replace(/\s+/g, ' ').trim();
+      if (text) pages.push(text);
+    }
+
+    return textToHtml(pages.join('\n\n'));
+  }
+
+  async function importFileContent(file) {
+    const name = file.name || 'icerik';
+    const ext = name.split('.').pop().toLowerCase();
+    setImportStatus(`${name} okunuyor...`, 'info');
+
+    if (ext === 'docx') return importDocx(file);
+    if (ext === 'pdf') return importPdf(file);
+
+    const text = await file.text();
+    if (ext === 'md' || ext === 'markdown') return markdownToHtml(text);
+    if (ext === 'html' || ext === 'htm') return sanitizeHtml(text);
+    return textToHtml(text);
   }
 
   function stopArcadeTemplate() {
@@ -465,6 +657,47 @@
 
   contentInput.addEventListener('input', updatePreview);
 
+  document.querySelectorAll('[data-editor-wrap]').forEach((button) => {
+    button.addEventListener('click', () => wrapSelection(button.dataset.editorWrap));
+  });
+
+  document.querySelectorAll('[data-editor-insert]').forEach((button) => {
+    button.addEventListener('click', () => insertSnippet(button.dataset.editorInsert));
+  });
+
+  cleanHtml?.addEventListener('click', () => {
+    contentInput.value = sanitizeHtml(contentInput.value);
+    updatePreview();
+    setImportStatus('HTML temizlendi.', 'success');
+  });
+
+  pasteAsMarkdown?.addEventListener('click', async () => {
+    const text = selectedText().trim() || contentInput.value.trim();
+    if (!text) {
+      setImportStatus('Donusturulecek Markdown metni yok.', 'error');
+      return;
+    }
+    const html = markdownToHtml(text);
+    if (selectedText().trim()) replaceSelection(html);
+    else contentInput.value = html;
+    updatePreview();
+    setImportStatus('Markdown HTML icerige donusturuldu.', 'success');
+  });
+
+  importFile?.addEventListener('change', async () => {
+    const file = importFile.files && importFile.files[0];
+    if (!file) return;
+
+    try {
+      const html = await importFileContent(file);
+      applyImportedHtml(html, file.name);
+    } catch (error) {
+      setImportStatus(error.message || 'Dosya aktarilamadi.', 'error');
+    } finally {
+      importFile.value = '';
+    }
+  });
+
   clearButton.addEventListener('click', () => {
     fillForm(null);
     setStatus('Form temizlendi.', 'info');
@@ -498,7 +731,7 @@
         summary: data.summary,
         status: data.status,
         published_at: data.published_at ? new Date(data.published_at).toISOString() : '',
-        content_html: data.content_html
+        content_html: sanitizeHtml(data.content_html)
       });
       fillForm(null);
       await loadArticles();

@@ -1,398 +1,139 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Makaleler - Ersin Binal</title>
-    <meta name="description" content="Ersin Binal'in makaleleri - teknoloji, pazarlama ve dijital donusum uzerine kisa notlar.">
-    <meta name="author" content="Ersin Binal">
-    <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Makaleler - Convivium</title>
+  <meta name="description" content="Convivium makale merkezi. Teknoloji, pazarlama, gelir modelleri ve dijital donusum uzerine okunabilir, gorsel ve terminal estetikli notlar.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
-    <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Makaleler - Convivium">
+  <meta property="og:description" content="Terminal estetikli modern makale merkezi.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/makaleler.html">
+  <meta property="og:locale" content="tr_TR">
+  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Makaleler - Convivium">
+  <meta name="twitter:description" content="Teknoloji, pazarlama ve dijital donusum uzerine makaleler.">
+  <meta name="twitter:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
 
-    <!-- OpenGraph Meta Tags -->
-    <meta property="og:site_name" content="Convivium">
-    <meta property="og:title" content="Makaleler - Ersin Binal">
-    <meta property="og:description" content="Teknoloji, pazarlama ve dijital donusum uzerine makaleler.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://ersinbinal.github.io/makaleler.html">
-    <meta property="og:locale" content="tr_TR">
-
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Makaleler - Ersin Binal">
-    <meta name="twitter:description" content="Teknoloji, pazarlama ve dijital donusum uzerine makaleler.">
-
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#00ff00">
-    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-    <link rel="manifest" href="/manifest.json">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
-
-    <!-- Preconnect -->
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <!-- Stylesheets -->
-    <link rel="stylesheet" href="/assets/css/common.css">
-    <link rel="stylesheet" href="/assets/css/animations.css">
-    <link rel="stylesheet" href="/assets/css/components.css">
-
-    <!-- Page-specific styles -->
-    <style>
-        body { padding: 20px; }
-        main { margin-top: 18px; }
-    </style>
+  <meta name="theme-color" content="#00ff00">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css?v=31">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=1">
 </head>
-<body>
-    <a class="skip-link" href="#content">Icerigi atla</a>
+<body class="articles-page">
+  <a class="skip-link" href="#content">Icerigi atla</a>
 
-    <!-- Reading progress bar -->
-    <div class="read-progress" id="readProgress">
-        <div class="read-progress-bar" id="readProgressBar"></div>
-    </div>
+  <div class="read-progress active" id="readProgress">
+    <div class="read-progress-bar" id="readProgressBar"></div>
+  </div>
 
-    <!-- Lightbox for images -->
-    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Gorsel buyutme">
-        <button class="lightbox-close" id="lightboxClose" aria-label="Kapat">&times;</button>
-        <img id="lightboxImg" src="" alt="">
-    </div>
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Gorsel buyutme">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Kapat">&times;</button>
+    <img id="lightboxImg" src="" alt="">
+  </div>
 
-    <!-- Back to top button -->
-    <button class="back-to-top" id="backToTop" aria-label="Basa don">&#8593;</button>
+  <button class="back-to-top" id="backToTop" aria-label="Basa don">&#8593;</button>
 
-    <div class="site">
-        <header class="site-header" role="banner">
-            <h1>Ersin Binal</h1>
-            <p>Terminal estetiginde makaleler - teknoloji, pazarlama, is modelleri.</p>
-            <nav role="navigation" aria-label="Site navigasyonu" style="margin-top: 12px;">
-                <a href="index.html" class="btn" aria-label="Ana sayfaya don">&#8592; Ana Sayfa</a>
-            </nav>
-        </header>
+  <div class="site articles-site">
+    <header class="articles-hero" role="banner">
+      <nav class="articles-nav" role="navigation" aria-label="Site navigasyonu">
+        <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
+        <a href="dashboard.html" class="btn">Dashboard</a>
+        <a href="admin.html" class="btn">Admin</a>
+      </nav>
 
-        <main id="content" role="main" aria-labelledby="page-title">
-            <div class="controls">
-                <h2 id="page-title">Makaleler</h2>
-                <div>
-                    <input id="search" class="search" type="search" placeholder="Ara... (baslik veya icerik)" aria-label="Makale ara">
-                </div>
-            </div>
-            <p id="contentSourceStatus" class="content-source-status" aria-live="polite"></p>
+      <div class="terminal-hero-grid">
+        <div class="terminal-hero-copy">
+          <p class="terminal-kicker">CONVIVIUM / DOSSIER INDEX</p>
+          <h1>Makaleler</h1>
+          <p>Gelir modelleri, yapay zeka, platform mantigi ve dijital donusum icin terminal sertliginde, modern bir okuma alani.</p>
+        </div>
+        <div class="terminal-panel" aria-label="Makale merkezi durumu">
+          <div class="terminal-panel-row"><span>source</span><strong id="articleSource">booting</strong></div>
+          <div class="terminal-panel-row"><span>records</span><strong id="articleCount">0</strong></div>
+          <div class="terminal-panel-row"><span>mode</span><strong>reader</strong></div>
+        </div>
+      </div>
+    </header>
 
-            <section id="articles" class="article-grid" aria-live="polite"></section>
+    <main id="content" class="articles-workspace" role="main">
+      <section class="articles-console" aria-label="Makale arama ve filtreleme">
+        <div class="console-command">
+          <span>&gt;</span>
+          <input id="search" type="search" autocomplete="off" placeholder="Baslik, konu veya icerikte ara" aria-label="Makale ara">
+        </div>
+        <div class="console-filters" id="topicFilters" aria-label="Konu filtreleri"></div>
+        <p id="contentSourceStatus" class="content-source-status" aria-live="polite">Icerikler yukleniyor...</p>
+      </section>
 
-            <!-- Template for articles -->
-            <template id="article-template">
-                <article class="card">
-                    <h3 class="title"></h3>
-                    <div class="meta">
-                        <span class="date"></span>
-                        <span class="read-time"></span>
-                    </div>
-                    <div class="summary"></div>
-                    <button class="btn read-btn">Devamini Oku</button>
-                    <div class="full" aria-hidden="true"></div>
-                </article>
-            </template>
-        </main>
-    </div>
+      <section class="reader-shell" aria-label="Makale okuyucu">
+        <aside class="article-stack-panel">
+          <div class="stack-heading">
+            <span>ARSIV</span>
+            <strong id="visibleCount">0</strong>
+          </div>
+          <div id="articles" class="article-stack" aria-live="polite"></div>
+        </aside>
 
-    <!-- Scripts -->
-    <script src="/assets/js/lazy-load.js" defer></script>
-    <script src="/assets/js/theme.js" defer></script>
-    <script src="/assets/js/utils.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <script src="/assets/js/supabase-config.js" defer></script>
-    <script src="/assets/js/supabase-client.js?v=21" defer></script>
+        <article id="reader" class="reader-panel" tabindex="-1">
+          <div class="reader-empty">
+            <span class="reader-empty-mark">_</span>
+            <p>Bir makale secildiginde okuma modu burada acilir.</p>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
 
-    <script>
-    // Guvenli, temiz makale verisi
-    const staticArticles = [
-        {
-            id: 'stat-1',
-            title: 'Abonelik Modelinin Yukselisi',
-            date: '2025-03-02',
-            summary: 'Dijital icerik platformlarinin buyumesiyle abonelik modelleri isletmelerin oncelikli stratejisi oldu.',
-            content: `
-                <h2>Abonelik Ekonomisinin Evrimi</h2>
-                <p>Son yillarda dijital icerik platformlarinin buyumesiyle abonelik modeli isletmelerin oncelikli stratejisi haline geldi. Netflix, Spotify ve benzeri sirketler, kullanicilara surekli icerik sunarak gelir modelini donusturdu.</p>
+  <template id="article-card-template">
+    <button class="article-row" type="button">
+      <span class="article-row-index"></span>
+      <span class="article-row-main">
+        <strong class="article-row-title"></strong>
+        <span class="article-row-summary"></span>
+        <span class="article-row-meta"></span>
+      </span>
+    </button>
+  </template>
 
-                <div class="article-image">
-                    <picture>
-                        <source type="image/webp" srcset="/uploads/veri-temelli-model-400.webp 400w, /uploads/veri-temelli-model-800.webp 800w" sizes="(max-width:600px) 100vw, 800px">
-                        <img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" width="800" height="450" loading="lazy" decoding="async">
-                    </picture>
-                    <div class="image-caption">Veri temelli gelir modelinin yapisi ve bilesenleri</div>
-                </div>
+  <script src="/assets/js/lazy-load.js" defer></script>
+  <script src="/assets/js/theme.js" defer></script>
+  <script src="/assets/js/utils.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=22" defer></script>
+  <script src="/assets/js/articles.js?v=1" defer></script>
 
-                <h3>Neden Abonelik?</h3>
-                <p>Abonelik modelleri sirketlere tahmin edilebilir gelir akisi saglar. Musteri yasam boyu degeri (CLV) artarken, kazanim maliyetleri duser. Bu model ozellikle SaaS sirketleri icin altin standarttir.</p>
+  <script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+      .catch(err => console.warn('[SW] Registration failed:', err));
+  }
+  </script>
 
-                <blockquote>"Abonelik modeli, musteri iliskisini bir kerelik satistan surekli deger yaratma surecine donusturur."</blockquote>
-
-                <h3>Basari Faktorleri</h3>
-                <ul>
-                    <li>Surekli deger sunumu ve icerik guncellemeleri</li>
-                    <li>Musteri sadakati programlari ve kisisellestirme</li>
-                    <li>Esneklik: farkli paketler ve fiyatlandirma secenekleri</li>
-                    <li>Dusuk giris engelleri ve ucretsiz deneme sureleri</li>
-                </ul>
-            `
-        },
-        {
-            id: 'stat-2',
-            title: 'Dijital Donusumde Yapay Zeka',
-            date: '2025-02-15',
-            summary: 'Yapay zeka musteri hizmetleri, veri analizi ve otomasyonda buyuk etkiler yaratiyor.',
-            content: `
-                <h2>YZ nin Is Dunyasindaki Yeri</h2>
-                <p>Yapay zeka, is dunyasinda devrim yaratiyor. Ozellikle musteri hizmetleri, veri analizi ve otomasyon alanlarinda buyuk etkiler yaratiyor. Peki, yapay zeka isletmelerin gelecegini nasil sekillendirecek?</p>
-
-                <h3>Temel Uygulama Alanlari</h3>
-                <ol>
-                    <li><strong>Musteri Hizmetleri:</strong> Chatbotlar ve sanal asistanlar 7/24 destek sagliyor</li>
-                    <li><strong>Veri Analizi:</strong> Buyuk veri setlerinden anlamli icgoruler cikarma</li>
-                    <li><strong>Otomasyon:</strong> Rutin islerin otomasyonu ve surec optimizasyonu</li>
-                    <li><strong>Kisisellestirme:</strong> Musteri deneyiminin bireysel ihtiyaclara gore uyarlanmasi</li>
-                </ol>
-
-                <p>YZ entegrasyonu artik luks degil, rekabet avantaji icin zorunluluk haline geliyor.</p>
-            `
-        },
-        {
-            id: 'stat-3',
-            title: 'Gelir Modelleri Nasil Evrimlesti?',
-            date: '2025-01-28',
-            summary: 'Barter ekonomisinden SaaS donemine kadar gelir modellerindeki kirilma noktalari.',
-            content: `
-                <h2>Tarihin Sayfalarinda Gelir Modelleri</h2>
-                <p>Gelir modelleri tarih boyunca degisim gosterdi. Barter ekonomisinden SaaS abonelik modellerine kadar olan surecte hangi kirilma noktalari yasandi?</p>
-
-                <h3>Evrim Asamalari</h3>
-                <p><strong>1. Barter Ekonomisi:</strong> Mal ve hizmet takasi<br>
-                <strong>2. Para Ekonomisi:</strong> Standart degisim araci<br>
-                <strong>3. Perakende:</strong> Fiziksel magaza satislari<br>
-                <strong>4. E-Ticaret:</strong> Online satis platformlari<br>
-                <strong>5. Abonelik:</strong> Surekli gelir modelleri<br>
-                <strong>6. Platform Ekonomisi:</strong> Cok tarafli pazaryerleri</p>
-
-                <p>Her asama, teknolojinin imkan verdigi yeni firsatlarla sekillendi.</p>
-            `
-        },
-        {
-            id: 'stat-4',
-            title: 'Fiyatin Otesinde: Gelir Yonetiminin Gizli Dili',
-            date: '2025-03-05',
-            summary: 'Veri temelli fiyatlandirma ve cift tarafli gelir modellerinin avantajlari.',
-            content: `
-                <h2>Modern Fiyatlandirma Stratejileri</h2>
-                <p>Veri temelli fiyatlandirma hem uyelik ucretleri hem de veri istihbarati gelirlerini icerir. Bu cift tarafli model, sirketlere coklu gelir akislari saglar.</p>
-
-                <div class="article-image">
-                    <img class="responsive" src="/uploads/veri-temelli-model.png" alt="Veri Temelli Gelir Modeli" loading="lazy" decoding="async" width="800" height="450">
-                    <div class="image-caption">Veri odakli fiyatlandirma modelinin semasi</div>
-                </div>
-
-                <h3>Veri Temelli Yaklasim</h3>
-                <p>Sirketler artik musteri davranislarini analiz ederek dinamik fiyatlandirma yapabiliyor. Bu sayede:</p>
-                <ul>
-                    <li>Talep dalgalanmalarina hizli tepki</li>
-                    <li>Kisisellestirmis fiyat teklifleri</li>
-                    <li>Gelir maksimizasyonu</li>
-                    <li>Musteri segmentasyonu optimizasyonu</li>
-                </ul>
-
-                <blockquote>"Fiyat sadece bir sayi degil, musteri algisinin ve deger onerisinin bir yansimasidir."</blockquote>
-            `
-        }
-    ];
-
-    // Dinamik makaleler localStorage'dan
-    function loadDynamicArticles(){
-        try {
-            const data = localStorage.getItem('articles');
-            if (!data) return [];
-            const parsed = JSON.parse(data);
-            return Array.isArray(parsed) ? parsed : [];
-        } catch(e) {
-            console.warn('LocalStorage parse error:', e);
-            return [];
-        }
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "Convivium Makaleler",
+    "description": "Teknoloji, pazarlama, gelir modelleri ve dijital donusum uzerine makaleler",
+    "url": "https://ersinbinal.github.io/makaleler.html",
+    "author": {
+      "@type": "Person",
+      "name": "Ersin Binal"
     }
-
-    // Calculate reading time
-    function calculateReadTime(text){
-        const words = text.replace(/<[^>]+>/g, ' ').trim().split(/\s+/).length;
-        const minutes = Math.ceil(words / 200);
-        return `~${minutes} dk okuma`;
-    }
-
-    // Generate table of contents
-    function generateTOC(content){
-        const temp = document.createElement('div');
-        temp.innerHTML = content;
-        const headings = temp.querySelectorAll('h2, h3');
-        if(headings.length === 0) return content;
-
-        let toc = '<div class="toc"><h4 class="toc-title">Icindekiler</h4><ul>';
-        headings.forEach((h, idx) => {
-            const id = `heading-${idx}`;
-            h.id = id;
-            const level = h.tagName === 'H2' ? '' : 'style="margin-left:16px;"';
-            toc += `<li ${level}><a href="#${id}">${h.textContent}</a></li>`;
-        });
-        toc += '</ul></div>';
-
-        return toc + temp.innerHTML;
-    }
-
-    // Render articles
-    function renderArticles(list){
-        const container = document.getElementById('articles');
-        container.innerHTML = '';
-        const tpl = document.getElementById('article-template');
-
-        if (!list.length) {
-            container.innerHTML = '<p class="system-status">Eslesen makale bulunamadi.</p>';
-            return;
-        }
-
-        list.forEach(article => {
-            const node = tpl.content.cloneNode(true);
-            const art = node.querySelector('article');
-
-            node.querySelector('.title').textContent = article.title;
-            node.querySelector('.date').textContent = article.date;
-
-            const readTime = calculateReadTime(article.content || '');
-            node.querySelector('.read-time').textContent = readTime;
-
-            const summaryText = article.summary || (article.content.replace(/<[^>]+>/g,'').slice(0,160) + '...');
-            node.querySelector('.summary').textContent = summaryText;
-
-            const full = node.querySelector('.full');
-            const processedContent = generateTOC(article.content || '');
-            full.innerHTML = processedContent;
-
-            const btn = node.querySelector('.read-btn');
-            btn.addEventListener('click', () => {
-                const wasActive = full.classList.contains('active');
-
-                // Close all other articles
-                document.querySelectorAll('.full.active').forEach(f => {
-                    f.classList.remove('active');
-                    f.setAttribute('aria-hidden', 'true');
-                    f.closest('article').classList.remove('expanded');
-                });
-                document.querySelectorAll('.read-btn').forEach(b => b.textContent = 'Devamini Oku');
-
-                if(!wasActive){
-                    full.classList.add('active');
-                    full.setAttribute('aria-hidden', 'false');
-                    art.classList.add('expanded');
-                    btn.textContent = 'Kapat';
-                    if(window.toggleProgress) window.toggleProgress(art);
-                    setTimeout(() => {
-                        art.scrollIntoView({behavior:'smooth', block:'start'});
-                    }, 100);
-                } else {
-                    if(window.toggleProgress) window.toggleProgress(null);
-                }
-            });
-
-            container.appendChild(node);
-        });
-    }
-
-    function mergeArticles(primary, fallback, dynamic){
-        const seen = new Set();
-        const merged = [];
-
-        [...primary, ...fallback, ...dynamic].forEach(article => {
-            const key = article.slug || article.id || article.title;
-            if (!key || seen.has(key)) return;
-            seen.add(key);
-            merged.push(article);
-        });
-
-        return merged;
-    }
-
-    function setContentSourceStatus(message){
-        const el = document.getElementById('contentSourceStatus');
-        if (el) el.textContent = message;
-    }
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', async () => {
-        const dyn = loadDynamicArticles();
-        const localDrafts = dyn.map((a,i)=>({
-            id:'dyn-'+i,
-            title:a.title,
-            slug:'local-'+i,
-            date:a.date,
-            summary:a.content.replace(/<[^>]+>/g,'').slice(0,120),
-            content: a.content
-        }));
-
-        let remoteArticles = [];
-        if (window.ConviviumBackend && window.ConviviumBackend.isConfigured()) {
-            setContentSourceStatus('Veritabani baglantisi kontrol ediliyor...');
-            try {
-                remoteArticles = await window.ConviviumBackend.fetchPublishedArticles();
-                setContentSourceStatus(remoteArticles.length
-                    ? `Veritabanindan ${remoteArticles.length} yayin yuklendi.`
-                    : 'Veritabani bagli; henuz yayinlanmis makale yok.');
-            } catch (error) {
-                console.warn('[Convivium] Remote article load failed:', error);
-                setContentSourceStatus('Veritabani okunamadi; statik arsiv gosteriliyor.');
-            }
-        } else {
-            setContentSourceStatus('Veritabani henuz bagli degil; statik arsiv gosteriliyor.');
-        }
-
-        const all = mergeArticles(remoteArticles, staticArticles, localDrafts);
-
-        renderArticles(all);
-
-        // Search
-        const search = document.getElementById('search');
-        search.addEventListener('input', (e)=>{
-            const q = e.target.value.trim().toLowerCase();
-            if(!q){ renderArticles(all); return; }
-            const filtered = all.filter(a =>
-                (a.title + ' ' + (a.summary||'') + ' ' + (a.content||''))
-                .toLowerCase()
-                .includes(q)
-            );
-            renderArticles(filtered);
-        });
-    });
-    </script>
-
-    <!-- Service Worker Registration -->
-    <script>
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/service-worker.js')
-            .catch(err => console.warn('[SW] Registration failed:', err));
-    }
-    </script>
-
-    <!-- Structured Data -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Blog",
-        "name": "Ersin Binal Makaleler",
-        "description": "Teknoloji, pazarlama ve dijital donusum uzerine makaleler",
-        "url": "https://ersinbinal.github.io/makaleler.html",
-        "author": {
-            "@type": "Person",
-            "name": "Ersin Binal"
-        }
-    }
-    </script>
+  }
+  </script>
 </body>
 </html>

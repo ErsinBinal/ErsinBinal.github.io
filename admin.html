@@ -7,23 +7,22 @@
   <meta name="description" content="Convivium icerik yonetimi paneli.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/admin.html">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
   <meta name="theme-color" content="#00ff00">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=30">
-  <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
-  <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
+  <link rel="stylesheet" href="/assets/css/components.css?v=31">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=1">
 </head>
-<body class="bugy-debug">
+<body>
   <a class="skip-link" href="#content">Icerigi atla</a>
 
   <div class="site site-wide">
     <header class="site-header" role="banner">
       <h1>Icerik Yonetimi</h1>
-      <p>Makaleleri veritabanina tasiyan admin paneli.</p>
+      <p>Makaleleri hazirlayan, ice aktaran ve veritabanina yayinlayan editor paneli.</p>
       <nav role="navigation" aria-label="Site navigasyonu" style="margin-top: 12px;">
         <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
         <a href="dashboard.html" class="btn">Dashboard</a>
@@ -34,104 +33,6 @@
 
     <main id="content" role="main" class="admin-layout">
       <section id="adminGate" class="system-status" aria-live="polite">Yukleniyor...</section>
-
-      <section class="bugy-admin-panel" aria-labelledby="arcadeKitTitle">
-        <div class="admin-toolbar">
-          <div>
-            <h2 id="arcadeKitTitle">Arcade Kit Lab</h2>
-            <p id="arcadeKitStatus" aria-live="polite">Arcade cekirdegi hazirlaniyor...</p>
-          </div>
-          <div class="bugy-toggle-row">
-            <label class="bugy-skin-select">
-              Palet
-              <select id="arcadePaletteSelect">
-                <option value="neon">Neon</option>
-                <option value="gameboy">Game Boy</option>
-                <option value="famicom">Famicom</option>
-                <option value="neogeo">Neo Geo</option>
-                <option value="mono">Mono</option>
-              </select>
-            </label>
-            <label class="bugy-skin-select">
-              Karakter
-              <select id="arcadeCharacterSelect">
-                <option value="mascot">Mascot</option>
-                <option value="runner">Runner</option>
-                <option value="mech">Mech</option>
-                <option value="wisp">Wisp</option>
-                <option value="boss">Boss</option>
-              </select>
-            </label>
-            <label class="bugy-random-toggle">
-              <input id="arcadeDebugToggle" type="checkbox">
-              Hitbox debug
-            </label>
-          </div>
-        </div>
-        <div id="arcadeDemoMount" class="arcade-demo-stage"></div>
-        <div class="arcade-control-grid" aria-label="Arcade Kit denemeleri">
-          <button class="btn btn-primary" type="button" data-arcade-demo="burst">Pixel Patlama</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="flash">Ekran Flash</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="shake">Sahne Sars</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="popup">Popup Yazı</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="timeline">Timeline Storm</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="tornado">Timeline Hortum</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="portal">Timeline Portal</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="canvas">Canvas Ping</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="shooter">Mini Shooter</button>
-          <button class="btn btn-primary" type="button" data-arcade-demo="storage">Skor Kaydet</button>
-          <button class="btn" type="button" data-arcade-demo="sprite">Sprite Değiştir</button>
-          <button class="btn" type="button" data-character-pose="idle">Pose Idle</button>
-          <button class="btn" type="button" data-character-pose="walk">Pose Walk</button>
-          <button class="btn" type="button" data-character-pose="jump">Pose Jump</button>
-          <button class="btn" type="button" data-character-pose="hit">Pose Hit</button>
-          <button class="btn" type="button" data-character-pose="cast">Pose Cast</button>
-        </div>
-      </section>
-
-      <section class="bugy-admin-panel" aria-labelledby="bugyAdminTitle">
-        <div class="admin-toolbar">
-          <div>
-            <h2 id="bugyAdminTitle">Bugy Kontrol</h2>
-            <p id="bugyStatus" aria-live="polite">Bugy hazirlaniyor...</p>
-          </div>
-          <div class="bugy-toggle-row">
-            <label class="bugy-skin-select">
-              Motor
-              <select id="bugyEngineSelect">
-                <option value="v1">Bugy V1</option>
-                <option value="v2">Bugy V2</option>
-                <option value="v3">Bugy V3</option>
-              </select>
-            </label>
-            <label class="bugy-skin-select">
-              Skin
-              <select id="bugySkinSelect">
-                <option value="classic">Forest Bugy</option>
-                <option value="matrix">Circuit Scout</option>
-                <option value="ember">Ember Runner</option>
-                <option value="ghost">Bone Glitch</option>
-                <option value="royal">Royal Courier</option>
-              </select>
-            </label>
-            <label class="bugy-random-toggle">
-              <input id="bugyRandomToggle" type="checkbox" checked>
-              Rastgele aksiyonlar
-            </label>
-            <button id="bugySummon" class="btn" type="button">Bugy'i Cagir</button>
-          </div>
-        </div>
-
-        <div class="bugy-control-grid" aria-label="Bugy aksiyonlari">
-          <button class="btn btn-primary" type="button" data-bugy-action="storm">Firtina + Yildirim</button>
-          <button class="btn btn-primary" type="button" data-bugy-action="tornado">Hortum + Firlat</button>
-          <button class="btn btn-primary" type="button" data-bugy-action="portal">Portal</button>
-          <button class="btn btn-primary" type="button" data-bugy-action="clone">Clone Glitch</button>
-          <button class="btn btn-primary" type="button" data-bugy-action="gravity">Dusuk Yercekimi</button>
-          <button class="btn btn-primary" type="button" data-bugy-action="abduct">UFO</button>
-          <button id="bugyNextAction" class="btn" type="button">Siradaki Aksiyon</button>
-        </div>
-      </section>
 
       <section id="adminWorkspace" hidden>
         <div class="admin-toolbar">
@@ -150,15 +51,17 @@
           <form id="articleForm" class="form-panel editor-panel">
             <input type="hidden" name="id">
 
-            <label>
-              Baslik
-              <input id="title" name="title" type="text" required maxlength="160">
-            </label>
+            <div class="editor-meta-row">
+              <label>
+                Baslik
+                <input id="title" name="title" type="text" required maxlength="160">
+              </label>
 
-            <label>
-              Slug
-              <input id="slug" name="slug" type="text" required maxlength="96" pattern="[a-z0-9-]+">
-            </label>
+              <label>
+                Slug
+                <input id="slug" name="slug" type="text" required maxlength="96" pattern="[a-z0-9-]+">
+              </label>
+            </div>
 
             <label>
               Ozet
@@ -181,6 +84,28 @@
               </label>
             </div>
 
+            <section class="admin-editor-tools" aria-label="Editor araclari">
+              <div class="import-toolbar">
+                <label class="file-import-label">
+                  Dosyadan aktar
+                  <input id="articleImportFile" type="file" accept=".txt,.md,.markdown,.html,.htm,.docx,.pdf,text/plain,text/markdown,text/html,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                </label>
+                <button id="pasteAsMarkdown" class="btn" type="button">Markdown'a cevir</button>
+                <button id="cleanHtml" class="btn" type="button">HTML temizle</button>
+              </div>
+              <div class="editor-toolbar" aria-label="Icerik arac cubugu">
+                <button class="btn" type="button" data-editor-wrap="h2">H2</button>
+                <button class="btn" type="button" data-editor-wrap="h3">H3</button>
+                <button class="btn" type="button" data-editor-wrap="strong">B</button>
+                <button class="btn" type="button" data-editor-wrap="blockquote">Alinti</button>
+                <button class="btn" type="button" data-editor-insert="image">Gorsel</button>
+                <button class="btn" type="button" data-editor-insert="video">Video</button>
+                <button class="btn" type="button" data-editor-insert="link">Link</button>
+                <button class="btn" type="button" data-editor-insert="list">Liste</button>
+              </div>
+              <p class="editor-helper" id="importStatus" aria-live="polite">TXT, Markdown, HTML, DOCX ve PDF dosyalarindan icerik aktarabilirsiniz. PDF aktarimi metin tabanli PDF'lerde calisir.</p>
+            </section>
+
             <label>
               Icerik HTML
               <textarea id="content_html" name="content_html" rows="16" required></textarea>
@@ -194,8 +119,10 @@
 
           <section class="preview-panel" aria-label="Makale onizleme">
             <h2>Onizleme</h2>
-            <div id="articlePreview" class="full active">
-              <p>Onizleme burada gorunur.</p>
+            <div class="preview-frame">
+              <div id="articlePreview" class="reader-content">
+                <p>Onizleme burada gorunur.</p>
+              </div>
             </div>
           </section>
         </div>
@@ -204,12 +131,11 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=21" defer></script>
-  <script src="/assets/js/arcade-kit.js?v=32" defer></script>
-  <script src="/assets/js/neon-sheep.js?v=29" defer></script>
-  <script src="/assets/js/bugy-v2.js?v=2" defer></script>
-  <script src="/assets/js/bugy-v3-loader.js?v=5" defer></script>
-  <script src="/assets/js/admin.js?v=35" defer></script>
+  <script src="/assets/js/supabase-client.js?v=22" defer></script>
+  <script src="/assets/js/articles.js?v=1" defer></script>
+  <script src="/assets/js/admin.js?v=36" defer></script>
 </body>
 </html>
