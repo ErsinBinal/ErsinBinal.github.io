@@ -2,51 +2,55 @@
   'use strict';
 
   const backend = window.ConviviumBackend;
+  const tools = window.ConviviumArticleTools || {};
+
   const gate = document.getElementById('adminGate');
   const workspace = document.getElementById('adminWorkspace');
   const status = document.getElementById('adminStatus');
-  const list = document.getElementById('articleList');
   const form = document.getElementById('articleForm');
+  const list = document.getElementById('articleList');
+  const articleTotal = document.getElementById('articleTotal');
+  const articleSearch = document.getElementById('articleSearch');
+  const statusFilter = document.getElementById('statusFilter');
   const clearButton = document.getElementById('clearForm');
   const deleteButton = document.getElementById('deleteArticle');
-  const slugInput = document.getElementById('slug');
+  const saveDraftButton = document.getElementById('saveDraft');
+  const publishButton = document.getElementById('publishArticle');
+  const submitButton = document.getElementById('submitArticle');
   const titleInput = document.getElementById('title');
+  const slugInput = document.getElementById('slug');
   const contentInput = document.getElementById('content_html');
+  const visualEditor = document.getElementById('visualEditor');
   const preview = document.getElementById('articlePreview');
   const importFile = document.getElementById('articleImportFile');
   const importStatus = document.getElementById('importStatus');
   const pasteAsMarkdown = document.getElementById('pasteAsMarkdown');
   const cleanHtml = document.getElementById('cleanHtml');
-  const bugyStatus = document.getElementById('bugyStatus');
-  const bugySummon = document.getElementById('bugySummon');
-  const bugyNextAction = document.getElementById('bugyNextAction');
-  const bugyEngineSelect = document.getElementById('bugyEngineSelect');
-  const bugyRandomToggle = document.getElementById('bugyRandomToggle');
-  const bugySkinSelect = document.getElementById('bugySkinSelect');
-  const arcadeStatus = document.getElementById('arcadeKitStatus');
-  const arcadePaletteSelect = document.getElementById('arcadePaletteSelect');
-  const arcadeCharacterSelect = document.getElementById('arcadeCharacterSelect');
-  const arcadeDebugToggle = document.getElementById('arcadeDebugToggle');
-  const arcadeDemoMount = document.getElementById('arcadeDemoMount');
-  let activeId = '';
-  let articles = [];
-  let arcadeStage = null;
-  let arcadeScene = null;
-  let arcadeTemplate = null;
-  let arcadeSprite = null;
-  let arcadeCharacter = null;
-  let arcadeSpriteIndex = 0;
-  const bugyEngineKey = 'convivium.bugy.engine';
+  const wordCount = document.getElementById('wordCount');
+  const readTime = document.getElementById('readTime');
+  const dirtyState = document.getElementById('dirtyState');
 
-  function setStatus(message, type) {
+  if (!form) return;
+
+  const state = {
+    articles: [],
+    filtered: [],
+    activeId: '',
+    dirty: false,
+    slugLocked: false
+  };
+
+  const autosaveKey = 'convivium.article.autosave';
+
+  function setStatus(message, type = 'info') {
     status.textContent = message || '';
-    status.dataset.type = type || 'info';
+    status.dataset.type = type;
   }
 
-  function setImportStatus(message, type) {
+  function setImportStatus(message, type = 'info') {
     if (!importStatus) return;
-    importStatus.textContent = message;
-    importStatus.dataset.type = type || 'info';
+    importStatus.textContent = message || '';
+    importStatus.dataset.type = type;
   }
 
   function setGate(message) {
@@ -55,254 +59,41 @@
     workspace.hidden = true;
   }
 
-  function formData() {
-    const data = new FormData(form);
-    return Object.fromEntries(data.entries());
-  }
-
-  function fillForm(article) {
-    activeId = article ? article.id : '';
-    form.elements.id.value = activeId;
-    form.elements.title.value = article ? article.title : '';
-    form.elements.slug.value = article ? article.slug : '';
-    form.elements.summary.value = article ? article.summary : '';
-    form.elements.status.value = article ? article.status : 'draft';
-    form.elements.published_at.value = article && article.published_at ? article.published_at.slice(0, 16) : '';
-    form.elements.content_html.value = article ? article.content_html : '';
-    deleteButton.disabled = !activeId;
-    updatePreview();
-  }
-
-  function updatePreview() {
-    const tools = window.ConviviumArticleTools;
-    const html = contentInput.value.trim() || '<p>Onizleme burada gorunur.</p>';
-    preview.innerHTML = tools?.sanitizeHtml ? tools.sanitizeHtml(html) : html;
-  }
-
-  function renderList() {
-    list.innerHTML = '';
-    if (!articles.length) {
-      const empty = document.createElement('li');
-      empty.textContent = 'Henuz veritabaninda makale yok.';
-      list.appendChild(empty);
-      return;
-    }
-
-    articles.forEach((article) => {
-      const item = document.createElement('li');
-      const button = document.createElement('button');
-      const title = document.createElement('strong');
-      const details = document.createElement('span');
-      const meta = article.status === 'published' ? 'yayinda' : article.status;
-      button.type = 'button';
-      button.className = 'content-list-button';
-      title.textContent = article.title;
-      details.textContent = `${meta} / ${article.slug}`;
-      button.append(title, details);
-      button.addEventListener('click', () => fillForm(article));
-      item.appendChild(button);
-      list.appendChild(item);
-    });
-  }
-
-  function renderBugyStatus() {
-    if (!bugyStatus) return;
-    const engine = getBugyEngine();
-    if (!engine) {
-      bugyStatus.textContent = 'Bugy motoru yuklenmedi.';
-      bugyStatus.dataset.type = 'error';
-      return;
-    }
-
-    const state = engine.getState();
-    const skinName = state.skinLabel || state.skin;
-    const source = state.assetSource ? ` / kaynak: ${state.assetSource}` : '';
-    bugyStatus.textContent = `Motor: ${state.engine || getSelectedBugyEngine().toUpperCase()} / Durum: ${state.state} / skin: ${skinName} / random: ${state.randomEnabled ? 'acik' : 'kapali'} / x:${state.x} y:${state.y}${source}`;
-    bugyStatus.dataset.type = 'success';
-    if (bugyEngineSelect) bugyEngineSelect.value = getSelectedBugyEngine();
-    if (bugyRandomToggle) bugyRandomToggle.checked = state.randomEnabled;
-    if (bugySkinSelect) bugySkinSelect.value = state.skin;
-  }
-
-  function setBugyMessage(message, type) {
-    if (!bugyStatus) return;
-    bugyStatus.textContent = message;
-    bugyStatus.dataset.type = type || 'info';
-  }
-
-  function runBugyAction(action) {
-    const engine = getBugyEngine();
-    if (!engine) {
-      renderBugyStatus();
-      return;
-    }
-
-    engine.summon();
-    window.setTimeout(() => {
-      const ok = engine.trigger(action);
-      setBugyMessage(ok ? `Aksiyon baslatildi: ${action}` : `Aksiyon baslatilamadi: ${action}`, ok ? 'success' : 'error');
-      window.setTimeout(renderBugyStatus, 900);
-    }, 120);
-  }
-
-  function getSelectedBugyEngine() {
-    const engine = localStorage.getItem(bugyEngineKey);
-    return engine === 'v3' || engine === 'v2' ? engine : 'v1';
-  }
-
-  function getBugyEngine() {
-    const selected = getSelectedBugyEngine();
-    if (selected === 'v3') return window.BugyV3;
-    if (selected === 'v2') return window.BugyV2;
-    return window.Bugy;
-  }
-
-  function setBugyEngine(version) {
-    const next = version === 'v3' || version === 'v2' ? version : 'v1';
-    localStorage.setItem(bugyEngineKey, next);
-    document.body.classList.toggle('bugy-v1-muted', next === 'v2' || next === 'v3');
-    if (next === 'v3') {
-      window.BugyV2?.deactivate?.();
-      window.BugyV3?.activate?.();
-    } else if (next === 'v2') {
-      window.BugyV3?.deactivate?.();
-      window.BugyV2?.activate?.();
-    } else {
-      window.BugyV3?.deactivate?.();
-      window.BugyV2?.deactivate?.();
-      window.Bugy?.summon?.();
-    }
-    renderBugyStatus();
-    return next;
-  }
-
-  function bootBugyControls() {
-    const waitForBugy = window.setInterval(() => {
-      if (!window.Bugy) return;
-      if (getSelectedBugyEngine() === 'v2' && !window.BugyV2) return;
-      if (getSelectedBugyEngine() === 'v3' && !window.BugyV3) return;
-      window.clearInterval(waitForBugy);
-      setBugyEngine(getSelectedBugyEngine());
-      renderBugyStatus();
-    }, 120);
-
-    window.setTimeout(() => {
-      window.clearInterval(waitForBugy);
-      renderBugyStatus();
-    }, 4000);
-
-    document.querySelectorAll('[data-bugy-action]').forEach((button) => {
-      button.addEventListener('click', () => {
-        if (!window.Bugy) {
-          renderBugyStatus();
-          return;
-        }
-        runBugyAction(button.dataset.bugyAction);
-      });
-    });
-
-    bugySummon?.addEventListener('click', () => {
-      const engine = getBugyEngine();
-      if (!engine) {
-        renderBugyStatus();
-        return;
-      }
-      engine.summon();
-      renderBugyStatus();
-    });
-
-    bugyNextAction?.addEventListener('click', () => {
-      const engine = getBugyEngine();
-      if (!engine) {
-        renderBugyStatus();
-        return;
-      }
-      engine.next();
-      setBugyMessage('Siradaki aksiyon baslatildi.', 'success');
-      window.setTimeout(renderBugyStatus, 900);
-    });
-
-    bugyEngineSelect?.addEventListener('change', () => {
-      const next = setBugyEngine(bugyEngineSelect.value);
-      setBugyMessage(`Bugy motoru secildi: ${next.toUpperCase()}`, 'success');
-      window.setTimeout(renderBugyStatus, 700);
-    });
-
-    bugyRandomToggle?.addEventListener('change', () => {
-      const engine = getBugyEngine();
-      if (!engine) {
-        renderBugyStatus();
-        return;
-      }
-      engine.setRandom(bugyRandomToggle.checked);
-      renderBugyStatus();
-    });
-
-    bugySkinSelect?.addEventListener('change', () => {
-      const engine = getBugyEngine();
-      if (!engine) {
-        renderBugyStatus();
-        return;
-      }
-      const skin = engine.setSkin(bugySkinSelect.value);
-      setBugyMessage(`Skin secildi: ${skin}`, 'success');
-      window.setTimeout(renderBugyStatus, 700);
-    });
-
-    window.addEventListener('bugy:state', renderBugyStatus);
-    window.addEventListener('bugy-v2:state', renderBugyStatus);
-    window.addEventListener('bugy-v3:state', renderBugyStatus);
-    window.setInterval(renderBugyStatus, 1200);
-  }
-
-  function setArcadeStatus(message, type) {
-    if (!arcadeStatus) return;
-    arcadeStatus.textContent = message;
-    arcadeStatus.dataset.type = type || 'info';
-  }
-
-  function selectedText() {
-    return contentInput.value.slice(contentInput.selectionStart, contentInput.selectionEnd);
-  }
-
-  function replaceSelection(value) {
-    const start = contentInput.selectionStart;
-    const end = contentInput.selectionEnd;
-    const before = contentInput.value.slice(0, start);
-    const after = contentInput.value.slice(end);
-    contentInput.value = `${before}${value}${after}`;
-    contentInput.focus();
-    contentInput.selectionStart = start;
-    contentInput.selectionEnd = start + value.length;
-    updatePreview();
-  }
-
   function escapeHtml(value) {
-    return window.ConviviumArticleTools?.escapeHtml
-      ? window.ConviviumArticleTools.escapeHtml(value)
-      : String(value || '').replace(/[&<>"']/g, (char) => ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[char]));
+    if (tools.escapeHtml) return tools.escapeHtml(value);
+    return String(value || '').replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
   }
 
   function sanitizeHtml(html) {
-    return window.ConviviumArticleTools?.sanitizeHtml
-      ? window.ConviviumArticleTools.sanitizeHtml(html)
-      : String(html || '');
+    return tools.sanitizeHtml ? tools.sanitizeHtml(html) : String(html || '');
+  }
+
+  function stripHtml(html) {
+    if (tools.stripHtml) return tools.stripHtml(html);
+    const box = document.createElement('div');
+    box.innerHTML = html || '';
+    return box.textContent.replace(/\s+/g, ' ').trim();
   }
 
   function markdownToHtml(markdown) {
-    return window.ConviviumArticleTools?.markdownToHtml
-      ? window.ConviviumArticleTools.markdownToHtml(markdown)
-      : `<p>${escapeHtml(markdown).replace(/\n{2,}/g, '</p><p>').replace(/\n/g, '<br>')}</p>`;
+    return tools.markdownToHtml
+      ? tools.markdownToHtml(markdown)
+      : textToHtml(markdown);
+  }
+
+  function slugify(value) {
+    return backend?.slugify ? backend.slugify(value) : String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
   }
 
   function textToHtml(text) {
     return String(text || '')
+      .replace(/\r\n/g, '\n')
       .split(/\n{2,}/)
       .map((part) => part.trim())
       .filter(Boolean)
@@ -310,16 +101,201 @@
       .join('\n');
   }
 
-  function wrapSelection(tag) {
-    const text = selectedText().trim();
-    const defaults = {
-      h2: 'Yeni bolum basligi',
-      h3: 'Alt baslik',
-      strong: 'vurgulu metin',
-      blockquote: 'Alinti metni'
-    };
-    const content = escapeHtml(text || defaults[tag] || 'metin');
-    replaceSelection(`<${tag}>${content}</${tag}>`);
+  function formData() {
+    syncEditorToTextarea();
+    return Object.fromEntries(new FormData(form).entries());
+  }
+
+  function setDirty(isDirty) {
+    state.dirty = Boolean(isDirty);
+    dirtyState.textContent = state.dirty ? 'Kaydedilmemis degisiklik var' : 'Degisiklik yok';
+    dirtyState.dataset.dirty = String(state.dirty);
+  }
+
+  function syncEditorToTextarea() {
+    const clean = sanitizeHtml(visualEditor.innerHTML);
+    contentInput.value = clean;
+    return clean;
+  }
+
+  function setEditorHtml(html) {
+    const clean = sanitizeHtml(html || '');
+    visualEditor.innerHTML = clean || '';
+    contentInput.value = clean;
+    updatePreview();
+    updateStats();
+  }
+
+  function updatePreview() {
+    const html = sanitizeHtml(visualEditor.innerHTML || contentInput.value || '');
+    preview.innerHTML = html || '<p>Onizleme burada gorunur.</p>';
+  }
+
+  function updateStats() {
+    const text = stripHtml(visualEditor.innerHTML);
+    const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    wordCount.textContent = `${words} kelime`;
+    readTime.textContent = `~${minutes} dk okuma`;
+
+    const summary = form.elements.summary;
+    if (summary && !summary.value.trim() && words > 20) {
+      summary.value = text.slice(0, 260);
+    }
+  }
+
+  function saveAutosave() {
+    const data = formData();
+    try {
+      localStorage.setItem(autosaveKey, JSON.stringify({
+        ...data,
+        content_html: contentInput.value,
+        saved_at: new Date().toISOString()
+      }));
+    } catch (error) {
+      console.warn('[Convivium] Autosave failed:', error);
+    }
+  }
+
+  function clearAutosave() {
+    try {
+      localStorage.removeItem(autosaveKey);
+    } catch (error) {
+      console.warn('[Convivium] Autosave cleanup failed:', error);
+    }
+  }
+
+  function statusLabel(value) {
+    if (value === 'published') return 'Yayinda';
+    if (value === 'archived') return 'Arsiv';
+    return 'Taslak';
+  }
+
+  function rowDate(article) {
+    return String(article.published_at || article.updated_at || article.created_at || '').slice(0, 10) || 'Tarihsiz';
+  }
+
+  function filterArticles() {
+    const q = articleSearch.value.trim().toLowerCase();
+    const statusValue = statusFilter.value;
+    state.filtered = state.articles.filter((article) => {
+      const statusOk = statusValue === 'all' || article.status === statusValue;
+      const queryOk = !q || `${article.title} ${article.summary} ${article.slug}`.toLowerCase().includes(q);
+      return statusOk && queryOk;
+    });
+    renderList();
+  }
+
+  function renderList() {
+    list.innerHTML = '';
+    articleTotal.textContent = state.articles.length;
+
+    if (!state.filtered.length) {
+      const empty = document.createElement('li');
+      empty.className = 'studio-empty';
+      empty.textContent = 'Bu filtrede makale yok.';
+      list.appendChild(empty);
+      return;
+    }
+
+    state.filtered.forEach((article) => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+      const title = document.createElement('strong');
+      const summary = document.createElement('span');
+      const meta = document.createElement('em');
+
+      button.type = 'button';
+      button.className = 'studio-list-button';
+      button.classList.toggle('is-active', article.id === state.activeId);
+      title.textContent = article.title || 'Basliksiz';
+      summary.textContent = article.summary || article.slug;
+      meta.textContent = `${statusLabel(article.status)} / ${rowDate(article)}`;
+      button.append(title, summary, meta);
+      button.addEventListener('click', () => fillForm(article));
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+  }
+
+  function fillForm(article) {
+    const hasArticle = Boolean(article);
+    state.activeId = hasArticle ? article.id : '';
+    state.slugLocked = hasArticle;
+
+    form.elements.id.value = hasArticle ? article.id : '';
+    form.elements.title.value = hasArticle ? article.title || '' : '';
+    form.elements.slug.value = hasArticle ? article.slug || '' : '';
+    form.elements.summary.value = hasArticle ? article.summary || '' : '';
+    form.elements.status.value = hasArticle ? article.status || 'draft' : 'draft';
+    form.elements.published_at.value = hasArticle && article.published_at ? article.published_at.slice(0, 16) : '';
+    setEditorHtml(hasArticle ? article.content_html || '' : '');
+
+    deleteButton.disabled = !hasArticle;
+    submitButton.textContent = hasArticle ? 'Guncelle' : 'Kaydet';
+    setDirty(false);
+    renderList();
+  }
+
+  function validateArticle(data) {
+    if (!data.title.trim()) throw new Error('Baslik gerekli.');
+    if (!data.slug.trim()) throw new Error('Slug gerekli.');
+    if (!data.summary.trim()) throw new Error('Ozet gerekli.');
+    if (!stripHtml(data.content_html).trim()) throw new Error('Makale icerigi bos olamaz.');
+  }
+
+  async function loadArticles(selectId = state.activeId) {
+    setStatus('Icerikler yukleniyor...', 'info');
+    state.articles = await backend.fetchManagedArticles();
+    state.filtered = [...state.articles];
+    filterArticles();
+
+    const selected = state.articles.find((article) => article.id === selectId);
+    if (selected) fillForm(selected);
+    else if (!state.activeId && state.articles[0]) fillForm(state.articles[0]);
+    else setDirty(false);
+
+    setStatus('Icerik listesi guncel.', 'success');
+  }
+
+  async function saveArticle(forceStatus) {
+    const data = formData();
+    if (forceStatus) {
+      data.status = forceStatus;
+      form.elements.status.value = forceStatus;
+    }
+
+    data.slug = slugify(data.slug || data.title);
+    form.elements.slug.value = data.slug;
+    data.content_html = sanitizeHtml(data.content_html);
+    if (data.status === 'published' && !data.published_at) {
+      data.published_at = new Date().toISOString();
+    } else if (data.published_at) {
+      data.published_at = new Date(data.published_at).toISOString();
+    }
+
+    validateArticle(data);
+
+    setStatus(data.status === 'published' ? 'Makale yayina hazirlaniyor...' : 'Makale kaydediliyor...', 'info');
+    const saved = await backend.saveArticle({
+      id: data.id,
+      title: data.title,
+      slug: data.slug,
+      summary: data.summary,
+      status: data.status,
+      published_at: data.published_at,
+      content_html: data.content_html
+    });
+
+    clearAutosave();
+    await loadArticles(saved.id);
+    setStatus(data.status === 'published' ? 'Makale yayinda.' : 'Makale kaydedildi.', 'success');
+  }
+
+  function insertHtml(html) {
+    visualEditor.focus();
+    document.execCommand('insertHTML', false, sanitizeHtml(html));
+    handleEditorChange();
   }
 
   function toEmbedUrl(raw) {
@@ -331,7 +307,7 @@
         return `https://www.youtube-nocookie.com/embed/${url.pathname.replace('/', '')}`;
       }
       if (url.hostname.includes('youtube.com')) {
-        const id = url.searchParams.get('v') || url.pathname.split('/').pop();
+        const id = url.searchParams.get('v') || url.pathname.split('/').filter(Boolean).pop();
         return id ? `https://www.youtube-nocookie.com/embed/${id}` : value;
       }
       if (url.hostname.includes('vimeo.com')) {
@@ -344,13 +320,21 @@
     return value;
   }
 
-  function insertSnippet(type) {
+  function handleInsert(type) {
+    if (type === 'link') {
+      const href = window.prompt('Link URL');
+      if (!href) return;
+      const label = window.getSelection().toString() || window.prompt('Link metni', 'Kaynak') || 'Kaynak';
+      insertHtml(`<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`);
+      return;
+    }
+
     if (type === 'image') {
       const src = window.prompt('Gorsel URL');
       if (!src) return;
       const alt = window.prompt('Gorsel aciklamasi', 'Makale gorseli') || 'Makale gorseli';
       const caption = window.prompt('Altyazi', '') || '';
-      replaceSelection(`<figure class="article-image">
+      insertHtml(`<figure class="article-image">
   <img class="responsive" src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" decoding="async">
   ${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ''}
 </figure>`);
@@ -360,47 +344,10 @@
     if (type === 'video') {
       const src = toEmbedUrl(window.prompt('YouTube veya Vimeo URL'));
       if (!src) return;
-      replaceSelection(`<figure class="article-video">
+      insertHtml(`<figure class="article-video">
   <iframe src="${escapeHtml(src)}" title="Makale videosu" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
 </figure>`);
-      return;
     }
-
-    if (type === 'link') {
-      const href = window.prompt('Link URL');
-      if (!href) return;
-      const text = selectedText().trim() || window.prompt('Link metni', 'Kaynak') || 'Kaynak';
-      replaceSelection(`<a href="${escapeHtml(href)}">${escapeHtml(text)}</a>`);
-      return;
-    }
-
-    if (type === 'list') {
-      const text = selectedText().trim();
-      const items = (text ? text.split(/\n+/) : ['Madde 1', 'Madde 2'])
-        .map((item) => `<li>${escapeHtml(item.replace(/^[-*]\s*/, '').trim())}</li>`)
-        .join('\n');
-      replaceSelection(`<ul>\n${items}\n</ul>`);
-    }
-  }
-
-  function applyImportedHtml(html, sourceName) {
-    const clean = sanitizeHtml(html);
-    if (!clean.trim()) {
-      setImportStatus('Dosyadan aktarilacak metin bulunamadi.', 'error');
-      return;
-    }
-
-    const hasContent = Boolean(contentInput.value.trim());
-    const shouldAppend = hasContent && window.confirm('Mevcut icerigin sonuna eklensin mi? Iptal derseniz editor icerigi degisir.');
-    contentInput.value = shouldAppend ? `${contentInput.value.trim()}\n\n${clean}` : clean;
-
-    if (!titleInput.value.trim() && sourceName) {
-      titleInput.value = sourceName.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
-      if (!slugInput.value.trim()) slugInput.value = backend.slugify(titleInput.value);
-    }
-
-    updatePreview();
-    setImportStatus(`${sourceName || 'Dosya'} aktarildi.`, 'success');
   }
 
   async function importDocx(file) {
@@ -441,185 +388,32 @@
     return textToHtml(text);
   }
 
-  function stopArcadeTemplate() {
-    arcadeTemplate?.destroy?.();
-    arcadeTemplate = null;
+  function applyImportedHtml(html, sourceName) {
+    const clean = sanitizeHtml(html);
+    if (!stripHtml(clean)) {
+      setImportStatus('Dosyadan aktarilacak metin bulunamadi.', 'error');
+      return;
+    }
+
+    const hasContent = Boolean(stripHtml(visualEditor.innerHTML));
+    const shouldAppend = hasContent && window.confirm('Mevcut icerigin sonuna eklensin mi? Iptal derseniz editor icerigi degisir.');
+    setEditorHtml(shouldAppend ? `${visualEditor.innerHTML}\n${clean}` : clean);
+
+    if (!titleInput.value.trim() && sourceName) {
+      titleInput.value = sourceName.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim();
+      if (!slugInput.value.trim()) slugInput.value = slugify(titleInput.value);
+    }
+
+    handleEditorChange();
+    setImportStatus(`${sourceName || 'Dosya'} aktarildi.`, 'success');
   }
 
-  function spawnArcadeSprite(form) {
-    if (!arcadeScene) return;
-    if (arcadeSprite) arcadeScene.remove(arcadeSprite);
-    arcadeSprite = arcadeScene.sprite({
-      form,
-      x: 130,
-      y: 72,
-      w: form === 'ship' ? 34 : 30,
-      h: form === 'orb' ? 30 : 34,
-      hitbox: { x: 4, y: 4, w: form === 'ship' ? 24 : 22, h: form === 'orb' ? 22 : 26 },
-      label: `arcade ${form}`
-    });
-  }
-
-  function spawnArcadeCharacter(model) {
-    if (!arcadeScene) return;
-    if (arcadeCharacter) arcadeScene.remove(arcadeCharacter);
-    arcadeCharacter = arcadeScene.actor({
-      model,
-      pose: 'idle',
-      x: 210,
-      y: 108,
-      scale: model === 'boss' ? 1 : 1.08,
-      tags: ['actor'],
-      label: `arcade character ${model}`
-    });
-  }
-
-  function bootArcadeStage(kit) {
-    stopArcadeTemplate();
-    arcadeStage?.destroy?.();
-    arcadeStage = kit.createStage({
-      mount: arcadeDemoMount,
-      palette: arcadePaletteSelect?.value || 'neon',
-      minHeight: 190
-    });
-    arcadeScene = kit.createScene({
-      stage: arcadeStage,
-      fps: 30,
-      debug: Boolean(arcadeDebugToggle?.checked)
-    });
-    spawnArcadeSprite('hero');
-    spawnArcadeCharacter(arcadeCharacterSelect?.value || 'mascot');
-    arcadeScene.onCollision('sprite', 'actor', () => {
-      kit.fx.flash(arcadeStage, { color: 'rgba(245,255,107,0.18)', duration: 80 });
-    });
-    arcadeScene.step();
-    kit.fx.popup(arcadeStage, 'READY', { x: 18, y: 18 });
-    kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 12 });
-  }
-
-  function bootArcadeKitControls() {
-    if (!arcadeDemoMount) return;
-    const waitForArcade = window.setInterval(() => {
-      if (!window.ConviviumArcadeKit) return;
-      window.clearInterval(waitForArcade);
-      const kit = window.ConviviumArcadeKit;
-      bootArcadeStage(kit);
-      setArcadeStatus(`Arcade Kit ${kit.version} aktif.`, 'success');
-    }, 120);
-
-    window.setTimeout(() => {
-      window.clearInterval(waitForArcade);
-      if (!window.ConviviumArcadeKit) setArcadeStatus('Arcade Kit yuklenmedi.', 'error');
-    }, 4000);
-
-    arcadePaletteSelect?.addEventListener('change', () => {
-      if (!arcadeStage) return;
-      arcadeStage.setPalette(arcadePaletteSelect.value);
-      setArcadeStatus(`Palet secildi: ${arcadePaletteSelect.value}`, 'success');
-    });
-
-    arcadeCharacterSelect?.addEventListener('change', () => {
-      stopArcadeTemplate();
-      spawnArcadeCharacter(arcadeCharacterSelect.value);
-      arcadeScene?.step();
-      setArcadeStatus(`Karakter modeli: ${arcadeCharacterSelect.value}`, 'success');
-    });
-
-    arcadeDebugToggle?.addEventListener('change', () => {
-      arcadeScene?.setDebug(arcadeDebugToggle.checked);
-      setArcadeStatus(`Hitbox debug: ${arcadeDebugToggle.checked ? 'acik' : 'kapali'}`, 'success');
-    });
-
-    document.querySelectorAll('[data-arcade-demo]').forEach((button) => {
-      button.addEventListener('click', () => {
-        if (!window.ConviviumArcadeKit || !arcadeStage) {
-          setArcadeStatus('Arcade Kit henuz hazir degil.', 'error');
-          return;
-        }
-
-        const kit = window.ConviviumArcadeKit;
-        const action = button.dataset.arcadeDemo;
-        if (action === 'burst') kit.fx.burst(arcadeStage, { x: 150, y: 92, count: 22 });
-        else if (action === 'flash') kit.fx.flash(arcadeStage, { color: 'rgba(245,255,107,0.42)' });
-        else if (action === 'shake') kit.fx.shake(arcadeStage);
-        else if (action === 'popup') kit.fx.popup(arcadeStage, 'INSERT COIN', { x: 76, y: 34 });
-        else if (action === 'timeline' || action === 'tornado' || action === 'portal') {
-          stopArcadeTemplate();
-          arcadeTemplate = kit.templates.petAction({
-            stage: arcadeStage,
-            model: arcadeCharacterSelect?.value || 'mascot'
-          });
-          arcadeCharacter = null;
-          arcadeSprite = null;
-          const timelineAction = action === 'timeline' ? 'storm' : action;
-          arcadeTemplate.runAction(timelineAction);
-          setArcadeStatus(`Timeline aksiyonu: ${timelineAction}`, 'success');
-        }
-        else if (action === 'shooter') {
-          stopArcadeTemplate();
-          arcadeScene?.stop();
-          arcadeStage?.clear();
-          arcadeTemplate = kit.templates.miniShooter({
-            stage: arcadeStage,
-            debug: Boolean(arcadeDebugToggle?.checked)
-          });
-          arcadeScene = arcadeTemplate.scene;
-          arcadeSprite = arcadeTemplate.player;
-          arcadeCharacter = null;
-          setArcadeStatus('Mini shooter template calisiyor.', 'success');
-        }
-        else if (action === 'canvas') {
-          stopArcadeTemplate();
-          arcadeScene?.stop();
-          arcadeStage?.clear();
-          const renderer = kit.renderers.canvas2d({
-            stage: arcadeStage,
-            width: 320,
-            height: 180
-          });
-          renderer
-            .clear('#050505')
-            .rect(38, 42, 48, 48, '#00eaff')
-            .outline(38, 42, 48, 48, '#f5ff6b')
-            .rect(124, 66, 72, 22, '#ff2ea6')
-            .rect(218, 36, 34, 84, '#00ff66')
-            .text('CANVAS2D READY', 82, 142, { color: '#c9ffd6', font: '12px monospace' });
-          arcadeTemplate = { destroy: () => renderer.destroy() };
-          setArcadeStatus('Canvas2D renderer hazir.', 'success');
-        }
-        else if (action === 'storage') {
-          const store = kit.storage.create('admin-lab');
-          const nextScore = store.best('highScore', Math.floor(1000 + Math.random() * 9000));
-          kit.fx.popup(arcadeStage, `HI ${nextScore}`, { x: 96, y: 26 });
-          setArcadeStatus(`Storage high score: ${nextScore}`, 'success');
-        }
-        else if (action === 'sprite') {
-          stopArcadeTemplate();
-          const forms = ['hero', 'ship', 'orb'];
-          arcadeSpriteIndex += 1;
-          spawnArcadeSprite(forms[arcadeSpriteIndex % forms.length]);
-          arcadeScene?.step();
-        }
-      });
-    });
-
-    document.querySelectorAll('[data-character-pose]').forEach((button) => {
-      button.addEventListener('click', () => {
-        if (!arcadeCharacter) {
-          setArcadeStatus('Karakter modeli henuz hazir degil.', 'error');
-          return;
-        }
-        arcadeCharacter.pose(button.dataset.characterPose);
-        setArcadeStatus(`Pose: ${button.dataset.characterPose}`, 'success');
-      });
-    });
-  }
-
-  async function loadArticles() {
-    setStatus('Icerikler yukleniyor...', 'info');
-    articles = await backend.fetchManagedArticles();
-    renderList();
-    setStatus('Icerik listesi guncel.', 'success');
+  function handleEditorChange() {
+    syncEditorToTextarea();
+    updatePreview();
+    updateStats();
+    setDirty(true);
+    saveAutosave();
   }
 
   async function boot() {
@@ -650,41 +444,74 @@
   }
 
   titleInput.addEventListener('input', () => {
-    if (!slugInput.value.trim()) {
-      slugInput.value = backend.slugify(titleInput.value);
+    if (!state.slugLocked || !slugInput.value.trim()) {
+      slugInput.value = slugify(titleInput.value);
     }
+    setDirty(true);
   });
 
-  contentInput.addEventListener('input', updatePreview);
-
-  document.querySelectorAll('[data-editor-wrap]').forEach((button) => {
-    button.addEventListener('click', () => wrapSelection(button.dataset.editorWrap));
+  slugInput.addEventListener('input', () => {
+    state.slugLocked = Boolean(slugInput.value.trim());
+    setDirty(true);
   });
 
-  document.querySelectorAll('[data-editor-insert]').forEach((button) => {
-    button.addEventListener('click', () => insertSnippet(button.dataset.editorInsert));
+  form.elements.summary.addEventListener('input', () => setDirty(true));
+  form.elements.status.addEventListener('change', () => setDirty(true));
+  form.elements.published_at.addEventListener('input', () => setDirty(true));
+
+  visualEditor.addEventListener('input', handleEditorChange);
+  visualEditor.addEventListener('paste', (event) => {
+    event.preventDefault();
+    const html = event.clipboardData.getData('text/html');
+    const text = event.clipboardData.getData('text/plain');
+    insertHtml(html ? sanitizeHtml(html) : textToHtml(text));
   });
 
-  cleanHtml?.addEventListener('click', () => {
-    contentInput.value = sanitizeHtml(contentInput.value);
-    updatePreview();
-    setImportStatus('HTML temizlendi.', 'success');
+  document.querySelectorAll('[data-command]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const command = button.dataset.command;
+      const value = button.dataset.value || null;
+      visualEditor.focus();
+      document.execCommand(command, false, value);
+      handleEditorChange();
+    });
   });
 
-  pasteAsMarkdown?.addEventListener('click', async () => {
-    const text = selectedText().trim() || contentInput.value.trim();
-    if (!text) {
-      setImportStatus('Donusturulecek Markdown metni yok.', 'error');
-      return;
-    }
-    const html = markdownToHtml(text);
-    if (selectedText().trim()) replaceSelection(html);
-    else contentInput.value = html;
-    updatePreview();
-    setImportStatus('Markdown HTML icerige donusturuldu.', 'success');
+  document.querySelectorAll('[data-insert]').forEach((button) => {
+    button.addEventListener('click', () => handleInsert(button.dataset.insert));
   });
 
-  importFile?.addEventListener('change', async () => {
+  articleSearch.addEventListener('input', filterArticles);
+  statusFilter.addEventListener('change', filterArticles);
+
+  clearButton.addEventListener('click', () => {
+    if (state.dirty && !window.confirm('Kaydedilmemis degisiklikler silinsin mi?')) return;
+    fillForm(null);
+    clearAutosave();
+    setStatus('Yeni makale hazir.', 'info');
+  });
+
+  saveDraftButton.addEventListener('click', () => {
+    saveArticle('draft').catch((error) => setStatus(error.message, 'error'));
+  });
+
+  publishButton.addEventListener('click', () => {
+    saveArticle('published').catch((error) => setStatus(error.message, 'error'));
+  });
+
+  cleanHtml.addEventListener('click', () => {
+    setEditorHtml(sanitizeHtml(visualEditor.innerHTML));
+    handleEditorChange();
+    setImportStatus('Icerik temizlendi.', 'success');
+  });
+
+  pasteAsMarkdown.addEventListener('click', async () => {
+    const text = window.prompt('Markdown metnini yapistirin');
+    if (!text) return;
+    applyImportedHtml(markdownToHtml(text), 'Markdown');
+  });
+
+  importFile.addEventListener('change', async () => {
     const file = importFile.files && importFile.files[0];
     if (!file) return;
 
@@ -698,52 +525,32 @@
     }
   });
 
-  clearButton.addEventListener('click', () => {
-    fillForm(null);
-    setStatus('Form temizlendi.', 'info');
-  });
-
   deleteButton.addEventListener('click', async () => {
-    if (!activeId) return;
-    const approved = window.confirm('Bu makale silinsin mi?');
-    if (!approved) return;
+    if (!state.activeId) return;
+    if (!window.confirm('Bu makale kalici olarak silinsin mi?')) return;
 
     try {
       setStatus('Makale siliniyor...', 'info');
-      await backend.deleteArticle(activeId);
+      await backend.deleteArticle(state.activeId);
+      state.activeId = '';
       fillForm(null);
-      await loadArticles();
+      await loadArticles('');
+      setStatus('Makale silindi.', 'success');
     } catch (error) {
       setStatus(error.message, 'error');
     }
   });
 
-  form.addEventListener('submit', async (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
-    const data = formData();
-
-    try {
-      setStatus('Makale kaydediliyor...', 'info');
-      await backend.saveArticle({
-        id: data.id,
-        title: data.title,
-        slug: data.slug,
-        summary: data.summary,
-        status: data.status,
-        published_at: data.published_at ? new Date(data.published_at).toISOString() : '',
-        content_html: sanitizeHtml(data.content_html)
-      });
-      fillForm(null);
-      await loadArticles();
-      setStatus('Makale kaydedildi.', 'success');
-    } catch (error) {
-      setStatus(error.message, 'error');
-    }
+    saveArticle().catch((error) => setStatus(error.message, 'error'));
   });
 
-  document.addEventListener('DOMContentLoaded', () => {
-    bootArcadeKitControls();
-    bootBugyControls();
-    boot();
+  window.addEventListener('beforeunload', (event) => {
+    if (!state.dirty) return;
+    event.preventDefault();
+    event.returnValue = '';
   });
+
+  document.addEventListener('DOMContentLoaded', boot);
 })();

@@ -218,13 +218,13 @@
       title: article.title.trim(),
       summary: article.summary.trim(),
       content_html: article.content_html.trim(),
-      status: article.status,
+      status: ['draft', 'published', 'archived'].includes(article.status) ? article.status : 'draft',
       published_at: article.status === 'published'
         ? (article.published_at || new Date().toISOString())
         : null
     };
 
-    if (!payload.slug) throw new Error('Gecerli bir slug ya da baslik gerekli.');
+    validateArticlePayload(payload);
 
     let query;
     if (article.id) {
@@ -237,7 +237,13 @@
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(toMessage(error));
+    if (error) {
+      const message = toMessage(error);
+      if (/duplicate key|unique/i.test(message)) {
+        throw new Error('Bu slug zaten kullaniliyor. Slug alanini benzersiz yapin.');
+      }
+      throw new Error(message);
+    }
     return data;
   }
 
@@ -536,6 +542,16 @@
       },
       recent: recent.slice(0, recentLimit)
     };
+  }
+
+  function validateArticlePayload(payload) {
+    if (!payload.title) throw new Error('Baslik gerekli.');
+    if (!payload.slug) throw new Error('Gecerli bir slug gerekli.');
+    if (!payload.summary) throw new Error('Ozet gerekli.');
+    if (!payload.content_html) throw new Error('Makale icerigi gerekli.');
+    if (!['draft', 'published', 'archived'].includes(payload.status)) {
+      throw new Error('Gecerli bir yayin durumu secin.');
+    }
   }
 
   window.ConviviumBackend = {
