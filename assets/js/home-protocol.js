@@ -944,29 +944,96 @@
         .trim()
         .slice(0, 900);
 
-      const askOracleFallback = async (command) => {
-        const controller = new AbortController();
-        const timeout = window.setTimeout(() => controller.abort(), 90000);
-        const prompt = `${oraclePrompt} ${command}`;
-
-        try {
-          const response = await fetch(`${oracleEndpoint}${encodeURIComponent(prompt)}`, {
-            signal: controller.signal
-          });
-
-          if (!response.ok) {
-            throw new Error(`oracle status ${response.status}`);
-          }
-
-          const answer = normalizeOracleAnswer(await response.text());
-          if (!answer) {
-            throw new Error('empty oracle response');
-          }
-
-          return answer;
-        } finally {
-          window.clearTimeout(timeout);
+      const readPuterAnswer = (response) => {
+        if (typeof response === 'string') return response;
+        if (typeof response?.text === 'string') return response.text;
+        if (typeof response?.message?.content === 'string') return response.message.content;
+        if (Array.isArray(response?.message?.content)) {
+          return response.message.content
+            .map(part => typeof part === 'string' ? part : part?.text || '')
+            .join('');
         }
+        return '';
+      };
+
+      const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
+
+      const askPollinationsOracle = async (prompt) => {
+        let lastError = null;
+
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const controller = new AbortController();
+          const timeout = window.setTimeout(() => controller.abort(), 90000);
+
+          try {
+            const response = await fetch(`${oracleEndpoint}${encodeURIComponent(prompt)}`, {
+              signal: controller.signal
+            });
+
+            if (!response.ok) {
+              const error = new Error(`oracle status ${response.status}`);
+              error.status = response.status;
+              throw error;
+            }
+
+            const answer = normalizeOracleAnswer(await response.text());
+            if (!answer) {
+              throw new Error('empty oracle response');
+            }
+
+            return answer;
+          } catch (error) {
+            lastError = error;
+            const status = error?.status || 0;
+            const shouldRetry = attempt < 1 && (status === 429 || status >= 500 || error?.name === 'AbortError');
+            if (!shouldRetry) break;
+            await wait(1200 * (attempt + 1));
+          } finally {
+            window.clearTimeout(timeout);
+          }
+        }
+
+        throw lastError || new Error('oracle unavailable');
+      };
+
+      const askPuterOracle = async (prompt) => {
+        if (!window.puter?.ai?.chat) {
+          throw new Error('puter oracle unavailable');
+        }
+
+        const response = await window.puter.ai.chat(prompt, {
+          model: 'gpt-5.4-nano',
+          temperature: 0.45,
+          max_tokens: 220
+        });
+        const answer = normalizeOracleAnswer(readPuterAnswer(response));
+        if (!answer) {
+          throw new Error('empty puter oracle response');
+        }
+        return answer;
+      };
+
+      const askOracleFallback = async (command) => {
+        const prompt = `${oraclePrompt} ${command}`;
+        const providers = [
+          { name: 'pollinations', ask: askPollinationsOracle },
+          { name: 'puter', ask: askPuterOracle }
+        ];
+        const errors = [];
+
+        for (const provider of providers) {
+          try {
+            return await provider.ask(prompt);
+          } catch (error) {
+            const providerError = error instanceof Error ? error : new Error(String(error));
+            providerError.provider = provider.name;
+            errors.push(providerError);
+          }
+        }
+
+        const lastError = errors[errors.length - 1] || new Error('oracle unavailable');
+        lastError.oracleErrors = errors;
+        throw lastError;
       };
 
       const setCommandBusy = (busy) => {
@@ -994,7 +1061,13 @@
           award(Math.max(state.level, 1));
           pulse(520, 0.07);
         } catch (error) {
-          if (commandOutput) commandOutput.textContent = 'oracle channel noisy. tekrar dene ya da hazir komutlardan birini kullan.';
+          const oracleErrors = error?.oracleErrors || [error];
+          const rateLimited = oracleErrors.some(item => item?.status === 429);
+          if (commandOutput) {
+            commandOutput.textContent = rateLimited
+              ? 'oracle mesgul. ana kanal limitte; yedek kanal da su an cevap veremedi. biraz sonra tekrar dene.'
+              : 'oracle channel noisy. dis servisler su an yanit vermiyor; biraz sonra tekrar dene.';
+          }
           if (microOracle) microOracle.textContent = 'oracle unavailable';
           pulse(150, 0.08);
         } finally {
