@@ -944,21 +944,10 @@
         .trim()
         .slice(0, 900);
 
-      const readPuterAnswer = (response) => {
-        if (typeof response === 'string') return response;
-        if (typeof response?.text === 'string') return response.text;
-        if (typeof response?.message?.content === 'string') return response.message.content;
-        if (Array.isArray(response?.message?.content)) {
-          return response.message.content
-            .map(part => typeof part === 'string' ? part : part?.text || '')
-            .join('');
-        }
-        return '';
-      };
-
       const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
 
-      const askPollinationsOracle = async (prompt) => {
+      const askOracleFallback = async (command) => {
+        const prompt = `${oraclePrompt} ${command}`;
         let lastError = null;
 
         for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -996,46 +985,6 @@
         throw lastError || new Error('oracle unavailable');
       };
 
-      const askPuterOracle = async (prompt) => {
-        if (!window.puter?.ai?.chat) {
-          throw new Error('puter oracle unavailable');
-        }
-
-        const response = await window.puter.ai.chat(prompt, {
-          model: 'gpt-5.4-nano',
-          temperature: 0.45,
-          max_tokens: 220
-        });
-        const answer = normalizeOracleAnswer(readPuterAnswer(response));
-        if (!answer) {
-          throw new Error('empty puter oracle response');
-        }
-        return answer;
-      };
-
-      const askOracleFallback = async (command) => {
-        const prompt = `${oraclePrompt} ${command}`;
-        const providers = [
-          { name: 'pollinations', ask: askPollinationsOracle },
-          { name: 'puter', ask: askPuterOracle }
-        ];
-        const errors = [];
-
-        for (const provider of providers) {
-          try {
-            return await provider.ask(prompt);
-          } catch (error) {
-            const providerError = error instanceof Error ? error : new Error(String(error));
-            providerError.provider = provider.name;
-            errors.push(providerError);
-          }
-        }
-
-        const lastError = errors[errors.length - 1] || new Error('oracle unavailable');
-        lastError.oracleErrors = errors;
-        throw lastError;
-      };
-
       const setCommandBusy = (busy) => {
         commandInFlight = busy;
         if (commandInput) commandInput.disabled = busy;
@@ -1061,12 +1010,11 @@
           award(Math.max(state.level, 1));
           pulse(520, 0.07);
         } catch (error) {
-          const oracleErrors = error?.oracleErrors || [error];
-          const rateLimited = oracleErrors.some(item => item?.status === 429);
+          const status = error?.status || 0;
           if (commandOutput) {
-            commandOutput.textContent = rateLimited
-              ? 'oracle mesgul. ana kanal limitte; yedek kanal da su an cevap veremedi. biraz sonra tekrar dene.'
-              : 'oracle channel noisy. dis servisler su an yanit vermiyor; biraz sonra tekrar dene.';
+            commandOutput.textContent = status === 429
+              ? 'oracle mesgul. dis servis limitine takildi; biraz sonra tekrar dene.'
+              : 'oracle channel noisy. dis servis su an yanit vermiyor; biraz sonra tekrar dene.';
           }
           if (microOracle) microOracle.textContent = 'oracle unavailable';
           pulse(150, 0.08);
