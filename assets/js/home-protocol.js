@@ -59,7 +59,10 @@
       const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'MAP', 'ARCHIVE', 'NOTES', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
-      const oracleEndpoint = 'https://text.pollinations.ai/';
+      const oracleProxyEndpoint = window.CONVIVIUM_ORACLE_ENDPOINT ||
+        document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content ||
+        '/api/oracle';
+      const oracleLegacyEndpoint = 'https://text.pollinations.ai/';
       const oraclePrompt = [
         'Kisa, net, Turkce cevap ver.',
         'Convivium terminali tonunda ol.',
@@ -946,7 +949,39 @@
 
       const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
 
-      const askOracleFallback = async (command) => {
+      const askOracleProxy = async (command) => {
+        const controller = new AbortController();
+        const timeout = window.setTimeout(() => controller.abort(), 24000);
+
+        try {
+          const response = await fetch(oracleProxyEndpoint, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ question: command })
+          });
+
+          if (!response.ok) {
+            const error = new Error(`oracle proxy status ${response.status}`);
+            error.status = response.status;
+            throw error;
+          }
+
+          const data = await response.json();
+          const answer = normalizeOracleAnswer(data?.answer);
+          if (!answer) {
+            throw new Error('empty oracle proxy response');
+          }
+
+          return answer;
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      };
+
+      const askOracleLegacy = async (command) => {
         const prompt = `${oraclePrompt} ${command}`;
         let lastError = null;
 
@@ -955,7 +990,7 @@
           const timeout = window.setTimeout(() => controller.abort(), 90000);
 
           try {
-            const response = await fetch(`${oracleEndpoint}${encodeURIComponent(prompt)}`, {
+            const response = await fetch(`${oracleLegacyEndpoint}${encodeURIComponent(prompt)}`, {
               signal: controller.signal
             });
 
@@ -983,6 +1018,19 @@
         }
 
         throw lastError || new Error('oracle unavailable');
+      };
+
+      const askOracleFallback = async (command) => {
+        try {
+          return await askOracleProxy(command);
+        } catch (proxyError) {
+          try {
+            return await askOracleLegacy(command);
+          } catch (legacyError) {
+            legacyError.proxyError = proxyError;
+            throw legacyError;
+          }
+        }
       };
 
       const setCommandBusy = (busy) => {

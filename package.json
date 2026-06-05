@@ -5,7 +5,8 @@
   "scripts": {
     "convert-images": "node scripts/convert-images.js",
     "build:bugy-v3": "em++ src/native/bugy-v3/bugy_v3.cpp -O3 --no-entry -s STANDALONE_WASM=1 -s EXPORTED_FUNCTIONS='[\"_bugy_init\",\"_bugy_update\",\"_bugy_trigger\",\"_bugy_next\",\"_bugy_set_skin\",\"_bugy_framebuffer\",\"_bugy_width\",\"_bugy_height\",\"_bugy_x\",\"_bugy_y\",\"_bugy_state\",\"_bugy_skin\"]' -o assets/wasm/bugy-v3.wasm",
-    "build:bugy-v3-atlas": "node scripts/build-bugy-v3-atlas.js"
+    "build:bugy-v3-atlas": "node scripts/build-bugy-v3-atlas.js",
+    "deploy:oracle": "npx wrangler deploy -c workers/oracle/wrangler.toml"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",
