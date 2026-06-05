@@ -1697,8 +1697,9 @@
     }
 
     .command-output {
-      min-height: 42px;
-      max-height: clamp(72px, calc(100vh - 368px), 152px);
+      flex: 1 1 auto;
+      min-height: 120px;
+      max-height: clamp(160px, calc(100vh - 328px), 320px);
       padding: 9px 10px;
       color: var(--journey-cyan);
       font-family: var(--font-display);
@@ -2179,6 +2180,7 @@
       }
 
       .command-output {
-        max-height: clamp(72px, calc(100vh - 310px), 150px);
+        min-height: 110px;
+        max-height: clamp(140px, calc(100vh - 280px), 240px);
       }
     }
