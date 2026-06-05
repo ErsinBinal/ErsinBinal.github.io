@@ -1615,23 +1615,27 @@
 
     .command-shell {
       position: fixed;
-      left: 50%;
-      bottom: 22px;
+      right: 18px;
+      top: 142px;
       z-index: 160;
-      width: min(760px, calc(100vw - 32px));
+      display: flex;
+      flex-direction: column;
+      width: min(520px, calc(100vw - 36px));
+      max-height: calc(100vh - 164px);
       border: 1px solid rgba(0, 234, 255, 0.42);
       background:
         linear-gradient(180deg, rgba(0, 234, 255, 0.08), rgba(0, 0, 0, 0.9)),
         rgba(0, 0, 0, 0.92);
       box-shadow: 0 0 40px rgba(0, 234, 255, 0.18);
-      transform: translate3d(-50%, calc(100% + 34px), 0);
+      overflow: hidden;
+      transform: translate3d(0, -14px, 0);
       opacity: 0;
       pointer-events: none;
       transition: transform 0.28s ease, opacity 0.28s ease;
     }
 
     .command-shell.is-open {
-      transform: translate3d(-50%, 0, 0);
+      transform: translate3d(0, 0, 0);
       opacity: 1;
       pointer-events: auto;
     }
@@ -1694,7 +1698,7 @@
 
     .command-output {
       min-height: 42px;
-      max-height: 170px;
+      max-height: clamp(72px, calc(100vh - 380px), 170px);
       padding: 10px 12px;
       color: var(--journey-cyan);
       font-family: var(--font-display);
@@ -2161,6 +2165,19 @@
       }
 
       .command-shell {
-        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        top: 12px;
+        width: auto;
+        max-height: calc(100vh - 82px);
+        transform: translate3d(0, -14px, 0);
+      }
+
+      .command-shell.is-open {
+        transform: translate3d(0, 0, 0);
+      }
+
+      .command-output {
+        max-height: clamp(72px, calc(100vh - 310px), 150px);
       }
     }
