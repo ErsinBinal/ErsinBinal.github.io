@@ -338,18 +338,32 @@
 
       const commandBootLines = () => [
         'CONVIVIUM DOS/86 initializing...',
-        'public index: index / archive / notes / map',
-        `visitor level: ${levels[state.level] || levels[0]}`,
-        `public visits: ${state.visits}`,
-        `opened public nodes: ${state.opened.length}`,
-        'oracle proxy: armed',
-        'safe memory: no private tokens loaded',
-        'ready.'
+        'BIOS: public interface bus online',
+        'MEM: private token banks not mounted',
+        'FS: index / archive / notes / map mounted read-only',
+        'NET: oracle proxy handshake queued',
+        'AI: cloud edge route preferred',
+        'AI: pollinations fallback downgraded to reserve',
+        `USER: visitor level ${levels[state.level] || levels[0]}`,
+        `STAT: public visits ${state.visits}`,
+        `STAT: opened public nodes ${state.opened.length}`,
+        `LOG: recent commands ${(state.commandLog || []).length}`,
+        'SEC: secrets unavailable in browser runtime',
+        'UI: command parser warm',
+        'UI: exit vector armed',
+        'OK: terminal ready'
       ];
+
+      const commandReadyText = () => [
+        'READY',
+        `level: ${levels[state.level] || levels[0]} / nodes: ${state.opened.length}`,
+        'type help or ask anything'
+      ].join('\n');
 
       const renderCommandBoot = () => {
         if (!commandOutput || commandInFlight) return;
         window.clearInterval(commandBootTimer);
+        window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-booting');
         commandShell.classList.remove('is-closing');
         commandOutput.textContent = '';
@@ -363,18 +377,22 @@
           if (index >= lines.length) {
             window.clearInterval(commandBootTimer);
             commandBootTimer = null;
-            commandShell.classList.remove('is-booting');
+            window.setTimeout(() => {
+              if (!commandShell.classList.contains('is-open') || commandInFlight) return;
+              commandOutput.textContent = commandReadyText();
+              commandShell.classList.remove('is-booting');
+            }, 420);
           }
         };
 
         if (reduceMotion) {
-          commandOutput.textContent = lines.join('\n');
+          commandOutput.textContent = commandReadyText();
           commandShell.classList.remove('is-booting');
           return;
         }
 
         writeLine();
-        commandBootTimer = window.setInterval(writeLine, 150);
+        commandBootTimer = window.setInterval(writeLine, 135);
       };
 
       const closeCommandWithMatrix = () => {
