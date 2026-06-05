@@ -530,8 +530,9 @@
           return 'deb: companion online. try deb scan / deb meteor / deb blackhole / deb deathstar.';
         }
         if (action === 'off') {
-          deb.deactivate();
-          return 'deb: offline. bugy channel restored.';
+          return deb.deactivate()
+            ? 'deb: entropy dispersal started. bugy channel restored.'
+            : 'deb: already offline.';
         }
         deb.trigger(action);
         return `deb: ${action} protocol started`;

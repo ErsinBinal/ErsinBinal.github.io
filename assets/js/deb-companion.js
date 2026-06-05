@@ -92,7 +92,8 @@
       detailProgress: 0,
       detailTarget: 0,
       particles: [],
-      echoes: []
+      echoes: [],
+      shutdown: null
     };
 
     const palette = {
@@ -550,6 +551,82 @@
         state.nextImpulse = performance.now() + rand(420, 900);
         pushParticle(state.x, state.y, [palette.cyan, palette.green, palette.pink][Math.floor(Math.random() * 3)], 620, 0.8);
       }
+    };
+
+    const startEntropyShutdown = () => {
+      if (state.shutdown) return true;
+      if (!state.active) return false;
+
+      if (state.sequence) {
+        restoreBugy(state.sequence.target);
+        state.sequence = null;
+      }
+
+      const count = 72;
+      const spread = Math.max(window.innerWidth, window.innerHeight) * 0.72;
+      state.shutdown = {
+        start: performance.now(),
+        duration: 1180,
+        x: state.x,
+        y: state.y,
+        shards: Array.from({ length: count }, (_, index) => {
+          const angle = (Math.PI * 2 * index) / count + rand(-0.16, 0.16);
+          return {
+            angle,
+            radius: rand(spread * 0.32, spread),
+            size: rand(2.2, 7.8),
+            stretch: rand(1.2, 3.8),
+            spin: rand(-2.4, 2.4),
+            jitter: rand(4, 18),
+            phase: rand(0, Math.PI * 2),
+            color: [palette.cyan, palette.green, palette.pink, palette.amber, palette.text][index % 5]
+          };
+        })
+      };
+      state.mode = 'entropy';
+      state.energy = 1;
+      state.detailOpen = false;
+      state.detailTarget = 0;
+      state.detailProgress = 0;
+      state.particles = [];
+      state.echoes = [];
+      localStorage.removeItem(activeKey);
+      localStorage.removeItem(legacyActiveKey);
+      layer.hidden = false;
+      coreButton.hidden = true;
+      chip.hidden = true;
+      burst(state.x, state.y, 96, [palette.cyan, palette.green, palette.pink, palette.amber, palette.text], 4.6, 1240);
+      pushEcho('ENTROPY', state.x + 18, state.y - 42);
+      if (consoleLine) consoleLine.textContent = 'deb entropy shutdown: core scattering';
+      if (microOracle) microOracle.textContent = 'entropy dispersal';
+      cancelAnimationFrame(state.raf);
+      state.last = 0;
+      state.raf = requestAnimationFrame(loop);
+      dispatch();
+      return true;
+    };
+
+    const finishDeactivate = () => {
+      state.active = false;
+      state.shutdown = null;
+      state.detailOpen = false;
+      state.detailTarget = 0;
+      state.detailProgress = 0;
+      state.sequence = null;
+      state.particles = [];
+      state.echoes = [];
+      cancelAnimationFrame(state.raf);
+      syncVisibility();
+      context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      persist();
+      dispatch();
+    };
+
+    const updateEntropyShutdown = (now) => {
+      if (!state.shutdown) return false;
+      if (now - state.shutdown.start < state.shutdown.duration) return false;
+      finishDeactivate();
+      return true;
     };
 
     const drawDiamond = (x, y, radius, stroke, fill, alpha = 1, rotation = 0) => {
@@ -1233,6 +1310,67 @@
       if (state.sequence.type === 'deathstar') drawDeathstarSequence(state.sequence, progress);
     };
 
+    const drawEntropyShutdown = () => {
+      const shutdown = state.shutdown;
+      if (!shutdown) return;
+
+      const progress = clamp((performance.now() - shutdown.start) / shutdown.duration, 0, 1);
+      const scatter = 1 - Math.pow(1 - progress, 3);
+      const fade = Math.pow(1 - progress, 1.35);
+
+      context.save();
+      context.globalCompositeOperation = 'lighter';
+
+      for (let ring = 0; ring < 4; ring += 1) {
+        const offset = ring * 0.09;
+        const p = clamp((progress - offset) / 0.78, 0, 1);
+        if (!p) continue;
+        context.globalAlpha = (1 - p) * 0.42;
+        context.strokeStyle = [palette.cyan, palette.green, palette.pink, palette.amber][ring];
+        context.lineWidth = ring === 0 ? 2 : 1;
+        context.beginPath();
+        context.arc(shutdown.x, shutdown.y, 18 + p * (150 + ring * 58), 0, Math.PI * 2);
+        context.stroke();
+      }
+
+      shutdown.shards.forEach((shard, index) => {
+        const lane = scatter * shard.radius;
+        const twist = Math.sin(state.phase * (1.4 + index * 0.01) + shard.phase) * shard.jitter * fade;
+        const x = shutdown.x + Math.cos(shard.angle) * lane + Math.cos(shard.angle + Math.PI / 2) * twist;
+        const y = shutdown.y + Math.sin(shard.angle) * lane + Math.sin(shard.angle + Math.PI / 2) * twist;
+
+        if (progress < 0.76) {
+          context.globalAlpha = (1 - progress / 0.76) * 0.18;
+          context.strokeStyle = shard.color;
+          context.lineWidth = 1;
+          context.beginPath();
+          context.moveTo(shutdown.x, shutdown.y);
+          context.lineTo(x, y);
+          context.stroke();
+        }
+
+        context.save();
+        context.translate(Math.round(x), Math.round(y));
+        context.rotate(shard.angle + state.phase * shard.spin);
+        context.globalAlpha = fade * rand(0.58, 0.96);
+        context.fillStyle = shard.color;
+        context.shadowColor = shard.color;
+        context.shadowBlur = 10;
+        context.fillRect(
+          -shard.size * shard.stretch * 0.5,
+          -shard.size * 0.5,
+          shard.size * shard.stretch,
+          shard.size
+        );
+        context.restore();
+      });
+
+      context.globalAlpha = fade;
+      drawDiamond(shutdown.x, shutdown.y, 18 + progress * 8, palette.text, 'rgba(0, 18, 18, 0.62)', fade, state.phase);
+      drawDiamond(shutdown.x, shutdown.y, 10 + progress * 14, palette.pink, 'rgba(255, 46, 166, 0.08)', fade * 0.62, -state.phase * 1.6);
+      context.restore();
+    };
+
     const drawNova = () => {
       const t = state.phase;
       const pulse = 1 + Math.sin(t * 2.7) * 0.08;
@@ -1304,8 +1442,11 @@
     const render = () => {
       context.clearRect(0, 0, window.innerWidth, window.innerHeight);
       drawParticles();
-      drawInteraction();
-      if (!state.sequence) drawNova();
+      if (state.shutdown) drawEntropyShutdown();
+      else {
+        drawInteraction();
+        if (!state.sequence) drawNova();
+      }
       drawEchoes();
       layer.classList.toggle('is-detail', state.detailProgress > 0.04);
       coreButton.style.setProperty('--deb-scale', `${(1 + state.detailProgress * 0.34).toFixed(3)}`);
@@ -1321,6 +1462,13 @@
       const dt = Math.min(42, state.last ? now - state.last : 16);
       state.last = now;
       state.phase += dt * 0.0016;
+      if (state.shutdown) {
+        if (updateEntropyShutdown(now)) return;
+        updateParticles(dt);
+        render();
+        state.raf = requestAnimationFrame(loop);
+        return;
+      }
       updateSequence(now);
       updateTargets(now);
       updatePhysics(dt);
@@ -1354,10 +1502,14 @@
     };
 
     const api = {
-      version: '1.2.0',
+      version: '1.3.0',
       actions: [...actions],
       activate() {
         state.active = true;
+        state.shutdown = null;
+        state.sequence = null;
+        state.particles = [];
+        state.echoes = [];
         state.mode = 'orbit';
         state.last = 0;
         localStorage.setItem(activeKey, '1');
@@ -1373,32 +1525,17 @@
         return true;
       },
       deactivate() {
-        if (state.sequence) {
-          restoreBugy(state.sequence.target);
-          state.sequence = null;
-        }
-        state.active = false;
-        state.detailOpen = false;
-        state.detailTarget = 0;
-        state.detailProgress = 0;
-        cancelAnimationFrame(state.raf);
-        syncVisibility();
-        context.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        localStorage.removeItem(activeKey);
-        localStorage.removeItem(legacyActiveKey);
-        persist();
-        dispatch();
-        return true;
+        return startEntropyShutdown();
       },
       summon() {
-        if (!state.active) this.activate();
+        if (!state.active || state.shutdown) this.activate();
         state.x = window.innerWidth * 0.64;
         state.y = window.innerHeight * 0.3;
         triggerMode('scan', true);
         return true;
       },
       trigger(action = 'scan') {
-        if (!state.active) this.activate();
+        if (!state.active || state.shutdown) this.activate();
         return triggerMode(actions.includes(action) ? action : 'scan', true);
       },
       next() {
@@ -1407,14 +1544,14 @@
         return this.trigger(action);
       },
       toggleDetail() {
-        if (!state.active) this.activate();
+        if (!state.active || state.shutdown) this.activate();
         return setDetailOpen(!state.detailOpen);
       },
       getState() {
         return {
           engine: 'deb',
           version: this.version,
-          active: state.active,
+          active: state.active && !state.shutdown,
           state: state.mode,
           randomEnabled: true,
           orbitModel: 'solar-system-realtime',
