@@ -71,6 +71,56 @@ const askPollinations = async (prompt, signal) => {
   return answer;
 };
 
+const askCloudflareAI = async (question, env) => {
+  if (!env.AI) throw new Error('cloudflare ai binding missing');
+
+  const response = await env.AI.run(env.CLOUDFLARE_AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
+    messages: [
+      { role: 'system', content: ORACLE_SYSTEM_PROMPT },
+      { role: 'user', content: question }
+    ],
+    max_tokens: 220,
+    temperature: 0.45
+  });
+
+  const answer = normalizeAnswer(response?.response || response?.result?.response);
+  if (!answer) throw new Error('empty cloudflare ai response');
+  return answer;
+};
+
+const askGroq = async (question, env, signal) => {
+  if (!env.GROQ_API_KEY) throw new Error('groq key missing');
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    signal,
+    headers: {
+      Authorization: `Bearer ${env.GROQ_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: env.GROQ_MODEL || 'llama-3.1-8b-instant',
+      messages: [
+        { role: 'system', content: ORACLE_SYSTEM_PROMPT },
+        { role: 'user', content: question }
+      ],
+      max_tokens: 220,
+      temperature: 0.45
+    })
+  });
+
+  if (!response.ok) {
+    const error = new Error(`groq status ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  const data = await response.json();
+  const answer = normalizeAnswer(data?.choices?.[0]?.message?.content);
+  if (!answer) throw new Error('empty groq response');
+  return answer;
+};
+
 const askOpenRouter = async (question, env, signal) => {
   if (!env.OPENROUTER_API_KEY) throw new Error('openrouter key missing');
 
@@ -143,11 +193,19 @@ const askGemini = async (question, env, signal) => {
 
 const withTimeout = async (callback, ms = 18000) => {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), ms);
+  let timeout = null;
   try {
-    return await callback(controller.signal);
+    return await Promise.race([
+      callback(controller.signal),
+      new Promise((_, reject) => {
+        timeout = setTimeout(() => {
+          controller.abort();
+          reject(new Error('provider timeout'));
+        }, ms);
+      })
+    ]);
   } finally {
-    clearTimeout(timeout);
+    if (timeout) clearTimeout(timeout);
   }
 };
 
@@ -160,9 +218,11 @@ const fallbackAnswer = async (question) => {
 const answerOracle = async (question, env) => {
   const prompt = buildPrompt(question);
   const providers = [
-    { name: 'pollinations', ask: signal => askPollinations(prompt, signal) },
+    { name: 'cloudflare-ai', ask: () => askCloudflareAI(question, env) },
+    { name: 'groq', ask: signal => askGroq(question, env, signal) },
     { name: 'openrouter', ask: signal => askOpenRouter(question, env, signal) },
-    { name: 'gemini', ask: signal => askGemini(question, env, signal) }
+    { name: 'gemini', ask: signal => askGemini(question, env, signal) },
+    { name: 'pollinations', ask: signal => askPollinations(prompt, signal) }
   ];
   const errors = [];
 
@@ -226,4 +286,3 @@ export default {
     return json(responseBody, 200, cors);
   }
 };
-

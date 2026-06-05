@@ -93,6 +93,8 @@
       let commandInFlight = false;
       let commandHistoryIndex = -1;
       let activeSuggestionIndex = 0;
+      let commandBootTimer = null;
+      let commandCloseTimer = null;
       let pendingOracleQuery = '';
       let lastFocusedElement = null;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -334,17 +336,91 @@
         }, 2800);
       }
 
+      const commandBootLines = () => [
+        'CONVIVIUM DOS/86 initializing...',
+        'public index: index / archive / notes / map',
+        `visitor level: ${levels[state.level] || levels[0]}`,
+        `public visits: ${state.visits}`,
+        `opened public nodes: ${state.opened.length}`,
+        'oracle proxy: armed',
+        'safe memory: no private tokens loaded',
+        'ready.'
+      ];
+
+      const renderCommandBoot = () => {
+        if (!commandOutput || commandInFlight) return;
+        window.clearInterval(commandBootTimer);
+        commandShell.classList.add('is-booting');
+        commandShell.classList.remove('is-closing');
+        commandOutput.textContent = '';
+        const lines = commandBootLines();
+        let index = 0;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const writeLine = () => {
+          commandOutput.textContent = lines.slice(0, index + 1).join('\n');
+          index += 1;
+          if (index >= lines.length) {
+            window.clearInterval(commandBootTimer);
+            commandBootTimer = null;
+            commandShell.classList.remove('is-booting');
+          }
+        };
+
+        if (reduceMotion) {
+          commandOutput.textContent = lines.join('\n');
+          commandShell.classList.remove('is-booting');
+          return;
+        }
+
+        writeLine();
+        commandBootTimer = window.setInterval(writeLine, 150);
+      };
+
+      const closeCommandWithMatrix = () => {
+        if (!commandShell.classList.contains('is-open')) return;
+        window.clearInterval(commandBootTimer);
+        window.clearTimeout(commandCloseTimer);
+        commandShell.classList.remove('is-booting');
+        commandShell.classList.add('is-closing');
+        clearCommandSuggestions();
+        if (commandInput) commandInput.disabled = true;
+        if (commandOutput) {
+          commandOutput.textContent = [
+            '010101 exit vector accepted',
+            '101001 command memory dissolving',
+            '001101 display buffer falling',
+            '111000 session closed'
+          ].join('\n');
+        }
+
+        commandCloseTimer = window.setTimeout(() => {
+          commandShell.classList.remove('is-open', 'is-closing');
+          commandShell.setAttribute('aria-hidden', 'true');
+          if (commandInput) {
+            commandInput.disabled = false;
+            commandInput.value = '';
+          }
+          if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
+        }, 620);
+      };
+
       const openCommand = () => {
         lastFocusedElement = document.activeElement;
+        window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-open');
+        commandShell.classList.remove('is-closing');
         commandShell.setAttribute('aria-hidden', 'false');
         renderCommandSuggestions(commandInput.value);
         commandInput.focus();
+        renderCommandBoot();
         pulse(260);
       };
 
       const closeCommand = () => {
-        commandShell.classList.remove('is-open');
+        window.clearInterval(commandBootTimer);
+        window.clearTimeout(commandCloseTimer);
+        commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
         commandShell.setAttribute('aria-hidden', 'true');
         clearCommandSuggestions();
         if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
@@ -598,6 +674,15 @@
           description: 'komut ciktisini temizler',
           aliases: ['cls', 'reset output'],
           action: clearCommand
+        },
+        {
+          command: 'exit',
+          description: 'komut ekranini kapatir',
+          aliases: ['quit', 'close', 'kapat', 'cikis', 'çıkış'],
+          action: () => {
+            closeCommandWithMatrix();
+            return commandOutput?.textContent;
+          }
         },
         {
           command: 'random',
@@ -949,6 +1034,20 @@
 
       const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
 
+      const localOracleAnswer = (command) => {
+        const normalized = normalizeCommand(command);
+        if (/kim|yapti|hazirladi|kurdu|tasarladi|sahibi/.test(normalized)) {
+          return 'oracle: Bu site Ersin Binal tarafindan hazirlanan deneysel Convivium alanidir. Public katmanda projeler, notlar, oyunlar ve terminal rotalari gorunur.';
+        }
+        if (/ne yapabilirsin|komut|yardim|help/.test(normalized)) {
+          return 'oracle: Kisa sorulari yanitlar, rotalari isaret eder ve public site hafizasindan guvenli ipuclari verir. Komut listesi icin help yaz.';
+        }
+        if (/site|convivium|burasi/.test(normalized)) {
+          return 'oracle: Convivium, public projeler ve deneysel arayuzler icin kurulmus bir terminal bahcesi. Gizli anahtar ya da ozel veri yuklu degil.';
+        }
+        return 'oracle: Dis kanallar sessiz. Soruyu tek cumleye indir, varsayimi kucult ve tekrar dene; terminal public hafizada kalmaya devam ediyor.';
+      };
+
       const askOracleProxy = async (command) => {
         const controller = new AbortController();
         const timeout = window.setTimeout(() => controller.abort(), 24000);
@@ -1027,8 +1126,7 @@
           try {
             return await askOracleLegacy(command);
           } catch (legacyError) {
-            legacyError.proxyError = proxyError;
-            throw legacyError;
+            return localOracleAnswer(command);
           }
         }
       };
