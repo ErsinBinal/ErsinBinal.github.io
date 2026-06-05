@@ -59,9 +59,14 @@
       const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'MAP', 'ARCHIVE', 'NOTES', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
-      const oracleProxyEndpoint = window.CONVIVIUM_ORACLE_ENDPOINT ||
+      const oracleProxyEndpoint = (
+        window.CONVIVIUM_ORACLE_ENDPOINT ||
         document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content ||
-        '/api/oracle';
+        ''
+      ).trim();
+      const oracleProxyIsRelative = oracleProxyEndpoint.startsWith('/');
+      const oracleProxyIsUsable = Boolean(oracleProxyEndpoint) &&
+        !(location.hostname.endsWith('github.io') && oracleProxyIsRelative);
       const oracleLegacyEndpoint = 'https://text.pollinations.ai/';
       const oraclePrompt = [
         'Kisa, net, Turkce cevap ver.',
@@ -787,6 +792,12 @@
           action: oracleCommand
         },
         {
+          command: 'oracle status',
+          description: 'oracle ai kanalinin baglanti durumunu gosterir',
+          aliases: ['ai status', 'oracle debug', 'ai debug'],
+          action: oracleStatusCommand
+        },
+        {
           command: 'oracle yes',
           description: 'bilinmeyen sorguyu oracle kanalina onayli gonderir',
           aliases: ['ask oracle', 'confirm oracle'],
@@ -1066,7 +1077,20 @@
         return 'oracle: Dis kanallar sessiz. Soruyu tek cumleye indir, varsayimi kucult ve tekrar dene; terminal public hafizada kalmaya devam ediyor.';
       };
 
+      const oracleStatusCommand = () => [
+        `oracle proxy: ${oracleProxyIsUsable ? 'configured' : 'not configured'}`,
+        `endpoint: ${oracleProxyEndpoint || 'empty'}`,
+        `host: ${location.hostname || 'local'}`,
+        'primary ai: Cloudflare Workers AI via deployed Worker',
+        'note: GitHub Pages cannot serve /api/oracle by itself',
+        'next: deploy Worker, then set convivium-oracle-endpoint to its workers.dev URL'
+      ].join('\n');
+
       const askOracleProxy = async (command) => {
+        if (!oracleProxyIsUsable) {
+          throw new Error('oracle proxy endpoint not configured');
+        }
+
         const controller = new AbortController();
         const timeout = window.setTimeout(() => controller.abort(), 24000);
 

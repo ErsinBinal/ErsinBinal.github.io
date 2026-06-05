@@ -4,8 +4,28 @@ Cloudflare Worker proxy for the command-shell oracle.
 
 ## Deploy
 
+CLI with Node/npm available:
+
 ```bash
 npx wrangler deploy -c workers/oracle/wrangler.toml
+```
+
+Dashboard without Node/npm:
+
+1. Open Cloudflare Dashboard.
+2. Go to Workers & Pages.
+3. Create a Worker named `convivium-oracle`.
+4. Add a Workers AI binding named `AI`.
+5. Paste `workers/oracle/src/index.js` into the Worker editor.
+6. Add these environment variables:
+   - `ALLOWED_ORIGINS`: `https://ersinbinal.github.io,http://localhost:8000,http://127.0.0.1:8000`
+   - `CLOUDFLARE_AI_MODEL`: `@cf/meta/llama-3.1-8b-instruct`
+   - `ORACLE_CACHE_TTL`: `900`
+7. Deploy and copy the `https://...workers.dev` URL.
+8. Put that URL into `index.html`:
+
+```html
+<meta name="convivium-oracle-endpoint" content="https://your-worker.workers.dev">
 ```
 
 ## Provider order
