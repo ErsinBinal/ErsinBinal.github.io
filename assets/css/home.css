@@ -1577,7 +1577,7 @@
       z-index: 120;
       display: grid;
       gap: 8px;
-      width: min(280px, calc(100vw - 36px));
+      width: min(320px, calc(100vw - 36px));
       pointer-events: none;
     }
 
@@ -1616,19 +1616,19 @@
     .command-shell {
       position: fixed;
       right: 18px;
-      top: 142px;
+      top: 150px;
       z-index: 160;
       display: flex;
       flex-direction: column;
-      width: min(520px, calc(100vw - 36px));
-      max-height: calc(100vh - 164px);
+      width: min(320px, calc(100vw - 36px));
+      max-height: calc(100vh - 168px);
       border: 1px solid rgba(0, 234, 255, 0.42);
       background:
-        linear-gradient(180deg, rgba(0, 234, 255, 0.08), rgba(0, 0, 0, 0.9)),
-        rgba(0, 0, 0, 0.92);
-      box-shadow: 0 0 40px rgba(0, 234, 255, 0.18);
+        linear-gradient(180deg, rgba(0, 234, 255, 0.07), rgba(0, 0, 0, 0.74)),
+        rgba(0, 0, 0, 0.78);
+      box-shadow: 0 0 18px rgba(0, 234, 255, 0.1);
       overflow: hidden;
-      transform: translate3d(0, -14px, 0);
+      transform: translate3d(0, -8px, 0);
       opacity: 0;
       pointer-events: none;
       transition: transform 0.28s ease, opacity 0.28s ease;
@@ -1645,8 +1645,8 @@
       grid-template-columns: auto 1fr auto;
       gap: 10px;
       align-items: center;
-      min-height: 52px;
-      padding: 10px 12px;
+      min-height: 44px;
+      padding: 8px 10px;
       border-bottom: 1px solid rgba(0, 255, 102, 0.16);
     }
 
@@ -1671,7 +1671,7 @@
       color: #fff;
       font: inherit;
       font-family: var(--font-display);
-      font-size: 1rem;
+      font-size: 0.9rem;
     }
 
     .command-input::placeholder {
@@ -1692,16 +1692,17 @@
     }
 
     .command-close {
-      width: 30px;
-      height: 30px;
+      width: 28px;
+      height: 28px;
     }
 
     .command-output {
       min-height: 42px;
-      max-height: clamp(72px, calc(100vh - 380px), 170px);
-      padding: 10px 12px;
+      max-height: clamp(72px, calc(100vh - 368px), 152px);
+      padding: 9px 10px;
       color: var(--journey-cyan);
       font-family: var(--font-display);
+      font-size: 0.82rem;
       line-height: 1.55;
       overflow-y: auto;
       white-space: pre-wrap;
@@ -1712,15 +1713,15 @@
     .command-help {
       display: flex;
       flex-wrap: wrap;
-      gap: 8px;
-      padding: 10px 12px 12px;
+      gap: 6px;
+      padding: 8px 10px 10px;
       color: var(--journey-muted);
-      font-size: 0.74rem;
+      font-size: 0.68rem;
     }
 
     .command-help span {
       border: 1px solid rgba(0, 255, 102, 0.14);
-      padding: 4px 7px;
+      padding: 3px 6px;
       background: rgba(0, 0, 0, 0.46);
     }
 
@@ -2167,10 +2168,10 @@
       .command-shell {
         left: 12px;
         right: 12px;
-        top: 12px;
+        top: 14px;
         width: auto;
         max-height: calc(100vh - 82px);
-        transform: translate3d(0, -14px, 0);
+        transform: translate3d(0, -8px, 0);
       }
 
       .command-shell.is-open {
