@@ -870,11 +870,9 @@
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
-        '',
+                '',
         'hidden:',
-        'signal -> oracle -> manifest -> unlock hidden, clues',
-        '',
-        'Bilinmeyen metinler oracle kanalina onaydan sonra gonderilir: oracle yes'
+        'signal -> oracle -> manifest -> unlock hidden, clues'
       ].join('\n');
 
       const commandMap = commandDefinitions.reduce((map, item) => {
@@ -1037,16 +1035,14 @@
           clearCommandSuggestions();
           return;
         }
-        if (isCreatorQuery(command)) {
+                if (isCreatorQuery(command)) {
           location.href = 'ozgecmisim.html';
           commandInput.value = '';
           clearCommandSuggestions();
           return;
         }
 
-        pendingOracleQuery = query;
-        if (commandOutput) commandOutput.textContent = `oracle confirmation required:\n"${query}"\n\nBu soru dis oracle kanalina gonderilecek. Devam etmek icin "oracle yes" yaz.`;
-        if (microOracle) microOracle.textContent = 'oracle awaiting confirmation';
+        await sendOracleQuery(query);
         commandInput.value = '';
         clearCommandSuggestions();
       };
