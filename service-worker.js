@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v63';
+const CACHE_NAME = 'convivium-v64';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -12,6 +12,7 @@ const PRECACHE_ASSETS = [
   '/index.html',
   '/ash-runner.html',
   '/cyberpunk-logic-game.html',
+  '/three-body-signal.html',
   '/dart-skorbord.html',
   '/universe-2.html',
   '/makaleler.html',
@@ -26,7 +27,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=7',
+  '/assets/css/home.css?v=8',
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
   '/assets/js/utils.js',
@@ -35,7 +36,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-v2.js?v=2',
   '/assets/js/bugy-v3-loader.js?v=6',
   '/assets/js/deb-companion.js?v=3',
-  '/assets/js/home-protocol.js?v=10',
+  '/assets/js/home-protocol.js?v=11',
   '/assets/js/service-worker-register.js?v=2',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff00.png?v=1',

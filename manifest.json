@@ -90,6 +90,13 @@
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
+      "name": "Uc Gunes Sinyali",
+      "short_name": "Signal",
+      "description": "Terminal tabanli bilimkurgu oyununu ac",
+      "url": "/three-body-signal.html",
+      "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
       "name": "The Oracle",
       "short_name": "Oracle",
       "description": "The Oracle deneyimini aç",

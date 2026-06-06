@@ -550,6 +550,7 @@
       const randomRoutes = [
         ['makaleler.html', 'dossier'],
         ['cyberpunk-logic-game.html', 'logic'],
+        ['three-body-signal.html', 'three body signal'],
         ['ash-runner.html', 'ash runner'],
         ['neon-river.html', 'neon river'],
         ['Bartender.html', 'bartender'],
@@ -895,6 +896,12 @@
           action: goTo('cyberpunk-logic-game.html')
         },
         {
+          command: 'run signal',
+          description: 'Uc Gunes Sinyali oyununu acar',
+          aliases: ['signal game', 'three body', 'three body signal', 'uc gunes', 'üç güneş', 'uc cisim', 'üç cisim', 'relay'],
+          action: goTo('three-body-signal.html')
+        },
+        {
           command: 'run ash',
           description: 'Ash Runner oyununu acar',
           aliases: ['ash', 'ash runner', 'scrap', 'brawler'],
@@ -1016,11 +1023,11 @@
         }
       ];
 
-      const keyboardHelpText = () => 'keyboard: D dossier, L logic, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, Tab complete, Up/Down history, ESC close';
+      const keyboardHelpText = () => 'keyboard: D dossier, L logic, T signal, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, Tab complete, Up/Down history, ESC close';
 
       const commandHelpText = () => [
         'routes:',
-        'home, map, archive, notes, open dossier, run logic, run ash, run flow',
+        'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
         '',
         'lab:',
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
@@ -1370,6 +1377,7 @@
           });
         } else if (key === 'd') location.href = 'makaleler.html';
         else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
+        else if (key === 't') location.href = 'three-body-signal.html';
         else if (key === 'b') location.href = 'ash-runner.html';
         else if (key === 'f') location.href = 'neon-river.html';
         else if (key === 'm') scrollToSection('map', 'signal map');
