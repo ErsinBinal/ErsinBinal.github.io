@@ -56,6 +56,39 @@ const readJson = async (request) => {
   }
 };
 
+const cacheTtl = (env) => {
+  const ttl = Number(env.ORACLE_CACHE_TTL || 900);
+  return Number.isFinite(ttl) && ttl > 0 ? Math.floor(ttl) : 900;
+};
+
+const readCache = async (cacheKey) => {
+  try {
+    return await caches.default.match(cacheKey);
+  } catch {
+    return null;
+  }
+};
+
+const readCachedBody = async (cacheKey) => {
+  const cached = await readCache(cacheKey);
+  if (!cached) return null;
+  try {
+    return await cached.json();
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = async (cacheKey, body, env) => {
+  try {
+    await caches.default.put(cacheKey, json(body, 200, {
+      'Cache-Control': `max-age=${cacheTtl(env)}`
+    }));
+  } catch {
+    // Cache failures should never prevent the oracle answer from reaching the UI.
+  }
+};
+
 const buildPrompt = (question) => `${ORACLE_SYSTEM_PROMPT} Soru: ${question}`;
 
 const askPollinations = async (prompt, signal) => {
@@ -266,9 +299,8 @@ export default {
     }
 
     const cacheKey = new Request(`https://oracle.cache/${await hashText(question.toLowerCase())}`);
-    const cached = await caches.default.match(cacheKey);
-    if (cached) {
-      const cachedBody = await cached.json();
+    const cachedBody = await readCachedBody(cacheKey);
+    if (cachedBody) {
       return json({ ...cachedBody, cached: true }, 200, cors);
     }
 
@@ -279,9 +311,7 @@ export default {
       degraded: Boolean(result.degraded)
     };
 
-    await caches.default.put(cacheKey, json(responseBody, 200, {
-      'Cache-Control': `max-age=${Number(env.ORACLE_CACHE_TTL || 900)}`
-    }));
+    await writeCache(cacheKey, responseBody, env);
 
     return json(responseBody, 200, cors);
   }

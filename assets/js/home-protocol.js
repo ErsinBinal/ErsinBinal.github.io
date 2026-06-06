@@ -59,6 +59,29 @@
       const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'MAP', 'ARCHIVE', 'NOTES', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
+      const defaultState = () => ({
+        visits: 0,
+        level: 0,
+        opened: [],
+        unlocked: [],
+        commands: 0,
+        commandLog: [],
+        rituals: 0,
+        easterTrail: []
+      });
+      const readState = () => {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(stateKey) || '{}');
+          return { ...defaultState(), ...(parsed && typeof parsed === 'object' ? parsed : {}) };
+        } catch {
+          try {
+            localStorage.removeItem(stateKey);
+          } catch {
+            // Ignore storage cleanup failures; the UI should still boot.
+          }
+          return defaultState();
+        }
+      };
       const oracleProxyEndpoint = (
         window.CONVIVIUM_ORACLE_ENDPOINT ||
         document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content ||
@@ -84,7 +107,10 @@
         'biraz gecikti ama islem devam ediyor...',
         'terminal hatta. cevabi bekliyorum...'
       ];
-      const state = JSON.parse(localStorage.getItem(stateKey) || '{"visits":0,"level":0,"opened":[],"unlocked":[],"commands":0}');
+      const state = readState();
+      state.visits = Number.isFinite(state.visits) ? state.visits : 0;
+      state.level = Number.isFinite(state.level) ? state.level : 0;
+      state.commands = Number.isFinite(state.commands) ? state.commands : 0;
       state.opened = Array.isArray(state.opened) ? state.opened : [];
       state.unlocked = Array.isArray(state.unlocked) ? state.unlocked : [];
       state.commandLog = Array.isArray(state.commandLog) ? state.commandLog.slice(-8) : [];
@@ -111,7 +137,13 @@
         user: null
       };
 
-      const persist = () => localStorage.setItem(stateKey, JSON.stringify(state));
+      const persist = () => {
+        try {
+          localStorage.setItem(stateKey, JSON.stringify(state));
+        } catch {
+          // Storage can be blocked in private/corporate browsers; keep the shell interactive.
+        }
+      };
 
       const pulse = (frequency = 220, duration = 0.045) => {
         if (!audioEnabled) return;
@@ -366,7 +398,7 @@
       ].join('\n');
 
       const renderCommandBoot = () => {
-        if (!commandOutput || commandInFlight) return;
+        if (!commandShell || !commandOutput || commandInFlight) return;
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-booting');
@@ -401,7 +433,7 @@
       };
 
       const closeCommandWithMatrix = () => {
-        if (!commandShell.classList.contains('is-open')) return;
+        if (!commandShell || !commandShell.classList.contains('is-open')) return;
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.remove('is-booting');
@@ -429,6 +461,7 @@
       };
 
       const openCommand = () => {
+        if (!commandShell || !commandInput) return;
         lastFocusedElement = document.activeElement;
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-open');
@@ -441,6 +474,7 @@
       };
 
       const closeCommand = () => {
+        if (!commandShell) return;
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');

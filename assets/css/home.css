@@ -2209,7 +2209,8 @@
       right: 18px;
       bottom: 18px;
       z-index: 132;
-      display: none;
+      display: inline-grid;
+      place-items: center;
       min-width: 54px;
       min-height: 40px;
       border: 1px solid rgba(0, 234, 255, 0.52);
@@ -2248,8 +2249,8 @@
 
     @media (max-width: 760px) {
       .mobile-command-button {
-        display: inline-grid;
-        place-items: center;
+        right: 14px;
+        bottom: 14px;
       }
 
       .command-shell {
