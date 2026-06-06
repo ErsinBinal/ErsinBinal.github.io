@@ -3,6 +3,8 @@
 
   const engineKey = 'convivium.bugy.engine';
   const skinKey = 'convivium.bugy.v3.skin';
+  const script = document.currentScript;
+  const wasmUrl = script?.dataset.wasm || '';
   const skins = ['classic', 'matrix', 'ember', 'ghost', 'royal'];
   const actions = ['storm', 'tornado', 'portal', 'clone', 'gravity', 'abduct'];
   const stateNames = ['walk', 'storm', 'tornado', 'portal', 'clone', 'gravity', 'abduct'];
@@ -118,7 +120,8 @@
     const readExport = (exports, name) => exports[name] || exports[`_${name}`];
 
     async function createWasmCore() {
-      const response = await fetch('/assets/wasm/bugy-v3.wasm', { cache: 'no-store' });
+      if (!wasmUrl) throw new Error('bugy-v3 wasm disabled');
+      const response = await fetch(wasmUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error('bugy-v3.wasm bulunamadi');
       const bytes = await response.arrayBuffer();
       const module = await WebAssembly.instantiate(bytes, {

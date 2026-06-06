@@ -599,6 +599,15 @@
         return `oracle: ${line}`;
       };
 
+      const oracleStatusCommand = () => [
+        `oracle proxy: ${oracleProxyIsUsable ? 'configured' : 'not configured'}`,
+        `endpoint: ${oracleProxyEndpoint || 'empty'}`,
+        `host: ${location.hostname || 'local'}`,
+        'primary ai: Cloudflare Workers AI via deployed Worker',
+        'note: GitHub Pages cannot serve /api/oracle by itself',
+        'next: deploy Worker, then set convivium-oracle-endpoint to its workers.dev URL'
+      ].join('\n');
+
       const manifestCommand = () => {
         registerProtocolStep('manifest');
         return 'manifest: residue indexed. devam etmek icin "unlock hidden" yaz veya "open manifest" ile dosyayi ac.';
@@ -1110,15 +1119,6 @@
         }
         return 'oracle: Dis kanallar sessiz. Soruyu tek cumleye indir, varsayimi kucult ve tekrar dene; terminal public hafizada kalmaya devam ediyor.';
       };
-
-      const oracleStatusCommand = () => [
-        `oracle proxy: ${oracleProxyIsUsable ? 'configured' : 'not configured'}`,
-        `endpoint: ${oracleProxyEndpoint || 'empty'}`,
-        `host: ${location.hostname || 'local'}`,
-        'primary ai: Cloudflare Workers AI via deployed Worker',
-        'note: GitHub Pages cannot serve /api/oracle by itself',
-        'next: deploy Worker, then set convivium-oracle-endpoint to its workers.dev URL'
-      ].join('\n');
 
       const askOracleProxy = async (command) => {
         if (!oracleProxyIsUsable) {
