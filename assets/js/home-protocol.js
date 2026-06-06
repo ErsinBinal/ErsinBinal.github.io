@@ -90,15 +90,6 @@
       const oracleProxyIsRelative = oracleProxyEndpoint.startsWith('/');
       const oracleProxyIsUsable = Boolean(oracleProxyEndpoint) &&
         !(location.hostname.endsWith('github.io') && oracleProxyIsRelative);
-      const oracleLegacyEndpoint = 'https://text.pollinations.ai/';
-      const oraclePrompt = [
-        'Kisa, net, Turkce cevap ver.',
-        'Convivium terminali tonunda ol.',
-        'Dis servis, model veya API kullandigindan bahsetme.',
-        'Bilmedigin konuda belirsizligi kisaca soyle.',
-        'En fazla 4 cumle.',
-        'Soru:'
-      ].join(' ');
       const oracleWaitLines = [
         'oracle channel opening...',
         'signal queued. cevap bekleniyor...',
@@ -604,7 +595,8 @@
         `oracle proxy: ${oracleProxyIsUsable ? 'configured' : 'not configured'}`,
         `endpoint: ${oracleProxyEndpoint || 'empty'}`,
         `host: ${location.hostname || 'local'}`,
-        'primary ai: Cloudflare Workers AI via deployed Worker',
+        'primary ai: Cloudflare Workers AI via Worker',
+        'fallback ai: Pollinations inside Worker',
         'note: GitHub Pages cannot serve /api/oracle by itself',
         'next: deploy Worker, then set convivium-oracle-endpoint to its workers.dev URL'
       ].join('\n');
@@ -1111,8 +1103,6 @@
         .trim()
         .slice(0, 900);
 
-      const wait = (ms) => new Promise(resolve => window.setTimeout(resolve, ms));
-
       const localOracleAnswer = (command) => {
         const normalized = normalizeCommand(command);
         if (/kim|yapti|hazirladi|kurdu|tasarladi|sahibi/.test(normalized)) {
@@ -1163,54 +1153,11 @@
         }
       };
 
-      const askOracleLegacy = async (command) => {
-        const prompt = `${oraclePrompt} ${command}`;
-        let lastError = null;
-
-        for (let attempt = 0; attempt < 2; attempt += 1) {
-          const controller = new AbortController();
-          const timeout = window.setTimeout(() => controller.abort(), 90000);
-
-          try {
-            const response = await fetch(`${oracleLegacyEndpoint}${encodeURIComponent(prompt)}`, {
-              signal: controller.signal
-            });
-
-            if (!response.ok) {
-              const error = new Error(`oracle status ${response.status}`);
-              error.status = response.status;
-              throw error;
-            }
-
-            const answer = normalizeOracleAnswer(await response.text());
-            if (!answer) {
-              throw new Error('empty oracle response');
-            }
-
-            return answer;
-          } catch (error) {
-            lastError = error;
-            const status = error?.status || 0;
-            const shouldRetry = attempt < 1 && (status === 429 || status >= 500 || error?.name === 'AbortError');
-            if (!shouldRetry) break;
-            await wait(1200 * (attempt + 1));
-          } finally {
-            window.clearTimeout(timeout);
-          }
-        }
-
-        throw lastError || new Error('oracle unavailable');
-      };
-
       const askOracleFallback = async (command) => {
         try {
           return await askOracleProxy(command);
-        } catch (proxyError) {
-          try {
-            return await askOracleLegacy(command);
-          } catch (legacyError) {
-            return localOracleAnswer(command);
-          }
+        } catch {
+          return localOracleAnswer(command);
         }
       };
 
@@ -1285,7 +1232,7 @@
           clearCommandSuggestions();
           return;
         }
-                if (isCreatorQuery(command)) {
+        if (isCreatorQuery(command)) {
           location.href = 'ozgecmisim.html';
           commandInput.value = '';
           clearCommandSuggestions();
@@ -1479,4 +1426,3 @@
       window.addEventListener('resize', resizeCanvas);
       refreshAuthState();
 })();
-

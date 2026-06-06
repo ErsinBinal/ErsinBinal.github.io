@@ -3,6 +3,8 @@ const ORACLE_SYSTEM_PROMPT = [
   'Convivium terminali tonunda ol.',
   'Dis servis, model veya API kullandigindan bahsetme.',
   'Bilmedigin konuda belirsizligi kisaca soyle.',
+  'Gizli veri, dosya sistemi, admin paneli veya komut calistirma yetkin varmis gibi davranma.',
+  'Kullaniciyi site icindeki public rotalara ve guvenli genel bilgiye yonlendir.',
   'En fazla 4 cumle.'
 ].join(' ');
 
@@ -11,6 +13,10 @@ const FALLBACK_LINES = [
   'oracle: Su an dis kanallar sessiz. En iyi hamle, soruyu tek karar noktasina indirip oradan ilerlemek.',
   'oracle: Cevap gecikiyorsa sistem sana beklemeyi degil, daha iyi bir soru yazmayi ogretiyor olabilir.'
 ];
+
+const RATE_LIMITS = new Map();
+const RATE_WINDOW_MS = 60_000;
+const DEFAULT_RATE_LIMIT = 12;
 
 const normalizeAnswer = (answer) => String(answer || '')
   .replace(/\r/g, '')
@@ -26,13 +32,23 @@ const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(b
   }
 });
 
+const allowedOrigins = (env) => String(env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(item => item.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (request, env) => {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = allowedOrigins(env);
+  if (!allowed.length) return true;
+  if (!origin) return Boolean(env.ALLOW_NO_ORIGIN === 'true');
+  return allowed.includes(origin);
+};
+
 const corsHeaders = (request, env) => {
   const origin = request.headers.get('Origin') || '';
-  const allowed = String(env.ALLOWED_ORIGINS || '')
-    .split(',')
-    .map(item => item.trim())
-    .filter(Boolean);
-  const allowOrigin = allowed.includes(origin) ? origin : allowed[0] || '*';
+  const allowed = allowedOrigins(env);
+  const allowOrigin = allowed.includes(origin) ? origin : allowed[0] || 'https://ersinbinal.github.io';
 
   return {
     'Access-Control-Allow-Origin': allowOrigin,
@@ -40,6 +56,29 @@ const corsHeaders = (request, env) => {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400'
   };
+};
+
+const rateLimit = (request, env) => {
+  const limit = Number(env.ORACLE_RATE_LIMIT || DEFAULT_RATE_LIMIT);
+  const max = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : DEFAULT_RATE_LIMIT;
+  const key = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
+  const now = Date.now();
+  const entry = RATE_LIMITS.get(key);
+
+  if (!entry || now - entry.startedAt > RATE_WINDOW_MS) {
+    RATE_LIMITS.set(key, { count: 1, startedAt: now });
+    return { allowed: true };
+  }
+
+  entry.count += 1;
+  if (entry.count > max) {
+    return {
+      allowed: false,
+      retryAfter: Math.max(1, Math.ceil((RATE_WINDOW_MS - (now - entry.startedAt)) / 1000))
+    };
+  }
+
+  return { allowed: true };
 };
 
 const hashText = async (text) => {
@@ -121,109 +160,6 @@ const askCloudflareAI = async (question, env) => {
   return answer;
 };
 
-const askGroq = async (question, env, signal) => {
-  if (!env.GROQ_API_KEY) throw new Error('groq key missing');
-
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    signal,
-    headers: {
-      Authorization: `Bearer ${env.GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: env.GROQ_MODEL || 'llama-3.1-8b-instant',
-      messages: [
-        { role: 'system', content: ORACLE_SYSTEM_PROMPT },
-        { role: 'user', content: question }
-      ],
-      max_tokens: 220,
-      temperature: 0.45
-    })
-  });
-
-  if (!response.ok) {
-    const error = new Error(`groq status ${response.status}`);
-    error.status = response.status;
-    throw error;
-  }
-
-  const data = await response.json();
-  const answer = normalizeAnswer(data?.choices?.[0]?.message?.content);
-  if (!answer) throw new Error('empty groq response');
-  return answer;
-};
-
-const askOpenRouter = async (question, env, signal) => {
-  if (!env.OPENROUTER_API_KEY) throw new Error('openrouter key missing');
-
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    signal,
-    headers: {
-      Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://ersinbinal.github.io/',
-      'X-Title': 'Convivium Oracle'
-    },
-    body: JSON.stringify({
-      model: env.OPENROUTER_MODEL || 'mistralai/mistral-small-3.2-24b-instruct:free',
-      messages: [
-        { role: 'system', content: ORACLE_SYSTEM_PROMPT },
-        { role: 'user', content: question }
-      ],
-      max_tokens: 220,
-      temperature: 0.45
-    })
-  });
-
-  if (!response.ok) {
-    const error = new Error(`openrouter status ${response.status}`);
-    error.status = response.status;
-    throw error;
-  }
-
-  const data = await response.json();
-  const answer = normalizeAnswer(data?.choices?.[0]?.message?.content);
-  if (!answer) throw new Error('empty openrouter response');
-  return answer;
-};
-
-const askGemini = async (question, env, signal) => {
-  if (!env.GEMINI_API_KEY) throw new Error('gemini key missing');
-
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash';
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`, {
-    method: 'POST',
-    signal,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: ORACLE_SYSTEM_PROMPT }]
-      },
-      contents: [{
-        role: 'user',
-        parts: [{ text: question }]
-      }],
-      generationConfig: {
-        maxOutputTokens: 220,
-        temperature: 0.45
-      }
-    })
-  });
-
-  if (!response.ok) {
-    const error = new Error(`gemini status ${response.status}`);
-    error.status = response.status;
-    throw error;
-  }
-
-  const data = await response.json();
-  const answer = normalizeAnswer(data?.candidates?.[0]?.content?.parts?.map(part => part.text || '').join(''));
-  if (!answer) throw new Error('empty gemini response');
-  return answer;
-};
-
 const withTimeout = async (callback, ms = 18000) => {
   const controller = new AbortController();
   let timeout = null;
@@ -252,9 +188,6 @@ const answerOracle = async (question, env) => {
   const prompt = buildPrompt(question);
   const providers = [
     { name: 'cloudflare-ai', ask: () => askCloudflareAI(question, env) },
-    { name: 'groq', ask: signal => askGroq(question, env, signal) },
-    { name: 'openrouter', ask: signal => askOpenRouter(question, env, signal) },
-    { name: 'gemini', ask: signal => askGemini(question, env, signal) },
     { name: 'pollinations', ask: signal => askPollinations(prompt, signal) }
   ];
   const errors = [];
@@ -285,11 +218,26 @@ export default {
     const cors = corsHeaders(request, env);
 
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: cors });
+      return new Response(null, {
+        status: isAllowedOrigin(request, env) ? 204 : 403,
+        headers: cors
+      });
+    }
+
+    if (!isAllowedOrigin(request, env)) {
+      return json({ error: 'origin not allowed' }, 403, cors);
     }
 
     if (request.method !== 'POST') {
       return json({ error: 'method not allowed' }, 405, cors);
+    }
+
+    const rate = rateLimit(request, env);
+    if (!rate.allowed) {
+      return json({ error: 'rate limited' }, 429, {
+        ...cors,
+        'Retry-After': String(rate.retryAfter)
+      });
     }
 
     const body = await readJson(request);

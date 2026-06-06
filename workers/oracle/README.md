@@ -1,54 +1,66 @@
 # Convivium Oracle Worker
 
-Cloudflare Worker proxy for the command-shell oracle.
+Cloudflare Worker proxy for the public command/oracle AI channel.
 
-## Deploy
-
-CLI with Node/npm available:
-
-```bash
-npx wrangler deploy -c workers/oracle/wrangler.toml
-```
-
-Dashboard without Node/npm:
-
-1. Open Cloudflare Dashboard.
-2. Go to Workers & Pages.
-3. Create a Worker named `convivium-oracle`.
-4. Add a Workers AI binding named `AI`.
-5. Paste `workers/oracle/src/index.js` into the Worker editor.
-6. Add these environment variables:
-   - `ALLOWED_ORIGINS`: `https://ersinbinal.github.io,http://localhost:8000,http://127.0.0.1:8000`
-   - `CLOUDFLARE_AI_MODEL`: `@cf/meta/llama-3.1-8b-instruct`
-   - `ORACLE_CACHE_TTL`: `900`
-7. Deploy and copy the `https://...workers.dev` URL.
-8. Put that URL into `index.html`:
-
-```html
-<meta name="convivium-oracle-endpoint" content="https://your-worker.workers.dev">
-```
+The website is static on GitHub Pages, so it cannot safely host an LLM endpoint by itself. This Worker is the safety boundary between the browser command shell and external AI providers.
 
 ## Provider order
 
-1. Cloudflare Workers AI, no extra API key, uses the Worker `AI` binding
-2. Groq, optional `GROQ_API_KEY`
-3. OpenRouter, optional `OPENROUTER_API_KEY`
-4. Gemini, optional `GEMINI_API_KEY`
-5. Pollinations, no secret, last external fallback
-6. Local short oracle line
+1. Cloudflare Workers AI through the `AI` binding
+2. Pollinations text endpoint from inside the Worker
+3. Local canned answer if every external provider fails
 
-## Optional fallback secrets
+No provider API key is required for the default setup.
 
-Cloudflare Workers AI and Pollinations work without provider secrets. Add any of these to enable more external fallbacks:
+Cloudflare Workers AI currently includes a free daily allocation on Workers Free plans. Pollinations is used only as a no-key fallback from the Worker, not directly from the browser.
+
+## Safety rules
+
+- Browser requests are accepted only from `ALLOWED_ORIGINS`.
+- Public HTML/JS never stores provider secrets.
+- The Worker does not expose files, shell commands, repository writes, admin actions, or local developer tools.
+- Responses are short text answers only.
+- Basic per-IP rate limiting is enabled with `ORACLE_RATE_LIMIT`.
+- Repeated questions are cached briefly with `ORACLE_CACHE_TTL`.
+
+## Deploy
 
 ```bash
-npx wrangler secret put GROQ_API_KEY -c workers/oracle/wrangler.toml
-npx wrangler secret put OPENROUTER_API_KEY -c workers/oracle/wrangler.toml
-npx wrangler secret put GEMINI_API_KEY -c workers/oracle/wrangler.toml
+npm run deploy:oracle
 ```
 
-After deploy, set the worker URL in `index.html`:
+If Cloudflare is not logged in on the machine:
+
+```bash
+npx wrangler login
+npm run deploy:oracle
+```
+
+After deploy, copy the Worker URL and set it in `index.html`:
 
 ```html
 <meta name="convivium-oracle-endpoint" content="https://your-worker.workers.dev">
+```
+
+Then push the site to GitHub Pages.
+
+## Local test
+
+After deploy:
+
+```bash
+curl -i https://your-worker.workers.dev \
+  -H 'Origin: https://ersinbinal.github.io' \
+  -H 'Content-Type: application/json' \
+  --data '{"question":"Bu site ne yapar?"}'
+```
+
+Expected response shape:
+
+```json
+{
+  "answer": "oracle: ...",
+  "provider": "cloudflare-ai",
+  "degraded": false
+}
 ```
