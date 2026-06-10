@@ -138,19 +138,96 @@
         }
       };
 
-      const pulse = (frequency = 220, duration = 0.045) => {
+      const getAudioContext = () => {
         if (!audioEnabled) return;
-        audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioContext ||= new AudioContextClass();
+        const resume = audioContext.resume?.();
+        if (resume?.catch) resume.catch(() => {});
+        return audioContext;
+      };
+
+      const pulse = (frequency = 220, duration = 0.045) => {
+        const context = getAudioContext();
+        if (!context) return;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
-        gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.045, audioContext.currentTime + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
-        oscillator.connect(gain).connect(audioContext.destination);
+        gain.gain.setValueAtTime(0.0001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+        oscillator.connect(gain).connect(context.destination);
         oscillator.start();
-        oscillator.stop(audioContext.currentTime + duration + 0.02);
+        oscillator.stop(context.currentTime + duration + 0.02);
+      };
+
+      const playPowerNoise = (startFrequency, endFrequency, duration, volume = 0.055) => {
+        const context = getAudioContext();
+        if (!context) return;
+        const frameCount = Math.max(1, Math.floor(context.sampleRate * duration));
+        const buffer = context.createBuffer(1, frameCount, context.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let index = 0; index < frameCount; index += 1) {
+          const fade = 1 - (index / frameCount) * 0.62;
+          data[index] = (Math.random() * 2 - 1) * fade;
+        }
+
+        const source = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        const now = context.currentTime;
+        source.buffer = buffer;
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(startFrequency, now);
+        filter.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), now + duration);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.linearRampToValueAtTime(volume, now + Math.min(0.14, duration / 4));
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        source.connect(filter).connect(gain).connect(context.destination);
+        source.start(now);
+        source.stop(now + duration + 0.04);
+      };
+
+      const playPowerBeep = (frequency, offset, duration, type = 'square', volume = 0.04) => {
+        const context = getAudioContext();
+        if (!context) return;
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const start = context.currentTime + offset;
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+        oscillator.connect(gain).connect(context.destination);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.025);
+      };
+
+      const playPowerSound = (mode) => {
+        if (!getAudioContext()) return;
+        if (mode === 'boot') {
+          playPowerNoise(220, 2600, 1.45, 0.052);
+          playPowerBeep(330, 0.08, 0.07, 'square', 0.03);
+          playPowerBeep(660, 0.28, 0.08, 'square', 0.034);
+          playPowerBeep(880, 0.46, 0.11, 'triangle', 0.032);
+          return;
+        }
+        if (mode === 'shutdown') {
+          playPowerNoise(1900, 90, 1.25, 0.05);
+          playPowerBeep(420, 0.08, 0.08, 'square', 0.034);
+          playPowerBeep(260, 0.34, 0.12, 'triangle', 0.032);
+          playPowerBeep(120, 0.76, 0.18, 'sine', 0.03);
+          return;
+        }
+        if (mode === 'restart') {
+          playPowerNoise(1500, 420, 0.36, 0.04);
+          playPowerBeep(520, 0.04, 0.06, 'square', 0.032);
+          playPowerBeep(520, 0.16, 0.06, 'square', 0.032);
+          playPowerBeep(740, 0.34, 0.08, 'triangle', 0.034);
+        }
       };
 
       const updateAccess = () => {
@@ -583,6 +660,7 @@
         overlay.classList.remove('is-off', 'is-shutting-down');
         overlay.classList.add('is-active', 'is-booting');
         document.body.classList.add('power-state-active');
+        playPowerSound('boot');
         renderPowerLines(bootLines(), () => {
           const timer = window.setTimeout(() => {
             overlay.classList.remove('is-active', 'is-booting');
@@ -607,6 +685,7 @@
         overlay.classList.remove('is-off', 'is-booting');
         overlay.classList.add('is-active', 'is-shutting-down');
         document.body.classList.add('power-state-active');
+        playPowerSound('shutdown');
         renderPowerLines(shutdownLines(), () => {
           const timer = window.setTimeout(() => {
             overlay.classList.remove('is-shutting-down');
@@ -629,6 +708,7 @@
         overlay.classList.remove('is-off');
         overlay.classList.add('is-active', 'is-booting');
         document.body.classList.add('power-state-active');
+        playPowerSound('restart');
         renderPowerLines(restartLines(), () => {
           const timer = window.setTimeout(renderPowerBoot, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 540);
           powerSequenceTimers.push(timer);
