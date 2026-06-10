@@ -2017,6 +2017,121 @@
       pointer-events: none;
     }
 
+    .screen-saver-system {
+      position: absolute;
+      right: clamp(32px, 9vw, 128px);
+      bottom: clamp(76px, 12vh, 132px);
+      z-index: 1;
+      display: block;
+      width: min(42vw, 430px);
+      aspect-ratio: 1;
+      border: 2px solid rgba(156, 255, 184, 0.52);
+      background:
+        linear-gradient(90deg, rgba(202, 255, 216, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(202, 255, 216, 0.08) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(156, 255, 184, 0.12), transparent 58%),
+        rgba(4, 20, 8, 0.72);
+      background-size: 12px 12px, 12px 12px, auto, auto;
+      box-shadow:
+        inset 0 0 0 6px rgba(0, 0, 0, 0.42),
+        inset 0 0 38px rgba(0, 255, 102, 0.16),
+        0 0 26px rgba(0, 255, 102, 0.16);
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .screen-saver-system::before,
+    .screen-saver-system::after {
+      content: '';
+      position: absolute;
+      pointer-events: none;
+    }
+
+    .screen-saver-system::before {
+      inset: 10px;
+      border: 1px solid rgba(202, 255, 216, 0.22);
+    }
+
+    .screen-saver-system::after {
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(0, 0, 0, 0.24) 5px 6px);
+      mix-blend-mode: multiply;
+    }
+
+    .system-label {
+      position: absolute;
+      left: 14px;
+      top: 12px;
+      z-index: 2;
+      color: rgba(202, 255, 216, 0.74);
+      font-size: clamp(0.58rem, 1.2vw, 0.76rem);
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(0, 255, 102, 0.28);
+    }
+
+    .system-sun {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      z-index: 2;
+      width: 10%;
+      aspect-ratio: 1;
+      background:
+        linear-gradient(90deg, transparent 18%, #d8ffe1 18% 82%, transparent 82%),
+        linear-gradient(0deg, transparent 18%, #d8ffe1 18% 82%, transparent 82%);
+      box-shadow:
+        0 0 0 3px rgba(202, 255, 216, 0.18),
+        0 0 22px rgba(156, 255, 184, 0.56);
+      transform: translate(-50%, -50%);
+      animation: systemSunPulse 1.8s steps(2, end) infinite;
+    }
+
+    .system-orbit {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border: 1px solid rgba(156, 255, 184, 0.26);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: systemOrbit 18s linear infinite;
+    }
+
+    .orbit-1 { width: 26%; height: 26%; animation-duration: 6s; }
+    .orbit-2 { width: 40%; height: 40%; animation-duration: 10s; animation-direction: reverse; }
+    .orbit-3 { width: 56%; height: 56%; animation-duration: 14s; }
+    .orbit-4 { width: 72%; height: 72%; animation-duration: 21s; animation-direction: reverse; }
+    .orbit-5 { width: 88%; height: 88%; animation-duration: 30s; }
+
+    .system-planet {
+      position: absolute;
+      left: 50%;
+      top: -4px;
+      display: block;
+      width: 8px;
+      height: 8px;
+      background: #caffd8;
+      box-shadow: 0 0 12px rgba(202, 255, 216, 0.42);
+      transform: translateX(-50%);
+    }
+
+    .planet-1 { width: 5px; height: 5px; }
+    .planet-2 { width: 7px; height: 7px; background: #9cffb8; }
+    .planet-3 {
+      width: 8px;
+      height: 8px;
+      border: 1px solid #d8ffe1;
+      background: rgba(156, 255, 184, 0.38);
+    }
+    .planet-4 { width: 6px; height: 10px; background: rgba(0, 234, 255, 0.78); }
+    .planet-5 {
+      width: 12px;
+      height: 8px;
+      background: #caffd8;
+      box-shadow:
+        0 0 0 2px rgba(202, 255, 216, 0.16),
+        0 0 16px rgba(202, 255, 216, 0.36);
+    }
+
     .screen-saver-status {
       position: absolute;
       right: clamp(18px, 5vw, 54px);
@@ -2286,6 +2401,18 @@
       100% { transform: translate(4vw, 58vh); }
     }
 
+    @keyframes systemOrbit {
+      from { transform: translate(-50%, -50%) rotate(0deg); }
+      to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+
+    @keyframes systemSunPulse {
+      50% {
+        opacity: 0.74;
+        filter: brightness(0.82);
+      }
+    }
+
     .page-loader {
       position: fixed;
       inset: 0;
@@ -2442,6 +2569,14 @@
         animation-name: screenSaverMobileDrift, powerBrandFlicker;
       }
 
+      .screen-saver-system {
+        left: 50%;
+        right: auto;
+        bottom: 138px;
+        width: min(82vw, 330px);
+        transform: translateX(-50%);
+      }
+
       .screen-saver-status {
         left: 18px;
         right: auto;
@@ -2476,7 +2611,9 @@
       .power-brand,
       .screen-saver-overlay::before,
       .screen-saver-noise,
-      .screen-saver-logo {
+      .screen-saver-logo,
+      .system-sun,
+      .system-orbit {
         animation: none !important;
       }
 
