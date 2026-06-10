@@ -489,7 +489,19 @@
         powerOverlay.setAttribute('aria-label', 'Convivium power screen');
         powerOverlay.innerHTML = [
           '<span class="power-scan" aria-hidden="true"></span>',
+          '<span class="power-brand" aria-hidden="true">Convivium</span>',
+          '<span class="power-mode" aria-hidden="true">POWER</span>',
+          '<span class="power-sidecar" aria-hidden="true">',
+          '  <span>CRT: SYNC</span>',
+          '  <span>BUS: PUBLIC</span>',
+          '  <span>KEYS: LOCKED</span>',
+          '</span>',
           '<span class="power-terminal" aria-live="polite"></span>',
+          '<span class="power-footer" aria-hidden="true">',
+          '  <span>640K PUBLIC MEMORY</span>',
+          '  <span>NO PRIVATE MOUNTS</span>',
+          '  <span>STATIC PAGE IMAGE</span>',
+          '</span>',
           '<span class="power-restart">click to restart</span>'
         ].join('');
         powerOverlay.addEventListener('click', () => {
@@ -497,6 +509,11 @@
         });
         document.body.appendChild(powerOverlay);
         return powerOverlay;
+      };
+
+      const setPowerMode = (label) => {
+        const mode = ensurePowerOverlay().querySelector('.power-mode');
+        if (mode) mode.textContent = label;
       };
 
       const renderPowerLines = (lines, done) => {
@@ -562,6 +579,7 @@
 
       const renderPowerBoot = () => {
         const overlay = ensurePowerOverlay();
+        setPowerMode('BOOT');
         overlay.classList.remove('is-off', 'is-shutting-down');
         overlay.classList.add('is-active', 'is-booting');
         document.body.classList.add('power-state-active');
@@ -583,6 +601,7 @@
 
       const shutdownCommand = () => {
         const overlay = ensurePowerOverlay();
+        setPowerMode('SHUTDOWN');
         setCommandBusy(true);
         closeCommand();
         overlay.classList.remove('is-off', 'is-booting');
@@ -592,6 +611,7 @@
           const timer = window.setTimeout(() => {
             overlay.classList.remove('is-shutting-down');
             overlay.classList.add('is-off');
+            setPowerMode('OFFLINE');
             const terminal = overlay.querySelector('.power-terminal');
             if (terminal) terminal.textContent = '';
             pulse(90, 0.1);
@@ -603,6 +623,7 @@
 
       const restartCommand = () => {
         const overlay = ensurePowerOverlay();
+        setPowerMode('RESTART');
         setCommandBusy(true);
         closeCommand();
         overlay.classList.remove('is-off');
