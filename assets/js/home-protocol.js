@@ -547,6 +547,19 @@
         'BOOT: returning to Convivium'
       ];
 
+      const restartLines = () => [
+        'CONVIVIUM DOS/86 RESTART',
+        'REQUEST: warm reboot accepted',
+        'DISPLAY: saving public interface state',
+        'FILES: no local file handles mounted',
+        'SECRETS: unavailable in browser runtime',
+        'AI: oracle channel paused',
+        'MEM: command buffer cleared',
+        'POWER: cycling display bus',
+        '',
+        'Restarting...'
+      ];
+
       const renderPowerBoot = () => {
         const overlay = ensurePowerOverlay();
         overlay.classList.remove('is-off', 'is-shutting-down');
@@ -586,6 +599,20 @@
           powerSequenceTimers.push(timer);
         });
         return 'shutdown sequence accepted';
+      };
+
+      const restartCommand = () => {
+        const overlay = ensurePowerOverlay();
+        setCommandBusy(true);
+        closeCommand();
+        overlay.classList.remove('is-off');
+        overlay.classList.add('is-active', 'is-booting');
+        document.body.classList.add('power-state-active');
+        renderPowerLines(restartLines(), () => {
+          const timer = window.setTimeout(renderPowerBoot, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 540);
+          powerSequenceTimers.push(timer);
+        });
+        return 'restart sequence accepted';
       };
 
       const normalizeCommand = (value) => value
@@ -862,6 +889,12 @@
           description: 'retro guvenli kapanis ekranini baslatir',
           aliases: ['shatdawn', 'shut down', 'poweroff', 'power off', 'kapan', 'kapat sistemi', 'sistemi kapat'],
           action: shutdownCommand
+        },
+        {
+          command: 'restart',
+          description: 'retro yeniden baslatma sekansini calistirir',
+          aliases: ['reboot', 'reset', 'warm reboot', 'yeniden baslat', 'yeniden başlat', 'tekrar baslat', 'tekrar başlat'],
+          action: restartCommand
         },
         {
           command: 'random',
@@ -1145,7 +1178,7 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
         '',
         'system:',
-        'whoami, log, clear, random, shutdown, level, access, dashboard, deb, bugy',
+        'whoami, log, clear, random, shutdown, restart, level, access, dashboard, deb, bugy',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
