@@ -128,6 +128,7 @@
       let lastFocusedElement = null;
       let powerOverlay = null;
       let powerSequenceTimers = [];
+      let screenSaverOverlay = null;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
       const authState = {
@@ -737,6 +738,52 @@
         return 'restart sequence accepted';
       };
 
+      const closeScreenSaver = () => {
+        if (!screenSaverOverlay) return;
+        screenSaverOverlay.classList.remove('is-active');
+        screenSaverOverlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('screen-saver-active');
+        if (lastFocusedElement && document.contains(lastFocusedElement) && typeof lastFocusedElement.focus === 'function') {
+          lastFocusedElement.focus();
+        } else {
+          mobileCommandButton?.focus();
+        }
+      };
+
+      const ensureScreenSaverOverlay = () => {
+        if (screenSaverOverlay) return screenSaverOverlay;
+        screenSaverOverlay = document.createElement('button');
+        screenSaverOverlay.type = 'button';
+        screenSaverOverlay.className = 'screen-saver-overlay';
+        screenSaverOverlay.setAttribute('aria-hidden', 'true');
+        screenSaverOverlay.setAttribute('aria-label', 'Ekran koruyucuyu kapat');
+        screenSaverOverlay.innerHTML = [
+          '<span class="screen-saver-noise" aria-hidden="true"></span>',
+          '<span class="screen-saver-logo" aria-hidden="true">Convivium</span>',
+          '<span class="screen-saver-status" aria-hidden="true">',
+          '  <span>SCREEN SAVER</span>',
+          '  <span>PUBLIC DISPLAY IDLE</span>',
+          '  <span>CLICK / KEY TO RETURN</span>',
+          '</span>',
+          '<span class="screen-saver-trace" aria-hidden="true">C:\\CONVIVIUM\\IDLE&gt; phosphor drift active</span>'
+        ].join('');
+        screenSaverOverlay.addEventListener('click', closeScreenSaver);
+        document.body.appendChild(screenSaverOverlay);
+        return screenSaverOverlay;
+      };
+
+      const screenSaverCommand = () => {
+        const overlay = ensureScreenSaverOverlay();
+        lastFocusedElement = document.activeElement;
+        closeCommand();
+        overlay.classList.add('is-active');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('screen-saver-active');
+        overlay.focus();
+        pulse(310, 0.08);
+        return 'screen saver active';
+      };
+
       const normalizeCommand = (value) => value
         .toLocaleLowerCase('tr-TR')
         .trim()
@@ -1017,6 +1064,12 @@
           description: 'retro yeniden baslatma sekansini calistirir',
           aliases: ['reboot', 'reset', 'warm reboot', 'yeniden baslat', 'yeniden başlat', 'tekrar baslat', 'tekrar başlat'],
           action: restartCommand
+        },
+        {
+          command: 'screen saver',
+          description: 'retro Convivium ekran koruyucuyu acar',
+          aliases: ['screensaver', 'screen server', 'screen save', 'ekran koruyucu', 'koruyucu', 'idle screen'],
+          action: screenSaverCommand
         },
         {
           command: 'random',
@@ -1300,7 +1353,7 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
         '',
         'system:',
-        'whoami, log, clear, random, shutdown, restart, level, access, dashboard, deb, bugy',
+        'whoami, log, clear, random, shutdown, restart, screen saver, level, access, dashboard, deb, bugy',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
@@ -1584,6 +1637,11 @@
       }, { passive: true });
 
       document.addEventListener('keydown', event => {
+        if (screenSaverOverlay?.classList.contains('is-active')) {
+          event.preventDefault();
+          closeScreenSaver();
+          return;
+        }
         if (event.target.matches('input, textarea')) return;
         const key = event.key.toLowerCase();
         if (key === '?' || (event.ctrlKey && key === 'k')) {

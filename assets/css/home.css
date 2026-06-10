@@ -1937,6 +1937,118 @@
       overflow: hidden;
     }
 
+    body.screen-saver-active {
+      overflow: hidden;
+    }
+
+    .screen-saver-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 11000;
+      display: none;
+      border: 0;
+      padding: 0;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(0, 234, 255, 0.12), transparent 26%),
+        radial-gradient(circle at 76% 68%, rgba(255, 46, 166, 0.1), transparent 30%),
+        repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.05) 0 1px, transparent 1px 7px),
+        #000;
+      color: #caffd8;
+      font-family: var(--font-display);
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .screen-saver-overlay.is-active {
+      display: block;
+    }
+
+    .screen-saver-overlay::before,
+    .screen-saver-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .screen-saver-overlay::before {
+      background-image:
+        radial-gradient(circle, rgba(202, 255, 216, 0.72) 0 1px, transparent 1px),
+        radial-gradient(circle, rgba(0, 234, 255, 0.5) 0 1px, transparent 1px);
+      background-size: 91px 91px, 147px 147px;
+      background-position: 12px 18px, 42px 63px;
+      animation: screenSaverStars 18s linear infinite;
+      opacity: 0.54;
+    }
+
+    .screen-saver-overlay::after {
+      border: clamp(10px, 2vw, 24px) solid rgba(0, 0, 0, 0.46);
+      box-shadow: inset 0 0 86px rgba(0, 255, 102, 0.1);
+    }
+
+    .screen-saver-noise {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.12), transparent),
+        repeating-linear-gradient(90deg, transparent 0 19px, rgba(0, 255, 102, 0.08) 19px 20px, transparent 20px 38px);
+      mix-blend-mode: screen;
+      opacity: 0.42;
+      transform: translateX(-100%);
+      animation: screenSaverSweep 4.6s steps(12, end) infinite;
+      pointer-events: none;
+    }
+
+    .screen-saver-logo {
+      position: absolute;
+      left: 8vw;
+      top: 12vh;
+      z-index: 1;
+      color: #e4ffea;
+      font-size: clamp(2.8rem, 10vw, 9rem);
+      line-height: 0.86;
+      text-shadow:
+        0 0 18px rgba(0, 255, 102, 0.72),
+        3px 0 0 rgba(0, 234, 255, 0.26),
+        -3px 0 0 rgba(255, 46, 166, 0.2);
+      animation:
+        screenSaverDrift 17s linear infinite alternate,
+        powerBrandFlicker 3.4s steps(2, end) infinite;
+      pointer-events: none;
+    }
+
+    .screen-saver-status {
+      position: absolute;
+      right: clamp(18px, 5vw, 54px);
+      top: clamp(18px, 5vw, 54px);
+      z-index: 1;
+      display: grid;
+      gap: 7px;
+      color: rgba(202, 255, 216, 0.78);
+      font-size: clamp(0.66rem, 1.4vw, 0.82rem);
+      text-align: right;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .screen-saver-status span {
+      border-right: 2px solid rgba(0, 234, 255, 0.46);
+      padding: 5px 8px;
+      background: rgba(0, 0, 0, 0.34);
+    }
+
+    .screen-saver-trace {
+      position: absolute;
+      left: clamp(18px, 5vw, 54px);
+      bottom: clamp(18px, 5vw, 46px);
+      z-index: 1;
+      color: rgba(156, 255, 184, 0.68);
+      font-size: clamp(0.68rem, 1.6vw, 0.88rem);
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0, 255, 102, 0.28);
+      pointer-events: none;
+    }
+
     .power-overlay {
       position: fixed;
       inset: 0;
@@ -2158,6 +2270,22 @@
       }
     }
 
+    @keyframes screenSaverStars {
+      to { background-position: 194px 109px, -105px 210px; }
+    }
+
+    @keyframes screenSaverSweep {
+      to { transform: translateX(100%); }
+    }
+
+    @keyframes screenSaverDrift {
+      0% { transform: translate(0, 0); }
+      22% { transform: translate(46vw, 8vh); }
+      48% { transform: translate(18vw, 52vh); }
+      72% { transform: translate(58vw, 38vh); }
+      100% { transform: translate(4vw, 58vh); }
+    }
+
     .page-loader {
       position: fixed;
       inset: 0;
@@ -2308,6 +2436,29 @@
         text-align: left;
         font-size: 0.62rem;
       }
+
+      .screen-saver-logo {
+        font-size: clamp(2.4rem, 16vw, 4.6rem);
+        animation-name: screenSaverMobileDrift, powerBrandFlicker;
+      }
+
+      .screen-saver-status {
+        left: 18px;
+        right: auto;
+        top: auto;
+        bottom: 70px;
+        text-align: left;
+      }
+
+      .screen-saver-status span {
+        border-right: 0;
+        border-left: 2px solid rgba(0, 234, 255, 0.46);
+      }
+
+      .screen-saver-trace {
+        right: 18px;
+        font-size: 0.62rem;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -2322,7 +2473,10 @@
       .power-overlay.is-shutting-down .power-scan,
       .power-overlay.is-booting .power-scan,
       .power-overlay.is-off::before,
-      .power-brand {
+      .power-brand,
+      .screen-saver-overlay::before,
+      .screen-saver-noise,
+      .screen-saver-logo {
         animation: none !important;
       }
 
@@ -2332,6 +2486,13 @@
         animation: none !important;
       }
 
+    }
+
+    @keyframes screenSaverMobileDrift {
+      0% { transform: translate(0, 0); }
+      28% { transform: translate(28vw, 12vh); }
+      56% { transform: translate(8vw, 42vh); }
+      100% { transform: translate(34vw, 30vh); }
     }
 
     /* Convivium OS refinements */
