@@ -1158,6 +1158,9 @@
           ctx.stroke();
         }
 
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+        ctx.fillRect(0, 0, width, height);
+
         if (!reduced && signalFlares.length < MAX_SIGNAL_FLARES && Math.random() < 0.003) {
           signalFlares.push({
             x: Math.random() * width,
@@ -1176,13 +1179,13 @@
         const wfH = 16;
         const wfSpeed = reduced ? 0 : elapsed * 14;
 
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
         ctx.fillRect(wfX, wfY, wfW, wfH);
-        ctx.strokeStyle = 'rgba(0, 234, 255, 0.22)';
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.28)';
         ctx.strokeRect(wfX, wfY, wfW, wfH);
 
-        ctx.strokeStyle = 'rgba(0, 234, 255, 0.84)';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.9)';
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
         for (let i = 0; i < wfW; i += 1) {
           const t = i + wfSpeed;
@@ -1196,7 +1199,7 @@
         }
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(0, 234, 255, 0.5)';
+        ctx.fillStyle = 'rgba(0, 234, 255, 0.6)';
         ctx.font = '8px "Share Tech Mono", monospace';
         ctx.fillText('SIGNAL', wfX + 4, wfY + wfH - 3);
         ctx.restore();
@@ -1207,12 +1210,12 @@
           if (age > flare.duration) return false;
           const progress = Math.min(age / flare.duration, 1);
           const radius = flare.maxRadius * Math.sin(progress * Math.PI);
-          const alpha = Math.sin(progress * Math.PI) * 0.7;
+          const alpha = Math.sin(progress * Math.PI) * 0.85;
           const color = `rgba(0, 234, 255, ${alpha})`;
-          const colorDim = `rgba(202, 255, 216, ${alpha * 0.4})`;
+          const colorDim = `rgba(202, 255, 216, ${alpha * 0.5})`;
 
           ctx.strokeStyle = color;
-          ctx.lineWidth = 1;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
           ctx.moveTo(flare.x - radius, flare.y);
           ctx.lineTo(flare.x + radius, flare.y);
@@ -1229,7 +1232,8 @@
           ctx.lineTo(flare.x - radius * 0.6, flare.y + radius * 0.6);
           ctx.stroke();
 
-          ctx.strokeStyle = `rgba(202, 255, 216, ${alpha * 0.25})`;
+          ctx.strokeStyle = `rgba(202, 255, 216, ${alpha * 0.3})`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.arc(flare.x, flare.y, radius * 0.5, 0, Math.PI * 2);
           ctx.stroke();
@@ -1237,9 +1241,6 @@
           return true;
         });
         ctx.restore();
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
-        ctx.fillRect(0, 0, width, height);
       };
 
       const drawScreenSaverSystem = (time = performance.now()) => {
