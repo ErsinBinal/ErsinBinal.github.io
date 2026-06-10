@@ -1989,6 +1989,7 @@
     .screen-saver-noise {
       position: absolute;
       inset: 0;
+      z-index: 1;
       background:
         linear-gradient(90deg, transparent, rgba(0, 234, 255, 0.12), transparent),
         repeating-linear-gradient(90deg, transparent 0 19px, rgba(0, 255, 102, 0.08) 19px 20px, transparent 20px 38px);
@@ -1999,11 +2000,23 @@
       pointer-events: none;
     }
 
+    .screen-saver-galaxy-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.72;
+      filter: blur(0.2px) contrast(0.92) saturate(0.72);
+      image-rendering: pixelated;
+      pointer-events: none;
+    }
+
     .screen-saver-logo {
       position: absolute;
       left: 8vw;
       top: 12vh;
-      z-index: 1;
+      z-index: 2;
       color: #e4ffea;
       font-size: clamp(2.8rem, 10vw, 9rem);
       line-height: 0.86;
@@ -2019,11 +2032,11 @@
 
     .screen-saver-system {
       position: absolute;
-      right: clamp(32px, 9vw, 128px);
-      bottom: clamp(64px, 10vh, 116px);
-      z-index: 1;
+      right: clamp(18px, 4vw, 44px);
+      bottom: clamp(36px, 7vh, 72px);
+      z-index: 2;
       display: block;
-      width: min(50vw, 560px);
+      width: clamp(230px, 25vw, 300px);
       aspect-ratio: 1;
       border: 2px solid rgba(156, 255, 184, 0.52);
       background:
@@ -2148,7 +2161,7 @@
       position: absolute;
       right: clamp(18px, 5vw, 54px);
       top: clamp(18px, 5vw, 54px);
-      z-index: 1;
+      z-index: 2;
       display: grid;
       gap: 7px;
       color: rgba(202, 255, 216, 0.78);
@@ -2168,7 +2181,7 @@
       position: absolute;
       left: clamp(18px, 5vw, 54px);
       bottom: clamp(18px, 5vw, 46px);
-      z-index: 1;
+      z-index: 2;
       color: rgba(156, 255, 184, 0.68);
       font-size: clamp(0.68rem, 1.6vw, 0.88rem);
       text-transform: uppercase;

@@ -131,6 +131,8 @@
       let screenSaverOverlay = null;
       let screenSaverCanvas = null;
       let screenSaverContext = null;
+      let screenSaverGalaxyCanvas = null;
+      let screenSaverGalaxyContext = null;
       let screenSaverFrame = null;
       let screenSaverStart = 0;
       let screenSaverPlanetOrder = [];
@@ -879,6 +881,15 @@
       };
 
       const resizeScreenSaverSystem = () => {
+        if (screenSaverGalaxyCanvas && screenSaverGalaxyContext) {
+          const ratio = Math.min(window.devicePixelRatio || 1, 2);
+          screenSaverGalaxyCanvas.width = Math.max(1, Math.floor(window.innerWidth * ratio));
+          screenSaverGalaxyCanvas.height = Math.max(1, Math.floor(window.innerHeight * ratio));
+          screenSaverGalaxyCanvas.style.width = `${window.innerWidth}px`;
+          screenSaverGalaxyCanvas.style.height = `${window.innerHeight}px`;
+          screenSaverGalaxyContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+          screenSaverGalaxyContext.imageSmoothingEnabled = false;
+        }
         if (!screenSaverCanvas || !screenSaverContext) return;
         const box = screenSaverCanvas.getBoundingClientRect();
         const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -888,9 +899,9 @@
         screenSaverContext.imageSmoothingEnabled = false;
       };
 
-      const drawPixelText = (ctx, text, x, y, color = '#caffd8') => {
+      const drawPixelText = (ctx, text, x, y, color = '#caffd8', size = 11) => {
         ctx.save();
-        ctx.font = '11px "Share Tech Mono", monospace';
+        ctx.font = `${size}px "Share Tech Mono", monospace`;
         ctx.fillStyle = color;
         ctx.shadowColor = 'rgba(156, 255, 184, 0.36)';
         ctx.shadowBlur = 6;
@@ -997,33 +1008,104 @@
       };
 
       const drawDataTicker = (ctx, planet, width, height, elapsed, reduced) => {
-        const ticker = [
-          `PLANET ${planet.name}`,
-          `SIZE ${planet.diameter}`,
-          `ELEMENT DENSITY ${planet.elements} / ${planet.density}`,
-          `AGE ${planet.age}`,
-          `MASS ${planet.mass}`,
-          `MOONS ${planet.moons}`
-        ].join('   //   ');
-        const secondary = screenSaverPlanetOrder
-          .map(index => screenSaverPlanets[index].short)
-          .join(' > ');
-        const speed = reduced ? 0 : elapsed * 34;
-        const x = width - (speed % (ticker.length * 7 + width));
-
+        const panelX = 12;
+        const panelY = Math.max(88, height - 112);
+        const panelW = width - 24;
+        const panelH = 94;
+        const trim = (value, max = 23) => value.length > max ? `${value.slice(0, max - 1)}.` : value;
+        const rows = [
+          ['PLANET', trim(planet.name, 18)],
+          ['DIAM', planet.diameter],
+          ['DENS', planet.density],
+          ['ELEM', trim(planet.elements, 24)],
+          ['AGE', planet.age],
+          ['MASS', planet.mass]
+        ];
+        const activeRow = reduced ? -1 : Math.floor(elapsed * 0.45) % rows.length;
+        const secondary = screenSaverPlanetOrder.map(index => screenSaverPlanets[index].short).join(' > ');
         ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.46)';
-        ctx.fillRect(8, height - 62, width - 16, 42);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
+        ctx.fillRect(panelX, panelY, panelW, panelH);
         ctx.strokeStyle = 'rgba(156, 255, 184, 0.26)';
-        ctx.strokeRect(8, height - 62, width - 16, 42);
-        drawPixelText(ctx, ticker, x, height - 42, '#d8ffe1');
-        drawPixelText(ctx, ticker, x + ticker.length * 7 + 80, height - 42, '#d8ffe1');
-        drawPixelText(ctx, `RANDOM QUEUE: ${secondary}`, 16, height - 24, 'rgba(0, 234, 255, 0.72)');
+        ctx.strokeRect(panelX, panelY, panelW, panelH);
+        drawPixelText(ctx, 'PLANET DATA STREAM', panelX + 8, panelY + 15, '#d8ffe1', 10);
+        rows.forEach(([label, value], index) => {
+          const y = panelY + 30 + index * 10;
+          if (index === activeRow) {
+            ctx.fillStyle = 'rgba(156, 255, 184, 0.12)';
+            ctx.fillRect(panelX + 6, y - 8, panelW - 12, 10);
+          }
+          drawPixelText(ctx, `${label.padEnd(6, ' ')} ${value}`, panelX + 8, y, index === activeRow ? '#d8ffe1' : 'rgba(202, 255, 216, 0.78)', 9);
+        });
+        const marker = reduced ? 0 : Math.floor((elapsed * 7) % Math.max(1, panelW - 18));
+        ctx.fillStyle = 'rgba(0, 234, 255, 0.58)';
+        ctx.fillRect(panelX + 8, panelY + panelH - 13, marker, 2);
+        drawPixelText(ctx, `QUEUE ${trim(secondary, 28)}`, panelX + 8, panelY + panelH - 3, 'rgba(0, 234, 255, 0.72)', 9);
         ctx.restore();
+      };
+
+      const drawScreenSaverGalaxy = (time = performance.now()) => {
+        if (!screenSaverGalaxyCanvas || !screenSaverGalaxyContext || !screenSaverOverlay?.classList.contains('is-active')) return;
+        const ctx = screenSaverGalaxyContext;
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        const elapsed = (time - screenSaverStart) / 1000;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        ctx.clearRect(0, 0, width, height);
+
+        const centerX = width * 0.48;
+        const centerY = height * 0.5;
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(-0.22);
+
+        for (let arm = 0; arm < 4; arm += 1) {
+          const phase = arm * Math.PI * 0.5 + (reduced ? 0 : elapsed * 0.025);
+          for (let index = 0; index < 170; index += 1) {
+            const t = index / 170;
+            const radius = Math.min(width, height) * (0.06 + t * 0.78);
+            const angle = phase + t * 5.4 + Math.sin(t * 8 + arm) * 0.18;
+            const localDrift = reduced ? 0 : elapsed * (0.6 + arm * 0.09);
+            const noise = Math.sin(index * 12.989 + arm * 78.23) * 0.5 + 0.5;
+            const x = Math.cos(angle) * radius + Math.sin(index * 3.17 + localDrift) * 18 * t;
+            const y = Math.sin(angle) * radius * 0.42 + Math.cos(index * 2.71 + localDrift) * 10 * t;
+            const alpha = (1 - t) * 0.05 + noise * 0.055;
+            ctx.fillStyle = arm % 2
+              ? `rgba(0, 234, 255, ${alpha * 0.72})`
+              : `rgba(156, 255, 184, ${alpha})`;
+            ctx.fillRect(Math.round(x), Math.round(y), noise > 0.72 ? 2 : 1, noise > 0.86 ? 2 : 1);
+          }
+        }
+
+        ctx.globalAlpha = 0.16;
+        ctx.strokeStyle = 'rgba(156, 255, 184, 0.34)';
+        ctx.lineWidth = 1;
+        for (let lane = 0; lane < 5; lane += 1) {
+          ctx.beginPath();
+          for (let step = 0; step < 80; step += 1) {
+            const t = step / 79;
+            const x = (t - 0.5) * width * 1.08;
+            const y = Math.sin(t * Math.PI * 2 + lane * 0.7 + elapsed * 0.04) * 24 + (lane - 2) * 18;
+            if (step === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+
+        for (let index = 0; index < 96; index += 1) {
+          const x = (index * 89 + (reduced ? 0 : elapsed * (index % 4 + 1))) % width;
+          const y = (index * 47 + Math.sin(elapsed * 0.2 + index) * 8 + height) % height;
+          const alpha = 0.1 + ((index * 19) % 23) / 180;
+          ctx.fillStyle = `rgba(202, 255, 216, ${alpha})`;
+          ctx.fillRect(Math.round(x), Math.round(y), index % 17 === 0 ? 2 : 1, 1);
+        }
       };
 
       const drawScreenSaverSystem = (time = performance.now()) => {
         if (!screenSaverCanvas || !screenSaverContext || !screenSaverOverlay?.classList.contains('is-active')) return;
+        drawScreenSaverGalaxy(time);
         const ctx = screenSaverContext;
         const width = screenSaverCanvas.clientWidth || 1;
         const height = screenSaverCanvas.clientHeight || 1;
@@ -1062,7 +1144,7 @@
         const cy = height * 0.54;
         const maxOrbit = Math.min(width, height) * 0.36;
         const order = screenSaverPlanetOrder.length ? screenSaverPlanetOrder : screenSaverPlanets.map((_, index) => index);
-        const featuredIndex = order[Math.floor((reduced ? 0 : elapsed / 8) % order.length)] || 0;
+        const featuredIndex = order[Math.floor((reduced ? 0 : elapsed / 20) % order.length)] || 0;
         const featuredPlanet = screenSaverPlanets[featuredIndex];
         const planets = screenSaverPlanets;
 
@@ -1154,6 +1236,8 @@
         screenSaverCanvas = screenSaverOverlay?.querySelector('.screen-saver-system-canvas');
         screenSaverContext = screenSaverCanvas?.getContext('2d') || null;
         if (!screenSaverCanvas || !screenSaverContext) return;
+        screenSaverGalaxyCanvas = screenSaverOverlay?.querySelector('.screen-saver-galaxy-canvas');
+        screenSaverGalaxyContext = screenSaverGalaxyCanvas?.getContext('2d') || null;
         screenSaverStart = performance.now();
         shuffleScreenSaverPlanets();
         resizeScreenSaverSystem();
@@ -1181,6 +1265,7 @@
         screenSaverOverlay.setAttribute('aria-hidden', 'true');
         screenSaverOverlay.setAttribute('aria-label', 'Ekran koruyucuyu kapat');
         screenSaverOverlay.innerHTML = [
+          '<canvas class="screen-saver-galaxy-canvas" aria-hidden="true"></canvas>',
           '<span class="screen-saver-noise" aria-hidden="true"></span>',
           '<span class="screen-saver-logo" aria-hidden="true">Convivium</span>',
           '<span class="screen-saver-system" aria-hidden="true">',
