@@ -268,6 +268,9 @@
           elements: 'H / He / methane'
         }
       ];
+      let signalFlares = [];
+      const MAX_SIGNAL_FLARES = 3;
+
       const authState = {
         checked: false,
         granted: false,
@@ -1155,6 +1158,84 @@
           ctx.stroke();
         }
 
+        if (!reduced && signalFlares.length < MAX_SIGNAL_FLARES && Math.random() < 0.003) {
+          signalFlares.push({
+            x: Math.random() * width,
+            y: Math.random() * height * 0.55,
+            startTime: elapsed,
+            duration: 3 + Math.random() * 4,
+            maxRadius: 18 + Math.random() * 44,
+            phase: Math.random() * 2
+          });
+        }
+
+        ctx.save();
+        const wfX = 14;
+        const wfY = height - 28;
+        const wfW = Math.min(240, width * 0.28);
+        const wfH = 16;
+        const wfSpeed = reduced ? 0 : elapsed * 14;
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.52)';
+        ctx.fillRect(wfX, wfY, wfW, wfH);
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.22)';
+        ctx.strokeRect(wfX, wfY, wfW, wfH);
+
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.84)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let i = 0; i < wfW; i += 1) {
+          const t = i + wfSpeed;
+          const signal = Math.sin(t * 0.08) * 0.5
+            + Math.sin(t * 0.035) * 0.3
+            + Math.sin(t * 0.14) * 0.2
+            + Math.sin(t * 0.27) * 0.1;
+          const y = wfY + wfH / 2 + signal * (wfH / 2 - 3);
+          if (i === 0) ctx.moveTo(Math.round(wfX + i), Math.round(y));
+          else ctx.lineTo(Math.round(wfX + i), Math.round(y));
+        }
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 234, 255, 0.5)';
+        ctx.font = '8px "Share Tech Mono", monospace';
+        ctx.fillText('SIGNAL', wfX + 4, wfY + wfH - 3);
+        ctx.restore();
+
+        ctx.save();
+        signalFlares = signalFlares.filter(flare => {
+          const age = elapsed - flare.startTime;
+          if (age > flare.duration) return false;
+          const progress = Math.min(age / flare.duration, 1);
+          const radius = flare.maxRadius * Math.sin(progress * Math.PI);
+          const alpha = Math.sin(progress * Math.PI) * 0.7;
+          const color = `rgba(0, 234, 255, ${alpha})`;
+          const colorDim = `rgba(202, 255, 216, ${alpha * 0.4})`;
+
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(flare.x - radius, flare.y);
+          ctx.lineTo(flare.x + radius, flare.y);
+          ctx.moveTo(flare.x, flare.y - radius);
+          ctx.lineTo(flare.x, flare.y + radius);
+          ctx.stroke();
+
+          ctx.strokeStyle = colorDim;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(flare.x - radius * 0.6, flare.y - radius * 0.6);
+          ctx.lineTo(flare.x + radius * 0.6, flare.y + radius * 0.6);
+          ctx.moveTo(flare.x + radius * 0.6, flare.y - radius * 0.6);
+          ctx.lineTo(flare.x - radius * 0.6, flare.y + radius * 0.6);
+          ctx.stroke();
+
+          ctx.strokeStyle = `rgba(202, 255, 216, ${alpha * 0.25})`;
+          ctx.beginPath();
+          ctx.arc(flare.x, flare.y, radius * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+
+          return true;
+        });
         ctx.restore();
 
         ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
@@ -1291,6 +1372,7 @@
 
       const startScreenSaverSystem = () => {
         stopScreenSaverSystem();
+        signalFlares = [];
         screenSaverCanvas = screenSaverOverlay?.querySelector('.screen-saver-system-canvas');
         screenSaverContext = screenSaverCanvas?.getContext('2d') || null;
         if (!screenSaverCanvas || !screenSaverContext) return;
