@@ -1933,6 +1933,116 @@
       border-color: rgba(245, 255, 107, 0.42);
     }
 
+    body.power-state-active {
+      overflow: hidden;
+    }
+
+    .power-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: none;
+      width: 100%;
+      min-height: 100%;
+      border: 0;
+      padding: clamp(18px, 6vw, 64px);
+      background: #000;
+      color: #9cffb8;
+      font-family: var(--font-display);
+      text-align: left;
+      cursor: default;
+      overflow: hidden;
+    }
+
+    .power-overlay.is-active,
+    .power-overlay.is-off {
+      display: grid;
+      align-items: start;
+    }
+
+    .power-overlay.is-active {
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.07) 0 1px, transparent 1px 6px),
+        radial-gradient(circle at 50% 48%, rgba(0, 255, 102, 0.12), transparent 46%),
+        #000;
+    }
+
+    .power-overlay.is-off {
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .power-overlay.is-off::before {
+      content: '';
+      width: min(72vw, 420px);
+      height: 1px;
+      background: rgba(156, 255, 184, 0.34);
+      box-shadow: 0 0 22px rgba(0, 255, 102, 0.26);
+      animation: powerPulse 2.2s ease-in-out infinite;
+    }
+
+    .power-scan {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, transparent, rgba(156, 255, 184, 0.16), transparent);
+      transform: translateY(-120%);
+    }
+
+    .power-overlay.is-shutting-down .power-scan,
+    .power-overlay.is-booting .power-scan {
+      animation: powerScan 1.2s steps(12, end) infinite;
+    }
+
+    .power-terminal {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: min(760px, 100%);
+      max-height: calc(100vh - 120px);
+      margin: 0;
+      color: #caffd8;
+      font-size: clamp(0.84rem, 2.2vw, 1.08rem);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow: hidden;
+      text-shadow: 0 0 14px rgba(0, 255, 102, 0.32);
+    }
+
+    .power-overlay.is-off .power-terminal {
+      display: none;
+    }
+
+    .power-restart {
+      position: relative;
+      z-index: 1;
+      display: none;
+      color: rgba(156, 255, 184, 0.72);
+      font-size: 0.82rem;
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px rgba(0, 255, 102, 0.28);
+    }
+
+    .power-overlay.is-off .power-restart {
+      display: block;
+    }
+
+    @keyframes powerScan {
+      to { transform: translateY(120%); }
+    }
+
+    @keyframes powerPulse {
+      0%, 100% {
+        opacity: 0.26;
+        transform: scaleX(0.72);
+      }
+      50% {
+        opacity: 0.82;
+        transform: scaleX(1);
+      }
+    }
+
     .page-loader {
       position: fixed;
       inset: 0;
@@ -2057,6 +2167,12 @@
       }
 
       .loader-terminal::before {
+        animation: none !important;
+      }
+
+      .power-overlay.is-shutting-down .power-scan,
+      .power-overlay.is-booting .power-scan,
+      .power-overlay.is-off::before {
         animation: none !important;
       }
 

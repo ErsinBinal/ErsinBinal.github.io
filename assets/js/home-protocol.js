@@ -119,6 +119,8 @@
       let commandCloseTimer = null;
       let pendingOracleQuery = '';
       let lastFocusedElement = null;
+      let powerOverlay = null;
+      let powerSequenceTimers = [];
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
       const authState = {
@@ -474,6 +476,118 @@
         if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
       };
 
+      const clearPowerTimers = () => {
+        powerSequenceTimers.forEach(timer => window.clearTimeout(timer));
+        powerSequenceTimers = [];
+      };
+
+      const ensurePowerOverlay = () => {
+        if (powerOverlay) return powerOverlay;
+        powerOverlay = document.createElement('button');
+        powerOverlay.type = 'button';
+        powerOverlay.className = 'power-overlay';
+        powerOverlay.setAttribute('aria-label', 'Convivium power screen');
+        powerOverlay.innerHTML = [
+          '<span class="power-scan" aria-hidden="true"></span>',
+          '<span class="power-terminal" aria-live="polite"></span>',
+          '<span class="power-restart">click to restart</span>'
+        ].join('');
+        powerOverlay.addEventListener('click', () => {
+          if (powerOverlay?.classList.contains('is-off')) renderPowerBoot();
+        });
+        document.body.appendChild(powerOverlay);
+        return powerOverlay;
+      };
+
+      const renderPowerLines = (lines, done) => {
+        const overlay = ensurePowerOverlay();
+        const terminal = overlay.querySelector('.power-terminal');
+        if (!terminal) return;
+        clearPowerTimers();
+        terminal.textContent = '';
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const stepMs = reduceMotion ? 1 : 145;
+
+        lines.forEach((_, index) => {
+          const timer = window.setTimeout(() => {
+            terminal.textContent = lines.slice(0, index + 1).join('\n');
+            terminal.scrollTop = terminal.scrollHeight;
+            pulse(index % 2 ? 180 : 240, 0.028);
+            if (index === lines.length - 1) done?.();
+          }, stepMs * index);
+          powerSequenceTimers.push(timer);
+        });
+      };
+
+      const shutdownLines = () => [
+        'CONVIVIUM DOS/86 SHUTDOWN',
+        'REQUEST: visitor command accepted',
+        'DISPLAY: switching to monochrome console',
+        'PUBLIC SESSION: volatile interface only',
+        'FILES: no local file handles mounted',
+        'SECRETS: unavailable in browser runtime',
+        'AI: external oracle channel closed',
+        'NET: worker route released',
+        'CACHE: static assets left untouched',
+        'MEM: command buffer cleared',
+        'POWER: phosphor decay started',
+        '',
+        'It is now safe to stop reading this screen.'
+      ];
+
+      const bootLines = () => [
+        'CONVIVIUM BIOS 0.86',
+        'POST: display adapter online',
+        'RAM: public interface map checked',
+        'DISK: static page image found',
+        'SEC: private mounts skipped',
+        'NET: optional oracle route on standby',
+        'UI: terminal shell warming',
+        'SCAN: green phosphor stable',
+        'BOOT: returning to Convivium'
+      ];
+
+      const renderPowerBoot = () => {
+        const overlay = ensurePowerOverlay();
+        overlay.classList.remove('is-off', 'is-shutting-down');
+        overlay.classList.add('is-active', 'is-booting');
+        document.body.classList.add('power-state-active');
+        renderPowerLines(bootLines(), () => {
+          const timer = window.setTimeout(() => {
+            overlay.classList.remove('is-active', 'is-booting');
+            document.body.classList.remove('power-state-active');
+            setCommandBusy(false);
+            if (lastFocusedElement && document.contains(lastFocusedElement) && typeof lastFocusedElement.focus === 'function') {
+              lastFocusedElement.focus();
+            } else {
+              mobileCommandButton?.focus();
+            }
+            pulse(420, 0.06);
+          }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 820);
+          powerSequenceTimers.push(timer);
+        });
+      };
+
+      const shutdownCommand = () => {
+        const overlay = ensurePowerOverlay();
+        setCommandBusy(true);
+        closeCommand();
+        overlay.classList.remove('is-off', 'is-booting');
+        overlay.classList.add('is-active', 'is-shutting-down');
+        document.body.classList.add('power-state-active');
+        renderPowerLines(shutdownLines(), () => {
+          const timer = window.setTimeout(() => {
+            overlay.classList.remove('is-shutting-down');
+            overlay.classList.add('is-off');
+            const terminal = overlay.querySelector('.power-terminal');
+            if (terminal) terminal.textContent = '';
+            pulse(90, 0.1);
+          }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 720);
+          powerSequenceTimers.push(timer);
+        });
+        return 'shutdown sequence accepted';
+      };
+
       const normalizeCommand = (value) => value
         .toLocaleLowerCase('tr-TR')
         .trim()
@@ -742,6 +856,12 @@
             closeCommandWithMatrix();
             return commandOutput?.textContent;
           }
+        },
+        {
+          command: 'shutdown',
+          description: 'retro guvenli kapanis ekranini baslatir',
+          aliases: ['shatdawn', 'shut down', 'poweroff', 'power off', 'kapan', 'kapat sistemi', 'sistemi kapat'],
+          action: shutdownCommand
         },
         {
           command: 'random',
@@ -1025,7 +1145,7 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
         '',
         'system:',
-        'whoami, log, clear, random, level, access, dashboard, deb, bugy',
+        'whoami, log, clear, random, shutdown, level, access, dashboard, deb, bugy',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
