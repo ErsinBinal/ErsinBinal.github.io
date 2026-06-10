@@ -2020,10 +2020,10 @@
     .screen-saver-system {
       position: absolute;
       right: clamp(32px, 9vw, 128px);
-      bottom: clamp(76px, 12vh, 132px);
+      bottom: clamp(64px, 10vh, 116px);
       z-index: 1;
       display: block;
-      width: min(42vw, 430px);
+      width: min(50vw, 560px);
       aspect-ratio: 1;
       border: 2px solid rgba(156, 255, 184, 0.52);
       background:
@@ -2038,6 +2038,16 @@
         0 0 26px rgba(0, 255, 102, 0.16);
       overflow: hidden;
       pointer-events: none;
+    }
+
+    .screen-saver-system-canvas {
+      position: absolute;
+      inset: 18px;
+      z-index: 1;
+      width: calc(100% - 36px);
+      height: calc(100% - 36px);
+      image-rendering: pixelated;
+      filter: contrast(1.12) saturate(0.84);
     }
 
     .screen-saver-system::before,
@@ -2062,7 +2072,7 @@
       position: absolute;
       left: 14px;
       top: 12px;
-      z-index: 2;
+      z-index: 3;
       color: rgba(202, 255, 216, 0.74);
       font-size: clamp(0.58rem, 1.2vw, 0.76rem);
       text-transform: uppercase;
@@ -2084,6 +2094,7 @@
         0 0 22px rgba(156, 255, 184, 0.56);
       transform: translate(-50%, -50%);
       animation: systemSunPulse 1.8s steps(2, end) infinite;
+      opacity: 0.16;
     }
 
     .system-orbit {
@@ -2094,6 +2105,7 @@
       border-radius: 50%;
       transform: translate(-50%, -50%);
       animation: systemOrbit 18s linear infinite;
+      opacity: 0.16;
     }
 
     .orbit-1 { width: 26%; height: 26%; animation-duration: 6s; }
@@ -2573,7 +2585,7 @@
         left: 50%;
         right: auto;
         bottom: 138px;
-        width: min(82vw, 330px);
+        width: min(88vw, 390px);
         transform: translateX(-50%);
       }
 

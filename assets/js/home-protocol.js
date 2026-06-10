@@ -129,6 +129,10 @@
       let powerOverlay = null;
       let powerSequenceTimers = [];
       let screenSaverOverlay = null;
+      let screenSaverCanvas = null;
+      let screenSaverContext = null;
+      let screenSaverFrame = null;
+      let screenSaverStart = 0;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
       const authState = {
@@ -738,8 +742,168 @@
         return 'restart sequence accepted';
       };
 
+      const stopScreenSaverSystem = () => {
+        if (screenSaverFrame) window.cancelAnimationFrame(screenSaverFrame);
+        screenSaverFrame = null;
+      };
+
+      const resizeScreenSaverSystem = () => {
+        if (!screenSaverCanvas || !screenSaverContext) return;
+        const box = screenSaverCanvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        screenSaverCanvas.width = Math.max(1, Math.floor(box.width * ratio));
+        screenSaverCanvas.height = Math.max(1, Math.floor(box.height * ratio));
+        screenSaverContext.setTransform(ratio, 0, 0, ratio, 0, 0);
+        screenSaverContext.imageSmoothingEnabled = false;
+      };
+
+      const drawPixelText = (ctx, text, x, y, color = '#caffd8') => {
+        ctx.save();
+        ctx.font = '11px "Share Tech Mono", monospace';
+        ctx.fillStyle = color;
+        ctx.shadowColor = 'rgba(156, 255, 184, 0.36)';
+        ctx.shadowBlur = 6;
+        ctx.fillText(text, Math.round(x), Math.round(y));
+        ctx.restore();
+      };
+
+      const drawScreenSaverSystem = (time = performance.now()) => {
+        if (!screenSaverCanvas || !screenSaverContext || !screenSaverOverlay?.classList.contains('is-active')) return;
+        const ctx = screenSaverContext;
+        const width = screenSaverCanvas.clientWidth || 1;
+        const height = screenSaverCanvas.clientHeight || 1;
+        const elapsed = (time - screenSaverStart) / 1000;
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        ctx.clearRect(0, 0, width, height);
+
+        ctx.fillStyle = '#071407';
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = 'rgba(156, 255, 184, 0.08)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x < width; x += 12) {
+          ctx.beginPath();
+          ctx.moveTo(x + 0.5, 0);
+          ctx.lineTo(x + 0.5, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < height; y += 12) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 0.5);
+          ctx.lineTo(width, y + 0.5);
+          ctx.stroke();
+        }
+
+        for (let index = 0; index < 74; index += 1) {
+          const drift = reduced ? 0 : elapsed * (index % 5 + 1) * 2.2;
+          const x = (index * 53 + drift) % width;
+          const y = (index * 97 + Math.sin(elapsed * 0.8 + index) * 4 + height) % height;
+          const alpha = 0.24 + ((index * 17) % 37) / 110;
+          ctx.fillStyle = `rgba(202, 255, 216, ${alpha})`;
+          ctx.fillRect(Math.round(x), Math.round(y), index % 11 === 0 ? 2 : 1, 1);
+        }
+
+        const cx = width * 0.5;
+        const cy = height * 0.54;
+        const maxOrbit = Math.min(width, height) * 0.42;
+        const planets = [
+          { name: 'MERC', orbit: 0.2, speed: 1.6, size: 3, phase: 0.5, color: '#caffd8' },
+          { name: 'VEN', orbit: 0.31, speed: 1.05, size: 4, phase: 2.2, color: '#9cffb8' },
+          { name: 'EARTH', orbit: 0.43, speed: 0.78, size: 5, phase: 3.1, color: '#d8ffe1' },
+          { name: 'MARS', orbit: 0.55, speed: 0.58, size: 4, phase: 1.4, color: '#7fdc92' },
+          { name: 'JOV', orbit: 0.7, speed: 0.34, size: 8, phase: 4.5, color: '#caffd8' },
+          { name: 'SAT', orbit: 0.84, speed: 0.24, size: 7, phase: 5.4, color: '#9cffb8' }
+        ];
+
+        ctx.save();
+        ctx.translate(cx, cy);
+        planets.forEach(planet => {
+          const rx = maxOrbit * planet.orbit;
+          const ry = rx * 0.47;
+          ctx.strokeStyle = 'rgba(156, 255, 184, 0.22)';
+          ctx.setLineDash([4, 7]);
+          ctx.beginPath();
+          ctx.ellipse(0, 0, rx, ry, -0.18, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+        ctx.setLineDash([]);
+
+        ctx.strokeStyle = 'rgba(202, 255, 216, 0.22)';
+        for (let i = 0; i < 34; i += 1) {
+          const angle = i * 0.46 + (reduced ? 0 : elapsed * 0.12);
+          const radius = maxOrbit * (0.61 + ((i * 13) % 9) / 95);
+          const x = Math.cos(angle) * radius;
+          const y = Math.sin(angle) * radius * 0.47;
+          ctx.fillStyle = i % 3 === 0 ? 'rgba(0, 234, 255, 0.54)' : 'rgba(156, 255, 184, 0.42)';
+          ctx.fillRect(Math.round(x), Math.round(y), 2, 1);
+        }
+
+        const sunPulse = reduced ? 0 : Math.sin(elapsed * 3.4) * 2;
+        ctx.fillStyle = '#d8ffe1';
+        ctx.shadowColor = 'rgba(156, 255, 184, 0.7)';
+        ctx.shadowBlur = 18;
+        ctx.fillRect(Math.round(-11 - sunPulse / 2), Math.round(-11 - sunPulse / 2), Math.round(22 + sunPulse), Math.round(22 + sunPulse));
+        ctx.fillStyle = '#071407';
+        ctx.fillRect(-3, -15, 6, 30);
+        ctx.fillRect(-15, -3, 30, 6);
+        ctx.shadowBlur = 0;
+
+        const drawn = planets.map(planet => {
+          const angle = (reduced ? 0.7 : elapsed * planet.speed) + planet.phase;
+          const rx = maxOrbit * planet.orbit;
+          const ry = rx * 0.47;
+          return {
+            ...planet,
+            x: Math.cos(angle) * rx,
+            y: Math.sin(angle) * ry,
+            depth: Math.sin(angle)
+          };
+        }).sort((a, b) => a.depth - b.depth);
+
+        drawn.forEach(planet => {
+          const dim = planet.depth < 0 ? 0.58 : 1;
+          ctx.fillStyle = planet.color;
+          ctx.globalAlpha = dim;
+          ctx.fillRect(Math.round(planet.x - planet.size / 2), Math.round(planet.y - planet.size / 2), planet.size, planet.size);
+          if (planet.name === 'SAT') {
+            ctx.strokeStyle = 'rgba(202, 255, 216, 0.8)';
+            ctx.strokeRect(Math.round(planet.x - 11), Math.round(planet.y - 3), 22, 6);
+          }
+          ctx.globalAlpha = 1;
+          if (planet.depth > -0.2) drawPixelText(ctx, planet.name, planet.x + 8, planet.y - 7, 'rgba(202, 255, 216, 0.72)');
+        });
+
+        const cometAngle = reduced ? 2.6 : (elapsed * 0.52) % (Math.PI * 2);
+        const cometX = Math.cos(cometAngle) * maxOrbit * 0.96;
+        const cometY = Math.sin(cometAngle) * maxOrbit * 0.26 - maxOrbit * 0.52;
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(cometX, cometY);
+        ctx.lineTo(cometX - 28, cometY + 8);
+        ctx.stroke();
+        ctx.fillStyle = '#caffd8';
+        ctx.fillRect(Math.round(cometX), Math.round(cometY), 4, 2);
+        ctx.restore();
+
+        drawPixelText(ctx, 'GB-CVM ORBITAL VIEW', 14, height - 18, 'rgba(156, 255, 184, 0.72)');
+        drawPixelText(ctx, `T+${String(Math.floor(elapsed)).padStart(4, '0')}`, width - 78, height - 18, 'rgba(156, 255, 184, 0.72)');
+
+        if (!reduced) screenSaverFrame = window.requestAnimationFrame(drawScreenSaverSystem);
+      };
+
+      const startScreenSaverSystem = () => {
+        stopScreenSaverSystem();
+        screenSaverCanvas = screenSaverOverlay?.querySelector('.screen-saver-system-canvas');
+        screenSaverContext = screenSaverCanvas?.getContext('2d') || null;
+        if (!screenSaverCanvas || !screenSaverContext) return;
+        screenSaverStart = performance.now();
+        resizeScreenSaverSystem();
+        drawScreenSaverSystem(screenSaverStart);
+      };
+
       const closeScreenSaver = () => {
         if (!screenSaverOverlay) return;
+        stopScreenSaverSystem();
         screenSaverOverlay.classList.remove('is-active');
         screenSaverOverlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('screen-saver-active');
@@ -762,6 +926,7 @@
           '<span class="screen-saver-logo" aria-hidden="true">Convivium</span>',
           '<span class="screen-saver-system" aria-hidden="true">',
           '  <span class="system-label">LOCAL SOLAR MAP</span>',
+          '  <canvas class="screen-saver-system-canvas"></canvas>',
           '  <span class="system-sun"></span>',
           '  <span class="system-orbit orbit-1"><span class="system-planet planet-1"></span></span>',
           '  <span class="system-orbit orbit-2"><span class="system-planet planet-2"></span></span>',
@@ -789,6 +954,7 @@
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('screen-saver-active');
         overlay.focus();
+        startScreenSaverSystem();
         pulse(310, 0.08);
         return 'screen saver active';
       };
@@ -1764,5 +1930,10 @@
       resizeCanvas();
       drawMap();
       window.addEventListener('resize', resizeCanvas);
+      window.addEventListener('resize', () => {
+        if (!screenSaverOverlay?.classList.contains('is-active')) return;
+        resizeScreenSaverSystem();
+        drawScreenSaverSystem(performance.now());
+      });
       refreshAuthState();
 })();
