@@ -133,8 +133,139 @@
       let screenSaverContext = null;
       let screenSaverFrame = null;
       let screenSaverStart = 0;
+      let screenSaverPlanetOrder = [];
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
+      const screenSaverPlanets = [
+        {
+          name: 'MERCURY',
+          short: 'MERC',
+          orbit: 0.2,
+          speed: 1.6,
+          phase: 0.5,
+          radius: 17,
+          moons: 0,
+          color: '#caffd8',
+          texture: 'crater',
+          diameter: '4,879 km',
+          density: '5.43 g/cm3',
+          age: '~4.50B yr',
+          mass: '3.30e23 kg',
+          elements: 'Fe core / silicate mantle'
+        },
+        {
+          name: 'VENUS',
+          short: 'VEN',
+          orbit: 0.31,
+          speed: 1.05,
+          phase: 2.2,
+          radius: 25,
+          moons: 0,
+          color: '#9cffb8',
+          texture: 'cloud',
+          diameter: '12,104 km',
+          density: '5.24 g/cm3',
+          age: '~4.50B yr',
+          mass: '4.87e24 kg',
+          elements: 'CO2 veil / basalt / Fe'
+        },
+        {
+          name: 'EARTH',
+          short: 'EARTH',
+          orbit: 0.43,
+          speed: 0.78,
+          phase: 3.1,
+          radius: 26,
+          moons: 1,
+          color: '#d8ffe1',
+          texture: 'continents',
+          diameter: '12,742 km',
+          density: '5.51 g/cm3',
+          age: '~4.54B yr',
+          mass: '5.97e24 kg',
+          elements: 'Fe / O / Si / Mg'
+        },
+        {
+          name: 'MARS',
+          short: 'MARS',
+          orbit: 0.55,
+          speed: 0.58,
+          phase: 1.4,
+          radius: 20,
+          moons: 2,
+          color: '#7fdc92',
+          texture: 'bands',
+          diameter: '6,779 km',
+          density: '3.93 g/cm3',
+          age: '~4.50B yr',
+          mass: '6.42e23 kg',
+          elements: 'Fe oxide / silicate'
+        },
+        {
+          name: 'JUPITER',
+          short: 'JOV',
+          orbit: 0.7,
+          speed: 0.34,
+          phase: 4.5,
+          radius: 42,
+          moons: 4,
+          color: '#caffd8',
+          texture: 'gas',
+          diameter: '139,820 km',
+          density: '1.33 g/cm3',
+          age: '~4.50B yr',
+          mass: '1.90e27 kg',
+          elements: 'H / He / trace CH4'
+        },
+        {
+          name: 'SATURN',
+          short: 'SAT',
+          orbit: 0.84,
+          speed: 0.24,
+          phase: 5.4,
+          radius: 38,
+          moons: 5,
+          color: '#9cffb8',
+          texture: 'rings',
+          diameter: '116,460 km',
+          density: '0.69 g/cm3',
+          age: '~4.50B yr',
+          mass: '5.68e26 kg',
+          elements: 'H / He / ice traces'
+        },
+        {
+          name: 'URANUS',
+          short: 'URA',
+          orbit: 0.96,
+          speed: 0.17,
+          phase: 0.9,
+          radius: 30,
+          moons: 4,
+          color: '#8effc1',
+          texture: 'tilt',
+          diameter: '50,724 km',
+          density: '1.27 g/cm3',
+          age: '~4.50B yr',
+          mass: '8.68e25 kg',
+          elements: 'H / He / methane ice'
+        },
+        {
+          name: 'NEPTUNE',
+          short: 'NEP',
+          orbit: 1.08,
+          speed: 0.13,
+          phase: 2.8,
+          radius: 30,
+          moons: 3,
+          color: '#a8ffd0',
+          texture: 'storm',
+          diameter: '49,244 km',
+          density: '1.64 g/cm3',
+          age: '~4.50B yr',
+          mass: '1.02e26 kg',
+          elements: 'H / He / methane'
+        }
+      ];
       const authState = {
         checked: false,
         granted: false,
@@ -767,6 +898,130 @@
         ctx.restore();
       };
 
+      const shuffleScreenSaverPlanets = () => {
+        screenSaverPlanetOrder = screenSaverPlanets.map((_, index) => index);
+        for (let index = screenSaverPlanetOrder.length - 1; index > 0; index -= 1) {
+          const swapIndex = Math.floor(Math.random() * (index + 1));
+          [screenSaverPlanetOrder[index], screenSaverPlanetOrder[swapIndex]] = [screenSaverPlanetOrder[swapIndex], screenSaverPlanetOrder[index]];
+        }
+      };
+
+      const drawPlanetTexture = (ctx, planet, x, y, radius, elapsed) => {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = planet.color;
+        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+
+        ctx.fillStyle = 'rgba(7, 20, 7, 0.34)';
+        for (let row = -radius; row <= radius; row += 7) {
+          const wave = Math.sin(row * 0.25 + elapsed * 1.4) * 4;
+          if (planet.texture === 'gas' || planet.texture === 'cloud' || planet.texture === 'bands') {
+            ctx.fillRect(Math.round(x - radius), Math.round(y + row + wave), Math.round(radius * 2), 3);
+          }
+        }
+
+        if (planet.texture === 'continents') {
+          [[-12, -6, 18, 9], [6, 4, 20, 7], [-4, 15, 14, 5]].forEach(([dx, dy, w, h]) => {
+            ctx.fillRect(Math.round(x + dx), Math.round(y + dy), w, h);
+          });
+        } else if (planet.texture === 'crater') {
+          [[-12, -9, 5], [9, -4, 4], [-3, 10, 6], [12, 12, 3]].forEach(([dx, dy, size]) => {
+            ctx.strokeStyle = 'rgba(7, 20, 7, 0.56)';
+            ctx.strokeRect(Math.round(x + dx), Math.round(y + dy), size, size);
+          });
+        } else if (planet.texture === 'storm') {
+          ctx.strokeStyle = 'rgba(7, 20, 7, 0.5)';
+          ctx.strokeRect(Math.round(x + radius * 0.12), Math.round(y - radius * 0.18), Math.round(radius * 0.46), Math.round(radius * 0.18));
+        } else if (planet.texture === 'tilt') {
+          ctx.fillStyle = 'rgba(7, 20, 7, 0.28)';
+          for (let offset = -radius; offset < radius; offset += 9) {
+            ctx.fillRect(Math.round(x + offset), Math.round(y - radius), 3, radius * 2);
+          }
+        }
+
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(202, 255, 216, 0.84)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(Math.round(x - radius), Math.round(y - radius), Math.round(radius * 2), Math.round(radius * 2));
+        ctx.strokeStyle = 'rgba(7, 20, 7, 0.48)';
+        ctx.beginPath();
+        ctx.arc(x - radius * 0.22, y - radius * 0.28, radius * 0.9, Math.PI * 1.15, Math.PI * 1.72);
+        ctx.stroke();
+
+        if (planet.texture === 'rings') {
+          ctx.strokeStyle = 'rgba(202, 255, 216, 0.86)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.ellipse(x, y, radius * 1.7, radius * 0.42, -0.12, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.strokeStyle = 'rgba(7, 20, 7, 0.72)';
+          ctx.beginPath();
+          ctx.ellipse(x, y, radius * 1.28, radius * 0.28, -0.12, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      };
+
+      const drawFeaturedPlanet = (ctx, planet, width, height, elapsed, reduced) => {
+        const x = width * 0.34;
+        const y = height * 0.42;
+        const radius = Math.max(24, Math.min(width, height) * (planet.radius / 360));
+        const orbitRadius = radius * 2.1;
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(156, 255, 184, 0.24)';
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.ellipse(x, y, orbitRadius * 1.4, orbitRadius * 0.54, -0.18, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        for (let index = 0; index < planet.moons; index += 1) {
+          const angle = (reduced ? index : elapsed * (0.9 + index * 0.13)) + index * 1.72;
+          const mx = x + Math.cos(angle) * orbitRadius * (0.86 + index * 0.11);
+          const my = y + Math.sin(angle) * orbitRadius * 0.38;
+          ctx.fillStyle = index % 2 ? 'rgba(0, 234, 255, 0.78)' : 'rgba(202, 255, 216, 0.86)';
+          ctx.fillRect(Math.round(mx), Math.round(my), index > 2 ? 3 : 4, index > 2 ? 3 : 4);
+          ctx.strokeStyle = 'rgba(202, 255, 216, 0.18)';
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(mx, my);
+          ctx.stroke();
+        }
+
+        drawPlanetTexture(ctx, planet, x, y, radius, elapsed);
+        drawPixelText(ctx, `FOCUS: ${planet.name}`, x - radius * 1.35, y - radius - 20, '#d8ffe1');
+        drawPixelText(ctx, `MOONS: ${planet.moons}`, x - radius * 1.35, y + radius + 20, 'rgba(202, 255, 216, 0.72)');
+        ctx.restore();
+      };
+
+      const drawDataTicker = (ctx, planet, width, height, elapsed, reduced) => {
+        const ticker = [
+          `PLANET ${planet.name}`,
+          `SIZE ${planet.diameter}`,
+          `ELEMENT DENSITY ${planet.elements} / ${planet.density}`,
+          `AGE ${planet.age}`,
+          `MASS ${planet.mass}`,
+          `MOONS ${planet.moons}`
+        ].join('   //   ');
+        const secondary = screenSaverPlanetOrder
+          .map(index => screenSaverPlanets[index].short)
+          .join(' > ');
+        const speed = reduced ? 0 : elapsed * 34;
+        const x = width - (speed % (ticker.length * 7 + width));
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.46)';
+        ctx.fillRect(8, height - 62, width - 16, 42);
+        ctx.strokeStyle = 'rgba(156, 255, 184, 0.26)';
+        ctx.strokeRect(8, height - 62, width - 16, 42);
+        drawPixelText(ctx, ticker, x, height - 42, '#d8ffe1');
+        drawPixelText(ctx, ticker, x + ticker.length * 7 + 80, height - 42, '#d8ffe1');
+        drawPixelText(ctx, `RANDOM QUEUE: ${secondary}`, 16, height - 24, 'rgba(0, 234, 255, 0.72)');
+        ctx.restore();
+      };
+
       const drawScreenSaverSystem = (time = performance.now()) => {
         if (!screenSaverCanvas || !screenSaverContext || !screenSaverOverlay?.classList.contains('is-active')) return;
         const ctx = screenSaverContext;
@@ -805,15 +1060,11 @@
 
         const cx = width * 0.5;
         const cy = height * 0.54;
-        const maxOrbit = Math.min(width, height) * 0.42;
-        const planets = [
-          { name: 'MERC', orbit: 0.2, speed: 1.6, size: 3, phase: 0.5, color: '#caffd8' },
-          { name: 'VEN', orbit: 0.31, speed: 1.05, size: 4, phase: 2.2, color: '#9cffb8' },
-          { name: 'EARTH', orbit: 0.43, speed: 0.78, size: 5, phase: 3.1, color: '#d8ffe1' },
-          { name: 'MARS', orbit: 0.55, speed: 0.58, size: 4, phase: 1.4, color: '#7fdc92' },
-          { name: 'JOV', orbit: 0.7, speed: 0.34, size: 8, phase: 4.5, color: '#caffd8' },
-          { name: 'SAT', orbit: 0.84, speed: 0.24, size: 7, phase: 5.4, color: '#9cffb8' }
-        ];
+        const maxOrbit = Math.min(width, height) * 0.36;
+        const order = screenSaverPlanetOrder.length ? screenSaverPlanetOrder : screenSaverPlanets.map((_, index) => index);
+        const featuredIndex = order[Math.floor((reduced ? 0 : elapsed / 8) % order.length)] || 0;
+        const featuredPlanet = screenSaverPlanets[featuredIndex];
+        const planets = screenSaverPlanets;
 
         ctx.save();
         ctx.translate(cx, cy);
@@ -862,15 +1113,20 @@
 
         drawn.forEach(planet => {
           const dim = planet.depth < 0 ? 0.58 : 1;
+          const size = Math.max(3, Math.round(planet.radius / 6));
           ctx.fillStyle = planet.color;
           ctx.globalAlpha = dim;
-          ctx.fillRect(Math.round(planet.x - planet.size / 2), Math.round(planet.y - planet.size / 2), planet.size, planet.size);
-          if (planet.name === 'SAT') {
+          ctx.fillRect(Math.round(planet.x - size / 2), Math.round(planet.y - size / 2), size, size);
+          if (planet.name === 'SATURN') {
             ctx.strokeStyle = 'rgba(202, 255, 216, 0.8)';
             ctx.strokeRect(Math.round(planet.x - 11), Math.round(planet.y - 3), 22, 6);
           }
+          if (planet === featuredPlanet) {
+            ctx.strokeStyle = 'rgba(0, 234, 255, 0.9)';
+            ctx.strokeRect(Math.round(planet.x - size - 3), Math.round(planet.y - size - 3), size * 2 + 6, size * 2 + 6);
+          }
           ctx.globalAlpha = 1;
-          if (planet.depth > -0.2) drawPixelText(ctx, planet.name, planet.x + 8, planet.y - 7, 'rgba(202, 255, 216, 0.72)');
+          if (planet.depth > -0.2) drawPixelText(ctx, planet.short, planet.x + 8, planet.y - 7, 'rgba(202, 255, 216, 0.72)');
         });
 
         const cometAngle = reduced ? 2.6 : (elapsed * 0.52) % (Math.PI * 2);
@@ -885,8 +1141,10 @@
         ctx.fillRect(Math.round(cometX), Math.round(cometY), 4, 2);
         ctx.restore();
 
-        drawPixelText(ctx, 'GB-CVM ORBITAL VIEW', 14, height - 18, 'rgba(156, 255, 184, 0.72)');
-        drawPixelText(ctx, `T+${String(Math.floor(elapsed)).padStart(4, '0')}`, width - 78, height - 18, 'rgba(156, 255, 184, 0.72)');
+        drawFeaturedPlanet(ctx, featuredPlanet, width, height, elapsed, reduced);
+        drawDataTicker(ctx, featuredPlanet, width, height, elapsed, reduced);
+        drawPixelText(ctx, 'GB-CVM ORBITAL VIEW', 14, 28, 'rgba(156, 255, 184, 0.72)');
+        drawPixelText(ctx, `T+${String(Math.floor(elapsed)).padStart(4, '0')}`, width - 78, 28, 'rgba(156, 255, 184, 0.72)');
 
         if (!reduced) screenSaverFrame = window.requestAnimationFrame(drawScreenSaverSystem);
       };
@@ -897,6 +1155,7 @@
         screenSaverContext = screenSaverCanvas?.getContext('2d') || null;
         if (!screenSaverCanvas || !screenSaverContext) return;
         screenSaverStart = performance.now();
+        shuffleScreenSaverPlanets();
         resizeScreenSaverSystem();
         drawScreenSaverSystem(screenSaverStart);
       };
