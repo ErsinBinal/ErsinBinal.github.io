@@ -109,8 +109,15 @@
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
+      const audioPreferenceKey = 'convivium.audio.enabled';
+      const masterVolume = 1.65;
       let signalIndex = 0;
       let audioEnabled = false;
+      try {
+        audioEnabled = localStorage.getItem(audioPreferenceKey) === 'true';
+      } catch {
+        audioEnabled = false;
+      }
       let audioContext = null;
       let commandInFlight = false;
       let commandHistoryIndex = -1;
@@ -138,6 +145,20 @@
         }
       };
 
+      const setAudioEnabled = (enabled, shouldPulse = false) => {
+        audioEnabled = Boolean(enabled);
+        try {
+          localStorage.setItem(audioPreferenceKey, String(audioEnabled));
+        } catch {
+          // Audio preference persistence is optional; the current page state still works.
+        }
+        if (soundToggle) {
+          soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
+          soundToggle.setAttribute('aria-pressed', String(audioEnabled));
+        }
+        if (shouldPulse) pulse(audioEnabled ? 520 : 180, audioEnabled ? 0.07 : 0.04);
+      };
+
       const getAudioContext = () => {
         if (!audioEnabled) return;
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -156,7 +177,7 @@
         oscillator.frequency.value = frequency;
         oscillator.type = 'sine';
         gain.gain.setValueAtTime(0.0001, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.045, context.currentTime + 0.008);
+        gain.gain.exponentialRampToValueAtTime(Math.min(0.12, 0.045 * masterVolume), context.currentTime + 0.008);
         gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
         oscillator.connect(gain).connect(context.destination);
         oscillator.start();
@@ -183,7 +204,7 @@
         filter.frequency.setValueAtTime(startFrequency, now);
         filter.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), now + duration);
         gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.linearRampToValueAtTime(volume, now + Math.min(0.14, duration / 4));
+        gain.gain.linearRampToValueAtTime(Math.min(0.14, volume * masterVolume), now + Math.min(0.14, duration / 4));
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
         source.connect(filter).connect(gain).connect(context.destination);
         source.start(now);
@@ -199,7 +220,7 @@
         oscillator.type = type;
         oscillator.frequency.setValueAtTime(frequency, start);
         gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+        gain.gain.exponentialRampToValueAtTime(Math.min(0.12, volume * masterVolume), start + 0.012);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
         oscillator.connect(gain).connect(context.destination);
         oscillator.start(start);
@@ -1549,11 +1570,9 @@
         location.href = 'auth.html';
       });
 
+      setAudioEnabled(audioEnabled);
       soundToggle?.addEventListener('click', () => {
-        audioEnabled = !audioEnabled;
-        soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
-        soundToggle.setAttribute('aria-pressed', String(audioEnabled));
-        pulse(440, 0.06);
+        setAudioEnabled(!audioEnabled, true);
       });
 
       window.addEventListener('pointermove', event => {
