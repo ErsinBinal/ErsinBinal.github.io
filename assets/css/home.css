@@ -2213,7 +2213,7 @@
     .mobile-command-button {
       position: fixed;
       right: 18px;
-      bottom: 18px;
+      bottom: 64px;
       z-index: 132;
       display: inline-grid;
       place-items: center;
