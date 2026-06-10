@@ -1053,54 +1053,112 @@
         const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         ctx.clearRect(0, 0, width, height);
 
-        const centerX = width * 0.48;
-        const centerY = height * 0.5;
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate(-0.22);
+        const driftX = reduced ? 0 : Math.sin(elapsed * 0.035) * width * 0.035;
+        const driftY = reduced ? 0 : Math.cos(elapsed * 0.028) * height * 0.028;
+        const centerX = width * 0.48 + driftX;
+        const centerY = height * 0.5 + driftY;
+        const galaxyScale = Math.max(width, height) * 0.58;
+        const hash = (value) => {
+          const raw = Math.sin(value * 12.9898) * 43758.5453;
+          return raw - Math.floor(raw);
+        };
 
-        for (let arm = 0; arm < 4; arm += 1) {
-          const phase = arm * Math.PI * 0.5 + (reduced ? 0 : elapsed * 0.025);
-          for (let index = 0; index < 170; index += 1) {
-            const t = index / 170;
-            const radius = Math.min(width, height) * (0.06 + t * 0.78);
-            const angle = phase + t * 5.4 + Math.sin(t * 8 + arm) * 0.18;
-            const localDrift = reduced ? 0 : elapsed * (0.6 + arm * 0.09);
-            const noise = Math.sin(index * 12.989 + arm * 78.23) * 0.5 + 0.5;
-            const x = Math.cos(angle) * radius + Math.sin(index * 3.17 + localDrift) * 18 * t;
-            const y = Math.sin(angle) * radius * 0.42 + Math.cos(index * 2.71 + localDrift) * 10 * t;
-            const alpha = (1 - t) * 0.05 + noise * 0.055;
-            ctx.fillStyle = arm % 2
-              ? `rgba(0, 234, 255, ${alpha * 0.72})`
-              : `rgba(156, 255, 184, ${alpha})`;
-            ctx.fillRect(Math.round(x), Math.round(y), noise > 0.72 ? 2 : 1, noise > 0.86 ? 2 : 1);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+        ctx.fillRect(0, 0, width, height);
+
+        for (let layer = 0; layer < 3; layer += 1) {
+          const speed = reduced ? 0 : elapsed * (0.8 + layer * 0.42);
+          for (let index = 0; index < 120; index += 1) {
+            const seed = index + layer * 911;
+            const x = (hash(seed) * width + speed * (layer + 1) * 6) % width;
+            const y = (hash(seed + 31) * height + Math.sin(elapsed * 0.11 + seed) * (3 + layer * 2) + height) % height;
+            const alpha = 0.08 + hash(seed + 77) * (0.16 + layer * 0.04);
+            ctx.fillStyle = `rgba(202, 255, 216, ${alpha})`;
+            ctx.fillRect(Math.round(x), Math.round(y), hash(seed + 9) > 0.88 ? 2 : 1, 1);
           }
         }
 
-        ctx.globalAlpha = 0.16;
-        ctx.strokeStyle = 'rgba(156, 255, 184, 0.34)';
-        ctx.lineWidth = 1;
-        for (let lane = 0; lane < 5; lane += 1) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(-0.34 + (reduced ? 0 : Math.sin(elapsed * 0.018) * 0.04));
+
+        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, galaxyScale * 0.18);
+        coreGradient.addColorStop(0, 'rgba(230, 255, 234, 0.72)');
+        coreGradient.addColorStop(0.24, 'rgba(156, 255, 184, 0.36)');
+        coreGradient.addColorStop(0.58, 'rgba(0, 234, 255, 0.12)');
+        coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = coreGradient;
+        ctx.fillRect(-galaxyScale * 0.22, -galaxyScale * 0.22, galaxyScale * 0.44, galaxyScale * 0.44);
+
+        ctx.globalCompositeOperation = 'lighter';
+        for (let halo = 0; halo < 7; halo += 1) {
+          ctx.strokeStyle = `rgba(156, 255, 184, ${0.055 - halo * 0.004})`;
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          for (let step = 0; step < 80; step += 1) {
-            const t = step / 79;
-            const x = (t - 0.5) * width * 1.08;
-            const y = Math.sin(t * Math.PI * 2 + lane * 0.7 + elapsed * 0.04) * 24 + (lane - 2) * 18;
+          ctx.ellipse(0, 0, galaxyScale * (0.16 + halo * 0.09), galaxyScale * (0.045 + halo * 0.026), 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        for (let arm = 0; arm < 5; arm += 1) {
+          const phase = arm * (Math.PI * 2 / 5) + (reduced ? 0 : elapsed * 0.045);
+          for (let index = 0; index < 310; index += 1) {
+            const t = index / 309;
+            const seed = arm * 1000 + index;
+            const radius = galaxyScale * (0.035 + Math.pow(t, 0.92) * 0.9);
+            const curl = t * 6.8 + Math.sin(t * 9 + arm) * 0.24;
+            const angle = phase + curl;
+            const jitter = (hash(seed) - 0.5) * galaxyScale * 0.042 * t;
+            const localDrift = reduced ? 0 : elapsed * (0.18 + arm * 0.018);
+            const x = Math.cos(angle) * radius + Math.sin(seed * 0.73 + localDrift) * jitter;
+            const y = Math.sin(angle) * radius * 0.36 + Math.cos(seed * 0.51 + localDrift) * jitter * 0.46;
+            const dustLane = Math.sin(t * 18 + arm * 1.7 + elapsed * 0.05);
+            const density = Math.max(0, 1 - t) * 0.05 + hash(seed + 77) * 0.12;
+            const size = hash(seed + 9) > 0.965 ? 3 : hash(seed + 13) > 0.86 ? 2 : 1;
+            const cyan = hash(seed + 41) > 0.72;
+            ctx.fillStyle = cyan
+              ? `rgba(0, 234, 255, ${density * 0.82})`
+              : `rgba(202, 255, 216, ${density})`;
+            ctx.fillRect(Math.round(x), Math.round(y), size, size);
+
+            if (dustLane > 0.62 && index % 3 === 0) {
+              ctx.fillStyle = `rgba(0, 0, 0, ${0.11 + hash(seed + 12) * 0.12})`;
+              ctx.fillRect(Math.round(x - size), Math.round(y - 1), size + 3, 2);
+            }
+          }
+        }
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.16)';
+        ctx.lineWidth = 1;
+        for (let lane = 0; lane < 9; lane += 1) {
+          ctx.beginPath();
+          for (let step = 0; step < 130; step += 1) {
+            const t = step / 129;
+            const x = (t - 0.5) * galaxyScale * 1.9;
+            const y = Math.sin(t * Math.PI * 3.2 + lane * 0.55 + elapsed * 0.05) * galaxyScale * 0.025 + (lane - 4) * galaxyScale * 0.026;
             if (step === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
           }
           ctx.stroke();
         }
-        ctx.globalAlpha = 1;
+
+        for (let flare = 0; flare < 3; flare += 1) {
+          const angle = flare * 2.1 + elapsed * 0.03;
+          const x = Math.cos(angle) * galaxyScale * 0.24;
+          const y = Math.sin(angle) * galaxyScale * 0.08;
+          ctx.strokeStyle = `rgba(230, 255, 234, ${0.18 - flare * 0.04})`;
+          ctx.beginPath();
+          ctx.moveTo(x - 42, y);
+          ctx.lineTo(x + 42, y);
+          ctx.moveTo(x, y - 16);
+          ctx.lineTo(x, y + 16);
+          ctx.stroke();
+        }
+
         ctx.restore();
 
-        for (let index = 0; index < 96; index += 1) {
-          const x = (index * 89 + (reduced ? 0 : elapsed * (index % 4 + 1))) % width;
-          const y = (index * 47 + Math.sin(elapsed * 0.2 + index) * 8 + height) % height;
-          const alpha = 0.1 + ((index * 19) % 23) / 180;
-          ctx.fillStyle = `rgba(202, 255, 216, ${alpha})`;
-          ctx.fillRect(Math.round(x), Math.round(y), index % 17 === 0 ? 2 : 1, 1);
-        }
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+        ctx.fillRect(0, 0, width, height);
       };
 
       const drawScreenSaverSystem = (time = performance.now()) => {
