@@ -1921,10 +1921,11 @@
         return !already;
       };
 
+      // Tee parçaları kaldırıldı: yatay/dikey kanalı "sihirli" tamamlayıp oyunu
+      // önemsizleştiriyorlardı. Kalanlar gerçek yön kararı gerektirir.
       const pipePieces = [
         { id: 'line', glyphs: ['│', '─'], masks: [5, 10] },
         { id: 'elbow', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9] },
-        { id: 'tee', glyphs: ['┴', '├', '┬', '┤'], masks: [11, 7, 14, 13] },
         { id: 'cross', glyphs: ['┼'], masks: [15] }
       ];
       const pipeDirs = [
@@ -1933,6 +1934,8 @@
         { bit: 4, dr: 1, dc: 0, opposite: 1 },
         { bit: 8, dr: 0, dc: -1, opposite: 2 }
       ];
+      const PIPE_VEC = { 1: [-1, 0], 2: [0, 1], 4: [1, 0], 8: [0, -1] };
+      const PIPE_OPP = { 1: 4, 4: 1, 2: 8, 8: 2 };
       // Su dolan boru, çift çizgi varyantıyla gösterilir (görsel akış geri bildirimi).
       const pipeWetGlyphs = {
         '│': '║', '─': '═',
@@ -1942,8 +1945,10 @@
       };
 
       const createPipePiece = () => {
-        const template = pipePieces[Math.floor(Math.random() * pipePieces.length)];
-        return { id: template.id, rotation: Math.floor(Math.random() * template.glyphs.length) };
+        const r = Math.random();
+        const id = r < 0.45 ? 'line' : r < 0.9 ? 'elbow' : 'cross';
+        const template = pipePieces.find(p => p.id === id);
+        return { id, rotation: Math.floor(Math.random() * template.glyphs.length) };
       };
 
       const pipeMask = (piece) => {
@@ -1987,10 +1992,11 @@
 
       const buildPipeLevel = (level) => {
         const size = 7;
-        const sr = level <= 1 ? 3 : Math.floor(Math.random() * size);
+        const sr = Math.floor(Math.random() * size);
         let dr = Math.floor(Math.random() * size);
-        // 2. seviyeden itibaren kaynak/drenaj farklı satırda olsun ki düz çizgi yetmesin.
-        while (level > 1 && dr === sr) dr = Math.floor(Math.random() * size);
+        // Kaynak ve çekirdek en az 2 satır farkta olsun: düz çizgi asla yetmesin.
+        let guard = 0;
+        while (Math.abs(dr - sr) < 2 && guard++ < 30) dr = Math.floor(Math.random() * size);
         const grid = Array.from({ length: size }, () => Array.from({ length: size }, () => null));
         const game = {
           active: true,
@@ -2010,8 +2016,22 @@
         grid[sr][0] = { kind: 'source', mask: 2 };
         grid[dr][size - 1] = { kind: 'drain', mask: 8 };
 
-        // Seviye arttıkça engel duvarları; her duvar yolu bloklamıyorsa kabul edilir.
-        const wallTarget = Math.min(8, Math.max(0, (level - 1) * 2));
+        // Orta sütunda tek geçitli engel duvarı: düz koridoru kırar, gerçek
+        // yönlendirme gerektirir. Çözülemez kalırsa geri alınır.
+        const barrierCol = 2 + Math.floor(Math.random() * (size - 4)); // 2..size-3
+        const gapRow = Math.floor(Math.random() * size);
+        for (let r = 0; r < size; r += 1) {
+          if (r === gapRow || grid[r][barrierCol]) continue;
+          grid[r][barrierCol] = { kind: 'wall', mask: 0 };
+        }
+        if (!pipePathExists(game, sr, 0, dr, size - 1)) {
+          for (let r = 0; r < size; r += 1) {
+            if (grid[r][barrierCol]?.kind === 'wall') grid[r][barrierCol] = null;
+          }
+        }
+
+        // Seviye arttıkça ek engel duvarları; her duvar yolu bloklamıyorsa kabul edilir.
+        const wallTarget = Math.min(6, Math.max(0, (level - 1) * 2));
         let walls = 0;
         let attempts = 0;
         while (walls < wallTarget && attempts < 200) {
@@ -2028,8 +2048,8 @@
         }
 
         const manhattan = Math.abs(sr - dr) + (size - 1);
-        game.budget = manhattan + 4 + level;
-        game.status = `PIPE-86 L${level} ready. S(${sr},0) -> D(${dr},${size - 1}). kur, sonra F.`;
+        game.budget = manhattan + 6 + level;
+        game.status = `PIPE-86 L${level}: S(${sr},0)->D(${dr},${size - 1}). engelden gecip baglan, sonra F.`;
         return game;
       };
 
@@ -2154,29 +2174,33 @@
         return renderPipeGame();
       };
 
+      // Deterministik akış: kaynaktan tek bir yol izlenir. Su bir boruya girer ve
+      // yalnızca bağlı tek çıkıştan devam eder; açık uç / yanlış parça = sızıntı.
       const tracePipeFlow = () => {
+        const g = pipeGame;
         const visited = new Set();
-        const stack = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
-        let reachedDrain = false;
-        while (stack.length) {
-          const current = stack.pop();
-          const key = `${current.r},${current.c}`;
-          if (visited.has(key)) continue;
-          visited.add(key);
-          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) reachedDrain = true;
-          const cell = pipeGame.grid[current.r]?.[current.c];
-          const mask = cell?.kind ? cell.mask : pipeMask(cell || {});
-          pipeDirs.forEach(dir => {
-            if (!(mask & dir.bit)) return;
-            const nr = current.r + dir.dr;
-            const nc = current.c + dir.dc;
-            const next = pipeGame.grid[nr]?.[nc];
-            if (!next) return;
-            const nextMask = next.kind ? next.mask : pipeMask(next);
-            if (nextMask & dir.opposite) stack.push({ r: nr, c: nc });
-          });
+        let cr = g.source.r, cc = g.source.c;
+        let dir = g.source.mask;          // kaynak doğuya (E=2) akıtır
+        let steps = 0;
+        const maxSteps = g.size * g.size + 4;
+        while (steps++ < maxSteps) {
+          const nr = cr + PIPE_VEC[dir][0];
+          const nc = cc + PIPE_VEC[dir][1];
+          const entryBit = PIPE_OPP[dir];
+          // Çekirdeğe ulaşıldı mı? (drain kabul yönü doğru olmalı)
+          if (nr === g.drain.r && nc === g.drain.c) {
+            return { ok: g.drain.mask === entryBit, visited };
+          }
+          const cell = pipeInBounds(nr, nc, g.size) ? g.grid[nr][nc] : null;
+          if (!cell || cell.kind) return { ok: false, visited, leak: { r: nr, c: nc } }; // boş/duvar/dışarı
+          const mask = pipeMask(cell);
+          if (!(mask & entryBit)) return { ok: false, visited, leak: { r: nr, c: nc } }; // bağlanmıyor
+          visited.add(`${nr},${nc}`);
+          const exit = mask === 15 ? PIPE_OPP[entryBit] : (mask & ~entryBit);
+          if (!exit) return { ok: false, visited, leak: { r: nr, c: nc } };
+          cr = nr; cc = nc; dir = exit;
         }
-        return { ok: reachedDrain, visited };
+        return { ok: false, visited };
       };
 
       const flowPipe = () => {
