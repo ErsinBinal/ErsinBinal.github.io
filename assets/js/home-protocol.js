@@ -2200,7 +2200,19 @@
           }
           const firstUnlock = unlockPipeflow();
           if (firstUnlock) {
-            pipeGame.status += '  ||  PIPEFLOW // OVERCLOCK acildi -> "pipeflow" yaz';
+            pipeGame.status += '  ||  PIPEFLOW // OVERCLOCK acildi — reaktor sogutuluyor...';
+            // İlk kazanışta: kısa geri sayım göster, sonra otomatik aç
+            if (commandOutput) commandOutput.textContent = renderPipeGame();
+            let countdown = 4;
+            const tick = window.setInterval(() => {
+              countdown -= 1;
+              if (pipeGame) pipeGame.status = `PIPEFLOW // OVERCLOCK acildi — ${countdown}s sonra aciliyor...`;
+              if (commandOutput && pipeGame) commandOutput.textContent = renderPipeGame();
+              if (countdown <= 0) {
+                window.clearInterval(tick);
+                window.location.href = 'pipeflow.html';
+              }
+            }, 1000);
           }
           award(Math.max(state.level, 2));
           pulse(720, 0.09);
