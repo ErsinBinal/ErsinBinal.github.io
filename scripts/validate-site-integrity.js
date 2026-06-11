@@ -14,6 +14,12 @@ const htmlFiles = htmlDirs.flatMap((dir) => {
 
 const errors = [];
 const versionedAssets = new Map();
+const browserFiles = [
+  ...htmlFiles,
+  ...fs.readdirSync(path.join(root, 'assets', 'js'))
+    .filter((file) => file.endsWith('.js'))
+    .map((file) => path.join(root, 'assets', 'js', file))
+];
 
 function relative(file) {
   return path.relative(root, file) || '.';
@@ -61,6 +67,13 @@ for (const [asset, versions] of versionedAssets.entries()) {
     .map(([version, files]) => `v=${version} (${[...new Set(files)].join(', ')})`)
     .join('; ');
   addError(`${asset} icin birden fazla cache versiyonu var: ${details}`);
+}
+
+for (const file of browserFiles) {
+  const source = fs.readFileSync(file, 'utf8');
+  if (/pollinations\.ai/i.test(source)) {
+    addError(`${relative(file)} browser tarafindan Pollinations'a dogrudan baglaniyor`);
+  }
 }
 
 const swPath = path.join(root, 'service-worker.js');

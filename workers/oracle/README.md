@@ -36,10 +36,16 @@ npx wrangler login
 npm run deploy:oracle
 ```
 
+In non-interactive shells, provide a Cloudflare API token instead:
+
+```bash
+CLOUDFLARE_API_TOKEN=... npm run deploy:oracle
+```
+
 After deploy, copy the Worker URL and set it in `index.html`:
 
-```html
-<meta name="convivium-oracle-endpoint" content="https://your-worker.workers.dev">
+```bash
+npm run set:oracle-endpoint -- https://your-worker.workers.dev
 ```
 
 Then push the site to GitHub Pages.
