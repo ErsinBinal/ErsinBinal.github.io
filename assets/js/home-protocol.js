@@ -138,6 +138,8 @@
       let screenSaverPlanetOrder = [];
       let virtualCwd = '/';
       let pipeGame = null;
+      let selectedTheme = 'green';
+      let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
       const screenSaverPlanets = [
@@ -285,6 +287,122 @@
         }
       };
 
+      const userPreferenceKey = () => {
+        const id = authState.user?.id || authState.user?.email || '';
+        return authState.granted && id ? `convivium.user.${id}.preferences` : '';
+      };
+
+      const readUserPreferences = () => {
+        const key = userPreferenceKey();
+        if (!key) return {};
+        try {
+          const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch {
+          return {};
+        }
+      };
+
+      const writeUserPreferences = (patch = {}) => {
+        const key = userPreferenceKey();
+        if (!key || restoringUserPreferences) return;
+        try {
+          localStorage.setItem(key, JSON.stringify({
+            ...readUserPreferences(),
+            ...patch,
+            updatedAt: new Date().toISOString()
+          }));
+        } catch {
+          // User scoped continuity is best-effort and should never block the public UI.
+        }
+      };
+
+      const currentPreferenceSnapshot = () => {
+        const bugyV3 = window.BugyV3?.getState?.();
+        const bugyV2 = window.BugyV2?.getState?.();
+        const deb = (window.DebCompanion || window.NovaCompanion)?.getState?.();
+        return {
+          audioEnabled,
+          theme: selectedTheme,
+          virtualCwd,
+          screenSaverActive: Boolean(screenSaverOverlay?.classList.contains('is-active')),
+          powerState: powerOverlay?.classList.contains('is-off') ? 'off' : 'ready',
+          bugyEngine: bugyV3?.active ? 'v3' : bugyV2?.active ? 'v2' : localStorage.getItem('convivium.bugy.engine') || 'v1',
+          bugyV3Skin: bugyV3?.skin || localStorage.getItem('convivium.bugy.v3.skin') || 'classic',
+          bugyV2Skin: bugyV2?.skin || localStorage.getItem('convivium.bugy.v2.skin') || 'classic',
+          debActive: Boolean(deb?.active),
+          debDetailOpen: Boolean(deb?.detailOpen)
+        };
+      };
+
+      const persistUserPreferences = (patch = {}) => {
+        writeUserPreferences({ ...currentPreferenceSnapshot(), ...patch });
+      };
+
+      const restorePowerOffPreference = () => {
+        const overlay = ensurePowerOverlay();
+        window.clearTimeout(commandCloseTimer);
+        window.clearInterval(commandBootTimer);
+        clearPowerTimers();
+        setPowerMode('OFFLINE');
+        overlay.classList.remove('is-active', 'is-booting', 'is-shutting-down');
+        overlay.classList.add('is-off');
+        const terminal = overlay.querySelector('.power-terminal');
+        if (terminal) terminal.textContent = '';
+        document.body.classList.add('power-state-active');
+        setCommandBusy(false);
+      };
+
+      const applyUserPreferences = () => {
+        const prefs = readUserPreferences();
+        if (!Object.keys(prefs).length) {
+          persistUserPreferences();
+          return;
+        }
+
+        restoringUserPreferences = true;
+        try {
+          if (typeof prefs.audioEnabled === 'boolean') setAudioEnabled(prefs.audioEnabled);
+          if (prefs.theme) themeCommand(prefs.theme);
+          if (prefs.virtualCwd && virtualFs[prefs.virtualCwd]) virtualCwd = prefs.virtualCwd;
+
+          if (prefs.bugyV3Skin) {
+            localStorage.setItem('convivium.bugy.v3.skin', prefs.bugyV3Skin);
+            window.BugyV3?.setSkin?.(prefs.bugyV3Skin);
+          }
+          if (prefs.bugyV2Skin) {
+            localStorage.setItem('convivium.bugy.v2.skin', prefs.bugyV2Skin);
+            window.BugyV2?.setSkin?.(prefs.bugyV2Skin);
+          }
+          if (prefs.bugyEngine) {
+            localStorage.setItem('convivium.bugy.engine', prefs.bugyEngine);
+            if (prefs.bugyEngine === 'v3') {
+              window.BugyV2?.deactivate?.();
+              window.BugyV3?.activate?.();
+            } else if (prefs.bugyEngine === 'v2') {
+              window.BugyV3?.deactivate?.();
+              window.BugyV2?.activate?.();
+            } else if (prefs.bugyEngine === 'v1') {
+              window.BugyV3?.deactivate?.();
+              window.BugyV2?.deactivate?.();
+              window.Bugy?.summon?.();
+            }
+          }
+          if (prefs.debActive) {
+            const deb = window.DebCompanion || window.NovaCompanion;
+            deb?.activate?.();
+            if (prefs.debDetailOpen && !deb?.getState?.().detailOpen) deb?.toggleDetail?.();
+          }
+          if (prefs.powerState === 'off') {
+            restorePowerOffPreference();
+          } else if (prefs.screenSaverActive) {
+            window.setTimeout(() => screenSaverCommand(), 120);
+          }
+        } finally {
+          restoringUserPreferences = false;
+        }
+      };
+
       const setAudioEnabled = (enabled, shouldPulse = false) => {
         audioEnabled = Boolean(enabled);
         try {
@@ -296,6 +414,7 @@
           soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
           soundToggle.setAttribute('aria-pressed', String(audioEnabled));
         }
+        persistUserPreferences({ audioEnabled });
         if (shouldPulse) pulse(audioEnabled ? 520 : 180, audioEnabled ? 0.07 : 0.04);
       };
 
@@ -463,6 +582,7 @@
           if (session) {
             award(3);
             restoreUnlockedGates();
+            applyUserPreferences();
             if (consoleLine) consoleLine.textContent = 'access granted';
             if (microOracle) microOracle.textContent = session.user.email || 'authenticated';
           }
@@ -827,6 +947,7 @@
             overlay.classList.remove('is-active', 'is-booting');
             document.body.classList.remove('power-state-active');
             setCommandBusy(false);
+            persistUserPreferences({ powerState: 'ready' });
             if (lastFocusedElement && document.contains(lastFocusedElement) && typeof lastFocusedElement.focus === 'function') {
               lastFocusedElement.focus();
             } else {
@@ -854,6 +975,7 @@
             setPowerMode('OFFLINE');
             const terminal = overlay.querySelector('.power-terminal');
             if (terminal) terminal.textContent = '';
+            persistUserPreferences({ powerState: 'off' });
             pulse(90, 0.1);
           }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 80 : 720);
           powerSequenceTimers.push(timer);
@@ -1359,6 +1481,7 @@
         screenSaverOverlay.classList.remove('is-active');
         screenSaverOverlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('screen-saver-active');
+        persistUserPreferences({ screenSaverActive: false });
         if (lastFocusedElement && document.contains(lastFocusedElement) && typeof lastFocusedElement.focus === 'function') {
           lastFocusedElement.focus();
         } else {
@@ -1408,6 +1531,7 @@
         document.body.classList.add('screen-saver-active');
         overlay.focus();
         startScreenSaverSystem();
+        persistUserPreferences({ screenSaverActive: true });
         pulse(310, 0.08);
         return 'screen saver active';
       };
@@ -1633,6 +1757,7 @@
         const path = resolveVirtualPath(target);
         if (!virtualFs[path]) return `cd: ${path}: no such virtual directory`;
         virtualCwd = path;
+        persistUserPreferences({ virtualCwd });
         return virtualCwd;
       };
 
@@ -1728,6 +1853,8 @@
         if (!colors[theme]) return 'theme: usage theme green|cyan|amber';
         document.documentElement.style.setProperty('--journey-green', colors[theme][0]);
         document.documentElement.style.setProperty('--journey-cyan', colors[theme][1]);
+        selectedTheme = theme;
+        persistUserPreferences({ theme });
         return `theme: ${theme}`;
       };
 
@@ -2782,6 +2909,34 @@
       setAudioEnabled(audioEnabled);
       soundToggle?.addEventListener('click', () => {
         setAudioEnabled(!audioEnabled, true);
+      });
+
+      window.addEventListener('bugy-v3:state', event => {
+        const detail = event.detail || {};
+        persistUserPreferences({
+          bugyEngine: detail.active ? 'v3' : currentPreferenceSnapshot().bugyEngine,
+          bugyV3Skin: detail.skin || localStorage.getItem('convivium.bugy.v3.skin') || 'classic'
+        });
+      });
+
+      window.addEventListener('bugy-v2:state', event => {
+        const detail = event.detail || {};
+        persistUserPreferences({
+          bugyEngine: detail.active ? 'v2' : currentPreferenceSnapshot().bugyEngine,
+          bugyV2Skin: detail.skin || localStorage.getItem('convivium.bugy.v2.skin') || 'classic'
+        });
+      });
+
+      window.addEventListener('deb:state', event => {
+        const detail = event.detail || {};
+        persistUserPreferences({
+          debActive: Boolean(detail.active),
+          debDetailOpen: Boolean(detail.detailOpen)
+        });
+      });
+
+      window.addEventListener('beforeunload', () => {
+        persistUserPreferences();
       });
 
       window.addEventListener('pointermove', event => {
