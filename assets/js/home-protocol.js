@@ -67,7 +67,8 @@
         commands: 0,
         commandLog: [],
         rituals: 0,
-        easterTrail: []
+        easterTrail: [],
+        pipeBest: 0
       });
       const readState = () => {
         try {
@@ -1911,6 +1912,13 @@
         { bit: 4, dr: 1, dc: 0, opposite: 1 },
         { bit: 8, dr: 0, dc: -1, opposite: 2 }
       ];
+      // Su dolan boru, çift çizgi varyantıyla gösterilir (görsel akış geri bildirimi).
+      const pipeWetGlyphs = {
+        '│': '║', '─': '═',
+        '└': '╚', '┌': '╔', '┐': '╗', '┘': '╝',
+        '┴': '╩', '├': '╠', '┬': '╦', '┤': '╣',
+        '┼': '╬'
+      };
 
       const createPipePiece = () => {
         const template = pipePieces[Math.floor(Math.random() * pipePieces.length)];
@@ -1922,55 +1930,134 @@
         return template?.masks[piece.rotation % template.masks.length] || 0;
       };
 
-      const pipeGlyph = (piece) => {
+      const pipeGlyph = (piece, wet = false) => {
         if (piece.kind === 'source') return 'S';
         if (piece.kind === 'drain') return 'D';
+        if (piece.kind === 'wall') return '▓';
         const template = pipePieces.find(item => item.id === piece.id);
-        return template?.glyphs[piece.rotation % template.glyphs.length] || '?';
+        const glyph = template?.glyphs[piece.rotation % template.glyphs.length] || '?';
+        return wet ? (pipeWetGlyphs[glyph] || glyph) : glyph;
+      };
+
+      const pipeInBounds = (r, c, size) => r >= 0 && c >= 0 && r < size && c < size;
+
+      // Kaynak ile drenaj arasında boş hücrelerden geçen bir yol var mı? (duvarlar bloklar)
+      const pipePathExists = (game, sr, sc, dr, dc) => {
+        const seen = new Set([`${sr},${sc}`]);
+        const queue = [[sr, sc]];
+        while (queue.length) {
+          const [r, c] = queue.shift();
+          if (r === dr && c === dc) return true;
+          for (const dir of pipeDirs) {
+            const nr = r + dir.dr;
+            const nc = c + dir.dc;
+            if (!pipeInBounds(nr, nc, game.size)) continue;
+            const key = `${nr},${nc}`;
+            if (seen.has(key)) continue;
+            const cell = game.grid[nr][nc];
+            // Boş hücre ya da kaynak/drenaj geçilebilir; duvar (kind: wall) bloklar.
+            if (cell && cell.kind !== 'drain' && cell.kind !== 'source') continue;
+            seen.add(key);
+            queue.push([nr, nc]);
+          }
+        }
+        return false;
+      };
+
+      const buildPipeLevel = (level) => {
+        const size = 7;
+        const sr = level <= 1 ? 3 : Math.floor(Math.random() * size);
+        let dr = Math.floor(Math.random() * size);
+        // 2. seviyeden itibaren kaynak/drenaj farklı satırda olsun ki düz çizgi yetmesin.
+        while (level > 1 && dr === sr) dr = Math.floor(Math.random() * size);
+        const grid = Array.from({ length: size }, () => Array.from({ length: size }, () => null));
+        const game = {
+          active: true,
+          size,
+          level,
+          cursor: { r: sr, c: 1 },
+          source: { r: sr, c: 0, mask: 2 },
+          drain: { r: dr, c: size - 1, mask: 8 },
+          grid,
+          queue: Array.from({ length: 5 }, createPipePiece),
+          placed: 0,
+          wet: new Set(),
+          won: false,
+          score: 0,
+          status: ''
+        };
+        grid[sr][0] = { kind: 'source', mask: 2 };
+        grid[dr][size - 1] = { kind: 'drain', mask: 8 };
+
+        // Seviye arttıkça engel duvarları; her duvar yolu bloklamıyorsa kabul edilir.
+        const wallTarget = Math.min(8, Math.max(0, (level - 1) * 2));
+        let walls = 0;
+        let attempts = 0;
+        while (walls < wallTarget && attempts < 200) {
+          attempts += 1;
+          const r = Math.floor(Math.random() * size);
+          const c = 1 + Math.floor(Math.random() * (size - 2));
+          if (grid[r][c]) continue;
+          grid[r][c] = { kind: 'wall', mask: 0 };
+          if (pipePathExists(game, sr, 0, dr, size - 1)) {
+            walls += 1;
+          } else {
+            grid[r][c] = null;
+          }
+        }
+
+        const manhattan = Math.abs(sr - dr) + (size - 1);
+        game.budget = manhattan + 4 + level;
+        game.status = `PIPE-86 L${level} ready. S(${sr},0) -> D(${dr},${size - 1}). kur, sonra F.`;
+        return game;
       };
 
       const startPipeGame = () => {
-        const size = 7;
-        pipeGame = {
-          active: true,
-          size,
-          cursor: { r: 3, c: 1 },
-          source: { r: 3, c: 0, mask: 2 },
-          drain: { r: 3, c: 6, mask: 8 },
-          grid: Array.from({ length: size }, () => Array.from({ length: size }, () => null)),
-          queue: Array.from({ length: 5 }, createPipePiece),
-          placed: 0,
-          status: 'PIPE-86 ready. connect S to D, then press F.',
-          won: false
-        };
-        pipeGame.grid[pipeGame.source.r][pipeGame.source.c] = { kind: 'source', mask: pipeGame.source.mask };
-        pipeGame.grid[pipeGame.drain.r][pipeGame.drain.c] = { kind: 'drain', mask: pipeGame.drain.mask };
+        pipeGame = buildPipeLevel(1);
+        pipeGame.score = 0;
+        return renderPipeGame();
+      };
+
+      const nextPipeLevel = () => {
+        const carriedScore = pipeGame?.score || 0;
+        const level = (pipeGame?.level || 1) + 1;
+        pipeGame = buildPipeLevel(level);
+        pipeGame.score = carriedScore;
+        pipeGame.status = `LEVEL ${level} / skor ${carriedScore}. yeni hat bekliyor.`;
         return renderPipeGame();
       };
 
       const renderPipeGame = () => {
         if (!pipeGame) return 'pipe: inactive';
+        const g = pipeGame;
+        const best = state.pipeBest || 0;
         const rows = [];
-        rows.push('PIPE-86 / DOS PLUMBING SIM');
-        rows.push('goal: connect S(source) to D(drain)');
+        rows.push(`PIPE-86 / DOS PLUMBING SIM   L${g.level}`);
+        rows.push(`skor ${g.score}   best ${best}   parca ${g.placed}/${g.budget}`);
+        rows.push('goal: S(source) -> D(drain)');
         rows.push('');
-        for (let r = 0; r < pipeGame.size; r += 1) {
+        for (let r = 0; r < g.size; r += 1) {
           let line = '';
-          for (let c = 0; c < pipeGame.size; c += 1) {
-            const cell = pipeGame.grid[r][c];
-            const glyph = cell ? pipeGlyph(cell) : '.';
-            line += pipeGame.cursor.r === r && pipeGame.cursor.c === c ? `[${glyph}]` : ` ${glyph} `;
+          for (let c = 0; c < g.size; c += 1) {
+            const cell = g.grid[r][c];
+            const wet = g.wet.has(`${r},${c}`);
+            const glyph = cell ? pipeGlyph(cell, wet) : '·';
+            line += g.cursor.r === r && g.cursor.c === c ? `[${glyph}]` : ` ${glyph} `;
           }
           rows.push(line);
         }
-        const next = pipeGame.queue[0];
         rows.push('');
-        rows.push(`next: ${pipeGlyph(next)} (${next.id})  placed: ${pipeGame.placed}`);
-        rows.push(`queue: ${pipeGame.queue.map(pipeGlyph).join(' ')}`);
-        rows.push(pipeGame.status);
+        if (g.won) {
+          rows.push(`✔ ${g.status}`);
+          rows.push('next: N tuşu (veya "pipe next") -> daha zor hat');
+        } else {
+          const next = g.queue[0];
+          rows.push(`next: ${pipeGlyph(next)} (${next.id})   queue: ${g.queue.map(p => pipeGlyph(p)).join(' ')}`);
+          rows.push(g.status);
+        }
         rows.push('');
-        rows.push('keys: arrows move / space,R rotate / enter place / F flow / Q quit');
-        rows.push('cmd : pipe rotate, pipe place, pipe flow, pipe quit, pipe new');
+        rows.push('keys: arrows move / space,R rotate / enter place / Bksp remove / F flow / N next / Q quit');
+        rows.push('cmd : pipe rotate|place|remove|flow|next|quit|new');
         return rows.join('\n');
       };
 
@@ -1988,24 +2075,27 @@
 
       const rotatePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won) { pipeGame.status = 'level cleared — N ile sonraki'; return renderPipeGame(); }
         const { r, c } = pipeGame.cursor;
         const cell = pipeGame.grid[r][c];
         if (cell && !cell.kind) {
           const template = pipePieces.find(item => item.id === cell.id);
           cell.rotation = (cell.rotation + 1) % template.glyphs.length;
+          pipeGame.wet.clear();
           pipeGame.status = `rotated placed ${cell.id}`;
         } else if (!cell) {
           const template = pipePieces.find(item => item.id === pipeGame.queue[0].id);
           pipeGame.queue[0].rotation = (pipeGame.queue[0].rotation + 1) % template.glyphs.length;
           pipeGame.status = `rotated next ${pipeGame.queue[0].id}`;
         } else {
-          pipeGame.status = 'source/drain cannot rotate';
+          pipeGame.status = `${cell.kind} cannot rotate`;
         }
         return renderPipeGame();
       };
 
       const placePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won) { pipeGame.status = 'level cleared — N ile sonraki'; return renderPipeGame(); }
         const { r, c } = pipeGame.cursor;
         if (pipeGame.grid[r][c]) {
           pipeGame.status = 'cell occupied';
@@ -2014,20 +2104,45 @@
         pipeGame.grid[r][c] = pipeGame.queue.shift();
         pipeGame.queue.push(createPipePiece());
         pipeGame.placed += 1;
-        pipeGame.status = 'piece placed';
+        pipeGame.wet.clear();
+        pipeGame.status = pipeGame.placed > pipeGame.budget
+          ? `piece placed (butce asildi, verim bonusu 0)`
+          : 'piece placed';
         pulse(360, 0.04);
+        return renderPipeGame();
+      };
+
+      const removePipe = () => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won) { pipeGame.status = 'level cleared — N ile sonraki'; return renderPipeGame(); }
+        const { r, c } = pipeGame.cursor;
+        const cell = pipeGame.grid[r][c];
+        if (!cell) {
+          pipeGame.status = 'empty cell';
+          return renderPipeGame();
+        }
+        if (cell.kind) {
+          pipeGame.status = `${cell.kind} cannot be removed`;
+          return renderPipeGame();
+        }
+        pipeGame.grid[r][c] = null;
+        pipeGame.placed = Math.max(0, pipeGame.placed - 1);
+        pipeGame.wet.clear();
+        pipeGame.status = 'piece removed';
+        pulse(220, 0.03);
         return renderPipeGame();
       };
 
       const tracePipeFlow = () => {
         const visited = new Set();
         const stack = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
+        let reachedDrain = false;
         while (stack.length) {
           const current = stack.pop();
           const key = `${current.r},${current.c}`;
           if (visited.has(key)) continue;
           visited.add(key);
-          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) return { ok: true, visited };
+          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) reachedDrain = true;
           const cell = pipeGame.grid[current.r]?.[current.c];
           const mask = cell?.kind ? cell.mask : pipeMask(cell || {});
           pipeDirs.forEach(dir => {
@@ -2040,20 +2155,33 @@
             if (nextMask & dir.opposite) stack.push({ r: nr, c: nc });
           });
         }
-        return { ok: false, visited };
+        return { ok: reachedDrain, visited };
       };
 
       const flowPipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won) { pipeGame.status = 'already cleared — N ile sonraki'; return renderPipeGame(); }
         const result = tracePipeFlow();
-        pipeGame.won = result.ok;
-        pipeGame.status = result.ok
-          ? `FLOW COMPLETE / connected in ${pipeGame.placed} pieces`
-          : `FLOW FAILED / connected cells ${result.visited.size}`;
+        pipeGame.wet = result.visited; // dolan boruları vurgula (kısmi de olsa)
         if (result.ok) {
+          pipeGame.won = true;
+          const filled = result.visited.size;
+          const base = 100 * pipeGame.level;
+          const pathBonus = filled * 10;
+          const slack = Math.max(0, pipeGame.budget - pipeGame.placed);
+          const effBonus = slack * 15;
+          const gained = base + pathBonus + effBonus;
+          pipeGame.score += gained;
+          pipeGame.status = `FLOW COMPLETE +${gained} (base ${base} / path ${pathBonus} / verim ${effBonus})`;
+          if (pipeGame.score > (state.pipeBest || 0)) {
+            state.pipeBest = pipeGame.score;
+            persist();
+          }
           award(Math.max(state.level, 2));
           pulse(720, 0.09);
+          window.setTimeout(() => pulse(960, 0.07), 90);
         } else {
+          pipeGame.status = `FLOW FAILED / dolan hucre ${result.visited.size} — kurmaya devam`;
           pulse(130, 0.08);
         }
         return renderPipeGame();
@@ -2061,17 +2189,22 @@
 
       const pipeCommand = (action = '') => {
         const command = normalizeCommand(action || 'new');
-        if (!pipeGame?.active || ['new', 'start', 'play'].includes(command)) return startPipeGame();
+        if (!pipeGame?.active || ['new', 'start', 'play', 'restart'].includes(command)) return startPipeGame();
         if (['rotate', 'r'].includes(command)) return rotatePipe();
         if (['place', 'put', 'enter'].includes(command)) return placePipe();
+        if (['remove', 'delete', 'del', 'x'].includes(command)) return removePipe();
         if (['flow', 'run', 'f'].includes(command)) return flowPipe();
+        if (['next', 'n', 'level'].includes(command)) {
+          if (!pipeGame.won) { pipeGame.status = 'once mevcut hatti bitir (F)'; return renderPipeGame(); }
+          return nextPipeLevel();
+        }
         if (['quit', 'exit', 'q'].includes(command)) {
           pipeGame.active = false;
           pipeGame = null;
           return 'pipe: session closed';
         }
         if (['help', '?'].includes(command)) return renderPipeGame();
-        return 'pipe: usage pipe new|rotate|place|flow|quit';
+        return 'pipe: usage pipe new|rotate|place|remove|flow|next|quit';
       };
 
       const debCommand = (action = 'summon') => {
@@ -2243,7 +2376,7 @@
         },
         {
           command: 'pipe',
-          description: 'DOS tarzi Pipe-86 oyununu acar',
+          description: 'DOS tarzi Pipe-86: seviyeli boru baglama oyunu (skor + best)',
           aliases: ['pipes', 'pipe game', 'pipe86', 'boru oyunu'],
           action: () => pipeCommand('new')
         },
@@ -2849,6 +2982,16 @@
           if (pipeShortcutMode && key === 'q') {
             event.preventDefault();
             if (commandOutput) commandOutput.textContent = pipeCommand('quit');
+            return;
+          }
+          if (pipeShortcutMode && (event.key === 'Backspace' || event.key === 'Delete')) {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = removePipe();
+            return;
+          }
+          if (pipeShortcutMode && key === 'n' && pipeGame.won) {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = nextPipeLevel();
             return;
           }
           if (event.key === 'Enter' && !commandInput.value.trim()) {
