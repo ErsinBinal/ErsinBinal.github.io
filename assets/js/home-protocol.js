@@ -68,7 +68,8 @@
         commandLog: [],
         rituals: 0,
         easterTrail: [],
-        pipeBest: 0
+        pipeBest: 0,
+        pipeUnlocked: false
       });
       const readState = () => {
         try {
@@ -1900,6 +1901,26 @@
         return `badge: ${badge}\ncommands: ${state.commands}\nlevel: ${levels[Math.min(state.level, levels.length - 1)]}`;
       };
 
+      // PIPE-86 tamamlanınca açılan Pipeflow // Overclock oyununun kilidi.
+      const PIPEFLOW_UNLOCK_KEY = 'convivium.pipe.unlocked';
+      const isPipeflowUnlocked = () => {
+        try { return localStorage.getItem(PIPEFLOW_UNLOCK_KEY) === '1' || !!state.pipeUnlocked; }
+        catch { return !!state.pipeUnlocked; }
+      };
+      const revealPipeflowLink = () => {
+        if (!isPipeflowUnlocked()) return;
+        document.getElementById('lab-pipeflow')?.removeAttribute('hidden');
+      };
+      const unlockPipeflow = () => {
+        const already = isPipeflowUnlocked();
+        state.pipeUnlocked = true;
+        state.unlocked = [...new Set([...(state.unlocked || []), 'pipeflow'])];
+        try { localStorage.setItem(PIPEFLOW_UNLOCK_KEY, '1'); } catch { /* storage blocked */ }
+        persist();
+        revealPipeflowLink();
+        return !already;
+      };
+
       const pipePieces = [
         { id: 'line', glyphs: ['│', '─'], masks: [5, 10] },
         { id: 'elbow', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9] },
@@ -2177,6 +2198,10 @@
             state.pipeBest = pipeGame.score;
             persist();
           }
+          const firstUnlock = unlockPipeflow();
+          if (firstUnlock) {
+            pipeGame.status += '  ||  PIPEFLOW // OVERCLOCK acildi -> "pipeflow" yaz';
+          }
           award(Math.max(state.level, 2));
           pulse(720, 0.09);
           window.setTimeout(() => pulse(960, 0.07), 90);
@@ -2379,6 +2404,18 @@
           description: 'DOS tarzi Pipe-86: seviyeli boru baglama oyunu (skor + best)',
           aliases: ['pipes', 'pipe game', 'pipe86', 'boru oyunu'],
           action: () => pipeCommand('new')
+        },
+        {
+          command: 'pipeflow',
+          description: 'Pipeflow // Overclock: PIPE-86 sonrasi acilan coolant routing oyunu',
+          aliases: ['run pipeflow', 'coolant', 'overclock', 'flux'],
+          action: () => {
+            if (!isPipeflowUnlocked()) {
+              return 'pipeflow: kilitli — once "pipe" oynayip hatti tamamla (FLOW COMPLETE).';
+            }
+            window.location.href = 'pipeflow.html';
+            return 'pipeflow: booting overclock...';
+          }
         },
         {
           command: 'random',
@@ -3202,6 +3239,7 @@
       if (state.opened?.length) {
         state.opened.forEach(id => document.getElementById(id)?.classList.add('is-visited'));
       }
+      revealPipeflowLink();
       if (state.visits > 1 && consoleLine) consoleLine.textContent = 'returning signal detected';
       updateOsSnapshot(state.level, state.visits > 1 ? 'returning.signal' : signals[0]);
       renderProtocolSurfaces();

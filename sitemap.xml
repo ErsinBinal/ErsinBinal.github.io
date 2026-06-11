@@ -61,6 +61,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ersinbinal.github.io/pipeflow.html</loc>
+    <lastmod>2026-06-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ersinbinal.github.io/universe-2.html</loc>
     <lastmod>2026-05-11</lastmod>
     <changefreq>monthly</changefreq>

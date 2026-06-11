@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PIPEFLOW // OVERCLOCK — Convivium</title>
+<meta name="description" content="Coolant routing protokolü: reaktör çekirdeğine soğutucuyu, sistem aşırı ısınmadan ulaştır. PIPE-86 sonrası açılan profesyonel mini oyun.">
+<meta name="robots" content="index, follow">
+<link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+<link rel="manifest" href="/manifest.json">
+<style>
+  :root{
+    --bg:#04060a;
+    --grid:#0a1410;
+    --primary:#00ff7b;
+    --primary-dim:#0a8a4a;
+    --accent:#00f3ff;
+    --accent-dim:#0a6a78;
+    --pink:#ff2bb0;
+    --red:#ff3a3a;
+    --amber:#ffd23a;
+    --ink:#9fffc7;
+    --font:ui-monospace,'Cascadia Code','Source Code Pro',Menlo,Consolas,'Courier New',monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{
+    background:
+      radial-gradient(1200px 800px at 50% -10%, rgba(0,255,123,0.06), transparent 60%),
+      radial-gradient(900px 600px at 50% 120%, rgba(0,243,255,0.05), transparent 60%),
+      var(--bg);
+    color:var(--primary);
+    font-family:var(--font);
+    overflow:hidden;
+    user-select:none;
+    touch-action:none;
+  }
+  /* CRT katmanları */
+  .crt-scan,.crt-vignette{position:fixed;inset:0;pointer-events:none;z-index:50;}
+  .crt-scan{background:repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.18) 2px 3px);mix-blend-mode:multiply;opacity:.55;animation:scanShift 8s linear infinite;}
+  .crt-vignette{box-shadow:inset 0 0 200px rgba(0,0,0,0.9), inset 0 0 60px rgba(0,0,0,0.6);}
+  @keyframes scanShift{to{background-position:0 6px;}}
+  @media (prefers-reduced-motion: reduce){.crt-scan{animation:none;}}
+
+  .stage{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;}
+
+  /* HUD */
+  .hud{width:100%;max-width:760px;padding:10px 14px 4px;display:flex;flex-direction:column;gap:8px;}
+  .hud-top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.78rem;letter-spacing:.06em;}
+  .brand{display:flex;flex-direction:column;line-height:1.1;}
+  .brand b{font-size:.95rem;color:var(--primary);text-shadow:0 0 12px rgba(0,255,123,.6);}
+  .brand span{font-size:.6rem;color:var(--accent);letter-spacing:.22em;opacity:.85;}
+  .stat{display:flex;gap:14px;}
+  .stat .cell{display:flex;flex-direction:column;align-items:flex-end;line-height:1.15;}
+  .stat .k{font-size:.55rem;color:var(--accent-dim);letter-spacing:.2em;}
+  .stat .v{font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums;text-shadow:0 0 10px rgba(159,255,199,.35);}
+  .stat .v.best{color:var(--amber);text-shadow:0 0 10px rgba(255,210,58,.4);}
+
+  /* Zaman çubuğu */
+  .timebar{position:relative;height:10px;border:1px solid var(--primary-dim);border-radius:6px;overflow:hidden;background:rgba(0,255,123,.05);}
+  .timebar .fill{position:absolute;inset:0;width:100%;transform-origin:left;transform:scaleX(1);transition:transform .08s linear;
+    background:linear-gradient(90deg,var(--primary),var(--accent));box-shadow:0 0 14px rgba(0,255,123,.5);}
+  .timebar.danger .fill{background:linear-gradient(90deg,var(--red),var(--amber));box-shadow:0 0 16px rgba(255,58,58,.6);}
+  .timebar .label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.58rem;letter-spacing:.22em;color:#04060a;font-weight:700;mix-blend-mode:difference;}
+
+  /* Sıra önizleme */
+  .queue{display:flex;align-items:center;gap:8px;font-size:.62rem;color:var(--accent-dim);letter-spacing:.16em;}
+  .queue .slots{display:flex;gap:6px;}
+  .queue canvas{width:34px;height:34px;border:1px solid rgba(0,255,123,.25);border-radius:6px;background:rgba(0,255,123,.04);}
+  .queue canvas.head{border-color:var(--primary);box-shadow:0 0 14px rgba(0,255,123,.45);}
+
+  /* Oyun alanı */
+  .board-wrap{position:relative;flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:6px 10px 0;min-height:0;}
+  #board{touch-action:none;border-radius:12px;box-shadow:0 0 50px rgba(0,255,123,.12), inset 0 0 60px rgba(0,0,0,.6);}
+
+  /* Kontroller */
+  .controls{width:100%;max-width:760px;display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));}
+  .btn{flex:1;appearance:none;border:1px solid var(--primary-dim);background:rgba(0,255,123,.06);color:var(--primary);
+    font-family:var(--font);font-size:.72rem;letter-spacing:.12em;padding:11px 6px;border-radius:8px;cursor:pointer;
+    transition:.15s;text-transform:uppercase;}
+  .btn:hover,.btn:focus-visible{background:rgba(0,255,123,.16);box-shadow:0 0 16px rgba(0,255,123,.3);outline:none;}
+  .btn:active{transform:translateY(1px);}
+  .btn.accent{border-color:var(--accent-dim);color:var(--accent);background:rgba(0,243,255,.06);}
+  .btn.accent:hover{background:rgba(0,243,255,.16);box-shadow:0 0 16px rgba(0,243,255,.3);}
+  .btn.go{border-color:var(--primary);color:#04060a;background:var(--primary);font-weight:700;box-shadow:0 0 18px rgba(0,255,123,.45);}
+  .btn small{display:block;font-size:.5rem;letter-spacing:.18em;opacity:.7;margin-top:2px;}
+
+  /* Overlay'ler */
+  .overlay{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:24px;background:rgba(4,6,10,.86);backdrop-filter:blur(3px);}
+  .overlay.show{display:flex;}
+  .panel{max-width:440px;width:100%;border:1px solid var(--primary-dim);border-radius:14px;padding:26px 22px;
+    background:linear-gradient(180deg, rgba(0,255,123,.05), rgba(0,0,0,.3));box-shadow:0 0 50px rgba(0,255,123,.15);}
+  .panel h1{margin:0 0 4px;font-size:1.5rem;letter-spacing:.08em;text-shadow:0 0 18px rgba(0,255,123,.5);}
+  .panel .sub{color:var(--accent);font-size:.66rem;letter-spacing:.26em;margin-bottom:16px;}
+  .panel p{color:var(--ink);font-size:.82rem;line-height:1.55;margin:8px 0;}
+  .panel .big{font-size:2.6rem;color:var(--amber);text-shadow:0 0 22px rgba(255,210,58,.5);margin:6px 0;font-variant-numeric:tabular-nums;}
+  .panel .row{display:flex;justify-content:center;gap:22px;margin:14px 0;}
+  .panel .row .c{display:flex;flex-direction:column;}
+  .panel .row .c .k{font-size:.55rem;letter-spacing:.2em;color:var(--accent-dim);}
+  .panel .row .c .val{font-size:1.4rem;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .panel .legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin:14px 0;font-size:.7rem;color:var(--ink);text-align:left;}
+  .panel .legend b{color:var(--primary);}
+  .actions{display:flex;gap:10px;margin-top:18px;}
+  .actions .btn{padding:13px 8px;font-size:.78rem;}
+  .home-link{position:fixed;top:10px;left:12px;z-index:55;font-size:.62rem;letter-spacing:.18em;color:var(--accent-dim);
+    text-decoration:none;border:1px solid transparent;padding:4px 8px;border-radius:6px;}
+  .home-link:hover{color:var(--accent);border-color:var(--accent-dim);}
+  .lock-note{color:var(--red);font-size:.74rem;margin-top:8px;}
+  .hint{color:var(--accent-dim);font-size:.62rem;letter-spacing:.1em;margin-top:14px;}
+  @media (max-width:520px){
+    .panel h1{font-size:1.25rem;}
+    .hud-top{font-size:.7rem;}
+    .controls .btn small{display:none;}
+  }
+</style>
+</head>
+<body>
+<a class="home-link" href="/index.html">&lt; convivium</a>
+<div class="crt-scan" aria-hidden="true"></div>
+<div class="crt-vignette" aria-hidden="true"></div>
+
+<div class="stage">
+  <div class="hud">
+    <div class="hud-top">
+      <div class="brand"><b>PIPEFLOW</b><span>// OVERCLOCK</span></div>
+      <div class="stat">
+        <div class="cell"><div class="k">LEVEL</div><div class="v" id="ui-level">1</div></div>
+        <div class="cell"><div class="k">SCORE</div><div class="v" id="ui-score">0</div></div>
+        <div class="cell"><div class="k">BEST</div><div class="v best" id="ui-best">0</div></div>
+      </div>
+    </div>
+    <div class="timebar" id="ui-timebar"><div class="fill" id="ui-timefill"></div><div class="label" id="ui-timelabel">HAZIRLIK</div></div>
+    <div class="queue">
+      <span>NEXT</span>
+      <div class="slots" id="ui-queue"></div>
+      <span style="margin-left:auto" id="ui-flowinfo">akış: bekliyor</span>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <canvas id="board"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="btn-rotate">Döndür<small>R / tıkla</small></button>
+    <button class="btn go" id="btn-flow">Akıt<small>boşluk</small></button>
+    <button class="btn accent" id="btn-pause">Duraklat<small>P</small></button>
+    <button class="btn" id="btn-restart">Yeniden<small>↻</small></button>
+  </div>
+</div>
+
+<!-- Lock -->
+<div class="overlay" id="ov-lock">
+  <div class="panel">
+    <h1>KİLİTLİ DÜĞÜM</h1>
+    <div class="sub">CLASSIFIED PROTOCOL</div>
+    <p>Bu protokol yalnızca <b>PIPE-86</b>'yı tamamlayanlara açılır.</p>
+    <p class="lock-note">Erişim reddedildi.</p>
+    <p>Ana sayfada komut satırını aç (<b>CMD</b>) ve <b>pipe</b> yazıp hattı bağla. Akış tamamlanınca burası açılır.</p>
+    <div class="actions">
+      <a class="btn go" href="/index.html#lab" style="text-decoration:none;text-align:center;line-height:1.2;">PIPE-86'YA GİT</a>
+    </div>
+    <div class="hint">zaten geçtiysen sayfayı yenile</div>
+  </div>
+</div>
+
+<!-- Start -->
+<div class="overlay show" id="ov-start">
+  <div class="panel">
+    <h1>PIPEFLOW</h1>
+    <div class="sub">// COOLANT ROUTING PROTOCOL</div>
+    <p>Reaktör aşırı ısınıyor. <b>S</b> kaynağından <b>çekirdeğe</b> bir soğutucu hattı kur — akış başlamadan önce yetiş.</p>
+    <div class="legend">
+      <div><b>S</b> kaynak</div><div><b>◉</b> çekirdek (hedef)</div>
+      <div><b>Tıkla/dokun</b> boru koy</div><div><b>R</b> parçayı döndür</div>
+      <div><b>Boşluk</b> akışı erken başlat</div><div><b>Sızıntı</b> = oyun biter</div>
+    </div>
+    <p class="hint">Akış borulardan ilerlerken önünü kapatmaya devam et. Daha uzun hat = daha çok puan.</p>
+    <div class="actions">
+      <button class="btn go" id="btn-start">BAŞLAT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pause -->
+<div class="overlay" id="ov-pause">
+  <div class="panel">
+    <h1>DURAKLATILDI</h1>
+    <div class="sub">SYSTEM HOLD</div>
+    <div class="actions">
+      <button class="btn go" id="btn-resume">DEVAM</button>
+      <button class="btn" id="btn-quit">ÇIKIŞ</button>
+    </div>
+  </div>
+</div>
+
+<!-- End (win/lose) -->
+<div class="overlay" id="ov-end">
+  <div class="panel">
+    <h1 id="end-title">SİSTEM SOĞUDU</h1>
+    <div class="sub" id="end-sub">LEVEL CLEAR</div>
+    <div class="big" id="end-score">0</div>
+    <div class="row">
+      <div class="c"><div class="k">LEVEL</div><div class="val" id="end-level">1</div></div>
+      <div class="c"><div class="k">HAT</div><div class="val" id="end-len">0</div></div>
+      <div class="c"><div class="k">BEST</div><div class="val" id="end-best">0</div></div>
+    </div>
+    <p id="end-msg"></p>
+    <div class="actions">
+      <button class="btn go" id="btn-next">DEVAM ET</button>
+      <button class="btn" id="btn-end-restart">YENİDEN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PIPEFLOW // OVERCLOCK
+   Convivium — PIPE-86 sonrası açılan coolant routing oyunu.
+   Saf Canvas 2D, bağımlılık yok. Web Audio synth, dokunmatik + klavye.
+   ============================================================ */
+(() => {
+  'use strict';
+
+  // ---- Unlock kontrolü ----------------------------------------------------
+  const UNLOCK_KEY = 'convivium.pipe.unlocked';
+  const BEST_KEY = 'convivium.pipeflow.best';
+  const isUnlocked = () => {
+    try {
+      if (localStorage.getItem(UNLOCK_KEY) === '1') return true;
+      // PIPE-86 state'inde de kontrol et (geriye dönük uyum)
+      const s = JSON.parse(localStorage.getItem('convivium.protocol.state') || '{}');
+      if (s && (s.pipeUnlocked || (Array.isArray(s.unlocked) && s.unlocked.includes('pipeflow')))) return true;
+      if (localStorage.getItem(BEST_KEY)) return true; // daha önce oynamış
+    } catch (_) {}
+    return false;
+  };
+
+  // ---- Yön / bit sabitleri (N=1,E=2,S=4,W=8) ------------------------------
+  const N = 1, E = 2, S = 4, W = 8;
+  const OPP = { 1: 4, 4: 1, 2: 8, 8: 2 };
+  const VEC = { 1: [-1, 0], 2: [0, 1], 4: [1, 0], 8: [0, -1] };
+
+  // Parça tipleri: line, elbow, cross (Pipe Mania klasiği)
+  const TYPES = {
+    line:  { masks: [E | W, N | S] },           // yatay / dikey
+    elbow: { masks: [N | E, E | S, S | W, W | N] },
+    cross: { masks: [N | E | S | W] }
+  };
+  const computeExit = (mask, entryBit) => (mask === 15 ? OPP[entryBit] : (mask & ~entryBit));
+
+  const genPiece = () => {
+    const r = Math.random();
+    const type = r < 0.42 ? 'line' : r < 0.86 ? 'elbow' : 'cross';
+    const rot = Math.floor(Math.random() * TYPES[type].masks.length);
+    return { type, rot };
+  };
+  const pieceMask = (p) => TYPES[p.type].masks[p.rot % TYPES[p.type].masks.length];
+
+  // ---- Ses (Web Audio synth) ---------------------------------------------
+  const Audio = {
+    ctx: null, muted: false,
+    ensure() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} } },
+    tone(freq, type, dur, vol = 0.08, when = 0) {
+      if (this.muted) return; this.ensure(); if (!this.ctx) return;
+      const t = this.ctx.currentTime + when;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t + dur + 0.02);
+    },
+    place() { this.tone(420, 'square', 0.07, 0.05); },
+    rotate() { this.tone(620, 'triangle', 0.05, 0.04); },
+    drip() { this.tone(300 + Math.random() * 120, 'sine', 0.12, 0.05); },
+    flowStart() { this.tone(160, 'sawtooth', 0.3, 0.06); this.tone(240, 'sine', 0.4, 0.05, 0.05); },
+    leak() { this.tone(140, 'sawtooth', 0.5, 0.1); this.tone(90, 'square', 0.6, 0.08, 0.06); },
+    win() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 'sine', 0.22, 0.07, i * 0.08)); }
+  };
+
+  // ---- DOM ----------------------------------------------------------------
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('board'), ctx = canvas.getContext('2d');
+  const ui = {
+    level: $('ui-level'), score: $('ui-score'), best: $('ui-best'),
+    timebar: $('ui-timebar'), timefill: $('ui-timefill'), timelabel: $('ui-timelabel'),
+    queue: $('ui-queue'), flowinfo: $('ui-flowinfo')
+  };
+
+  // ---- Oyun durumu --------------------------------------------------------
+  const G = {
+    cols: 7, rows: 7, cell: 56, pad: 0,
+    grid: [],                 // grid[r][c] = null | pipe | {kind}
+    source: null, core: null,
+    queue: [],
+    cursor: { r: 0, c: 0 },
+    level: 1, score: 0, best: 0,
+    phase: 'idle',            // idle | build | flowing | leak | win | paused
+    prevPhase: 'build',
+    countdown: 0, countdownMax: 0,
+    secPerCell: 0.8,
+    flow: null,               // aktif akış başı
+    pathLen: 0,
+    particles: [],
+    shake: 0,
+    started: false
+  };
+
+  // ---- Seviye üretimi -----------------------------------------------------
+  const inB = (r, c) => r >= 0 && c >= 0 && r < G.rows && c < G.cols;
+
+  function pathExists(grid, rows, cols, sr, sc, dr, dc) {
+    const seen = new Set([sr + ',' + sc]); const q = [[sr, sc]];
+    while (q.length) {
+      const [r, c] = q.shift();
+      if (r === dr && c === dc) return true;
+      for (const b of [N, E, S, W]) {
+        const nr = r + VEC[b][0], nc = c + VEC[b][1];
+        if (nr < 0 || nc < 0 || nr >= rows || nc >= cols) continue;
+        const k = nr + ',' + nc; if (seen.has(k)) continue;
+        const cell = grid[nr][nc];
+        if (cell && cell.kind !== 'core' && cell.kind !== 'source') continue; // duvar
+        seen.add(k); q.push([nr, nc]);
+      }
+    }
+    return false;
+  }
+
+  function levelConfig(n) {
+    const size = Math.min(7 + Math.floor((n - 1) / 2), 10);
+    return {
+      cols: size, rows: size,
+      countdown: Math.max(2.6, 6 - (n - 1) * 0.45),
+      secPerCell: Math.max(0.34, 0.82 - (n - 1) * 0.055),
+      walls: Math.min(14, (n - 1) * 2)
+    };
+  }
+
+  function buildLevel(n) {
+    const cfg = levelConfig(n);
+    G.cols = cfg.cols; G.rows = cfg.rows;
+    G.secPerCell = cfg.secPerCell;
+    G.countdown = G.countdownMax = cfg.countdown;
+    G.grid = Array.from({ length: G.rows }, () => Array.from({ length: G.cols }, () => null));
+
+    const sr = Math.floor(Math.random() * G.rows);
+    let cr = Math.floor(Math.random() * G.rows);
+    while (cr === sr) cr = Math.floor(Math.random() * G.rows);
+    G.source = { r: sr, c: 0, dir: E };
+    G.core = { r: cr, c: G.cols - 1, accept: W };
+    G.grid[sr][0] = { kind: 'source' };
+    G.grid[cr][G.cols - 1] = { kind: 'core' };
+
+    // Duvarlar — yolu bloklamayacak şekilde
+    let placed = 0, tries = 0;
+    while (placed < cfg.walls && tries < 250) {
+      tries++;
+      const r = Math.floor(Math.random() * G.rows);
+      const c = 1 + Math.floor(Math.random() * (G.cols - 2));
+      if (G.grid[r][c]) continue;
+      G.grid[r][c] = { kind: 'wall' };
+      if (pathExists(G.grid, G.rows, G.cols, sr, 0, cr, G.cols - 1)) placed++;
+      else G.grid[r][c] = null;
+    }
+
+    G.queue = Array.from({ length: 5 }, genPiece);
+    G.cursor = { r: sr, c: 1 };
+    G.flow = null; G.pathLen = 0; G.particles = []; G.shake = 0;
+    G.phase = 'build';
+    resize();
+    renderQueue();
+    updateHUD();
+  }
+
+  // ---- Yerleştirme / döndürme --------------------------------------------
+  function canPlace(r, c) {
+    if (!inB(r, c)) return false;
+    const cell = G.grid[r][c];
+    if (!cell) return true;                 // boş
+    if (cell.kind === 'pipe' && !cell.locked) return true; // akmamış boruyu değiştir
+    return false;
+  }
+
+  function placeAt(r, c) {
+    if (G.phase !== 'build' && G.phase !== 'flowing') return;
+    if (!canPlace(r, c)) { Audio.tone(120, 'square', 0.06, 0.04); return; }
+    const p = G.queue[0];
+    G.grid[r][c] = { kind: 'pipe', mask: pieceMask(p), locked: false, fill: 0, entry: 0, exit: 0 };
+    G.queue.shift(); G.queue.push(genPiece());
+    spawnSpark(cellCenter(r, c).x, cellCenter(r, c).y, 'rgba(0,255,123,0.9)', 8);
+    Audio.place();
+    renderQueue(); updateHUD();
+  }
+
+  function rotateHead() {
+    const p = G.queue[0];
+    p.rot = (p.rot + 1) % TYPES[p.type].masks.length;
+    Audio.rotate(); renderQueue();
+  }
+
+  // ---- Akış başlat / simüle ----------------------------------------------
+  function startFlow() {
+    if (G.phase !== 'build') return;
+    G.phase = 'flowing';
+    G.countdown = 0;
+    Audio.flowStart();
+    // İlk hedef: kaynağın komşusu
+    const [dr, dc] = VEC[G.source.dir];
+    enterCell(G.source.r + dr, G.source.c + dc, OPP[G.source.dir]);
+  }
+
+  // Akış başını verilen hücreye sok; geçersizse sızıntı
+  function enterCell(r, c, entryBit) {
+    // Çekirdek mi?
+    if (G.core && r === G.core.r && c === G.core.c) {
+      if (G.core.accept === entryBit) { winLevel(); return; }
+      leakAt(G.flow ? G.flow.r : G.source.r, G.flow ? G.flow.c : G.source.c); return;
+    }
+    const cell = inB(r, c) ? G.grid[r][c] : null;
+    if (!cell || cell.kind !== 'pipe') { // boş / duvar / dışarı → sızıntı
+      G.phase = 'flowing';
+      leakAt(r, c, true); return;
+    }
+    if (!(cell.mask & entryBit)) { leakAt(r, c, true); return; } // bağlanmıyor
+    const exit = computeExit(cell.mask, entryBit);
+    cell.locked = true; cell.entry = entryBit; cell.exit = exit; cell.fill = 0;
+    G.flow = { r, c, entryBit, exitBit: exit };
+    G.pathLen++;
+    G.score += 10 + (cell.mask === 15 ? 6 : 0);
+    Audio.drip();
+    updateHUD();
+  }
+
+  function advanceFlow(dt) {
+    if (G.phase !== 'flowing' || !G.flow) return;
+    const cell = G.grid[G.flow.r][G.flow.c];
+    cell.fill += dt / G.secPerCell;
+    if (cell.fill >= 1) {
+      cell.fill = 1;
+      const carry = 0; // sade tutuyoruz
+      const [dr, dc] = VEC[G.flow.exitBit];
+      const nr = G.flow.r + dr, nc = G.flow.c + dc;
+      // tip için droplet
+      const cc = cellCenter(G.flow.r, G.flow.c);
+      spawnSpark(cc.x, cc.y, 'rgba(0,243,255,0.85)', 5);
+      enterCell(nr, nc, OPP[G.flow.exitBit]);
+    }
+  }
+
+  function leakAt(r, c, edge) {
+    if (G.phase === 'leak' || G.phase === 'win') return;
+    G.phase = 'leak';
+    const cc = inB(r, c) ? cellCenter(r, c) : cellCenter(G.cursor.r, G.cursor.c);
+    for (let i = 0; i < 30; i++) spawnSpark(cc.x, cc.y, 'rgba(255,58,58,0.95)', 16 + Math.random() * 10);
+    G.shake = 18;
+    Audio.leak();
+    saveBest();
+    setTimeout(() => endScreen(false), 900);
+  }
+
+  function winLevel() {
+    G.phase = 'win';
+    const leftover = Math.max(0, Math.round(G.countdown));
+    const bonus = 100 * G.level + G.pathLen * 5;
+    G.score += bonus;
+    const cc = cellCenter(G.core.r, G.core.c);
+    for (let i = 0; i < 36; i++) spawnSpark(cc.x, cc.y, i % 2 ? 'rgba(0,255,123,0.95)' : 'rgba(0,243,255,0.95)', 18 + Math.random() * 12);
+    G.shake = 10;
+    Audio.win();
+    saveBest();
+    setTimeout(() => endScreen(true, bonus), 850);
+  }
+
+  // ---- Parçacıklar --------------------------------------------------------
+  function spawnSpark(x, y, color, speed) {
+    const a = Math.random() * Math.PI * 2;
+    G.particles.push({ x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, life: 1, color, size: 1.5 + Math.random() * 2.5 });
+  }
+  function updateParticles(dt) {
+    for (const p of G.particles) { p.x += p.vx * dt * 18; p.y += p.vy * dt * 18; p.vy += 26 * dt; p.life -= dt * 1.6; }
+    G.particles = G.particles.filter(p => p.life > 0);
+    if (G.shake > 0) G.shake = Math.max(0, G.shake - dt * 60);
+  }
+
+  // ---- Geometri / boyut ---------------------------------------------------
+  function cellCenter(r, c) { return { x: G.pad + c * G.cell + G.cell / 2, y: G.pad + r * G.cell + G.cell / 2 }; }
+  function edgePoint(cx, cy, bit, h) {
+    if (bit === N) return [cx, cy - h]; if (bit === S) return [cx, cy + h];
+    if (bit === E) return [cx + h, cy]; return [cx - h, cy];
+  }
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    const availW = wrap.clientWidth - 12;
+    const availH = wrap.clientHeight - 6;
+    G.pad = 8;
+    const cell = Math.floor(Math.min((availW - G.pad * 2) / G.cols, (availH - G.pad * 2) / G.rows));
+    G.cell = Math.max(28, cell);
+    const w = G.cell * G.cols + G.pad * 2;
+    const h = G.cell * G.rows + G.pad * 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
+    canvas.width = Math.floor(w * dpr); canvas.height = Math.floor(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // ---- Çizim --------------------------------------------------------------
+  function draw(time) {
+    const w = G.cell * G.cols + G.pad * 2, h = G.cell * G.rows + G.pad * 2;
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
+
+    // zemin
+    ctx.fillStyle = '#060a08';
+    roundRect(G.pad - 4, G.pad - 4, G.cols * G.cell + 8, G.rows * G.cell + 8, 10); ctx.fill();
+
+    // grid hücreleri
+    for (let r = 0; r < G.rows; r++) for (let c = 0; c < G.cols; c++) {
+      const x = G.pad + c * G.cell, y = G.pad + r * G.cell;
+      ctx.strokeStyle = 'rgba(0,255,123,0.08)';
+      ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, G.cell - 1, G.cell - 1);
+      const cell = G.grid[r][c];
+      if (!cell) { ctx.fillStyle = 'rgba(0,255,123,0.05)'; ctx.beginPath(); ctx.arc(x + G.cell / 2, y + G.cell / 2, 1.6, 0, 7); ctx.fill(); }
+    }
+
+    // hücre içerikleri
+    for (let r = 0; r < G.rows; r++) for (let c = 0; c < G.cols; c++) {
+      const cell = G.grid[r][c]; if (!cell) continue;
+      const { x: cx, y: cy } = cellCenter(r, c);
+      if (cell.kind === 'wall') drawWall(cx, cy);
+      else if (cell.kind === 'source') drawSource(cx, cy, time);
+      else if (cell.kind === 'core') drawCore(cx, cy, time);
+      else if (cell.kind === 'pipe') drawPipe(cx, cy, cell, time);
+    }
+
+    // ghost (yerleştirilecek parça önizleme)
+    if ((G.phase === 'build' || G.phase === 'flowing') && canPlace(G.cursor.r, G.cursor.c)) {
+      const { x: cx, y: cy } = cellCenter(G.cursor.r, G.cursor.c);
+      ctx.globalAlpha = 0.35 + Math.sin(time / 200) * 0.12;
+      drawTube(cx, cy, pieceMask(G.queue[0]), G.cell * 0.5 - 4, 'rgba(0,243,255,0.9)', Math.max(4, G.cell * 0.16));
+      ctx.globalAlpha = 1;
+      const x = G.pad + G.cursor.c * G.cell, y = G.pad + G.cursor.r * G.cell;
+      ctx.strokeStyle = 'rgba(0,243,255,0.8)'; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, G.cell - 2, G.cell - 2);
+    }
+
+    // parçacıklar
+    for (const p of G.particles) {
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.color; ctx.shadowBlur = 8; ctx.shadowColor = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function drawTube(cx, cy, mask, h, color, lw) {
+    ctx.lineCap = 'round'; ctx.lineWidth = lw; ctx.strokeStyle = color;
+    ctx.shadowBlur = lw * 1.2; ctx.shadowColor = color;
+    for (const b of [N, E, S, W]) {
+      if (!(mask & b)) continue;
+      const [ex, ey] = edgePoint(cx, cy, b, h);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke();
+    }
+    // merkez bağlantı noktası
+    ctx.beginPath(); ctx.arc(cx, cy, lw * 0.55, 0, 7); ctx.fillStyle = color; ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  function drawPipe(cx, cy, cell, time) {
+    const h = G.cell * 0.5 - 4;
+    const lw = Math.max(4, G.cell * 0.16);
+    // boş (akmamış) boru — sönük cyan
+    drawTube(cx, cy, cell.mask, h, cell.locked ? 'rgba(0,200,160,0.35)' : 'rgba(0,243,255,0.5)', lw);
+    // sıvı dolumu
+    if (cell.locked && cell.fill > 0) {
+      const pts = [edgePoint(cx, cy, cell.entry, h), [cx, cy], edgePoint(cx, cy, cell.exit, h)];
+      const grad = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[2][0], pts[2][1]);
+      grad.addColorStop(0, '#00ff7b'); grad.addColorStop(1, '#00f3ff');
+      ctx.lineCap = 'round'; ctx.lineWidth = lw * 0.7; ctx.strokeStyle = grad;
+      ctx.shadowBlur = lw * 1.6; ctx.shadowColor = 'rgba(0,255,123,0.9)';
+      strokeFraction(pts, cell.fill);
+      // ilerleyen parlak uç
+      if (cell.fill < 1) {
+        const tip = pointAtFraction(pts, cell.fill);
+        ctx.beginPath(); ctx.arc(tip.x, tip.y, lw * 0.5, 0, 7);
+        ctx.fillStyle = '#aaffe0'; ctx.shadowColor = '#00ff7b'; ctx.shadowBlur = 14; ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // polyline'ın frac (0..1) kadarını çiz
+  function strokeFraction(pts, frac) {
+    const segs = [];
+    let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const d = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
+      segs.push(d); total += d;
+    }
+    let target = total * Math.min(1, Math.max(0, frac));
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      if (target <= 0) break;
+      const d = segs[i];
+      if (target >= d) { ctx.lineTo(pts[i + 1][0], pts[i + 1][1]); target -= d; }
+      else { const t = target / d; ctx.lineTo(pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t); target = 0; }
+    }
+    ctx.stroke();
+  }
+  function pointAtFraction(pts, frac) {
+    const segs = []; let total = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const d = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]); segs.push(d); total += d; }
+    let target = total * frac;
+    for (let i = 0; i < pts.length - 1; i++) {
+      if (target <= segs[i]) { const t = segs[i] ? target / segs[i] : 0; return { x: pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, y: pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t }; }
+      target -= segs[i];
+    }
+    const last = pts[pts.length - 1]; return { x: last[0], y: last[1] };
+  }
+
+  function drawWall(cx, cy) {
+    const s = G.cell * 0.4;
+    ctx.fillStyle = 'rgba(40,50,55,0.9)';
+    roundRect(cx - s, cy - s, s * 2, s * 2, 4); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,140,150,0.4)'; ctx.lineWidth = 1;
+    for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx - s + i * 8, cy - s); ctx.lineTo(cx - s + i * 8 + s, cy + s); ctx.stroke(); }
+  }
+
+  function drawSource(cx, cy, time) {
+    const pulse = 0.6 + Math.sin(time / 180) * 0.4;
+    const r = G.cell * 0.34;
+    ctx.fillStyle = 'rgba(0,255,123,' + (0.2 + pulse * 0.25) + ')';
+    ctx.shadowBlur = 22; ctx.shadowColor = '#00ff7b';
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#04060a'; ctx.font = 'bold ' + Math.floor(G.cell * 0.4) + 'px ' + getFont();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('S', cx, cy + 1);
+    // çıkış oku
+    const [ex, ey] = edgePoint(cx, cy, G.source.dir, G.cell * 0.5 - 3);
+    ctx.strokeStyle = '#00ff7b'; ctx.lineWidth = Math.max(4, G.cell * 0.16); ctx.lineCap = 'round';
+    ctx.shadowBlur = 10; ctx.shadowColor = '#00ff7b';
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.shadowBlur = 0;
+  }
+
+  function drawCore(cx, cy, time) {
+    const reached = G.phase === 'win';
+    const baseCol = reached ? '#00ff7b' : '#00f3ff';
+    for (let i = 3; i >= 1; i--) {
+      ctx.strokeStyle = baseCol; ctx.globalAlpha = 0.18 * i + Math.sin(time / 200 + i) * 0.08;
+      ctx.lineWidth = 2; ctx.beginPath();
+      ctx.arc(cx, cy, G.cell * 0.12 * i + (time / 30 % (G.cell * 0.12)), 0, 7); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = baseCol; ctx.shadowBlur = 20; ctx.shadowColor = baseCol;
+    ctx.beginPath(); ctx.arc(cx, cy, G.cell * 0.16, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#04060a'; ctx.font = 'bold ' + Math.floor(G.cell * 0.26) + 'px ' + getFont();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('◉', cx, cy + 1);
+  }
+
+  function getFont() { return "ui-monospace,'Cascadia Code',Menlo,Consolas,monospace"; }
+
+  // ---- HUD ----------------------------------------------------------------
+  function updateHUD() {
+    ui.level.textContent = G.level;
+    ui.score.textContent = G.score;
+    ui.best.textContent = G.best;
+    ui.flowinfo.textContent = G.phase === 'flowing' ? ('hat: ' + G.pathLen)
+      : G.phase === 'build' ? 'akış: bekliyor' : G.phase;
+  }
+
+  function renderQueue() {
+    ui.queue.innerHTML = '';
+    G.queue.forEach((p, i) => {
+      const cv = document.createElement('canvas');
+      cv.width = 68; cv.height = 68; if (i === 0) cv.className = 'head';
+      const c = cv.getContext('2d');
+      const mask = pieceMask(p);
+      c.lineCap = 'round'; c.lineWidth = 9; c.strokeStyle = i === 0 ? '#00ff7b' : '#00b8d0';
+      c.shadowBlur = i === 0 ? 10 : 0; c.shadowColor = '#00ff7b';
+      const cx = 34, cy = 34, h = 26;
+      for (const b of [N, E, S, W]) {
+        if (!(mask & b)) continue;
+        const ep = b === N ? [cx, cy - h] : b === S ? [cx, cy + h] : b === E ? [cx + h, cy] : [cx - h, cy];
+        c.beginPath(); c.moveTo(cx, cy); c.lineTo(ep[0], ep[1]); c.stroke();
+      }
+      ui.queue.appendChild(cv);
+    });
+  }
+
+  function updateTimebar() {
+    if (G.phase === 'build') {
+      const frac = G.countdownMax ? G.countdown / G.countdownMax : 0;
+      ui.timefill.style.transform = 'scaleX(' + frac + ')';
+      ui.timebar.classList.toggle('danger', frac < 0.35);
+      ui.timelabel.textContent = 'AKIŞA ' + G.countdown.toFixed(1) + 's';
+    } else if (G.phase === 'flowing') {
+      ui.timefill.style.transform = 'scaleX(1)';
+      ui.timebar.classList.remove('danger');
+      ui.timelabel.textContent = 'AKIŞ AKTİF // hat ' + G.pathLen;
+    } else if (G.phase === 'win') {
+      ui.timelabel.textContent = 'ÇEKİRDEK SOĞUDU';
+    } else if (G.phase === 'leak') {
+      ui.timebar.classList.add('danger');
+      ui.timelabel.textContent = 'SIZINTI';
+    }
+  }
+
+  // ---- Skor kaydı ---------------------------------------------------------
+  function saveBest() {
+    if (G.score > G.best) {
+      G.best = G.score;
+      try { localStorage.setItem(BEST_KEY, String(G.best)); } catch (_) {}
+    }
+  }
+  function loadBest() { try { G.best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; } catch (_) { G.best = 0; } }
+
+  // ---- Overlay akışı ------------------------------------------------------
+  function show(id) { $(id).classList.add('show'); }
+  function hide(id) { $(id).classList.remove('show'); }
+
+  function endScreen(win, bonus) {
+    $('end-title').textContent = win ? 'ÇEKİRDEK SOĞUDU' : 'SIZINTI // SİSTEM ARIZASI';
+    $('end-sub').textContent = win ? 'LEVEL ' + G.level + ' CLEAR' : 'COOLANT BREACH';
+    $('end-score').textContent = G.score;
+    $('end-level').textContent = G.level;
+    $('end-len').textContent = G.pathLen;
+    $('end-best').textContent = G.best;
+    $('end-msg').textContent = win
+      ? ('+' + (bonus || 0) + ' bonus. Sonraki düğüm daha hızlı akacak.')
+      : 'Akış bağlı olmayan bir uca ulaştı. Hattı önceden tamamla.';
+    $('btn-next').textContent = win ? 'DEVAM ET' : 'TEKRAR DENE';
+    show('ov-end');
+  }
+
+  // ---- Ana döngü ----------------------------------------------------------
+  let last = 0;
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000 || 0);
+    last = now;
+    if (G.phase === 'build') {
+      G.countdown -= dt;
+      if (G.countdown <= 0) startFlow();
+    } else if (G.phase === 'flowing') {
+      advanceFlow(dt);
+    }
+    updateParticles(dt);
+    if (G.started) { draw(now); updateTimebar(); }
+    requestAnimationFrame(loop);
+  }
+
+  // ---- Girdi --------------------------------------------------------------
+  function pointerToCell(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const x = (clientX - rect.left), y = (clientY - rect.top);
+    const c = Math.floor((x - G.pad) / G.cell), r = Math.floor((y - G.pad) / G.cell);
+    return { r, c };
+  }
+
+  canvas.addEventListener('pointermove', (e) => {
+    const { r, c } = pointerToCell(e.clientX, e.clientY);
+    if (inB(r, c)) G.cursor = { r, c };
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    Audio.ensure();
+    const { r, c } = pointerToCell(e.clientX, e.clientY);
+    if (inB(r, c)) { G.cursor = { r, c }; placeAt(r, c); }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
+    if (G.phase === 'paused') return;
+    const k = e.key.toLowerCase();
+    if (e.key === 'ArrowUp') G.cursor.r = Math.max(0, G.cursor.r - 1);
+    else if (e.key === 'ArrowDown') G.cursor.r = Math.min(G.rows - 1, G.cursor.r + 1);
+    else if (e.key === 'ArrowLeft') G.cursor.c = Math.max(0, G.cursor.c - 1);
+    else if (e.key === 'ArrowRight') G.cursor.c = Math.min(G.cols - 1, G.cursor.c + 1);
+    else if (k === 'r') rotateHead();
+    else if (e.key === 'Enter') placeAt(G.cursor.r, G.cursor.c);
+    else if (e.key === ' ') startFlow();
+    else if (k === 'p') togglePause();
+  });
+
+  // ---- Butonlar -----------------------------------------------------------
+  $('btn-rotate').addEventListener('click', rotateHead);
+  $('btn-flow').addEventListener('click', () => { Audio.ensure(); startFlow(); });
+  $('btn-pause').addEventListener('click', togglePause);
+  $('btn-restart').addEventListener('click', () => { if (confirmRestart()) restartLevel(); });
+  $('btn-start').addEventListener('click', () => { Audio.ensure(); hide('ov-start'); G.started = true; });
+  $('btn-resume').addEventListener('click', togglePause);
+  $('btn-quit').addEventListener('click', () => { location.href = '/index.html#lab'; });
+  $('btn-next').addEventListener('click', () => {
+    hide('ov-end');
+    if ($('end-title').textContent.indexOf('SOĞUDU') >= 0) { G.level++; buildLevel(G.level); }
+    else { restartLevel(); }
+  });
+  $('btn-end-restart').addEventListener('click', () => { hide('ov-end'); fullRestart(); });
+
+  function confirmRestart() { return true; }
+  function restartLevel() { buildLevel(G.level); }
+  function fullRestart() { G.level = 1; G.score = 0; buildLevel(1); }
+
+  function togglePause() {
+    if (G.phase === 'paused') { G.phase = G.prevPhase; hide('ov-pause'); }
+    else if (G.phase === 'build' || G.phase === 'flowing') { G.prevPhase = G.phase; G.phase = 'paused'; show('ov-pause'); }
+  }
+
+  window.addEventListener('resize', () => { resize(); });
+
+  // ---- Başlat -------------------------------------------------------------
+  function boot() {
+    if (!isUnlocked()) { show('ov-lock'); return; }
+    loadBest();
+    buildLevel(1);
+    G.started = false; // start overlay'i bekle
+    requestAnimationFrame(loop);
+    // ilk çizim start overlay arkasında görünmesin diye started=false; yine de grid kuruldu
+    G.started = true;
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
