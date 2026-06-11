@@ -1,7 +1,7 @@
 {
   "name": "ersinbinal-site-tools",
   "version": "1.0.0",
-  "description": "Helper tools for ErsinBinal.github.io - image conversion",
+  "description": "Convivium GitHub Pages site: terminal UI, articles, games, PWA assets, Supabase helpers, and Oracle Worker tooling.",
   "scripts": {
     "check": "npm run check:syntax && npm run check:site",
     "check:site": "node scripts/validate-site-integrity.js",

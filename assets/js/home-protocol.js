@@ -2710,12 +2710,49 @@
         if (commandShell) commandShell.setAttribute('aria-busy', String(busy));
       };
 
+      const typeOracleOutput = (text) => new Promise((resolve) => {
+        if (!commandOutput) {
+          resolve();
+          return;
+        }
+
+        const output = String(text || '');
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || output.length < 12) {
+          commandOutput.textContent = output;
+          resolve();
+          return;
+        }
+
+        commandOutput.textContent = '';
+        let index = 0;
+        const writeNext = () => {
+          if (!commandInFlight) {
+            resolve();
+            return;
+          }
+
+          index += 1;
+          commandOutput.textContent = output.slice(0, index);
+          if (index >= output.length) {
+            resolve();
+            return;
+          }
+
+          const char = output[index - 1];
+          const delay = /[.!?]/.test(char) ? 90 : /[,;:]/.test(char) ? 45 : char === '\n' ? 70 : 14;
+          window.setTimeout(writeNext, delay);
+        };
+
+        writeNext();
+      });
+
       const sendOracleQuery = async (query) => {
         if (commandOutput) commandOutput.textContent = oracleWaitLines[0];
         if (microOracle) microOracle.textContent = 'external oracle channel';
         setCommandBusy(true);
         let waitLineIndex = 0;
-        const waitSignal = window.setInterval(() => {
+        let waitSignal = window.setInterval(() => {
           if (!commandInFlight || !commandOutput) return;
           waitLineIndex = (waitLineIndex + 1) % oracleWaitLines.length;
           commandOutput.textContent = oracleWaitLines[waitLineIndex];
@@ -2723,7 +2760,10 @@
 
         try {
           const result = await askOracleFallback(query);
-          if (commandOutput) commandOutput.textContent = result;
+          window.clearInterval(waitSignal);
+          waitSignal = null;
+          if (microOracle) microOracle.textContent = 'oracle stream receiving';
+          await typeOracleOutput(result);
           if (microOracle) microOracle.textContent = 'oracle response received';
           updateOsSnapshot(state.level, 'oracle.response');
           award(Math.max(state.level, 1));
@@ -2738,7 +2778,7 @@
           if (microOracle) microOracle.textContent = 'oracle unavailable';
           pulse(150, 0.08);
         } finally {
-          window.clearInterval(waitSignal);
+          if (waitSignal) window.clearInterval(waitSignal);
           setCommandBusy(false);
           commandInput?.focus();
         }
