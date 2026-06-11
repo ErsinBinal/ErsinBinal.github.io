@@ -136,6 +136,8 @@
       let screenSaverFrame = null;
       let screenSaverStart = 0;
       let screenSaverPlanetOrder = [];
+      let virtualCwd = '/';
+      let pipeGame = null;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
       const screenSaverPlanets = [
@@ -1596,6 +1598,355 @@
         return `random route: ${label}`;
       };
 
+      const virtualFs = {
+        '/': ['routes', 'lab', 'notes', 'system'],
+        '/routes': ['home', 'map', 'archive', 'notes', 'open dossier'],
+        '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe'],
+        '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
+        '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver']
+      };
+
+      const virtualDocs = {
+        about: 'Convivium: public deneysel terminal alanı. Route, oyun, oracle ve not katmanları browser içinde çalışır.',
+        system: 'system: static GitHub Pages shell / Worker üzerinden public oracle / local secrets unavailable.',
+        routes: 'routes: home, map, archive, notes, open dossier, lab komutları.',
+        lab: 'lab: logic, signal, ash, flow, pipe ve companion deneyleri.',
+        audio: `audio: ${audioEnabled ? 'on' : 'off'} / preference persisted locally.`
+      };
+
+      const resolveVirtualPath = (target = '') => {
+        const normalized = normalizeCommand(target).replace(/\s+/g, '-');
+        if (!normalized || normalized === '/') return '/';
+        if (normalized === '..') return virtualCwd.split('/').slice(0, -1).join('/') || '/';
+        const path = normalized.startsWith('/') ? normalized : `${virtualCwd === '/' ? '' : virtualCwd}/${normalized}`;
+        return path.replace(/\/+/g, '/');
+      };
+
+      const lsCommand = (target = '') => {
+        const path = resolveVirtualPath(target);
+        const items = virtualFs[path];
+        if (!items) return `ls: ${path}: not found`;
+        return [`${path}:`, ...items.map(item => `  ${item}`)].join('\n');
+      };
+
+      const cdCommand = (target = '/') => {
+        const path = resolveVirtualPath(target);
+        if (!virtualFs[path]) return `cd: ${path}: no such virtual directory`;
+        virtualCwd = path;
+        return virtualCwd;
+      };
+
+      const catCommand = (target = '') => {
+        const key = normalizeCommand(target || 'about');
+        return virtualDocs[key] || `cat: ${target || 'empty'}: public document not found`;
+      };
+
+      const treeCommand = () => [
+        '/',
+        '|-- routes',
+        '|   |-- home',
+        '|   |-- map',
+        '|   |-- archive',
+        '|   `-- open dossier',
+        '|-- lab',
+        '|   |-- run logic',
+        '|   |-- run signal',
+        '|   |-- run ash',
+        '|   |-- run flow',
+        '|   `-- pipe',
+        '|-- notes',
+        '|   |-- note',
+        '|   |-- quote',
+        '|   `-- ritual',
+        '`-- system',
+        '    |-- whoami',
+        '    |-- memory',
+        '    |-- ps',
+        '    `-- power'
+      ].join('\n');
+
+      const findCommand = (target = '') => {
+        const query = normalizeCommand(target);
+        if (!query) return 'find: usage find <term>';
+        const matches = commandChoices
+          .filter(choice => normalizeCommand(choice).includes(query))
+          .slice(0, 12);
+        return matches.length ? `find ${target}:\n${matches.map(item => `  ${item}`).join('\n')}` : `find: no command matching "${target}"`;
+      };
+
+      const uptimeCommand = () => {
+        const seconds = Math.floor(performance.now() / 1000);
+        const minutes = Math.floor(seconds / 60);
+        return [
+          `uptime: ${minutes}m ${seconds % 60}s`,
+          `visits: ${state.visits}`,
+          `commands: ${state.commands}`,
+          `level: ${levels[Math.min(state.level, levels.length - 1)]}`
+        ].join('\n');
+      };
+
+      const dateCommand = () => new Date().toLocaleString('tr-TR', {
+        dateStyle: 'full',
+        timeStyle: 'medium'
+      });
+
+      const versionCommand = () => [
+        'Convivium Terminal 0.86',
+        'protocol: public-static',
+        'render: browser',
+        'oracle: worker-proxy optional',
+        'build: local-js'
+      ].join('\n');
+
+      const memoryCommand = () => [
+        'MEMORY MAP',
+        '0000: public route cache',
+        '0100: command history ring',
+        '0200: visual overlays',
+        '0300: oracle pending buffer',
+        '0400: companion bus',
+        'SEC : private mounts unavailable'
+      ].join('\n');
+
+      const psCommand = () => [
+        'PID  STATUS   PROCESS',
+        `001  ${commandShell?.classList.contains('is-open') ? 'RUN' : 'IDLE'}     command.shell`,
+        `002  ${screenSaverOverlay?.classList.contains('is-active') ? 'RUN' : 'IDLE'}     screen.saver`,
+        `003  ${powerOverlay?.classList.contains('is-active') || powerOverlay?.classList.contains('is-off') ? 'RUN' : 'IDLE'}     power.overlay`,
+        `004  ${(window.DebCompanion || window.NovaCompanion)?.getState?.().active ? 'RUN' : 'IDLE'}     deb.companion`,
+        `005  ${commandInFlight ? 'WAIT' : 'IDLE'}     oracle.channel`,
+        `006  ${pipeGame?.active ? 'RUN' : 'IDLE'}     pipe.game`
+      ].join('\n');
+
+      const themeCommand = (target = '') => {
+        const theme = normalizeCommand(target);
+        const colors = {
+          green: ['#00ff66', '#caffd8'],
+          cyan: ['#00eaff', '#d8fbff'],
+          amber: ['#f5ff6b', '#fff7b0']
+        };
+        if (!colors[theme]) return 'theme: usage theme green|cyan|amber';
+        document.documentElement.style.setProperty('--journey-green', colors[theme][0]);
+        document.documentElement.style.setProperty('--journey-cyan', colors[theme][1]);
+        return `theme: ${theme}`;
+      };
+
+      const volumeCommand = (target = '') => {
+        const action = normalizeCommand(target);
+        if (['mute', 'off', 'kapali', 'kapat'].includes(action)) {
+          setAudioEnabled(false);
+          return 'audio off';
+        }
+        if (['on', 'up', 'ac', 'aç', 'open'].includes(action)) {
+          setAudioEnabled(true, true);
+          return 'audio on';
+        }
+        return `audio: ${audioEnabled ? 'on' : 'off'} / usage volume on|mute`;
+      };
+
+      const scanCommand = () => {
+        document.querySelectorAll('.journey-gate, .site-header').forEach((item, index) => {
+          window.setTimeout(() => item.classList.add('is-visited'), index * 80);
+        });
+        pulse(620, 0.08);
+        return 'scan: public nodes highlighted';
+      };
+
+      const nextCommand = () => {
+        const unopened = stages.find(stage => !(state.opened || []).includes(stage.id) && stage.id);
+        if (!unopened) return 'next: all known public nodes have been touched';
+        unopened.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return `next: ${unopened.id}`;
+      };
+
+      const tourCommand = () => {
+        const ids = ['origin', 'index', 'lab', 'trace', 'map', 'archive', 'notes', 'hidden'];
+        ids.forEach((id, index) => {
+          window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), index * 950);
+        });
+        return 'tour: route playback started';
+      };
+
+      const badgeCommand = () => {
+        const badge = state.commands > 30 ? 'TERMINAL OPERATOR' : state.commands > 12 ? 'FIELD USER' : 'GUEST PILOT';
+        return `badge: ${badge}\ncommands: ${state.commands}\nlevel: ${levels[Math.min(state.level, levels.length - 1)]}`;
+      };
+
+      const pipePieces = [
+        { id: 'line', glyphs: ['│', '─'], masks: [5, 10] },
+        { id: 'elbow', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9] },
+        { id: 'tee', glyphs: ['┴', '├', '┬', '┤'], masks: [11, 7, 14, 13] },
+        { id: 'cross', glyphs: ['┼'], masks: [15] }
+      ];
+      const pipeDirs = [
+        { bit: 1, dr: -1, dc: 0, opposite: 4 },
+        { bit: 2, dr: 0, dc: 1, opposite: 8 },
+        { bit: 4, dr: 1, dc: 0, opposite: 1 },
+        { bit: 8, dr: 0, dc: -1, opposite: 2 }
+      ];
+
+      const createPipePiece = () => {
+        const template = pipePieces[Math.floor(Math.random() * pipePieces.length)];
+        return { id: template.id, rotation: Math.floor(Math.random() * template.glyphs.length) };
+      };
+
+      const pipeMask = (piece) => {
+        const template = pipePieces.find(item => item.id === piece.id);
+        return template?.masks[piece.rotation % template.masks.length] || 0;
+      };
+
+      const pipeGlyph = (piece) => {
+        if (piece.kind === 'source') return 'S';
+        if (piece.kind === 'drain') return 'D';
+        const template = pipePieces.find(item => item.id === piece.id);
+        return template?.glyphs[piece.rotation % template.glyphs.length] || '?';
+      };
+
+      const startPipeGame = () => {
+        const size = 7;
+        pipeGame = {
+          active: true,
+          size,
+          cursor: { r: 3, c: 1 },
+          source: { r: 3, c: 0, mask: 2 },
+          drain: { r: 3, c: 6, mask: 8 },
+          grid: Array.from({ length: size }, () => Array.from({ length: size }, () => null)),
+          queue: Array.from({ length: 5 }, createPipePiece),
+          placed: 0,
+          status: 'PIPE-86 ready. connect S to D, then press F.',
+          won: false
+        };
+        pipeGame.grid[pipeGame.source.r][pipeGame.source.c] = { kind: 'source', mask: pipeGame.source.mask };
+        pipeGame.grid[pipeGame.drain.r][pipeGame.drain.c] = { kind: 'drain', mask: pipeGame.drain.mask };
+        return renderPipeGame();
+      };
+
+      const renderPipeGame = () => {
+        if (!pipeGame) return 'pipe: inactive';
+        const rows = [];
+        rows.push('PIPE-86 / DOS PLUMBING SIM');
+        rows.push('goal: connect S(source) to D(drain)');
+        rows.push('');
+        for (let r = 0; r < pipeGame.size; r += 1) {
+          let line = '';
+          for (let c = 0; c < pipeGame.size; c += 1) {
+            const cell = pipeGame.grid[r][c];
+            const glyph = cell ? pipeGlyph(cell) : '.';
+            line += pipeGame.cursor.r === r && pipeGame.cursor.c === c ? `[${glyph}]` : ` ${glyph} `;
+          }
+          rows.push(line);
+        }
+        const next = pipeGame.queue[0];
+        rows.push('');
+        rows.push(`next: ${pipeGlyph(next)} (${next.id})  placed: ${pipeGame.placed}`);
+        rows.push(`queue: ${pipeGame.queue.map(pipeGlyph).join(' ')}`);
+        rows.push(pipeGame.status);
+        rows.push('');
+        rows.push('keys: arrows move / space,R rotate / enter place / F flow / Q quit');
+        rows.push('cmd : pipe rotate, pipe place, pipe flow, pipe quit, pipe new');
+        return rows.join('\n');
+      };
+
+      const setPipeOutput = () => {
+        if (commandOutput) commandOutput.textContent = renderPipeGame();
+      };
+
+      const movePipeCursor = (dr, dc) => {
+        if (!pipeGame?.active) return;
+        pipeGame.cursor.r = Math.max(0, Math.min(pipeGame.size - 1, pipeGame.cursor.r + dr));
+        pipeGame.cursor.c = Math.max(0, Math.min(pipeGame.size - 1, pipeGame.cursor.c + dc));
+        pipeGame.status = `cursor: ${pipeGame.cursor.r},${pipeGame.cursor.c}`;
+        setPipeOutput();
+      };
+
+      const rotatePipe = () => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        const { r, c } = pipeGame.cursor;
+        const cell = pipeGame.grid[r][c];
+        if (cell && !cell.kind) {
+          const template = pipePieces.find(item => item.id === cell.id);
+          cell.rotation = (cell.rotation + 1) % template.glyphs.length;
+          pipeGame.status = `rotated placed ${cell.id}`;
+        } else if (!cell) {
+          const template = pipePieces.find(item => item.id === pipeGame.queue[0].id);
+          pipeGame.queue[0].rotation = (pipeGame.queue[0].rotation + 1) % template.glyphs.length;
+          pipeGame.status = `rotated next ${pipeGame.queue[0].id}`;
+        } else {
+          pipeGame.status = 'source/drain cannot rotate';
+        }
+        return renderPipeGame();
+      };
+
+      const placePipe = () => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        const { r, c } = pipeGame.cursor;
+        if (pipeGame.grid[r][c]) {
+          pipeGame.status = 'cell occupied';
+          return renderPipeGame();
+        }
+        pipeGame.grid[r][c] = pipeGame.queue.shift();
+        pipeGame.queue.push(createPipePiece());
+        pipeGame.placed += 1;
+        pipeGame.status = 'piece placed';
+        pulse(360, 0.04);
+        return renderPipeGame();
+      };
+
+      const tracePipeFlow = () => {
+        const visited = new Set();
+        const stack = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
+        while (stack.length) {
+          const current = stack.pop();
+          const key = `${current.r},${current.c}`;
+          if (visited.has(key)) continue;
+          visited.add(key);
+          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) return { ok: true, visited };
+          const cell = pipeGame.grid[current.r]?.[current.c];
+          const mask = cell?.kind ? cell.mask : pipeMask(cell || {});
+          pipeDirs.forEach(dir => {
+            if (!(mask & dir.bit)) return;
+            const nr = current.r + dir.dr;
+            const nc = current.c + dir.dc;
+            const next = pipeGame.grid[nr]?.[nc];
+            if (!next) return;
+            const nextMask = next.kind ? next.mask : pipeMask(next);
+            if (nextMask & dir.opposite) stack.push({ r: nr, c: nc });
+          });
+        }
+        return { ok: false, visited };
+      };
+
+      const flowPipe = () => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        const result = tracePipeFlow();
+        pipeGame.won = result.ok;
+        pipeGame.status = result.ok
+          ? `FLOW COMPLETE / connected in ${pipeGame.placed} pieces`
+          : `FLOW FAILED / connected cells ${result.visited.size}`;
+        if (result.ok) {
+          award(Math.max(state.level, 2));
+          pulse(720, 0.09);
+        } else {
+          pulse(130, 0.08);
+        }
+        return renderPipeGame();
+      };
+
+      const pipeCommand = (action = '') => {
+        const command = normalizeCommand(action || 'new');
+        if (!pipeGame?.active || ['new', 'start', 'play'].includes(command)) return startPipeGame();
+        if (['rotate', 'r'].includes(command)) return rotatePipe();
+        if (['place', 'put', 'enter'].includes(command)) return placePipe();
+        if (['flow', 'run', 'f'].includes(command)) return flowPipe();
+        if (['quit', 'exit', 'q'].includes(command)) {
+          pipeGame.active = false;
+          pipeGame = null;
+          return 'pipe: session closed';
+        }
+        if (['help', '?'].includes(command)) return renderPipeGame();
+        return 'pipe: usage pipe new|rotate|place|flow|quit';
+      };
+
       const debCommand = (action = 'summon') => {
         const deb = window.DebCompanion || window.NovaCompanion;
         if (!deb) return 'deb: module not ready';
@@ -1671,6 +2022,72 @@
           action: clearCommand
         },
         {
+          command: 'ls',
+          description: 'sanal terminal dizinini listeler',
+          aliases: ['dir'],
+          action: () => lsCommand()
+        },
+        {
+          command: 'pwd',
+          description: 'sanal terminal konumunu gosterir',
+          aliases: ['where'],
+          action: () => virtualCwd
+        },
+        {
+          command: 'cd',
+          description: 'sanal dizin degistirir',
+          aliases: ['chdir'],
+          action: () => 'cd: usage cd routes|lab|notes|system'
+        },
+        {
+          command: 'cat',
+          description: 'public terminal dokumani okur',
+          aliases: ['type'],
+          action: () => catCommand('about')
+        },
+        {
+          command: 'tree',
+          description: 'site terminal agacini gosterir',
+          aliases: ['sitemap'],
+          action: treeCommand
+        },
+        {
+          command: 'find',
+          description: 'komut ve route arar',
+          aliases: ['search'],
+          action: () => 'find: usage find <term>'
+        },
+        {
+          command: 'uptime',
+          description: 'oturum suresini ve terminal sayaclarini gosterir',
+          aliases: ['runtime'],
+          action: uptimeCommand
+        },
+        {
+          command: 'date',
+          description: 'lokal tarih ve saati gosterir',
+          aliases: ['time', 'saat', 'tarih'],
+          action: dateCommand
+        },
+        {
+          command: 'version',
+          description: 'terminal surum bilgisini gosterir',
+          aliases: ['ver'],
+          action: versionCommand
+        },
+        {
+          command: 'memory',
+          description: 'guvenli kurgu bellek haritasini gosterir',
+          aliases: ['mem'],
+          action: memoryCommand
+        },
+        {
+          command: 'ps',
+          description: 'aktif public UI sureclerini gosterir',
+          aliases: ['processes', 'tasks'],
+          action: psCommand
+        },
+        {
           command: 'exit',
           description: 'komut ekranini kapatir',
           aliases: ['quit', 'close', 'kapat', 'cikis', 'çıkış'],
@@ -1696,6 +2113,12 @@
           description: 'retro Convivium ekran koruyucuyu acar',
           aliases: ['screensaver', 'screen server', 'screen save', 'ekran koruyucu', 'koruyucu', 'idle screen'],
           action: screenSaverCommand
+        },
+        {
+          command: 'pipe',
+          description: 'DOS tarzi Pipe-86 oyununu acar',
+          aliases: ['pipes', 'pipe game', 'pipe86', 'boru oyunu'],
+          action: () => pipeCommand('new')
         },
         {
           command: 'random',
@@ -1768,6 +2191,42 @@
           description: 'klasik gezinen pet katmanina doner',
           aliases: ['classic bugy', 'pet classic'],
           action: bugyCommand
+        },
+        {
+          command: 'theme',
+          description: 'terminal renk modunu degistirir',
+          aliases: ['color'],
+          action: () => 'theme: usage theme green|cyan|amber'
+        },
+        {
+          command: 'volume',
+          description: 'terminal sesini komuttan yonetir',
+          aliases: ['audio', 'sound'],
+          action: () => volumeCommand()
+        },
+        {
+          command: 'scan',
+          description: 'public node tarama efektini baslatir',
+          aliases: ['node scan'],
+          action: scanCommand
+        },
+        {
+          command: 'next',
+          description: 'siradaki public node onerisine gider',
+          aliases: ['continue', 'ileri'],
+          action: nextCommand
+        },
+        {
+          command: 'tour',
+          description: 'sayfa rotasini otomatik gezdirir',
+          aliases: ['guide', 'walkthrough'],
+          action: tourCommand
+        },
+        {
+          command: 'badge',
+          description: 'terminal rozetini gosterir',
+          aliases: ['rank', 'achievement'],
+          action: badgeCommand
         },
         {
           command: 'signal',
@@ -1976,10 +2435,13 @@
         'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
         '',
         'lab:',
-        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe',
+        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe',
         '',
         'system:',
-        'whoami, log, clear, random, shutdown, restart, screen saver, level, access, dashboard, deb, bugy',
+        'whoami, uptime, date, version, memory, ps, log, clear, random, shutdown, restart, screen saver',
+        '',
+        'terminal:',
+        'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
@@ -2179,6 +2641,30 @@
           return;
         }
         const action = commandMap[command];
+        const parameterActions = [
+          ['ls ', value => lsCommand(value)],
+          ['dir ', value => lsCommand(value)],
+          ['cd ', value => cdCommand(value)],
+          ['chdir ', value => cdCommand(value)],
+          ['cat ', value => catCommand(value)],
+          ['type ', value => catCommand(value)],
+          ['find ', value => findCommand(value)],
+          ['search ', value => findCommand(value)],
+          ['theme ', value => themeCommand(value)],
+          ['color ', value => themeCommand(value)],
+          ['volume ', value => volumeCommand(value)],
+          ['audio ', value => volumeCommand(value)],
+          ['sound ', value => volumeCommand(value)],
+          ['pipe ', value => pipeCommand(value)]
+        ];
+        const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
+        if (parameterMatch) {
+          const result = parameterMatch[1](command.slice(parameterMatch[0].length));
+          if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
         if (action) {
           const result = await action();
           if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
@@ -2200,6 +2686,50 @@
 
       commandInput?.addEventListener('keydown', event => {
         const matches = matchingCommands(commandInput.value);
+        if (pipeGame?.active) {
+          const key = event.key.toLowerCase();
+          const pipeShortcutMode = !commandInput.value.trim();
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            movePipeCursor(-1, 0);
+            return;
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            movePipeCursor(1, 0);
+            return;
+          }
+          if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            movePipeCursor(0, -1);
+            return;
+          }
+          if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            movePipeCursor(0, 1);
+            return;
+          }
+          if (pipeShortcutMode && (key === ' ' || key === 'r')) {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = rotatePipe();
+            return;
+          }
+          if (pipeShortcutMode && key === 'f') {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = flowPipe();
+            return;
+          }
+          if (pipeShortcutMode && key === 'q') {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = pipeCommand('quit');
+            return;
+          }
+          if (event.key === 'Enter' && !commandInput.value.trim()) {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = placePipe();
+            return;
+          }
+        }
         if (event.key === 'Enter') {
           event.preventDefault();
           runCommand(commandInput.value);
