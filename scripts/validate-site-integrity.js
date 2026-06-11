@@ -90,10 +90,11 @@ if (!precacheMatch) {
 }
 
 const mustPrecache = [
+  '/offline.html',
   '/assets/css/components.css?v=31',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/supabase-client.js?v=23',
-  '/assets/js/home-protocol.js?v=27',
+  '/assets/js/home-protocol.js?v=28',
   '/assets/js/service-worker-register.js?v=2'
 ];
 

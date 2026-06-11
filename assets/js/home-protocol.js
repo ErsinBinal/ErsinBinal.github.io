@@ -59,6 +59,7 @@
       const routeNames = ['ORIGIN', 'INDEX', 'LAB', 'TRACE', 'MAP', 'ARCHIVE', 'NOTES', 'HIDDEN'];
       const levels = ['GUEST', 'READER', 'OPERATOR', 'INITIATE'];
       const stateKey = 'convivium.protocol.state';
+      const offlineNodeKey = 'convivium.offline.node';
       const defaultState = () => ({
         visits: 0,
         level: 0,
@@ -67,6 +68,7 @@
         commands: 0,
         commandLog: [],
         rituals: 0,
+        offlineNode: false,
         easterTrail: []
       });
       const readState = () => {
@@ -106,6 +108,7 @@
       state.unlocked = Array.isArray(state.unlocked) ? state.unlocked : [];
       state.commandLog = Array.isArray(state.commandLog) ? state.commandLog.slice(-8) : [];
       state.rituals = Number.isFinite(state.rituals) ? state.rituals : 0;
+      state.offlineNode = Boolean(state.offlineNode);
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
@@ -1625,6 +1628,51 @@
         return trail === 'signal>oracle>manifest';
       };
 
+      const readOfflineNode = () => {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(offlineNodeKey) || '{}');
+          return parsed && typeof parsed === 'object' ? parsed : {};
+        } catch {
+          return {};
+        }
+      };
+
+      const writeOfflineNode = (patch = {}) => {
+        try {
+          localStorage.setItem(offlineNodeKey, JSON.stringify({
+            ...readOfflineNode(),
+            ...patch,
+            updatedAt: new Date().toISOString()
+          }));
+        } catch {
+          // Offline node reward is best-effort; it should never block the terminal.
+        }
+      };
+
+      const blackoutCommand = () => {
+        const node = readOfflineNode();
+        if (!node.solved) {
+          return [
+            'blackout: paket yok.',
+            'offline node sadece gercek kesinti aninda cozulur.',
+            'rota: hidden -> Offline Node'
+          ].join('\n');
+        }
+
+        state.offlineNode = true;
+        state.opened = [...new Set([...(state.opened || []), 'hidden'])];
+        award(Math.max(state.level, 3));
+        if (consoleLine) consoleLine.textContent = 'blackout seed recovered';
+        if (microOracle) microOracle.textContent = 'offline node remembered';
+        writeOfflineNode({ claimed: true, claimedAt: node.claimedAt || new Date().toISOString() });
+        return [
+          'blackout packet / recovered',
+          'code: blackout.seed',
+          'internet kesilince site kaybolmadi; kendi hafizasina dustu.',
+          'surprise: hidden rota artik seni offline node uzerinden taniyor.'
+        ].join('\n');
+      };
+
       const unlockHiddenCommand = () => {
         const ritualKeyAccepted = hasEasterKey();
         registerProtocolStep('unlock');
@@ -2356,6 +2404,12 @@
           action: badgeCommand
         },
         {
+          command: 'blackout',
+          description: 'offline node paketini okur',
+          aliases: ['offline node', 'blackout seed', 'return packet'],
+          action: blackoutCommand
+        },
+        {
           command: 'signal',
           description: 'kisa yerel sinyal uretir',
           aliases: ['ping', 'pulse'],
@@ -2568,13 +2622,13 @@
         'whoami, uptime, date, version, memory, ps, log, clear, random, shutdown, restart, screen saver',
         '',
         'terminal:',
-        'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge',
+        'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
                 '',
         'hidden:',
-        'signal -> oracle -> manifest -> unlock hidden, clues'
+        'signal -> oracle -> manifest -> unlock hidden, clues, offline node'
       ].join('\n');
 
       const commandMap = commandDefinitions.reduce((map, item) => {
@@ -3101,6 +3155,18 @@
       }
       if (state.visits > 1 && consoleLine) consoleLine.textContent = 'returning signal detected';
       updateOsSnapshot(state.level, state.visits > 1 ? 'returning.signal' : signals[0]);
+      const offlineNode = readOfflineNode();
+      if (offlineNode.solved) {
+        state.offlineNode = true;
+        state.opened = [...new Set([...(state.opened || []), 'hidden'])];
+        award(Math.max(state.level, 3));
+        if (!offlineNode.welcomed && navigator.onLine) {
+          if (consoleLine) consoleLine.textContent = 'blackout packet delivered / type blackout';
+          if (microOracle) microOracle.textContent = 'offline node returned';
+          updateOsSnapshot(state.level, 'blackout.seed');
+          writeOfflineNode({ welcomed: true, welcomedAt: new Date().toISOString() });
+        }
+      }
       renderProtocolSurfaces();
       persist();
       resizeCanvas();
