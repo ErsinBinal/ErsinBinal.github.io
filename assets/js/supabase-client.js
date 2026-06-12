@@ -393,6 +393,26 @@
     return data;
   }
 
+  async function updateRecommendationOutcome(id, accepted) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) return;
+    const { data, error: fetchError } = await client
+      .from('app_recommendations')
+      .select('recommendation_meta')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single();
+    if (fetchError) throw new Error(toMessage(fetchError));
+    const meta = { ...(data?.recommendation_meta || {}), accepted, outcome_at: new Date().toISOString() };
+    const { error } = await client
+      .from('app_recommendations')
+      .update({ recommendation_meta: meta })
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (error) throw new Error(toMessage(error));
+  }
+
   async function fetchUserAppRecommendations(limit = 25) {
     const client = await requireClient();
     const user = await getUser();
@@ -620,6 +640,7 @@
     fetchUserDartStats,
     fetchOracleProfile,
     upsertOracleProfile,
+    updateRecommendationOutcome,
     slugify
   };
 })();

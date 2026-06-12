@@ -1488,13 +1488,15 @@
 
           const _now = new Date();
           const _profile = loadUserProfile();
-          window.ConviviumActivity?.recordRecommendation({
+          const _recPromise = window.ConviviumActivity?.recordRecommendation({
             recommendation_title: reading.name || reading.code || 'Oracle okuması',
             recommendation_summary: reading.signal || reading.move || '',
             recommendation_meta: {
               code: reading.code,
               axis: reading.axis,
               topic: reading.topic,
+              topic_index: state.topic,
+              choices: state.choices,
               confidence: reading.confidence,
               move: reading.move,
               trap: reading.trap,
@@ -1504,6 +1506,9 @@
               dominant_clues: matrix.clues.slice(0, 3)
             }
           });
+          if (_recPromise && typeof _recPromise.then === 'function') {
+            _recPromise.then(rec => { if (rec?.id) state.current.supabaseRecId = rec.id; }).catch(() => {});
+          }
           updateProtocol(reading);
           renderHistory();
           drawNoise();
@@ -1522,6 +1527,9 @@
         state.current.accepted = accepted;
         persistReading(state.current, accepted);
         mergeReadingIntoProfile(state.current, accepted);
+        if (state.current.supabaseRecId && window.ConviviumBackend?.isConfigured()) {
+          window.ConviviumBackend.updateRecommendationOutcome(state.current.supabaseRecId, accepted).catch(() => {});
+        }
         els.accept.classList.toggle('is-selected-yes', accepted === true);
         els.refuse.classList.toggle('is-selected-no', accepted === false);
         renderHistory();
