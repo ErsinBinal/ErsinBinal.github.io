@@ -417,12 +417,12 @@
   }
 
   function startNewMatch() {
+    ['RED', 'BLUE'].forEach((slot) => { if (cpuConfig[slot]) clearCpu(slot); });
     state = createInitialState();
     hideOverlay();
     render();
     updateSyncStatus();
-    if (!cpuConfig.RED && !cpuConfig.BLUE) els.keyboardInput.focus();
-    scheduleCpuTurn();
+    els.keyboardInput.focus();
   }
 
   function showOverlay(title, text, showReset) {
