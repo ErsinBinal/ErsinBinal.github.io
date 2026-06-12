@@ -1,6 +1,14 @@
 /**
- * ConviviumAudio - small retro audio engine for site UI, apps and games.
- * Web Audio only: no external sound files, limited channels, procedural presets.
+ * ConviviumAudio - retro audio engine for site UI, apps and games.
+ *
+ * Strategy: cues are still procedural (no external sound files), but each cue is
+ * RENDERED ONCE into an AudioBuffer via OfflineAudioContext and cached. Playback
+ * is then a single bufferSource.start() — no live node graph per play. This gives
+ * near-zero latency, perfectly consistent timing (the whole layered cue is baked
+ * in, so no sync drift), and reliable behaviour on mobile.
+ *
+ * Note: on iOS the hardware silent/mute switch mutes ALL Web Audio output; that
+ * is a device setting and cannot be bypassed from code.
  */
 (function () {
   'use strict';
@@ -14,34 +22,30 @@
     ambient: 0.45,
     music: 0.50
   };
+  const LOOKAHEAD = 0.005;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const nowMs = () => (window.performance?.now ? window.performance.now() : Date.now());
 
-  // Scheduling lookahead (s) + shared anchor so every layered sub-sound of one
-  // cue starts from a single base time instead of re-reading ctx.currentTime
-  // after each independent `await getCtx()` (which drifts them out of sync).
-  const LOOKAHEAD = 0.006;
-  let anchorTimeValue = 0;
-  let anchorWall = 0;
-  const anchorTime = () => {
-    if (!ctx) return null;
-    const t = nowMs();
-    if (anchorTimeValue && (t - anchorWall) < 24) return anchorTimeValue;
-    anchorTimeValue = ctx.currentTime + LOOKAHEAD;
-    anchorWall = t;
-    return anchorTimeValue;
-  };
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
 
   let ctx = null;
   let enabled = false;
-  let initialized = false;
-  let activeUntil = [];
-  let channelBudget = 8;
+  let graphReady = false;
+  let primed = false;
+  let prerenderStarted = false;
   let ambientNode = null;
   let musicState = null;
   let lastPointerSfx = null;
   let busVolumes = { ...DEFAULT_BUS_VOLUMES };
+
+  // Cache: undefined = not rendered, null = render failed, object = { buffer, bus }.
+  const bufferCache = Object.create(null);
+  const renderPromises = Object.create(null);
+
+  // When set, tone()/noise() record a layer descriptor instead of synthesizing.
+  let recordTarget = null;
 
   try { enabled = localStorage.getItem(PREF_KEY) === 'true'; } catch {}
   try {
@@ -49,9 +53,10 @@
     if (stored && typeof stored === 'object') busVolumes = { ...busVolumes, ...stored };
   } catch {}
 
-  const graph = {
-    master: null,
-    buses: {}
+  const graph = { master: null, buses: {} };
+
+  const connect = (source, target) => {
+    try { source.connect(target); return true; } catch { return false; }
   };
 
   const safeAudioParam = (param, method, value, time) => {
@@ -65,17 +70,12 @@
     try { localStorage.setItem(BUS_VOLUME_KEY, JSON.stringify(busVolumes)); } catch {}
   };
 
-  const connect = (source, target) => {
-    try {
-      source.connect(target);
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  // ---------------------------------------------------------------------------
+  // Online audio context + mixing graph
+  // ---------------------------------------------------------------------------
 
-  const setupGraph = () => {
-    if (!ctx || initialized) return;
+  const buildGraph = () => {
+    if (!ctx || graphReady) return;
     try {
       graph.master = ctx.createGain();
       graph.master.gain.value = busVolumes.master;
@@ -86,79 +86,59 @@
         connect(gain, graph.master);
         graph.buses[name] = gain;
       });
-      initialized = true;
+      graphReady = true;
     } catch {
-      initialized = false;
+      graphReady = false;
     }
   };
 
-  let primed = false;
-  // Open the audio output route during the first gesture so the very first
-  // real sound isn't delayed while the hardware/route wakes up (notably Safari/iOS).
-  const primeOutput = (c) => {
-    if (primed) return;
+  const busGain = (bus = 'ui') => {
+    if (!graphReady) buildGraph();
+    return graph.buses[bus] || graph.buses.ui || graph.master || (ctx && ctx.destination);
+  };
+
+  const ensureCtx = () => {
+    if (ctx || !AC) return ctx;
+    try {
+      ctx = new AC({ latencyHint: 'interactive' });
+    } catch {
+      try { ctx = new AC(); } catch { return null; }
+    }
+    buildGraph();
+    return ctx;
+  };
+
+  // Open the output route during the first gesture so the very first real sound
+  // isn't delayed while the hardware wakes up (notably Safari/iOS).
+  const primeOutput = () => {
+    if (primed || !ctx) return;
     primed = true;
     try {
-      const buffer = c.createBuffer(1, 1, c.sampleRate);
-      const source = c.createBufferSource();
+      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
       source.buffer = buffer;
-      connect(source, c.destination);
+      connect(source, ctx.destination);
       source.start(0);
     } catch {}
   };
 
-  const getCtx = async () => {
-    if (!enabled) return null;
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return null;
-    if (!ctx) {
-      try {
-        ctx = new AudioContext({ latencyHint: 'interactive' });
-      } catch {
-        try { ctx = new AudioContext(); } catch { return null; }
-      }
-    }
-    setupGraph();
-    if (ctx.state === 'suspended') {
-      try { await ctx.resume(); } catch {}
-    }
-    if (ctx.state === 'running') {
-      primeOutput(ctx);
-      return ctx;
-    }
-    return null;
+  // Called synchronously from a user gesture so resume() counts as activation.
+  const unlock = () => {
+    if (!enabled || !ensureCtx()) return;
+    if (ctx.state !== 'running') { try { ctx.resume(); } catch {} }
+    primeOutput();
+    prerenderAll();
   };
 
-  const warmAudio = () => {
-    if (!enabled) return;
-    getCtx();
-  };
+  // ---------------------------------------------------------------------------
+  // Synthesis primitives (shared by live playback and offline rendering)
+  // ---------------------------------------------------------------------------
 
-  const getBus = (bus = 'ui') => {
-    if (!initialized) setupGraph();
-    return graph.buses[bus] || graph.buses.ui || graph.master || ctx?.destination;
-  };
-
-  const borrowChannel = (duration, offset = 0) => {
-    const t = nowMs();
-    const start = t + Math.max(0, offset) * 1000;
-    const end = start + Math.max(40, Math.ceil((duration || 0.05) * 1000 + 80));
-    activeUntil = activeUntil.filter((item) => item > t);
-    const overlapping = activeUntil.filter((item) => item > start).length;
-    if (overlapping >= channelBudget) return false;
-    activeUntil.push(end);
-    return true;
-  };
-
-  const tone = async (freq, duration = 0.06, opts = {}) => {
-    const baseTime = anchorTime();
-    const c = await getCtx();
-    if (!c || !borrowChannel(duration, opts.offset || 0)) return;
+  const synthTone = (c, dest, freq, duration, opts, start) => {
     try {
-      const base = baseTime != null ? baseTime : c.currentTime + LOOKAHEAD;
-      const start = base + (opts.offset || 0);
-      const end = start + Math.max(0.015, duration);
-      const attack = clamp(opts.attack ?? 0.002, 0.001, duration * 0.45);
+      const dur = Math.max(0.015, duration);
+      const end = start + dur;
+      const attack = clamp(opts.attack ?? 0.002, 0.001, dur * 0.45);
       const volume = clamp(opts.volume ?? 0.04, 0.001, 0.18);
       const quantized = opts.raw ? freq : Math.max(12, Math.round(freq / 4) * 4);
       const osc = c.createOscillator();
@@ -186,20 +166,15 @@
       safeAudioParam(gain.gain, 'linearRampToValueAtTime', volume, start + attack);
       safeAudioParam(gain.gain, 'exponentialRampToValueAtTime', 0.0001, end);
       connect(input, gain);
-      connect(gain, getBus(opts.bus));
+      connect(gain, dest);
       osc.start(start);
       osc.stop(end + 0.03);
     } catch {}
   };
 
-  const noise = async (opts = {}) => {
-    const duration = Math.max(0.012, opts.duration || 0.08);
-    const baseTime = anchorTime();
-    const c = await getCtx();
-    if (!c || !borrowChannel(duration, opts.offset || 0)) return;
+  const synthNoise = (c, dest, opts, start) => {
     try {
-      const base = baseTime != null ? baseTime : c.currentTime + LOOKAHEAD;
-      const start = base + (opts.offset || 0);
+      const duration = Math.max(0.012, opts.duration || 0.08);
       const sampleRate = opts.rate || Math.min(c.sampleRate, 22050);
       const length = Math.max(1, Math.floor(sampleRate * duration));
       const buffer = c.createBuffer(1, length, sampleRate);
@@ -223,10 +198,30 @@
       safeAudioParam(gain.gain, 'exponentialRampToValueAtTime', 0.0001, start + duration);
       connect(source, filter);
       connect(filter, gain);
-      connect(gain, getBus(opts.bus));
+      connect(gain, dest);
       source.start(start);
       source.stop(start + duration + 0.02);
     } catch {}
+  };
+
+  // ---------------------------------------------------------------------------
+  // Recipe layer = tone()/noise() in record mode; live synth otherwise.
+  // ---------------------------------------------------------------------------
+
+  const liveFire = (synthFn) => {
+    if (!enabled || !ensureCtx()) return;
+    if (ctx.state === 'running') synthFn();
+    else { try { ctx.resume().then(synthFn).catch(() => {}); } catch {} }
+  };
+
+  const tone = (freq, duration = 0.06, opts = {}) => {
+    if (recordTarget) { recordTarget.push({ kind: 'tone', freq, duration, opts }); return; }
+    liveFire(() => synthTone(ctx, busGain(opts.bus), freq, duration, opts, ctx.currentTime + LOOKAHEAD + (opts.offset || 0)));
+  };
+
+  const noise = (opts = {}) => {
+    if (recordTarget) { recordTarget.push({ kind: 'noise', opts }); return; }
+    liveFire(() => synthNoise(ctx, busGain(opts.bus), opts, ctx.currentTime + LOOKAHEAD + (opts.offset || 0)));
   };
 
   const sequence = (steps = [], opts = {}) => {
@@ -249,6 +244,10 @@
       });
     });
   };
+
+  // ---------------------------------------------------------------------------
+  // Cue recipes (unchanged sound design)
+  // ---------------------------------------------------------------------------
 
   const sounds = {
     'ui.click': () => sequence([
@@ -562,15 +561,114 @@
     refuse: 'oracle.refuse'
   };
 
-  const play = (name, opts = {}) => {
-    const key = aliases[name] || name;
+  // ---------------------------------------------------------------------------
+  // Offline render + cache
+  // ---------------------------------------------------------------------------
+
+  const captureLayers = (key) => {
     const fn = sounds[key];
-    if (typeof fn === 'function') {
-      fn(opts);
+    if (!fn) return null;
+    const prev = recordTarget;
+    recordTarget = [];
+    try { fn(); } catch {}
+    const layers = recordTarget;
+    recordTarget = prev;
+    return layers;
+  };
+
+  const layerEnd = (layer) => {
+    if (layer.kind === 'tone') {
+      return (layer.opts.offset || 0) + Math.max(0.015, layer.duration || 0.06) + 0.06;
+    }
+    return (layer.opts.offset || 0) + Math.max(0.012, layer.opts.duration || 0.08) + 0.04;
+  };
+
+  const cueBus = (layers) => {
+    for (let i = 0; i < layers.length; i += 1) {
+      const b = layers[i].opts && layers[i].opts.bus;
+      if (b) return b;
+    }
+    return 'ui';
+  };
+
+  const renderCue = (key) => {
+    if (!OAC) return Promise.resolve(null);
+    const layers = captureLayers(key);
+    if (!layers || !layers.length) return Promise.resolve(null);
+    const sampleRate = (ctx && ctx.sampleRate) || 44100;
+    let total = 0.05;
+    layers.forEach((l) => { total = Math.max(total, layerEnd(l)); });
+    const length = Math.max(1, Math.ceil(total * sampleRate));
+    let octx;
+    try { octx = new OAC(1, length, sampleRate); } catch { return Promise.resolve(null); }
+    layers.forEach((l) => {
+      if (l.kind === 'tone') synthTone(octx, octx.destination, l.freq, l.duration, l.opts, l.opts.offset || 0);
+      else synthNoise(octx, octx.destination, l.opts, l.opts.offset || 0);
+    });
+    return octx.startRendering()
+      .then((buffer) => ({ buffer, bus: cueBus(layers) }))
+      .catch(() => null);
+  };
+
+  const getCueEntry = (key) => {
+    if (bufferCache[key] !== undefined) return Promise.resolve(bufferCache[key]);
+    if (!renderPromises[key]) {
+      renderPromises[key] = renderCue(key).then((entry) => {
+        bufferCache[key] = entry;
+        delete renderPromises[key];
+        return entry;
+      });
+    }
+    return renderPromises[key];
+  };
+
+  const prerenderAll = () => {
+    if (prerenderStarted || !OAC) return;
+    prerenderStarted = true;
+    const keys = Object.keys(sounds);
+    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 0));
+    let i = 0;
+    const step = () => {
+      if (i >= keys.length) return;
+      const key = keys[i++];
+      if (bufferCache[key] !== undefined) { idle(step); return; }
+      getCueEntry(key).finally(() => idle(step));
+    };
+    step();
+  };
+
+  // ---------------------------------------------------------------------------
+  // Playback
+  // ---------------------------------------------------------------------------
+
+  const playBuffer = (entry) => {
+    if (!entry || !entry.buffer || !ctx) return;
+    if (ctx.state !== 'running') { try { ctx.resume(); } catch {} }
+    try {
+      const source = ctx.createBufferSource();
+      source.buffer = entry.buffer;
+      connect(source, busGain(entry.bus));
+      source.start();
+    } catch {}
+  };
+
+  const play = (name, opts = {}) => {
+    if (!enabled) return false;
+    const key = aliases[name] || name;
+    if (!sounds[key]) return false;
+    unlock();
+    const cached = bufferCache[key];
+    if (cached !== undefined) {
+      if (cached) playBuffer(cached);
       return true;
     }
-    return false;
+    getCueEntry(key).then((entry) => { if (entry && enabled) playBuffer(entry); });
+    return true;
   };
+
+  // ---------------------------------------------------------------------------
+  // Background music (rendered once, looped)
+  // ---------------------------------------------------------------------------
 
   const patterns = {
     terminal: {
@@ -614,49 +712,87 @@
     }
   };
 
+  const renderPattern = (name) => {
+    if (!OAC) return Promise.resolve(null);
+    const pattern = patterns[name] || patterns.terminal;
+    const stepLen = 60000 / pattern.bpm / 2 / 1000;
+    const total = pattern.steps.length * stepLen;
+    const sampleRate = (ctx && ctx.sampleRate) || 44100;
+    let octx;
+    try { octx = new OAC(1, Math.max(1, Math.ceil(total * sampleRate)), sampleRate); } catch { return Promise.resolve(null); }
+    pattern.steps.forEach((step, idx) => {
+      if (!step) return;
+      const at = idx * stepLen;
+      if (step.noise) {
+        synthNoise(octx, octx.destination, { ...step.noise }, at);
+        return;
+      }
+      synthTone(octx, octx.destination, step.freq || step[0] || 220, step.duration || step[1] || 0.06, {
+        type: step.type || step[2] || 'square',
+        volume: step.volume || step[3] || 0.012,
+        slide: step.slide,
+        filter: step.filter
+      }, at);
+    });
+    return octx.startRendering().then((buffer) => buffer).catch(() => null);
+  };
+
   const stopMusic = () => {
     if (!musicState) return;
-    window.clearInterval(musicState.timer);
+    try { if (musicState.source) musicState.source.stop(); } catch {}
     musicState = null;
   };
 
   const startMusic = (name = 'terminal') => {
     stopMusic();
-    const pattern = patterns[name] || patterns.terminal;
-    const stepMs = 60000 / pattern.bpm / 2;
-    let index = 0;
-    const tick = () => {
-      if (!enabled) return;
-      const step = pattern.steps[index % pattern.steps.length];
-      sequence([step], { bus: 'music' });
-      index += 1;
-    };
-    tick();
-    musicState = { name, timer: window.setInterval(tick, stepMs) };
+    if (!enabled) return;
+    unlock();
+    const token = {};
+    musicState = { name, source: null, token };
+    renderPattern(name).then((buffer) => {
+      if (!musicState || musicState.token !== token) return;
+      if (!buffer || !ctx || ctx.state !== 'running') return;
+      try {
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        connect(source, busGain('music'));
+        source.start();
+        musicState.source = source;
+      } catch {}
+    });
   };
 
-  const startAmbient = async () => {
-    const c = await getCtx();
-    if (!c || ambientNode) return;
-    try {
-      const sampleRate = Math.min(c.sampleRate, 22050);
-      const buffer = c.createBuffer(1, sampleRate * 3, sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.14;
-      const source = c.createBufferSource();
-      const filter = c.createBiquadFilter();
-      const gain = c.createGain();
-      source.buffer = buffer;
-      source.loop = true;
-      filter.type = 'lowpass';
-      filter.frequency.value = 240;
-      gain.gain.value = 0.018;
-      connect(source, filter);
-      connect(filter, gain);
-      connect(gain, getBus('ambient'));
-      source.start();
-      ambientNode = { source, gain };
-    } catch {}
+  // ---------------------------------------------------------------------------
+  // Ambient bed (looping filtered noise)
+  // ---------------------------------------------------------------------------
+
+  const startAmbient = () => {
+    if (!enabled || ambientNode || !ensureCtx()) return;
+    const build = () => {
+      if (ambientNode || !ctx || ctx.state !== 'running') return;
+      try {
+        const sampleRate = Math.min(ctx.sampleRate, 22050);
+        const buffer = ctx.createBuffer(1, sampleRate * 3, sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.14;
+        const source = ctx.createBufferSource();
+        const filter = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        source.buffer = buffer;
+        source.loop = true;
+        filter.type = 'lowpass';
+        filter.frequency.value = 240;
+        gain.gain.value = 0.018;
+        connect(source, filter);
+        connect(filter, gain);
+        connect(gain, busGain('ambient'));
+        source.start();
+        ambientNode = { source, gain };
+      } catch {}
+    };
+    if (ctx.state === 'running') build();
+    else { try { ctx.resume().then(build).catch(() => {}); } catch {} }
   };
 
   const stopAmbient = () => {
@@ -664,6 +800,10 @@
     try { ambientNode.source.stop(); } catch {}
     ambientNode = null;
   };
+
+  // ---------------------------------------------------------------------------
+  // Enable / toggle UI
+  // ---------------------------------------------------------------------------
 
   const syncToggles = () => {
     document.querySelectorAll('[data-sfx-toggle]').forEach((el) => {
@@ -683,7 +823,7 @@
       stopAmbient();
       return;
     }
-    warmAudio();
+    unlock();
     if (withSound) play('ui.toggleOn');
   };
 
@@ -719,8 +859,12 @@
     document.body.appendChild(btn);
   };
 
+  // ---------------------------------------------------------------------------
+  // Event delegation
+  // ---------------------------------------------------------------------------
+
   const sfxTarget = (event, includeLinks = true) => {
-    if (!enabled) return;
+    if (!enabled) return null;
     const selector = includeLinks
       ? 'button:not([data-sfx-skip]), [role="button"]:not([data-sfx-skip]), a[href]:not([data-sfx-skip])'
       : 'button:not([data-sfx-skip]), [role="button"]:not([data-sfx-skip])';
@@ -738,7 +882,7 @@
   };
 
   ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
-    document.addEventListener(eventName, warmAudio, { capture: true, passive: true });
+    document.addEventListener(eventName, unlock, { capture: true, passive: true });
   });
 
   document.addEventListener('pointerdown', (event) => {
@@ -751,13 +895,7 @@
   document.addEventListener('click', (event) => {
     const el = sfxTarget(event, true);
     if (!el) return;
-    if (
-      lastPointerSfx &&
-      lastPointerSfx.el === el &&
-      nowMs() - lastPointerSfx.at < 480
-    ) {
-      return;
-    }
+    if (lastPointerSfx && lastPointerSfx.el === el && nowMs() - lastPointerSfx.at < 480) return;
     playForElement(el);
   });
 
@@ -778,16 +916,13 @@
   window.addEventListener('convivium:audio', handleAudioEvent);
   document.addEventListener('convivium:audio', handleAudioEvent);
 
+  // ---------------------------------------------------------------------------
+  // Public API
+  // ---------------------------------------------------------------------------
+
   const api = {
     get enabled() { return enabled; },
     get context() { return ctx; },
-    get channels() {
-      const t = nowMs();
-      activeUntil = activeUntil.filter((item) => item > t);
-      return activeUntil.length;
-    },
-    get maxChannels() { return channelBudget; },
-    set maxChannels(value) { channelBudget = clamp(Number(value) || 8, 1, 24); },
     get busVolumes() { return { ...busVolumes }; },
     setEnabled,
     setBusVolume,
@@ -800,6 +935,7 @@
     noise,
     sequence,
     pulse: (freq = 220, duration = 0.045) => tone(freq, duration, { type: 'sine', volume: 0.036 }),
+    prerender: prerenderAll,
     click: () => play('click'),
     nav: () => play('nav'),
     select: () => play('select'),
