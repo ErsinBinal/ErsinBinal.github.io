@@ -10,6 +10,16 @@
     RED: 'Kirmizi Oyuncu',
     BLUE: 'Mavi Oyuncu'
   };
+
+  const CPU_PLAYERS = [
+    { id: 'littler',   name: 'Luke Littler',   nick: 'The Nuke',       year: 2025, trebleRate: 0.52, doubleRate: 0.43, pressureBoost: 0.18 },
+    { id: 'humphries', name: 'Luke Humphries',  nick: 'Cool Hand Luke', year: 2024, trebleRate: 0.49, doubleRate: 0.41, pressureBoost: 0.15 },
+    { id: 'msmith',    name: 'Michael Smith',   nick: 'Bully Boy',      year: 2023, trebleRate: 0.47, doubleRate: 0.38, pressureBoost: 0.12 },
+    { id: 'wright',    name: 'Peter Wright',    nick: 'Snakebite',      year: 2022, trebleRate: 0.46, doubleRate: 0.37, pressureBoost: 0.10 },
+    { id: 'price',     name: 'Gerwyn Price',    nick: 'The Iceman',     year: 2021, trebleRate: 0.48, doubleRate: 0.39, pressureBoost: 0.13 }
+  ];
+
+  const cpuConfig = { RED: null, BLUE: null };
   const checkoutRoutes = {
     170: 'T20 - T20 - BULL',
     167: 'T20 - T19 - BULL',
@@ -142,6 +152,7 @@
   }
 
   function displayName(slot) {
+    if (cpuConfig[slot]) return cpuConfig[slot].name;
     return slotAuth[slot].label || SLOT_NAMES[slot];
   }
 
@@ -378,6 +389,7 @@
     state.currentTurnStartScore = state.scores[state.currentTurn];
     state.isResolving = false;
     render();
+    scheduleCpuTurn();
   }
 
   function undoLastAction() {
@@ -406,7 +418,8 @@
     hideOverlay();
     render();
     updateSyncStatus();
-    els.keyboardInput.focus();
+    if (!cpuConfig.RED && !cpuConfig.BLUE) els.keyboardInput.focus();
+    scheduleCpuTurn();
   }
 
   function showOverlay(title, text, showReset) {
@@ -500,6 +513,102 @@
     }
   }
 
+  function cpuSimDart(cpu, remaining, isPressure) {
+    const boost = isPressure ? cpu.pressureBoost : 0;
+    const r = Math.random();
+
+    if (remaining === 50) {
+      const h = Math.min(0.60, cpu.doubleRate + boost);
+      if (r < h) return 50;
+      if (r < h + 0.20) return 25;
+      return Math.floor(Math.random() * 8) + 1;
+    }
+
+    if (remaining >= 2 && remaining <= 40 && remaining % 2 === 0) {
+      const h = Math.min(0.62, cpu.doubleRate + boost);
+      if (r < h) return remaining;
+      if (r < h + 0.20) return remaining / 2;
+      return 0;
+    }
+
+    const treble = Math.min(0.62, cpu.trebleRate + boost);
+
+    if (!isPressure) {
+      if (r < treble * 0.50) return 60;
+      if (r < treble * 0.50 + 0.07) return 57;
+      if (r < treble * 0.50 + 0.14) return 40;
+      if (r < treble * 0.50 + 0.24) return 20;
+      if (r < treble * 0.50 + 0.38) return Math.floor(Math.random() * 15) + 5;
+      return Math.floor(Math.random() * 20) + 1;
+    }
+
+    if (r < treble) return 60;
+    if (r < treble + 0.08) return 57;
+    if (r < treble + 0.16) return 40;
+    if (r < treble + 0.26) return 20;
+    if (r < treble + 0.40) return Math.floor(Math.random() * 10) + 10;
+    return Math.floor(Math.random() * 10) + 1;
+  }
+
+  function playCpuDarts(slot) {
+    if (state.currentTurn !== slot || state.isComplete || state.isResolving) return;
+    if (state.currentSetDarts.length >= 3) return;
+
+    const cpu = cpuConfig[slot];
+    if (!cpu) return;
+
+    const oppSlot = slot === 'RED' ? 'BLUE' : 'RED';
+    const isPressure = state.scores[oppSlot] <= 50;
+    const remaining = state.scores[slot];
+
+    addDart(cpuSimDart(cpu, remaining, isPressure));
+
+    if (!state.isComplete && !state.isResolving && state.currentTurn === slot && state.currentSetDarts.length < 3) {
+      window.setTimeout(() => playCpuDarts(slot), 680);
+    }
+  }
+
+  function scheduleCpuTurn() {
+    const slot = state.currentTurn;
+    if (!cpuConfig[slot] || state.isComplete) return;
+    window.setTimeout(() => playCpuDarts(slot), 900);
+  }
+
+  function selectCpu(slot, cpuId) {
+    const cpu = CPU_PLAYERS.find((p) => p.id === cpuId);
+    if (!cpu) return;
+
+    if (cpuConfig[slot]?.id === cpuId) {
+      clearCpu(slot);
+      return;
+    }
+
+    cpuConfig[slot] = cpu;
+    const nameEl = slot === 'RED' ? els.redAuthName : els.blueAuthName;
+    nameEl.textContent = cpu.name;
+    setSlotStatus(slot, `CPU · ${cpu.year} · ${cpu.nick}`);
+
+    const grid = document.getElementById(slot === 'RED' ? 'redCpuGrid' : 'blueCpuGrid');
+    grid.querySelectorAll('.dart-cpu-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.cpuId === cpuId);
+    });
+
+    render();
+    updateSyncStatus();
+  }
+
+  function clearCpu(slot) {
+    cpuConfig[slot] = null;
+    const nameEl = slot === 'RED' ? els.redAuthName : els.blueAuthName;
+    nameEl.textContent = slotAuth[slot].label || SLOT_NAMES[slot];
+    const auth = slotAuth[slot];
+    setSlotStatus(slot, auth.user ? `Aktif: ${auth.user.email || auth.user.id}` : 'Misafir.');
+    const grid = document.getElementById(slot === 'RED' ? 'redCpuGrid' : 'blueCpuGrid');
+    grid.querySelectorAll('.dart-cpu-btn').forEach((btn) => btn.classList.remove('is-active'));
+    render();
+    updateSyncStatus();
+  }
+
   function renderBadges() {
     els.dartBadges.replaceChildren();
     for (let index = 0; index < 3; index += 1) {
@@ -524,8 +633,10 @@
   }
 
   function renderControls() {
-    const disabled = state.isResolving || state.isComplete;
-    els.undoButton.disabled = disabled || !state.history.length || Boolean(state.persistedMatchId);
+    const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
+    const disabled = state.isResolving || state.isComplete || isCpuTurn;
+    const anyCpu = Boolean(cpuConfig.RED || cpuConfig.BLUE);
+    els.undoButton.disabled = disabled || !state.history.length || Boolean(state.persistedMatchId) || anyCpu;
     els.keyboardInput.disabled = disabled;
     els.manualForm.querySelector('button').disabled = disabled;
     document.querySelectorAll('.dart-keypad button').forEach((button) => {
@@ -534,7 +645,10 @@
   }
 
   function render() {
-    els.turnIndicator.textContent = `Siradaki: ${displayName(state.currentTurn)}`;
+    const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
+    els.turnIndicator.textContent = isCpuTurn
+      ? `${displayName(state.currentTurn)} düşünüyor...`
+      : `Siradaki: ${displayName(state.currentTurn)}`;
     els.scoreRED.textContent = state.scores.RED;
     els.scoreBLUE.textContent = state.scores.BLUE;
     els.labelRED.textContent = displayName('RED');
@@ -620,6 +734,12 @@
     }
 
     addDart(Number(button.dataset.score));
+  });
+
+  document.querySelector('.dart-auth-grid').addEventListener('click', (event) => {
+    const btn = event.target.closest('.dart-cpu-btn');
+    if (!btn) return;
+    selectCpu(btn.dataset.slot, btn.dataset.cpuId);
   });
 
   render();

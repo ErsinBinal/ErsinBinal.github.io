@@ -229,6 +229,66 @@
   margin: 10px 0 0;
 }
 
+.dart-cpu-section {
+  margin-top: 12px;
+}
+
+.dart-cpu-divider {
+  display: block;
+  text-align: center;
+  font-size: 0.70rem;
+  letter-spacing: 0.10em;
+  color: var(--dart-muted);
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.dart-cpu-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.dart-cpu-btn {
+  display: grid;
+  gap: 2px;
+  padding: 6px 2px;
+  font: inherit;
+  border: 1px solid var(--dart-line);
+  border-radius: 6px;
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--dart-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.14s, color 0.14s, background 0.14s;
+}
+
+.dart-cpu-btn span {
+  display: block;
+  font-size: 0.62rem;
+  opacity: 0.65;
+}
+
+.dart-cpu-btn strong {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dart-cpu-btn:hover {
+  border-color: var(--dart-amber);
+  color: #fff;
+}
+
+.dart-cpu-btn.is-active {
+  border-color: var(--dart-amber);
+  background: rgba(245, 158, 11, 0.14);
+  color: var(--dart-amber);
+}
+
 .dart-player {
   position: relative;
   display: grid;
