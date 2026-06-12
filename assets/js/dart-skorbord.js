@@ -609,21 +609,12 @@
     if (button.dataset.multiplier) {
       const multiplier = Number(button.dataset.multiplier);
       const inputValue = Number(els.keyboardInput.value);
-      if (!els.keyboardInput.value || Number.isNaN(inputValue) || inputValue < 0 || inputValue > 60) {
-        showOverlay('Gecersiz deger', `${multiplier}× icin once ok skorunu (0-60) girin.`, false);
-        window.setTimeout(hideOverlay, 1400);
+      if (!els.keyboardInput.value || Number.isNaN(inputValue) || inputValue < 0) {
         els.keyboardInput.focus();
         return;
       }
       const result = inputValue * multiplier;
-      if (result > 60) {
-        showOverlay('Gecersiz deger', `${inputValue} × ${multiplier} = ${result} — maksimum ok skoru 60'tir.`, false);
-        window.setTimeout(hideOverlay, 1600);
-        els.keyboardInput.focus();
-        return;
-      }
-      els.keyboardInput.value = '';
-      addDart(result);
+      els.keyboardInput.value = String(result);
       els.keyboardInput.focus();
       return;
     }
