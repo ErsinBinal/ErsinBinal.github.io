@@ -100,7 +100,7 @@
   <button class="access-chip" id="access-chip-button" type="button" aria-label="Erisim durumunu ac">
     ACCESS <strong id="access-chip">INITIATE</strong>
   </button>
-  <button class="sound-toggle" type="button" id="sound-toggle" aria-pressed="false">audio off</button>
+  <button class="sound-toggle" type="button" id="sound-toggle" data-sfx-toggle aria-pressed="false">audio off</button>
   <button class="mobile-command-button" id="mobile-command-button" type="button" aria-label="Komut satırını aç">CMD</button>
 
   <section class="command-shell" id="command-shell" role="dialog" aria-modal="false" aria-label="Komut satırı" aria-hidden="true">
@@ -457,7 +457,8 @@
   <script src="/assets/js/supabase-client.js?v=23"></script>
 
   <!-- Journey Interaction Layer -->
-  <script src="/assets/js/home-protocol.js?v=31" defer></script>
+  <script src="/assets/js/sfx.js" defer></script>
+  <script src="/assets/js/home-protocol.js?v=32" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=2" defer></script>

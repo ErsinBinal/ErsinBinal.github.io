@@ -112,16 +112,9 @@
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
-      const audioPreferenceKey = 'convivium.audio.enabled';
-      const masterVolume = 1.65;
       let signalIndex = 0;
-      let audioEnabled = false;
-      try {
-        audioEnabled = localStorage.getItem(audioPreferenceKey) === 'true';
-      } catch {
-        audioEnabled = false;
-      }
-      let audioContext = null;
+      let audioEnabled = window.ConviviumSFX?.enabled ?? false;
+      let audioContext = null; // artık ConviviumSFX yönetiyor; eski kod uyumluluğu için bırakıldı
       let commandInFlight = false;
       let commandHistoryIndex = -1;
       let activeSuggestionIndex = 0;
@@ -409,109 +402,21 @@
 
       const setAudioEnabled = (enabled, shouldPulse = false) => {
         audioEnabled = Boolean(enabled);
-        try {
-          localStorage.setItem(audioPreferenceKey, String(audioEnabled));
-        } catch {
-          // Audio preference persistence is optional; the current page state still works.
-        }
+        window.ConviviumSFX?.setEnabled?.(audioEnabled, shouldPulse);
         if (soundToggle) {
           soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
           soundToggle.setAttribute('aria-pressed', String(audioEnabled));
         }
         persistUserPreferences({ audioEnabled });
-        if (shouldPulse) pulse(audioEnabled ? 520 : 180, audioEnabled ? 0.07 : 0.04);
-      };
-
-      const getAudioContext = () => {
-        if (!audioEnabled) return;
-        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContextClass) return;
-        audioContext ||= new AudioContextClass();
-        const resume = audioContext.resume?.();
-        if (resume?.catch) resume.catch(() => {});
-        return audioContext;
       };
 
       const pulse = (frequency = 220, duration = 0.045) => {
-        const context = getAudioContext();
-        if (!context) return;
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.frequency.value = frequency;
-        oscillator.type = 'sine';
-        gain.gain.setValueAtTime(0.0001, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(Math.min(0.12, 0.045 * masterVolume), context.currentTime + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
-        oscillator.connect(gain).connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + duration + 0.02);
-      };
-
-      const playPowerNoise = (startFrequency, endFrequency, duration, volume = 0.055) => {
-        const context = getAudioContext();
-        if (!context) return;
-        const frameCount = Math.max(1, Math.floor(context.sampleRate * duration));
-        const buffer = context.createBuffer(1, frameCount, context.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let index = 0; index < frameCount; index += 1) {
-          const fade = 1 - (index / frameCount) * 0.62;
-          data[index] = (Math.random() * 2 - 1) * fade;
-        }
-
-        const source = context.createBufferSource();
-        const filter = context.createBiquadFilter();
-        const gain = context.createGain();
-        const now = context.currentTime;
-        source.buffer = buffer;
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(startFrequency, now);
-        filter.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), now + duration);
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.linearRampToValueAtTime(Math.min(0.14, volume * masterVolume), now + Math.min(0.14, duration / 4));
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-        source.connect(filter).connect(gain).connect(context.destination);
-        source.start(now);
-        source.stop(now + duration + 0.04);
-      };
-
-      const playPowerBeep = (frequency, offset, duration, type = 'square', volume = 0.04) => {
-        const context = getAudioContext();
-        if (!context) return;
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        const start = context.currentTime + offset;
-        oscillator.type = type;
-        oscillator.frequency.setValueAtTime(frequency, start);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(Math.min(0.12, volume * masterVolume), start + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-        oscillator.connect(gain).connect(context.destination);
-        oscillator.start(start);
-        oscillator.stop(start + duration + 0.025);
+        window.ConviviumSFX?.pulse?.(frequency, duration);
       };
 
       const playPowerSound = (mode) => {
-        if (!getAudioContext()) return;
-        if (mode === 'boot') {
-          playPowerNoise(220, 2600, 1.45, 0.052);
-          playPowerBeep(330, 0.08, 0.07, 'square', 0.03);
-          playPowerBeep(660, 0.28, 0.08, 'square', 0.034);
-          playPowerBeep(880, 0.46, 0.11, 'triangle', 0.032);
-          return;
-        }
-        if (mode === 'shutdown') {
-          playPowerNoise(1900, 90, 1.25, 0.05);
-          playPowerBeep(420, 0.08, 0.08, 'square', 0.034);
-          playPowerBeep(260, 0.34, 0.12, 'triangle', 0.032);
-          playPowerBeep(120, 0.76, 0.18, 'sine', 0.03);
-          return;
-        }
-        if (mode === 'restart') {
-          playPowerNoise(1500, 420, 0.36, 0.04);
-          playPowerBeep(520, 0.04, 0.06, 'square', 0.032);
-          playPowerBeep(520, 0.16, 0.06, 'square', 0.032);
-          playPowerBeep(740, 0.34, 0.08, 'triangle', 0.034);
-        }
+        if (!audioEnabled) return;
+        window.ConviviumSFX?.[mode]?.();
       };
 
       const updateAccess = () => {
