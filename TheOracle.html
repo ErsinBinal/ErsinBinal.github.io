@@ -13,6 +13,7 @@
   <meta property="og:description" content="Kapalı işaretler ve yalın kehanet motoru.">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#050505">
+  <meta name="convivium-oracle-endpoint" content="https://convivium-oracle.convivium.workers.dev">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -973,6 +974,7 @@
     (() => {
       const STORAGE_KEY = 'convivium.oracle.ritual.v1';
       const PROTOCOL_KEY = 'convivium.protocol.state';
+      const ORACLE_ENDPOINT = (document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content || '').trim();
       const glyphs = ['◇', '△', '□', '◌', '✣', '✦', '⌁', '⌬', '⟡', '⊙', '◈', '⌖'];
 
       const axisLabels = {
@@ -1500,6 +1502,32 @@
         }, 340);
       };
 
+      // ── Oracle AI yorumu ───────────────────────────────────
+      const fetchOracleHint = async (reading) => {
+        if (!ORACLE_ENDPOINT) return;
+        const question = `Konu: ${reading.topic}. Eksen: ${reading.axis}. Clue: ${(reading.clues || []).slice(0, 3).join(', ')}. Guven: ${reading.confidence}%. Okuma adi: ${reading.name}. İşaret: ${reading.signal}. Bu okumaya tek cumleyle, Oracle sesiyle, gizemli ve kisa bir yorum ekle.`;
+        try {
+          const controller = new AbortController();
+          const t = window.setTimeout(() => controller.abort(), 15000);
+          const res = await fetch(ORACLE_ENDPOINT, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question })
+          });
+          window.clearTimeout(t);
+          if (!res.ok) return;
+          const data = await res.json();
+          const hint = (data?.answer || '').replace(/^oracle:\s*/i, '').trim();
+          if (!hint || data?.degraded) return;
+          const hintRow = row('ses', hint);
+          els.output.appendChild(hintRow);
+          window.setTimeout(() => hintRow.classList.add('is-visible'), 80);
+        } catch {
+          // sessiz hata
+        }
+      };
+
       // ── Okuma ─────────────────────────────────────────────
       const drawReading = () => {
         if (state.busy) return;
@@ -1529,6 +1557,7 @@
             ? [row('ayna', 'Bu işaretleri daha önce bıraktın. Oracle, denemeyi okur — ama aynı kapıdan iki kez geçilmez. Soru değişti mi, yoksa sadece cevap mı?'), ...readingRows(reading)]
             : readingRows(reading);
           revealRows(outputRows);
+          fetchOracleHint(reading);
           els.postActions.classList.add('is-visible');
           state.busy = false;
           els.ritualPanel?.classList.remove('is-reading');
