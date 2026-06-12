@@ -1300,24 +1300,70 @@
         return score;
       };
 
-      const pickAnswer = (matrix, seed) => allAnswers.reduce((best, a) => {
-        const s = answerFit(a, matrix, seed);
-        return !best || s > best.score ? { answer: a, score: s } : best;
-      }, null).answer;
+      const combinationKey = () => `${state.topic}:${state.choices.join(',')}`;
+
+      const pickAnswer = (matrix, seed, extraPenaltyCodes = new Map()) => {
+        const store = loadStore();
+        // Son 7 okumanın kodlarına azalan ceza (en yakın = en yüksek ceza)
+        const recentPenalty = new Map();
+        store.readings.slice(0, 7).forEach((r, i) => {
+          if (r.code) recentPenalty.set(r.code, Math.max(recentPenalty.get(r.code) || 0, 42 - i * 5));
+        });
+
+        return allAnswers.reduce((best, a) => {
+          let s = answerFit(a, matrix, seed);
+          if (recentPenalty.has(a.code)) s -= recentPenalty.get(a.code);
+          if (extraPenaltyCodes.has(a.code)) s -= extraPenaltyCodes.get(a.code);
+          return !best || s > best.score ? { answer: a, score: s } : best;
+        }, null).answer;
+      };
+
+      // Tam eşleşme: aynı konu + aynı 3 seçim
+      const isDuplicateCombination = () => {
+        const key = combinationKey();
+        return loadStore().readings.some(r => r.combinationKey === key);
+      };
+
+      // Yakın eşleşme: aynı konu + en az 2/3 aynı seçim
+      const nearDuplicateCode = () => {
+        const [ct, cc] = [String(state.topic), state.choices.join(',')];
+        const cArr = cc.split(',');
+        for (const r of loadStore().readings) {
+          if (!r.combinationKey) continue;
+          const [rt, rc] = r.combinationKey.split(':');
+          if (rt !== ct) continue;
+          const rArr = rc.split(',');
+          const matches = cArr.filter((v, i) => v === rArr[i]).length;
+          if (matches >= 2 && r.code) return r.code;
+        }
+        return null;
+      };
 
       // ── Okuma oluştur ──────────────────────────────────────
-      const createReading = () => {
+      const createReading = (isDuplicate = false) => {
         const matrix = calculateMatrix();
         const topicLabel = state.topic !== null ? topics[state.topic].label : 'genel';
-        const seed = hashText([topicLabel, state.choices.join(','), state.stirOffset].join('|'));
-        const answer = pickAnswer(matrix, seed);
+
+        // Yakın kombinasyona ek ceza: o okumanın kodu tekrar çıkmasın
+        const extraPenalty = new Map();
+        const nearCode = nearDuplicateCode();
+        if (nearCode) extraPenalty.set(nearCode, 55);
+
+        // Tam kopya ise seed'i sert kaydır — farklı bir ses çıksın
+        const seedBase = isDuplicate
+          ? hashText([topicLabel, state.choices.join(','), state.stirOffset, 'mirror', Date.now()].join('|'))
+          : hashText([topicLabel, state.choices.join(','), state.stirOffset].join('|'));
+
+        const answer = pickAnswer(matrix, seedBase, extraPenalty);
         const meta = confidenceMeta(matrix.confidence);
-        state.entropy = seed % 1000003;
+        state.entropy = seedBase % 1000003;
 
         return {
-          id: `${answer.code}-${seed.toString(36)}-${Date.now().toString(36)}`,
+          id: `${answer.code}-${seedBase.toString(36)}-${Date.now().toString(36)}`,
           createdAt: new Date().toISOString(),
           topic: topicLabel,
+          combinationKey: combinationKey(),
+          isDuplicate,
           accepted: null,
           rarity: meta.rarity,
           rarityLabel: meta.label,
@@ -1468,16 +1514,21 @@
         els.stamp.textContent = 'okuyor';
 
         const matrix = calculateMatrix();
+        const duplicate = isDuplicateCombination();
+
         revealRows([
-          row('iz', `${joinClues(matrix.clues.slice(0, 2))} kıpırdıyor.`),
+          row('iz', duplicate ? 'Bu işaretler tanıdık. Oracle, aynı yoldan farklı bir sesle geçiyor.' : `${joinClues(matrix.clues.slice(0, 2))} kıpırdıyor.`),
           row('okuma', 'Oracle cevabı arıyor...')
         ]);
 
         window.setTimeout(() => {
-          const reading = createReading();
+          const reading = createReading(duplicate);
           state.current = reading;
           setHero(reading);
-          revealRows(readingRows(reading));
+          const outputRows = duplicate
+            ? [row('ayna', 'Bu işaretleri daha önce bıraktın. Oracle, denemeyi okur — ama aynı kapıdan iki kez geçilmez. Soru değişti mi, yoksa sadece cevap mı?'), ...readingRows(reading)]
+            : readingRows(reading);
+          revealRows(outputRows);
           els.postActions.classList.add('is-visible');
           state.busy = false;
           els.ritualPanel?.classList.remove('is-reading');
