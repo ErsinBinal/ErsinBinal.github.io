@@ -467,6 +467,44 @@
     return data || [];
   }
 
+  async function fetchOracleProfile() {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) return null;
+    const { data, error } = await client
+      .from('oracle_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function upsertOracleProfile(profileData) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Oracle profili icin once giris yapmalisiniz.');
+    const payload = {
+      user_id: user.id,
+      reading_count: Math.max(0, Number(profileData.reading_count) || 0),
+      accepted_count: Math.max(0, Number(profileData.accepted_count) || 0),
+      refused_count: Math.max(0, Number(profileData.refused_count) || 0),
+      axis_scores: profileData.axis_scores || {},
+      accepted_axes: profileData.accepted_axes || {},
+      refused_axes: profileData.refused_axes || {},
+      dominant_axis: profileData.dominant_axis || null,
+      last_reading_at: profileData.last_reading_at || new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await client
+      .from('oracle_profiles')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
   async function fetchUserDartStats(limit = 12) {
     const client = await requireClient();
     const user = await getUser();
@@ -580,6 +618,8 @@
     createDartMatchWithClient,
     saveDartThrowsWithClient,
     fetchUserDartStats,
+    fetchOracleProfile,
+    upsertOracleProfile,
     slugify
   };
 })();

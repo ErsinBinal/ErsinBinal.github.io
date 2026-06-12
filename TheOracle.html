@@ -1139,12 +1139,42 @@
       ];
 
       const keywordScores = [
-        { words: ['net', 'karar', 'kontrol', 'plan', 'emin', 'kanıt', 'bilgi', 'düzen', 'sınır'], score: { control: 2, clarity: 2, evidence: 1 } },
-        { words: ['istiyorum', 'arzu', 'çekim', 'heyecan', 'fırsat', 'hemen', 'yakın', 'devam', 'evet'], score: { desire: 2, urgency: 2, risk: 1 } },
-        { words: ['gitmek', 'bırakmak', 'bitirmek', 'hayır', 'uzak', 'yoruldum', 'kapanış', 'kopmak'], score: { exit: 3, clarity: 1, risk: 1 } },
-        { words: ['geri', 'özledim', 'konuşmak', 'bağ', 'kişi', 'geçmiş', 'tekrar', 'dönmek', 'yarım'], score: { returning: 3, relation: 2, evidence: 1 } },
-        { words: ['korku', 'risk', 'kaybetmek', 'belirsiz', 'bulanık', 'şüphe', 'gizli', 'saklı'], score: { risk: 2, clarity: 0, evidence: 1 } },
-        { words: ['beklemek', 'zaman', 'sabır', 'yavaş', 'henüz', 'sonra'], score: { returning: 1, urgency: 0, clarity: 2 } }
+        {
+          words: ['net', 'karar', 'kontrol', 'plan', 'emin', 'kanıt', 'bilgi', 'düzen', 'sınır', 'kural', 'disiplin', 'mantık', 'analiz', 'hedef', 'sonuç', 'kesin', 'açık', 'belirli', 'somut', 'pratik', 'akıl', 'değerlendirmek', 'anlamak', 'bilmek', 'ispat', 'ölçmek', 'netlik', 'anladım', 'karar verdim', 'kesin biliyorum'],
+          score: { control: 2, clarity: 2, evidence: 1 }
+        },
+        {
+          words: ['istiyorum', 'arzu', 'çekim', 'heyecan', 'fırsat', 'hemen', 'devam', 'evet', 'seviyorum', 'tutku', 'ihtiyaç', 'canlı', 'büyümek', 'kazanmak', 'ulaşmak', 'başarmak', 'hayalim', 'çok istiyorum', 'mutlaka', 'kesinlikle', 'ateşliyim', 'coşkulu', 'hevesli', 'istekli'],
+          score: { desire: 2, urgency: 2, risk: 1 }
+        },
+        {
+          words: ['gitmek', 'bırakmak', 'bitirmek', 'hayır', 'uzak', 'yoruldum', 'kopmak', 'yeter', 'artık', 'bitti', 'son', 'vazgeçmek', 'çıkmak', 'kaçmak', 'uzaklaşmak', 'özgürlük', 'tükenmiş', 'sıkıldım', 'bunaldım', 'dayanamıyorum', 'pes', 'kesmek', 'devam edemiyorum', 'isteksizim', 'bıktım'],
+          score: { exit: 3, clarity: 1, risk: 1 }
+        },
+        {
+          words: ['geri', 'özledim', 'konuşmak', 'bağ', 'kişi', 'geçmiş', 'tekrar', 'dönmek', 'yarım', 'eski', 'eskiden', 'hatırlamak', 'yeniden', 'birlikte', 'ilişki', 'onarma', 'affetmek', 'dinlemek', 'paylaşmak', 'güvenmek', 'açılmak', 'anlatmak', 'iletişim', 'yakınlık', 'aile', 'arkadaş', 'özlem', 'dönmek istiyorum'],
+          score: { returning: 3, relation: 2, evidence: 1 }
+        },
+        {
+          words: ['korku', 'risk', 'kaybetmek', 'belirsiz', 'bulanık', 'şüphe', 'tedirgin', 'endişe', 'kaygı', 'ürkek', 'çekingen', 'korkuyorum', 'yanlış', 'hata', 'pişmanlık', 'tehlike', 'zarar', 'acı', 'üzgün', 'mutsuz', 'karmaşık', 'çelişki', 'ne yapacağım', 'bilmiyorum ki', 'kötü hissediyorum'],
+          score: { risk: 2, clarity: 0, evidence: 1 }
+        },
+        {
+          words: ['beklemek', 'zaman', 'sabır', 'yavaş', 'henüz', 'sonra', 'ileride', 'yakında', 'bir gün', 'biraz', 'belki', 'sanki', 'galiba', 'herhalde', 'düşünüyorum', 'tartıyorum', 'ertelemek', 'hazır değilim', 'bakalım', 'şimdilik', 'acelesi yok'],
+          score: { returning: 1, urgency: 0, clarity: 2 }
+        },
+        {
+          words: ['şimdi', 'acil', 'bugün', 'yarın', 'geciktim', 'geç kaldım', 'son şans', 'bekleyemem', 'çabuk', 'hızlı', 'vakit az', 'an meselesi', 'fırsat geçiyor', 'artık bekleyemem'],
+          score: { urgency: 3, risk: 1, desire: 1 }
+        },
+        {
+          words: ['nefret', 'kırgın', 'kırıldım', 'incindim', 'hayal kırıklığı', 'ihanet', 'güvensizlik', 'kıskançlık', 'yanlış anlaşıldım', 'duyulmadım', 'görmezden gelindi', 'değer vermiyor', 'önemsemiyor', 'anlamıyor', 'paylaşamıyoruz', 'yabancılaştık', 'uzaklaştık'],
+          score: { relation: 3, returning: 1, risk: 1 }
+        },
+        {
+          words: ['fark ettim', 'öğrendim', 'keşfettim', 'netleşti', 'anlaşıldı', 'ortaya çıktı', 'kanıtladım', 'yaşadım ve gördüm', 'deneyimledim', 'bizzat gördüm', 'artık biliyorum', 'gözlemledim', 'gerçeği gördüm'],
+          score: { evidence: 2, clarity: 2, control: 1 }
+        }
       ];
 
       function mergeProfile(base, adjust = {}) {
@@ -1553,6 +1583,184 @@
         return `${clean.slice(0, -1).join(', ')} ve ${clean[clean.length - 1]}`;
       };
 
+      // --- Kullanici profil yönetimi (cross-session öğrenme) ---
+      const USER_PROFILE_KEY = 'convivium.oracle.userprofile.v2';
+
+      const loadUserProfile = () => {
+        try {
+          const raw = localStorage.getItem(USER_PROFILE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+      };
+
+      const saveUserProfile = (profile) => {
+        try { localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile)); } catch {}
+      };
+
+      const mergeReadingIntoProfile = (reading, accepted) => {
+        const profile = loadUserProfile() || {
+          readingCount: 0, acceptedCount: 0, refusedCount: 0,
+          acceptedAxes: {}, refusedAxes: {}, axisHistory: []
+        };
+        profile.readingCount = (profile.readingCount || 0) + 1;
+        profile.lastAt = new Date().toISOString();
+        if (accepted === true) {
+          profile.acceptedCount = (profile.acceptedCount || 0) + 1;
+          profile.acceptedAxes[reading.axis] = (profile.acceptedAxes[reading.axis] || 0) + 1;
+          profile.axisHistory = [...(profile.axisHistory || []).slice(-14), {
+            axis: reading.axis, confidence: reading.confidence, at: profile.lastAt
+          }];
+        } else if (accepted === false) {
+          profile.refusedCount = (profile.refusedCount || 0) + 1;
+          profile.refusedAxes[reading.axis] = (profile.refusedAxes[reading.axis] || 0) + 1;
+        }
+        saveUserProfile(profile);
+        syncProfileToSupabase(profile).catch(() => {});
+      };
+
+      const syncProfileToSupabase = async (profile) => {
+        if (!window.ConviviumBackend?.isConfigured()) return;
+        try {
+          const dominantAxis = Object.entries(profile.acceptedAxes || {})
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+          await window.ConviviumBackend.upsertOracleProfile({
+            reading_count: profile.readingCount,
+            accepted_count: profile.acceptedCount || 0,
+            refused_count: profile.refusedCount || 0,
+            axis_scores: {},
+            accepted_axes: profile.acceptedAxes || {},
+            refused_axes: profile.refusedAxes || {},
+            dominant_axis: dominantAxis,
+            last_reading_at: profile.lastAt
+          });
+        } catch {}
+      };
+
+      // --- Cevaplar arasi çapraz örüntü tespiti ---
+      const answerTimings = [];
+      const recordAnswerTime = () => answerTimings.push(Date.now());
+
+      const detectCrossPatterns = (answers) => {
+        const bonus = blankScore();
+        if (answers.length < 2) return bonus;
+
+        const normalized = answers.map(a => normalizeText(a));
+        const allWords = normalized.flatMap(a => a.split(' ').filter(w => w.length > 3));
+        const wordFreq = {};
+        allWords.forEach(w => { wordFreq[w] = (wordFreq[w] || 0) + 1; });
+        const repeats = Object.values(wordFreq).filter(c => c >= 2).length;
+        if (repeats >= 2) addScores(bonus, { returning: 1, risk: 1 });
+        if (repeats >= 5) addScores(bonus, { returning: 1, risk: 1 });
+
+        // Cevaplar kısalıyorsa = kapanma/kaçınma
+        const lengths = answers.map(a => a.length);
+        const midpoint = Math.ceil(lengths.length / 2);
+        const avgFirst = lengths.slice(0, midpoint).reduce((s, n) => s + n, 0) / midpoint;
+        const avgLast = lengths.slice(midpoint).reduce((s, n) => s + n, 0) / Math.max(1, lengths.length - midpoint);
+        if (avgLast < avgFirst * 0.55) addScores(bonus, { exit: 2, clarity: 1 });
+
+        // İç çelişki: istek + gidiş aynı anda
+        const full = normalized.join(' ');
+        const hasDesireWord = ['istiyorum', 'seviyorum', 'özledim', 'tutku', 'heyecan'].some(w => full.includes(w));
+        const hasExitWord = ['bırakmak', 'gitmek', 'yoruldum', 'bitti', 'artık', 'yeter', 'tükenmiş'].some(w => full.includes(w));
+        if (hasDesireWord && hasExitWord) addScores(bonus, { risk: 2, returning: 1, clarity: -1 });
+
+        // Yüksek yadsıma yoğunluğu = sınır/direnç
+        const negCount = (full.match(/\b(değil|yok|hayır|istemiyorum|olmaz|reddetmek|kabul etmiyorum)\b/g) || []).length;
+        if (negCount >= 3) addScores(bonus, { exit: 2, control: 1 });
+
+        // Birden fazla cevap soru işareti içeriyorsa = derin belirsizlik
+        const questionCount = answers.filter(a => a.includes('?')).length;
+        if (questionCount >= 2) addScores(bonus, { risk: 2, urgency: 1, clarity: -1 });
+
+        // Cevap hızı: < 8s = kaygı, > 45s = özenli düşünme
+        if (answerTimings.length >= 2) {
+          const gaps = answerTimings.slice(1).map((t, i) => t - answerTimings[i]);
+          const avgGap = gaps.reduce((s, n) => s + n, 0) / gaps.length;
+          if (avgGap < 8000) addScores(bonus, { urgency: 2, risk: 1 });
+          if (avgGap > 45000) addScores(bonus, { evidence: 1, clarity: 1 });
+        }
+
+        return bonus;
+      };
+
+      // --- Saat ve gün bazlı bağlamsal sinyaller ---
+      const extractContextSignals = () => {
+        const signals = blankScore();
+        const now = new Date();
+        const hour = now.getHours();
+        const day = now.getDay();
+        // Gece geç (22:00-04:59): duygusal savunmasızlık
+        if (hour >= 22 || hour <= 4) addScores(signals, { risk: 1, relation: 1, returning: 1, urgency: 1 });
+        // Sabah erken (05-08): netlik/karar enerjisi
+        if (hour >= 5 && hour <= 8) addScores(signals, { control: 1, clarity: 1 });
+        // Hafta sonu: daha yansıtıcı, az acil
+        if (day === 0 || day === 6) addScores(signals, { returning: 1, urgency: -1 });
+        // Pazartesi sabahı: başlangıç enerjisi
+        if (day === 1 && hour >= 8 && hour <= 13) addScores(signals, { urgency: 1, control: 1 });
+        return signals;
+      };
+
+      // --- Supabase'den gecmis oracle ve davranis verisi yukle ---
+      const loadBehavioralContext = async () => {
+        if (!window.ConviviumBackend?.isConfigured()) return;
+        try {
+          const [remoteProfile, history, sessions] = await Promise.all([
+            window.ConviviumBackend.fetchOracleProfile().catch(() => null),
+            window.ConviviumBackend.fetchUserAppRecommendations(20).catch(() => []),
+            window.ConviviumBackend.fetchUserAppSessions(20).catch(() => [])
+          ]);
+
+          // Supabase profili varsa localStorage'i zenginleştir
+          if (remoteProfile && remoteProfile.reading_count > 0) {
+            const localProfile = loadUserProfile() || {};
+            if ((remoteProfile.reading_count || 0) >= (localProfile.readingCount || 0)) {
+              saveUserProfile({
+                readingCount: remoteProfile.reading_count,
+                acceptedCount: remoteProfile.accepted_count || 0,
+                refusedCount: remoteProfile.refused_count || 0,
+                acceptedAxes: remoteProfile.accepted_axes || {},
+                refusedAxes: remoteProfile.refused_axes || {},
+                axisHistory: localProfile.axisHistory || [],
+                lastAt: remoteProfile.last_reading_at
+              });
+            }
+          } else {
+            // Remote profil yoksa, app_recommendations'tan inşa et
+            const oracleHistory = (history || []).filter(r => {
+              const meta = r.recommendation_meta || {};
+              return r.app_key === 'oracle' || String(meta.code || '').match(/^[ASE]-\d+/);
+            });
+            if (oracleHistory.length > 0) {
+              const localProfile = loadUserProfile();
+              if (!localProfile || oracleHistory.length > (localProfile.readingCount || 0)) {
+                const rebuilt = {
+                  readingCount: oracleHistory.length,
+                  acceptedCount: 0, refusedCount: 0,
+                  acceptedAxes: {}, refusedAxes: {}, axisHistory: []
+                };
+                oracleHistory.forEach(r => {
+                  const meta = r.recommendation_meta || {};
+                  if (meta.axis) rebuilt.axisHistory.push({ axis: meta.axis, confidence: meta.confidence || 50, at: r.created_at });
+                });
+                saveUserProfile(rebuilt);
+              }
+            }
+          }
+
+          // Oyun verisi üzerinden kişilik sinyali: çok oyun oynayan = aktif/acil
+          const gameSessions = (sessions || []).filter(s => s.item_type === 'game');
+          if (gameSessions.length >= 5) {
+            state._behavioralBoost = { urgency: 1, control: 1 };
+          }
+          // Oracle'da uzun süre geçirenler = derin sorun/returning yüksek
+          const oracleSession = (sessions || []).find(s => s.item_key === 'oracle');
+          if (oracleSession && oracleSession.duration_seconds > 300) {
+            state._behavioralBoost = { ...(state._behavioralBoost || {}), returning: 1, risk: 1 };
+          }
+        } catch {}
+      };
+
       const explainEntropy = (matrix, seed, answer, clues) => {
         const topClues = clues.slice(0, 2).filter(Boolean);
         const clueText = topClues.length ? joinClues(topClues) : 'söylenmeyenler';
@@ -1601,6 +1809,11 @@
         addScores(totals, lensAxisBias[state.lens] || {});
         const analyses = state.answers.map((answer, index) => analyzeAnswer(answer, index));
         analyses.forEach((analysis) => addScores(totals, analysis.score));
+
+        // Çapraz örüntü + bağlam sinyalleri + davranışsal güçlendirme
+        if (state.answers.length >= 2) addScores(totals, detectCrossPatterns(state.answers));
+        addScores(totals, extractContextSignals());
+        if (state._behavioralBoost) addScores(totals, state._behavioralBoost);
 
         const answered = state.answers.length;
         const completion = Math.round((answered / dialogueSteps.length) * 100);
@@ -1682,6 +1895,16 @@
         score += closeness('relation') * 4;
         score += closeness('evidence') * 5;
         score += (hashText(`${seed}|${answer.code}`) % 1000) / 1000;
+
+        // Kullanici profiline göre kabul/ret geçmişi ayarlaması
+        const profile = loadUserProfile();
+        if (profile) {
+          const accepted = (profile.acceptedAxes || {})[answer.axis] || 0;
+          const refused = (profile.refusedAxes || {})[answer.axis] || 0;
+          score += Math.min(18, accepted * 6);
+          score -= Math.min(24, refused * 8);
+        }
+
         return score;
       };
 
@@ -1805,6 +2028,8 @@
           updateMeters();
           els.stamp.textContent = `okuma açıldı: ${reading.confidence}%`;
           persistReading(reading, null);
+          const _now = new Date();
+          const _profile = loadUserProfile();
           window.ConviviumActivity?.recordRecommendation({
             recommendation_title: reading.name || reading.code || 'Oracle okuması',
             recommendation_summary: reading.signal || reading.move || reading.matrixSummary || '',
@@ -1813,7 +2038,12 @@
               axis: reading.axis,
               confidence: reading.confidence,
               move: reading.move,
-              trap: reading.trap
+              trap: reading.trap,
+              hour_of_day: _now.getHours(),
+              day_of_week: _now.getDay(),
+              answer_lengths: state.answers.map(a => a.length),
+              oracle_reading_count: (_profile?.readingCount || 0) + 1,
+              dominant_clues: matrix.clues.filter(Boolean).slice(0, 3)
             }
           });
           updateProtocol(reading);
@@ -1833,6 +2063,7 @@
         if (!state.current) return;
         state.current.accepted = accepted;
         persistReading(state.current, accepted);
+        mergeReadingIntoProfile(state.current, accepted);
         if (!accepted) {
           const store = loadStore();
           store.refused = (store.refused || 0) + 1;
@@ -1950,6 +2181,7 @@
           return;
         }
 
+        recordAnswerTime();
         addTranscript('oracle', dialogueSteps[state.step]);
         addTranscript('user', answer);
         state.answers.push(answer.slice(0, 180));
@@ -2083,6 +2315,7 @@
         window.addEventListener('resize', () => {
           drawNoise();
         });
+        loadBehavioralContext();
       };
 
       init();
