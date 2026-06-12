@@ -1417,6 +1417,13 @@
       color: var(--journey-muted);
     }
 
+    .site-footer .copyright-line {
+      flex-basis: 100%;
+      color: rgba(201, 255, 214, 0.62);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
     @media (max-width: 1040px) {
       .experience-frame {
         grid-template-columns: 1fr;

@@ -4,6 +4,14 @@ Convivium, Ersin Binal'in GitHub Pages uzerinde tuttugu kisisel ve deneysel web 
 
 Canli site: <https://ersinbinal.github.io/>
 
+## Lisans ve Telif
+
+Bu repository ve Convivium sitesindeki Ersin Binal tarafindan uretilmis ozgun kod, tasarim, metin, oyun/rituel akislari, promptlar ve gorsel kimlik unsurlari acik kaynak degildir.
+
+Copyright (c) 2026 Ersin Binal. All rights reserved.
+
+Ziyaret etmek, link vermek ve kisisel inceleme yapmak serbesttir; kopyalamak, yeniden yayinlamak, klon site uretmek, ticari kullanmak veya turev calisma yayinlamak icin yazili izin gerekir. Detaylar icin [LICENSE](LICENSE) ve [NOTICE.md](NOTICE.md) dosyalarina bakin.
+
 ## Bu Site Ne Anlatir?
 
 Convivium'un ana fikri su: arayuzler sadece bilgi gosteren yuzeyler degil, dusunme bicimini degistiren kucuk sistemlerdir. Bu yuzden sitede makaleler, mini oyunlar, barista/bartender gibi rituel araclari ve terminal tabanli deneyler yan yana durur.
