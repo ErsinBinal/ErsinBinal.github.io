@@ -43,6 +43,15 @@
     }).format(new Date(value));
   }
 
+  function formatDay(value) {
+    if (!value) return '-';
+    return new Intl.DateTimeFormat('tr-TR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    }).format(new Date(value));
+  }
+
   function formatDuration(seconds) {
     const total = Math.max(0, Number(seconds) || 0);
     const minutes = Math.floor(total / 60);
@@ -170,18 +179,31 @@
           </span>
         `).join('')}
       </div>
-      ${recent.slice(0, 6).map((match) => `
+      ${recent.slice(0, 8).map((match) => {
+        const oppTag = match.opponentType === 'cpu' ? 'CPU' : match.opponentType === 'guest' ? 'Misafir' : null;
+        const oppLabel = (oppTag ? `${oppTag} · ` : '') + escapeHtml(match.opponent.label);
+        const avg = Number(match.own.average || 0).toFixed(1);
+        const high = Number(match.own.highestTurn || 0);
+        const s180 = Number(match.own.oneEighties || 0);
+        const busts = Number(match.own.busts || 0);
+        const badges = [
+          `Ort. ${avg}`,
+          `Max ${high}`,
+          s180 ? `180 ×${s180}` : null,
+          busts ? `Bust ${busts}` : null,
+          formatDuration(match.duration_seconds)
+        ].filter(Boolean);
+        return `
         <article class="dashboard-row">
           <div>
-            <strong>${match.won ? 'Galibiyet' : 'Maglubiyet'} / ${escapeHtml(match.opponent.label)}</strong>
-            <span>${formatDate(match.created_at)} / ${formatDuration(match.duration_seconds)}</span>
+            <strong>${match.won ? '▲ Galibiyet' : '▼ Maglubiyet'} · ${oppLabel}</strong>
+            <span>${formatDay(match.created_at)}</span>
           </div>
           <div class="dashboard-metrics">
-            <span>Ort. ${Number(match.own.average || 0).toFixed(1)}</span>
-            <span>En yuksek ${Number(match.own.highestTurn || 0)}</span>
+            ${badges.map((b) => `<span>${escapeHtml(b)}</span>`).join('')}
           </div>
-        </article>
-      `).join('')}
+        </article>`;
+      }).join('')}
     `;
   }
 

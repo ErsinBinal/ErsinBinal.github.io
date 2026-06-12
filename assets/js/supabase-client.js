@@ -437,8 +437,8 @@
   async function createDartMatchWithClient(client, match) {
     if (!client) throw new Error('Dart mac kaydi icin Supabase oturumu gerekli.');
     const payload = {
-      red_user_id: match.red_user_id,
-      blue_user_id: match.blue_user_id,
+      red_user_id: match.red_user_id || null,
+      blue_user_id: match.blue_user_id || null,
       winner_user_id: match.winner_user_id || null,
       winner_slot: match.winner_slot || null,
       start_score: Math.max(1, Number(match.start_score) || 501),
@@ -447,7 +447,9 @@
       blue_final_score: Math.max(0, Number(match.blue_final_score) || 0),
       status: match.status === 'completed' ? 'completed' : 'in_progress',
       summary: match.summary && typeof match.summary === 'object' ? match.summary : {},
-      completed_at: match.status === 'completed' ? (match.completed_at || new Date().toISOString()) : null
+      completed_at: match.status === 'completed' ? (match.completed_at || new Date().toISOString()) : null,
+      opponent_label: match.opponent_label || null,
+      opponent_type: match.opponent_type || 'human'
     };
 
     const { data, error } = await client
@@ -533,7 +535,7 @@
 
     const { data, error } = await client
       .from('dart_matches')
-      .select('id, red_user_id, blue_user_id, winner_user_id, winner_slot, start_score, duration_seconds, red_final_score, blue_final_score, status, summary, completed_at, created_at')
+      .select('id, red_user_id, blue_user_id, winner_user_id, winner_slot, start_score, duration_seconds, red_final_score, blue_final_score, status, summary, completed_at, created_at, opponent_label, opponent_type')
       .or(`red_user_id.eq.${user.id},blue_user_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
       .limit(200);
@@ -577,17 +579,19 @@
         status: match.status,
         created_at: match.completed_at || match.created_at,
         duration_seconds: match.duration_seconds,
+        opponentType: match.opponent_type || 'human',
         own: {
           label: own.label || (slot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
           average: Number(own.average || 0),
           highestTurn: Number(own.highestTurn || 0),
           totalDarts: Number(own.totalDarts || 0),
+          turnsCount: Number(own.turnsCount || 0),
           busts: Number(own.busts || 0),
           oneEighties: Number(own.oneEighties || 0),
           finalScore: slot === 'RED' ? match.red_final_score : match.blue_final_score
         },
         opponent: {
-          label: opponent.label || (opponentSlot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
+          label: opponent.label || match.opponent_label || (opponentSlot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
           finalScore: opponentSlot === 'RED' ? match.red_final_score : match.blue_final_score
         }
       };

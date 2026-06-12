@@ -471,20 +471,42 @@
       return;
     }
 
-    if (!hasTwoDistinctUsers()) {
-      updateSyncStatus('Mac misafir modunda bitti. Kayit icin iki farkli kullanici girisi gerekli.');
+    const redUser = slotAuth.RED.user;
+    const blueUser = slotAuth.BLUE.user;
+
+    if (!redUser && !blueUser) {
+      updateSyncStatus('Mac misafir modunda bitti. Kayit icin en az bir hesapla giris gerekli.');
       return;
     }
 
     try {
-      updateSyncStatus('Dart maci ve detayli atislar kaydediliyor...');
-      const redClient = slotAuth.RED.client;
-      const blueClient = slotAuth.BLUE.client;
+      updateSyncStatus('Dart maci kaydediliyor...');
+
+      const bothDistinct = Boolean(redUser && blueUser && redUser.id !== blueUser.id);
+
+      let opponentLabel = null;
+      let opponentType = 'human';
+      if (!bothDistinct) {
+        const humanSlot = redUser ? 'RED' : 'BLUE';
+        const oppSlot = humanSlot === 'RED' ? 'BLUE' : 'RED';
+        const oppCpu = cpuConfig[oppSlot];
+        if (oppCpu) {
+          opponentType = 'cpu';
+          opponentLabel = oppCpu.name;
+        } else {
+          opponentType = 'guest';
+          opponentLabel = displayName(oppSlot);
+        }
+      }
+
+      const primaryClient = redUser ? slotAuth.RED.client : slotAuth.BLUE.client;
+      const winnerUser = slotAuth[winnerSlot].user;
       const summary = buildMatchSummary(winnerSlot);
-      const match = await backend.createDartMatchWithClient(redClient, {
-        red_user_id: slotAuth.RED.user.id,
-        blue_user_id: slotAuth.BLUE.user.id,
-        winner_user_id: slotAuth[winnerSlot].user.id,
+
+      const match = await backend.createDartMatchWithClient(primaryClient, {
+        red_user_id: redUser ? redUser.id : null,
+        blue_user_id: bothDistinct ? blueUser.id : null,
+        winner_user_id: winnerUser ? winnerUser.id : null,
         winner_slot: winnerSlot,
         start_score: START_SCORE,
         duration_seconds: summary.duration,
@@ -492,24 +514,28 @@
         blue_final_score: state.scores.BLUE,
         status: 'completed',
         summary: summary.payload,
-        completed_at: summary.payload.completedAt
+        completed_at: summary.payload.completedAt,
+        opponent_label: opponentLabel,
+        opponent_type: opponentType
       });
 
-      const rows = state.throwRecords.map((record) => ({
-        ...record,
-        match_id: match.id,
-        user_id: slotAuth[record.player_slot].user.id
-      }));
-      const redRows = rows.filter((row) => row.player_slot === 'RED');
-      const blueRows = rows.filter((row) => row.player_slot === 'BLUE');
-
-      await Promise.all([
-        backend.saveDartThrowsWithClient(redClient, redRows),
-        backend.saveDartThrowsWithClient(blueClient, blueRows)
-      ]);
+      const throwPromises = [];
+      if (redUser) {
+        const rows = state.throwRecords
+          .filter((r) => r.player_slot === 'RED')
+          .map((r) => ({ ...r, match_id: match.id, user_id: redUser.id }));
+        if (rows.length) throwPromises.push(backend.saveDartThrowsWithClient(slotAuth.RED.client, rows));
+      }
+      if (bothDistinct && blueUser) {
+        const rows = state.throwRecords
+          .filter((r) => r.player_slot === 'BLUE')
+          .map((r) => ({ ...r, match_id: match.id, user_id: blueUser.id }));
+        if (rows.length) throwPromises.push(backend.saveDartThrowsWithClient(slotAuth.BLUE.client, rows));
+      }
+      await Promise.all(throwPromises);
 
       state.persistedMatchId = match.id;
-      updateSyncStatus('Mac kaydedildi. Dashboard istatistikleri guncellendi.');
+      updateSyncStatus('Mac kaydedildi.');
       render();
     } catch (error) {
       updateSyncStatus(`Dart kaydi tamamlanamadi: ${error.message || error}`);
