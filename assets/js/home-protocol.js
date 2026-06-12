@@ -2012,13 +2012,13 @@
           queue: Array.from({ length: 6 }, createPipePiece),
           placed: 0,
           skipped: 0,
-          flowIn: 16,
+          flowIn: 32,
           score: 0,
           flowPath: new Set(),
           flowWave: new Set(),
           leakAt: null,
           temp: 9200,
-          status: 'REACTOR COOLANT ready. containment opens after 16 actions.',
+          status: 'REACTOR COOLANT ready. containment opens after 32 actions.',
           resolving: false,
           won: false,
           lost: false
@@ -2153,7 +2153,7 @@
         rows.push('╔══════════════════════════════════════════════════════════════════════════════╗');
         rows.push('║ PIPE-90 // TOKAMAK COOLANT EMERGENCY                                       ║');
         rows.push('╠══════════════════════════════════════════════════════════════════════════════╣');
-        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 16, 8)}] ║`);
+        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 32, 8)}] ║`);
         rows.push(`║ SCORE ${String(pipeGame.score).padStart(4, '0')}   PLACED ${String(pipeGame.placed).padStart(2, '0')}   DUMP ${String(pipeGame.skipped).padStart(2, '0')}   LOOP: PUMP >>> CORE             ║`);
         rows.push('╚══════════════════════════════════════════════════════════════════════════════╝');
         rows.push('');
