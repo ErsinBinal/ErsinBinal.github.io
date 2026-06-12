@@ -689,16 +689,35 @@
       font-size: 0.92rem;
     }
 
-    .post-actions {
+    .feedback-line {
       position: relative;
       z-index: 1;
       display: none;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 18px;
+      align-items: center;
+      gap: 14px;
+      margin-top: 20px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(242, 239, 228, 0.1);
+      color: var(--dim);
+      font-size: 0.74rem;
     }
 
-    .post-actions.is-visible { display: grid; }
+    .feedback-line.is-visible { display: flex; }
+
+    .feedback-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--dim);
+      cursor: pointer;
+      font: inherit;
+      font-size: 0.78rem;
+      transition: color 150ms ease;
+    }
+
+    .feedback-btn:hover, .feedback-btn:focus-visible { color: var(--ink); outline: none; }
+    .feedback-btn.is-selected-yes { color: var(--green); }
+    .feedback-btn.is-selected-no { color: var(--muted); }
 
     .history-list {
       position: relative;
@@ -929,10 +948,10 @@
           <div class="result-line" id="result-line">Konunu seç, üç işareti tamamla.</div>
         </div>
         <div class="oracle-output" id="oracle-output"></div>
-        <div class="post-actions" id="post-actions">
-          <button class="history-btn" type="button" id="accept-btn">Yerinde</button>
-          <button class="history-btn" type="button" id="refuse-btn">Uymadı</button>
-          <button class="history-btn" type="button" id="copy-btn">Kopyala</button>
+        <div class="feedback-line" id="post-actions">
+          <span>Bu ses sende yankı uyandırdı mı?</span>
+          <button class="feedback-btn" type="button" id="accept-btn">◆ Evet</button>
+          <button class="feedback-btn" type="button" id="refuse-btn">◇ Hayır</button>
         </div>
       </article>
 
@@ -1114,7 +1133,6 @@
         postActions: document.getElementById('post-actions'),
         accept: document.getElementById('accept-btn'),
         refuse: document.getElementById('refuse-btn'),
-        copy: document.getElementById('copy-btn'),
         history: document.getElementById('history-list'),
         traceCount: document.getElementById('trace-count'),
         toast: document.getElementById('toast')
@@ -1444,6 +1462,8 @@
         state.busy = true;
         updateMeters();
         els.postActions.classList.remove('is-visible');
+        els.accept.className = 'feedback-btn';
+        els.refuse.className = 'feedback-btn';
         els.ritualPanel?.classList.add('is-reading');
         els.stamp.textContent = 'okuyor';
 
@@ -1498,16 +1518,12 @@
 
       const updateCurrentAcceptance = (accepted) => {
         if (!state.current) return;
+        if (state.current.accepted !== null && state.current.accepted !== undefined) return;
         state.current.accepted = accepted;
         persistReading(state.current, accepted);
         mergeReadingIntoProfile(state.current, accepted);
-        if (!accepted) {
-          revealRows([...readingRows(state.current), row('not', state.current.counter || 'Bir sonraki okumada farklı bir yol açılabilir.')]);
-          showToast('Uymadı olarak kaydedildi.');
-        } else {
-          revealRows([...readingRows(state.current), row('kayıt', 'Okuma kabul edildi.')]);
-          showToast('Okuma kabul edildi.');
-        }
+        els.accept.classList.toggle('is-selected-yes', accepted === true);
+        els.refuse.classList.toggle('is-selected-no', accepted === false);
         renderHistory();
       };
 
@@ -1548,21 +1564,6 @@
           });
           return btn;
         }));
-      };
-
-      const copyReading = async () => {
-        if (!state.current) return;
-        const r = state.current;
-        const text = [
-          `THE ORACLE / ${r.code}`,
-          `OKUMA: ${r.name}${r.subtitle ? ' — ' + r.subtitle : ''}`,
-          `KONU: ${r.topic || '—'} / GÜVEN: ${r.confidence || '—'}%`,
-          `İŞARET: ${r.signal || '—'}`,
-          `YOL: ${r.move || '—'}`,
-          `SAKIN: ${r.trap || '—'}`
-        ].join('\n');
-        try { await navigator.clipboard.writeText(text); showToast('Panoya kopyalandı.'); }
-        catch { showToast('Kopyalama engellendi.'); }
       };
 
       const showToast = (msg) => {
@@ -1665,7 +1666,6 @@
         els.stir.addEventListener('click', stirChance);
         els.accept.addEventListener('click', () => updateCurrentAcceptance(true));
         els.refuse.addEventListener('click', () => updateCurrentAcceptance(false));
-        els.copy.addEventListener('click', copyReading);
         window.addEventListener('resize', drawNoise);
       };
 
