@@ -2153,7 +2153,7 @@
         rows.push('╔══════════════════════════════════════════════════════════════════════════════╗');
         rows.push('║ PIPE-90 // TOKAMAK COOLANT EMERGENCY                                       ║');
         rows.push('╠══════════════════════════════════════════════════════════════════════════════╣');
-        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 16, 8)}] ║`);
+        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 36, 8)}] ║`);
         rows.push(`║ SCORE ${String(pipeGame.score).padStart(4, '0')}   PLACED ${String(pipeGame.placed).padStart(2, '0')}   DUMP ${String(pipeGame.skipped).padStart(2, '0')}   LOOP: PUMP >>> CORE             ║`);
         rows.push('╚══════════════════════════════════════════════════════════════════════════════╝');
         rows.push('');
