@@ -595,6 +595,7 @@
 
     render();
     updateSyncStatus();
+    scheduleCpuTurn();
   }
 
   function clearCpu(slot) {
