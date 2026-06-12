@@ -40,7 +40,8 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(Math.min(0.12, Math.max(0.001, vol || 0.04)), t + 0.012);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      osc.connect(g).connect(c.destination);
+      osc.connect(g);
+      g.connect(c.destination);
       osc.start(t);
       osc.stop(t + dur + 0.03);
     } catch {}
@@ -66,7 +67,9 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(Math.min(0.12, Math.max(0.001, vol || 0.04)), t + Math.min(0.08, dur / 4));
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(flt).connect(g).connect(c.destination);
+      src.connect(flt);
+      flt.connect(g);
+      g.connect(c.destination);
       src.start(t); src.stop(t + dur + 0.04);
     } catch {}
   };
@@ -88,7 +91,9 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.linearRampToValueAtTime(Math.min(0.12, Math.max(0.001, vol || 0.04)), t + 0.004);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(flt).connect(g).connect(c.destination);
+      src.connect(flt);
+      flt.connect(g);
+      g.connect(c.destination);
       src.start(t); src.stop(t + dur + 0.02);
     } catch {}
   };
@@ -282,7 +287,9 @@
         src.buffer = buf; src.loop = true;
         flt.type = 'lowpass'; flt.frequency.value = 240;
         g.gain.value = 0.008;
-        src.connect(flt).connect(g).connect(c.destination);
+        src.connect(flt);
+        flt.connect(g);
+        g.connect(c.destination);
         src.start();
         _amb = { src, g };
       } catch {}

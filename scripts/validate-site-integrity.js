@@ -94,7 +94,8 @@ const mustPrecache = [
   '/assets/css/components.css?v=31',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/supabase-client.js?v=23',
-  '/assets/js/home-protocol.js?v=31',
+  '/assets/js/sfx.js?v=6',
+  '/assets/js/home-protocol.js?v=32',
   '/assets/js/service-worker-register.js?v=2'
 ];
 
