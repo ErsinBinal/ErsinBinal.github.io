@@ -393,6 +393,12 @@
   border-color: rgba(239, 68, 68, 0.62);
 }
 
+.dart-keypad button[data-multiplier="2"],
+.dart-keypad button[data-multiplier="3"] {
+  color: #c4b5fd;
+  border-color: rgba(167, 139, 250, 0.6);
+}
+
 .dart-keypad button[data-score="50"],
 .dart-keypad button[data-score="25"] {
   color: #bbf7d0;

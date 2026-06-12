@@ -603,8 +603,31 @@
   els.undoButton.addEventListener('click', undoLastAction);
   els.manualForm.addEventListener('submit', handleManualScore);
   els.keypad.addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-score]');
+    const button = event.target.closest('button[data-score], button[data-multiplier]');
     if (!button) return;
+
+    if (button.dataset.multiplier) {
+      const multiplier = Number(button.dataset.multiplier);
+      const inputValue = Number(els.keyboardInput.value);
+      if (!els.keyboardInput.value || Number.isNaN(inputValue) || inputValue < 0 || inputValue > 60) {
+        showOverlay('Gecersiz deger', `${multiplier}× icin once ok skorunu (0-60) girin.`, false);
+        window.setTimeout(hideOverlay, 1400);
+        els.keyboardInput.focus();
+        return;
+      }
+      const result = inputValue * multiplier;
+      if (result > 60) {
+        showOverlay('Gecersiz deger', `${inputValue} × ${multiplier} = ${result} — maksimum ok skoru 60'tir.`, false);
+        window.setTimeout(hideOverlay, 1600);
+        els.keyboardInput.focus();
+        return;
+      }
+      els.keyboardInput.value = '';
+      addDart(result);
+      els.keyboardInput.focus();
+      return;
+    }
+
     addDart(Number(button.dataset.score));
   });
 
