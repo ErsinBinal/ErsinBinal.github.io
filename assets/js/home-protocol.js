@@ -141,6 +141,7 @@
       let screenSaverPlanetOrder = [];
       let virtualCwd = '/';
       let pipeGame = null;
+      let pipeAnimationTimers = [];
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -1948,20 +1949,21 @@
       };
 
       const pipePieces = [
-        { id: 'line', glyphs: ['│', '─'], masks: [5, 10] },
-        { id: 'elbow', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9] },
-        { id: 'tee', glyphs: ['┴', '├', '┬', '┤'], masks: [11, 7, 14, 13] },
-        { id: 'cross', glyphs: ['┼'], masks: [15] }
+        { id: 'straight', glyphs: ['│', '─'], masks: [5, 10], weight: 4 },
+        { id: 'bend', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9], weight: 5 },
+        { id: 'junction', glyphs: ['┴', '├', '┬', '┤'], masks: [11, 7, 14, 13], weight: 1 },
+        { id: 'cross', glyphs: ['┼'], masks: [15], weight: 1 }
       ];
       const pipeDirs = [
-        { bit: 1, dr: -1, dc: 0, opposite: 4 },
-        { bit: 2, dr: 0, dc: 1, opposite: 8 },
-        { bit: 4, dr: 1, dc: 0, opposite: 1 },
-        { bit: 8, dr: 0, dc: -1, opposite: 2 }
+        { bit: 1, dr: -1, dc: 0, opposite: 4, name: 'north' },
+        { bit: 2, dr: 0, dc: 1, opposite: 8, name: 'east' },
+        { bit: 4, dr: 1, dc: 0, opposite: 1, name: 'south' },
+        { bit: 8, dr: 0, dc: -1, opposite: 2, name: 'west' }
       ];
+      const pipeBag = pipePieces.flatMap(piece => Array.from({ length: piece.weight }, () => piece));
 
       const createPipePiece = () => {
-        const template = pipePieces[Math.floor(Math.random() * pipePieces.length)];
+        const template = pipeBag[Math.floor(Math.random() * pipeBag.length)];
         return { id: template.id, rotation: Math.floor(Math.random() * template.glyphs.length) };
       };
 
@@ -1971,54 +1973,133 @@
       };
 
       const pipeGlyph = (piece) => {
-        if (piece.kind === 'source') return 'S';
-        if (piece.kind === 'drain') return 'D';
+        if (piece.kind === 'source') return 'P';
+        if (piece.kind === 'drain') return 'C';
+        if (piece.kind === 'block') return '█';
         const template = pipePieces.find(item => item.id === piece.id);
         return template?.glyphs[piece.rotation % template.glyphs.length] || '?';
       };
 
+      const clearPipeAnimation = () => {
+        pipeAnimationTimers.forEach(timer => window.clearTimeout(timer));
+        pipeAnimationTimers = [];
+      };
+
       const startPipeGame = () => {
-        const size = 7;
+        clearPipeAnimation();
+        const rows = 7;
+        const cols = 8;
+        const drainRow = 1 + Math.floor(Math.random() * 5);
         pipeGame = {
           active: true,
-          size,
+          rows,
+          cols,
           cursor: { r: 3, c: 1 },
           source: { r: 3, c: 0, mask: 2 },
-          drain: { r: 3, c: 6, mask: 8 },
-          grid: Array.from({ length: size }, () => Array.from({ length: size }, () => null)),
-          queue: Array.from({ length: 5 }, createPipePiece),
+          drain: { r: drainRow, c: cols - 1, mask: 8 },
+          grid: Array.from({ length: rows }, () => Array.from({ length: cols }, () => null)),
+          queue: Array.from({ length: 6 }, createPipePiece),
           placed: 0,
-          status: 'PIPE-86 ready. connect S to D, then press F.',
-          won: false
+          skipped: 0,
+          flowIn: 16,
+          score: 0,
+          flowPath: new Set(),
+          leakAt: null,
+          temp: 9200,
+          status: 'REACTOR COOLANT ready. containment opens after 16 actions.',
+          won: false,
+          lost: false
         };
         pipeGame.grid[pipeGame.source.r][pipeGame.source.c] = { kind: 'source', mask: pipeGame.source.mask };
         pipeGame.grid[pipeGame.drain.r][pipeGame.drain.c] = { kind: 'drain', mask: pipeGame.drain.mask };
+        [
+          { r: 1, c: 3 },
+          { r: 5, c: 4 }
+        ].forEach(block => {
+          if (block.r !== pipeGame.drain.r || block.c !== pipeGame.drain.c) {
+            pipeGame.grid[block.r][block.c] = { kind: 'block', mask: 0 };
+          }
+        });
         return renderPipeGame();
+      };
+
+      const pipeCellMask = (cell) => {
+        if (!cell) return 0;
+        if (cell.kind) return cell.mask || 0;
+        return pipeMask(cell);
+      };
+
+      const pipeScore = (win) => {
+        if (!pipeGame) return 0;
+        const base = win ? 1000 : 0;
+        return Math.max(0, base + (pipeGame.flowIn * 35) - (pipeGame.placed * 25) - (pipeGame.skipped * 60));
+      };
+
+      const pipeFinaleFrame = (title, art, lines = []) => [
+        renderPipeGame(),
+        '',
+        title,
+        art.join('\n'),
+        ...lines
+      ].join('\n');
+
+      const schedulePipeFinale = (success) => {
+        if (!pipeGame || !commandOutput) return;
+        clearPipeAnimation();
+        const gameRef = pipeGame;
+        const score = pipeGame.score;
+        const frames = success
+          ? [
+            pipeFinaleFrame('COOLANT FLOW CONFIRMED / CORE TEMP 9200K', ['        (###)', '       (#####)', '        (###)'], ['coolant valves opening...']),
+            pipeFinaleFrame('CORE TEMP 5100K', ['        {***}', '       {*****}', '        {***}'], ['plasma ring stabilizing...']),
+            pipeFinaleFrame('CORE TEMP 1800K', ['        [~~~]', '       [~~~~~]', '        [~~~]'], ['containment pressure dropping...']),
+            pipeFinaleFrame('CORE STABLE / COOLANT LOOP LOCKED', ['        [   ]', '       [  C  ]', '        [___]'], [`score: ${score}`, 'reactor: cold enough to breathe'])
+          ]
+          : [
+            pipeFinaleFrame('COOLANT FLOW FAILED / CORE TEMP RISING', ['        (###)', '       (#####)', '        (###)'], ['alarm: return line not sealed']),
+            pipeFinaleFrame('CONTAINMENT BREACH', ['      \\  |  /', '    --- ### ---', '      /  |  \\'], ['pressure spike detected']),
+            pipeFinaleFrame('*** REACTOR FLASH ***', ['    .  *  .  *  .', '  *   #######   *', '    *  *****  *'], ['coolant lost / chamber flooded with light']),
+            pipeFinaleFrame('SYSTEM SCRAM / SESSION LOST', ['        .....', '      ..     ..', '        .....'], ['reactor: emergency shutdown'])
+          ];
+
+        frames.forEach((frame, index) => {
+          const timer = window.setTimeout(() => {
+            if (pipeGame !== gameRef || !commandOutput) return;
+            commandOutput.textContent = frame;
+          }, 420 + (index * 620));
+          pipeAnimationTimers.push(timer);
+        });
       };
 
       const renderPipeGame = () => {
         if (!pipeGame) return 'pipe: inactive';
         const rows = [];
-        rows.push('PIPE-86 / DOS PLUMBING SIM');
-        rows.push('goal: connect S(source) to D(drain)');
+        rows.push('PIPE-90 / FUSION CORE COOLANT');
+        rows.push('goal: route coolant from P(pump) to C(core) before containment opens');
+        rows.push(`flow in: ${Math.max(pipeGame.flowIn, 0)} actions  temp: ${pipeGame.temp}K  score: ${pipeGame.score}`);
+        rows.push(`placed: ${pipeGame.placed}  dumped: ${pipeGame.skipped}`);
         rows.push('');
-        for (let r = 0; r < pipeGame.size; r += 1) {
+        for (let r = 0; r < pipeGame.rows; r += 1) {
           let line = '';
-          for (let c = 0; c < pipeGame.size; c += 1) {
+          for (let c = 0; c < pipeGame.cols; c += 1) {
             const cell = pipeGame.grid[r][c];
             const glyph = cell ? pipeGlyph(cell) : '.';
-            line += pipeGame.cursor.r === r && pipeGame.cursor.c === c ? `[${glyph}]` : ` ${glyph} `;
+            const key = `${r},${c}`;
+            if (pipeGame.cursor.r === r && pipeGame.cursor.c === c) line += `[${glyph}]`;
+            else if (pipeGame.leakAt === key) line += `!${glyph}!`;
+            else if (pipeGame.flowPath?.has(key)) line += `~${glyph}~`;
+            else line += ` ${glyph} `;
           }
           rows.push(line);
         }
         const next = pipeGame.queue[0];
         rows.push('');
-        rows.push(`next: ${pipeGlyph(next)} (${next.id})  placed: ${pipeGame.placed}`);
+        rows.push(`next: ${pipeGlyph(next)} ${next.id}`);
         rows.push(`queue: ${pipeGame.queue.map(pipeGlyph).join(' ')}`);
         rows.push(pipeGame.status);
         rows.push('');
-        rows.push('keys: arrows move / space,R rotate / enter place / F flow / Q quit');
-        rows.push('cmd : pipe rotate, pipe place, pipe flow, pipe quit, pipe new');
+        rows.push('keys: arrows move / space,R rotate / enter place / F coolant / X dump / Q quit');
+        rows.push('cmd : pipe rotate, pipe place, pipe flow, pipe dump, pipe quit, pipe new');
         return rows.join('\n');
       };
 
@@ -2028,14 +2109,26 @@
 
       const movePipeCursor = (dr, dc) => {
         if (!pipeGame?.active) return;
-        pipeGame.cursor.r = Math.max(0, Math.min(pipeGame.size - 1, pipeGame.cursor.r + dr));
-        pipeGame.cursor.c = Math.max(0, Math.min(pipeGame.size - 1, pipeGame.cursor.c + dc));
+        pipeGame.cursor.r = Math.max(0, Math.min(pipeGame.rows - 1, pipeGame.cursor.r + dr));
+        pipeGame.cursor.c = Math.max(0, Math.min(pipeGame.cols - 1, pipeGame.cursor.c + dc));
         pipeGame.status = `cursor: ${pipeGame.cursor.r},${pipeGame.cursor.c}`;
         setPipeOutput();
       };
 
+      const tickPipePressure = () => {
+        if (!pipeGame?.active || pipeGame.won || pipeGame.lost) return null;
+        pipeGame.flowIn -= 1;
+        pipeGame.temp = Math.min(9999, pipeGame.temp + 180);
+        if (pipeGame.flowIn <= 0) {
+          pipeGame.status = 'CONTAINMENT OPEN / coolant forced into line';
+          return flowPipe(true);
+        }
+        return null;
+      };
+
       const rotatePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
         const { r, c } = pipeGame.cursor;
         const cell = pipeGame.grid[r][c];
         if (cell && !cell.kind) {
@@ -2049,11 +2142,12 @@
         } else {
           pipeGame.status = 'source/drain cannot rotate';
         }
-        return renderPipeGame();
+        return tickPipePressure() || renderPipeGame();
       };
 
       const placePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
         const { r, c } = pipeGame.cursor;
         if (pipeGame.grid[r][c]) {
           pipeGame.status = 'cell occupied';
@@ -2064,46 +2158,80 @@
         pipeGame.placed += 1;
         pipeGame.status = 'piece placed';
         pulse(360, 0.04);
-        return renderPipeGame();
+        return tickPipePressure() || renderPipeGame();
+      };
+
+      const dumpPipe = () => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
+        const skipped = pipeGame.queue.shift();
+        pipeGame.queue.push(createPipePiece());
+        pipeGame.skipped += 1;
+        pipeGame.status = `dumped ${skipped.id} / penalty armed`;
+        pulse(180, 0.04);
+        return tickPipePressure() || renderPipeGame();
       };
 
       const tracePipeFlow = () => {
         const visited = new Set();
+        const leaks = [];
+        let reachedDrain = false;
         const stack = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
         while (stack.length) {
           const current = stack.pop();
           const key = `${current.r},${current.c}`;
           if (visited.has(key)) continue;
           visited.add(key);
-          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) return { ok: true, visited };
           const cell = pipeGame.grid[current.r]?.[current.c];
-          const mask = cell?.kind ? cell.mask : pipeMask(cell || {});
+          const mask = pipeCellMask(cell);
+          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) {
+            reachedDrain = true;
+            continue;
+          }
           pipeDirs.forEach(dir => {
             if (!(mask & dir.bit)) return;
             const nr = current.r + dir.dr;
             const nc = current.c + dir.dc;
             const next = pipeGame.grid[nr]?.[nc];
-            if (!next) return;
-            const nextMask = next.kind ? next.mask : pipeMask(next);
+            if (!next) {
+              leaks.push({ r: nr, c: nc, from: key, dir: dir.name });
+              return;
+            }
+            const nextMask = pipeCellMask(next);
+            if (!(nextMask & dir.opposite)) {
+              leaks.push({ r: nr, c: nc, from: key, dir: dir.name });
+              return;
+            }
             if (nextMask & dir.opposite) stack.push({ r: nr, c: nc });
           });
         }
-        return { ok: false, visited };
+        return { ok: reachedDrain && leaks.length === 0, reachedDrain, leaks, visited };
       };
 
-      const flowPipe = () => {
+      const flowPipe = (auto = false) => {
         if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
+        clearPipeAnimation();
         const result = tracePipeFlow();
+        pipeGame.flowPath = result.visited;
+        pipeGame.leakAt = result.leaks[0] ? `${result.leaks[0].r},${result.leaks[0].c}` : null;
         pipeGame.won = result.ok;
+        pipeGame.lost = !result.ok;
+        pipeGame.score = pipeScore(result.ok);
+        pipeGame.temp = result.ok ? 640 : 9999;
         pipeGame.status = result.ok
-          ? `FLOW COMPLETE / connected in ${pipeGame.placed} pieces`
-          : `FLOW FAILED / connected cells ${result.visited.size}`;
+          ? `CORE COOLING / ${pipeGame.score} pts / ${pipeGame.placed} pipes`
+          : result.reachedDrain
+            ? `COOLANT LEAK / open outlet ${result.leaks[0]?.dir || 'unknown'}`
+            : `CORE STARVED / coolant never reached chamber / wet cells ${result.visited.size}`;
         if (result.ok) {
           award(Math.max(state.level, 2));
           pulse(720, 0.09);
         } else {
           pulse(130, 0.08);
         }
+        if (auto && !result.ok) pipeGame.status = `AUTO SCRAM / ${pipeGame.status}`;
+        schedulePipeFinale(result.ok);
         return renderPipeGame();
       };
 
@@ -2112,14 +2240,16 @@
         if (!pipeGame?.active || ['new', 'start', 'play'].includes(command)) return startPipeGame();
         if (['rotate', 'r'].includes(command)) return rotatePipe();
         if (['place', 'put', 'enter'].includes(command)) return placePipe();
+        if (['dump', 'skip', 'x', 'discard'].includes(command)) return dumpPipe();
         if (['flow', 'run', 'f'].includes(command)) return flowPipe();
         if (['quit', 'exit', 'q'].includes(command)) {
+          clearPipeAnimation();
           pipeGame.active = false;
           pipeGame = null;
           return 'pipe: session closed';
         }
         if (['help', '?'].includes(command)) return renderPipeGame();
-        return 'pipe: usage pipe new|rotate|place|flow|quit';
+        return 'pipe: usage pipe new|rotate|place|flow|dump|quit';
       };
 
       const debCommand = (action = 'summon') => {
@@ -2291,8 +2421,8 @@
         },
         {
           command: 'pipe',
-          description: 'DOS tarzi Pipe-86 oyununu acar',
-          aliases: ['pipes', 'pipe game', 'pipe86', 'boru oyunu'],
+          description: 'fuzyon reaktoru sogutma oyunu Pipe-90i acar',
+          aliases: ['pipes', 'pipe game', 'pipe86', 'pipe90', 'boru oyunu', 'reactor', 'reaktor', 'coolant'],
           action: () => pipeCommand('new')
         },
         {
@@ -2616,7 +2746,7 @@
         'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
         '',
         'lab:',
-        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe',
+        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, pipe dump',
         '',
         'system:',
         'whoami, uptime, date, version, memory, ps, log, clear, random, shutdown, restart, screen saver',
@@ -2938,6 +3068,11 @@
           if (pipeShortcutMode && key === 'f') {
             event.preventDefault();
             if (commandOutput) commandOutput.textContent = flowPipe();
+            return;
+          }
+          if (pipeShortcutMode && key === 'x') {
+            event.preventDefault();
+            if (commandOutput) commandOutput.textContent = dumpPipe();
             return;
           }
           if (pipeShortcutMode && key === 'q') {
