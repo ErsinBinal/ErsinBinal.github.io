@@ -18,6 +18,21 @@
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const nowMs = () => (window.performance?.now ? window.performance.now() : Date.now());
 
+  // Scheduling lookahead (s) + shared anchor so every layered sub-sound of one
+  // cue starts from a single base time instead of re-reading ctx.currentTime
+  // after each independent `await getCtx()` (which drifts them out of sync).
+  const LOOKAHEAD = 0.02;
+  let anchorTimeValue = 0;
+  let anchorWall = 0;
+  const anchorTime = () => {
+    if (!ctx) return null;
+    const t = nowMs();
+    if (anchorTimeValue && (t - anchorWall) < 24) return anchorTimeValue;
+    anchorTimeValue = ctx.currentTime + LOOKAHEAD;
+    anchorWall = t;
+    return anchorTimeValue;
+  };
+
   let ctx = null;
   let enabled = false;
   let initialized = false;
@@ -117,10 +132,12 @@
   };
 
   const tone = async (freq, duration = 0.06, opts = {}) => {
+    const baseTime = anchorTime();
     const c = await getCtx();
     if (!c || !borrowChannel(duration, opts.offset || 0)) return;
     try {
-      const start = c.currentTime + (opts.offset || 0);
+      const base = baseTime != null ? baseTime : c.currentTime + LOOKAHEAD;
+      const start = base + (opts.offset || 0);
       const end = start + Math.max(0.015, duration);
       const attack = clamp(opts.attack ?? 0.002, 0.001, duration * 0.45);
       const volume = clamp(opts.volume ?? 0.04, 0.001, 0.18);
@@ -158,10 +175,12 @@
 
   const noise = async (opts = {}) => {
     const duration = Math.max(0.012, opts.duration || 0.08);
+    const baseTime = anchorTime();
     const c = await getCtx();
     if (!c || !borrowChannel(duration, opts.offset || 0)) return;
     try {
-      const start = c.currentTime + (opts.offset || 0);
+      const base = baseTime != null ? baseTime : c.currentTime + LOOKAHEAD;
+      const start = base + (opts.offset || 0);
       const sampleRate = opts.rate || Math.min(c.sampleRate, 22050);
       const length = Math.max(1, Math.floor(sampleRate * duration));
       const buffer = c.createBuffer(1, length, sampleRate);
