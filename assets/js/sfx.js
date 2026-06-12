@@ -267,6 +267,39 @@
       { freq: 880, duration: 0.035, volume: 0.024, at: 0.120 },
       { freq: 880, duration: 0.095, volume: 0.026, at: 0.220 }
     ]),
+    'terminal.open': () => {
+      noise({ filter: 'highpass', freq: 900, duration: 0.035, volume: 0.025, bus: 'ui', bitcrush: 3 });
+      sequence([
+        { freq: 196, duration: 0.055, type: 'square', volume: 0.020 },
+        { freq: 392, duration: 0.060, type: 'triangle', volume: 0.024 },
+        { freq: 784, duration: 0.075, type: 'sine', volume: 0.020 }
+      ], { stepMs: 42 });
+    },
+    'terminal.close': () => sequence([
+      { freq: 520, duration: 0.045, type: 'triangle', volume: 0.022 },
+      { freq: 260, duration: 0.060, type: 'square', volume: 0.018 },
+      { noise: { filter: 'lowpass', freq: 500, to: 90, duration: 0.080, volume: 0.026 } }
+    ], { stepMs: 36 }),
+    'terminal.run': () => sequence([
+      { freq: 660, duration: 0.026, type: 'square', volume: 0.018 },
+      { freq: 660, duration: 0.026, type: 'square', volume: 0.018, at: 0.045 },
+      { noise: { filter: 'highpass', freq: 1600, duration: 0.014, volume: 0.020, bitcrush: 2 }, at: 0.090 }
+    ]),
+    'terminal.complete': () => sequence([
+      { freq: 330, duration: 0.060, type: 'triangle', volume: 0.022 },
+      { freq: 495, duration: 0.070, type: 'triangle', volume: 0.022 },
+      { freq: 660, duration: 0.090, type: 'sine', volume: 0.020 }
+    ], { stepMs: 58 }),
+    'terminal.type': () => tone(980, 0.018, { type: 'square', volume: 0.010, bus: 'ui' }),
+    'terminal.suggest': () => tone(740, 0.032, { type: 'triangle', volume: 0.014, bus: 'ui' }),
+    'system.unlock': () => {
+      noise({ freq: 260, to: 2200, duration: 0.28, volume: 0.030, bus: 'ui', bitcrush: 4 });
+      sequence([
+        { freq: 220, duration: 0.075, type: 'square', volume: 0.022 },
+        { freq: 440, duration: 0.075, type: 'triangle', volume: 0.024 },
+        { freq: 880, duration: 0.110, type: 'sine', volume: 0.020 }
+      ], { stepMs: 70 });
+    },
     'system.boot': () => {
       noise({ freq: 220, to: 2600, duration: 1.45, volume: 0.040, bus: 'ui' });
       sequence([
@@ -316,6 +349,51 @@
       noise({ bus: 'game', filter: 'bandpass', freq: 720, duration: 0.09, volume: 0.075, bitcrush: 2 });
       tone(116, 0.11, { bus: 'game', type: 'sawtooth', volume: 0.060, slide: -62 });
     },
+    'game.start': () => {
+      noise({ bus: 'game', filter: 'highpass', freq: 1300, duration: 0.045, volume: 0.040, bitcrush: 3 });
+      sequence([
+        { freq: 220, duration: 0.060, type: 'square', volume: 0.038 },
+        { freq: 330, duration: 0.060, type: 'square', volume: 0.036 },
+        { freq: 440, duration: 0.080, type: 'triangle', volume: 0.034 }
+      ], { bus: 'game', stepMs: 58 });
+    },
+    'game.step': () => tone(96, 0.040, { bus: 'game', type: 'triangle', volume: 0.022, slide: -16 }),
+    'game.correct': () => sequence([
+      { freq: 660, duration: 0.052, type: 'square', volume: 0.040 },
+      { freq: 990, duration: 0.090, type: 'sine', volume: 0.034 }
+    ], { bus: 'game', stepMs: 62 }),
+    'game.wrong': () => {
+      tone(320, 0.080, { bus: 'game', type: 'sawtooth', volume: 0.040, slide: -120 });
+      noise({ bus: 'game', filter: 'highpass', freq: 700, duration: 0.045, volume: 0.040, bitcrush: 2 });
+    },
+    'game.timeout': () => sequence([
+      { freq: 440, duration: 0.060, type: 'square', volume: 0.034 },
+      { freq: 220, duration: 0.080, type: 'square', volume: 0.030 },
+      { freq: 110, duration: 0.110, type: 'sawtooth', volume: 0.030 }
+    ], { bus: 'game', stepMs: 74 }),
+    'game.win': () => sequence([
+      { freq: 392, duration: 0.080, type: 'triangle', volume: 0.038 },
+      { freq: 523, duration: 0.080, type: 'triangle', volume: 0.038 },
+      { freq: 659, duration: 0.100, type: 'triangle', volume: 0.034 },
+      { freq: 784, duration: 0.150, type: 'sine', volume: 0.030 }
+    ], { bus: 'game', stepMs: 74 }),
+    'game.fail': () => {
+      sequence([
+        { freq: 260, duration: 0.080, type: 'sawtooth', volume: 0.034 },
+        { freq: 184, duration: 0.090, type: 'sawtooth', volume: 0.032 },
+        { freq: 130, duration: 0.120, type: 'square', volume: 0.030 }
+      ], { bus: 'game', stepMs: 80 });
+      noise({ bus: 'game', filter: 'lowpass', freq: 600, to: 110, duration: 0.220, volume: 0.036, bitcrush: 3 });
+    },
+    'game.bust': () => {
+      tone(180, 0.080, { bus: 'game', type: 'sawtooth', volume: 0.045, slide: -80 });
+      noise({ bus: 'game', filter: 'bandpass', freq: 520, duration: 0.080, volume: 0.060, bitcrush: 2 });
+    },
+    'game.power': () => sequence([
+      { freq: 620, duration: 0.060, type: 'triangle', volume: 0.034 },
+      { freq: 880, duration: 0.080, type: 'triangle', volume: 0.032 }
+    ], { bus: 'game', stepMs: 65 }),
+    'game.hazard': () => tone(55, 0.150, { bus: 'game', type: 'sawtooth', volume: 0.045, slide: -18 }),
     'game.pickup': () => sequence([
       { freq: 340, duration: 0.06, type: 'square', volume: 0.052 },
       { freq: 560, duration: 0.07, type: 'square', volume: 0.047 }
@@ -345,6 +423,53 @@
       { freq: 520, duration: 0.045, type: 'triangle', volume: 0.030 },
       { freq: 780, duration: 0.070, type: 'triangle', volume: 0.026 }
     ], { stepMs: 70 }),
+    'app.score': () => sequence([
+      { freq: 300, duration: 0.038, type: 'square', volume: 0.026 },
+      { freq: 450, duration: 0.050, type: 'triangle', volume: 0.024 }
+    ], { bus: 'game', stepMs: 42 }),
+    'app.highScore': () => {
+      sequence([
+        { freq: 360, duration: 0.060, type: 'square', volume: 0.032 },
+        { freq: 540, duration: 0.060, type: 'triangle', volume: 0.032 },
+        { freq: 720, duration: 0.110, type: 'sine', volume: 0.026 }
+      ], { bus: 'game', stepMs: 58 });
+    },
+    'app.undo': () => {
+      tone(420, 0.050, { bus: 'ui', type: 'triangle', volume: 0.024, slide: -130 });
+      noise({ bus: 'ui', filter: 'highpass', freq: 1000, duration: 0.018, volume: 0.018, bitcrush: 3 });
+    },
+    'app.reset': () => sequence([
+      { freq: 500, duration: 0.050, type: 'square', volume: 0.024 },
+      { freq: 260, duration: 0.070, type: 'square', volume: 0.022 }
+    ], { stepMs: 54 }),
+    'app.save': () => sequence([
+      { freq: 500, duration: 0.040, type: 'triangle', volume: 0.022 },
+      { freq: 750, duration: 0.060, type: 'sine', volume: 0.020 }
+    ], { stepMs: 56 }),
+    'oracle.choose': () => sequence([
+      { freq: 220, duration: 0.050, type: 'triangle', volume: 0.022 },
+      { freq: 330, duration: 0.070, type: 'sine', volume: 0.018 }
+    ], { stepMs: 52 }),
+    'oracle.draw': () => {
+      noise({ bus: 'ui', filter: 'bandpass', freq: 360, to: 1300, duration: 0.32, volume: 0.030, bitcrush: 5 });
+      sequence([
+        { freq: 130, duration: 0.120, type: 'sine', volume: 0.020 },
+        { freq: 260, duration: 0.120, type: 'triangle', volume: 0.022 },
+        { freq: 520, duration: 0.160, type: 'sine', volume: 0.018 }
+      ], { stepMs: 105 });
+    },
+    'oracle.stir': () => {
+      noise({ bus: 'ui', filter: 'highpass', freq: 780, duration: 0.090, volume: 0.036, bitcrush: 4 });
+      tone(180, 0.090, { bus: 'ui', type: 'triangle', volume: 0.024, slide: 110 });
+    },
+    'oracle.accept': () => sequence([
+      { freq: 330, duration: 0.060, type: 'sine', volume: 0.022 },
+      { freq: 660, duration: 0.100, type: 'sine', volume: 0.020 }
+    ], { stepMs: 64 }),
+    'oracle.refuse': () => sequence([
+      { freq: 294, duration: 0.060, type: 'triangle', volume: 0.022 },
+      { freq: 196, duration: 0.090, type: 'triangle', volume: 0.020 }
+    ], { stepMs: 64 }),
     'app.denied': () => sounds['ui.error']()
   };
 
@@ -357,10 +482,27 @@
     reveal: 'ui.reveal',
     glitch: 'ui.glitch',
     transmit: 'ui.transmit',
+    open: 'terminal.open',
+    close: 'terminal.close',
+    run: 'terminal.run',
+    complete: 'terminal.complete',
+    type: 'terminal.type',
+    suggest: 'terminal.suggest',
     boot: 'system.boot',
     shutdown: 'system.shutdown',
     restart: 'system.restart',
+    unlock: 'system.unlock',
+    start: 'game.start',
+    correct: 'game.correct',
+    wrong: 'game.wrong',
+    timeout: 'game.timeout',
+    win: 'game.win',
+    fail: 'game.fail',
+    bust: 'game.bust',
+    power: 'game.power',
+    hazard: 'game.hazard',
     jump: 'game.jump',
+    step: 'game.step',
     land: 'game.land',
     hit: 'game.hit',
     pickup: 'game.pickup',
@@ -368,8 +510,18 @@
     laser: 'game.laser',
     explosion: 'game.explosion',
     portal: 'game.portal',
+    score: 'app.score',
+    highScore: 'app.highScore',
+    undo: 'app.undo',
+    reset: 'app.reset',
+    save: 'app.save',
     notify: 'app.notify',
-    denied: 'app.denied'
+    denied: 'app.denied',
+    choose: 'oracle.choose',
+    draw: 'oracle.draw',
+    stir: 'oracle.stir',
+    accept: 'oracle.accept',
+    refuse: 'oracle.refuse'
   };
 
   const play = (name, opts = {}) => {
@@ -579,6 +731,15 @@
     lastPointerSfx = { el, at: nowMs() };
   }, { capture: true });
 
+  const handleAudioEvent = (event) => {
+    const detail = event.detail || {};
+    const name = typeof detail === 'string' ? detail : detail.name || detail.sound || detail.cue;
+    if (name) play(name, detail);
+  };
+
+  window.addEventListener('convivium:audio', handleAudioEvent);
+  document.addEventListener('convivium:audio', handleAudioEvent);
+
   const api = {
     get enabled() { return enabled; },
     get context() { return ctx; },
@@ -593,6 +754,10 @@
     setEnabled,
     setBusVolume,
     play,
+    cue: play,
+    dispatch: (name, opts = {}) => {
+      window.dispatchEvent(new CustomEvent('convivium:audio', { detail: { ...opts, name } }));
+    },
     tone: (freq, duration, opts) => tone(freq, duration, opts),
     noise,
     sequence,
@@ -617,6 +782,14 @@
     explosion: () => play('explosion'),
     portal: () => play('portal'),
     notify: () => play('notify'),
+    score: () => play('score'),
+    highScore: () => play('highScore'),
+    undo: () => play('undo'),
+    reset: () => play('reset'),
+    save: () => play('save'),
+    win: () => play('win'),
+    fail: () => play('fail'),
+    bust: () => play('bust'),
     toggle: (on) => play(on ? 'ui.toggleOn' : 'ui.toggleOff'),
     music: {
       get active() { return Boolean(musicState); },
@@ -639,4 +812,5 @@
 
   window.ConviviumAudio = api;
   window.ConviviumSFX = api;
+  window.ConviviumAudioCue = play;
 })();

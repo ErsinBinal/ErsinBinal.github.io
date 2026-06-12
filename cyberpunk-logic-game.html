@@ -710,6 +710,9 @@
         const resultSummaryElement = document.getElementById('result-summary');
         const scoreSaveStatusElement = document.getElementById('score-save-status');
         const scoreboardTitleElement = document.getElementById('scoreboard-title');
+        const audioCue = (name) => {
+            window.ConviviumAudio?.play?.(name);
+        };
 
         // Yükleme sırasında sırayla gösterilecek metinler
         const loadingMessages = [
@@ -863,6 +866,7 @@ function showNextLoadingMessage() {
             const correctIndex = question.answer;
 
             if (index === correctIndex) {
+                audioCue(gameState.streak >= 2 ? 'app.highScore' : 'game.correct');
                 optionElements[index].classList.add('correct');
                 // Point calculation based on time
                 let pointsEarned = 0;
@@ -879,6 +883,7 @@ function showNextLoadingMessage() {
                 gameState.score += pointsEarned;
                 feedbackElement.textContent = `NODE AÇILDI +${pointsEarned}. ${question.explanation}`;
             } else {
+                audioCue(option.skip ? 'terminal.suggest' : 'game.wrong');
                 optionElements[index].classList.add(option.skip ? 'skip' : 'incorrect');
                 optionElements[correctIndex]?.classList.add('correct');
                 gameState.streak = 0;
@@ -892,6 +897,7 @@ function showNextLoadingMessage() {
         }
 
         function handleTimeout() {
+            audioCue('game.timeout');
             const question = gameState.questions[gameState.currentQuestion];
             const optionElements = document.querySelectorAll('.option');
             optionElements.forEach(opt => {
@@ -920,6 +926,7 @@ function showNextLoadingMessage() {
         
         // Show final results
         function showResults() {
+            audioCue(gameState.trace < 55 ? 'game.win' : 'game.fail');
             questionContainer.style.display = 'none';
             resultsElement.style.display = 'flex';
             finalScoreElement.textContent = gameState.score;
@@ -1076,6 +1083,7 @@ function showNextLoadingMessage() {
         
         // Start the game
         function startGame() {
+            audioCue('game.start');
             gameState.currentQuestion = 0;
             gameState.score = 0;
             gameState.streak = 0;
@@ -1122,6 +1130,6 @@ function showNextLoadingMessage() {
         }
     })();
     </script>
-  <script src="/assets/js/sfx.js?v=8" defer></script>
+  <script src="/assets/js/sfx.js?v=9" defer></script>
 </body>
 </html>

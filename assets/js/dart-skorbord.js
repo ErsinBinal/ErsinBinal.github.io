@@ -21,6 +21,9 @@
 
   const cpuConfig = { RED: null, BLUE: null };
   let cpuTurnToken = 0;
+  const audioCue = (name) => {
+    window.ConviviumAudio?.play?.(name);
+  };
   const checkoutRoutes = {
     170: 'T20 - T20 - BULL',
     167: 'T20 - T19 - BULL',
@@ -313,6 +316,7 @@
   function addDart(value) {
     if (state.isResolving || state.isComplete || state.currentSetDarts.length >= 3) return;
     const numericValue = Math.max(0, Math.min(60, Number(value) || 0));
+    audioCue(numericValue >= 50 ? 'app.highScore' : 'app.score');
     const slot = state.currentTurn;
     const currentScore = state.scores[slot];
 
@@ -336,6 +340,7 @@
         isWinningThrow: false
       });
       completeTurn(slot, 0, dartsInTurn, true);
+      audioCue('game.bust');
       resolveTurn('Bust', 'Skor 1 veya altina dusmez. Sira rakibe geciyor.', true);
       return;
     }
@@ -352,6 +357,7 @@
       completeTurn(slot, rawTurnTotal, dartsInTurn, false);
       state.isComplete = true;
       render();
+      audioCue('game.win');
       showOverlay('Leg kazanildi', `${displayName(slot)} maci bitirdi.`, true);
       persistCompletedMatch(slot);
       return;
@@ -363,6 +369,7 @@
       const scored = rawTurnTotal;
       completeTurn(slot, scored, 3, false);
       if (scored >= 100) {
+        audioCue(scored === 180 ? 'app.highScore' : 'game.power');
         resolveTurn(scored === 180 ? 'Perfect 180' : 'Harika set', `Set toplami: ${scored}`, false);
       } else if (scored <= 40) {
         resolveTurn('Dusuk set', `Set toplami: ${scored}`, false);
@@ -397,6 +404,7 @@
 
   function undoLastAction() {
     if (!state.history.length || state.isResolving || state.isComplete || state.persistedMatchId) return;
+    audioCue('app.undo');
     const previous = state.history.pop();
     state = {
       ...state,
@@ -417,6 +425,7 @@
   }
 
   function startNewMatch() {
+    audioCue('app.reset');
     ['RED', 'BLUE'].forEach((slot) => { if (cpuConfig[slot]) clearCpu(slot); });
     state = createInitialState();
     hideOverlay();
@@ -615,6 +624,7 @@
     }
 
     cpuConfig[slot] = cpu;
+    audioCue('app.notify');
     const nameEl = slot === 'RED' ? els.redAuthName : els.blueAuthName;
     nameEl.textContent = cpu.name;
     setSlotStatus(slot, `CPU · ${cpu.year} · ${cpu.nick}`);
@@ -631,6 +641,7 @@
 
   function clearCpu(slot) {
     cpuConfig[slot] = null;
+    audioCue('app.undo');
     const nameEl = slot === 'RED' ? els.redAuthName : els.blueAuthName;
     nameEl.textContent = slotAuth[slot].label || SLOT_NAMES[slot];
     const auth = slotAuth[slot];
@@ -704,6 +715,7 @@
     event.preventDefault();
     const value = Number(els.keyboardInput.value);
     if (Number.isNaN(value) || value < 0 || value > 60) {
+      audioCue('app.denied');
       showOverlay('Gecersiz skor', 'Tek ok icin 0 ile 60 arasinda bir deger girin.', false);
       window.setTimeout(hideOverlay, 1200);
       return;

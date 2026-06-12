@@ -1465,7 +1465,12 @@
         Array.from(els.stepDots.children).forEach(d => { d.className = 'is-done'; });
       };
 
+      const audioCue = (name) => {
+        window.ConviviumAudio?.play?.(name);
+      };
+
       const selectTopic = (idx) => {
+        audioCue('oracle.choose');
         state.topic = idx;
         state.choices = [];
         state.stirOffset = 0;
@@ -1483,6 +1488,7 @@
       const selectChoice = (choiceIdx) => {
         const qIdx = state.choices.length;
         if (qIdx >= choiceSteps.length) return;
+        audioCue('oracle.choose');
 
         Array.from(els.choiceGrid.children).forEach(b => b.classList.remove('is-selected'));
         document.querySelector(`[data-choice="${choiceIdx}"]`)?.classList.add('is-selected');
@@ -1532,6 +1538,7 @@
       const drawReading = () => {
         if (state.busy) return;
         if (!isMatrixComplete()) { showToast('Önce konunu ve üç işareti seç.'); return; }
+        audioCue('oracle.draw');
 
         state.busy = true;
         updateMeters();
@@ -1604,6 +1611,7 @@
       const updateCurrentAcceptance = (accepted) => {
         if (!state.current) return;
         if (state.current.accepted !== null && state.current.accepted !== undefined) return;
+        audioCue(accepted ? 'oracle.accept' : 'oracle.refuse');
         state.current.accepted = accepted;
         persistReading(state.current, accepted);
         mergeReadingIntoProfile(state.current, accepted);
@@ -1663,6 +1671,7 @@
 
       const stirChance = () => {
         if (!isMatrixComplete()) return;
+        audioCue('oracle.stir');
         state.stirOffset = (state.stirOffset + 1) % allAnswers.length;
         state.entropy = (state.entropy + 137 + state.stirOffset) % 1000003;
         els.sigilMark.textContent = glyphs[(state.entropy + state.stirOffset) % glyphs.length];
@@ -1771,6 +1780,6 @@
       init();
     })();
   </script>
-  <script src="/assets/js/sfx.js?v=8" defer></script>
+  <script src="/assets/js/sfx.js?v=9" defer></script>
 </body>
 </html>

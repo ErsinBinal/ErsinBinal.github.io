@@ -414,6 +414,10 @@
         window.ConviviumSFX?.pulse?.(frequency, duration);
       };
 
+      const audioCue = (name, options) => {
+        window.ConviviumAudio?.play?.(name, options);
+      };
+
       const playPowerSound = (mode) => {
         if (!audioEnabled) return;
         window.ConviviumSFX?.[mode]?.();
@@ -508,9 +512,11 @@
       };
 
       const award = (amount = 1) => {
+        const previousLevel = state.level;
         state.level = Math.min(levels.length - 1, Math.max(state.level, amount));
         persist();
         updateAccess();
+        if (state.level > previousLevel) audioCue('system.unlock');
       };
 
       const routeSuggestions = {
@@ -722,6 +728,7 @@
 
       const openCommand = () => {
         if (!commandShell || !commandInput) return;
+        audioCue('terminal.open');
         lastFocusedElement = document.activeElement;
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-open');
@@ -741,6 +748,7 @@
 
       const closeCommand = () => {
         if (!commandShell) return;
+        audioCue('terminal.close');
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
@@ -2807,6 +2815,7 @@
 
       const applySuggestion = (value, run = false) => {
         if (!commandInput || !value) return;
+        audioCue(run ? 'terminal.run' : 'terminal.suggest');
         commandInput.value = value;
         commandInput.focus();
         renderCommandSuggestions(value);
@@ -2998,6 +3007,7 @@
         state.commandLog = [...(state.commandLog || []), query].slice(-8);
         if (state.commands >= 3) award(2);
         persist();
+        audioCue('terminal.run');
         pulse(390, 0.055);
         if (['oracle yes', 'ask oracle', 'confirm oracle'].includes(command)) {
           if (!pendingOracleQuery) {
@@ -3034,6 +3044,7 @@
         if (parameterMatch) {
           const result = parameterMatch[1](command.slice(parameterMatch[0].length));
           if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
+          audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
           return;
@@ -3041,6 +3052,7 @@
         if (action) {
           const result = await action();
           if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
+          audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
           return;
