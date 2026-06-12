@@ -25,6 +25,7 @@
   let channelBudget = 8;
   let ambientNode = null;
   let musicState = null;
+  let lastPointerSfx = null;
   let busVolumes = { ...DEFAULT_BUS_VOLUMES };
 
   try { enabled = localStorage.getItem(PREF_KEY) === 'true'; } catch {}
@@ -81,13 +82,22 @@
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return null;
     if (!ctx) {
-      try { ctx = new AudioContext(); } catch { return null; }
+      try {
+        ctx = new AudioContext({ latencyHint: 'interactive' });
+      } catch {
+        try { ctx = new AudioContext(); } catch { return null; }
+      }
     }
     setupGraph();
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch {}
     }
     return ctx.state === 'running' ? ctx : null;
+  };
+
+  const warmAudio = () => {
+    if (!enabled) return;
+    getCtx();
   };
 
   const getBus = (bus = 'ui') => {
@@ -112,7 +122,7 @@
     try {
       const start = c.currentTime + (opts.offset || 0);
       const end = start + Math.max(0.015, duration);
-      const attack = clamp(opts.attack ?? 0.006, 0.001, duration * 0.45);
+      const attack = clamp(opts.attack ?? 0.002, 0.001, duration * 0.45);
       const volume = clamp(opts.volume ?? 0.04, 0.001, 0.18);
       const quantized = opts.raw ? freq : Math.max(12, Math.round(freq / 4) * 4);
       const osc = c.createOscillator();
@@ -483,6 +493,7 @@
       stopAmbient();
       return;
     }
+    warmAudio();
     if (withSound) play('ui.toggleOn');
   };
 
@@ -518,19 +529,55 @@
     document.body.appendChild(btn);
   };
 
-  document.addEventListener('click', (event) => {
+  const sfxTarget = (event, includeLinks = true) => {
     if (!enabled) return;
-    const el = event.target.closest(
-      'button:not([data-sfx-skip]), [role="button"]:not([data-sfx-skip]), a[href]:not([data-sfx-skip])'
-    );
-    if (!el) return;
-    if (el.dataset.sfxToggle !== undefined) return;
-    if (el.closest('#command-shell, .system-hud, .journey-gate')) return;
+    const selector = includeLinks
+      ? 'button:not([data-sfx-skip]), [role="button"]:not([data-sfx-skip]), a[href]:not([data-sfx-skip])'
+      : 'button:not([data-sfx-skip]), [role="button"]:not([data-sfx-skip])';
+    const el = event.target.closest(selector);
+    if (!el || el.dataset.sfxToggle !== undefined) return null;
+    if (el.closest('#command-shell, .system-hud, .journey-gate')) return null;
+    return el;
+  };
+
+  const playForElement = (el) => {
     const type = el.dataset.sfx;
     if (type && play(type)) return;
     if (el.tagName === 'A') { play('nav'); return; }
     play('click');
+  };
+
+  ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
+    document.addEventListener(eventName, warmAudio, { capture: true, passive: true });
   });
+
+  document.addEventListener('pointerdown', (event) => {
+    const el = sfxTarget(event, false);
+    if (!el) return;
+    playForElement(el);
+    lastPointerSfx = { el, at: nowMs() };
+  }, { capture: true, passive: true });
+
+  document.addEventListener('click', (event) => {
+    const el = sfxTarget(event, true);
+    if (!el) return;
+    if (
+      lastPointerSfx &&
+      lastPointerSfx.el === el &&
+      nowMs() - lastPointerSfx.at < 480
+    ) {
+      return;
+    }
+    playForElement(el);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.repeat || event.key !== 'Enter') return;
+    const el = sfxTarget(event, false);
+    if (!el) return;
+    playForElement(el);
+    lastPointerSfx = { el, at: nowMs() };
+  }, { capture: true });
 
   const api = {
     get enabled() { return enabled; },
