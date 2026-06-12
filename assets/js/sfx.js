@@ -340,13 +340,13 @@
     restart: async () => {
       const c = await getCtx(); if (!c) return;
       try {
+        const t = c.currentTime;
         [0, 0.12, 0.24].forEach((offset, i) => {
           tone([520, 520, 740][i], 0.09, 'square', 0.028, offset);
         });
         // Yükselen sweep
+        const ts = t + 0.40;
         const osc = c.createOscillator(), g = c.createGain();
-        const ts = (await getCtx())?.currentTime + 0.40;
-        if (!ts) return;
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(200, ts);
         osc.frequency.exponentialRampToValueAtTime(680, ts + 0.22);
