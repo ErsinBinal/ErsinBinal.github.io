@@ -21,7 +21,7 @@
   // Scheduling lookahead (s) + shared anchor so every layered sub-sound of one
   // cue starts from a single base time instead of re-reading ctx.currentTime
   // after each independent `await getCtx()` (which drifts them out of sync).
-  const LOOKAHEAD = 0.02;
+  const LOOKAHEAD = 0.006;
   let anchorTimeValue = 0;
   let anchorWall = 0;
   const anchorTime = () => {
@@ -92,6 +92,21 @@
     }
   };
 
+  let primed = false;
+  // Open the audio output route during the first gesture so the very first
+  // real sound isn't delayed while the hardware/route wakes up (notably Safari/iOS).
+  const primeOutput = (c) => {
+    if (primed) return;
+    primed = true;
+    try {
+      const buffer = c.createBuffer(1, 1, c.sampleRate);
+      const source = c.createBufferSource();
+      source.buffer = buffer;
+      connect(source, c.destination);
+      source.start(0);
+    } catch {}
+  };
+
   const getCtx = async () => {
     if (!enabled) return null;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -107,7 +122,11 @@
     if (ctx.state === 'suspended') {
       try { await ctx.resume(); } catch {}
     }
-    return ctx.state === 'running' ? ctx : null;
+    if (ctx.state === 'running') {
+      primeOutput(ctx);
+      return ctx;
+    }
+    return null;
   };
 
   const warmAudio = () => {
@@ -723,7 +742,7 @@
   });
 
   document.addEventListener('pointerdown', (event) => {
-    const el = sfxTarget(event, false);
+    const el = sfxTarget(event, true);
     if (!el) return;
     playForElement(el);
     lastPointerSfx = { el, at: nowMs() };
