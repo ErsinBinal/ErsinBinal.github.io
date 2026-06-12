@@ -1132,10 +1132,10 @@
       const axisKeys = ['control', 'desire', 'exit', 'returning'];
 
       const dialogueSteps = [
-        'Aklındaki şeyi söyleme. Sadece onun sende bıraktığı ilk hissi yaz.',
-        'O his yaklaşınca bedenin ne yapmak istiyor: tutmak mı, gitmek mi, beklemek mi?',
-        'Bu konuda seni en çok susturan şey ne? Bir kişi, bir zaman, bir korku ya da bir istek olabilir.',
-        'Son cevap: İçinden geçen en dürüst cümleyi yaz. Süsleme, açıklama yapma.'
+        'Şu an içini en çok neyle dolduruyorsun? Bir his, bir isim, bir durum — ne olursa.',
+        'Bu konuda içten içe ne olmasını istiyorsun? İdeal son nasıl görünüyor sana?',
+        'Seni en çok durduran şey ne — bir korku mu, başka biri mi, yoksa kendine söylediğin bir şey mi?',
+        'Şimdi her şeyi bir yana bıraksan, ne hissederdin? Süsleme, ilk gelen şeyi yaz.'
       ];
 
       const keywordScores = [
@@ -1155,98 +1155,98 @@
       }
 
       const answerThemes = [
-        { key: 'clarity', title: 'Netlik', axis: 'control', glyph: '□', profile: { control: 5, desire: 1, exit: 1, returning: 1, risk: 1, clarity: 5, urgency: 2, relation: 1, evidence: 4 }, signal: 'Konu netlik istiyor.', action: 'soruyu tek cümleye indir', reward: 'Karar alanın daralır' },
-        { key: 'boundary', title: 'Sınır', axis: 'exit', glyph: '◇', profile: { control: 3, desire: 0, exit: 5, returning: 1, risk: 3, clarity: 4, urgency: 2, relation: 3, evidence: 2 }, signal: 'Burada sınır çizmek gerekiyor.', action: 'neyi kabul etmeyeceğini yaz', reward: 'Yük azalır' },
-        { key: 'courage', title: 'Cesaret', axis: 'desire', glyph: '✦', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 4, clarity: 3, urgency: 4, relation: 2, evidence: 1 }, signal: 'İstek güçlü ama çekingenlik var.', action: 'istediğin şeyi açık söyle', reward: 'Bekleme basıncı düşer' },
-        { key: 'patience', title: 'Sabır', axis: 'returning', glyph: '◌', profile: { control: 3, desire: 1, exit: 1, returning: 5, risk: 1, clarity: 3, urgency: 0, relation: 3, evidence: 3 }, signal: 'Bu konu hemen zorlanmamalı.', action: 'biraz zaman tanı', reward: 'Gerçek eğilim görünür' },
-        { key: 'evidence', title: 'Kanıt', axis: 'control', glyph: '⌖', profile: { control: 5, desire: 0, exit: 1, returning: 1, risk: 2, clarity: 4, urgency: 1, relation: 1, evidence: 5 }, signal: 'Duygu değil, kanıt belirleyici olmalı.', action: 'elindeki veriyi ayır', reward: 'Yanlış yorum riski azalır' },
-        { key: 'talk', title: 'Konuşma', axis: 'returning', glyph: '⌬', profile: { control: 2, desire: 2, exit: 0, returning: 5, risk: 2, clarity: 3, urgency: 2, relation: 5, evidence: 2 }, signal: 'Bu düğüm konuşmadan çözülmez.', action: 'kısa ve net bir konuşma aç', reward: 'Belirsizlik azalır' },
-        { key: 'test', title: 'Küçük Deneme', axis: 'desire', glyph: '△', profile: { control: 4, desire: 4, exit: 1, returning: 1, risk: 1, clarity: 3, urgency: 3, relation: 1, evidence: 4 }, signal: 'Büyük karar yerine küçük deneme daha uygun.', action: 'düşük riskli bir test kur', reward: 'Cevap pratikte görünür' },
-        { key: 'closure', title: 'Kapanış', axis: 'exit', glyph: '●', profile: { control: 3, desire: 0, exit: 5, returning: 0, risk: 4, clarity: 5, urgency: 3, relation: 2, evidence: 3 }, signal: 'Bu konu kapanış istiyor.', action: 'açık kapıyı azalt', reward: 'Zihinsel alan açılır' },
-        { key: 'repair', title: 'Onarım', axis: 'returning', glyph: '◈', profile: { control: 2, desire: 2, exit: 1, returning: 5, risk: 2, clarity: 3, urgency: 1, relation: 5, evidence: 3 }, signal: 'Tam kopuş değil, onarım ihtimali var.', action: 'eski hatayı adlandır', reward: 'Aynı döngü zayıflar' },
-        { key: 'opportunity', title: 'Fırsat', axis: 'desire', glyph: '⟡', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 3, clarity: 3, urgency: 5, relation: 1, evidence: 2 }, signal: 'Fırsat penceresi açık ama kısa.', action: 'gecikmeden küçük bir hamle yap', reward: 'Avantaj kaybolmadan yakalanır' }
+        { key: 'clarity', title: 'Görüş', axis: 'control', glyph: '□', profile: { control: 5, desire: 1, exit: 1, returning: 1, risk: 1, clarity: 5, urgency: 2, relation: 1, evidence: 4 }, signal: 'Bulanık görünen şeyin aslında çok net bir cevabı var.', action: 'bunu tek bir soruya indir', reward: 'Zihin netleşince yol kendiliğinden görünür' },
+        { key: 'boundary', title: 'Çizgi', axis: 'exit', glyph: '◇', profile: { control: 3, desire: 0, exit: 5, returning: 1, risk: 3, clarity: 4, urgency: 2, relation: 3, evidence: 2 }, signal: 'Bir sınır çizme zamanı geldi.', action: 'ne kabul etmeyeceğini sesli söyle', reward: 'Çizilen sınır seni küçültmez, büyütür' },
+        { key: 'courage', title: 'Cesur Adım', axis: 'desire', glyph: '✦', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 4, clarity: 3, urgency: 4, relation: 2, evidence: 1 }, signal: 'İstediğin şey gerçek — ama henüz tam söylemedin.', action: 'istediğini açık ve net söyle', reward: 'Söylenen istek güç kazanır' },
+        { key: 'patience', title: 'Bekleme Zamanı', axis: 'returning', glyph: '◌', profile: { control: 3, desire: 1, exit: 1, returning: 5, risk: 1, clarity: 3, urgency: 0, relation: 3, evidence: 3 }, signal: 'Bu konu henüz olgunlaşmadı. Sabır burada güçtür.', action: 'biraz bekle ve izle', reward: 'Olgunlaşmış meyve daha tatlıdır' },
+        { key: 'evidence', title: 'Gerçek Yüz', axis: 'control', glyph: '⌖', profile: { control: 5, desire: 0, exit: 1, returning: 1, risk: 2, clarity: 4, urgency: 1, relation: 1, evidence: 5 }, signal: 'Hisler seni yanıltıyor olabilir. Elimdeki gerçek ne söylüyor?', action: 'elimdeki somut şeylere bak', reward: 'Gerçeği görmek ağır ama özgürleştirici' },
+        { key: 'talk', title: 'Söz Köprüsü', axis: 'returning', glyph: '⌬', profile: { control: 2, desire: 2, exit: 0, returning: 5, risk: 2, clarity: 3, urgency: 2, relation: 5, evidence: 2 }, signal: 'Bu düğüm ancak konuşmayla çözülür.', action: 'kısa ve dürüst bir konuşma aç', reward: 'Açılan söz köprüsü iki tarafı da taşır' },
+        { key: 'test', title: 'Küçük Kapı', axis: 'desire', glyph: '△', profile: { control: 4, desire: 4, exit: 1, returning: 1, risk: 1, clarity: 3, urgency: 3, relation: 1, evidence: 4 }, signal: 'Büyük karar vermeden önce küçük bir kapıdan gir.', action: 'küçük bir deneme yap', reward: 'Küçük kapı büyük kapının habercisidir' },
+        { key: 'closure', title: 'Bırakış', axis: 'exit', glyph: '●', profile: { control: 3, desire: 0, exit: 5, returning: 0, risk: 4, clarity: 5, urgency: 3, relation: 2, evidence: 3 }, signal: 'Bir şeyi bırakma zamanı geldi.', action: 'neyi taşımayı bırakacağını söyle', reward: 'Bırakılan yük omzunu değil, ruhunu hafifletir' },
+        { key: 'repair', title: 'Yara Sarma', axis: 'returning', glyph: '◈', profile: { control: 2, desire: 2, exit: 1, returning: 5, risk: 2, clarity: 3, urgency: 1, relation: 5, evidence: 3 }, signal: 'Kopmak değil, onarmak mümkün.', action: 'o yaranın adını koy', reward: 'Sarılan yara hem seni hem karşını iyileştirir' },
+        { key: 'opportunity', title: 'Açık Pencere', axis: 'desire', glyph: '⟡', profile: { control: 2, desire: 5, exit: 0, returning: 1, risk: 3, clarity: 3, urgency: 5, relation: 1, evidence: 2 }, signal: 'Bir pencere açık — fark etmeyebilirsin ama rüzgar esmeye başladı.', action: 'şu an önündeki küçük fırsatı gör', reward: 'Açık pencereden içeri giren, geride kalmaz' }
       ];
 
       const answerForms = [
         {
-          label: 'İlk adım',
+          label: 'İlk Işık',
           adjust: { urgency: 1 },
-          signal: (theme) => `${theme.signal} Büyük karar değil, ilk adım önemli.`,
-          move: (theme) => `Bugün ${theme.action}. Sonra sonucu gözle.`,
-          trap: () => 'Her şeyi aynı anda çözmeye çalışmak.',
+          signal: (theme) => `${theme.signal} Küçük bir başlangıç yapmak zamanı.`,
+          move: (theme) => `Bugün sadece ${theme.action}. Devamını hayat getirecek.`,
+          trap: () => 'Mükemmel olmayı bekleyerek başlamamak.',
           reward: (theme) => `${theme.reward}.`
         },
         {
-          label: 'Net koşul',
+          label: 'Koşul Koy',
           adjust: { control: 1, clarity: 1 },
-          signal: (theme) => `${theme.signal} Cevap bir koşula bağlanmalı.`,
-          move: (theme) => `${theme.action} ve kabul edeceğin koşulu yaz.`,
-          trap: () => 'Koşulsuz evet demek.',
-          reward: () => 'Pazarlık gücün korunur.'
+          signal: (theme) => `${theme.signal} Bir koşul koyarak ilerlemek seni korur.`,
+          move: (theme) => `${theme.action}, ama önce kabul edeceğin koşulu açıkça söyle.`,
+          trap: () => 'Koşulsuz vermek — ve sonra yorulmak.',
+          reward: () => 'Koşul koyan yorulmaz; sınırını bildiği için güçlüdür.'
         },
         {
-          label: 'Bekleme payı',
+          label: 'Sessizlik Ver',
           adjust: { urgency: -1, risk: -1 },
-          signal: (theme) => `${theme.signal} Acele etmek sonucu bulanıklaştırır.`,
-          move: (theme) => `Bir gün bekle, sonra ${theme.action}.`,
-          trap: () => 'Beklemeyi kaçışa çevirmek.',
-          reward: () => 'Daha sakin karar verirsin.'
+          signal: (theme) => `${theme.signal} Acelesiz olmak burada bilgeliktir.`,
+          move: (theme) => `Bir gün dur. Sonra ${theme.action}.`,
+          trap: () => 'Durmayı kaçmakla karıştırmak.',
+          reward: () => 'Dinlenen nehir daha uzağa akar.'
         },
         {
-          label: 'Kısa konuşma',
+          label: 'Tek Cümle',
           adjust: { relation: 1, returning: 1 },
-          signal: (theme) => `${theme.signal} Konuşma kısa kalırsa işe yarar.`,
-          move: () => 'Tek bir cümleyle ne istediğini söyle.',
-          trap: () => 'Eski tartışmayı yeniden açmak.',
-          reward: () => 'Karşı tarafın gerçek tavrı görünür.'
+          signal: (theme) => `${theme.signal} Bir cümle yeter — en temiz olanı.`,
+          move: () => 'Ne hissettiğini tek cümleyle söyle. Ne fazla, ne eksik.',
+          trap: () => 'Eskiyi yeninin içine karıştırmak.',
+          reward: () => 'Tek gerçek cümle, binlerce açıklamadan güçlüdür.'
         },
         {
-          label: 'Ölç ve bak',
+          label: 'Dene ve Gör',
           adjust: { evidence: 1, control: 1 },
-          signal: (theme) => `${theme.signal} Tahmin yerine ölçüm daha doğru.`,
-          move: () => 'Küçük bir deneme yap ve sonucu yaz.',
+          signal: (theme) => `${theme.signal} Düşünmek değil, küçük bir deneme cevabı verir.`,
+          move: () => 'Küçük bir adım at ve sonucu gözle. Cevap orada.',
           trap: () => 'Hissi tek kanıt saymak.',
-          reward: () => 'Cevap soyut olmaktan çıkar.'
+          reward: () => 'Yaşanan tecrübe, tahminden her zaman daha doğrudur.'
         },
         {
-          label: 'Şimdilik hayır',
+          label: 'Şimdi Hayır',
           adjust: { exit: 1, risk: -1 },
-          signal: (theme) => `${theme.signal} Şimdilik hayır demek alan açar.`,
-          move: () => 'Hayır de, ama kapıyı tamamen yakma.',
-          trap: () => 'Suçluluk yüzünden kabul etmek.',
-          reward: () => 'Kendi sınırını daha net görürsün.'
+          signal: (theme) => `${theme.signal} "Hayır" demek kaybetmek değil — kendin olmaktır.`,
+          move: () => '"Hayır" de. Kapıyı tamamen kapatmak zorunda değilsin.',
+          trap: () => 'Başkasını kırmamak için kendini incitmek.',
+          reward: () => '"Hayır" söyleyebilen kişi, "evet"ine güvenilir.'
         },
         {
-          label: 'Sınırlı evet',
+          label: 'Koşullu Evet',
           adjust: { desire: 1, risk: 1 },
-          signal: (theme) => `${theme.signal} Evet varsa sınırıyla birlikte gelmeli.`,
-          move: () => 'Evet de, ama süreyi ve sınırı baştan söyle.',
-          trap: () => 'Heyecanla bütün kontrolü bırakmak.',
-          reward: () => 'İstek zarar vermeden ilerler.'
+          signal: (theme) => `${theme.signal} Evet, ama sınırınla birlikte.`,
+          move: () => '"Evet" de — ama nereye kadar olduğunu da söyle.',
+          trap: () => 'İsteğin sınırı yutmasına izin vermek.',
+          reward: () => 'Koşullu evet, hem seni hem karşını taşır.'
         },
         {
-          label: 'Dış göz',
+          label: 'Dışarıdan Bak',
           adjust: { evidence: 1, clarity: 1 },
-          signal: (theme) => `${theme.signal} Dışarıdan bakış kararı temizler.`,
-          move: () => 'Güvendiğin bir kişiden sadece bir geri bildirim al.',
-          trap: () => 'Herkese sorup kafanı dağıtmak.',
-          reward: () => 'Kör nokta azalır.'
+          signal: (theme) => `${theme.signal} Güvendiğin bir ses, sana ayna olabilir.`,
+          move: () => 'Bir kişiye, sadece bir kişiye danış.',
+          trap: () => 'Herkese sormak kafayı değil, sesi çoğaltır.',
+          reward: () => 'Güvenilir bir ayna, en kısa yolu gösterir.'
         },
         {
-          label: 'Eski iz',
+          label: 'Geçmişte Ara',
           adjust: { returning: 1, evidence: 1 },
-          signal: (theme) => `${theme.signal} Geçmişteki benzer durum ipucu veriyor.`,
-          move: () => 'Benzer bir eski olayı hatırla ve oradaki sonucu yaz.',
-          trap: () => 'Aynı hatayı yeni isimle tekrarlamak.',
-          reward: () => 'Döngüyü daha erken fark edersin.'
+          signal: (theme) => `${theme.signal} Benzer bir şey daha önce de oldu.`,
+          move: () => 'O anı hatırla. Orada ne öğrenmiştin?',
+          trap: () => 'Eski acıyı yeni isimle taşımak.',
+          reward: () => 'Geçmiş tekrar etmez — ama ders verir.'
         },
         {
-          label: 'Son kontrol',
+          label: 'Son Bakış',
           adjust: { clarity: 1, risk: 1 },
-          signal: (theme) => `${theme.signal} Karardan önce son kontrol gerekiyor.`,
-          move: () => 'Maliyet, zaman ve insan etkisini üç satırda yaz.',
-          trap: () => 'Sadece iyi ihtimali düşünmek.',
-          reward: () => 'Karar daha gerçekçi olur.'
+          signal: (theme) => `${theme.signal} Karar vermeden önce bir kez daha bak.`,
+          move: () => 'Kaybedeceklerini, kazanacaklarını ve etkileyeceğin kişileri say.',
+          trap: () => 'Sadece iyi ihtimali görmek.',
+          reward: () => 'Gerçekçi bakış, pişmanlığı önceden bitirir.'
         }
       ];
 
@@ -1262,192 +1262,192 @@
           move: form.move(theme),
           trap: form.trap(theme),
           reward: form.reward(theme),
-          counter: `Bu cevap uymuyorsa önce "${theme.title}" yönünü değil, seçtiğin işaretleri değiştir. Sorun büyük ihtimalle orada kaydı.`
+          counter: `Bu okuma uymuyorsa, seçtiğin bakış açısına geri dön. "${theme.title}" işareti değil, içindeki çekim değişmiş olabilir.`
         };
       }));
 
       const symbols = [
         {
           code: 'S-01',
-          name: 'Kırılmış Simetri',
+          name: 'Ayna Yüzlü',
           glyph: '◇',
           rarity: 'common',
-          bias: 'against',
-          signal: 'Karşı taraf ritmi senden önce kurmuş.',
-          trap: 'Hızlı cevap vermek seni ucuz gösterir.',
-          move: 'Cevap verme. Bir koşul koy ve sessizliği onun üzerine bırak.',
-          price: 'Gecikmenin bedeli görünürlük kaybı.',
-          reward: 'Kontrol geri gelir ama zafer gibi görünmez.',
-          counter: 'Simetriyi onarmaya çalışma; asimetriyi yönet.'
+          bias: 'neutral',
+          signal: 'Karşındakinde aslında kendini görüyorsun.',
+          trap: 'Sorunu onun üzerinden çözmeye çalışmak — asıl mesele sende.',
+          move: 'Bir adım geri çekil. Bu durumda seni rahatsız eden kısım gerçekten nerede?',
+          price: 'Kendine bakmak, başkasına bakmaktan daha ağır gelir.',
+          reward: 'Kendi içindeki düğüm çözülünce dışarısı da yumuşar.',
+          counter: 'Diğerini değiştirmeye çalışmadan önce sende ne değişmeli sorusunu sor.'
         },
         {
           code: 'S-02',
-          name: 'Soğuk Kazanç',
+          name: 'Kır Atı',
           glyph: '□',
           rarity: 'common',
           bias: 'with',
-          signal: 'Şans hızlı olana değil, tutarlı olana eğiliyor.',
-          trap: 'Duygusal gösteriş, iyi pozisyonu yakar.',
-          move: 'Tek hamle seç. Geri kalan her şeyi masadan kaldır.',
-          price: 'Bir ihtimali bilerek öldürmen gerekecek.',
-          reward: 'Alan daralır, etki büyür.',
-          counter: 'Kazancı ispatlama; kullan.'
+          signal: 'Sende büyük bir enerji var — ama yönlendirilmeden dağılıyor.',
+          trap: 'Bu enerjiyi bastırmak ya da her yöne aynı anda göndermek.',
+          move: 'Bugün tek bir alana odaklan. Tüm gücü oraya ver.',
+          price: 'Diğer şeyler bekleyecek.',
+          reward: 'Odaklandığında ne kadar güçlü olduğunu hatırlarsın.',
+          counter: 'Dağılmış ateş ısıtmaz; topla ve yönlendir.'
         },
         {
           code: 'S-03',
-          name: 'Karşı Işık',
+          name: 'Kırık Beklenti',
           glyph: '✦',
           rarity: 'common',
-          bias: 'neutral',
-          signal: 'Görünen engel, asıl engelin gölgesi.',
-          trap: 'Yanlış kişiyi ikna etmeye çalışıyorsun.',
-          move: 'Muhatabı değiştir. Aynı fikri daha yüksek bir noktaya taşı.',
-          price: 'Eski tartışma yarım kalacak.',
-          reward: 'Zemin değişir, dirençlerin çoğu anlamsızlaşır.',
-          counter: 'Işığı büyütme; acısını doğru yüzeye düşür.'
+          bias: 'against',
+          signal: 'Söylemediğin bir beklenti var ve o, sessizce sizi uzaklaştırıyor.',
+          trap: 'Anlaşılmasını beklemek — söylemeden.',
+          move: 'O beklentiyi tek cümleye indir ve söyle.',
+          price: 'Savunmasız hissedebilirsin.',
+          reward: 'Söylenen beklenti, kırık hayale dönüşmez.',
+          counter: 'Anlaşılmak istiyorsan önce anlaşılır olmayı dene.'
         },
         {
           code: 'S-04',
-          name: 'Kesik Hat',
+          name: 'İki Kapı',
           glyph: '⌁',
           rarity: 'common',
-          bias: 'against',
-          signal: 'Bağlantı var ama hat temiz değil.',
-          trap: 'Belirsizliği romantize etmek.',
-          move: 'Tek bir net soru sor. Cevap yoksa bunu cevap say.',
-          price: 'Kendine anlattığın zarif hikaye bozulur.',
-          reward: 'Enerjin geri döner.',
-          counter: 'Gürültüyü anlam sanma.'
+          bias: 'neutral',
+          signal: 'Bir kavşaktasın. Her iki yol da gerçek, ama sadece biri sana ait.',
+          trap: 'Her iki kapıyı da açık tutmaya çalışmak.',
+          move: 'Hangisini seçersen seç, bütün kalpten seç.',
+          price: 'Bir kapı kapanacak.',
+          reward: 'Tam bir seçim, yarım iki seçimden daha güçlüdür.',
+          counter: 'Kararsızlık da bir seçimdir — ama seni ilerletmez.'
         },
         {
           code: 'S-05',
-          name: 'Gizli Operatör',
+          name: 'Geç Saatte Doğru',
           glyph: '⌖',
           rarity: 'common',
           bias: 'with',
-          signal: 'Oyundaki asıl güç açıkta durmuyor.',
-          trap: 'Sahnedeki kişiyi sistemin sahibi sanmak.',
-          move: 'Dolaylı yolu seç. Bir aracı, bir kayıt, bir belge kullan.',
-          price: 'Hız duygusundan vazgeçeceksin.',
-          reward: 'Kapı daha az direnerek açılır.',
-          counter: 'Kahramanlık yapma; mimariyi oku.'
+          signal: 'Niyetin doğru — ama zamanlaması bozuk.',
+          trap: 'Doğru şeyi yanlış anda yapmak ve neden işe yaramadığını anlamamak.',
+          move: 'Bir adım geri çek. Zamanı sorgulamaya başla.',
+          price: 'Sabır gerekecek.',
+          reward: 'Doğru zamanda yapılan küçük şey, yanlış zamanda yapılan büyük şeyden güçlüdür.',
+          counter: 'Doğruluğu sorgulama; zamanını sorgula.'
         },
         {
           code: 'S-06',
-          name: 'İkinci Anahtar',
+          name: 'Yarım Söz',
           glyph: '⌬',
           rarity: 'common',
-          bias: 'with',
-          signal: 'İlk çözüm doğru değil, ama seni doğru kilide getirdi.',
-          trap: 'İlk fikre sadakati erdem sanmak.',
-          move: 'Planın yüzde otuzunu koru, geri kalanını yeniden diz.',
-          price: 'Emeğin bir parçası çöpe gidecek.',
-          reward: 'Kilit direnmek yerine esner.',
-          counter: 'Anahtar değil, dişlerin sırası önemli.'
+          bias: 'against',
+          signal: 'Söylenmeden kalan bir şey var. O boşluk giderek büyüyor.',
+          trap: 'Geçip gittiğini sanmak.',
+          move: 'O yarım sözü tamamla — kâğıda ya da doğrudan.',
+          price: 'Konuşmak rahatsızlık verebilir.',
+          reward: 'Tamamlanan söz, zihnini de tamamlar.',
+          counter: 'Suskunluk her zaman huzur değildir.'
         },
         {
           code: 'S-07',
-          name: 'Pahalı Sessizlik',
+          name: 'Eski Taş',
           glyph: '◌',
           rarity: 'common',
           bias: 'neutral',
-          signal: 'Susmak artık strateji değil, maliyet.',
-          trap: 'Zarif görünmek için geç kalmak.',
-          move: 'Kısa, temiz, kanıtsız bir pozisyon al.',
-          price: 'Yanlış anlaşılma riski açığa çıkar.',
-          reward: 'Konumun belirginleşir.',
-          counter: 'Her şeyi anlatma; sadece sınırı çiz.'
+          signal: 'Geçmişten bir şey yeniden yüzeye çıkıyor. Adını koymak istiyor.',
+          trap: 'Tekrar gömmek.',
+          move: 'Sadece adını koy. Şimdi çözmek zorunda değilsin.',
+          price: 'Eski ağırlıklar geçici olarak daha yakın hissettirilebilir.',
+          reward: 'Adlandırılan şey gücünü kaybeder.',
+          counter: 'Geçmiş geçmez — ama isim verilince hafifler.'
         },
         {
           code: 'S-08',
-          name: 'Ters Meridyen',
+          name: 'Uzak Ses',
           glyph: '△',
           rarity: 'common',
-          bias: 'against',
-          signal: 'Gittiğin yön doğru, başlangıç noktan yanlış.',
-          trap: 'Sorunu sonuç üzerinden tarif etmek.',
-          move: 'Bir adım geriye dön ve ilk varsayımı değiştir.',
-          price: 'Bugünkü hız kesilecek.',
-          reward: 'Üç hafta sonra bu gecikme zeka gibi görünür.',
-          counter: 'Yönünü değil, referans noktasını sorgula.'
+          bias: 'with',
+          signal: 'İçinde bir ses var ve ne dediğini zaten biliyorsun.',
+          trap: 'O sesi duymamak için kendini başka şeylerle meşgul etmek.',
+          move: 'Beş dakika sessizlik. O sesi dinle.',
+          price: 'Ne duyacağın seni rahatsız edebilir.',
+          reward: 'Kendi sesini duymak, en güvenilir pusulayı buldurmaktır.',
+          counter: 'Dışarıda cevap aramadan önce içeriye bak.'
         },
         {
           code: 'R-11',
-          name: 'Nadir Geçit',
+          name: 'Altın Kırık',
           glyph: '⟡',
           rarity: 'rare',
           bias: 'with',
-          signal: 'Küçük bir açık, normalden büyük sonuç verebilir.',
-          trap: 'Fırsatı kalabalığa göstermek.',
-          move: 'Hemen ama sessiz ilerle. İki kişi yeter.',
-          price: 'Onay arama refleksini keseceksin.',
-          reward: 'Erken giren avantajını alır.',
-          counter: 'Geçit açıkken manifesto yazılmaz.'
+          signal: 'Kırıldığın yer, en güçlü olduğun yere dönüşebilir.',
+          trap: 'Kırığı saklamak ya da onarmış gibi görünmek.',
+          move: 'O kırığı gizleme. Onunla konuş, onunla ilerle.',
+          price: 'Savunmasızlık görünür olacak.',
+          reward: 'Altın kırıklardan akar — ustalar bunu bilir.',
+          counter: 'Kusursuz görünmek, büyümeyi durdurur.'
         },
         {
           code: 'R-12',
-          name: 'Çift Hafıza',
+          name: "Ay'ın Arkası",
           glyph: '◈',
           rarity: 'rare',
           bias: 'neutral',
-          signal: 'Bu olay bir kez yaşanmadı; eski bir kalıp yeniden çalışıyor.',
-          trap: 'Yeni sandığın şeye eski refleksle cevap vermek.',
-          move: 'Önceki versiyonda ne yaptıysan tersini küçük ölçekte dene.',
-          price: 'Kendini tutarlı hissetmeyebilirsin.',
-          reward: 'Döngü bozulur.',
-          counter: 'Hafızayı delil yap, hapishane değil.'
+          signal: 'Görünenden çok daha fazlası var. Tüm tablo henüz ortaya çıkmadı.',
+          trap: 'Elimdeki bilgiyle kesin karar vermek.',
+          move: 'Acelesiz ol. Bir şeylerin netleşmesine izin ver.',
+          price: 'Belirsizliği taşımak yorucu olabilir.',
+          reward: 'Sabırla beklenen netlik, aceleyle çıkarılan sonuçtan değerlidir.',
+          counter: 'Bilinmeyeni düşman sanma; bazen o seni koruyor.'
         },
         {
           code: 'R-13',
-          name: 'Zehirli Altın',
+          name: 'Kadim Dönüş',
           glyph: '✣',
           rarity: 'rare',
           bias: 'against',
-          signal: 'Cazip olan şey, seni pahalı bir bağımlılığa çağırıyor.',
-          trap: 'Değeri parlaklıkla karıştırmak.',
-          move: 'Teklifin bedelini yazılı hale getir. Yazılamıyorsa reddet.',
-          price: 'Kısa vadeli alkış kaybolur.',
-          reward: 'Uzun vadeli pazarlık gücün korunur.',
-          counter: 'Altını değil, temas ettiği eli izle.'
+          signal: 'Bu daha önce de oldu. Farklı isimde, ama aynı his.',
+          trap: 'Bunu yeni sanmak ve eski alışkanlıkla cevap vermek.',
+          move: 'O eski kez ne olmuştu? Bu sefer ne farklı yapabilirsin?',
+          price: 'Döngüyü fark etmek acı verebilir.',
+          reward: 'Tekrar eden şeyi gören, ondan özgürleşebilir.',
+          counter: 'Geçmiş ders kitabıdır — zindan değil.'
         },
         {
           code: 'R-14',
-          name: 'Operatör Maskesi',
+          name: 'İki Ateş',
           glyph: '⊙',
           rarity: 'rare',
-          bias: 'with',
-          signal: 'Bugün rol yapmak sahicilikten daha faydalı.',
-          trap: 'İç halini dış protokole karıştırmak.',
-          move: 'Daha soğuk, daha resmi, daha az açık ol.',
-          price: 'Sıcak görünme ihtiyacı yanacak.',
-          reward: 'Ciddiye alınma hızı artar.',
-          counter: 'Maske yalan değil; ortam tercümesi.'
+          bias: 'neutral',
+          signal: 'İki gerçek istek arasındasın. Her ikisi de gerçek.',
+          trap: 'Birinin yanlış olduğuna ikna olmaya çalışmak.',
+          move: 'Her ikisini de kâğıda say. Hangisi şu an daha canlı?',
+          price: 'Biri beklemek zorunda kalacak.',
+          reward: 'İki ateş arasında seçim yapmak yorucu — ama seçince güç büyür.',
+          counter: 'Kendini suçlama; iki şeyi aynı anda sevmek insani.'
         },
         {
           code: 'E-21',
-          name: 'Eclipse Clause',
+          name: 'Tutulma',
           glyph: '●',
           rarity: 'eclipse',
           bias: 'against',
-          signal: 'Şans senden yana değil; ama bu kötü haber değil.',
-          trap: 'Kaybeden eli kazanmak için zorlamak.',
-          move: 'Oyunu kapat. Koşulları değiştirmeden devam etme.',
-          price: 'Bir süre yanlış anlaşılacaksın.',
-          reward: 'Gelecekteki daha büyük kayıp iptal olur.',
-          counter: 'Bugünkü geri çekilme, yarınki kontrolün peşinatıdır.'
+          signal: 'Şu an ışık görmek zor. Bu geçici — ama gerçek bir karanlık.',
+          trap: 'Bu karanlıkta büyük kararlar vermek.',
+          move: 'Sadece bugünü tamamla. Büyük kararları ışık döndüğünde ver.',
+          price: 'Beklemek çok ağır hissettirilebilir.',
+          reward: 'Tutulmadan sonra her şey daha net görünür.',
+          counter: 'Karanlıkta yol haritası çizilmez; önce bekle.'
         },
         {
           code: 'E-22',
-          name: 'White Noise Crown',
+          name: "Köklerin Sesi",
           glyph: '✶',
           rarity: 'eclipse',
           bias: 'with',
-          signal: 'Kaos sana çalışıyor. Kimse resmi tam okuyamıyor.',
-          trap: 'Erken açıklama yaparak büyüyü bozmak.',
-          move: 'Sonucu değil, sonraki adımı göster. Geri kalan karanlık kalsın.',
-          price: 'Takdir geç gelecek.',
-          reward: 'Hamleni taklit edemeyecekler.',
-          counter: 'Belirsizlik düşman değil; perdedir.'
+          signal: 'Temel bir şey değişiyor. Bu anlık bir duygu değil.',
+          trap: 'Küçük düzeltmelerle geçiştirmeye çalışmak.',
+          move: 'Sana en temel hissettiren şeye dön. O sesi dinle.',
+          price: 'Köklü değişim konforlu değildir.',
+          reward: 'Kökünden gelen değişim, kalıcı ve gerçektir.',
+          counter: 'Yüzeydeki sesleri susturmak, kökteki sesi güçlendirir.'
         }
       ];
 
@@ -1554,9 +1554,11 @@
       };
 
       const explainEntropy = (matrix, seed, answer, clues) => {
-        const seedMark = String(seed % 997).padStart(3, '0');
-        const frontClues = clues.slice(0, 3);
-        return `Entropi ${seedMark}: ${joinClues(frontClues)} aynı hatta düştü. Kelime ağırlığı ${axisLabels[matrix.dominant.key]} yönünü yükseltti; ${axisLabels[matrix.second.key]} arkada kaldı. Bu yüzden ${answer.name.toLocaleLowerCase('tr-TR')} cevabı seçildi.`;
+        const topClues = clues.slice(0, 2).filter(Boolean);
+        const clueText = topClues.length ? joinClues(topClues) : 'söylenmeyenler';
+        const dominantLabel = axisLabels[matrix.dominant.key] || 'bilinmeyen';
+        const secondLabel = axisLabels[matrix.second.key] || 'gizli';
+        return `Oracle, söylediklerindeki ${clueText} izini takip etti. Bu izler ${dominantLabel} çekimine girdi; ${secondLabel} gölgede kaldı. Oradan ${answer.name.toLocaleLowerCase('tr-TR')} yüzeye çıktı.`;
       };
 
       const normalizeText = (text) => text
@@ -1719,9 +1721,9 @@
           axis: matrix.dominant.key,
           secondAxis: matrix.second.key,
           clues,
-          clueLine: `${joinClues(clues)} aynı cümle ailesine düştü. Oracle bunu rastgele değil, aynı yere dönen bir düşünce izi olarak okudu.`,
+          clueLine: `Cevaplarında en çok ${joinClues(clues.slice(0, 3))} döndü. Oracle bu tekrarı bir yön işareti olarak okudu.`,
           entropyLine: explainEntropy(matrix, seed, answer, clues),
-          matrixSummary: `${axisLabels[matrix.dominant.key]} baskın. İkinci gölge: ${axisLabels[matrix.second.key]}. Okuma netliği: ${matrix.confidence}%.`,
+          matrixSummary: `Oracle'ın baktığı yer: ${axisLabels[matrix.dominant.key]}. Gölgede kalan: ${axisLabels[matrix.second.key]}.`,
           ...answer
         };
       };
@@ -1764,9 +1766,9 @@
         return [
           row('kehanet', reading.signal || 'Cevap net değil. İşaretleri yeniden seç.'),
           row('izler', reading.clueLine || summary),
-          row('entropi', reading.entropyLine || summary),
-          row('hamle', reading.move || 'Tek küçük adım seç.'),
-          row('sakın', reading.trap || 'Aynı anda çok şey çözmeye çalışma.')
+          row('kaynak', reading.entropyLine || summary),
+          row('yol', reading.move || 'Küçük bir adım at.'),
+          row('sakın', reading.trap || 'Kendini zorlama.')
         ];
       };
 
@@ -1787,9 +1789,9 @@
         const clues = matrix.clues;
 
         revealRows([
-          row('avuç', `${joinClues(clues.slice(0, 2))} ilk izi bıraktı.`),
-          row('gölge', `${axisLabels[matrix.dominant.key]} ağır basıyor; ${axisLabels[matrix.second.key]} geriden geliyor.`),
-          row('entropi', `${answerBank.length} kapalı cevap içinden aynı titreşime en yakın olan aranıyor.`)
+          row('iz', `${joinClues(clues.slice(0, 2))} kıpırdıyor.`),
+          row('ağırlık', `${axisLabels[matrix.dominant.key]} ön planda; ${axisLabels[matrix.second.key]} arkada.`),
+          row('okuma', 'Oracle cevabı arıyor...')
         ]);
 
         window.setTimeout(() => {
@@ -1903,14 +1905,14 @@
         const reading = state.current;
         const text = [
           `THE ORACLE / ${reading.code}`,
-          `CEVAP: ${reading.name}`,
-          `TUTARLILIK: ${reading.confidence || '-'}%`,
+          `OKUMA: ${reading.name}`,
+          `GÜVEN: ${reading.confidence || '-'}%`,
           `KONU: ${reading.focus || '-'}`,
-          `IZLER: ${reading.clueLine || '-'}`,
-          `ENTROPI: ${reading.entropyLine || '-'}`,
-          `ADIM: ${reading.move || '-'}`,
-          `DIKKAT: ${reading.trap || '-'}`,
-          `SONUC: ${reading.reward || '-'}`
+          `İZLER: ${reading.clueLine || '-'}`,
+          `KAYNAK: ${reading.entropyLine || '-'}`,
+          `YOL: ${reading.move || '-'}`,
+          `SAKIN: ${reading.trap || '-'}`,
+          `ÖDÜL: ${reading.reward || '-'}`
         ].join('\n');
         try {
           await navigator.clipboard.writeText(text);
