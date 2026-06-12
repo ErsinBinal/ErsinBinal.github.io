@@ -824,6 +824,12 @@
         commandShell.setAttribute('aria-hidden', 'false');
         renderCommandSuggestions(commandInput.value);
         commandInput.focus();
+        if (pipeGame?.active) {
+          setPipeGameMode(true);
+          setPipeOutput();
+          pulse(260);
+          return;
+        }
         renderCommandBoot();
         pulse(260);
       };
@@ -1985,8 +1991,13 @@
         pipeAnimationTimers = [];
       };
 
+      const setPipeGameMode = (active) => {
+        commandShell?.classList.toggle('is-game-mode', Boolean(active));
+      };
+
       const startPipeGame = () => {
         clearPipeAnimation();
+        setPipeGameMode(true);
         const rows = 7;
         const cols = 8;
         const drainRow = 1 + Math.floor(Math.random() * 5);
@@ -2004,9 +2015,11 @@
           flowIn: 16,
           score: 0,
           flowPath: new Set(),
+          flowWave: new Set(),
           leakAt: null,
           temp: 9200,
           status: 'REACTOR COOLANT ready. containment opens after 16 actions.',
+          resolving: false,
           won: false,
           lost: false
         };
@@ -2034,6 +2047,67 @@
         const base = win ? 1000 : 0;
         return Math.max(0, base + (pipeGame.flowIn * 35) - (pipeGame.placed * 25) - (pipeGame.skipped * 60));
       };
+
+      const pipeMeter = (value, max, width = 12) => {
+        const clamped = Math.max(0, Math.min(max, value));
+        const filled = Math.round((clamped / max) * width);
+        return `${'█'.repeat(filled)}${'░'.repeat(width - filled)}`;
+      };
+
+      const pipeTileLines = (cell, r, c) => {
+        const key = `${r},${c}`;
+        const cursor = pipeGame.cursor.r === r && pipeGame.cursor.c === c;
+        const leak = pipeGame.leakAt === key;
+        const wet = pipeGame.flowPath?.has(key);
+        const wave = pipeGame.flowWave?.has(key);
+        let lines = ['       ', '   .   ', '       '];
+
+        if (cell?.kind === 'block') {
+          lines = ['███████', '██ROD██', '███████'];
+        } else if (cell?.kind === 'source') {
+          lines = wet || wave
+            ? ['╔════╗ ', '║PUMP╠≈', '╚════╝ ']
+            : ['╔════╗ ', '║PUMP╠═', '╚════╝ '];
+        } else if (cell?.kind === 'drain') {
+          const label = pipeGame.won ? 'COLD' : pipeGame.lost ? 'HOT!' : 'CORE';
+          lines = wet || wave
+            ? [' ╔════╗', `≈╣${label}║`, ' ╚════╝']
+            : [' ╔════╗', `═╣${label}║`, ' ╚════╝'];
+        } else if (cell) {
+          const mask = pipeCellMask(cell);
+          const tile = Array.from({ length: 3 }, () => Array.from({ length: 7 }, () => ' '));
+          const horizontal = wave ? '≋' : wet ? '≈' : '═';
+          const vertical = wave ? '≋' : wet ? '≈' : '║';
+          const core = wave ? '▓' : wet ? '≈' : pipeGlyph(cell);
+          if (mask & 1) tile[0][3] = vertical;
+          if (mask & 4) tile[2][3] = vertical;
+          if (mask & 8) {
+            tile[1][1] = horizontal;
+            tile[1][2] = horizontal;
+          }
+          if (mask & 2) {
+            tile[1][4] = horizontal;
+            tile[1][5] = horizontal;
+          }
+          tile[1][3] = core;
+          lines = tile.map(row => row.join(''));
+        }
+
+        if (leak) lines = ['!!XX!!!', '!KACAK!', '!!XX!!!'];
+        if (cursor && !leak) {
+          lines = lines.map((line, index) => {
+            const chars = line.split('');
+            chars[0] = index === 0 ? '┌' : index === 1 ? '│' : '└';
+            chars[6] = index === 0 ? '┐' : index === 1 ? '│' : '┘';
+            return chars.join('');
+          });
+        }
+        return lines;
+      };
+
+      const pipeQueuePreview = () => pipeGame.queue
+        .map((piece, index) => `${index === 0 ? 'NEXT' : `Q${index}`}[${pipeGlyph(piece)}:${piece.id.slice(0, 4)}]`)
+        .join(' ');
 
       const pipeFinaleFrame = (title, art, lines = []) => [
         renderPipeGame(),
@@ -2074,32 +2148,33 @@
       const renderPipeGame = () => {
         if (!pipeGame) return 'pipe: inactive';
         const rows = [];
-        rows.push('PIPE-90 / FUSION CORE COOLANT');
-        rows.push('goal: route coolant from P(pump) to C(core) before containment opens');
-        rows.push(`flow in: ${Math.max(pipeGame.flowIn, 0)} actions  temp: ${pipeGame.temp}K  score: ${pipeGame.score}`);
-        rows.push(`placed: ${pipeGame.placed}  dumped: ${pipeGame.skipped}`);
+        const heat = Math.min(10000, Math.max(0, pipeGame.temp));
+        const pressure = Math.max(pipeGame.flowIn, 0);
+        rows.push('╔══════════════════════════════════════════════════════════════════════════════╗');
+        rows.push('║ PIPE-90 // TOKAMAK COOLANT EMERGENCY                                       ║');
+        rows.push('╠══════════════════════════════════════════════════════════════════════════════╣');
+        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 16, 8)}] ║`);
+        rows.push(`║ SCORE ${String(pipeGame.score).padStart(4, '0')}   PLACED ${String(pipeGame.placed).padStart(2, '0')}   DUMP ${String(pipeGame.skipped).padStart(2, '0')}   LOOP: PUMP >>> CORE             ║`);
+        rows.push('╚══════════════════════════════════════════════════════════════════════════════╝');
         rows.push('');
         for (let r = 0; r < pipeGame.rows; r += 1) {
-          let line = '';
+          const tileRows = ['', '', ''];
           for (let c = 0; c < pipeGame.cols; c += 1) {
             const cell = pipeGame.grid[r][c];
-            const glyph = cell ? pipeGlyph(cell) : '.';
-            const key = `${r},${c}`;
-            if (pipeGame.cursor.r === r && pipeGame.cursor.c === c) line += `[${glyph}]`;
-            else if (pipeGame.leakAt === key) line += `!${glyph}!`;
-            else if (pipeGame.flowPath?.has(key)) line += `~${glyph}~`;
-            else line += ` ${glyph} `;
+            const tile = pipeTileLines(cell, r, c);
+            tileRows[0] += tile[0];
+            tileRows[1] += tile[1];
+            tileRows[2] += tile[2];
           }
-          rows.push(line);
+          rows.push(...tileRows);
         }
         const next = pipeGame.queue[0];
         rows.push('');
-        rows.push(`next: ${pipeGlyph(next)} ${next.id}`);
-        rows.push(`queue: ${pipeGame.queue.map(pipeGlyph).join(' ')}`);
-        rows.push(pipeGame.status);
+        rows.push(`QUEUE: ${pipeQueuePreview()}`);
+        rows.push(`ACTIVE: ${pipeGlyph(next)} ${next.id.toUpperCase()}   STATUS: ${pipeGame.status}`);
         rows.push('');
-        rows.push('keys: arrows move / space,R rotate / enter place / F coolant / X dump / Q quit');
-        rows.push('cmd : pipe rotate, pipe place, pipe flow, pipe dump, pipe quit, pipe new');
+        rows.push('KEYS: arrows move | SPACE/R rotate | ENTER weld | F coolant | X dump | Q quit');
+        rows.push('CMDS: pipe rotate | pipe place | pipe flow | pipe dump | pipe quit | pipe new');
         return rows.join('\n');
       };
 
@@ -2128,7 +2203,7 @@
 
       const rotatePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
+        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
         const { r, c } = pipeGame.cursor;
         const cell = pipeGame.grid[r][c];
         if (cell && !cell.kind) {
@@ -2147,7 +2222,7 @@
 
       const placePipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
+        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
         const { r, c } = pipeGame.cursor;
         if (pipeGame.grid[r][c]) {
           pipeGame.status = 'cell occupied';
@@ -2163,7 +2238,7 @@
 
       const dumpPipe = () => {
         if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
+        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
         const skipped = pipeGame.queue.shift();
         pipeGame.queue.push(createPipePiece());
         pipeGame.skipped += 1;
@@ -2174,14 +2249,16 @@
 
       const tracePipeFlow = () => {
         const visited = new Set();
+        const order = [];
         const leaks = [];
         let reachedDrain = false;
-        const stack = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
-        while (stack.length) {
-          const current = stack.pop();
+        const queue = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
+        while (queue.length) {
+          const current = queue.shift();
           const key = `${current.r},${current.c}`;
           if (visited.has(key)) continue;
           visited.add(key);
+          order.push(key);
           const cell = pipeGame.grid[current.r]?.[current.c];
           const mask = pipeCellMask(cell);
           if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) {
@@ -2202,21 +2279,20 @@
               leaks.push({ r: nr, c: nc, from: key, dir: dir.name });
               return;
             }
-            if (nextMask & dir.opposite) stack.push({ r: nr, c: nc });
+            if (nextMask & dir.opposite) queue.push({ r: nr, c: nc });
           });
         }
-        return { ok: reachedDrain && leaks.length === 0, reachedDrain, leaks, visited };
+        return { ok: reachedDrain && leaks.length === 0, reachedDrain, leaks, visited, order };
       };
 
-      const flowPipe = (auto = false) => {
-        if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost) return renderPipeGame();
-        clearPipeAnimation();
-        const result = tracePipeFlow();
-        pipeGame.flowPath = result.visited;
-        pipeGame.leakAt = result.leaks[0] ? `${result.leaks[0].r},${result.leaks[0].c}` : null;
+      const finishPipeFlow = (result, auto) => {
+        if (!pipeGame) return;
+        pipeGame.flowWave = new Set();
+        pipeGame.flowPath = new Set(result.order);
+        pipeGame.leakAt = result.leaks[0]?.from || null;
         pipeGame.won = result.ok;
         pipeGame.lost = !result.ok;
+        pipeGame.resolving = false;
         pipeGame.score = pipeScore(result.ok);
         pipeGame.temp = result.ok ? 640 : 9999;
         pipeGame.status = result.ok
@@ -2231,7 +2307,47 @@
           pulse(130, 0.08);
         }
         if (auto && !result.ok) pipeGame.status = `AUTO SCRAM / ${pipeGame.status}`;
+        setPipeOutput();
         schedulePipeFinale(result.ok);
+      };
+
+      const schedulePipeFlow = (result, auto) => {
+        if (!pipeGame || !commandOutput) return;
+        const gameRef = pipeGame;
+        const order = result.order.length ? result.order : Array.from(result.visited);
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion) {
+          finishPipeFlow(result, auto);
+          return;
+        }
+        order.forEach((key, index) => {
+          const timer = window.setTimeout(() => {
+            if (pipeGame !== gameRef || !commandOutput) return;
+            pipeGame.flowWave = new Set([key]);
+            pipeGame.flowPath.add(key);
+            pipeGame.status = `COOLANT MOVING / wet cell ${index + 1}/${order.length}`;
+            commandOutput.textContent = renderPipeGame();
+          }, index * 145);
+          pipeAnimationTimers.push(timer);
+        });
+        const finishTimer = window.setTimeout(() => {
+          if (pipeGame !== gameRef) return;
+          finishPipeFlow(result, auto);
+        }, (order.length * 145) + 220);
+        pipeAnimationTimers.push(finishTimer);
+      };
+
+      const flowPipe = (auto = false) => {
+        if (!pipeGame?.active) return 'pipe: inactive';
+        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
+        clearPipeAnimation();
+        const result = tracePipeFlow();
+        pipeGame.flowPath = new Set();
+        pipeGame.flowWave = new Set();
+        pipeGame.leakAt = null;
+        pipeGame.resolving = true;
+        pipeGame.status = auto ? 'AUTO RELEASE / coolant charge entering loop' : 'MANUAL RELEASE / coolant charge entering loop';
+        schedulePipeFlow(result, auto);
         return renderPipeGame();
       };
 
@@ -2244,6 +2360,7 @@
         if (['flow', 'run', 'f'].includes(command)) return flowPipe();
         if (['quit', 'exit', 'q'].includes(command)) {
           clearPipeAnimation();
+          setPipeGameMode(false);
           pipeGame.active = false;
           pipeGame = null;
           return 'pipe: session closed';
