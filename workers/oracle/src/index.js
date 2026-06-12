@@ -207,11 +207,13 @@ const answerOracle = async (question, env) => {
       const answer = await withTimeout(provider.ask);
       return { answer, provider: provider.name };
     } catch (error) {
-      errors.push({
+      const entry = {
         provider: provider.name,
         message: error?.message || String(error),
         status: error?.status || 0
-      });
+      };
+      errors.push(entry);
+      console.error('provider failed', JSON.stringify(entry));
     }
   }
 

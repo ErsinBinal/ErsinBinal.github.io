@@ -4,7 +4,7 @@ compatibility_date = "2026-06-05"
 
 [vars]
 ALLOWED_ORIGINS = "https://ersinbinal.github.io,http://localhost:8000,http://127.0.0.1:8000"
-CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct"
+CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
 
