@@ -20,6 +20,7 @@
   ];
 
   const cpuConfig = { RED: null, BLUE: null };
+  let cpuTurnToken = 0;
   const checkoutRoutes = {
     170: 'T20 - T20 - BULL',
     167: 'T20 - T19 - BULL',
@@ -365,13 +366,15 @@
         resolveTurn(scored === 180 ? 'Perfect 180' : 'Harika set', `Set toplami: ${scored}`, false);
       } else if (scored <= 40) {
         resolveTurn('Dusuk set', `Set toplami: ${scored}`, false);
+      } else if (!cpuConfig[slot] && (cpuConfig.RED || cpuConfig.BLUE)) {
+        resolveTurn('Set', `${scored} puan`, false, 900);
       } else {
         advanceTurn();
       }
     }
   }
 
-  function resolveTurn(title, text, isBust) {
+  function resolveTurn(title, text, isBust, delay = 1350) {
     state.isResolving = true;
     render();
     showOverlay(title, text, false);
@@ -379,7 +382,7 @@
       hideOverlay();
       advanceTurn();
       if (isBust) updateSyncStatus('Bust kaydedildi. Mac bitince senkron durumu tekrar kontrol edilir.');
-    }, 1350);
+    }, delay);
   }
 
   function advanceTurn() {
@@ -550,7 +553,8 @@
     return Math.floor(Math.random() * 10) + 1;
   }
 
-  function playCpuDarts(slot) {
+  function playCpuDarts(slot, token) {
+    if (token !== cpuTurnToken) return;
     if (state.currentTurn !== slot || state.isComplete || state.isResolving) return;
     if (state.currentSetDarts.length >= 3) return;
 
@@ -564,14 +568,15 @@
     addDart(cpuSimDart(cpu, remaining, isPressure));
 
     if (!state.isComplete && !state.isResolving && state.currentTurn === slot && state.currentSetDarts.length < 3) {
-      window.setTimeout(() => playCpuDarts(slot), 680);
+      window.setTimeout(() => playCpuDarts(slot, token), 680);
     }
   }
 
   function scheduleCpuTurn() {
     const slot = state.currentTurn;
     if (!cpuConfig[slot] || state.isComplete) return;
-    window.setTimeout(() => playCpuDarts(slot), 900);
+    const token = ++cpuTurnToken;
+    window.setTimeout(() => playCpuDarts(slot, token), 900);
   }
 
   function selectCpu(slot, cpuId) {
