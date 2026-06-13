@@ -315,6 +315,7 @@
       };
 
       const currentPreferenceSnapshot = () => {
+        const bugyV4 = window.BugyV4?.getState?.();
         const bugyV3 = window.BugyV3?.getState?.();
         const bugyV2 = window.BugyV2?.getState?.();
         const deb = (window.DebCompanion || window.NovaCompanion)?.getState?.();
@@ -324,7 +325,8 @@
           virtualCwd,
           screenSaverActive: Boolean(screenSaverOverlay?.classList.contains('is-active')),
           powerState: powerOverlay?.classList.contains('is-off') ? 'off' : 'ready',
-          bugyEngine: bugyV3?.active ? 'v3' : bugyV2?.active ? 'v2' : localStorage.getItem('convivium.bugy.engine') || 'v1',
+          bugyEngine: bugyV4?.active ? 'v4' : bugyV3?.active ? 'v3' : bugyV2?.active ? 'v2' : localStorage.getItem('convivium.bugy.engine') || 'v1',
+          bugyV4Skin: bugyV4?.skin || localStorage.getItem('convivium.bugy.v4.skin') || 'clippy',
           bugyV3Skin: bugyV3?.skin || localStorage.getItem('convivium.bugy.v3.skin') || 'classic',
           bugyV2Skin: bugyV2?.skin || localStorage.getItem('convivium.bugy.v2.skin') || 'classic',
           debActive: Boolean(deb?.active),
@@ -363,6 +365,10 @@
           if (prefs.theme) themeCommand(prefs.theme);
           if (prefs.virtualCwd && virtualFs[prefs.virtualCwd]) virtualCwd = prefs.virtualCwd;
 
+          if (prefs.bugyV4Skin) {
+            localStorage.setItem('convivium.bugy.v4.skin', prefs.bugyV4Skin);
+            window.BugyV4?.setSkin?.(prefs.bugyV4Skin);
+          }
           if (prefs.bugyV3Skin) {
             localStorage.setItem('convivium.bugy.v3.skin', prefs.bugyV3Skin);
             window.BugyV3?.setSkin?.(prefs.bugyV3Skin);
@@ -373,13 +379,20 @@
           }
           if (prefs.bugyEngine) {
             localStorage.setItem('convivium.bugy.engine', prefs.bugyEngine);
-            if (prefs.bugyEngine === 'v3') {
+            if (prefs.bugyEngine === 'v4') {
+              window.BugyV2?.deactivate?.();
+              window.BugyV3?.deactivate?.();
+              window.BugyV4?.activate?.();
+            } else if (prefs.bugyEngine === 'v3') {
+              window.BugyV4?.deactivate?.();
               window.BugyV2?.deactivate?.();
               window.BugyV3?.activate?.();
             } else if (prefs.bugyEngine === 'v2') {
+              window.BugyV4?.deactivate?.();
               window.BugyV3?.deactivate?.();
               window.BugyV2?.activate?.();
             } else if (prefs.bugyEngine === 'v1') {
+              window.BugyV4?.deactivate?.();
               window.BugyV3?.deactivate?.();
               window.BugyV2?.deactivate?.();
               window.Bugy?.summon?.();
@@ -2299,6 +2312,7 @@
       };
 
       const bugyCommand = () => {
+        window.BugyV4?.deactivate?.();
         window.BugyV3?.deactivate?.();
         window.BugyV2?.deactivate?.();
         window.Bugy?.summon?.();
@@ -3181,6 +3195,14 @@
           soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
           soundToggle.setAttribute('aria-pressed', String(audioEnabled));
         }
+      });
+
+      window.addEventListener('bugy-v4:state', event => {
+        const detail = event.detail || {};
+        persistUserPreferences({
+          bugyEngine: detail.active ? 'v4' : currentPreferenceSnapshot().bugyEngine,
+          bugyV4Skin: detail.skin || localStorage.getItem('convivium.bugy.v4.skin') || 'clippy'
+        });
       });
 
       window.addEventListener('bugy-v3:state', event => {

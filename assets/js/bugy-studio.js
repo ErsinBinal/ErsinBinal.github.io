@@ -14,8 +14,12 @@
   const SKIN_KEYS = {
     v1: 'convivium.bugy.skin',
     v2: 'convivium.bugy.v2.skin',
-    v3: 'convivium.bugy.v3.skin'
+    v3: 'convivium.bugy.v3.skin',
+    v4: 'convivium.bugy.v4.skin'
   };
+
+  // v1'i sondurmek icin v1 disindaki tum kaplama (overlay) motorlari.
+  const OVERLAYS = ['v2', 'v3', 'v4'];
 
   const ENGINES = [
     {
@@ -38,6 +42,13 @@
       tag: 'v3 / canvas core',
       note: 'Kenney atlas + canvas cekirdek. En gelismis efektler.',
       api: () => window.BugyV3
+    },
+    {
+      key: 'v4',
+      name: 'Bugy Assistants',
+      tag: 'v4 / office tribute',
+      note: 'Clippy, Merlin, Rover, K-9, Genie, Scribble, The Dot. Atteberry estetigi.',
+      api: () => window.BugyV4
     }
   ];
 
@@ -46,7 +57,15 @@
     matrix: 'Matrix',
     ember: 'Ember',
     ghost: 'Ghost',
-    royal: 'Royal'
+    royal: 'Royal',
+    // v4 asistanlari
+    clippy: 'Clippy',
+    merlin: 'Merlin',
+    rover: 'Rover',
+    f1: 'F1 / K-9',
+    genie: 'Genie',
+    scribble: 'Scribble',
+    dot: 'The Dot'
   };
 
   const $ = (id) => document.getElementById(id);
@@ -98,14 +117,23 @@
     try { localStorage.setItem(key, value); } catch { /* best effort */ }
   };
 
-  // Hangi motor su an aktif? v3 > v2 > v1 oncelik sirasi.
+  // Hangi motor su an aktif? v4 > v3 > v2 > v1 oncelik sirasi.
   function resolveActive() {
+    const v4 = window.BugyV4;
+    if (v4 && v4.getState && v4.getState().active) return { key: 'v4', api: v4 };
     const v3 = window.BugyV3;
     if (v3 && v3.getState && v3.getState().active) return { key: 'v3', api: v3 };
     const v2 = window.BugyV2;
     if (v2 && v2.getState && v2.getState().active) return { key: 'v2', api: v2 };
     return { key: 'v1', api: window.Bugy || null };
   }
+
+  const overlayApi = (key) => {
+    if (key === 'v2') return window.BugyV2;
+    if (key === 'v3') return window.BugyV3;
+    if (key === 'v4') return window.BugyV4;
+    return null;
+  };
 
   function engineState(key) {
     const def = ENGINES.find((e) => e.key === key);
@@ -114,19 +142,19 @@
     try { return api.getState(); } catch { return null; }
   }
 
-  // ---- Motor degistirme (home-protocol mantigi ile birebir) ----
+  // ---- Motor degistirme (tum kaplama motorlari karsilikli dislar) ----
   function setEngine(key) {
     writeLS(ENGINE_KEY, key);
-    if (key === 'v3') {
-      window.BugyV2 && window.BugyV2.deactivate && window.BugyV2.deactivate();
-      window.BugyV3 && window.BugyV3.activate && window.BugyV3.activate();
-    } else if (key === 'v2') {
-      window.BugyV3 && window.BugyV3.deactivate && window.BugyV3.deactivate();
-      window.BugyV2 && window.BugyV2.activate && window.BugyV2.activate();
-    } else {
-      window.BugyV3 && window.BugyV3.deactivate && window.BugyV3.deactivate();
-      window.BugyV2 && window.BugyV2.deactivate && window.BugyV2.deactivate();
+    // Hedef disindaki tum overlay motorlarini kapat.
+    OVERLAYS.filter((k) => k !== key).forEach((k) => {
+      const api = overlayApi(k);
+      if (api && api.deactivate) api.deactivate();
+    });
+    if (key === 'v1') {
       window.Bugy && window.Bugy.summon && window.Bugy.summon();
+    } else {
+      const api = overlayApi(key);
+      if (api && api.activate) api.activate();
     }
     sfx('system.boot');
     log(`motor -> ${key}`);
@@ -470,6 +498,7 @@
       case '1': setEngine('v1'); break;
       case '2': setEngine('v2'); break;
       case '3': setEngine('v3'); break;
+      case '4': setEngine('v4'); break;
       case 's': { const a = resolveActive(); a.api && a.api.summon && a.api.summon(); sfx('ui.click'); refresh(); break; }
       case 'n': { const a = resolveActive(); a.api && a.api.next && a.api.next(); session.actions += 1; window.setTimeout(refresh, 600); break; }
       case 'r': els.randomToggle.checked = !els.randomToggle.checked; els.randomToggle.dispatchEvent(new Event('change')); break;
@@ -573,7 +602,7 @@
     window.addEventListener('keydown', handleKey);
 
     // Motorlarin yayinladigi durum olaylari
-    ['bugy:state', 'bugy-v2:state', 'bugy-v3:state', 'deb:state', 'nova:state'].forEach((evt) => {
+    ['bugy:state', 'bugy-v2:state', 'bugy-v3:state', 'bugy-v4:state', 'deb:state', 'nova:state'].forEach((evt) => {
       window.addEventListener(evt, () => {
         renderTelemetry();
         renderDeb();

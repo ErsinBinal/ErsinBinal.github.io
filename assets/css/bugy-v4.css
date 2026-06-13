@@ -1,0 +1,195 @@
+/* Convivium - Bugy v4 "Office Yardimcilari"
+   Kevan J. Atteberry estetigi: yumusak, yuvarlak, dostane illustrasyon hissi.
+   Office 97-2003 asistan animasyonlarindan esinlenen hareketler. */
+
+.bugy-v4-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* --- Karakter --- */
+.bugy-v4-char {
+  position: absolute;
+  left: 0;
+  bottom: 18px;
+  width: 110px;
+  height: 132px;
+  pointer-events: auto;
+  cursor: pointer;
+  transform-origin: 50% 100%;
+  will-change: transform;
+}
+
+.bugy-v4-svg-wrap { width: 100%; height: 100%; }
+
+.v4-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* Atteberry yumusak golge */
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+}
+
+.bugy-v4-char:focus-visible {
+  outline: 2px solid var(--v4-accent, #00f3ff);
+  outline-offset: 4px;
+  border-radius: 14px;
+}
+
+/* --- Goz kirpma --- */
+.v4-pupil {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.08s ease;
+}
+.bugy-v4-char.is-blink .v4-pupil { transform: scaleY(0.12); }
+
+/* --- Konusma balonu (klasik Office ipucu) --- */
+.bugy-v4-balloon {
+  position: absolute;
+  left: 0;
+  bottom: 152px;
+  max-width: 230px;
+  padding: 9px 13px;
+  background: linear-gradient(180deg, #fffbe0, #fdf2b8);
+  color: #3a2f12;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  line-height: 1.4;
+  border: 2px solid #d9b94a;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transform-origin: 0 100%;
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+.bugy-v4-balloon.is-on { opacity: 1; }
+.bugy-v4-balloon::after {
+  content: '';
+  position: absolute;
+  left: 26px;
+  bottom: -12px;
+  border-width: 12px 10px 0 0;
+  border-style: solid;
+  border-color: #fdf2b8 transparent transparent transparent;
+  filter: drop-shadow(1px 2px 0 #d9b94a);
+}
+
+/* --- Parcaciklar --- */
+.v4-particle {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+  animation: v4Particle 0.95s ease-out forwards;
+  text-shadow: 0 0 6px currentColor;
+}
+@keyframes v4Particle {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.4) rotate(0deg); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.1) rotate(140deg); }
+}
+
+/* ============================================================
+   Mood animasyonlari (Office asistan jestleri)
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+  /* Clippy "tada" — kutlama ziplamasi */
+  .bugy-v4-char.is-tada { animation: v4Tada 1.4s ease; }
+  @keyframes v4Tada {
+    0% { transform: translateY(0) scale(1); }
+    15% { transform: translateY(-2px) scale(1.06, 0.94); }
+    30% { transform: translateY(-26px) scale(0.96, 1.08) rotate(-6deg); }
+    50% { transform: translateY(0) scale(1.04, 0.96) rotate(5deg); }
+    70% { transform: translateY(-14px) scale(1) rotate(-3deg); }
+    100% { transform: translateY(0) scale(1) rotate(0deg); }
+  }
+
+  /* think — yana egilip dusunme */
+  .bugy-v4-char.is-think { animation: v4Think 1.8s ease; }
+  @keyframes v4Think {
+    0%, 100% { transform: rotate(0deg); }
+    25%, 75% { transform: rotate(-7deg) translateY(-2px); }
+  }
+
+  /* alert — uyari sarsintisi */
+  .bugy-v4-char.is-alert { animation: v4Alert 0.5s ease 0s 2; }
+  @keyframes v4Alert {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px) rotate(-3deg); }
+    40% { transform: translateX(6px) rotate(3deg); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* wave — selamlama sallanmasi */
+  .bugy-v4-char.is-wave { animation: v4Wave 1.3s ease; transform-origin: 50% 100%; }
+  @keyframes v4Wave {
+    0%, 100% { transform: rotate(0deg); }
+    20% { transform: rotate(8deg); }
+    40% { transform: rotate(-8deg); }
+    60% { transform: rotate(6deg); }
+    80% { transform: rotate(-4deg); }
+  }
+
+  /* magic — Merlin buyu suzulmesi */
+  .bugy-v4-char.is-magic { animation: v4Magic 1.7s ease; }
+  @keyframes v4Magic {
+    0% { transform: translateY(0); filter: drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+    50% { transform: translateY(-22px) scale(1.05); }
+    100% { transform: translateY(0); }
+  }
+  .bugy-v4-char.is-magic .v4-svg { animation: v4Glow 1.7s ease; }
+  @keyframes v4Glow {
+    0%, 100% { filter: drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+    50% { filter: drop-shadow(0 0 18px var(--v4-accent, #9b6bff)) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+  }
+
+  /* search — Rover one egilip arama */
+  .bugy-v4-char.is-search { animation: v4Search 1.6s ease; }
+  @keyframes v4Search {
+    0%, 100% { transform: rotate(0deg) translateX(0); }
+    25% { transform: rotate(10deg) translateX(8px); }
+    50% { transform: rotate(0deg) translateX(0); }
+    75% { transform: rotate(-10deg) translateX(-8px); }
+  }
+
+  /* morph — The Dot sekil/renk donusumu */
+  .bugy-v4-char.is-morph { animation: v4Morph 1.7s ease-in-out; }
+  @keyframes v4Morph {
+    0%, 100% { transform: scale(1, 1); }
+    25% { transform: scale(1.18, 0.82); }
+    50% { transform: scale(0.84, 1.16) rotate(8deg); }
+    75% { transform: scale(1.1, 0.9) rotate(-6deg); }
+  }
+  .bugy-v4-char.is-morph .v4-svg { animation: v4Hue 1.7s linear; }
+
+  /* The Dot surekli renk dongusu + halka donmesi */
+  .bugy-v4-char[data-skin="dot"] .v4-svg { animation: v4HueCycle 7s linear infinite; }
+  .bugy-v4-char[data-skin="dot"] .v4-dot-ring {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: v4Spin 9s linear infinite;
+  }
+  @keyframes v4HueCycle { from { filter: hue-rotate(0deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); } to { filter: hue-rotate(360deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); } }
+  @keyframes v4Spin { to { transform: rotate(360deg); } }
+
+  /* Merlin yildiz parildamasi */
+  .bugy-v4-char[data-skin="merlin"] .v4-stars circle { animation: v4Twinkle 1.8s ease-in-out infinite; }
+  .bugy-v4-char[data-skin="merlin"] .v4-stars circle:nth-child(2) { animation-delay: 0.6s; }
+  .bugy-v4-char[data-skin="merlin"] .v4-stars circle:nth-child(3) { animation-delay: 1.1s; }
+  @keyframes v4Twinkle { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+}
+
+@keyframes v4Hue {
+  0%, 100% { filter: hue-rotate(0deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+  50% { filter: hue-rotate(180deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+}
+
+/* Hareket azaltma tercihinde sabit dur */
+@media (prefers-reduced-motion: reduce) {
+  .bugy-v4-char { transition: none; }
+}
