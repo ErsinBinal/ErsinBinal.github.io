@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
   <link rel="stylesheet" href="/assets/css/deb-companion.css?v=2">
-  <link rel="stylesheet" href="/assets/css/bugy-studio.css?v=1">
+  <link rel="stylesheet" href="/assets/css/bugy-studio.css?v=2">
 </head>
 <body class="bugy-debug bugy-studio-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
@@ -31,10 +31,12 @@
         <span id="globalStatus" aria-live="polite">Motorlar baslatiliyor...</span>
       </div>
       <nav class="studio-actions" aria-label="Navigasyon">
+        <button id="soundToggle" class="btn" type="button" aria-pressed="false">Ses: kapali</button>
         <a class="btn" href="index.html">&#8592; Ana Sayfa</a>
         <a class="btn" href="admin.html">Content Studio</a>
         <a class="btn" href="dashboard.html">Dashboard</a>
       </nav>
+      <p id="shortcutHint" class="shortcut-hint">Kisayollar: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> motor · <kbd>S</kbd> cagir · <kbd>N</kbd> aksiyon · <kbd>R</kbd> rastgele · <kbd>C</kbd> kaos · <kbd>B</kbd> deb · <kbd>Esc</kbd> v1</p>
     </header>
 
     <div class="studio-board">
@@ -54,6 +56,22 @@
           <span id="telemetryEngine" class="badge">v1</span>
         </div>
         <dl id="telemetryGrid" class="telemetry-grid"></dl>
+        <div class="stat-strip" aria-label="Oturum istatistikleri">
+          <span><em id="statActions">0</em> aksiyon</span>
+          <span><em id="statUptime">0:00</em> sure</span>
+          <span class="heartbeat" id="statHeartbeat" aria-hidden="true">●</span>
+        </div>
+      </section>
+
+      <!-- POSITION RADAR -->
+      <section class="studio-card radar-card" aria-labelledby="radarTitle">
+        <div class="card-head">
+          <h2 id="radarTitle">Konum Radari</h2>
+          <span class="card-hint">canli x/y izi</span>
+        </div>
+        <div class="radar-wrap">
+          <canvas id="radar" width="320" height="200" role="img" aria-label="Bugy konum radari"></canvas>
+        </div>
       </section>
 
       <!-- SKIN LAB -->
@@ -69,10 +87,16 @@
       <section class="studio-card action-console" aria-labelledby="actionTitle">
         <div class="card-head">
           <h2 id="actionTitle">Aksiyon Konsolu</h2>
-          <label class="switch">
-            <input id="randomToggle" type="checkbox">
-            <span>Rastgele aksiyonlar</span>
-          </label>
+          <span class="switch-row">
+            <label class="switch">
+              <input id="randomToggle" type="checkbox">
+              <span>Rastgele</span>
+            </label>
+            <label class="switch">
+              <input id="chaosToggle" type="checkbox">
+              <span>Kaos modu</span>
+            </label>
+          </span>
         </div>
         <div id="actionGrid" class="chip-grid" role="group" aria-label="Aktif motor aksiyonlari"></div>
         <div class="console-row">
@@ -126,6 +150,6 @@
   <script src="/assets/js/bugy-v3-loader.js?v=6" defer></script>
   <script src="/assets/js/deb-companion.js?v=4" defer></script>
   <script src="/assets/js/sfx.js?v=14" defer></script>
-  <script src="/assets/js/bugy-studio.js?v=1" defer></script>
+  <script src="/assets/js/bugy-studio.js?v=2" defer></script>
 </body>
 </html>

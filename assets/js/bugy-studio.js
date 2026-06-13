@@ -71,10 +71,26 @@
     copyStateBtn: $('copyStateBtn'),
     resetPrefsBtn: $('resetPrefsBtn'),
     eventLog: $('eventLog'),
-    clearLogBtn: $('clearLogBtn')
+    clearLogBtn: $('clearLogBtn'),
+    soundToggle: $('soundToggle'),
+    chaosToggle: $('chaosToggle'),
+    statActions: $('statActions'),
+    statUptime: $('statUptime'),
+    statHeartbeat: $('statHeartbeat'),
+    radar: $('radar')
   };
 
   const getDeb = () => window.DebCompanion || window.NovaCompanion;
+
+  // ---- SFX yardimcisi (sfx.js varsa) ----
+  const sfx = (name) => {
+    const engine = window.ConviviumSFX;
+    if (engine && engine.play) { try { engine.play(name); } catch { /* ignore */ } }
+  };
+
+  // ---- Oturum istatistikleri ----
+  const session = { actions: 0, startedAt: Date.now() };
+  const prevTelemetry = {};
   const readLS = (key) => {
     try { return localStorage.getItem(key); } catch { return null; }
   };
@@ -112,6 +128,7 @@
       window.BugyV2 && window.BugyV2.deactivate && window.BugyV2.deactivate();
       window.Bugy && window.Bugy.summon && window.Bugy.summon();
     }
+    sfx('system.boot');
     log(`motor -> ${key}`);
     refresh();
   }
@@ -166,6 +183,20 @@
     dl.append(dt, dd);
   }
 
+  // Degeri degisen telemetri satirini kisa sure parlatir.
+  function flashRow(dl, label, value) {
+    const text = value == null || value === '' ? '—' : String(value);
+    const dt = document.createElement('dt');
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.textContent = text;
+    if (prevTelemetry[label] !== undefined && prevTelemetry[label] !== text) {
+      dd.classList.add('flash');
+    }
+    prevTelemetry[label] = text;
+    dl.append(dt, dd);
+  }
+
   function renderTelemetry() {
     const { key } = resolveActive();
     const st = engineState(key) || (key === 'v1' && window.Bugy ? window.Bugy.getState() : null);
@@ -176,13 +207,24 @@
       row(dl, 'Durum', 'motor okunamadi');
       return;
     }
-    row(dl, 'Motor', key);
-    row(dl, 'Hal', st.state);
-    row(dl, 'Skin', st.skinLabel ? `${st.skin} (${st.skinLabel})` : st.skin);
-    row(dl, 'Rastgele', st.randomEnabled ? 'acik' : 'kapali');
-    row(dl, 'Konum', `x:${st.x ?? '?'}  y:${st.y ?? '?'}`);
-    if (st.mode) row(dl, 'Mod', st.mode);
-    if (st.assetSource) row(dl, 'Varlik', st.assetSource);
+    flashRow(dl, 'Motor', key);
+    flashRow(dl, 'Hal', st.state);
+    flashRow(dl, 'Skin', st.skinLabel ? `${st.skin} (${st.skinLabel})` : st.skin);
+    flashRow(dl, 'Rastgele', st.randomEnabled ? 'acik' : 'kapali');
+    flashRow(dl, 'Konum', `x:${st.x ?? '?'}  y:${st.y ?? '?'}`);
+    if (st.mode) flashRow(dl, 'Mod', st.mode);
+    if (st.assetSource) flashRow(dl, 'Varlik', st.assetSource);
+    updateStats();
+  }
+
+  // ---- Oturum istatistikleri + nabiz ----
+  function updateStats() {
+    if (els.statActions) els.statActions.textContent = String(session.actions);
+    if (els.statUptime) {
+      const s = Math.floor((Date.now() - session.startedAt) / 1000);
+      const m = Math.floor(s / 60);
+      els.statUptime.textContent = `${m}:${String(s % 60).padStart(2, '0')}`;
+    }
   }
 
   // ---- Render: skin lab ----
@@ -206,9 +248,10 @@
 
   function applySkin(skin) {
     const { key, api } = resolveActive();
-    if (!api || !api.setSkin) { log(`skin uygulanamadi: ${key} motoru hazir degil`); return; }
+    if (!api || !api.setSkin) { log(`skin uygulanamadi: ${key} motoru hazir degil`); sfx('ui.error'); return; }
     api.setSkin(skin);
     if (SKIN_KEYS[key]) writeLS(SKIN_KEYS[key], skin);
+    sfx('ui.select');
     log(`${key} skin -> ${skin}`);
     refresh();
   }
@@ -233,10 +276,12 @@
 
   function runAction(action) {
     const { key, api } = resolveActive();
-    if (!api || !api.trigger) { log(`aksiyon basarisiz: ${key} hazir degil`); return; }
+    if (!api || !api.trigger) { log(`aksiyon basarisiz: ${key} hazir degil`); sfx('ui.error'); return; }
     if (api.summon) api.summon();
     const ok = api.trigger(action);
+    if (ok) { session.actions += 1; sfx('ui.confirm'); } else { sfx('ui.error'); }
     log(`${key} aksiyon "${action}" -> ${ok ? 'ok' : 'reddedildi'}`);
+    pulseRadar();
     window.setTimeout(refresh, 700);
   }
 
@@ -264,6 +309,8 @@
         const d = getDeb();
         if (!d || !d.trigger) return;
         d.trigger(action);
+        session.actions += 1;
+        sfx('ui.transmit');
         log(`deb aksiyon "${action}"`);
         window.setTimeout(refresh, 700);
       });
@@ -303,6 +350,142 @@
     li.append(time, text);
     els.eventLog.prepend(li);
     while (els.eventLog.children.length > 60) els.eventLog.lastChild.remove();
+  }
+
+  // ---- Konum radari ----
+  const radar = { ctx: null, w: 320, h: 200, trail: [], debTrail: [], pulses: [], raf: 0 };
+
+  function initRadar() {
+    if (!els.radar || !els.radar.getContext) return;
+    radar.ctx = els.radar.getContext('2d');
+    radar.w = els.radar.width;
+    radar.h = els.radar.height;
+    drawRadar();
+  }
+
+  function pulseRadar() {
+    if (!radar.ctx) return;
+    const st = engineState(resolveActive().key);
+    if (!st) return;
+    radar.pulses.push({ x: norm(st.x, window.innerWidth), y: norm(st.y, window.innerHeight), r: 0 });
+  }
+
+  const norm = (v, span) => Math.max(0, Math.min(1, (Number(v) || 0) / Math.max(1, span)));
+
+  function drawRadar() {
+    const ctx = radar.ctx;
+    if (!ctx) return;
+    const { w, h } = radar;
+    ctx.clearRect(0, 0, w, h);
+
+    // izgara
+    ctx.strokeStyle = 'rgba(0, 119, 0, 0.25)';
+    ctx.lineWidth = 1;
+    for (let gx = 0; gx <= w; gx += w / 8) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, h); ctx.stroke();
+    }
+    for (let gy = 0; gy <= h; gy += h / 5) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    }
+
+    const plotTrail = (trail, color) => {
+      for (let i = 0; i < trail.length; i += 1) {
+        const p = trail[i];
+        const alpha = (i + 1) / trail.length;
+        ctx.fillStyle = color.replace('ALPHA', (alpha * 0.6).toFixed(2));
+        ctx.beginPath();
+        ctx.arc(p.x * w, p.y * h, 1.5 + alpha * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    plotTrail(radar.trail, 'rgba(0, 243, 255, ALPHA)');
+    plotTrail(radar.debTrail, 'rgba(255, 0, 150, ALPHA)');
+
+    // aktif nokta
+    const head = radar.trail[radar.trail.length - 1];
+    if (head) {
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.95)';
+      ctx.beginPath();
+      ctx.arc(head.x * w, head.y * h, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 255, 0, 0.4)';
+      ctx.beginPath();
+      ctx.arc(head.x * w, head.y * h, 8, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // patlama halkalari
+    radar.pulses = radar.pulses.filter((pulse) => {
+      pulse.r += 2.4;
+      const a = Math.max(0, 1 - pulse.r / 46);
+      if (a <= 0) return false;
+      ctx.strokeStyle = `rgba(0, 255, 0, ${a.toFixed(2)})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(pulse.x * w, pulse.y * h, pulse.r, 0, Math.PI * 2);
+      ctx.stroke();
+      return true;
+    });
+  }
+
+  function radarLoop() {
+    if (!radar.ctx) return;
+    const st = engineState(resolveActive().key);
+    if (st && st.x != null) {
+      radar.trail.push({ x: norm(st.x, window.innerWidth), y: norm(st.y, window.innerHeight) });
+      while (radar.trail.length > 48) radar.trail.shift();
+    }
+    const deb = getDeb();
+    const ds = deb && deb.getState ? deb.getState() : null;
+    if (ds && ds.active && ds.x != null) {
+      radar.debTrail.push({ x: norm(ds.x, window.innerWidth), y: norm(ds.y, window.innerHeight) });
+      while (radar.debTrail.length > 48) radar.debTrail.shift();
+    } else if (radar.debTrail.length) {
+      radar.debTrail.shift();
+    }
+    drawRadar();
+    radar.raf = window.requestAnimationFrame(radarLoop);
+  }
+
+  // ---- Kaos modu (oto-demo) ----
+  let chaosTimer = 0;
+  function setChaos(on) {
+    window.clearInterval(chaosTimer);
+    document.body.classList.toggle('chaos-on', on);
+    if (!on) { log('kaos modu kapandi'); return; }
+    log('kaos modu basladi');
+    sfx('system.unlock');
+    chaosTimer = window.setInterval(() => {
+      const { key, api } = resolveActive();
+      const st = engineState(key);
+      const actions = (st && st.actions) || (api && api.actions) || [];
+      if (actions.length) runAction(actions[Math.floor(Math.random() * actions.length)]);
+    }, 2600);
+  }
+
+  // ---- Klavye kisayollari ----
+  function handleKey(event) {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)) return;
+    switch (event.key.toLowerCase()) {
+      case '1': setEngine('v1'); break;
+      case '2': setEngine('v2'); break;
+      case '3': setEngine('v3'); break;
+      case 's': { const a = resolveActive(); a.api && a.api.summon && a.api.summon(); sfx('ui.click'); refresh(); break; }
+      case 'n': { const a = resolveActive(); a.api && a.api.next && a.api.next(); session.actions += 1; window.setTimeout(refresh, 600); break; }
+      case 'r': els.randomToggle.checked = !els.randomToggle.checked; els.randomToggle.dispatchEvent(new Event('change')); break;
+      case 'c': els.chaosToggle.checked = !els.chaosToggle.checked; setChaos(els.chaosToggle.checked); break;
+      case 'b': { const d = getDeb(); if (d) { const on = d.getState && d.getState().active; on ? d.deactivate() : d.activate(); window.setTimeout(refresh, 300); } break; }
+      default: return;
+    }
+  }
+
+  // ---- Ses ac/kapat ----
+  function syncSoundToggle() {
+    const engine = window.ConviviumSFX;
+    const on = Boolean(engine && engine.enabled);
+    els.soundToggle.textContent = `Ses: ${on ? 'acik' : 'kapali'}`;
+    els.soundToggle.setAttribute('aria-pressed', String(on));
+    els.soundToggle.classList.toggle('is-on', on);
   }
 
   // ---- Toplu yenileme ----
@@ -380,6 +563,15 @@
     });
     els.clearLogBtn.addEventListener('click', () => { els.eventLog.innerHTML = ''; });
 
+    els.soundToggle.addEventListener('click', () => {
+      const engine = window.ConviviumSFX;
+      if (engine && engine.setEnabled) engine.setEnabled(!engine.enabled, true);
+      syncSoundToggle();
+      log(`ses -> ${window.ConviviumSFX && window.ConviviumSFX.enabled ? 'acik' : 'kapali'}`);
+    });
+    els.chaosToggle.addEventListener('change', () => setChaos(els.chaosToggle.checked));
+    window.addEventListener('keydown', handleKey);
+
     // Motorlarin yayinladigi durum olaylari
     ['bugy:state', 'bugy-v2:state', 'bugy-v3:state', 'deb:state', 'nova:state'].forEach((evt) => {
       window.addEventListener(evt, () => {
@@ -393,6 +585,9 @@
   // bir kac kez tekrar deneyerek gec gelen motorlari da yakaliyoruz.
   function boot() {
     wire();
+    initRadar();
+    syncSoundToggle();
+    radarLoop();
     refresh();
     let tries = 0;
     const poll = window.setInterval(() => {
@@ -404,6 +599,7 @@
     // ama v1'e donmus durumda telemetriyi hizalamak icin tetikliyoruz).
     window.setTimeout(refresh, 1500);
     window.setInterval(refresh, 2500);
+    window.setInterval(updateStats, 1000);
   }
 
   if (document.readyState === 'loading') {
