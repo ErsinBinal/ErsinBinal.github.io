@@ -38,6 +38,7 @@
   let ambientNode = null;
   let musicState = null;
   let lastPointerSfx = null;
+  let lastToggleAt = 0;
   let busVolumes = { ...DEFAULT_BUS_VOLUMES };
 
   // Cache: undefined = not rendered, null = render failed, object = { buffer, bus }.
@@ -118,7 +119,7 @@
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       connect(source, ctx.destination);
-      source.start(0);
+      source.start(ctx.currentTime);
     } catch {}
   };
 
@@ -662,7 +663,8 @@
       if (cached) playBuffer(cached);
       return true;
     }
-    getCueEntry(key).then((entry) => { if (entry && enabled) playBuffer(entry); });
+    try { sounds[key](opts); } catch {}
+    getCueEntry(key);
     return true;
   };
 
@@ -812,12 +814,56 @@
     });
   };
 
+  const emitState = () => {
+    try {
+      window.dispatchEvent(new CustomEvent('convivium:audio-state', { detail: { enabled } }));
+    } catch {}
+  };
+
+  const stopToggleEvent = (event) => {
+    if (!event) return;
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation?.();
+    event.stopImmediatePropagation?.();
+  };
+
+  const toggleFromGesture = (event) => {
+    stopToggleEvent(event);
+    lastToggleAt = nowMs();
+    setEnabled(!enabled, true);
+  };
+
+  const bindToggle = (el) => {
+    if (!el || el.dataset.sfxBound === 'true') return;
+    el.dataset.sfxBound = 'true';
+    el.addEventListener('pointerdown', toggleFromGesture, { passive: false });
+    el.addEventListener('touchend', (event) => {
+      if (nowMs() - lastToggleAt < 700) {
+        stopToggleEvent(event);
+        return;
+      }
+      toggleFromGesture(event);
+    }, { passive: false });
+    el.addEventListener('click', (event) => {
+      if (nowMs() - lastToggleAt < 700) {
+        stopToggleEvent(event);
+        return;
+      }
+      toggleFromGesture(event);
+    });
+  };
+
+  const bindToggles = () => {
+    document.querySelectorAll('[data-sfx-toggle]').forEach(bindToggle);
+  };
+
   const setEnabled = (value, withSound = false) => {
     const next = Boolean(value);
     if (withSound && enabled && !next) play('ui.toggleOff');
     enabled = next;
     try { localStorage.setItem(PREF_KEY, String(enabled)); } catch {}
     syncToggles();
+    emitState();
     if (!enabled) {
       stopMusic();
       stopAmbient();
@@ -838,6 +884,7 @@
 
   const injectToggle = () => {
     if (document.querySelector('[data-sfx-toggle]')) {
+      bindToggles();
       syncToggles();
       return;
     }
@@ -855,8 +902,8 @@
     ].join(';');
     btn.addEventListener('mouseenter', () => { btn.style.opacity = '1'; });
     btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.72'; });
-    btn.addEventListener('click', () => setEnabled(!enabled, true));
     document.body.appendChild(btn);
+    bindToggle(btn);
   };
 
   // ---------------------------------------------------------------------------
@@ -881,7 +928,7 @@
     play('click');
   };
 
-  ['pointerdown', 'touchstart', 'keydown'].forEach((eventName) => {
+  ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click'].forEach((eventName) => {
     document.addEventListener(eventName, unlock, { capture: true, passive: true });
   });
 

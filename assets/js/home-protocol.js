@@ -3174,6 +3174,15 @@
         setAudioEnabled(!audioEnabled, true);
       });
 
+      window.addEventListener('convivium:audio-state', event => {
+        if (typeof event.detail?.enabled !== 'boolean') return;
+        audioEnabled = event.detail.enabled;
+        if (soundToggle) {
+          soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
+          soundToggle.setAttribute('aria-pressed', String(audioEnabled));
+        }
+      });
+
       window.addEventListener('bugy-v3:state', event => {
         const detail = event.detail || {};
         persistUserPreferences({
