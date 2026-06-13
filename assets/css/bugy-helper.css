@@ -1,79 +1,104 @@
 /* Convivium - Bugy Helper launcher
-   Bagimsiz stil: oyun sayfalari common.css yuklemeyebilir, bu yuzden renkler sabit. */
+   Sitenin retro-terminal / HUD diline uyumlu. Bagimsiz stil: oyun sayfalari
+   common.css yuklemeyebilir, bu yuzden renkler sabit (neon yesil palet). */
 
 .bugy-launcher {
   position: fixed;
   right: 18px;
   bottom: 18px;
   z-index: 99998;
-  width: 52px;
-  height: 52px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
   padding: 0;
-  border-radius: 50%;
-  border: 2px solid #00ff88;
-  background: radial-gradient(circle at 30% 25%, #0b2b1c, #04140d);
-  color: #7dffb0;
-  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
-  font-size: 1.5rem;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 255, 100, 0.6);
+  background: rgba(3, 12, 7, 0.92);
+  color: #4dff8f;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 1.2rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.5), 0 6px 16px rgba(0, 0, 0, 0.45);
-  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease;
+  overflow: hidden;
+  box-shadow: 0 0 12px rgba(0, 255, 100, 0.18), inset 0 0 16px rgba(0, 40, 20, 0.7);
+  text-shadow: 0 0 6px rgba(0, 255, 100, 0.6);
+  transition: transform 0.16s ease, box-shadow 0.25s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Tarama cizgisi (scanline) dokusu */
+.bugy-launcher::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0, 255, 100, 0.07) 0 1px, transparent 1px 3px);
+  border-radius: inherit;
+}
+
+.bugy-launcher-glyph {
+  position: relative;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* Terminal imleci (kapaliyken yanip soner) */
+.bugy-launcher:not(.is-open) .bugy-launcher-glyph::after {
+  content: '_';
+  margin-left: 1px;
+  animation: bugyCaret 1.05s steps(1) infinite;
+}
+@keyframes bugyCaret { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+
 .bugy-launcher:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 0 18px rgba(0, 255, 136, 0.6), 0 6px 16px rgba(0, 0, 0, 0.5);
+  transform: translateY(-1px);
+  border-color: rgba(0, 255, 100, 0.95);
+  box-shadow: 0 0 18px rgba(0, 255, 100, 0.4), inset 0 0 16px rgba(0, 50, 25, 0.8);
 }
 
 .bugy-launcher:focus-visible {
-  outline: 2px solid #7dffb0;
+  outline: 1px solid #7dffb0;
   outline-offset: 3px;
 }
 
-.bugy-launcher .bugy-launcher-glyph {
-  line-height: 1;
-  pointer-events: none;
-  transition: transform 0.2s ease;
-}
-
+/* Acikken HUD tersine doner */
 .bugy-launcher.is-open {
-  background: radial-gradient(circle at 30% 25%, #2b0b16, #14040a);
-  border-color: #ff5f87;
-  color: #ffb3c6;
+  background: rgba(0, 255, 100, 0.85);
+  color: #021008;
+  border-color: #00ff66;
+  text-shadow: none;
 }
-.bugy-launcher.is-open .bugy-launcher-glyph { transform: rotate(90deg); }
 
-/* Sakin nabiz (kapaliyken dikkat ceker) */
+/* Sakin kenarlik nabzi (dikkat ceker, materyal degil HUD hissi) */
 @media (prefers-reduced-motion: no-preference) {
   .bugy-launcher:not(.is-open) {
-    animation: bugyLauncherPulse 2.6s ease-in-out infinite;
+    animation: bugyLauncherFlicker 3.4s ease-in-out infinite;
   }
 }
-@keyframes bugyLauncherPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.45), 0 6px 16px rgba(0, 0, 0, 0.45); }
-  50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0), 0 6px 16px rgba(0, 0, 0, 0.45); }
+@keyframes bugyLauncherFlicker {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 100, 0.14), inset 0 0 16px rgba(0, 40, 20, 0.7); }
+  50% { box-shadow: 0 0 16px rgba(0, 255, 100, 0.35), inset 0 0 16px rgba(0, 40, 20, 0.7); }
 }
 
-/* Ilk giris ipucu balonu */
+/* Ilk giris ipucu — terminal tooltip (site UI'si yesil; karakterin balonu ayri/sari) */
 .bugy-launcher-hint {
   position: fixed;
-  right: 80px;
-  bottom: 30px;
+  right: 74px;
+  bottom: 26px;
   z-index: 99998;
-  max-width: 220px;
-  padding: 8px 12px;
-  background: linear-gradient(180deg, #fffbe0, #fdf2b8);
-  color: #3a2f12;
-  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
-  font-size: 0.76rem;
-  line-height: 1.4;
-  border: 2px solid #d9b94a;
-  border-radius: 12px;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  max-width: 230px;
+  padding: 7px 11px;
+  background: rgba(3, 12, 7, 0.95);
+  color: #7dffb0;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  border: 1px solid rgba(0, 255, 100, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 0 12px rgba(0, 255, 100, 0.18);
   opacity: 0;
   transform: translateX(8px);
   transition: opacity 0.35s ease, transform 0.35s ease;
@@ -83,14 +108,17 @@
 .bugy-launcher-hint::after {
   content: '';
   position: absolute;
-  right: -10px;
-  bottom: 14px;
-  border-width: 8px 0 8px 10px;
-  border-style: solid;
-  border-color: transparent transparent transparent #fdf2b8;
+  right: -7px;
+  bottom: 13px;
+  width: 10px;
+  height: 10px;
+  background: rgba(3, 12, 7, 0.95);
+  border-right: 1px solid rgba(0, 255, 100, 0.6);
+  border-top: 1px solid rgba(0, 255, 100, 0.6);
+  transform: rotate(45deg);
 }
 
 @media (max-width: 520px) {
-  .bugy-launcher { right: 12px; bottom: 12px; width: 46px; height: 46px; font-size: 1.3rem; }
-  .bugy-launcher-hint { right: 66px; bottom: 22px; max-width: 60vw; }
+  .bugy-launcher { right: 12px; bottom: 12px; width: 42px; height: 42px; font-size: 1.05rem; }
+  .bugy-launcher-hint { right: 62px; bottom: 20px; max-width: 56vw; }
 }

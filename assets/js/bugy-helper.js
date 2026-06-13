@@ -9,7 +9,7 @@
 
   const V4_JS = '/assets/js/bugy-v4.js?v=2';
   const V4_CSS = '/assets/css/bugy-v4.css?v=1';
-  const HELPER_CSS = '/assets/css/bugy-helper.css?v=1';
+  const HELPER_CSS = '/assets/css/bugy-helper.css?v=2';
 
   // --- Sayfaya ozel ipucu tabani ---
   const TIPS = {
@@ -180,7 +180,7 @@
     // Ilk girişte kisa bir ipucu balonu.
     hint = document.createElement('div');
     hint.className = 'bugy-launcher-hint';
-    hint.textContent = 'Yardim mi lazim? Bana tikla.';
+    hint.textContent = '> yardim protokolu: tikla';
     document.body.appendChild(hint);
     window.setTimeout(() => hint && hint.classList.add('is-on'), 1200);
     window.setTimeout(() => { if (hint) { hint.classList.remove('is-on'); window.setTimeout(() => hint && hint.remove(), 400); hint = null; } }, 8000);
