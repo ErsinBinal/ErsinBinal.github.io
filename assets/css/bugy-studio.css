@@ -1,0 +1,283 @@
+/* Convivium - Bugy Studio
+   Gelismis bugy motoru kontrol merkezi arayuzu. */
+
+.bugy-studio-page {
+  min-height: 100vh;
+}
+
+.bugy-studio {
+  position: relative;
+  z-index: 50; /* roaming bugy katmanlarinin uzerinde tiklanabilir kalsin */
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 18px 64px;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+/* ---- Topbar ---- */
+.bugy-studio .studio-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--color-primary-dim);
+}
+
+.bugy-studio .studio-title p {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  color: var(--color-text-dim);
+}
+
+.bugy-studio .studio-title h1 {
+  margin: 4px 0 6px;
+  font-size: 1.55rem;
+  text-shadow: var(--glow-primary-soft);
+}
+
+.bugy-studio .studio-title span {
+  font-size: 0.8rem;
+  color: var(--color-accent);
+}
+
+.bugy-studio .studio-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- Board ---- */
+.studio-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.engine-bay,
+.action-console,
+.event-log { grid-column: 1 / -1; }
+
+@media (max-width: 760px) {
+  .studio-board { grid-template-columns: 1fr; }
+}
+
+/* ---- Cards ---- */
+.studio-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-primary-dim);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 16px 16px 18px;
+}
+
+.studio-card .card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.studio-card .card-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+}
+
+.card-hint {
+  font-size: 0.72rem;
+  color: var(--color-text-dim);
+}
+
+.badge {
+  font-size: 0.72rem;
+  padding: 2px 9px;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.badge-dim {
+  border-color: var(--color-primary-dim);
+  color: var(--color-text-dim);
+}
+
+/* ---- Engine grid ---- */
+.engine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.engine-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--color-primary-dim);
+  border-radius: var(--border-radius-md);
+  background: rgba(0, 0, 0, 0.55);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.engine-card.is-active {
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-primary-soft);
+}
+
+.engine-card.is-offline { opacity: 0.55; }
+
+.engine-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.engine-card-head strong { font-size: 1rem; }
+
+.engine-ver {
+  font-size: 0.7rem;
+  color: var(--color-accent);
+}
+
+.engine-note {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--color-text-dim);
+  line-height: 1.45;
+  min-height: 2.2em;
+}
+
+.engine-flag {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  color: var(--color-text-dim);
+}
+
+.engine-card.is-active .engine-flag { color: var(--color-primary-bright); }
+
+.engine-card .btn { margin-top: auto; }
+
+/* ---- Telemetry / storage grids ---- */
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 14px;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.telemetry-grid dt { color: var(--color-text-dim); }
+.telemetry-grid dd {
+  margin: 0;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+/* ---- Chips ---- */
+.chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 7px 12px;
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--color-text);
+  border: 1px solid var(--color-primary-dim);
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  box-shadow: var(--glow-primary-soft);
+}
+
+.chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.chip.is-on {
+  background: var(--color-primary-dim);
+  border-color: var(--color-primary);
+  color: #000;
+  font-weight: 700;
+}
+
+.chip-action { color: var(--color-accent); border-color: var(--color-accent); }
+.chip-action:hover:not(:disabled) {
+  box-shadow: var(--glow-accent);
+  border-color: var(--color-accent);
+}
+
+/* ---- Console rows ---- */
+.console-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  cursor: pointer;
+}
+
+.switch input { accent-color: var(--color-primary); }
+
+/* ---- Button variants used here ---- */
+.btn-danger {
+  border-color: var(--color-accent-red);
+  color: var(--color-accent-red);
+}
+.btn-danger:hover {
+  background: var(--color-accent-red);
+  color: #000;
+  box-shadow: 0 0 12px var(--color-accent-red);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.72rem;
+}
+
+/* ---- Event log ---- */
+.log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  font-size: 0.76rem;
+}
+
+.log-list li {
+  display: flex;
+  gap: 10px;
+  padding: 4px 2px;
+  border-bottom: 1px dashed rgba(0, 119, 0, 0.3);
+}
+
+.log-list time {
+  color: var(--color-text-dim);
+  flex: 0 0 auto;
+}
+
+.log-list span { color: var(--color-text); word-break: break-word; }

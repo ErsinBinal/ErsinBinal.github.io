@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bugy Studio - Convivium</title>
+  <meta name="description" content="Convivium bugy motorlarini (v1/v2/v3) ve DEB yoldasini yoneten gelismis kontrol merkezi.">
+  <meta name="author" content="Ersin Binal">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://ersinbinal.github.io/bugy-studio.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; worker-src 'self' blob:; media-src 'self' data: blob:; connect-src 'self';">
+  <meta name="theme-color" content="#00ff00">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css?v=31">
+  <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
+  <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
+  <link rel="stylesheet" href="/assets/css/deb-companion.css?v=2">
+  <link rel="stylesheet" href="/assets/css/bugy-studio.css?v=1">
+</head>
+<body class="bugy-debug bugy-studio-page">
+  <a class="skip-link" href="#content">Icerigi atla</a>
+
+  <main id="content" class="bugy-studio bugy-admin-panel" role="main">
+    <header class="studio-topbar">
+      <div class="studio-title">
+        <p>CONVIVIUM / BUGY STUDIO</p>
+        <h1>Bugy Kontrol Merkezi</h1>
+        <span id="globalStatus" aria-live="polite">Motorlar baslatiliyor...</span>
+      </div>
+      <nav class="studio-actions" aria-label="Navigasyon">
+        <a class="btn" href="index.html">&#8592; Ana Sayfa</a>
+        <a class="btn" href="admin.html">Content Studio</a>
+        <a class="btn" href="dashboard.html">Dashboard</a>
+      </nav>
+    </header>
+
+    <div class="studio-board">
+      <!-- ENGINE BAY -->
+      <section class="studio-card engine-bay" aria-labelledby="engineBayTitle">
+        <div class="card-head">
+          <h2 id="engineBayTitle">Motor Yuvasi</h2>
+          <span class="card-hint">Aktif motoru sec. Esc her zaman v1'e dondurur.</span>
+        </div>
+        <div id="engineGrid" class="engine-grid" role="group" aria-label="Bugy motorlari"></div>
+      </section>
+
+      <!-- LIVE TELEMETRY -->
+      <section class="studio-card telemetry" aria-labelledby="telemetryTitle">
+        <div class="card-head">
+          <h2 id="telemetryTitle">Canli Telemetri</h2>
+          <span id="telemetryEngine" class="badge">v1</span>
+        </div>
+        <dl id="telemetryGrid" class="telemetry-grid"></dl>
+      </section>
+
+      <!-- SKIN LAB -->
+      <section class="studio-card skin-lab" aria-labelledby="skinLabTitle">
+        <div class="card-head">
+          <h2 id="skinLabTitle">Skin Laboratuvari</h2>
+          <span id="skinCurrent" class="card-hint">classic</span>
+        </div>
+        <div id="skinGrid" class="chip-grid" role="group" aria-label="Skin secenekleri"></div>
+      </section>
+
+      <!-- ACTION CONSOLE -->
+      <section class="studio-card action-console" aria-labelledby="actionTitle">
+        <div class="card-head">
+          <h2 id="actionTitle">Aksiyon Konsolu</h2>
+          <label class="switch">
+            <input id="randomToggle" type="checkbox">
+            <span>Rastgele aksiyonlar</span>
+          </label>
+        </div>
+        <div id="actionGrid" class="chip-grid" role="group" aria-label="Aktif motor aksiyonlari"></div>
+        <div class="console-row">
+          <button id="summonBtn" class="btn" type="button">Cagir</button>
+          <button id="nextBtn" class="btn" type="button">Siradaki Aksiyon</button>
+          <button id="resetEngineBtn" class="btn btn-danger" type="button">v1'e Don</button>
+        </div>
+      </section>
+
+      <!-- DEB COMPANION -->
+      <section class="studio-card deb-panel" aria-labelledby="debTitle">
+        <div class="card-head">
+          <h2 id="debTitle">DEB Yoldasi</h2>
+          <span id="debStatus" class="badge badge-dim">cevrimdisi</span>
+        </div>
+        <div class="console-row">
+          <button id="debActivate" class="btn btn-primary" type="button">Etkinlestir</button>
+          <button id="debDetail" class="btn" type="button">Detay Panelini Ac/Kapat</button>
+          <button id="debDeactivate" class="btn btn-danger" type="button">Kapat</button>
+        </div>
+        <div id="debActionGrid" class="chip-grid" role="group" aria-label="DEB aksiyonlari"></div>
+      </section>
+
+      <!-- PERSISTENCE -->
+      <section class="studio-card persistence" aria-labelledby="persistTitle">
+        <div class="card-head">
+          <h2 id="persistTitle">Kalicilik & Tercihler</h2>
+          <span class="card-hint">localStorage anahtarlari</span>
+        </div>
+        <dl id="storageGrid" class="telemetry-grid"></dl>
+        <div class="console-row">
+          <button id="copyStateBtn" class="btn" type="button">Durumu Kopyala (JSON)</button>
+          <button id="resetPrefsBtn" class="btn btn-danger" type="button">Tercihleri Sifirla</button>
+        </div>
+      </section>
+
+      <!-- EVENT LOG -->
+      <section class="studio-card event-log" aria-labelledby="logTitle">
+        <div class="card-head">
+          <h2 id="logTitle">Olay Gunlugu</h2>
+          <button id="clearLogBtn" class="btn btn-sm" type="button">Temizle</button>
+        </div>
+        <ul id="eventLog" class="log-list" aria-live="polite"></ul>
+      </section>
+    </div>
+  </main>
+
+  <script src="/assets/js/arcade-kit.js?v=32" defer></script>
+  <script src="/assets/js/neon-sheep.js?v=29" defer></script>
+  <script src="/assets/js/bugy-v2.js?v=2" defer></script>
+  <script src="/assets/js/bugy-v3-loader.js?v=6" defer></script>
+  <script src="/assets/js/deb-companion.js?v=4" defer></script>
+  <script src="/assets/js/sfx.js?v=14" defer></script>
+  <script src="/assets/js/bugy-studio.js?v=1" defer></script>
+</body>
+</html>
