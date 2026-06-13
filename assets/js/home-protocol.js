@@ -377,21 +377,24 @@
             localStorage.setItem('convivium.bugy.v2.skin', prefs.bugyV2Skin);
             window.BugyV2?.setSkin?.(prefs.bugyV2Skin);
           }
-          if (prefs.bugyEngine) {
-            localStorage.setItem('convivium.bugy.engine', prefs.bugyEngine);
-            if (prefs.bugyEngine === 'v4') {
+          // Canli secim (studio/terminal en son ne yazdiysa) snapshot'tan onceliklidir;
+          // boylece admin panelinde secilen bugy ana sayfada geri ezilmez.
+          const engine = localStorage.getItem('convivium.bugy.engine') || prefs.bugyEngine;
+          if (engine) {
+            localStorage.setItem('convivium.bugy.engine', engine);
+            if (engine === 'v4') {
               window.BugyV2?.deactivate?.();
               window.BugyV3?.deactivate?.();
               window.BugyV4?.activate?.();
-            } else if (prefs.bugyEngine === 'v3') {
+            } else if (engine === 'v3') {
               window.BugyV4?.deactivate?.();
               window.BugyV2?.deactivate?.();
               window.BugyV3?.activate?.();
-            } else if (prefs.bugyEngine === 'v2') {
+            } else if (engine === 'v2') {
               window.BugyV4?.deactivate?.();
               window.BugyV3?.deactivate?.();
               window.BugyV2?.activate?.();
-            } else if (prefs.bugyEngine === 'v1') {
+            } else if (engine === 'v1') {
               window.BugyV4?.deactivate?.();
               window.BugyV3?.deactivate?.();
               window.BugyV2?.deactivate?.();
