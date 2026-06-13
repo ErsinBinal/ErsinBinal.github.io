@@ -54,6 +54,9 @@ for (const file of htmlFiles) {
     if (path.basename(file) === 'TheOracle.html' && !policy.includes('https://*.workers.dev')) {
       addError('TheOracle.html CSP connect-src workers.dev icermiyor');
     }
+    if (html.includes('/assets/js/sfx.js') && !policy.includes("media-src 'self' data: blob:")) {
+      addError(`${relative(file)} CSP eksik: media-src 'self' data: blob:`);
+    }
   }
 
   for (const match of html.matchAll(/\b(?:href|src)=["'](\/assets\/[^"']+)["']/g)) {
