@@ -1,515 +1,46 @@
 /**
- * ConviviumAudio - retro audio engine for site UI, apps and games.
+ * ConviviumAudio - mobile-first HTMLAudio sound engine.
  *
- * Strategy: cues are still procedural (no external sound files), but each cue is
- * RENDERED ONCE into an AudioBuffer via OfflineAudioContext and cached. Playback
- * is then a single bufferSource.start() — no live node graph per play. This gives
- * near-zero latency, perfectly consistent timing (the whole layered cue is baked
- * in, so no sync drift), and reliable behaviour on mobile.
- *
- * Note: on iOS the hardware silent/mute switch mutes ALL Web Audio output; that
- * is a device setting and cannot be bypassed from code.
+ * This version does not use Web Audio. Every cue is rendered to a tiny WAV data
+ * URI and played through HTMLAudioElement pools. The goal is predictable mobile
+ * unlock behavior over theoretical low-latency graph scheduling.
  */
 (function () {
   'use strict';
 
   const PREF_KEY = 'convivium.audio.enabled';
   const BUS_VOLUME_KEY = 'convivium.audio.busVolumes';
+  const SAMPLE_RATE = 22050;
+  const POOL_SIZE = 3;
+  const DOUBLE_TAP_GUARD_MS = 700;
   const DEFAULT_BUS_VOLUMES = {
-    master: 0.86,
-    ui: 0.76,
-    game: 0.82,
+    master: 0.9,
+    ui: 0.8,
+    game: 0.86,
     ambient: 0.45,
-    music: 0.50
+    music: 0.46
   };
-  const LOOKAHEAD = 0.005;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const nowMs = () => (window.performance?.now ? window.performance.now() : Date.now());
 
-  const AC = window.AudioContext || window.webkitAudioContext;
-  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-
-  let ctx = null;
   let enabled = false;
-  let graphReady = false;
-  let primed = false;
-  let prerenderStarted = false;
-  let ambientNode = null;
-  let musicState = null;
-  let lastPointerSfx = null;
+  let unlocked = false;
   let lastToggleAt = 0;
+  let lastPointerSfx = null;
+  let poolCursor = 0;
+  let musicTimer = null;
+  let ambientTimer = null;
   let busVolumes = { ...DEFAULT_BUS_VOLUMES };
 
-  // Cache: undefined = not rendered, null = render failed, object = { buffer, bus }.
-  const bufferCache = Object.create(null);
-  const renderPromises = Object.create(null);
-
-  // When set, tone()/noise() record a layer descriptor instead of synthesizing.
-  let recordTarget = null;
+  const cueCache = Object.create(null);
+  const pools = Object.create(null);
 
   try { enabled = localStorage.getItem(PREF_KEY) === 'true'; } catch {}
   try {
     const stored = JSON.parse(localStorage.getItem(BUS_VOLUME_KEY) || '{}');
     if (stored && typeof stored === 'object') busVolumes = { ...busVolumes, ...stored };
   } catch {}
-
-  const graph = { master: null, buses: {} };
-
-  const connect = (source, target) => {
-    try { source.connect(target); return true; } catch { return false; }
-  };
-
-  const safeAudioParam = (param, method, value, time) => {
-    try {
-      if (param && typeof param[method] === 'function') param[method](value, time);
-      else if (param) param.value = value;
-    } catch {}
-  };
-
-  const persistBusVolumes = () => {
-    try { localStorage.setItem(BUS_VOLUME_KEY, JSON.stringify(busVolumes)); } catch {}
-  };
-
-  // ---------------------------------------------------------------------------
-  // Online audio context + mixing graph
-  // ---------------------------------------------------------------------------
-
-  const buildGraph = () => {
-    if (!ctx || graphReady) return;
-    try {
-      graph.master = ctx.createGain();
-      graph.master.gain.value = busVolumes.master;
-      connect(graph.master, ctx.destination);
-      ['ui', 'game', 'ambient', 'music'].forEach((name) => {
-        const gain = ctx.createGain();
-        gain.gain.value = busVolumes[name];
-        connect(gain, graph.master);
-        graph.buses[name] = gain;
-      });
-      graphReady = true;
-    } catch {
-      graphReady = false;
-    }
-  };
-
-  const busGain = (bus = 'ui') => {
-    if (!graphReady) buildGraph();
-    return graph.buses[bus] || graph.buses.ui || graph.master || (ctx && ctx.destination);
-  };
-
-  const ensureCtx = () => {
-    if (ctx || !AC) return ctx;
-    try {
-      ctx = new AC({ latencyHint: 'interactive' });
-    } catch {
-      try { ctx = new AC(); } catch { return null; }
-    }
-    buildGraph();
-    return ctx;
-  };
-
-  // Open the output route during the first gesture so the very first real sound
-  // isn't delayed while the hardware wakes up (notably Safari/iOS).
-  const primeOutput = () => {
-    if (primed || !ctx) return;
-    primed = true;
-    try {
-      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      connect(source, ctx.destination);
-      source.start(ctx.currentTime);
-    } catch {}
-  };
-
-  // Called synchronously from a user gesture so resume() counts as activation.
-  const unlock = () => {
-    if (!enabled || !ensureCtx()) return;
-    if (ctx.state !== 'running') { try { ctx.resume(); } catch {} }
-    primeOutput();
-    prerenderAll();
-  };
-
-  // ---------------------------------------------------------------------------
-  // Synthesis primitives (shared by live playback and offline rendering)
-  // ---------------------------------------------------------------------------
-
-  const synthTone = (c, dest, freq, duration, opts, start) => {
-    try {
-      const dur = Math.max(0.015, duration);
-      const end = start + dur;
-      const attack = clamp(opts.attack ?? 0.002, 0.001, dur * 0.45);
-      const volume = clamp(opts.volume ?? 0.04, 0.001, 0.18);
-      const quantized = opts.raw ? freq : Math.max(12, Math.round(freq / 4) * 4);
-      const osc = c.createOscillator();
-      const gain = c.createGain();
-      let input = osc;
-
-      osc.type = opts.type || 'square';
-      osc.frequency.setValueAtTime(quantized, start);
-      if (opts.slide) {
-        const target = Math.max(12, quantized + opts.slide);
-        safeAudioParam(osc.frequency, 'exponentialRampToValueAtTime', target, end);
-      }
-      if (typeof opts.detune === 'number' && osc.detune) osc.detune.value = opts.detune;
-
-      if (opts.filter) {
-        const filter = c.createBiquadFilter();
-        filter.type = opts.filter.type || 'lowpass';
-        filter.frequency.setValueAtTime(opts.filter.freq || 1200, start);
-        if (opts.filter.to) safeAudioParam(filter.frequency, 'exponentialRampToValueAtTime', Math.max(20, opts.filter.to), end);
-        connect(osc, filter);
-        input = filter;
-      }
-
-      safeAudioParam(gain.gain, 'setValueAtTime', 0.0001, start);
-      safeAudioParam(gain.gain, 'linearRampToValueAtTime', volume, start + attack);
-      safeAudioParam(gain.gain, 'exponentialRampToValueAtTime', 0.0001, end);
-      connect(input, gain);
-      connect(gain, dest);
-      osc.start(start);
-      osc.stop(end + 0.03);
-    } catch {}
-  };
-
-  const synthNoise = (c, dest, opts, start) => {
-    try {
-      const duration = Math.max(0.012, opts.duration || 0.08);
-      const sampleRate = opts.rate || Math.min(c.sampleRate, 22050);
-      const length = Math.max(1, Math.floor(sampleRate * duration));
-      const buffer = c.createBuffer(1, length, sampleRate);
-      const data = buffer.getChannelData(0);
-      const decay = opts.decay ?? 0.68;
-      for (let i = 0; i < length; i += 1) {
-        const fade = 1 - (i / length) * decay;
-        const bitcrush = opts.bitcrush ? (i % opts.bitcrush === 0 ? 1 : 0.42) : 1;
-        data[i] = (Math.random() * 2 - 1) * fade * bitcrush;
-      }
-
-      const source = c.createBufferSource();
-      const filter = c.createBiquadFilter();
-      const gain = c.createGain();
-      source.buffer = buffer;
-      filter.type = opts.filter || 'lowpass';
-      filter.frequency.setValueAtTime(opts.freq || 1100, start);
-      if (opts.to) safeAudioParam(filter.frequency, 'exponentialRampToValueAtTime', Math.max(20, opts.to), start + duration);
-      safeAudioParam(gain.gain, 'setValueAtTime', 0.0001, start);
-      safeAudioParam(gain.gain, 'linearRampToValueAtTime', clamp(opts.volume || 0.04, 0.001, 0.18), start + Math.min(0.018, duration / 3));
-      safeAudioParam(gain.gain, 'exponentialRampToValueAtTime', 0.0001, start + duration);
-      connect(source, filter);
-      connect(filter, gain);
-      connect(gain, dest);
-      source.start(start);
-      source.stop(start + duration + 0.02);
-    } catch {}
-  };
-
-  // ---------------------------------------------------------------------------
-  // Recipe layer = tone()/noise() in record mode; live synth otherwise.
-  // ---------------------------------------------------------------------------
-
-  const liveFire = (synthFn) => {
-    if (!enabled || !ensureCtx()) return;
-    if (ctx.state === 'running') synthFn();
-    else { try { ctx.resume().then(synthFn).catch(() => {}); } catch {} }
-  };
-
-  const tone = (freq, duration = 0.06, opts = {}) => {
-    if (recordTarget) { recordTarget.push({ kind: 'tone', freq, duration, opts }); return; }
-    liveFire(() => synthTone(ctx, busGain(opts.bus), freq, duration, opts, ctx.currentTime + LOOKAHEAD + (opts.offset || 0)));
-  };
-
-  const noise = (opts = {}) => {
-    if (recordTarget) { recordTarget.push({ kind: 'noise', opts }); return; }
-    liveFire(() => synthNoise(ctx, busGain(opts.bus), opts, ctx.currentTime + LOOKAHEAD + (opts.offset || 0)));
-  };
-
-  const sequence = (steps = [], opts = {}) => {
-    const stepMs = opts.stepMs || 70;
-    const bus = opts.bus || 'ui';
-    steps.forEach((step, index) => {
-      if (!step) return;
-      const at = (opts.offset || 0) + (step.at ?? index * stepMs / 1000);
-      if (step.noise) {
-        noise({ ...step.noise, bus, offset: at });
-        return;
-      }
-      tone(step.freq || step[0] || 220, step.duration || step[1] || 0.06, {
-        type: step.type || step[2] || opts.type || 'square',
-        volume: step.volume || step[3] || opts.volume || 0.035,
-        slide: step.slide,
-        filter: step.filter,
-        bus,
-        offset: at
-      });
-    });
-  };
-
-  // ---------------------------------------------------------------------------
-  // Cue recipes (unchanged sound design)
-  // ---------------------------------------------------------------------------
-
-  const sounds = {
-    'ui.click': () => sequence([
-      { freq: 404, duration: 0.038, volume: 0.026 },
-      { freq: 512, duration: 0.028, volume: 0.014, at: 0.024 }
-    ]),
-    'ui.nav': () => {
-      noise({ freq: 2200, to: 320, duration: 0.18, volume: 0.045, bus: 'ui' });
-      sequence([
-        { freq: 460, duration: 0.08, type: 'triangle', volume: 0.030, at: 0.12 },
-        { freq: 380, duration: 0.06, type: 'triangle', volume: 0.022, at: 0.20 }
-      ]);
-    },
-    'ui.toggleOn': () => {
-      noise({ filter: 'highpass', freq: 1400, duration: 0.022, volume: 0.040, bus: 'ui' });
-      tone(620, 0.07, { type: 'square', volume: 0.034, offset: 0.008 });
-    },
-    'ui.toggleOff': () => {
-      noise({ filter: 'highpass', freq: 200, duration: 0.022, volume: 0.040, bus: 'ui' });
-      tone(210, 0.07, { type: 'square', volume: 0.032, offset: 0.008 });
-    },
-    'ui.select': () => sequence([
-      { freq: 660, duration: 0.15, type: 'sine', volume: 0.038 },
-      { freq: 990, duration: 0.09, type: 'sine', volume: 0.016, at: 0.045 }
-    ]),
-    'ui.confirm': () => sequence([
-      { freq: 330, duration: 0.13, type: 'triangle', volume: 0.033 },
-      { freq: 415, duration: 0.13, type: 'triangle', volume: 0.031 },
-      { freq: 495, duration: 0.13, type: 'triangle', volume: 0.029 },
-      { freq: 660, duration: 0.15, type: 'triangle', volume: 0.034 }
-    ], { stepMs: 68 }),
-    'ui.error': () => {
-      sequence([
-        { freq: 440, duration: 0.10, type: 'sawtooth', volume: 0.030 },
-        { freq: 330, duration: 0.10, type: 'sawtooth', volume: 0.028 },
-        { freq: 220, duration: 0.12, type: 'sawtooth', volume: 0.026 }
-      ], { stepMs: 75 });
-      noise({ filter: 'highpass', freq: 900, duration: 0.04, volume: 0.050, bus: 'ui' });
-    },
-    'ui.reveal': () => sequence([
-      { freq: 160, duration: 0.09, volume: 0.020 },
-      { freq: 260, duration: 0.08, volume: 0.022 },
-      { freq: 380, duration: 0.07, volume: 0.024 },
-      { freq: 540, duration: 0.07, volume: 0.026 }
-    ], { stepMs: 30 }),
-    'ui.glitch': () => {
-      noise({ filter: 'highpass', freq: 1100, duration: 0.018, volume: 0.048, bus: 'ui', bitcrush: 2 });
-      noise({ filter: 'highpass', freq: 1400, duration: 0.012, volume: 0.036, bus: 'ui', offset: 0.030, bitcrush: 3 });
-      noise({ filter: 'highpass', freq: 900, duration: 0.020, volume: 0.040, bus: 'ui', offset: 0.055, bitcrush: 2 });
-    },
-    'ui.transmit': () => sequence([
-      { freq: 880, duration: 0.035, volume: 0.024 },
-      { freq: 880, duration: 0.035, volume: 0.024, at: 0.060 },
-      { freq: 880, duration: 0.035, volume: 0.024, at: 0.120 },
-      { freq: 880, duration: 0.095, volume: 0.026, at: 0.220 }
-    ]),
-    'terminal.open': () => {
-      noise({ filter: 'highpass', freq: 900, duration: 0.035, volume: 0.025, bus: 'ui', bitcrush: 3 });
-      sequence([
-        { freq: 196, duration: 0.055, type: 'square', volume: 0.020 },
-        { freq: 392, duration: 0.060, type: 'triangle', volume: 0.024 },
-        { freq: 784, duration: 0.075, type: 'sine', volume: 0.020 }
-      ], { stepMs: 42 });
-    },
-    'terminal.close': () => sequence([
-      { freq: 520, duration: 0.045, type: 'triangle', volume: 0.022 },
-      { freq: 260, duration: 0.060, type: 'square', volume: 0.018 },
-      { noise: { filter: 'lowpass', freq: 500, to: 90, duration: 0.080, volume: 0.026 } }
-    ], { stepMs: 36 }),
-    'terminal.run': () => sequence([
-      { freq: 660, duration: 0.026, type: 'square', volume: 0.018 },
-      { freq: 660, duration: 0.026, type: 'square', volume: 0.018, at: 0.045 },
-      { noise: { filter: 'highpass', freq: 1600, duration: 0.014, volume: 0.020, bitcrush: 2 }, at: 0.090 }
-    ]),
-    'terminal.complete': () => sequence([
-      { freq: 330, duration: 0.060, type: 'triangle', volume: 0.022 },
-      { freq: 495, duration: 0.070, type: 'triangle', volume: 0.022 },
-      { freq: 660, duration: 0.090, type: 'sine', volume: 0.020 }
-    ], { stepMs: 58 }),
-    'terminal.type': () => tone(980, 0.018, { type: 'square', volume: 0.010, bus: 'ui' }),
-    'terminal.suggest': () => tone(740, 0.032, { type: 'triangle', volume: 0.014, bus: 'ui' }),
-    'system.unlock': () => {
-      noise({ freq: 260, to: 2200, duration: 0.28, volume: 0.030, bus: 'ui', bitcrush: 4 });
-      sequence([
-        { freq: 220, duration: 0.075, type: 'square', volume: 0.022 },
-        { freq: 440, duration: 0.075, type: 'triangle', volume: 0.024 },
-        { freq: 880, duration: 0.110, type: 'sine', volume: 0.020 }
-      ], { stepMs: 70 });
-    },
-    'system.boot': () => {
-      noise({ freq: 220, to: 2600, duration: 1.45, volume: 0.040, bus: 'ui' });
-      sequence([
-        [110, 0.13, 'square', 0.026],
-        [165, 0.13, 'square', 0.027],
-        [220, 0.13, 'square', 0.028],
-        [330, 0.13, 'square', 0.029],
-        [440, 0.14, 'triangle', 0.030],
-        [550, 0.14, 'triangle', 0.031],
-        [660, 0.14, 'triangle', 0.032],
-        { freq: 440, duration: 0.40, type: 'triangle', volume: 0.018, at: 0.92 },
-        { freq: 550, duration: 0.40, type: 'triangle', volume: 0.018, at: 0.92 },
-        { freq: 660, duration: 0.40, type: 'triangle', volume: 0.018, at: 0.92 }
-      ], { stepMs: 110 });
-    },
-    'system.shutdown': () => {
-      sequence([
-        [660, 0.16, 'triangle', 0.030],
-        [550, 0.16, 'triangle', 0.028],
-        [440, 0.16, 'triangle', 0.026],
-        [330, 0.16, 'square', 0.024],
-        [220, 0.18, 'square', 0.022],
-        [110, 0.20, 'square', 0.020]
-      ], { stepMs: 100 });
-      noise({ freq: 1800, to: 90, duration: 1.15, volume: 0.038, bus: 'ui' });
-    },
-    'system.restart': () => {
-      noise({ freq: 1500, to: 420, duration: 0.36, volume: 0.034, bus: 'ui' });
-      sequence([
-        { freq: 520, duration: 0.06, volume: 0.026, at: 0.04 },
-        { freq: 520, duration: 0.06, volume: 0.026, at: 0.16 },
-        { freq: 740, duration: 0.09, type: 'triangle', volume: 0.028, at: 0.34 },
-        { freq: 200, duration: 0.06, type: 'triangle', volume: 0.024, at: 0.50 },
-        { freq: 350, duration: 0.06, type: 'triangle', volume: 0.024, at: 0.58 },
-        { freq: 680, duration: 0.09, type: 'triangle', volume: 0.026, at: 0.66 }
-      ]);
-    },
-    'game.jump': () => {
-      tone(176, 0.09, { bus: 'game', type: 'sawtooth', volume: 0.060, slide: 180 });
-      noise({ bus: 'game', freq: 1300, duration: 0.045, volume: 0.026 });
-    },
-    'game.land': () => {
-      noise({ bus: 'game', freq: 900, to: 160, duration: 0.075, volume: 0.065 });
-      tone(88, 0.055, { bus: 'game', type: 'triangle', volume: 0.050, slide: -24 });
-    },
-    'game.hit': () => {
-      noise({ bus: 'game', filter: 'bandpass', freq: 720, duration: 0.09, volume: 0.075, bitcrush: 2 });
-      tone(116, 0.11, { bus: 'game', type: 'sawtooth', volume: 0.060, slide: -62 });
-    },
-    'game.start': () => {
-      noise({ bus: 'game', filter: 'highpass', freq: 1300, duration: 0.045, volume: 0.040, bitcrush: 3 });
-      sequence([
-        { freq: 220, duration: 0.060, type: 'square', volume: 0.038 },
-        { freq: 330, duration: 0.060, type: 'square', volume: 0.036 },
-        { freq: 440, duration: 0.080, type: 'triangle', volume: 0.034 }
-      ], { bus: 'game', stepMs: 58 });
-    },
-    'game.step': () => tone(96, 0.040, { bus: 'game', type: 'triangle', volume: 0.022, slide: -16 }),
-    'game.correct': () => sequence([
-      { freq: 660, duration: 0.052, type: 'square', volume: 0.040 },
-      { freq: 990, duration: 0.090, type: 'sine', volume: 0.034 }
-    ], { bus: 'game', stepMs: 62 }),
-    'game.wrong': () => {
-      tone(320, 0.080, { bus: 'game', type: 'sawtooth', volume: 0.040, slide: -120 });
-      noise({ bus: 'game', filter: 'highpass', freq: 700, duration: 0.045, volume: 0.040, bitcrush: 2 });
-    },
-    'game.timeout': () => sequence([
-      { freq: 440, duration: 0.060, type: 'square', volume: 0.034 },
-      { freq: 220, duration: 0.080, type: 'square', volume: 0.030 },
-      { freq: 110, duration: 0.110, type: 'sawtooth', volume: 0.030 }
-    ], { bus: 'game', stepMs: 74 }),
-    'game.win': () => sequence([
-      { freq: 392, duration: 0.080, type: 'triangle', volume: 0.038 },
-      { freq: 523, duration: 0.080, type: 'triangle', volume: 0.038 },
-      { freq: 659, duration: 0.100, type: 'triangle', volume: 0.034 },
-      { freq: 784, duration: 0.150, type: 'sine', volume: 0.030 }
-    ], { bus: 'game', stepMs: 74 }),
-    'game.fail': () => {
-      sequence([
-        { freq: 260, duration: 0.080, type: 'sawtooth', volume: 0.034 },
-        { freq: 184, duration: 0.090, type: 'sawtooth', volume: 0.032 },
-        { freq: 130, duration: 0.120, type: 'square', volume: 0.030 }
-      ], { bus: 'game', stepMs: 80 });
-      noise({ bus: 'game', filter: 'lowpass', freq: 600, to: 110, duration: 0.220, volume: 0.036, bitcrush: 3 });
-    },
-    'game.bust': () => {
-      tone(180, 0.080, { bus: 'game', type: 'sawtooth', volume: 0.045, slide: -80 });
-      noise({ bus: 'game', filter: 'bandpass', freq: 520, duration: 0.080, volume: 0.060, bitcrush: 2 });
-    },
-    'game.power': () => sequence([
-      { freq: 620, duration: 0.060, type: 'triangle', volume: 0.034 },
-      { freq: 880, duration: 0.080, type: 'triangle', volume: 0.032 }
-    ], { bus: 'game', stepMs: 65 }),
-    'game.hazard': () => tone(55, 0.150, { bus: 'game', type: 'sawtooth', volume: 0.045, slide: -18 }),
-    'game.pickup': () => sequence([
-      { freq: 340, duration: 0.06, type: 'square', volume: 0.052 },
-      { freq: 560, duration: 0.07, type: 'square', volume: 0.047 }
-    ], { bus: 'game', stepMs: 62 }),
-    'game.coin': () => sequence([
-      { freq: 760, duration: 0.05, type: 'sine', volume: 0.050 },
-      { freq: 1120, duration: 0.09, type: 'sine', volume: 0.048 }
-    ], { bus: 'game', stepMs: 55 }),
-    'game.laser': () => {
-      tone(1180, 0.035, { bus: 'game', type: 'sawtooth', volume: 0.036, slide: 260 });
-      tone(1540, 0.025, { bus: 'game', type: 'sine', volume: 0.020, offset: 0.018 });
-    },
-    'game.explosion': () => {
-      noise({ bus: 'game', freq: 1700, to: 120, duration: 0.24, volume: 0.105, bitcrush: 2 });
-      tone(64, 0.15, { bus: 'game', type: 'sawtooth', volume: 0.070, slide: -28 });
-      tone(144, 0.09, { bus: 'game', type: 'square', volume: 0.050, slide: 80, offset: 0.055 });
-    },
-    'game.portal': () => {
-      sequence([
-        { freq: 196, duration: 0.09, type: 'sine', volume: 0.045 },
-        { freq: 392, duration: 0.13, type: 'sawtooth', volume: 0.055 },
-        { freq: 784, duration: 0.16, type: 'triangle', volume: 0.038 }
-      ], { bus: 'game', stepMs: 54 });
-      noise({ bus: 'game', filter: 'highpass', freq: 1200, duration: 0.12, volume: 0.035, bitcrush: 3 });
-    },
-    'app.notify': () => sequence([
-      { freq: 520, duration: 0.045, type: 'triangle', volume: 0.030 },
-      { freq: 780, duration: 0.070, type: 'triangle', volume: 0.026 }
-    ], { stepMs: 70 }),
-    'app.score': () => sequence([
-      { freq: 300, duration: 0.038, type: 'square', volume: 0.026 },
-      { freq: 450, duration: 0.050, type: 'triangle', volume: 0.024 }
-    ], { bus: 'game', stepMs: 42 }),
-    'app.highScore': () => {
-      sequence([
-        { freq: 360, duration: 0.060, type: 'square', volume: 0.032 },
-        { freq: 540, duration: 0.060, type: 'triangle', volume: 0.032 },
-        { freq: 720, duration: 0.110, type: 'sine', volume: 0.026 }
-      ], { bus: 'game', stepMs: 58 });
-    },
-    'app.undo': () => {
-      tone(420, 0.050, { bus: 'ui', type: 'triangle', volume: 0.024, slide: -130 });
-      noise({ bus: 'ui', filter: 'highpass', freq: 1000, duration: 0.018, volume: 0.018, bitcrush: 3 });
-    },
-    'app.reset': () => sequence([
-      { freq: 500, duration: 0.050, type: 'square', volume: 0.024 },
-      { freq: 260, duration: 0.070, type: 'square', volume: 0.022 }
-    ], { stepMs: 54 }),
-    'app.save': () => sequence([
-      { freq: 500, duration: 0.040, type: 'triangle', volume: 0.022 },
-      { freq: 750, duration: 0.060, type: 'sine', volume: 0.020 }
-    ], { stepMs: 56 }),
-    'oracle.choose': () => sequence([
-      { freq: 220, duration: 0.050, type: 'triangle', volume: 0.022 },
-      { freq: 330, duration: 0.070, type: 'sine', volume: 0.018 }
-    ], { stepMs: 52 }),
-    'oracle.draw': () => {
-      noise({ bus: 'ui', filter: 'bandpass', freq: 360, to: 1300, duration: 0.32, volume: 0.030, bitcrush: 5 });
-      sequence([
-        { freq: 130, duration: 0.120, type: 'sine', volume: 0.020 },
-        { freq: 260, duration: 0.120, type: 'triangle', volume: 0.022 },
-        { freq: 520, duration: 0.160, type: 'sine', volume: 0.018 }
-      ], { stepMs: 105 });
-    },
-    'oracle.stir': () => {
-      noise({ bus: 'ui', filter: 'highpass', freq: 780, duration: 0.090, volume: 0.036, bitcrush: 4 });
-      tone(180, 0.090, { bus: 'ui', type: 'triangle', volume: 0.024, slide: 110 });
-    },
-    'oracle.accept': () => sequence([
-      { freq: 330, duration: 0.060, type: 'sine', volume: 0.022 },
-      { freq: 660, duration: 0.100, type: 'sine', volume: 0.020 }
-    ], { stepMs: 64 }),
-    'oracle.refuse': () => sequence([
-      { freq: 294, duration: 0.060, type: 'triangle', volume: 0.022 },
-      { freq: 196, duration: 0.090, type: 'triangle', volume: 0.020 }
-    ], { stepMs: 64 }),
-    'app.denied': () => sounds['ui.error']()
-  };
 
   const aliases = {
     click: 'ui.click',
@@ -562,250 +93,329 @@
     refuse: 'oracle.refuse'
   };
 
-  // ---------------------------------------------------------------------------
-  // Offline render + cache
-  // ---------------------------------------------------------------------------
-
-  const captureLayers = (key) => {
-    const fn = sounds[key];
-    if (!fn) return null;
-    const prev = recordTarget;
-    recordTarget = [];
-    try { fn(); } catch {}
-    const layers = recordTarget;
-    recordTarget = prev;
-    return layers;
+  const note = {
+    c3: 130.81, d3: 146.83, e3: 164.81, f3: 174.61, g3: 196.00, a3: 220.00, b3: 246.94,
+    c4: 261.63, d4: 293.66, e4: 329.63, f4: 349.23, g4: 392.00, a4: 440.00, b4: 493.88,
+    c5: 523.25, d5: 587.33, e5: 659.25, f5: 698.46, g5: 783.99, a5: 880.00, b5: 987.77
   };
 
-  const layerEnd = (layer) => {
-    if (layer.kind === 'tone') {
-      return (layer.opts.offset || 0) + Math.max(0.015, layer.duration || 0.06) + 0.06;
-    }
-    return (layer.opts.offset || 0) + Math.max(0.012, layer.opts.duration || 0.08) + 0.04;
+  const tone = (freq, dur, opts = {}) => ({
+    kind: 'tone',
+    freq,
+    dur,
+    at: opts.at || 0,
+    type: opts.type || 'square',
+    volume: opts.volume ?? 0.35,
+    slide: opts.slide || 0,
+    attack: opts.attack ?? 0.004
+  });
+
+  const noise = (dur, opts = {}) => ({
+    kind: 'noise',
+    dur,
+    at: opts.at || 0,
+    volume: opts.volume ?? 0.22,
+    seed: opts.seed || 1,
+    decay: opts.decay ?? 0.72,
+    band: opts.band || 1
+  });
+
+  const cue = (bus, layers) => ({ bus, layers });
+
+  const recipes = {
+    'ui.click': cue('ui', [
+      tone(404, 0.038, { volume: 0.24 }),
+      tone(512, 0.028, { at: 0.024, volume: 0.14 })
+    ]),
+    'ui.nav': cue('ui', [
+      noise(0.18, { volume: 0.22, seed: 2, band: 2 }),
+      tone(460, 0.08, { at: 0.12, type: 'triangle', volume: 0.22 }),
+      tone(380, 0.06, { at: 0.20, type: 'triangle', volume: 0.17 })
+    ]),
+    'ui.toggleOn': cue('ui', [
+      noise(0.024, { volume: 0.2, seed: 3, band: 3 }),
+      tone(620, 0.075, { at: 0.008, volume: 0.26 })
+    ]),
+    'ui.toggleOff': cue('ui', [
+      noise(0.024, { volume: 0.16, seed: 4, band: 1 }),
+      tone(210, 0.08, { at: 0.008, volume: 0.23 })
+    ]),
+    'ui.select': cue('ui', [
+      tone(660, 0.15, { type: 'sine', volume: 0.25 }),
+      tone(990, 0.09, { at: 0.045, type: 'sine', volume: 0.12 })
+    ]),
+    'ui.confirm': cue('ui', [
+      tone(330, 0.12, { type: 'triangle', volume: 0.22 }),
+      tone(415, 0.12, { at: 0.068, type: 'triangle', volume: 0.22 }),
+      tone(495, 0.12, { at: 0.136, type: 'triangle', volume: 0.20 }),
+      tone(660, 0.14, { at: 0.204, type: 'triangle', volume: 0.24 })
+    ]),
+    'ui.error': cue('ui', [
+      tone(440, 0.10, { type: 'saw', volume: 0.23, slide: -40 }),
+      tone(330, 0.10, { at: 0.075, type: 'saw', volume: 0.22, slide: -50 }),
+      tone(220, 0.12, { at: 0.15, type: 'saw', volume: 0.22, slide: -60 }),
+      noise(0.045, { volume: 0.2, seed: 5, band: 3 })
+    ]),
+    'ui.reveal': cue('ui', [
+      tone(160, 0.09, { volume: 0.16 }),
+      tone(260, 0.08, { at: 0.03, volume: 0.18 }),
+      tone(380, 0.07, { at: 0.06, volume: 0.19 }),
+      tone(540, 0.07, { at: 0.09, volume: 0.20 })
+    ]),
+    'ui.glitch': cue('ui', [
+      noise(0.018, { volume: 0.22, seed: 6, band: 4 }),
+      noise(0.012, { at: 0.03, volume: 0.18, seed: 7, band: 3 }),
+      noise(0.020, { at: 0.055, volume: 0.19, seed: 8, band: 2 })
+    ]),
+    'ui.transmit': cue('ui', [
+      tone(880, 0.035, { volume: 0.18 }),
+      tone(880, 0.035, { at: 0.06, volume: 0.18 }),
+      tone(880, 0.035, { at: 0.12, volume: 0.18 }),
+      tone(880, 0.095, { at: 0.22, volume: 0.20 })
+    ]),
+    'terminal.open': cue('ui', [
+      noise(0.035, { volume: 0.16, seed: 9, band: 3 }),
+      tone(196, 0.055, { volume: 0.15 }),
+      tone(392, 0.060, { at: 0.042, type: 'triangle', volume: 0.19 }),
+      tone(784, 0.075, { at: 0.084, type: 'sine', volume: 0.16 })
+    ]),
+    'terminal.close': cue('ui', [
+      tone(520, 0.045, { type: 'triangle', volume: 0.17 }),
+      tone(260, 0.060, { at: 0.036, volume: 0.15 }),
+      noise(0.080, { at: 0.072, volume: 0.13, seed: 10, band: 1 })
+    ]),
+    'terminal.run': cue('ui', [
+      tone(660, 0.026, { volume: 0.16 }),
+      tone(660, 0.026, { at: 0.045, volume: 0.16 }),
+      noise(0.014, { at: 0.090, volume: 0.16, seed: 11, band: 3 })
+    ]),
+    'terminal.complete': cue('ui', [
+      tone(330, 0.060, { type: 'triangle', volume: 0.17 }),
+      tone(495, 0.070, { at: 0.058, type: 'triangle', volume: 0.17 }),
+      tone(660, 0.090, { at: 0.116, type: 'sine', volume: 0.15 })
+    ]),
+    'terminal.type': cue('ui', [tone(980, 0.018, { volume: 0.08 })]),
+    'terminal.suggest': cue('ui', [tone(740, 0.032, { type: 'triangle', volume: 0.12 })]),
+    'system.unlock': cue('ui', [
+      noise(0.28, { volume: 0.13, seed: 12, band: 2 }),
+      tone(220, 0.075, { volume: 0.16 }),
+      tone(440, 0.075, { at: 0.070, type: 'triangle', volume: 0.18 }),
+      tone(880, 0.110, { at: 0.140, type: 'sine', volume: 0.16 })
+    ]),
+    'system.boot': cue('ui', [
+      noise(0.85, { volume: 0.10, seed: 13, band: 1 }),
+      tone(110, 0.12, { at: 0.10, volume: 0.15 }),
+      tone(165, 0.12, { at: 0.21, volume: 0.16 }),
+      tone(220, 0.12, { at: 0.32, volume: 0.17 }),
+      tone(330, 0.12, { at: 0.43, volume: 0.18 }),
+      tone(440, 0.20, { at: 0.54, type: 'triangle', volume: 0.16 })
+    ]),
+    'system.shutdown': cue('ui', [
+      tone(660, 0.14, { type: 'triangle', volume: 0.18 }),
+      tone(440, 0.16, { at: 0.10, type: 'triangle', volume: 0.16 }),
+      tone(220, 0.18, { at: 0.24, volume: 0.14 }),
+      noise(0.36, { at: 0.22, volume: 0.12, seed: 14, band: 1 })
+    ]),
+    'system.restart': cue('ui', [
+      noise(0.28, { volume: 0.12, seed: 15, band: 2 }),
+      tone(520, 0.055, { at: 0.04, volume: 0.18 }),
+      tone(520, 0.055, { at: 0.16, volume: 0.18 }),
+      tone(740, 0.085, { at: 0.34, type: 'triangle', volume: 0.20 })
+    ]),
+    'game.jump': cue('game', [tone(176, 0.09, { type: 'saw', volume: 0.28, slide: 180 }), noise(0.045, { volume: 0.12, seed: 16 })]),
+    'game.land': cue('game', [noise(0.075, { volume: 0.28, seed: 17, band: 1 }), tone(88, 0.055, { type: 'triangle', volume: 0.22, slide: -24 })]),
+    'game.hit': cue('game', [noise(0.09, { volume: 0.32, seed: 18, band: 2 }), tone(116, 0.11, { type: 'saw', volume: 0.26, slide: -62 })]),
+    'game.start': cue('game', [noise(0.045, { volume: 0.18, seed: 19, band: 3 }), tone(220, 0.060, { volume: 0.25 }), tone(330, 0.060, { at: 0.058, volume: 0.25 }), tone(440, 0.080, { at: 0.116, type: 'triangle', volume: 0.24 })]),
+    'game.step': cue('game', [tone(96, 0.040, { type: 'triangle', volume: 0.12, slide: -16 })]),
+    'game.correct': cue('game', [tone(660, 0.052, { volume: 0.28 }), tone(990, 0.090, { at: 0.062, type: 'sine', volume: 0.24 })]),
+    'game.wrong': cue('game', [tone(320, 0.080, { type: 'saw', volume: 0.24, slide: -120 }), noise(0.045, { volume: 0.20, seed: 20, band: 3 })]),
+    'game.timeout': cue('game', [tone(440, 0.060, { volume: 0.22 }), tone(220, 0.080, { at: 0.074, volume: 0.20 }), tone(110, 0.110, { at: 0.148, type: 'saw', volume: 0.20 })]),
+    'game.win': cue('game', [tone(note.g4, 0.08, { type: 'triangle', volume: 0.28 }), tone(note.c5, 0.08, { at: 0.074, type: 'triangle', volume: 0.28 }), tone(note.e5, 0.10, { at: 0.148, type: 'triangle', volume: 0.25 }), tone(note.g5, 0.15, { at: 0.222, type: 'sine', volume: 0.22 })]),
+    'game.fail': cue('game', [tone(260, 0.08, { type: 'saw', volume: 0.22 }), tone(184, 0.09, { at: 0.08, type: 'saw', volume: 0.21 }), tone(130, 0.12, { at: 0.16, volume: 0.20 }), noise(0.22, { at: 0.10, volume: 0.13, seed: 21, band: 1 })]),
+    'game.bust': cue('game', [tone(180, 0.080, { type: 'saw', volume: 0.26, slide: -80 }), noise(0.080, { volume: 0.28, seed: 22, band: 2 })]),
+    'game.power': cue('game', [tone(620, 0.060, { type: 'triangle', volume: 0.25 }), tone(880, 0.080, { at: 0.065, type: 'triangle', volume: 0.24 })]),
+    'game.hazard': cue('game', [tone(55, 0.150, { type: 'saw', volume: 0.24, slide: -18 })]),
+    'game.pickup': cue('game', [tone(340, 0.060, { volume: 0.22 }), tone(560, 0.070, { at: 0.062, volume: 0.21 })]),
+    'game.coin': cue('game', [tone(760, 0.050, { type: 'sine', volume: 0.22 }), tone(1120, 0.090, { at: 0.055, type: 'sine', volume: 0.22 })]),
+    'game.laser': cue('game', [tone(1180, 0.035, { type: 'saw', volume: 0.22, slide: 260 }), tone(1540, 0.025, { at: 0.018, type: 'sine', volume: 0.13 })]),
+    'game.explosion': cue('game', [noise(0.24, { volume: 0.36, seed: 23, band: 1 }), tone(64, 0.15, { type: 'saw', volume: 0.26, slide: -28 }), tone(144, 0.09, { at: 0.055, volume: 0.20, slide: 80 })]),
+    'game.portal': cue('game', [tone(196, 0.09, { type: 'sine', volume: 0.20 }), tone(392, 0.13, { at: 0.054, type: 'saw', volume: 0.24 }), tone(784, 0.16, { at: 0.108, type: 'triangle', volume: 0.18 }), noise(0.12, { volume: 0.12, seed: 24, band: 3 })]),
+    'app.notify': cue('ui', [tone(520, 0.045, { type: 'triangle', volume: 0.19 }), tone(780, 0.070, { at: 0.070, type: 'triangle', volume: 0.17 })]),
+    'app.score': cue('game', [tone(300, 0.038, { volume: 0.18 }), tone(450, 0.050, { at: 0.042, type: 'triangle', volume: 0.17 })]),
+    'app.highScore': cue('game', [tone(360, 0.060, { volume: 0.22 }), tone(540, 0.060, { at: 0.058, type: 'triangle', volume: 0.22 }), tone(720, 0.110, { at: 0.116, type: 'sine', volume: 0.20 })]),
+    'app.undo': cue('ui', [tone(420, 0.050, { type: 'triangle', volume: 0.17, slide: -130 }), noise(0.018, { volume: 0.10, seed: 25, band: 3 })]),
+    'app.reset': cue('ui', [tone(500, 0.050, { volume: 0.17 }), tone(260, 0.070, { at: 0.054, volume: 0.16 })]),
+    'app.save': cue('ui', [tone(500, 0.040, { type: 'triangle', volume: 0.16 }), tone(750, 0.060, { at: 0.056, type: 'sine', volume: 0.15 })]),
+    'app.denied': cue('ui', [tone(240, 0.070, { type: 'saw', volume: 0.20, slide: -80 }), noise(0.050, { volume: 0.16, seed: 26, band: 2 })]),
+    'oracle.choose': cue('ui', [tone(220, 0.050, { type: 'triangle', volume: 0.16 }), tone(330, 0.070, { at: 0.052, type: 'sine', volume: 0.14 })]),
+    'oracle.draw': cue('ui', [noise(0.32, { volume: 0.13, seed: 27, band: 2 }), tone(130, 0.120, { type: 'sine', volume: 0.15 }), tone(260, 0.120, { at: 0.105, type: 'triangle', volume: 0.16 }), tone(520, 0.160, { at: 0.210, type: 'sine', volume: 0.14 })]),
+    'oracle.stir': cue('ui', [noise(0.090, { volume: 0.18, seed: 28, band: 3 }), tone(180, 0.090, { type: 'triangle', volume: 0.17, slide: 110 })]),
+    'oracle.accept': cue('ui', [tone(330, 0.060, { type: 'sine', volume: 0.16 }), tone(660, 0.100, { at: 0.064, type: 'sine', volume: 0.15 })]),
+    'oracle.refuse': cue('ui', [tone(294, 0.060, { type: 'triangle', volume: 0.16 }), tone(196, 0.090, { at: 0.064, type: 'triangle', volume: 0.15 })])
   };
 
-  const cueBus = (layers) => {
-    for (let i = 0; i < layers.length; i += 1) {
-      const b = layers[i].opts && layers[i].opts.bus;
-      if (b) return b;
-    }
-    return 'ui';
+  const waveValue = (type, phase) => {
+    const p = phase % 1;
+    if (type === 'sine') return Math.sin(p * Math.PI * 2);
+    if (type === 'triangle') return 1 - 4 * Math.abs(Math.round(p - 0.25) - (p - 0.25));
+    if (type === 'saw') return (p * 2) - 1;
+    return p < 0.5 ? 1 : -1;
   };
 
-  const renderCue = (key) => {
-    if (!OAC) return Promise.resolve(null);
-    const layers = captureLayers(key);
-    if (!layers || !layers.length) return Promise.resolve(null);
-    const sampleRate = (ctx && ctx.sampleRate) || 44100;
-    let total = 0.05;
-    layers.forEach((l) => { total = Math.max(total, layerEnd(l)); });
-    const length = Math.max(1, Math.ceil(total * sampleRate));
-    let octx;
-    try { octx = new OAC(1, length, sampleRate); } catch { return Promise.resolve(null); }
-    layers.forEach((l) => {
-      if (l.kind === 'tone') synthTone(octx, octx.destination, l.freq, l.duration, l.opts, l.opts.offset || 0);
-      else synthNoise(octx, octx.destination, l.opts, l.opts.offset || 0);
-    });
-    return octx.startRendering()
-      .then((buffer) => ({ buffer, bus: cueBus(layers) }))
-      .catch(() => null);
-  };
-
-  const getCueEntry = (key) => {
-    if (bufferCache[key] !== undefined) return Promise.resolve(bufferCache[key]);
-    if (!renderPromises[key]) {
-      renderPromises[key] = renderCue(key).then((entry) => {
-        bufferCache[key] = entry;
-        delete renderPromises[key];
-        return entry;
-      });
-    }
-    return renderPromises[key];
-  };
-
-  const prerenderAll = () => {
-    if (prerenderStarted || !OAC) return;
-    prerenderStarted = true;
-    const keys = Object.keys(sounds);
-    const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 0));
-    let i = 0;
-    const step = () => {
-      if (i >= keys.length) return;
-      const key = keys[i++];
-      if (bufferCache[key] !== undefined) { idle(step); return; }
-      getCueEntry(key).finally(() => idle(step));
+  const rng = (seed) => {
+    let s = seed >>> 0;
+    return () => {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return ((s / 4294967295) * 2) - 1;
     };
-    step();
   };
 
-  // ---------------------------------------------------------------------------
-  // Playback
-  // ---------------------------------------------------------------------------
+  const envelope = (t, dur, attack) => {
+    if (t < attack) return t / Math.max(0.001, attack);
+    const tail = clamp((dur - t) / Math.max(0.001, dur - attack), 0, 1);
+    return tail * tail;
+  };
 
-  const playBuffer = (entry) => {
-    if (!entry || !entry.buffer || !ctx) return;
-    if (ctx.state !== 'running') { try { ctx.resume(); } catch {} }
+  const mixTone = (samples, layer) => {
+    const start = Math.floor(layer.at * SAMPLE_RATE);
+    const count = Math.max(1, Math.floor(layer.dur * SAMPLE_RATE));
+    let phase = 0;
+    for (let i = 0; i < count && start + i < samples.length; i += 1) {
+      const t = i / SAMPLE_RATE;
+      const progress = i / Math.max(1, count - 1);
+      const freq = Math.max(12, layer.freq + layer.slide * progress);
+      phase += freq / SAMPLE_RATE;
+      samples[start + i] += waveValue(layer.type, phase) * layer.volume * envelope(t, layer.dur, layer.attack);
+    }
+  };
+
+  const mixNoise = (samples, layer) => {
+    const start = Math.floor(layer.at * SAMPLE_RATE);
+    const count = Math.max(1, Math.floor(layer.dur * SAMPLE_RATE));
+    const random = rng(layer.seed);
+    let held = 0;
+    for (let i = 0; i < count && start + i < samples.length; i += 1) {
+      if (i % layer.band === 0) held = random();
+      const fade = 1 - (i / count) * layer.decay;
+      samples[start + i] += held * layer.volume * fade;
+    }
+  };
+
+  const renderRecipe = (recipe) => {
+    let duration = 0.06;
+    recipe.layers.forEach((layer) => {
+      duration = Math.max(duration, layer.at + layer.dur + 0.05);
+    });
+    const samples = new Float32Array(Math.ceil(duration * SAMPLE_RATE));
+    recipe.layers.forEach((layer) => {
+      if (layer.kind === 'tone') mixTone(samples, layer);
+      else mixNoise(samples, layer);
+    });
+    return { bus: recipe.bus, src: wavDataUri(samples) };
+  };
+
+  const wavDataUri = (samples) => {
+    const bytesPerSample = 2;
+    const dataSize = samples.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(buffer);
+    const write = (offset, text) => {
+      for (let i = 0; i < text.length; i += 1) view.setUint8(offset + i, text.charCodeAt(i));
+    };
+    write(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    write(8, 'WAVE');
+    write(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, SAMPLE_RATE, true);
+    view.setUint32(28, SAMPLE_RATE * bytesPerSample, true);
+    view.setUint16(32, bytesPerSample, true);
+    view.setUint16(34, 16, true);
+    write(36, 'data');
+    view.setUint32(40, dataSize, true);
+    let offset = 44;
+    for (let i = 0; i < samples.length; i += 1) {
+      const value = clamp(samples[i], -1, 1);
+      view.setInt16(offset, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+      offset += 2;
+    }
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return `data:audio/wav;base64,${btoa(binary)}`;
+  };
+
+  const keyFor = (name) => aliases[name] || name;
+
+  const entryFor = (name) => {
+    const key = keyFor(name);
+    if (!recipes[key]) return null;
+    if (!cueCache[key]) cueCache[key] = renderRecipe(recipes[key]);
+    return { key, ...cueCache[key] };
+  };
+
+  const preloadCore = () => {
+    ['ui.click', 'ui.toggleOn', 'ui.toggleOff'].forEach((name) => {
+      try { poolFor(name); } catch {}
+    });
+  };
+
+  const makeAudio = (src, bus) => {
+    const audio = new Audio();
+    audio.preload = 'auto';
+    audio.src = src;
+    audio.playsInline = true;
+    audio.setAttribute('playsinline', '');
+    audio.dataset.bus = bus;
+    audio.load();
+    return audio;
+  };
+
+  const poolFor = (name) => {
+    const entry = entryFor(name);
+    if (!entry) return null;
+    if (!pools[entry.key]) {
+      pools[entry.key] = Array.from({ length: POOL_SIZE }, () => makeAudio(entry.src, entry.bus));
+    }
+    return { entry, pool: pools[entry.key] };
+  };
+
+  const volumeFor = (bus) => clamp((busVolumes.master ?? 1) * (busVolumes[bus] ?? 1), 0, 1);
+
+  const tryPlay = (audio, bus) => {
     try {
-      const source = ctx.createBufferSource();
-      source.buffer = entry.buffer;
-      connect(source, busGain(entry.bus));
-      source.start();
+      audio.pause();
+      audio.currentTime = 0;
+      audio.muted = false;
+      audio.volume = volumeFor(bus);
+      const result = audio.play();
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+      unlocked = true;
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const play = (name) => {
+    if (!enabled) return false;
+    const item = poolFor(name);
+    if (!item) return false;
+    const { entry, pool } = item;
+    const ready = pool.find((audio) => audio.paused || audio.ended) || pool[poolCursor++ % pool.length];
+    return tryPlay(ready, entry.bus);
+  };
+
+  const emitState = () => {
+    try {
+      window.dispatchEvent(new CustomEvent('convivium:audio-state', { detail: { enabled, unlocked } }));
     } catch {}
   };
-
-  const play = (name, opts = {}) => {
-    if (!enabled) return false;
-    const key = aliases[name] || name;
-    if (!sounds[key]) return false;
-    unlock();
-    const cached = bufferCache[key];
-    if (cached !== undefined) {
-      if (cached) playBuffer(cached);
-      return true;
-    }
-    try { sounds[key](opts); } catch {}
-    getCueEntry(key);
-    return true;
-  };
-
-  // ---------------------------------------------------------------------------
-  // Background music (rendered once, looped)
-  // ---------------------------------------------------------------------------
-
-  const patterns = {
-    terminal: {
-      bpm: 112,
-      steps: [
-        { freq: 110, duration: 0.055, type: 'square', volume: 0.012 },
-        null,
-        { freq: 165, duration: 0.050, type: 'square', volume: 0.010 },
-        null,
-        { freq: 220, duration: 0.060, type: 'triangle', volume: 0.012 },
-        null,
-        { freq: 165, duration: 0.050, type: 'square', volume: 0.010 },
-        { noise: { filter: 'highpass', freq: 1100, duration: 0.018, volume: 0.012, bitcrush: 4 } }
-      ]
-    },
-    runner: {
-      bpm: 136,
-      steps: [
-        { freq: 98, duration: 0.045, type: 'square', volume: 0.018 },
-        { noise: { freq: 900, duration: 0.022, volume: 0.012 } },
-        { freq: 196, duration: 0.040, type: 'square', volume: 0.014 },
-        null,
-        { freq: 147, duration: 0.045, type: 'square', volume: 0.016 },
-        { noise: { filter: 'highpass', freq: 1500, duration: 0.016, volume: 0.010 } },
-        { freq: 220, duration: 0.050, type: 'triangle', volume: 0.012 },
-        null
-      ]
-    },
-    oracle: {
-      bpm: 88,
-      steps: [
-        { freq: 130, duration: 0.18, type: 'sine', volume: 0.012 },
-        null,
-        { freq: 195, duration: 0.15, type: 'triangle', volume: 0.010 },
-        null,
-        { freq: 260, duration: 0.11, type: 'sine', volume: 0.009 },
-        null,
-        null,
-        { noise: { filter: 'bandpass', freq: 540, duration: 0.06, volume: 0.010 } }
-      ]
-    }
-  };
-
-  const renderPattern = (name) => {
-    if (!OAC) return Promise.resolve(null);
-    const pattern = patterns[name] || patterns.terminal;
-    const stepLen = 60000 / pattern.bpm / 2 / 1000;
-    const total = pattern.steps.length * stepLen;
-    const sampleRate = (ctx && ctx.sampleRate) || 44100;
-    let octx;
-    try { octx = new OAC(1, Math.max(1, Math.ceil(total * sampleRate)), sampleRate); } catch { return Promise.resolve(null); }
-    pattern.steps.forEach((step, idx) => {
-      if (!step) return;
-      const at = idx * stepLen;
-      if (step.noise) {
-        synthNoise(octx, octx.destination, { ...step.noise }, at);
-        return;
-      }
-      synthTone(octx, octx.destination, step.freq || step[0] || 220, step.duration || step[1] || 0.06, {
-        type: step.type || step[2] || 'square',
-        volume: step.volume || step[3] || 0.012,
-        slide: step.slide,
-        filter: step.filter
-      }, at);
-    });
-    return octx.startRendering().then((buffer) => buffer).catch(() => null);
-  };
-
-  const stopMusic = () => {
-    if (!musicState) return;
-    try { if (musicState.source) musicState.source.stop(); } catch {}
-    musicState = null;
-  };
-
-  const startMusic = (name = 'terminal') => {
-    stopMusic();
-    if (!enabled) return;
-    unlock();
-    const token = {};
-    musicState = { name, source: null, token };
-    renderPattern(name).then((buffer) => {
-      if (!musicState || musicState.token !== token) return;
-      if (!buffer || !ctx || ctx.state !== 'running') return;
-      try {
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = true;
-        connect(source, busGain('music'));
-        source.start();
-        musicState.source = source;
-      } catch {}
-    });
-  };
-
-  // ---------------------------------------------------------------------------
-  // Ambient bed (looping filtered noise)
-  // ---------------------------------------------------------------------------
-
-  const startAmbient = () => {
-    if (!enabled || ambientNode || !ensureCtx()) return;
-    const build = () => {
-      if (ambientNode || !ctx || ctx.state !== 'running') return;
-      try {
-        const sampleRate = Math.min(ctx.sampleRate, 22050);
-        const buffer = ctx.createBuffer(1, sampleRate * 3, sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i += 1) data[i] = (Math.random() * 2 - 1) * 0.14;
-        const source = ctx.createBufferSource();
-        const filter = ctx.createBiquadFilter();
-        const gain = ctx.createGain();
-        source.buffer = buffer;
-        source.loop = true;
-        filter.type = 'lowpass';
-        filter.frequency.value = 240;
-        gain.gain.value = 0.018;
-        connect(source, filter);
-        connect(filter, gain);
-        connect(gain, busGain('ambient'));
-        source.start();
-        ambientNode = { source, gain };
-      } catch {}
-    };
-    if (ctx.state === 'running') build();
-    else { try { ctx.resume().then(build).catch(() => {}); } catch {} }
-  };
-
-  const stopAmbient = () => {
-    if (!ambientNode) return;
-    try { ambientNode.source.stop(); } catch {}
-    ambientNode = null;
-  };
-
-  // ---------------------------------------------------------------------------
-  // Enable / toggle UI
-  // ---------------------------------------------------------------------------
 
   const syncToggles = () => {
     document.querySelectorAll('[data-sfx-toggle]').forEach((el) => {
@@ -814,9 +424,31 @@
     });
   };
 
-  const emitState = () => {
+  const unlock = () => {
+    if (!enabled) return;
+    const item = poolFor('ui.click');
+    if (!item) return;
+    const primary = item.pool[0];
+    if (unlocked) return;
     try {
-      window.dispatchEvent(new CustomEvent('convivium:audio-state', { detail: { enabled } }));
+      primary.muted = true;
+      primary.currentTime = 0;
+      const result = primary.play();
+      if (result && typeof result.then === 'function') {
+        result.then(() => {
+          primary.pause();
+          primary.currentTime = 0;
+          primary.muted = false;
+          unlocked = true;
+          emitState();
+        }).catch(() => {});
+      } else {
+        primary.pause();
+        primary.currentTime = 0;
+        primary.muted = false;
+        unlocked = true;
+        emitState();
+      }
     } catch {}
   };
 
@@ -825,36 +457,6 @@
     if (event.cancelable) event.preventDefault();
     event.stopPropagation?.();
     event.stopImmediatePropagation?.();
-  };
-
-  const toggleFromGesture = (event) => {
-    stopToggleEvent(event);
-    lastToggleAt = nowMs();
-    setEnabled(!enabled, true);
-  };
-
-  const bindToggle = (el) => {
-    if (!el || el.dataset.sfxBound === 'true') return;
-    el.dataset.sfxBound = 'true';
-    el.addEventListener('pointerdown', toggleFromGesture, { passive: false });
-    el.addEventListener('touchend', (event) => {
-      if (nowMs() - lastToggleAt < 700) {
-        stopToggleEvent(event);
-        return;
-      }
-      toggleFromGesture(event);
-    }, { passive: false });
-    el.addEventListener('click', (event) => {
-      if (nowMs() - lastToggleAt < 700) {
-        stopToggleEvent(event);
-        return;
-      }
-      toggleFromGesture(event);
-    });
-  };
-
-  const bindToggles = () => {
-    document.querySelectorAll('[data-sfx-toggle]').forEach(bindToggle);
   };
 
   const setEnabled = (value, withSound = false) => {
@@ -873,17 +475,40 @@
     if (withSound) play('ui.toggleOn');
   };
 
-  const setBusVolume = (bus, value) => {
-    if (!Object.prototype.hasOwnProperty.call(busVolumes, bus)) return false;
-    busVolumes[bus] = clamp(Number(value) || 0, 0, 1);
-    if (bus === 'master' && graph.master) graph.master.gain.value = busVolumes.master;
-    if (graph.buses[bus]) graph.buses[bus].gain.value = busVolumes[bus];
-    persistBusVolumes();
-    return true;
+  const toggleFromGesture = (event) => {
+    stopToggleEvent(event);
+    lastToggleAt = nowMs();
+    setEnabled(!enabled, true);
+  };
+
+  const bindToggle = (el) => {
+    if (!el || el.dataset.sfxBound === 'true') return;
+    el.dataset.sfxBound = 'true';
+    el.addEventListener('pointerdown', toggleFromGesture, { passive: false });
+    el.addEventListener('touchend', (event) => {
+      if (nowMs() - lastToggleAt < DOUBLE_TAP_GUARD_MS) {
+        stopToggleEvent(event);
+        return;
+      }
+      toggleFromGesture(event);
+    }, { passive: false });
+    el.addEventListener('click', (event) => {
+      if (nowMs() - lastToggleAt < DOUBLE_TAP_GUARD_MS) {
+        stopToggleEvent(event);
+        return;
+      }
+      toggleFromGesture(event);
+    });
+  };
+
+  const bindToggles = () => {
+    document.querySelectorAll('[data-sfx-toggle]').forEach(bindToggle);
   };
 
   const injectToggle = () => {
-    if (document.querySelector('[data-sfx-toggle]')) {
+    preloadCore();
+    const existing = document.querySelector('[data-sfx-toggle]');
+    if (existing) {
       bindToggles();
       syncToggles();
       return;
@@ -904,11 +529,28 @@
     btn.addEventListener('mouseleave', () => { btn.style.opacity = '0.72'; });
     document.body.appendChild(btn);
     bindToggle(btn);
+    syncToggles();
   };
 
-  // ---------------------------------------------------------------------------
-  // Event delegation
-  // ---------------------------------------------------------------------------
+  const captureToggle = (event) => {
+    const el = event.target?.closest?.('[data-sfx-toggle]');
+    if (!el) return;
+    if (event.type === 'click' && nowMs() - lastToggleAt < DOUBLE_TAP_GUARD_MS) {
+      stopToggleEvent(event);
+      return;
+    }
+    if (event.type === 'pointerdown' || event.type === 'touchend' || event.type === 'click') {
+      toggleFromGesture(event);
+    }
+  };
+
+  ['pointerdown', 'touchend', 'click'].forEach((type) => {
+    document.addEventListener(type, captureToggle, { capture: true, passive: false });
+  });
+
+  ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click'].forEach((type) => {
+    document.addEventListener(type, unlock, { capture: true, passive: true });
+  });
 
   const sfxTarget = (event, includeLinks = true) => {
     if (!enabled) return null;
@@ -927,10 +569,6 @@
     if (el.tagName === 'A') { play('nav'); return; }
     play('click');
   };
-
-  ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click'].forEach((eventName) => {
-    document.addEventListener(eventName, unlock, { capture: true, passive: true });
-  });
 
   document.addEventListener('pointerdown', (event) => {
     const el = sfxTarget(event, true);
@@ -957,19 +595,60 @@
   const handleAudioEvent = (event) => {
     const detail = event.detail || {};
     const name = typeof detail === 'string' ? detail : detail.name || detail.sound || detail.cue;
-    if (name) play(name, detail);
+    if (name) play(name);
   };
 
   window.addEventListener('convivium:audio', handleAudioEvent);
   document.addEventListener('convivium:audio', handleAudioEvent);
 
-  // ---------------------------------------------------------------------------
-  // Public API
-  // ---------------------------------------------------------------------------
+  const setBusVolume = (bus, value) => {
+    if (!Object.prototype.hasOwnProperty.call(busVolumes, bus)) return false;
+    busVolumes[bus] = clamp(Number(value) || 0, 0, 1);
+    Object.values(pools).flat().forEach((audio) => {
+      audio.volume = volumeFor(audio.dataset.bus || 'ui');
+    });
+    try { localStorage.setItem(BUS_VOLUME_KEY, JSON.stringify(busVolumes)); } catch {}
+    return true;
+  };
+
+  const startMusic = (name = 'terminal') => {
+    stopMusic();
+    if (!enabled) return;
+    const sequences = {
+      terminal: ['terminal.type', 'ui.click', 'terminal.type', 'terminal.suggest'],
+      runner: ['game.step', 'game.step', 'game.pickup', 'game.step'],
+      oracle: ['oracle.choose', 'terminal.type', 'oracle.stir', 'terminal.type']
+    };
+    const pattern = sequences[name] || sequences.terminal;
+    let i = 0;
+    musicTimer = window.setInterval(() => {
+      play(pattern[i % pattern.length]);
+      i += 1;
+    }, name === 'runner' ? 220 : 520);
+  };
+
+  function stopMusic() {
+    if (!musicTimer) return;
+    window.clearInterval(musicTimer);
+    musicTimer = null;
+  }
+
+  const startAmbient = () => {
+    stopAmbient();
+    if (!enabled) return;
+    ambientTimer = window.setInterval(() => play('terminal.type'), 2600);
+  };
+
+  function stopAmbient() {
+    if (!ambientTimer) return;
+    window.clearInterval(ambientTimer);
+    ambientTimer = null;
+  }
 
   const api = {
     get enabled() { return enabled; },
-    get context() { return ctx; },
+    get unlocked() { return unlocked; },
+    get context() { return null; },
     get busVolumes() { return { ...busVolumes }; },
     setEnabled,
     setBusVolume,
@@ -978,11 +657,11 @@
     dispatch: (name, opts = {}) => {
       window.dispatchEvent(new CustomEvent('convivium:audio', { detail: { ...opts, name } }));
     },
-    tone: (freq, duration, opts) => tone(freq, duration, opts),
-    noise,
-    sequence,
-    pulse: (freq = 220, duration = 0.045) => tone(freq, duration, { type: 'sine', volume: 0.036 }),
-    prerender: prerenderAll,
+    tone: () => play('terminal.type'),
+    noise: () => play('ui.glitch'),
+    sequence: () => play('terminal.run'),
+    pulse: () => play('terminal.type'),
+    prerender: () => Object.keys(recipes).forEach(entryFor),
     click: () => play('click'),
     nav: () => play('nav'),
     select: () => play('select'),
@@ -1013,13 +692,13 @@
     bust: () => play('bust'),
     toggle: (on) => play(on ? 'ui.toggleOn' : 'ui.toggleOff'),
     music: {
-      get active() { return Boolean(musicState); },
-      get current() { return musicState?.name || ''; },
+      get active() { return Boolean(musicTimer); },
+      get current() { return musicTimer ? 'html-audio-loop' : ''; },
       start: startMusic,
       stop: stopMusic
     },
     ambient: {
-      get active() { return Boolean(ambientNode); },
+      get active() { return Boolean(ambientTimer); },
       start: startAmbient,
       stop: stopAmbient
     }
