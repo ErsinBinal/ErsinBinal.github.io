@@ -1,0 +1,96 @@
+/* Convivium - Bugy Helper launcher
+   Bagimsiz stil: oyun sayfalari common.css yuklemeyebilir, bu yuzden renkler sabit. */
+
+.bugy-launcher {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 99998;
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #00ff88;
+  background: radial-gradient(circle at 30% 25%, #0b2b1c, #04140d);
+  color: #7dffb0;
+  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.5), 0 6px 16px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bugy-launcher:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 18px rgba(0, 255, 136, 0.6), 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.bugy-launcher:focus-visible {
+  outline: 2px solid #7dffb0;
+  outline-offset: 3px;
+}
+
+.bugy-launcher .bugy-launcher-glyph {
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 0.2s ease;
+}
+
+.bugy-launcher.is-open {
+  background: radial-gradient(circle at 30% 25%, #2b0b16, #14040a);
+  border-color: #ff5f87;
+  color: #ffb3c6;
+}
+.bugy-launcher.is-open .bugy-launcher-glyph { transform: rotate(90deg); }
+
+/* Sakin nabiz (kapaliyken dikkat ceker) */
+@media (prefers-reduced-motion: no-preference) {
+  .bugy-launcher:not(.is-open) {
+    animation: bugyLauncherPulse 2.6s ease-in-out infinite;
+  }
+}
+@keyframes bugyLauncherPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.45), 0 6px 16px rgba(0, 0, 0, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0), 0 6px 16px rgba(0, 0, 0, 0.45); }
+}
+
+/* Ilk giris ipucu balonu */
+.bugy-launcher-hint {
+  position: fixed;
+  right: 80px;
+  bottom: 30px;
+  z-index: 99998;
+  max-width: 220px;
+  padding: 8px 12px;
+  background: linear-gradient(180deg, #fffbe0, #fdf2b8);
+  color: #3a2f12;
+  font-family: ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  border: 2px solid #d9b94a;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+.bugy-launcher-hint.is-on { opacity: 1; transform: translateX(0); }
+.bugy-launcher-hint::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  bottom: 14px;
+  border-width: 8px 0 8px 10px;
+  border-style: solid;
+  border-color: transparent transparent transparent #fdf2b8;
+}
+
+@media (max-width: 520px) {
+  .bugy-launcher { right: 12px; bottom: 12px; width: 46px; height: 46px; font-size: 1.3rem; }
+  .bugy-launcher-hint { right: 66px; bottom: 22px; max-width: 60vw; }
+}
