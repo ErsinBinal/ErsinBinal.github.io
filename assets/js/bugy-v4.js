@@ -9,9 +9,6 @@
 (() => {
   'use strict';
 
-  // Bu script etiketi (statik yuklemede pet, helper enjeksiyonunda data-autostart="off").
-  const thisScript = document.currentScript;
-
   const engineKey = 'convivium.bugy.engine';
   const skinKey = 'convivium.bugy.v4.skin';
 
@@ -217,11 +214,7 @@
       nextAction: 0,
       raf: 0,
       blinkAt: 0,
-      idleQuipAt: 0,
-      // Yardimci modu: yerinde durur, rastgele gezinmez, ipucu sunar.
-      helper: false,
-      helpTips: [],
-      helpIndex: 0
+      idleQuipAt: 0
     };
 
     const CHAR_W = 110;
@@ -295,14 +288,14 @@
     // --- Aksiyon calistirici ---
     const moodDuration = { tada: 1400, think: 1800, alert: 1200, wave: 1300, magic: 1700, search: 1600, morph: 1700 };
     let moodTimer = 0;
-    const runMood = (mood, line) => {
+    const runMood = (mood) => {
       state.mood = mood;
       state.busy = true;
       char.classList.remove(...actions.map((a) => `is-${a}`));
       char.classList.add(`is-${mood}`);
       if (mood === 'tada' || mood === 'magic' || mood === 'morph' || mood === 'search') burst(mood === 'magic' ? 14 : 10);
       const quips = def().quips;
-      say(line || quips[Math.floor(Math.random() * quips.length)]);
+      say(quips[Math.floor(Math.random() * quips.length)]);
       dispatch();
       window.clearTimeout(moodTimer);
       moodTimer = window.setTimeout(() => {
@@ -317,7 +310,7 @@
     const loop = (ts) => {
       if (!state.active) return;
       const bob = Math.sin(ts / 420) * 5;
-      if (!state.busy && !state.helper) {
+      if (!state.busy) {
         state.x += state.dir * 0.55;
         const min = 6;
         const max = window.innerWidth - CHAR_W - 6;
@@ -373,7 +366,6 @@
       },
       deactivate() {
         state.active = false;
-        state.helper = false;
         window.cancelAnimationFrame(state.raf);
         window.clearTimeout(moodTimer);
         char.classList.remove(...actions.map((a) => `is-${a}`));
@@ -383,43 +375,8 @@
       },
       summon() {
         if (!state.active) this.activate();
-        if (state.helper) {
-          // Yardimci modunda "?" dugmesinin yaninda durur ve ilk ipucunu verir.
-          state.x = clamp(window.innerWidth - CHAR_W - 120, 6, window.innerWidth - CHAR_W - 6);
-          const first = state.helpTips[0];
-          state.helpIndex = state.helpTips.length > 1 ? 1 : 0;
-          runMood('wave', first);
-        } else {
-          state.x = clamp(window.innerWidth / 2 - CHAR_W / 2, 6, window.innerWidth - CHAR_W - 6);
-          runMood('wave');
-        }
-        return true;
-      },
-      // --- Yardimci API'si ---
-      speak(text) {
-        if (!state.active) this.activate();
-        if (text) say(String(text));
-        return true;
-      },
-      loadTips(tips) {
-        state.helpTips = Array.isArray(tips) ? tips.filter(Boolean).map(String) : [];
-        state.helpIndex = 0;
-        state.helper = state.helpTips.length > 0;
-        if (state.helper) state.randomEnabled = false;
-        return state.helpTips.length;
-      },
-      clearTips() {
-        state.helpTips = [];
-        state.helpIndex = 0;
-        state.helper = false;
-        return true;
-      },
-      nextTip() {
-        if (!state.active) this.activate();
-        if (!state.helpTips.length) return false;
-        const tip = state.helpTips[state.helpIndex % state.helpTips.length];
-        state.helpIndex += 1;
-        runMood('think', tip);
+        state.x = clamp(window.innerWidth / 2 - CHAR_W / 2, 6, window.innerWidth - CHAR_W - 6);
+        runMood('wave');
         return true;
       },
       trigger(action) {
@@ -459,19 +416,13 @@
           skinLabel: def().label,
           skins: [...skins],
           randomEnabled: state.randomEnabled,
-          helper: state.helper,
-          tipCount: state.helpTips.length,
           x: Math.round(state.x),
           y: Math.round(groundTop())
         };
       }
     };
 
-    // Yardimci modunda tiklayinca siradaki ipucu; aksi halde siradaki jest.
-    char.addEventListener('click', () => {
-      if (state.helper && state.helpTips.length) api.nextTip();
-      else api.next();
-    });
+    char.addEventListener('click', () => api.next());
     char.tabIndex = 0;
     char.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -493,9 +444,7 @@
 
     renderSvg();
     window.BugyV4 = api;
-    // Yalnizca pet olarak yuklendiyse (data-autostart != "off") kayitli motoru ac.
-    // Helper enjeksiyonunda otomatik acilmaz; sadece "?" dugmesiyle cagrilir.
-    if (thisScript?.dataset.autostart !== 'off' && readLS(engineKey) === 'v4') api.activate();
+    if (readLS(engineKey) === 'v4') api.activate();
   };
 
   if (document.readyState === 'loading') {
