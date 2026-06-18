@@ -213,7 +213,7 @@
       render();
       scheduleCpu();
       if (active && isOnline() && !opts.remote && host.sendAction) {
-        host.sendAction('atc-new', {});
+        host.sendAction('mode-new', {});
       }
     }
 

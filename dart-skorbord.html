@@ -12,7 +12,7 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
-  <link rel="stylesheet" href="/assets/css/dart-skorbord.css?v=2">
+  <link rel="stylesheet" href="/assets/css/dart-skorbord.css?v=3">
 </head>
 <body class="dart-page">
   <a class="skip-link" href="#dartApp">Icerigi atla</a>
@@ -39,6 +39,7 @@
         <div class="dart-mode-select" role="group" aria-label="Oyun modu">
           <button type="button" class="dart-mode-btn is-active" data-mode="x01">501</button>
           <button type="button" class="dart-mode-btn" data-mode="atc">Around the Clock</button>
+          <button type="button" class="dart-mode-btn" data-mode="cricket">Cricket</button>
         </div>
         <label class="dart-rule-toggle" id="doubleOutWrap" title="Bitis icin son ok double olmali">
           <input type="checkbox" id="doubleOutToggle" checked>
@@ -162,6 +163,26 @@
       </div>
     </section>
 
+    <section id="cricketSection" class="cricket-board" hidden aria-label="Cricket skor paneli">
+      <header class="cricket-head">
+        <div class="cricket-player cricket-red is-active" id="cricketHeadRED">
+          <span>RED</span>
+          <strong id="cricketNameRED">Kirmizi Oyuncu</strong>
+          <div class="cricket-score" id="cricketScoreRED">0</div>
+        </div>
+        <div class="cricket-player cricket-blue" id="cricketHeadBLUE">
+          <span>BLUE</span>
+          <strong id="cricketNameBLUE">Mavi Oyuncu</strong>
+          <div class="cricket-score" id="cricketScoreBLUE">0</div>
+        </div>
+      </header>
+      <div id="cricketGrid" class="cricket-grid"></div>
+      <div class="cricket-turn-strip">
+        <span class="dart-panel-label">Bu tur</span>
+        <div id="cricketBadges" class="atc-badges"></div>
+      </div>
+    </section>
+
     <section class="dart-turn-panel" aria-label="Mevcut sira">
       <div>
         <span class="dart-panel-label">Mevcut atislar</span>
@@ -210,8 +231,9 @@
   <script src="/assets/js/supabase-client.js?v=23" defer></script>
   <script src="/assets/js/dart-board-svg.js?v=1" defer></script>
   <script src="/assets/js/dart-online.js?v=1" defer></script>
-  <script src="/assets/js/dart-atc.js?v=1" defer></script>
-  <script src="/assets/js/dart-skorbord.js?v=5" defer></script>
+  <script src="/assets/js/dart-atc.js?v=2" defer></script>
+  <script src="/assets/js/dart-cricket.js?v=1" defer></script>
+  <script src="/assets/js/dart-skorbord.js?v=6" defer></script>
   <script src="/assets/js/sfx.js?v=14" defer></script>
 </body>
 </html>

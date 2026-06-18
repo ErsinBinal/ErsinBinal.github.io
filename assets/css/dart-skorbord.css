@@ -855,6 +855,120 @@ input:disabled {
 .atc-pip.is-hit { border-color: rgba(51, 214, 159, 0.7); color: var(--dart-green); }
 .atc-pip.is-miss { border-color: rgba(239, 68, 68, 0.6); color: var(--dart-red); }
 
+/* --- Cricket paneli --- */
+.cricket-board {
+  display: grid;
+  gap: 14px;
+}
+
+.cricket-board[hidden] { display: none; }
+
+.cricket-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cricket-player {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+  text-align: center;
+}
+
+.cricket-red { border-color: rgba(239, 68, 68, 0.44); }
+.cricket-blue { border-color: rgba(56, 189, 248, 0.44); }
+
+.cricket-red.is-active {
+  border-color: rgba(239, 68, 68, 0.95);
+  box-shadow: 0 0 28px rgba(239, 68, 68, 0.22);
+}
+
+.cricket-blue.is-active {
+  border-color: rgba(56, 189, 248, 0.95);
+  box-shadow: 0 0 28px rgba(56, 189, 248, 0.22);
+}
+
+.cricket-player span {
+  color: var(--dart-muted);
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.cricket-player strong { color: #fff; }
+
+.cricket-score {
+  margin-top: 4px;
+  color: var(--dart-amber);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: clamp(2rem, 7vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.cricket-grid {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+}
+
+.cricket-row {
+  display: grid;
+  grid-template-columns: 1fr 88px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.cricket-label {
+  text-align: center;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+}
+
+.cricket-mark {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--dart-text);
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+}
+
+.cricket-mark-red.is-closed {
+  border-color: rgba(239, 68, 68, 0.8);
+  color: var(--dart-red);
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.cricket-mark-blue.is-closed {
+  border-color: rgba(56, 189, 248, 0.8);
+  color: var(--dart-blue);
+  background: rgba(56, 189, 248, 0.12);
+}
+
+.cricket-turn-strip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+}
+
 @media (max-width: 860px) {
   .dart-online-controls {
     grid-template-columns: 1fr 1fr;

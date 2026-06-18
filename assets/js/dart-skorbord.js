@@ -32,9 +32,17 @@
   let onlineNames = { RED: null, BLUE: null };
   let boardController = null;
 
-  // Oyun modu: 'x01' (501) | 'atc' (Around the Clock).
+  // Oyun modu: 'x01' (501) | 'atc' (Around the Clock) | 'cricket'.
   let gameMode = 'x01';
   let atc = null;
+  let cricket = null;
+
+  // Aktif "ozel" mod modulu (x01 disindaki modlar ortak arayuzu paylasir).
+  function customMode() {
+    if (gameMode === 'atc') return atc;
+    if (gameMode === 'cricket') return cricket;
+    return null;
+  }
   const audioCue = (name) => {
     window.ConviviumAudio?.play?.(name);
   };
@@ -141,7 +149,16 @@
     atcTargetBLUE: document.getElementById('atcTargetBLUE'),
     atcProgRED: document.getElementById('atcProgRED'),
     atcProgBLUE: document.getElementById('atcProgBLUE'),
-    atcBadges: document.getElementById('atcBadges')
+    atcBadges: document.getElementById('atcBadges'),
+    cricketSection: document.getElementById('cricketSection'),
+    cricketGrid: document.getElementById('cricketGrid'),
+    cricketHeadRED: document.getElementById('cricketHeadRED'),
+    cricketHeadBLUE: document.getElementById('cricketHeadBLUE'),
+    cricketNameRED: document.getElementById('cricketNameRED'),
+    cricketNameBLUE: document.getElementById('cricketNameBLUE'),
+    cricketScoreRED: document.getElementById('cricketScoreRED'),
+    cricketScoreBLUE: document.getElementById('cricketScoreBLUE'),
+    cricketBadges: document.getElementById('cricketBadges')
   };
 
   let state = createInitialState();
@@ -720,7 +737,8 @@
     render();
     updateSyncStatus();
     scheduleCpuTurn();
-    if (gameMode === 'atc' && atc) atc.refresh();
+    const cmRefresh = customMode();
+    if (cmRefresh) cmRefresh.refresh();
   }
 
   function clearCpu(slot) {
@@ -734,7 +752,8 @@
     grid.querySelectorAll('.dart-cpu-btn').forEach((btn) => btn.classList.remove('is-active'));
     render();
     updateSyncStatus();
-    if (gameMode === 'atc' && atc) atc.refresh();
+    const cmRefresh = customMode();
+    if (cmRefresh) cmRefresh.refresh();
   }
 
   function renderBadges() {
@@ -775,7 +794,8 @@
   }
 
   function render() {
-    if (gameMode === 'atc') { if (atc) atc.render(); return; }
+    const cm = customMode();
+    if (cm) { cm.render(); return; }
     const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
     if (onlineMode) {
       els.turnIndicator.textContent = state.isComplete
@@ -853,7 +873,8 @@
   els.redSignOut.addEventListener('click', () => handleSignOut('RED'));
   els.blueSignOut.addEventListener('click', () => handleSignOut('BLUE'));
   function newMatchForMode() {
-    if (gameMode === 'atc' && atc) atc.newMatch();
+    const cm = customMode();
+    if (cm) cm.newMatch();
     else startNewMatch();
   }
   els.newMatchButton.addEventListener('click', newMatchForMode);
@@ -892,8 +913,9 @@
 
   // --- Gorsel dart tahtasi (girdi aktif moda yonlendirilir) ---
   function routeBoardInput(dart) {
-    if (gameMode === 'atc') {
-      if (atc) atc.applyDart(dart);
+    const cm = customMode();
+    if (cm) {
+      cm.applyDart(dart);
     } else {
       addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment });
     }
@@ -907,12 +929,13 @@
 
   // --- Mod yonetimi ---
   function applyModeVisibility() {
-    const isAtc = gameMode === 'atc';
-    if (els.boardSection) els.boardSection.hidden = isAtc;
-    if (els.turnPanel) els.turnPanel.hidden = isAtc;
-    if (els.controlsSection) els.controlsSection.hidden = isAtc;
-    if (els.atcSection) els.atcSection.hidden = !isAtc;
-    if (els.doubleOutWrap) els.doubleOutWrap.style.display = isAtc ? 'none' : '';
+    const isX01 = gameMode === 'x01';
+    if (els.boardSection) els.boardSection.hidden = !isX01;
+    if (els.turnPanel) els.turnPanel.hidden = !isX01;
+    if (els.controlsSection) els.controlsSection.hidden = !isX01;
+    if (els.atcSection) els.atcSection.hidden = gameMode !== 'atc';
+    if (els.cricketSection) els.cricketSection.hidden = gameMode !== 'cricket';
+    if (els.doubleOutWrap) els.doubleOutWrap.style.display = isX01 ? '' : 'none';
   }
 
   function syncModeSelectorUI() {
@@ -925,17 +948,17 @@
 
   function setGameMode(mode, opts) {
     opts = opts || {};
-    if (mode !== 'x01' && mode !== 'atc') return;
+    if (mode !== 'x01' && mode !== 'atc' && mode !== 'cricket') return;
     if (onlineMode && !opts.remote) { syncModeSelectorUI(); return; }
     gameMode = mode;
     applyModeVisibility();
-    if (mode === 'atc') {
-      if (atc) {
-        atc.setActive(true);
-        if (!opts.remote) atc.newMatch({ remote: true });
-      }
+    // Diger ozel modlari pasiflestir.
+    if (atc) atc.setActive(gameMode === 'atc');
+    if (cricket) cricket.setActive(gameMode === 'cricket');
+    const cm = customMode();
+    if (cm) {
+      if (!opts.remote) cm.newMatch({ remote: true });
     } else {
-      if (atc) atc.setActive(false);
       if (!opts.remote) startNewMatch();
       else { state = createInitialState(); render(); }
     }
@@ -944,8 +967,7 @@
   }
 
   function initModes() {
-    if (!window.ConviviumDartATC) return;
-    atc = window.ConviviumDartATC.create({
+    const modeHost = {
       els: els,
       audioCue: audioCue,
       showOverlay: showOverlay,
@@ -958,8 +980,11 @@
       sendAction: (type, payload) => { if (online) online.sendAction(type, payload); },
       cpuConfig: () => cpuConfig,
       names: () => ({ RED: displayName('RED'), BLUE: displayName('BLUE') }),
-      onComplete: () => { /* ATC online maclari su an kaydedilmiyor */ }
-    });
+      onComplete: () => { /* ozel mod online maclari su an kaydedilmiyor */ }
+    };
+
+    if (window.ConviviumDartATC) atc = window.ConviviumDartATC.create(modeHost);
+    if (window.ConviviumDartCricket) cricket = window.ConviviumDartCricket.create(modeHost);
 
     if (els.modeSelect) {
       els.modeSelect.addEventListener('click', (event) => {
@@ -991,12 +1016,13 @@
   function onlineSnapshot() {
     const snap = clone(state);
     snap.history = [];
+    const cm = customMode();
     return {
       state: snap,
       doubleOut: ruleDoubleOut,
       names: onlineNames,
       mode: gameMode,
-      atc: atc ? atc.serialize() : null
+      modeState: cm ? cm.serialize() : null
     };
   }
 
@@ -1015,11 +1041,13 @@
       gameMode = payload.mode;
       applyModeVisibility();
       if (atc) atc.setActive(gameMode === 'atc');
+      if (cricket) cricket.setActive(gameMode === 'cricket');
       syncModeSelectorUI();
     }
 
-    if (gameMode === 'atc') {
-      if (atc && payload.atc) atc.applyState(payload.atc);
+    const cm = customMode();
+    if (cm) {
+      if (payload.modeState) cm.applyState(payload.modeState);
     } else if (payload.state) {
       state = payload.state;
       state.history = [];
@@ -1035,7 +1063,8 @@
     onlineNames[mySlot] = localDisplayName(mySlot === 'RED' ? 'Ev sahibi' : 'Misafir');
     ruleDoubleOut = els.doubleOutToggle ? els.doubleOutToggle.checked : ruleDoubleOut;
     state = createInitialState();
-    if (gameMode === 'atc' && atc) atc.newMatch({ remote: true });
+    const cmEnter = customMode();
+    if (cmEnter) cmEnter.newMatch({ remote: true });
     hideOverlay();
     syncModeSelectorUI();
   }
@@ -1045,7 +1074,8 @@
     localSlot = null;
     onlineNames = { RED: null, BLUE: null };
     state = createInitialState();
-    if (gameMode === 'atc' && atc) atc.newMatch({ remote: true });
+    const cmExit = customMode();
+    if (cmExit) cmExit.newMatch({ remote: true });
     hideOverlay();
     updateOnlineUi();
     syncModeSelectorUI();
@@ -1081,8 +1111,9 @@
       case 'ready':
         els.onlineStatus.textContent = 'Rakip baglandi. Iyi oyunlar!';
         if (online && online.isHost()) {
-          if (gameMode === 'atc') { if (atc) atc.newMatch({ remote: true }); }
-          else { state = createInitialState(); }
+          const cmReady = customMode();
+          if (cmReady) cmReady.newMatch({ remote: true });
+          else state = createInitialState();
           online.sendAction('sync', onlineSnapshot());
         }
         break;
@@ -1117,8 +1148,9 @@
       applyRemoteState(action.payload);
     } else if (action.type === 'new-match') {
       startNewMatch({ remote: true });
-    } else if (action.type === 'atc-new') {
-      if (atc) atc.newMatch({ remote: true });
+    } else if (action.type === 'mode-new') {
+      const cm = customMode();
+      if (cm) cm.newMatch({ remote: true });
     }
   }
 
@@ -1132,8 +1164,9 @@
       getClient: () => backend.getClient(),
       onState: handleOnlineState,
       onRemoteDart: (payload) => {
-        if (payload && payload.mode === 'atc') {
-          if (atc) atc.applyRemoteDart(payload);
+        if (payload && payload.mode && payload.mode !== 'x01') {
+          const cm = customMode();
+          if (cm) cm.applyRemoteDart(payload);
         } else {
           addDart(payload.value, { isDouble: payload.isDouble, segment: payload.segment, remote: true });
         }
