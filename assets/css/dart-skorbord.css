@@ -510,6 +510,209 @@ input:disabled {
   opacity: 0.56;
 }
 
+/* --- Durum paneli aksiyonlari + kural toggle --- */
+.dart-status-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.dart-rule-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--dart-text);
+  font-weight: 700;
+  font-size: 0.86rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dart-rule-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--dart-amber);
+  cursor: pointer;
+}
+
+/* --- Online panel --- */
+.dart-online {
+  min-width: 0;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.dart-online-head {
+  display: grid;
+  gap: 4px;
+}
+
+.dart-online-head strong {
+  color: var(--dart-amber);
+}
+
+.dart-online-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) auto minmax(0, 0.9fr) auto auto;
+  gap: 8px;
+}
+
+.dart-online-controls input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.76);
+  color: #fff;
+  font: inherit;
+  padding: 0 12px;
+}
+
+.dart-online-controls input:focus {
+  border-color: var(--dart-amber);
+  outline: none;
+}
+
+#onlineCodeInput {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+  text-align: center;
+}
+
+.dart-online-controls button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.78);
+  color: var(--dart-text);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dart-online-controls button:hover:not(:disabled) {
+  border-color: rgba(248, 193, 74, 0.72);
+  transform: translateY(-1px);
+}
+
+#onlineCreate {
+  color: #10151f;
+  background: var(--dart-green);
+  border-color: var(--dart-green);
+}
+
+.dart-online-code {
+  margin: 0;
+  color: var(--dart-muted);
+  font-size: 0.9rem;
+}
+
+.dart-online-code strong {
+  color: var(--dart-amber);
+  font-size: 1.2rem;
+  letter-spacing: 0.18em;
+}
+
+/* --- Gorsel dart tahtasi --- */
+.dart-board-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+
+.dart-board-svg {
+  width: min(420px, 90vw);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.dart-board-svg.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dart-board-svg .db-frame {
+  fill: #05070c;
+  stroke: rgba(148, 163, 184, 0.3);
+  stroke-width: 2;
+}
+
+.dart-board-svg [data-segment] {
+  stroke: rgba(5, 7, 12, 0.85);
+  stroke-width: 0.8;
+  cursor: pointer;
+  transition: filter 0.1s ease;
+}
+
+.dart-board-svg [data-segment]:hover,
+.dart-board-svg [data-segment]:focus {
+  filter: brightness(1.5);
+  outline: none;
+}
+
+.dart-board-svg .db-single.db-a { fill: #0e1422; }
+.dart-board-svg .db-single.db-b { fill: #e8e2cf; }
+.dart-board-svg .db-treble.db-a,
+.dart-board-svg .db-double.db-a { fill: #1fb47e; }
+.dart-board-svg .db-treble.db-b,
+.dart-board-svg .db-double.db-b { fill: #e0413f; }
+
+.dart-board-svg .db-bull-outer {
+  fill: #1fb47e;
+  stroke: rgba(5, 7, 12, 0.85);
+  stroke-width: 0.8;
+  cursor: pointer;
+}
+
+.dart-board-svg .db-bull-inner {
+  fill: #e0413f;
+  stroke: rgba(5, 7, 12, 0.85);
+  stroke-width: 0.8;
+  cursor: pointer;
+}
+
+.dart-board-svg .db-bull-outer:hover,
+.dart-board-svg .db-bull-inner:hover {
+  filter: brightness(1.4);
+}
+
+.dart-board-svg .db-num {
+  fill: #f1f5f9;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.dart-board-hint {
+  margin: 0;
+  color: var(--dart-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+@media (max-width: 860px) {
+  .dart-online-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 860px) {
   .dart-page {
     padding: 16px;

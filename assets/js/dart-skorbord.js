@@ -21,6 +21,16 @@
 
   const cpuConfig = { RED: null, BLUE: null };
   let cpuTurnToken = 0;
+
+  // Kural durumu (createInitialState bunu okur, böylece yeni maçta korunur).
+  let ruleDoubleOut = true;
+
+  // Online (Supabase Realtime) durumu.
+  let online = null;
+  let onlineMode = false;
+  let localSlot = null;
+  let onlineNames = { RED: null, BLUE: null };
+  let boardController = null;
   const audioCue = (name) => {
     window.ConviviumAudio?.play?.(name);
   };
@@ -103,7 +113,16 @@
     overlay: document.getElementById('dartOverlay'),
     overlayTitle: document.getElementById('overlayTitle'),
     overlayText: document.getElementById('overlayText'),
-    overlayResetButton: document.getElementById('overlayResetButton')
+    overlayResetButton: document.getElementById('overlayResetButton'),
+    boardSvg: document.getElementById('dartBoardSvg'),
+    doubleOutToggle: document.getElementById('doubleOutToggle'),
+    onlineName: document.getElementById('onlineName'),
+    onlineCreate: document.getElementById('onlineCreate'),
+    onlineJoin: document.getElementById('onlineJoin'),
+    onlineCodeInput: document.getElementById('onlineCodeInput'),
+    onlineLeave: document.getElementById('onlineLeave'),
+    onlineStatus: document.getElementById('onlineStatus'),
+    onlineCode: document.getElementById('onlineCode')
   };
 
   let state = createInitialState();
@@ -132,7 +151,8 @@
       startedAt: Date.now(),
       isResolving: false,
       isComplete: false,
-      persistedMatchId: null
+      persistedMatchId: null,
+      rules: { doubleOut: ruleDoubleOut }
     };
   }
 
@@ -156,6 +176,7 @@
   }
 
   function displayName(slot) {
+    if (onlineMode && onlineNames[slot]) return onlineNames[slot];
     if (cpuConfig[slot]) return cpuConfig[slot].name;
     return slotAuth[slot].label || SLOT_NAMES[slot];
   }
@@ -293,6 +314,7 @@
       turn_number: state.currentTurnNumber,
       dart_number: state.currentSetDarts.length,
       dart_value: value,
+      segment: options.segment || null,
       turn_total: options.turnTotal,
       remaining_score: options.remainingScore,
       is_bust: Boolean(options.isBust),
@@ -313,9 +335,22 @@
     }
   }
 
-  function addDart(value) {
+  function addDart(value, meta) {
+    meta = meta || {};
     if (state.isResolving || state.isComplete || state.currentSetDarts.length >= 3) return;
+
+    // Online: yalniz siradaki yerel oyuncu giris yapabilir (uzak atislar meta.remote ile gelir).
+    if (onlineMode && !meta.remote && state.currentTurn !== localSlot) return;
+
     const numericValue = Math.max(0, Math.min(60, Number(value) || 0));
+    const isDouble = Boolean(meta.isDouble);
+    const segment = meta.segment || null;
+
+    // Online: yerel atisi rakibe yayinla (uzak atislar yeniden yayinlanmaz).
+    if (onlineMode && !meta.remote && online) {
+      online.sendDart({ value: numericValue, isDouble: isDouble, segment: segment });
+    }
+
     audioCue(numericValue >= 50 ? 'app.highScore' : 'app.score');
     const slot = state.currentTurn;
     const currentScore = state.scores[slot];
@@ -331,17 +366,31 @@
     const dartsInTurn = state.currentSetDarts.length;
     const rawTurnTotal = turnTotal();
 
-    if (nextScore < 0 || nextScore === 1) {
+    const doubleOut = state.rules.doubleOut;
+    let isBust = nextScore < 0;
+    if (!isBust) {
+      if (doubleOut) {
+        if (nextScore === 1 || (nextScore === 0 && !isDouble)) isBust = true;
+      } else if (nextScore === 1) {
+        isBust = true;
+      }
+    }
+
+    if (isBust) {
       state.scores[slot] = state.currentTurnStartScore;
       recordThrow(slot, numericValue, {
         turnTotal: 0,
         remainingScore: state.currentTurnStartScore,
         isBust: true,
-        isWinningThrow: false
+        isWinningThrow: false,
+        segment: segment
       });
       completeTurn(slot, 0, dartsInTurn, true);
       audioCue('game.bust');
-      resolveTurn('Bust', 'Skor 1 veya altina dusmez. Sira rakibe geciyor.', true);
+      const bustMsg = (doubleOut && nextScore === 0 && !isDouble)
+        ? 'Double ile bitirmelisiniz. Sira rakibe geciyor.'
+        : 'Skor gecersiz oldu. Sira rakibe geciyor.';
+      resolveTurn('Bust', bustMsg, true);
       return;
     }
 
@@ -350,7 +399,8 @@
       turnTotal: rawTurnTotal,
       remainingScore: nextScore,
       isBust: false,
-      isWinningThrow: nextScore === 0
+      isWinningThrow: nextScore === 0,
+      segment: segment
     });
 
     if (nextScore === 0) {
@@ -403,6 +453,7 @@
   }
 
   function undoLastAction() {
+    if (onlineMode) return;
     if (!state.history.length || state.isResolving || state.isComplete || state.persistedMatchId) return;
     audioCue('app.undo');
     const previous = state.history.pop();
@@ -424,14 +475,21 @@
     updateSyncStatus();
   }
 
-  function startNewMatch() {
+  function startNewMatch(opts) {
+    opts = opts || {};
     audioCue('app.reset');
-    ['RED', 'BLUE'].forEach((slot) => { if (cpuConfig[slot]) clearCpu(slot); });
+    if (!onlineMode) {
+      ['RED', 'BLUE'].forEach((slot) => { if (cpuConfig[slot]) clearCpu(slot); });
+    }
     state = createInitialState();
     hideOverlay();
     render();
     updateSyncStatus();
     els.keyboardInput.focus();
+    // Online: yeni maci rakibe bildir (uzak istek tekrar yayinlanmaz).
+    if (onlineMode && !opts.remote && online) {
+      online.sendAction('new-match', {});
+    }
   }
 
   function showOverlay(title, text, showReset) {
@@ -475,6 +533,10 @@
   }
 
   async function persistCompletedMatch(winnerSlot) {
+    if (onlineMode) {
+      updateSyncStatus('Online mac tamamlandi. (Online maclar su an kaydedilmiyor.)');
+      return;
+    }
     if (!backend || !backend.isConfigured()) {
       updateSyncStatus('Mac misafir modunda bitti. Supabase baglantisi olmadigi icin kayit yapilmadi.');
       return;
@@ -677,21 +739,31 @@
 
   function renderControls() {
     const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
-    const disabled = state.isResolving || state.isComplete || isCpuTurn;
+    const onlineNotMyTurn = onlineMode && state.currentTurn !== localSlot;
+    const disabled = state.isResolving || state.isComplete || isCpuTurn || onlineNotMyTurn;
     const anyCpu = Boolean(cpuConfig.RED || cpuConfig.BLUE);
-    els.undoButton.disabled = disabled || !state.history.length || Boolean(state.persistedMatchId) || anyCpu;
+    els.undoButton.disabled = disabled || !state.history.length || Boolean(state.persistedMatchId) || anyCpu || onlineMode;
     els.keyboardInput.disabled = disabled;
     els.manualForm.querySelector('button').disabled = disabled;
     document.querySelectorAll('.dart-keypad button').forEach((button) => {
       button.disabled = disabled;
     });
+    if (boardController) boardController.setEnabled(!disabled);
   }
 
   function render() {
     const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
-    els.turnIndicator.textContent = isCpuTurn
-      ? `${displayName(state.currentTurn)} düşünüyor...`
-      : `Siradaki: ${displayName(state.currentTurn)}`;
+    if (onlineMode) {
+      els.turnIndicator.textContent = state.isComplete
+        ? `${displayName(state.currentTurn)} kazandi`
+        : (state.currentTurn === localSlot
+            ? 'Sira sende'
+            : `Rakip oynuyor: ${displayName(state.currentTurn)}`);
+    } else {
+      els.turnIndicator.textContent = isCpuTurn
+        ? `${displayName(state.currentTurn)} düşünüyor...`
+        : `Siradaki: ${displayName(state.currentTurn)}`;
+    }
     els.scoreRED.textContent = state.scores.RED;
     els.scoreBLUE.textContent = state.scores.BLUE;
     els.labelRED.textContent = displayName('RED');
@@ -777,15 +849,192 @@
       return;
     }
 
-    addDart(Number(button.dataset.score));
+    addDart(Number(button.dataset.score), {
+      isDouble: button.dataset.double === '1',
+      segment: button.dataset.segment || null
+    });
   });
 
   document.querySelector('.dart-auth-grid').addEventListener('click', (event) => {
     const btn = event.target.closest('.dart-cpu-btn');
     if (!btn) return;
+    if (onlineMode) return; // online sirasinda CPU secilemez
     selectCpu(btn.dataset.slot, btn.dataset.cpuId);
   });
 
+  // --- Gorsel dart tahtasi ---
+  function initBoard() {
+    if (els.boardSvg && window.ConviviumDartBoard) {
+      boardController = window.ConviviumDartBoard.create(els.boardSvg, (dart) => {
+        addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment });
+      });
+    }
+  }
+
+  // --- Double-out kural toggle ---
+  if (els.doubleOutToggle) {
+    els.doubleOutToggle.checked = ruleDoubleOut;
+    els.doubleOutToggle.addEventListener('change', () => {
+      if (onlineMode) { els.doubleOutToggle.checked = ruleDoubleOut; return; }
+      ruleDoubleOut = els.doubleOutToggle.checked;
+      startNewMatch(); // kural degisikligi yeni mac gerektirir
+    });
+  }
+
+  // --- Online (Supabase Realtime) ---
+  function localDisplayName(fallback) {
+    if (els.onlineName && els.onlineName.value.trim()) return els.onlineName.value.trim();
+    const user = slotAuth.RED.user || slotAuth.BLUE.user;
+    if (user) return userLabel(user, fallback);
+    return fallback;
+  }
+
+  function onlineSnapshot() {
+    const snap = clone(state);
+    snap.history = [];
+    return { state: snap, doubleOut: ruleDoubleOut, names: onlineNames };
+  }
+
+  function applyRemoteState(payload) {
+    if (!payload || !payload.state) return;
+    state = payload.state;
+    state.history = [];
+    if (typeof payload.doubleOut === 'boolean') ruleDoubleOut = payload.doubleOut;
+    if (payload.names) {
+      onlineNames[localSlot] = onlineNames[localSlot] || payload.names[localSlot];
+      const opp = localSlot === 'RED' ? 'BLUE' : 'RED';
+      onlineNames[opp] = payload.names[opp] || onlineNames[opp];
+    }
+    if (els.doubleOutToggle) els.doubleOutToggle.checked = ruleDoubleOut;
+    hideOverlay();
+    render();
+  }
+
+  function enterOnlineFresh(mySlot) {
+    ['RED', 'BLUE'].forEach((slot) => { if (cpuConfig[slot]) clearCpu(slot); });
+    onlineMode = true;
+    localSlot = mySlot;
+    onlineNames[mySlot] = localDisplayName(mySlot === 'RED' ? 'Ev sahibi' : 'Misafir');
+    ruleDoubleOut = els.doubleOutToggle ? els.doubleOutToggle.checked : ruleDoubleOut;
+    state = createInitialState();
+    hideOverlay();
+  }
+
+  function exitOnline() {
+    onlineMode = false;
+    localSlot = null;
+    onlineNames = { RED: null, BLUE: null };
+    state = createInitialState();
+    hideOverlay();
+    updateOnlineUi();
+    render();
+    updateSyncStatus();
+  }
+
+  function updateOnlineUi() {
+    const supported = Boolean(backend && backend.isConfigured() && window.ConviviumDartOnline);
+    if (els.onlineCreate) els.onlineCreate.disabled = !supported || onlineMode;
+    if (els.onlineJoin) els.onlineJoin.disabled = !supported || onlineMode;
+    if (els.onlineCodeInput) els.onlineCodeInput.disabled = !supported || onlineMode;
+    if (els.onlineName) els.onlineName.disabled = onlineMode;
+    if (els.onlineLeave) els.onlineLeave.hidden = !onlineMode;
+    if (els.onlineCode) els.onlineCode.hidden = !(onlineMode && online && online.isHost());
+  }
+
+  function handleOnlineState(info) {
+    if (!els.onlineStatus) return;
+    switch (info.status) {
+      case 'connecting':
+        els.onlineStatus.textContent = 'Baglaniyor...';
+        break;
+      case 'waiting':
+        enterOnlineFresh('RED');
+        els.onlineStatus.textContent = 'Oda kodu: ' + info.code + ' — rakip bekleniyor.';
+        if (els.onlineCode) els.onlineCode.textContent = info.code;
+        break;
+      case 'joined':
+        enterOnlineFresh('BLUE');
+        els.onlineStatus.textContent = 'Odaya katildiniz. Rakip senkronu bekleniyor...';
+        break;
+      case 'ready':
+        els.onlineStatus.textContent = 'Rakip baglandi. Iyi oyunlar!';
+        if (online && online.isHost()) {
+          state = createInitialState();
+          online.sendAction('sync', onlineSnapshot());
+        }
+        break;
+      case 'opponent-left':
+        els.onlineStatus.textContent = 'Rakip ayrildi. Yeniden baglanmasini bekleyin.';
+        break;
+      case 'closed':
+        exitOnline();
+        els.onlineStatus.textContent = 'Online oturum kapatildi.';
+        return;
+      case 'error':
+        els.onlineStatus.textContent = info.message || 'Online baglanti hatasi.';
+        break;
+    }
+    updateOnlineUi();
+    render();
+  }
+
+  function handleOnlinePresence(info) {
+    if (!onlineMode) return;
+    if (info.opponentName && info.opponentSlot) {
+      onlineNames[info.opponentSlot] = info.opponentName;
+    }
+    render();
+  }
+
+  function handleOnlineAction(action) {
+    if (!action || !action.type) return;
+    if (action.type === 'request-sync-source') {
+      if (online && online.isHost()) online.sendAction('sync', onlineSnapshot());
+    } else if (action.type === 'sync') {
+      applyRemoteState(action.payload);
+    } else if (action.type === 'new-match') {
+      startNewMatch({ remote: true });
+    }
+  }
+
+  function setupOnline() {
+    if (!backend || !backend.isConfigured() || !window.ConviviumDartOnline) {
+      if (els.onlineStatus) els.onlineStatus.textContent = 'Online icin Supabase yapilandirmasi gerekli.';
+      updateOnlineUi();
+      return;
+    }
+    online = window.ConviviumDartOnline.create({
+      getClient: () => backend.getClient(),
+      onState: handleOnlineState,
+      onRemoteDart: (dart) => addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment, remote: true }),
+      onRemoteAction: handleOnlineAction,
+      onPresence: handleOnlinePresence
+    });
+    updateOnlineUi();
+  }
+
+  if (els.onlineCreate) {
+    els.onlineCreate.addEventListener('click', () => {
+      if (online) online.host(localDisplayName('Ev sahibi'));
+    });
+  }
+  if (els.onlineJoin) {
+    els.onlineJoin.addEventListener('click', () => {
+      if (!online) return;
+      const code = ((els.onlineCodeInput && els.onlineCodeInput.value) || '').trim().toUpperCase();
+      if (!code) {
+        if (els.onlineStatus) els.onlineStatus.textContent = 'Oda kodu girin.';
+        return;
+      }
+      online.join(code, localDisplayName('Misafir'));
+    });
+  }
+  if (els.onlineLeave) {
+    els.onlineLeave.addEventListener('click', () => { if (online) online.leave(); });
+  }
+
+  initBoard();
+  setupOnline();
   render();
   initAuth();
 })();

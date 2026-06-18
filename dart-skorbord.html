@@ -35,7 +35,28 @@
         <strong id="turnIndicator">Siradaki: Kirmizi Oyuncu</strong>
         <span id="syncStatus">Misafir modu aktif. Iki oyuncu giris yaparsa mac istatistikleri kaydedilir.</span>
       </div>
-      <button id="newMatchButton" type="button">Yeni Mac</button>
+      <div class="dart-status-actions">
+        <label class="dart-rule-toggle" title="Bitis icin son ok double olmali">
+          <input type="checkbox" id="doubleOutToggle" checked>
+          <span>Double-out</span>
+        </label>
+        <button id="newMatchButton" type="button">Yeni Mac</button>
+      </div>
+    </section>
+
+    <section class="dart-online" aria-label="Online oyun">
+      <div class="dart-online-head">
+        <strong>Online Oyun</strong>
+        <span id="onlineStatus">Oda kurun ya da bir kod ile katilin. Misafir olarak da oynanabilir.</span>
+      </div>
+      <div class="dart-online-controls">
+        <input id="onlineName" type="text" maxlength="24" placeholder="Goruntu adin (opsiyonel)" autocomplete="off">
+        <button id="onlineCreate" type="button">Oda Kur</button>
+        <input id="onlineCodeInput" type="text" maxlength="5" placeholder="ODA KODU" autocomplete="off">
+        <button id="onlineJoin" type="button">Katil</button>
+        <button id="onlineLeave" type="button" hidden>Ayril</button>
+      </div>
+      <p class="dart-online-code">Oda kodu: <strong id="onlineCode" hidden></strong></p>
     </section>
 
     <section class="dart-auth-grid" aria-label="Oyuncu girisleri">
@@ -130,20 +151,25 @@
       <button id="undoButton" type="button">Geri Al</button>
     </section>
 
+    <section class="dart-board-wrap" aria-label="Gorsel dart tahtasi">
+      <svg id="dartBoardSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <p class="dart-board-hint">Tahtadan segmente dokun: tek / triple / double otomatik hesaplanir. Klasik tus takimi ve manuel giris asagida korunur.</p>
+    </section>
+
     <section class="dart-controls" aria-label="Skor girisi">
       <form id="manualScoreForm" class="dart-manual-form">
         <input id="keyboardInput" type="number" inputmode="numeric" min="0" placeholder="Ok skoru (0-60)">
         <button type="submit">Onayla</button>
       </form>
       <div class="dart-keypad">
-        <button type="button" data-score="0">MISS</button>
+        <button type="button" data-score="0" data-segment="MISS">MISS</button>
         <button type="button" data-multiplier="2">2×</button>
         <button type="button" data-multiplier="3">3×</button>
-        <button type="button" data-score="20">20</button>
-        <button type="button" data-score="25">BULL</button>
-        <button type="button" data-score="40">D20</button>
-        <button type="button" data-score="50">D-BULL</button>
-        <button type="button" data-score="60">T20</button>
+        <button type="button" data-score="20" data-segment="S20">20</button>
+        <button type="button" data-score="25" data-segment="OUTER_BULL">BULL</button>
+        <button type="button" data-score="40" data-segment="D20" data-double="1">D20</button>
+        <button type="button" data-score="50" data-segment="BULL" data-double="1">D-BULL</button>
+        <button type="button" data-score="60" data-segment="T20">T20</button>
       </div>
     </section>
   </main>
@@ -159,7 +185,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=23" defer></script>
-  <script src="/assets/js/dart-skorbord.js?v=3" defer></script>
+  <script src="/assets/js/dart-board-svg.js?v=1" defer></script>
+  <script src="/assets/js/dart-online.js?v=1" defer></script>
+  <script src="/assets/js/dart-skorbord.js?v=4" defer></script>
   <script src="/assets/js/sfx.js?v=14" defer></script>
 </body>
 </html>
