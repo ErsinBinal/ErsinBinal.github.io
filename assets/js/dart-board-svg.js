@@ -181,18 +181,33 @@
   }
 
   // Etkilesimsiz sicaklik haritasi: counts = { segmentKodu: adet }.
+  // Stiller inline verilir; boylece sayfanin CSS'ine bagimli degildir (dashboard'da
+  // dart-skorbord.css yuklu olmasa da dogru gorunur).
   function heatmap(svg, counts) {
     if (!svg) return;
     buildBoard(svg);
-    svg.classList.add('is-heatmap');
+    svg.setAttribute('class', 'dart-heat-svg');
     var data = counts || {};
     var values = Object.keys(data).map(function (k) { return data[k]; });
     var max = values.length ? Math.max.apply(null, values) : 0;
+
+    var frame = svg.querySelector('.db-frame');
+    if (frame) {
+      frame.style.fill = '#05070c';
+      frame.style.stroke = 'rgba(148, 163, 184, 0.28)';
+      frame.style.strokeWidth = '2';
+    }
+    svg.querySelectorAll('.db-num').forEach(function (n) {
+      n.style.fill = '#e2e8f0';
+      n.style.fontWeight = '800';
+    });
 
     svg.querySelectorAll('[data-segment]').forEach(function (node) {
       var seg = node.dataset.segment;
       var count = data[seg] || 0;
       node.style.fill = heatColor(max ? count / max : 0, count);
+      node.style.stroke = 'rgba(5, 7, 12, 0.65)';
+      node.style.strokeWidth = '0.6';
       node.removeAttribute('tabindex');
       node.removeAttribute('role');
       var title = document.createElementNS(SVG_NS, 'title');

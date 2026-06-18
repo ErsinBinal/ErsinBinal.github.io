@@ -264,6 +264,12 @@
     return { counts, miss, totalDarts, hasData: Object.keys(counts).length > 0 };
   }
 
+  function segmentLabel(code) {
+    if (code === 'OUTER_BULL') return '25';
+    if (code === 'BULL') return 'Bull';
+    return code;
+  }
+
   function dartHeatmapSection(list) {
     const data = dartHeatmapData(list);
     if (!data.hasData) {
@@ -273,11 +279,18 @@
           <p class="dashboard-empty">Segment verisi henüz yok. Tahta/keypad ile oynanan yeni maçlar kaydedildikçe dolar.</p>
         </div>`;
     }
+    const top = Object.keys(data.counts)
+      .map((k) => [k, data.counts[k]])
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([code, n]) => `<span class="dart-heat-chip">${escapeHtml(segmentLabel(code))} <strong>×${n}</strong></span>`)
+      .join('');
     return `
       <div class="dart-heat">
-        <div class="dart-heat-head"><span>Isabet Isı Haritası</span><span class="dart-heat-hint">Segmente gelince adet</span></div>
+        <div class="dart-heat-head"><span>Isabet Isı Haritası</span><span class="dart-heat-hint">Segmente gelince adet · ${data.totalDarts} ok</span></div>
         <svg class="dart-heat-svg" data-heat="1" xmlns="http://www.w3.org/2000/svg"></svg>
         <div class="dart-heat-legend"><span>AZ</span><i class="dart-heat-bar"></i><span>ÇOK</span>${data.miss ? ` · <span class="dart-heat-miss">Iska: ${data.miss}</span>` : ''}</div>
+        <div class="dart-heat-top">${top}</div>
       </div>`;
   }
 
