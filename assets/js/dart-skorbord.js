@@ -545,6 +545,12 @@
     const players = {};
 
     ['RED', 'BLUE'].forEach((slot) => {
+      const segments = {};
+      state.throwRecords.forEach((r) => {
+        if (r.player_slot === slot && r.segment) {
+          segments[r.segment] = (segments[r.segment] || 0) + 1;
+        }
+      });
       players[slot] = {
         label: displayName(slot),
         average: Number(statAverage(slot)),
@@ -553,7 +559,8 @@
         turnsCount: state.stats[slot].turnsCount,
         highestTurn: state.stats[slot].highestTurn,
         oneEighties: state.stats[slot].oneEighties,
-        busts: state.stats[slot].busts
+        busts: state.stats[slot].busts,
+        segments: segments
       };
     });
 
@@ -664,7 +671,8 @@
           darts: snap.darts ? (snap.darts[slot] || 0) : 0,
           hits: snap.hits ? (snap.hits[slot] || 0) : 0,
           completed: pointer >= total,
-          targetsLeft: Math.max(0, total - pointer)
+          targetsLeft: Math.max(0, total - pointer),
+          segments: snap.segments ? (snap.segments[slot] || {}) : {}
         };
       });
     } else {
@@ -676,7 +684,8 @@
           label: displayName(slot),
           points: snap.scores ? (snap.scores[slot] || 0) : 0,
           closed: closed,
-          darts: snap.darts ? (snap.darts[slot] || 0) : 0
+          darts: snap.darts ? (snap.darts[slot] || 0) : 0,
+          segments: snap.segments ? (snap.segments[slot] || {}) : {}
         };
       });
     }

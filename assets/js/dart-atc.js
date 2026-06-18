@@ -39,6 +39,7 @@
         pointers: { RED: 0, BLUE: 0 },
         hits: { RED: 0, BLUE: 0 },
         darts: { RED: 0, BLUE: 0 },
+        segments: { RED: {}, BLUE: {} },
         currentTurn: 'RED',
         dartsThisTurn: 0,
         turnMarks: [],
@@ -85,6 +86,7 @@
 
       state.dartsThisTurn += 1;
       state.darts[slot] += 1;
+      if (payload.segment) state.segments[slot][payload.segment] = (state.segments[slot][payload.segment] || 0) + 1;
 
       if (hit) {
         state.turnMarks.push('hit');

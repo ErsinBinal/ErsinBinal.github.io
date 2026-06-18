@@ -244,6 +244,39 @@
       </div>`;
   }
 
+  function dartHeatmapData(list) {
+    const counts = {};
+    let miss = 0;
+    let totalDarts = 0;
+    list.forEach((m) => {
+      const segs = (m.own && m.own.segments) || {};
+      Object.keys(segs).forEach((s) => {
+        const c = Number(segs[s]) || 0;
+        totalDarts += c;
+        if (s === 'MISS') { miss += c; return; }
+        counts[s] = (counts[s] || 0) + c;
+      });
+    });
+    return { counts, miss, totalDarts, hasData: Object.keys(counts).length > 0 };
+  }
+
+  function dartHeatmapSection(list) {
+    const data = dartHeatmapData(list);
+    if (!data.hasData) {
+      return `
+        <div class="dart-heat">
+          <div class="dart-heat-head"><span>Isabet Isı Haritası</span></div>
+          <p class="dashboard-empty">Segment verisi henüz yok. Tahta/keypad ile oynanan yeni maçlar kaydedildikçe dolar.</p>
+        </div>`;
+    }
+    return `
+      <div class="dart-heat">
+        <div class="dart-heat-head"><span>Isabet Isı Haritası</span><span class="dart-heat-hint">Segmente gelince adet</span></div>
+        <svg class="dart-heat-svg" data-heat="1" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="dart-heat-legend"><span>AZ</span><i class="dart-heat-bar"></i><span>ÇOK</span>${data.miss ? ` · <span class="dart-heat-miss">Iska: ${data.miss}</span>` : ''}</div>
+      </div>`;
+  }
+
   function dartMatchBadges(m) {
     if (m.mode === 'atc') {
       return [`${m.own.darts} ok`, m.own.completed ? 'Bitirdi' : `${m.own.targetsLeft} hedef kaldi`];
@@ -317,7 +350,12 @@
     }).join('');
 
     const emptyNote = list.length ? '' : '<p class="dashboard-empty">Bu filtrede mac bulunamadi.</p>';
-    dartStatsEl.innerHTML = controls + kpiGrid + dartSparkline(list) + (recent || emptyNote);
+    dartStatsEl.innerHTML = controls + kpiGrid + dartSparkline(list) + dartHeatmapSection(list) + (recent || emptyNote);
+
+    const heatSvg = dartStatsEl.querySelector('.dart-heat-svg[data-heat]');
+    if (heatSvg && window.ConviviumDartBoard && window.ConviviumDartBoard.heatmap) {
+      window.ConviviumDartBoard.heatmap(heatSvg, dartHeatmapData(list).counts);
+    }
 
     dartStatsEl.querySelectorAll('.dart-filter').forEach((group) => {
       group.addEventListener('click', (event) => {

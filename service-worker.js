@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v103';
+const CACHE_NAME = 'convivium-v104';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -24,7 +24,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/common.css',
   '/assets/css/animations.css',
   '/assets/css/components.css?v=31',
-  '/assets/css/dart-dashboard.css?v=2',
+  '/assets/css/dart-dashboard.css?v=3',
   '/assets/css/articles.css?v=3',
   '/assets/css/dart-skorbord.css?v=3',
   '/assets/css/arcade-kit.css?v=36',
@@ -66,17 +66,17 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=25',
+  '/assets/js/supabase-client.js?v=26',
   '/assets/js/articles.js?v=3',
   '/assets/js/auth-gate.js?v=21',
-  '/assets/js/dart-board-svg.js?v=1',
+  '/assets/js/dart-board-svg.js?v=2',
   '/assets/js/dart-online.js?v=1',
-  '/assets/js/dart-atc.js?v=3',
-  '/assets/js/dart-cricket.js?v=2',
-  '/assets/js/dart-skorbord.js?v=7',
+  '/assets/js/dart-atc.js?v=4',
+  '/assets/js/dart-cricket.js?v=3',
+  '/assets/js/dart-skorbord.js?v=8',
   '/assets/js/auth.js',
   '/assets/js/admin.js?v=37',
-  '/assets/js/dashboard.js?v=25',
+  '/assets/js/dashboard.js?v=26',
   '/manifest.json'
 ];
 

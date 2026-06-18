@@ -469,6 +469,7 @@
       match_id: throwRow.match_id,
       user_id: throwRow.user_id,
       player_slot: throwRow.player_slot === 'BLUE' ? 'BLUE' : 'RED',
+      segment: throwRow.segment || null,
       turn_number: Math.max(1, Number(throwRow.turn_number) || 1),
       dart_number: Math.max(1, Math.min(3, Number(throwRow.dart_number) || 1)),
       dart_value: Math.max(0, Math.min(60, Number(throwRow.dart_value) || 0)),
@@ -608,7 +609,8 @@
           completed: Boolean(own.completed),
           targetsLeft: Number(own.targetsLeft || 0),
           points: Number(own.points || 0),
-          closed: Number(own.closed || 0)
+          closed: Number(own.closed || 0),
+          segments: (own.segments && typeof own.segments === 'object') ? own.segments : {}
         },
         opponent: {
           label: opponent.label || match.opponent_label || (opponentSlot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),

@@ -172,5 +172,34 @@
     };
   }
 
-  window.ConviviumDartBoard = { create: create, SECTOR_ORDER: SECTOR_ORDER };
+  function heatColor(ratio, count) {
+    if (!count) return '#0b1220'; // veri yok
+    var t = Math.max(0, Math.min(1, ratio));
+    var hue = 210 - 210 * t;          // mavi (dusuk) -> kirmizi (yuksek)
+    var light = 30 + 26 * t;
+    return 'hsl(' + hue.toFixed(0) + ', 78%, ' + light.toFixed(0) + '%)';
+  }
+
+  // Etkilesimsiz sicaklik haritasi: counts = { segmentKodu: adet }.
+  function heatmap(svg, counts) {
+    if (!svg) return;
+    buildBoard(svg);
+    svg.classList.add('is-heatmap');
+    var data = counts || {};
+    var values = Object.keys(data).map(function (k) { return data[k]; });
+    var max = values.length ? Math.max.apply(null, values) : 0;
+
+    svg.querySelectorAll('[data-segment]').forEach(function (node) {
+      var seg = node.dataset.segment;
+      var count = data[seg] || 0;
+      node.style.fill = heatColor(max ? count / max : 0, count);
+      node.removeAttribute('tabindex');
+      node.removeAttribute('role');
+      var title = document.createElementNS(SVG_NS, 'title');
+      title.textContent = (node.dataset.label || seg) + ': ' + count;
+      node.appendChild(title);
+    });
+  }
+
+  window.ConviviumDartBoard = { create: create, heatmap: heatmap, SECTOR_ORDER: SECTOR_ORDER };
 })();

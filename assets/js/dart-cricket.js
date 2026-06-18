@@ -44,6 +44,7 @@
         marks: marks,
         scores: { RED: 0, BLUE: 0 },
         darts: { RED: 0, BLUE: 0 },
+        segments: { RED: {}, BLUE: {} },
         currentTurn: 'RED',
         dartsThisTurn: 0,
         turnLog: [],
@@ -112,6 +113,7 @@
       var slot = state.currentTurn;
       state.dartsThisTurn += 1;
       state.darts[slot] += 1;
+      if (payload.segment) state.segments[slot][payload.segment] = (state.segments[slot][payload.segment] || 0) + 1;
       var parsed = parseSegment(payload.segment);
       if (parsed) {
         applyMarks(slot, parsed.number, parsed.marks);
