@@ -185,3 +185,59 @@
   border: 1px solid rgba(0, 255, 0, 0.25);
   vertical-align: middle;
 }
+
+/* Leaderboard tablosu */
+.dart-lb-myrank {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+
+.dart-lb-myrank strong { color: #4ade80; }
+
+.dart-lb {
+  display: grid;
+  gap: 4px;
+}
+
+.dart-lb-row {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 48px 56px 56px 60px;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border: 1px solid rgba(0, 255, 0, 0.12);
+  border-radius: 8px;
+  font-size: 0.86rem;
+}
+
+.dart-lb-row span:not(.dart-lb-name):not(.dart-lb-rank) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dart-lb-head {
+  border: 0;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+}
+
+.dart-lb-rank {
+  font-weight: 900;
+  font-family: ui-monospace, Consolas, monospace;
+}
+
+.dart-lb-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+}
+
+.dart-lb-row.is-me {
+  border-color: rgba(74, 222, 128, 0.6);
+  background: rgba(74, 222, 128, 0.1);
+}
+
+.dart-lb-row.is-me .dart-lb-rank { color: #4ade80; }

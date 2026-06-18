@@ -634,6 +634,17 @@
     };
   }
 
+  async function fetchDartLeaderboard(mode = 'all', limit = 200) {
+    const client = await requireClient();
+    const m = ['all', 'x01', 'atc', 'cricket'].includes(mode) ? mode : 'all';
+    const { data, error } = await client.rpc('dart_leaderboard', {
+      p_mode: m,
+      p_limit: Math.max(1, Number(limit) || 200)
+    });
+    if (error) throw new Error(toMessage(error));
+    return data || [];
+  }
+
   function validateArticlePayload(payload) {
     if (!payload.title) throw new Error('Baslik gerekli.');
     if (!payload.slug) throw new Error('Gecerli bir slug gerekli.');
@@ -670,6 +681,7 @@
     createDartMatchWithClient,
     saveDartThrowsWithClient,
     fetchUserDartStats,
+    fetchDartLeaderboard,
     fetchOracleProfile,
     upsertOracleProfile,
     updateRecommendationOutcome,

@@ -8,6 +8,7 @@
   const recommendationsEl = document.getElementById('dashboardRecommendations');
   const sessionsEl = document.getElementById('dashboardSessions');
   const dartStatsEl = document.getElementById('dashboardDartStats');
+  const leaderboardEl = document.getElementById('dashboardDartLeaderboard');
   const signOutButton = document.getElementById('dashboardSignOut');
 
   const gameNames = {
@@ -24,6 +25,9 @@
 
   function friendlyError(error) {
     const message = error?.message || String(error || '');
+    if (/dart_leaderboard/i.test(message)) {
+      return "Siralama fonksiyonu eksik. docs/database/2026-06-18-dart-leaderboard.sql dosyasini SQL Editor'de calistirin.";
+    }
     if (/column .*mode.* does not exist|dart_matches\.mode/i.test(message)) {
       return "Dart mod kolonu eksik. docs/database/2026-06-18-dart-modes.sql dosyasini SQL Editor'de calistirin.";
     }
@@ -367,6 +371,79 @@
     });
   }
 
+  const DART_LB_MODES = [['all', 'Tümü'], ['x01', '501'], ['atc', 'ATC'], ['cricket', 'Cricket']];
+  let dartLb = { mode: 'all', rows: [], userId: null, loading: false };
+
+  function wireLbFilter() {
+    const group = leaderboardEl.querySelector('[data-lb-filter="mode"]');
+    if (!group) return;
+    group.addEventListener('click', (event) => {
+      const btn = event.target.closest('button[data-value]');
+      if (!btn || btn.dataset.value === dartLb.mode) return;
+      dartLb.mode = btn.dataset.value;
+      loadDartLeaderboard();
+    });
+  }
+
+  function renderLeaderboard() {
+    if (!leaderboardEl) return;
+    const controls = `
+      <div class="dart-dash-controls">
+        <div class="dart-filter" data-lb-filter="mode">
+          ${DART_LB_MODES.map(([v, l]) => `<button type="button" class="${dartLb.mode === v ? 'is-active' : ''}" data-value="${v}">${l}</button>`).join('')}
+        </div>
+      </div>`;
+
+    if (dartLb.loading) {
+      leaderboardEl.innerHTML = controls + '<p class="dashboard-empty">Yukleniyor...</p>';
+      wireLbFilter();
+      return;
+    }
+
+    const rows = dartLb.rows || [];
+    if (!rows.length) {
+      leaderboardEl.innerHTML = controls + '<p class="dashboard-empty">Bu modda siralama icin yeterli kayit yok.</p>';
+      wireLbFilter();
+      return;
+    }
+
+    const myIndex = rows.findIndex((r) => r.user_id === dartLb.userId);
+    const myRank = myIndex >= 0 ? `<p class="dart-lb-myrank">Senin siran: <strong>#${myIndex + 1}</strong> / ${rows.length}</p>` : '';
+
+    const table = `
+      <div class="dart-lb">
+        <div class="dart-lb-row dart-lb-head">
+          <span>#</span><span>Oyuncu</span><span>Maç</span><span>Gal%</span><span>3-Ort</span><span>En Yük.</span>
+        </div>
+        ${rows.slice(0, 20).map((r, i) => `
+          <div class="dart-lb-row${r.user_id === dartLb.userId ? ' is-me' : ''}">
+            <span class="dart-lb-rank">${i + 1}</span>
+            <span class="dart-lb-name">${escapeHtml(r.display_name || 'Oyuncu')}</span>
+            <span>${Number(r.matches) || 0}</span>
+            <span>${r.win_pct != null ? r.win_pct + '%' : '-'}</span>
+            <span>${r.avg_three_dart != null ? Number(r.avg_three_dart).toFixed(1) : '-'}</span>
+            <span>${Number(r.best_high) || 0}</span>
+          </div>`).join('')}
+      </div>`;
+
+    leaderboardEl.innerHTML = controls + myRank + table;
+    wireLbFilter();
+  }
+
+  async function loadDartLeaderboard() {
+    if (!leaderboardEl || !backend.fetchDartLeaderboard) return;
+    dartLb.loading = true;
+    renderLeaderboard();
+    try {
+      dartLb.rows = await backend.fetchDartLeaderboard(dartLb.mode, 200);
+      dartLb.loading = false;
+      renderLeaderboard();
+    } catch (error) {
+      dartLb.loading = false;
+      empty(leaderboardEl, friendlyError(error));
+    }
+  }
+
   async function init() {
     if (!backend || !backend.isConfigured()) {
       setStatus('Supabase baglantisi yapilandirilmadi.', 'error');
@@ -397,6 +474,9 @@
       renderDartStats(dartStats);
       renderSessions(sessions);
       setStatus('Hazir.', 'success');
+
+      dartLb.userId = session.user.id;
+      loadDartLeaderboard();
     } catch (error) {
       setStatus(friendlyError(error), 'error');
     }
