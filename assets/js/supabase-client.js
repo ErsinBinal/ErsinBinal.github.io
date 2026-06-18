@@ -628,7 +628,7 @@
     return {
       byMode,
       totalMatches: matches.filter((m) => m.status === 'completed').length,
-      recent: recent.slice(0, recentLimit)
+      matches: recent
     };
   }
 

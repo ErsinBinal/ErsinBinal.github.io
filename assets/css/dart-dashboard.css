@@ -1,75 +1,117 @@
-/* Dashboard'daki dart istatistik bolumu: mod-bazli kartlar + mac gecmisi. */
+/* Dashboard dart bolumu: filtreler + KPI + trend + mac gecmisi. */
 
-.dart-mode-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+.dart-dash-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
   margin-bottom: 14px;
 }
 
-.dart-mode-card {
+.dart-filter {
+  display: inline-flex;
+  border: 1px solid rgba(0, 255, 0, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dart-filter button {
+  border: 0;
+  border-right: 1px solid rgba(0, 255, 0, 0.16);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 7px 14px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.dart-filter button:last-child { border-right: 0; }
+.dart-filter button:hover { opacity: 1; }
+
+.dart-filter button.is-active {
+  background: rgba(0, 255, 0, 0.16);
+  color: #4ade80;
+  opacity: 1;
+}
+
+/* KPI kartlari */
+.dart-kpi-grid {
   display: grid;
-  gap: 8px;
-  padding: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.dart-kpi {
+  position: relative;
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
   border: 1px solid rgba(0, 255, 0, 0.18);
   border-radius: 10px;
   background: rgba(0, 20, 0, 0.25);
 }
 
-.dart-mode-card header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.dart-mode-card header strong {
-  font-size: 0.86rem;
-  opacity: 0.85;
-}
-
-.dart-mode-tag {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-}
-
-.dart-mode-x01 .dart-mode-tag { color: #4ade80; }
-.dart-mode-atc .dart-mode-tag { color: #38bdf8; }
-.dart-mode-cricket .dart-mode-tag { color: #f8c14a; }
-
-.dart-mode-wl {
-  margin: 0;
+.dart-kpi strong {
   font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   font-weight: 900;
+  line-height: 1;
 }
 
-.dart-mode-metrics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(0, 255, 0, 0.12);
+.dart-kpi span {
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
 }
 
-.dart-mode-metrics span {
-  display: grid;
-  gap: 2px;
-}
-
-.dart-mode-metrics strong {
-  font-size: 1.05rem;
-}
-
-.dart-mode-metrics em {
+.dart-delta {
+  position: absolute;
+  top: 10px;
+  right: 12px;
   font-style: normal;
   font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.dart-delta.up { color: #4ade80; }
+.dart-delta.down { color: #ef4444; }
+
+/* Trend (sparkline) */
+.dart-trend {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(0, 255, 0, 0.18);
+  border-radius: 10px;
+  background: rgba(0, 20, 0, 0.25);
+}
+
+.dart-trend-head,
+.dart-trend-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
   opacity: 0.65;
+}
+
+.dart-trend-head { margin-bottom: 6px; }
+.dart-trend-foot { margin-top: 4px; letter-spacing: 0.08em; }
+
+.dart-spark {
+  display: block;
+  width: 100%;
+  height: 46px;
+}
+
+.dart-spark polyline {
+  fill: none;
+  stroke: #4ade80;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
 /* Mac gecmisi satirlari */

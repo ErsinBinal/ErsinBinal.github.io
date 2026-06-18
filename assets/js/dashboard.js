@@ -145,29 +145,103 @@
 
   const DART_MODE_LABELS = { x01: '501', atc: 'Around the Clock', cricket: 'Cricket' };
 
-  function dartModeCard(mode, b) {
-    if (!b || !b.matches) return '';
-    const wlParts = [`${b.wins}G`, `${b.losses}M`];
-    if (mode === 'cricket' && b.draws) wlParts.push(`${b.draws}B`);
-    let extra;
-    if (mode === 'x01') {
-      extra = [['Ort.', Number(b.average || 0).toFixed(1)], ['En yuksek', b.highestTurn || 0], ['180', b.oneEighties || 0]];
-    } else if (mode === 'atc') {
-      extra = [['Ort. ok', b.avgDarts || 0], ['En hizli', b.bestDarts || '-']];
-    } else {
-      extra = [['Ort. puan', b.avgPoints || 0], ['En yuksek', b.bestPoints || 0]];
+  let dartState = { matches: [], mode: 'all', range: 'all' };
+
+  function dartFilterMatches() {
+    const now = Date.now();
+    const rangeMs = dartState.range === '7d' ? 7 * 864e5 : dartState.range === '30d' ? 30 * 864e5 : 0;
+    return dartState.matches.filter((m) => {
+      if (m.status !== 'completed') return false;
+      if (dartState.mode !== 'all' && m.mode !== dartState.mode) return false;
+      if (rangeMs && (now - new Date(m.created_at).getTime()) > rangeMs) return false;
+      return true;
+    });
+  }
+
+  function winPctOf(list) {
+    const w = list.filter((m) => m.won).length;
+    const l = list.filter((m) => !m.won && !m.draw).length;
+    return (w + l) ? Math.round((w / (w + l)) * 100) : 0;
+  }
+
+  function avgOf(list, pick) {
+    const vals = list.map(pick).filter((v) => v > 0);
+    if (!vals.length) return 0;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  }
+
+  function dartWinStreak(list) {
+    let streak = 0;
+    for (const m of list) { if (m.draw || !m.won) break; streak += 1; }
+    return streak;
+  }
+
+  function dartKpis(list) {
+    const total = list.length;
+    const wins = list.filter((m) => m.won).length;
+    const losses = list.filter((m) => !m.won && !m.draw).length;
+    const winPct = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0;
+    const half = Math.floor(total / 2);
+    const wpDelta = half ? (winPctOf(list.slice(0, half)) - winPctOf(list.slice(half))) : 0;
+
+    const cards = [
+      { label: 'Maç', value: total },
+      { label: 'Galibiyet %', value: winPct + '%', delta: wpDelta },
+      { label: 'Galibiyet Serisi', value: dartWinStreak(list) }
+    ];
+
+    const mode = dartState.mode;
+    if (mode === 'x01' || mode === 'all') {
+      const x01 = list.filter((m) => m.mode === 'x01');
+      if (x01.length) {
+        const h = Math.floor(x01.length / 2);
+        const avgDelta = h ? (avgOf(x01.slice(0, h), (m) => m.own.average) - avgOf(x01.slice(h), (m) => m.own.average)) : 0;
+        cards.push({ label: '3-Dart Ort. (501)', value: avgOf(x01, (m) => m.own.average).toFixed(1), delta: Number(avgDelta.toFixed(1)) });
+        cards.push({ label: 'En Yüksek Tur', value: Math.max(0, ...x01.map((m) => m.own.highestTurn || 0)) });
+        cards.push({ label: '180', value: x01.reduce((a, m) => a + (m.own.oneEighties || 0), 0) });
+      }
     }
+    if (mode === 'atc') {
+      const avgD = avgOf(list, (m) => m.own.darts);
+      cards.push({ label: 'Ort. Ok', value: avgD ? avgD.toFixed(1) : '-' });
+      const best = Math.min(Infinity, ...list.filter((m) => m.won && m.own.darts).map((m) => m.own.darts));
+      cards.push({ label: 'En Hızlı (ok)', value: isFinite(best) ? best : '-' });
+    }
+    if (mode === 'cricket') {
+      const avgP = avgOf(list, (m) => m.own.points);
+      cards.push({ label: 'Ort. Puan', value: avgP ? Math.round(avgP) : '-' });
+      cards.push({ label: 'En Yüksek Puan', value: Math.max(0, ...list.map((m) => m.own.points || 0)) });
+    }
+    return cards;
+  }
+
+  function dartArrow(delta) {
+    if (!delta || Math.abs(delta) < 0.05) return '';
+    const up = delta > 0;
+    return `<em class="dart-delta ${up ? 'up' : 'down'}">${up ? '▲' : '▼'} ${Math.abs(delta)}</em>`;
+  }
+
+  function dartSparkline(list) {
+    const x01 = list.filter((m) => m.mode === 'x01' && m.own.average > 0).slice().reverse();
+    if (x01.length < 2) return '';
+    const vals = x01.map((m) => m.own.average);
+    const max = Math.max(...vals);
+    const min = Math.min(...vals);
+    const W = 280;
+    const H = 46;
+    const pad = 3;
+    const span = max - min || 1;
+    const pts = vals.map((v, i) => {
+      const x = pad + (i / (vals.length - 1)) * (W - 2 * pad);
+      const y = H - pad - ((v - min) / span) * (H - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
     return `
-      <article class="dart-mode-card dart-mode-${mode}">
-        <header>
-          <span class="dart-mode-tag">${escapeHtml(DART_MODE_LABELS[mode])}</span>
-          <strong>${b.matches} mac</strong>
-        </header>
-        <p class="dart-mode-wl">${escapeHtml(wlParts.join(' / '))}</p>
-        <div class="dart-mode-metrics">
-          ${extra.map(([l, v]) => `<span><strong>${escapeHtml(v)}</strong><em>${escapeHtml(l)}</em></span>`).join('')}
-        </div>
-      </article>`;
+      <div class="dart-trend">
+        <div class="dart-trend-head"><span>3-Dart Ort. / Maç (501)</span><span>${min.toFixed(1)} – ${max.toFixed(1)}</span></div>
+        <svg viewBox="0 0 ${W} ${H}" class="dart-spark" preserveAspectRatio="none"><polyline points="${pts}"></polyline></svg>
+        <div class="dart-trend-foot"><span>ESKİ</span><span>YENİ</span></div>
+      </div>`;
   }
 
   function dartMatchBadges(m) {
@@ -201,8 +275,31 @@
       return;
     }
 
-    const cards = ['x01', 'atc', 'cricket'].map((mode) => dartModeCard(mode, stats.byMode[mode])).join('');
-    const recent = (stats.recent || []).slice(0, 10).map((match) => {
+    dartState.matches = stats.matches || [];
+    renderDartDash();
+  }
+
+  function renderDartDash() {
+    const list = dartFilterMatches();
+    const kpis = dartKpis(list);
+    const modeBtns = [['all', 'Tümü'], ['x01', '501'], ['atc', 'ATC'], ['cricket', 'Cricket']];
+    const rangeBtns = [['all', 'Tümü'], ['30d', '30 gün'], ['7d', '7 gün']];
+
+    const controls = `
+      <div class="dart-dash-controls">
+        <div class="dart-filter" data-filter="mode">
+          ${modeBtns.map(([v, l]) => `<button type="button" class="${dartState.mode === v ? 'is-active' : ''}" data-value="${v}">${l}</button>`).join('')}
+        </div>
+        <div class="dart-filter" data-filter="range">
+          ${rangeBtns.map(([v, l]) => `<button type="button" class="${dartState.range === v ? 'is-active' : ''}" data-value="${v}">${l}</button>`).join('')}
+        </div>
+      </div>`;
+
+    const kpiGrid = `<div class="dart-kpi-grid">
+      ${kpis.map((k) => `<div class="dart-kpi"><strong>${escapeHtml(k.value)}</strong><span>${escapeHtml(k.label)}</span>${k.delta !== undefined ? dartArrow(k.delta) : ''}</div>`).join('')}
+    </div>`;
+
+    const recent = list.slice(0, 12).map((match) => {
       const oppTag = match.opponentType === 'cpu' ? 'CPU' : match.opponentType === 'guest' ? 'Misafir' : null;
       const oppLabel = (oppTag ? `${oppTag} · ` : '') + escapeHtml(match.opponent.label);
       const result = match.draw ? '■ Berabere' : match.won ? '▲ Galibiyet' : '▼ Maglubiyet';
@@ -219,7 +316,17 @@
         </article>`;
     }).join('');
 
-    dartStatsEl.innerHTML = `<div class="dart-mode-cards">${cards}</div>${recent}`;
+    const emptyNote = list.length ? '' : '<p class="dashboard-empty">Bu filtrede mac bulunamadi.</p>';
+    dartStatsEl.innerHTML = controls + kpiGrid + dartSparkline(list) + (recent || emptyNote);
+
+    dartStatsEl.querySelectorAll('.dart-filter').forEach((group) => {
+      group.addEventListener('click', (event) => {
+        const btn = event.target.closest('button[data-value]');
+        if (!btn) return;
+        dartState[group.dataset.filter] = btn.dataset.value;
+        renderDartDash();
+      });
+    });
   }
 
   async function init() {
