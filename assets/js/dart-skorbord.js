@@ -31,6 +31,10 @@
   let localSlot = null;
   let onlineNames = { RED: null, BLUE: null };
   let boardController = null;
+
+  // Oyun modu: 'x01' (501) | 'atc' (Around the Clock).
+  let gameMode = 'x01';
+  let atc = null;
   const audioCue = (name) => {
     window.ConviviumAudio?.play?.(name);
   };
@@ -122,7 +126,22 @@
     onlineCodeInput: document.getElementById('onlineCodeInput'),
     onlineLeave: document.getElementById('onlineLeave'),
     onlineStatus: document.getElementById('onlineStatus'),
-    onlineCode: document.getElementById('onlineCode')
+    onlineCode: document.getElementById('onlineCode'),
+    doubleOutWrap: document.getElementById('doubleOutWrap'),
+    modeSelect: document.querySelector('.dart-mode-select'),
+    atcSection: document.getElementById('atcSection'),
+    boardSection: document.querySelector('.dart-board'),
+    turnPanel: document.querySelector('.dart-turn-panel'),
+    controlsSection: document.querySelector('.dart-controls'),
+    atcRED: document.getElementById('atcRED'),
+    atcBLUE: document.getElementById('atcBLUE'),
+    atcNameRED: document.getElementById('atcNameRED'),
+    atcNameBLUE: document.getElementById('atcNameBLUE'),
+    atcTargetRED: document.getElementById('atcTargetRED'),
+    atcTargetBLUE: document.getElementById('atcTargetBLUE'),
+    atcProgRED: document.getElementById('atcProgRED'),
+    atcProgBLUE: document.getElementById('atcProgBLUE'),
+    atcBadges: document.getElementById('atcBadges')
   };
 
   let state = createInitialState();
@@ -651,6 +670,7 @@
   }
 
   function playCpuDarts(slot, token) {
+    if (gameMode !== 'x01') return;
     if (token !== cpuTurnToken) return;
     if (state.currentTurn !== slot || state.isComplete || state.isResolving) return;
     if (state.currentSetDarts.length >= 3) return;
@@ -670,6 +690,7 @@
   }
 
   function scheduleCpuTurn() {
+    if (gameMode !== 'x01') return; // ATC kendi CPU'sunu yonetir
     const slot = state.currentTurn;
     if (!cpuConfig[slot] || state.isComplete) return;
     const token = ++cpuTurnToken;
@@ -699,6 +720,7 @@
     render();
     updateSyncStatus();
     scheduleCpuTurn();
+    if (gameMode === 'atc' && atc) atc.refresh();
   }
 
   function clearCpu(slot) {
@@ -712,6 +734,7 @@
     grid.querySelectorAll('.dart-cpu-btn').forEach((btn) => btn.classList.remove('is-active'));
     render();
     updateSyncStatus();
+    if (gameMode === 'atc' && atc) atc.refresh();
   }
 
   function renderBadges() {
@@ -752,6 +775,7 @@
   }
 
   function render() {
+    if (gameMode === 'atc') { if (atc) atc.render(); return; }
     const isCpuTurn = Boolean(cpuConfig[state.currentTurn]);
     if (onlineMode) {
       els.turnIndicator.textContent = state.isComplete
@@ -828,8 +852,12 @@
   els.blueForm.addEventListener('submit', handleSignIn);
   els.redSignOut.addEventListener('click', () => handleSignOut('RED'));
   els.blueSignOut.addEventListener('click', () => handleSignOut('BLUE'));
-  els.newMatchButton.addEventListener('click', startNewMatch);
-  els.overlayResetButton.addEventListener('click', startNewMatch);
+  function newMatchForMode() {
+    if (gameMode === 'atc' && atc) atc.newMatch();
+    else startNewMatch();
+  }
+  els.newMatchButton.addEventListener('click', newMatchForMode);
+  els.overlayResetButton.addEventListener('click', newMatchForMode);
   els.undoButton.addEventListener('click', undoLastAction);
   els.manualForm.addEventListener('submit', handleManualScore);
   els.keypad.addEventListener('click', (event) => {
@@ -862,11 +890,82 @@
     selectCpu(btn.dataset.slot, btn.dataset.cpuId);
   });
 
-  // --- Gorsel dart tahtasi ---
+  // --- Gorsel dart tahtasi (girdi aktif moda yonlendirilir) ---
+  function routeBoardInput(dart) {
+    if (gameMode === 'atc') {
+      if (atc) atc.applyDart(dart);
+    } else {
+      addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment });
+    }
+  }
+
   function initBoard() {
     if (els.boardSvg && window.ConviviumDartBoard) {
-      boardController = window.ConviviumDartBoard.create(els.boardSvg, (dart) => {
-        addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment });
+      boardController = window.ConviviumDartBoard.create(els.boardSvg, routeBoardInput);
+    }
+  }
+
+  // --- Mod yonetimi ---
+  function applyModeVisibility() {
+    const isAtc = gameMode === 'atc';
+    if (els.boardSection) els.boardSection.hidden = isAtc;
+    if (els.turnPanel) els.turnPanel.hidden = isAtc;
+    if (els.controlsSection) els.controlsSection.hidden = isAtc;
+    if (els.atcSection) els.atcSection.hidden = !isAtc;
+    if (els.doubleOutWrap) els.doubleOutWrap.style.display = isAtc ? 'none' : '';
+  }
+
+  function syncModeSelectorUI() {
+    if (!els.modeSelect) return;
+    els.modeSelect.querySelectorAll('.dart-mode-btn').forEach((btn) => {
+      btn.classList.toggle('is-active', btn.dataset.mode === gameMode);
+      btn.disabled = onlineMode; // online sirasinda mod degistirilemez
+    });
+  }
+
+  function setGameMode(mode, opts) {
+    opts = opts || {};
+    if (mode !== 'x01' && mode !== 'atc') return;
+    if (onlineMode && !opts.remote) { syncModeSelectorUI(); return; }
+    gameMode = mode;
+    applyModeVisibility();
+    if (mode === 'atc') {
+      if (atc) {
+        atc.setActive(true);
+        if (!opts.remote) atc.newMatch({ remote: true });
+      }
+    } else {
+      if (atc) atc.setActive(false);
+      if (!opts.remote) startNewMatch();
+      else { state = createInitialState(); render(); }
+    }
+    syncModeSelectorUI();
+    render();
+  }
+
+  function initModes() {
+    if (!window.ConviviumDartATC) return;
+    atc = window.ConviviumDartATC.create({
+      els: els,
+      audioCue: audioCue,
+      showOverlay: showOverlay,
+      hideOverlay: hideOverlay,
+      setBoardEnabled: (en) => { if (boardController) boardController.setEnabled(en); },
+      setTurnText: (text) => { els.turnIndicator.textContent = text; },
+      isOnline: () => onlineMode,
+      localSlot: () => localSlot,
+      sendDart: (payload) => { if (online) online.sendDart(payload); },
+      sendAction: (type, payload) => { if (online) online.sendAction(type, payload); },
+      cpuConfig: () => cpuConfig,
+      names: () => ({ RED: displayName('RED'), BLUE: displayName('BLUE') }),
+      onComplete: () => { /* ATC online maclari su an kaydedilmiyor */ }
+    });
+
+    if (els.modeSelect) {
+      els.modeSelect.addEventListener('click', (event) => {
+        const btn = event.target.closest('.dart-mode-btn');
+        if (!btn) return;
+        setGameMode(btn.dataset.mode);
       });
     }
   }
@@ -892,13 +991,17 @@
   function onlineSnapshot() {
     const snap = clone(state);
     snap.history = [];
-    return { state: snap, doubleOut: ruleDoubleOut, names: onlineNames };
+    return {
+      state: snap,
+      doubleOut: ruleDoubleOut,
+      names: onlineNames,
+      mode: gameMode,
+      atc: atc ? atc.serialize() : null
+    };
   }
 
   function applyRemoteState(payload) {
-    if (!payload || !payload.state) return;
-    state = payload.state;
-    state.history = [];
+    if (!payload) return;
     if (typeof payload.doubleOut === 'boolean') ruleDoubleOut = payload.doubleOut;
     if (payload.names) {
       onlineNames[localSlot] = onlineNames[localSlot] || payload.names[localSlot];
@@ -906,8 +1009,23 @@
       onlineNames[opp] = payload.names[opp] || onlineNames[opp];
     }
     if (els.doubleOutToggle) els.doubleOutToggle.checked = ruleDoubleOut;
-    hideOverlay();
-    render();
+
+    // Mod senkronu (host belirler).
+    if (payload.mode && payload.mode !== gameMode) {
+      gameMode = payload.mode;
+      applyModeVisibility();
+      if (atc) atc.setActive(gameMode === 'atc');
+      syncModeSelectorUI();
+    }
+
+    if (gameMode === 'atc') {
+      if (atc && payload.atc) atc.applyState(payload.atc);
+    } else if (payload.state) {
+      state = payload.state;
+      state.history = [];
+      hideOverlay();
+      render();
+    }
   }
 
   function enterOnlineFresh(mySlot) {
@@ -917,7 +1035,9 @@
     onlineNames[mySlot] = localDisplayName(mySlot === 'RED' ? 'Ev sahibi' : 'Misafir');
     ruleDoubleOut = els.doubleOutToggle ? els.doubleOutToggle.checked : ruleDoubleOut;
     state = createInitialState();
+    if (gameMode === 'atc' && atc) atc.newMatch({ remote: true });
     hideOverlay();
+    syncModeSelectorUI();
   }
 
   function exitOnline() {
@@ -925,8 +1045,10 @@
     localSlot = null;
     onlineNames = { RED: null, BLUE: null };
     state = createInitialState();
+    if (gameMode === 'atc' && atc) atc.newMatch({ remote: true });
     hideOverlay();
     updateOnlineUi();
+    syncModeSelectorUI();
     render();
     updateSyncStatus();
   }
@@ -959,7 +1081,8 @@
       case 'ready':
         els.onlineStatus.textContent = 'Rakip baglandi. Iyi oyunlar!';
         if (online && online.isHost()) {
-          state = createInitialState();
+          if (gameMode === 'atc') { if (atc) atc.newMatch({ remote: true }); }
+          else { state = createInitialState(); }
           online.sendAction('sync', onlineSnapshot());
         }
         break;
@@ -994,6 +1117,8 @@
       applyRemoteState(action.payload);
     } else if (action.type === 'new-match') {
       startNewMatch({ remote: true });
+    } else if (action.type === 'atc-new') {
+      if (atc) atc.newMatch({ remote: true });
     }
   }
 
@@ -1006,7 +1131,13 @@
     online = window.ConviviumDartOnline.create({
       getClient: () => backend.getClient(),
       onState: handleOnlineState,
-      onRemoteDart: (dart) => addDart(dart.value, { isDouble: dart.isDouble, segment: dart.segment, remote: true }),
+      onRemoteDart: (payload) => {
+        if (payload && payload.mode === 'atc') {
+          if (atc) atc.applyRemoteDart(payload);
+        } else {
+          addDart(payload.value, { isDouble: payload.isDouble, segment: payload.segment, remote: true });
+        }
+      },
       onRemoteAction: handleOnlineAction,
       onPresence: handleOnlinePresence
     });
@@ -1034,7 +1165,9 @@
   }
 
   initBoard();
+  initModes();
   setupOnline();
+  applyModeVisibility();
   render();
   initAuth();
 })();

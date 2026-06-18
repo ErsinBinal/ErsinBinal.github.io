@@ -707,9 +707,161 @@ input:disabled {
   text-align: center;
 }
 
+/* --- Mod secici --- */
+.dart-mode-select {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dart-mode-btn {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--dart-line);
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--dart-muted);
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.dart-mode-btn:last-child { border-right: 0; }
+
+.dart-mode-btn:hover:not(.is-active) { color: #fff; }
+
+.dart-mode-btn.is-active {
+  background: rgba(245, 158, 11, 0.16);
+  color: var(--dart-amber);
+}
+
+.dart-mode-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+
+/* Acik display tanimi `hidden` ozniteligini ezdigi icin mod gecislerinde
+   gizlenmesi gereken bolumlere explicit none kurali gerekiyor. */
+.dart-board[hidden],
+.dart-turn-panel[hidden],
+.dart-controls[hidden] {
+  display: none;
+}
+
+/* --- Around the Clock paneli --- */
+.atc-board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.atc-board[hidden] { display: none; }
+
+.atc-player {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 260px;
+  padding: 20px;
+  align-content: start;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.atc-red { border-color: rgba(239, 68, 68, 0.44); }
+.atc-blue { border-color: rgba(56, 189, 248, 0.44); }
+
+.atc-red.is-active {
+  border-color: rgba(239, 68, 68, 0.95);
+  box-shadow: 0 0 34px rgba(239, 68, 68, 0.24);
+}
+
+.atc-blue.is-active {
+  border-color: rgba(56, 189, 248, 0.95);
+  box-shadow: 0 0 34px rgba(56, 189, 248, 0.24);
+}
+
+.atc-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.atc-meta span {
+  color: var(--dart-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+}
+
+.atc-meta strong { color: #fff; }
+
+.atc-target-label {
+  color: var(--dart-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-top: 10px;
+}
+
+.atc-target {
+  text-align: center;
+}
+
+.atc-target strong {
+  color: #fff;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: clamp(3.4rem, 11vw, 6.4rem);
+  font-weight: 900;
+  line-height: 0.95;
+}
+
+.atc-progress {
+  text-align: center;
+  color: var(--dart-amber);
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.atc-turn-strip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: var(--dart-panel);
+}
+
+.atc-badges { display: flex; gap: 8px; }
+
+.atc-pip {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  aspect-ratio: 1;
+  border: 1px solid var(--dart-line);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.6);
+  color: var(--dart-muted);
+  font-weight: 900;
+  font-size: 1.2rem;
+}
+
+.atc-pip.is-hit { border-color: rgba(51, 214, 159, 0.7); color: var(--dart-green); }
+.atc-pip.is-miss { border-color: rgba(239, 68, 68, 0.6); color: var(--dart-red); }
+
 @media (max-width: 860px) {
   .dart-online-controls {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .atc-board {
+    grid-template-columns: 1fr;
   }
 }
 

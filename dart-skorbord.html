@@ -12,7 +12,7 @@
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
-  <link rel="stylesheet" href="/assets/css/dart-skorbord.css">
+  <link rel="stylesheet" href="/assets/css/dart-skorbord.css?v=2">
 </head>
 <body class="dart-page">
   <a class="skip-link" href="#dartApp">Icerigi atla</a>
@@ -36,7 +36,11 @@
         <span id="syncStatus">Misafir modu aktif. Iki oyuncu giris yaparsa mac istatistikleri kaydedilir.</span>
       </div>
       <div class="dart-status-actions">
-        <label class="dart-rule-toggle" title="Bitis icin son ok double olmali">
+        <div class="dart-mode-select" role="group" aria-label="Oyun modu">
+          <button type="button" class="dart-mode-btn is-active" data-mode="x01">501</button>
+          <button type="button" class="dart-mode-btn" data-mode="atc">Around the Clock</button>
+        </div>
+        <label class="dart-rule-toggle" id="doubleOutWrap" title="Bitis icin son ok double olmali">
           <input type="checkbox" id="doubleOutToggle" checked>
           <span>Double-out</span>
         </label>
@@ -139,6 +143,25 @@
       </article>
     </section>
 
+    <section id="atcSection" class="atc-board" hidden aria-label="Around the Clock skor paneli">
+      <article id="atcRED" class="atc-player atc-red is-active">
+        <div class="atc-meta"><span>RED</span><strong id="atcNameRED">Kirmizi Oyuncu</strong></div>
+        <div class="atc-target-label">Hedef</div>
+        <div class="atc-target"><strong id="atcTargetRED">1</strong></div>
+        <div class="atc-progress" id="atcProgRED">0 / 21</div>
+      </article>
+      <article id="atcBLUE" class="atc-player atc-blue">
+        <div class="atc-meta"><span>BLUE</span><strong id="atcNameBLUE">Mavi Oyuncu</strong></div>
+        <div class="atc-target-label">Hedef</div>
+        <div class="atc-target"><strong id="atcTargetBLUE">1</strong></div>
+        <div class="atc-progress" id="atcProgBLUE">0 / 21</div>
+      </article>
+      <div class="atc-turn-strip">
+        <span class="dart-panel-label">Bu tur</span>
+        <div id="atcBadges" class="atc-badges"></div>
+      </div>
+    </section>
+
     <section class="dart-turn-panel" aria-label="Mevcut sira">
       <div>
         <span class="dart-panel-label">Mevcut atislar</span>
@@ -187,7 +210,8 @@
   <script src="/assets/js/supabase-client.js?v=23" defer></script>
   <script src="/assets/js/dart-board-svg.js?v=1" defer></script>
   <script src="/assets/js/dart-online.js?v=1" defer></script>
-  <script src="/assets/js/dart-skorbord.js?v=4" defer></script>
+  <script src="/assets/js/dart-atc.js?v=1" defer></script>
+  <script src="/assets/js/dart-skorbord.js?v=5" defer></script>
   <script src="/assets/js/sfx.js?v=14" defer></script>
 </body>
 </html>
