@@ -611,6 +611,7 @@
       const summary = buildMatchSummary(winnerSlot);
 
       const match = await backend.createDartMatchWithClient(primaryClient, {
+        mode: 'x01',
         red_user_id: redUser ? redUser.id : null,
         blue_user_id: bothDistinct ? blueUser.id : null,
         winner_user_id: winnerUser ? winnerUser.id : null,
@@ -645,6 +646,105 @@
       updateSyncStatus('Mac kaydedildi.');
       render();
     } catch (error) {
+      updateSyncStatus(`Dart kaydi tamamlanamadi: ${error.message || error}`);
+    }
+  }
+
+  // --- Ozel mod (ATC / Cricket) mac kaydi ---
+  let customPersistDone = false;
+
+  function buildCustomSummary(mode, snap, winnerSlot, durationSeconds) {
+    const players = {};
+    if (mode === 'atc') {
+      const total = (window.ConviviumDartATC && window.ConviviumDartATC.TARGETS.length) || 21;
+      ['RED', 'BLUE'].forEach((slot) => {
+        const pointer = snap.pointers ? (snap.pointers[slot] || 0) : 0;
+        players[slot] = {
+          label: displayName(slot),
+          darts: snap.darts ? (snap.darts[slot] || 0) : 0,
+          hits: snap.hits ? (snap.hits[slot] || 0) : 0,
+          completed: pointer >= total,
+          targetsLeft: Math.max(0, total - pointer)
+        };
+      });
+    } else {
+      const numbers = (window.ConviviumDartCricket && window.ConviviumDartCricket.NUMBERS) || [];
+      ['RED', 'BLUE'].forEach((slot) => {
+        const marks = snap.marks ? (snap.marks[slot] || {}) : {};
+        const closed = numbers.filter((n) => (marks[n] || 0) >= 3).length;
+        players[slot] = {
+          label: displayName(slot),
+          points: snap.scores ? (snap.scores[slot] || 0) : 0,
+          closed: closed,
+          darts: snap.darts ? (snap.darts[slot] || 0) : 0
+        };
+      });
+    }
+    return { mode, winnerSlot: winnerSlot || null, players, completedAt: new Date().toISOString(), duration: durationSeconds };
+  }
+
+  async function persistCustomMatch(winnerSlot) {
+    if (customPersistDone) return;
+    if (onlineMode) {
+      updateSyncStatus('Online mac tamamlandi. (Online maclar su an kaydedilmiyor.)');
+      return;
+    }
+    if (!backend || !backend.isConfigured()) return;
+
+    const cm = customMode();
+    if (!cm) return;
+    const redUser = slotAuth.RED.user;
+    const blueUser = slotAuth.BLUE.user;
+    if (!redUser && !blueUser) {
+      updateSyncStatus('Mac bitti. Kayit icin en az bir hesapla giris gerekli.');
+      return;
+    }
+
+    const snap = cm.serialize();
+    const mode = gameMode;
+
+    try {
+      customPersistDone = true;
+      updateSyncStatus('Mac kaydediliyor...');
+
+      const bothDistinct = Boolean(redUser && blueUser && redUser.id !== blueUser.id);
+      let opponentLabel = null;
+      let opponentType = 'human';
+      if (!bothDistinct) {
+        const humanSlot = redUser ? 'RED' : 'BLUE';
+        const oppSlot = humanSlot === 'RED' ? 'BLUE' : 'RED';
+        const oppCpu = cpuConfig[oppSlot];
+        if (oppCpu) { opponentType = 'cpu'; opponentLabel = oppCpu.name; }
+        else { opponentType = 'guest'; opponentLabel = displayName(oppSlot); }
+      }
+
+      const primaryClient = redUser ? slotAuth.RED.client : slotAuth.BLUE.client;
+      const winnerUser = winnerSlot ? slotAuth[winnerSlot].user : null;
+      const duration = 0;
+      const summary = buildCustomSummary(mode, snap, winnerSlot, duration);
+      const finals = mode === 'cricket'
+        ? { red: summary.players.RED.points, blue: summary.players.BLUE.points }
+        : { red: snap.pointers ? snap.pointers.RED : 0, blue: snap.pointers ? snap.pointers.BLUE : 0 };
+
+      await backend.createDartMatchWithClient(primaryClient, {
+        mode: mode,
+        red_user_id: redUser ? redUser.id : null,
+        blue_user_id: bothDistinct ? blueUser.id : null,
+        winner_user_id: winnerUser ? winnerUser.id : null,
+        winner_slot: winnerSlot || null,
+        duration_seconds: duration,
+        red_final_score: finals.red,
+        blue_final_score: finals.blue,
+        status: 'completed',
+        summary: summary,
+        completed_at: summary.completedAt,
+        opponent_label: opponentLabel,
+        opponent_type: opponentType
+      });
+
+      updateSyncStatus('Mac kaydedildi.');
+    } catch (error) {
+      customPersistDone = false;
       updateSyncStatus(`Dart kaydi tamamlanamadi: ${error.message || error}`);
     }
   }
@@ -873,6 +973,7 @@
   els.redSignOut.addEventListener('click', () => handleSignOut('RED'));
   els.blueSignOut.addEventListener('click', () => handleSignOut('BLUE'));
   function newMatchForMode() {
+    customPersistDone = false;
     const cm = customMode();
     if (cm) cm.newMatch();
     else startNewMatch();
@@ -950,6 +1051,7 @@
     opts = opts || {};
     if (mode !== 'x01' && mode !== 'atc' && mode !== 'cricket') return;
     if (onlineMode && !opts.remote) { syncModeSelectorUI(); return; }
+    customPersistDone = false;
     gameMode = mode;
     applyModeVisibility();
     // Diger ozel modlari pasiflestir.
@@ -980,7 +1082,7 @@
       sendAction: (type, payload) => { if (online) online.sendAction(type, payload); },
       cpuConfig: () => cpuConfig,
       names: () => ({ RED: displayName('RED'), BLUE: displayName('BLUE') }),
-      onComplete: () => { /* ozel mod online maclari su an kaydedilmiyor */ }
+      onComplete: (winnerSlot) => { persistCustomMatch(winnerSlot); }
     };
 
     if (window.ConviviumDartATC) atc = window.ConviviumDartATC.create(modeHost);

@@ -38,6 +38,7 @@
       return {
         pointers: { RED: 0, BLUE: 0 },
         hits: { RED: 0, BLUE: 0 },
+        darts: { RED: 0, BLUE: 0 },
         currentTurn: 'RED',
         dartsThisTurn: 0,
         turnMarks: [],
@@ -83,6 +84,7 @@
       var hit = sec !== null && sec === target;
 
       state.dartsThisTurn += 1;
+      state.darts[slot] += 1;
 
       if (hit) {
         state.turnMarks.push('hit');

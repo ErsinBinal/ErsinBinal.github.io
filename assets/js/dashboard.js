@@ -24,6 +24,9 @@
 
   function friendlyError(error) {
     const message = error?.message || String(error || '');
+    if (/column .*mode.* does not exist|dart_matches\.mode/i.test(message)) {
+      return "Dart mod kolonu eksik. docs/database/2026-06-18-dart-modes.sql dosyasini SQL Editor'de calistirin.";
+    }
     if (/dart_matches|dart_throws/i.test(message)) {
       return "Dart tablolari henuz Supabase tarafinda yok. docs/database/2026-06-01-dart-skorbord.sql dosyasini SQL Editor'de calistirin.";
     }
@@ -140,6 +143,46 @@
     `).join('');
   }
 
+  const DART_MODE_LABELS = { x01: '501', atc: 'Around the Clock', cricket: 'Cricket' };
+
+  function dartModeCard(mode, b) {
+    if (!b || !b.matches) return '';
+    const wlParts = [`${b.wins}G`, `${b.losses}M`];
+    if (mode === 'cricket' && b.draws) wlParts.push(`${b.draws}B`);
+    let extra;
+    if (mode === 'x01') {
+      extra = [['Ort.', Number(b.average || 0).toFixed(1)], ['En yuksek', b.highestTurn || 0], ['180', b.oneEighties || 0]];
+    } else if (mode === 'atc') {
+      extra = [['Ort. ok', b.avgDarts || 0], ['En hizli', b.bestDarts || '-']];
+    } else {
+      extra = [['Ort. puan', b.avgPoints || 0], ['En yuksek', b.bestPoints || 0]];
+    }
+    return `
+      <article class="dart-mode-card dart-mode-${mode}">
+        <header>
+          <span class="dart-mode-tag">${escapeHtml(DART_MODE_LABELS[mode])}</span>
+          <strong>${b.matches} mac</strong>
+        </header>
+        <p class="dart-mode-wl">${escapeHtml(wlParts.join(' / '))}</p>
+        <div class="dart-mode-metrics">
+          ${extra.map(([l, v]) => `<span><strong>${escapeHtml(v)}</strong><em>${escapeHtml(l)}</em></span>`).join('')}
+        </div>
+      </article>`;
+  }
+
+  function dartMatchBadges(m) {
+    if (m.mode === 'atc') {
+      return [`${m.own.darts} ok`, m.own.completed ? 'Bitirdi' : `${m.own.targetsLeft} hedef kaldi`];
+    }
+    if (m.mode === 'cricket') {
+      return [`${m.own.points} puan`, `${m.own.closed}/7 kapali`];
+    }
+    const badges = [`Ort. ${Number(m.own.average || 0).toFixed(1)}`, `Max ${m.own.highestTurn || 0}`];
+    if (m.own.oneEighties) badges.push(`180 ×${m.own.oneEighties}`);
+    if (m.own.busts) badges.push(`Bust ${m.own.busts}`);
+    return badges;
+  }
+
   function renderDartStats(stats) {
     if (!dartStatsEl) return;
 
@@ -153,58 +196,30 @@
       return;
     }
 
-    if (!stats.totals || !stats.totals.matches) {
-      empty(dartStatsEl, 'Henuz kaydedilmis dart maci yok.');
+    if (!stats.totalMatches) {
+      empty(dartStatsEl, 'Henuz kaydedilmis dart maci yok. 501, Around the Clock veya Cricket oynayip iki hesapla (ya da bir hesap + CPU) giris yapin.');
       return;
     }
 
-    const totals = stats.totals;
-    const recent = stats.recent || [];
-    const metrics = [
-      ['Mac', totals.matches],
-      ['G', totals.wins],
-      ['M', totals.losses],
-      ['Ort.', Number(totals.average || 0).toFixed(1)],
-      ['En yuksek', totals.highestTurn],
-      ['180', totals.oneEighties],
-      ['Bust', totals.busts]
-    ];
-
-    dartStatsEl.innerHTML = `
-      <div class="dashboard-stat-grid">
-        ${metrics.map(([label, value]) => `
-          <span>
-            <strong>${escapeHtml(value)}</strong>
-            <em>${escapeHtml(label)}</em>
-          </span>
-        `).join('')}
-      </div>
-      ${recent.slice(0, 8).map((match) => {
-        const oppTag = match.opponentType === 'cpu' ? 'CPU' : match.opponentType === 'guest' ? 'Misafir' : null;
-        const oppLabel = (oppTag ? `${oppTag} · ` : '') + escapeHtml(match.opponent.label);
-        const avg = Number(match.own.average || 0).toFixed(1);
-        const high = Number(match.own.highestTurn || 0);
-        const s180 = Number(match.own.oneEighties || 0);
-        const busts = Number(match.own.busts || 0);
-        const badges = [
-          `Ort. ${avg}`,
-          `Max ${high}`,
-          s180 ? `180 ×${s180}` : null,
-          busts ? `Bust ${busts}` : null,
-          formatDuration(match.duration_seconds)
-        ].filter(Boolean);
-        return `
-        <article class="dashboard-row">
+    const cards = ['x01', 'atc', 'cricket'].map((mode) => dartModeCard(mode, stats.byMode[mode])).join('');
+    const recent = (stats.recent || []).slice(0, 10).map((match) => {
+      const oppTag = match.opponentType === 'cpu' ? 'CPU' : match.opponentType === 'guest' ? 'Misafir' : null;
+      const oppLabel = (oppTag ? `${oppTag} · ` : '') + escapeHtml(match.opponent.label);
+      const result = match.draw ? '■ Berabere' : match.won ? '▲ Galibiyet' : '▼ Maglubiyet';
+      const badges = dartMatchBadges(match);
+      return `
+        <article class="dashboard-row dart-match-row dart-result-${match.draw ? 'draw' : match.won ? 'win' : 'loss'}">
           <div>
-            <strong>${match.won ? '▲ Galibiyet' : '▼ Maglubiyet'} · ${oppLabel}</strong>
-            <span>${formatDay(match.created_at)}</span>
+            <strong>${result} · ${oppLabel}</strong>
+            <span><span class="dart-mode-pill">${escapeHtml(DART_MODE_LABELS[match.mode] || match.mode)}</span> ${formatDay(match.created_at)}</span>
           </div>
           <div class="dashboard-metrics">
             ${badges.map((b) => `<span>${escapeHtml(b)}</span>`).join('')}
           </div>
         </article>`;
-      }).join('')}
-    `;
+    }).join('');
+
+    dartStatsEl.innerHTML = `<div class="dart-mode-cards">${cards}</div>${recent}`;
   }
 
   async function init() {

@@ -437,6 +437,7 @@
   async function createDartMatchWithClient(client, match) {
     if (!client) throw new Error('Dart mac kaydi icin Supabase oturumu gerekli.');
     const payload = {
+      mode: ['x01', 'atc', 'cricket'].includes(match.mode) ? match.mode : 'x01',
       red_user_id: match.red_user_id || null,
       blue_user_id: match.blue_user_id || null,
       winner_user_id: match.winner_user_id || null,
@@ -535,47 +536,62 @@
 
     const { data, error } = await client
       .from('dart_matches')
-      .select('id, red_user_id, blue_user_id, winner_user_id, winner_slot, start_score, duration_seconds, red_final_score, blue_final_score, status, summary, completed_at, created_at, opponent_label, opponent_type')
+      .select('id, mode, red_user_id, blue_user_id, winner_user_id, winner_slot, start_score, duration_seconds, red_final_score, blue_final_score, status, summary, completed_at, created_at, opponent_label, opponent_type')
       .or(`red_user_id.eq.${user.id},blue_user_id.eq.${user.id}`)
       .order('created_at', { ascending: false })
-      .limit(200);
+      .limit(300);
 
     if (error) throw new Error(toMessage(error));
 
     const matches = data || [];
-    const totals = {
-      matches: matches.length,
-      wins: 0,
-      losses: 0,
-      darts: 0,
-      scored: 0,
-      highestTurn: 0,
-      oneEighties: 0,
-      busts: 0
+
+    // Mod-bazli toplamlar.
+    const byMode = {
+      x01: { matches: 0, wins: 0, losses: 0, scored: 0, darts: 0, highestTurn: 0, oneEighties: 0, busts: 0, average: 0 },
+      atc: { matches: 0, wins: 0, losses: 0, dartsSum: 0, bestDarts: 0, avgDarts: 0 },
+      cricket: { matches: 0, wins: 0, losses: 0, draws: 0, pointsSum: 0, bestPoints: 0, avgPoints: 0 }
     };
 
     const recent = matches.map((match) => {
+      const mode = ['x01', 'atc', 'cricket'].includes(match.mode) ? match.mode : 'x01';
       const slot = match.red_user_id === user.id ? 'RED' : 'BLUE';
       const opponentSlot = slot === 'RED' ? 'BLUE' : 'RED';
       const own = dartPlayerSummary(match.summary, slot);
       const opponent = dartPlayerSummary(match.summary, opponentSlot);
-      const won = match.winner_user_id === user.id;
+      const completed = match.status === 'completed';
+      const won = match.winner_slot === slot;
+      const draw = completed && !match.winner_slot;
 
-      if (match.status === 'completed') {
-        if (won) totals.wins += 1;
-        else totals.losses += 1;
+      const bucket = byMode[mode];
+      if (completed) {
+        bucket.matches += 1;
+        if (draw) { if (mode === 'cricket') bucket.draws += 1; }
+        else if (won) bucket.wins += 1;
+        else bucket.losses += 1;
       }
 
-      totals.darts += Number(own.totalDarts || 0);
-      totals.scored += Number(own.totalScored || 0);
-      totals.highestTurn = Math.max(totals.highestTurn, Number(own.highestTurn || 0));
-      totals.oneEighties += Number(own.oneEighties || 0);
-      totals.busts += Number(own.busts || 0);
+      if (mode === 'x01') {
+        bucket.darts += Number(own.totalDarts || 0);
+        bucket.scored += Number(own.totalScored || 0);
+        bucket.highestTurn = Math.max(bucket.highestTurn, Number(own.highestTurn || 0));
+        bucket.oneEighties += Number(own.oneEighties || 0);
+        bucket.busts += Number(own.busts || 0);
+      } else if (mode === 'atc') {
+        const d = Number(own.darts || 0);
+        bucket.dartsSum += d;
+        if (won && d > 0) bucket.bestDarts = bucket.bestDarts ? Math.min(bucket.bestDarts, d) : d;
+      } else {
+        const p = Number(own.points || 0);
+        bucket.pointsSum += p;
+        bucket.bestPoints = Math.max(bucket.bestPoints, p);
+      }
 
       return {
         id: match.id,
+        mode,
         slot,
         won,
+        draw,
         status: match.status,
         created_at: match.completed_at || match.created_at,
         duration_seconds: match.duration_seconds,
@@ -585,23 +601,33 @@
           average: Number(own.average || 0),
           highestTurn: Number(own.highestTurn || 0),
           totalDarts: Number(own.totalDarts || 0),
-          turnsCount: Number(own.turnsCount || 0),
-          busts: Number(own.busts || 0),
           oneEighties: Number(own.oneEighties || 0),
-          finalScore: slot === 'RED' ? match.red_final_score : match.blue_final_score
+          busts: Number(own.busts || 0),
+          darts: Number(own.darts || 0),
+          hits: Number(own.hits || 0),
+          completed: Boolean(own.completed),
+          targetsLeft: Number(own.targetsLeft || 0),
+          points: Number(own.points || 0),
+          closed: Number(own.closed || 0)
         },
         opponent: {
           label: opponent.label || match.opponent_label || (opponentSlot === 'RED' ? 'Kirmizi Oyuncu' : 'Mavi Oyuncu'),
-          finalScore: opponentSlot === 'RED' ? match.red_final_score : match.blue_final_score
+          points: Number(opponent.points || 0)
         }
       };
     });
 
+    // Ortalamalari hesapla.
+    byMode.x01.average = byMode.x01.darts > 0
+      ? Number(((byMode.x01.scored / byMode.x01.darts) * 3).toFixed(1)) : 0;
+    byMode.atc.avgDarts = byMode.atc.matches > 0
+      ? Number((byMode.atc.dartsSum / byMode.atc.matches).toFixed(1)) : 0;
+    byMode.cricket.avgPoints = byMode.cricket.matches > 0
+      ? Number((byMode.cricket.pointsSum / byMode.cricket.matches).toFixed(0)) : 0;
+
     return {
-      totals: {
-        ...totals,
-        average: totals.darts > 0 ? Number(((totals.scored / totals.darts) * 3).toFixed(1)) : 0
-      },
+      byMode,
+      totalMatches: matches.filter((m) => m.status === 'completed').length,
       recent: recent.slice(0, recentLimit)
     };
   }
