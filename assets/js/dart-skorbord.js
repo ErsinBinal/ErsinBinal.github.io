@@ -403,10 +403,15 @@
     const rawTurnTotal = turnTotal();
 
     const doubleOut = state.rules.doubleOut;
+    // Bitiş atışı bir double olabilir mi? Görsel tahtadan gelen isDouble kesindir;
+    // manuel/keypad girişinde, tam sıfıra indiren değer geçerli bir double değeriyse
+    // (çift ve 2–40 ya da 50/Bull) bitiş kabul edilir (manuel skor takipçisi mantığı).
+    const finishesOnDouble = isDouble || numericValue === 50 ||
+      (numericValue >= 2 && numericValue <= 40 && numericValue % 2 === 0);
     let isBust = nextScore < 0;
     if (!isBust) {
       if (doubleOut) {
-        if (nextScore === 1 || (nextScore === 0 && !isDouble)) isBust = true;
+        if (nextScore === 1 || (nextScore === 0 && !finishesOnDouble)) isBust = true;
       } else if (nextScore === 1) {
         isBust = true;
       }
@@ -423,8 +428,8 @@
       });
       completeTurn(slot, 0, dartsInTurn, true);
       audioCue('game.bust');
-      const bustMsg = (doubleOut && nextScore === 0 && !isDouble)
-        ? 'Double ile bitirmelisiniz. Sira rakibe geciyor.'
+      const bustMsg = (doubleOut && nextScore === 0 && !finishesOnDouble)
+        ? 'Double-out: bitiş için double gerekli (çift sayı ya da Bull). Sira rakibe geciyor.'
         : 'Skor gecersiz oldu. Sira rakibe geciyor.';
       resolveTurn('Bust', bustMsg, true);
       return;
