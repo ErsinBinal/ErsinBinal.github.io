@@ -69,7 +69,9 @@
         commandLog: [],
         rituals: 0,
         offlineNode: false,
-        easterTrail: []
+        easterTrail: [],
+        inventory: [],
+        discovered: []
       });
       const readState = () => {
         try {
@@ -110,6 +112,8 @@
       state.rituals = Number.isFinite(state.rituals) ? state.rituals : 0;
       state.offlineNode = Boolean(state.offlineNode);
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
+      state.inventory = Array.isArray(state.inventory) ? [...new Set(state.inventory)] : [];
+      state.discovered = Array.isArray(state.discovered) ? [...new Set(state.discovered)] : [];
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       let signalIndex = 0;
@@ -512,6 +516,7 @@
             award(3);
             restoreUnlockedGates();
             applyUserPreferences();
+            syncWorldStateFromCloud();
             if (consoleLine) consoleLine.textContent = 'access granted';
             if (microOracle) microOracle.textContent = session.user.email || 'authenticated';
           }
@@ -533,6 +538,50 @@
         persist();
         updateAccess();
         if (state.level > previousLevel) audioCue('system.unlock');
+      };
+
+      // --- Faz 3: kalici world state senkronu (Supabase). Tamamen defansif:
+      // backend yoksa / oturum yoksa / hata olursa localStorage davranisi aynen korunur.
+      let worldSyncReady = false;
+      let worldSaveTimer = null;
+
+      const scheduleWorldSave = (immediate = false) => {
+        const backend = window.ConviviumBackend;
+        if (!worldSyncReady || !backend?.saveWorldState) return;
+        if (worldSaveTimer) window.clearTimeout(worldSaveTimer);
+        const run = () => {
+          worldSaveTimer = null;
+          backend.saveWorldState({
+            unlocked: state.unlocked,
+            inventory: state.inventory,
+            discovered: state.discovered,
+            level: state.level
+          }).catch(() => { /* sessiz: bulut yazimi basarisizsa local state gecerli kalir */ });
+        };
+        if (immediate) run();
+        else worldSaveTimer = window.setTimeout(run, 1500);
+      };
+
+      const syncWorldStateFromCloud = async () => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.fetchWorldState) return;
+        try {
+          const remote = await backend.fetchWorldState();
+          if (remote) {
+            // Union merge: hicbir ilerleme kaybolmaz (local + bulut birlesir).
+            state.unlocked = [...new Set([...(state.unlocked || []), ...(remote.unlocked || [])])];
+            state.inventory = [...new Set([...(state.inventory || []), ...(remote.inventory || [])])];
+            state.discovered = [...new Set([...(state.discovered || []), ...(remote.discovered || [])])];
+            state.level = Math.max(Number(state.level) || 0, Number(remote.level) || 0);
+            persist();
+            updateAccess();
+            renderProtocolSurfaces();
+          }
+          worldSyncReady = true;
+          scheduleWorldSave(true); // birlesik durumu buluta geri yaz.
+        } catch {
+          worldSyncReady = false; // sessiz fallback.
+        }
       };
 
       const routeSuggestions = {
@@ -1707,11 +1756,13 @@
       };
 
       const virtualFs = {
-        '/': ['routes', 'lab', 'notes', 'system'],
+        '/': ['routes', 'lab', 'notes', 'system', 'vault'],
         '/routes': ['home', 'map', 'archive', 'notes', 'open dossier'],
         '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe'],
         '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
-        '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver']
+        '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver'],
+        '/vault': ['satir'],
+        '/core': ['cekirdek', 'gunluk']
       };
 
       const virtualDocs = {
@@ -1726,8 +1777,10 @@
         const normalized = normalizeCommand(target).replace(/\s+/g, '-');
         if (!normalized || normalized === '/') return '/';
         if (normalized === '..') return virtualCwd.split('/').slice(0, -1).join('/') || '/';
-        const path = normalized.startsWith('/') ? normalized : `${virtualCwd === '/' ? '' : virtualCwd}/${normalized}`;
-        return path.replace(/\/+/g, '/');
+        const path = (normalized.startsWith('/') ? normalized : `${virtualCwd === '/' ? '' : virtualCwd}/${normalized}`).replace(/\/+/g, '/');
+        // Goreli yol yoksa ama ust seviye bir esikse oraya cevir (cd vault her yerden calissin).
+        if (!virtualFs[path] && virtualFs[`/${normalized}`]) return `/${normalized}`;
+        return path;
       };
 
       const lsCommand = (target = '') => {
@@ -1740,9 +1793,14 @@
       const cdCommand = (target = '/') => {
         const path = resolveVirtualPath(target);
         if (!virtualFs[path]) return `cd: ${path}: no such virtual directory`;
+        const room = worldRooms[path];
+        if (room?.locked && !(state.unlocked || []).includes(path)) {
+          return `cd: ${path}: muhurlu. "unlock ${path.replace(/^\//, '')}" ile ya da dogru anahtarla ac.`;
+        }
         virtualCwd = path;
         persistUserPreferences({ virtualCwd });
-        return virtualCwd;
+        const look = room?.look;
+        return look ? `${virtualCwd}\n${look}` : virtualCwd;
       };
 
       const catCommand = (target = '') => {
@@ -1767,11 +1825,12 @@
         '|   |-- note',
         '|   |-- quote',
         '|   `-- ritual',
-        '`-- system',
-        '    |-- whoami',
-        '    |-- memory',
-        '    |-- ps',
-        '    `-- power'
+        '|-- system',
+        '|   |-- whoami',
+        '|   |-- memory',
+        '|   |-- ps',
+        '|   `-- power',
+        '`-- vault  [muhurlu]'
       ].join('\n');
 
       const findCommand = (target = '') => {
@@ -1781,6 +1840,245 @@
           .filter(choice => normalizeCommand(choice).includes(query))
           .slice(0, 12);
         return matches.length ? `find ${target}:\n${matches.map(item => `  ${item}`).join('\n')}` : `find: no command matching "${target}"`;
+      };
+
+      // --- World layer (Faz 1): odalar, inceleme, envanter, muhur ---
+      const worldRooms = {
+        '/': {
+          look: 'Convivium ana hattindasin. Dort esik soluk soluk yaniyor: routes, lab, notes, system. Zeminde tek bir cizik isaret var.',
+          objects: {
+            'isaret': 'Zemindeki cizik bir glyph. Dikkatle bakinca dort esigin ortak bir merkeze baktigini gosteriyor. Merkez muhurlu: /vault.',
+            'glyph': 'Ayni cizik. /vault adli muhurlu bir duguma isaret ediyor. Onu acan sey notlarin arasinda saklı.'
+          }
+        },
+        '/routes': {
+          look: 'Rotalar esigi. Public sayfalara acilan kapilar burada dizili: home, map, archive, dossier.',
+          objects: {
+            'dossier': 'Yarisi acik bir dosya. Erisim seviyen yukseldikce daha fazla satir okunuyor.'
+          }
+        },
+        '/lab': {
+          look: 'Lab esigi. Oynanabilir deneyler ve companion ritleri burada calisir. Bir kosede pipe reaktoru bekliyor.',
+          objects: {
+            'reactor': 'Pipe reaktoru bekleme modunda. "pipe" yazip coolant hattini cekirdege ulastiran birine /core mühru acilir.',
+            'pipe': 'Reaktorun kontrol paneli. pipe komutu ile coolant bulmacasini baslat; cozersen cekirdek (/core) erisilir olur.'
+          }
+        },
+        '/notes': {
+          look: 'Saha notlari esigi. Alintilar, ritueller ve yarim birakilmis izler. Bir kosede sicacik parlayan bir clue var.',
+          objects: {
+            'clues': 'Notlarin arasinda kucuk, sicak bir parca: bir shard. Almak icin: take shard.',
+            'ritual': 'Tekrarlanan kucuk bir jest. Her tekrar bir ritmi pekistirir.'
+          },
+          grants: { item: 'shard' }
+        },
+        '/system': {
+          look: 'Sistem esigi. whoami, uptime, memory, power. Soguk ve duzenli.',
+          objects: {
+            'memory': 'Bellek haritasi. 0400: companion bus satiri yeni acilmis gibi titreseyor.'
+          }
+        },
+        '/vault': {
+          look: 'Kasa. Muhur cozuldu. Iceride tek satir var: "Arayuz, dusunme bicimini degistiren kucuk bir sistemdir." Convivium burada baslar.',
+          locked: true,
+          key: 'shard',
+          objects: {
+            'satir': 'Kurucu cumle. Ilk iz tamamlandi; terminal bunu hatirlayacak.'
+          }
+        },
+        '/core': {
+          look: 'Cekirdek. Coolant hatti kilitlendi, sicaklik dustu. Burasi sitenin nabzi: her deney, her route buradan beslenir. Duvarda bir gunluk asili.',
+          locked: true,
+          key: 'coolant',
+          objects: {
+            'cekirdek': 'Soguyan cekirdek. Reaktoru sen soguttun; ikinci iz tamamlandi.',
+            'gunluk': 'Gunluk: "Bir sistemi anlamak, onu soguk tutabilmektir. Convivium da boyle nefes alir."'
+          }
+        }
+      };
+
+      const currentRoom = () => worldRooms[virtualCwd] || null;
+
+      const roomObjectKey = (room, target) => {
+        const query = normalizeCommand(target);
+        if (!room || !room.objects || !query) return null;
+        return Object.keys(room.objects).find(key => {
+          const norm = normalizeCommand(key);
+          return norm === query || norm.includes(query) || query.includes(norm);
+        }) || null;
+      };
+
+      const lookCommand = (target = '') => {
+        const room = currentRoom();
+        if (!room) return `look: ${virtualCwd}: bu esikte gorulecek bir sey yok.`;
+        if (target.trim()) return examineCommand(target);
+        if (!state.discovered.includes(virtualCwd)) {
+          state.discovered = [...new Set([...state.discovered, virtualCwd])];
+          persist();
+        }
+        const objects = Object.keys(room.objects || {});
+        const lines = [room.look];
+        if (objects.length) lines.push(`incelenebilir: ${objects.join(', ')} (examine <nesne>)`);
+        return lines.join('\n');
+      };
+
+      const examineCommand = (target = '') => {
+        const room = currentRoom();
+        if (!room) return 'examine: burada inceleyecek bir sey yok.';
+        if (!target.trim()) return 'examine: usage examine <nesne> (once look yaz).';
+        const key = roomObjectKey(room, target);
+        if (!key) return `examine: "${target}" burada yok. look ile etrafa bak.`;
+        return room.objects[key];
+      };
+
+      const takeCommand = (target = '') => {
+        const room = currentRoom();
+        if (!target.trim()) return 'take: usage take <nesne>';
+        const grant = room?.grants;
+        const want = normalizeCommand(target);
+        if (grant && normalizeCommand(grant.item) === want) {
+          if ((state.inventory || []).includes(grant.item)) return `take: ${grant.item} zaten cantanda.`;
+          state.inventory = [...new Set([...(state.inventory || []), grant.item])];
+          state.easterTrail = [...(state.easterTrail || []), `take:${grant.item}`].slice(-4);
+          persist();
+          scheduleWorldSave();
+          audioCue('system.unlock');
+          return `aldin: ${grant.item}. (inventory ile bak, sonra muhuru ac)`;
+        }
+        return `take: "${target}" burada alinabilir degil.`;
+      };
+
+      const inventoryCommand = () => {
+        const items = state.inventory || [];
+        if (!items.length) return 'inventory: canta bos. Esikleri look + examine ile tara.';
+        return ['inventory:', ...items.map(item => `  ${item}`)].join('\n');
+      };
+
+      const unlockRoomCommand = (arg = '') => {
+        const parts = normalizeCommand(arg)
+          .replace(/\b(with|ile|kullan|kullanarak)\b/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .split(' ')
+          .filter(Boolean);
+        const roomName = parts[0];
+        if (!roomName) return 'unlock: usage unlock <oda> [with <anahtar>]';
+        const path = resolveVirtualPath(roomName);
+        const room = worldRooms[path];
+        if (!room) return `unlock: ${roomName}: boyle bir esik yok.`;
+        if (!room.locked) return `unlock: ${path} zaten acik.`;
+        if ((state.unlocked || []).includes(path)) return `unlock: ${path} zaten cozuldu.`;
+        const needed = room.key;
+        const hasKey = (state.inventory || []).includes(needed);
+        if (!hasKey) return `unlock: ${path} icin "${needed}" gerekiyor. Once onu bul ve take et.`;
+        const providedKey = parts[1];
+        if (providedKey && normalizeCommand(providedKey) !== normalizeCommand(needed)) {
+          return `unlock: "${providedKey}" bu muhru acmiyor.`;
+        }
+        state.unlocked = [...new Set([...(state.unlocked || []), path])];
+        state.easterTrail = [...(state.easterTrail || []), `unlock:${path}`].slice(-4);
+        persist();
+        scheduleWorldSave();
+        award(3);
+        updateAccess();
+        audioCue('system.unlock');
+        return `muhur cozuldu: ${path}. simdi cd ${roomName} ile gir.`;
+      };
+
+      // use <nesne> on <hedef>: cantadaki nesneyi dunyada kullan (genisletilebilir).
+      const useCommand = (arg = '') => {
+        const norm = normalizeCommand(arg);
+        if (!norm) return 'use: usage use <nesne> on <hedef>';
+        const parts = norm.split(/\s+(?:on|uzerine|ustune|ile|to)\s+/);
+        const item = (parts[0] || '').trim();
+        const target = (parts[1] || '').trim();
+        if (!item) return 'use: usage use <nesne> on <hedef>';
+        if (!(state.inventory || []).includes(item)) return `use: "${item}" cantanda yok. inventory ile bak.`;
+        if (!target) return `use: ${item} neyin uzerinde? (use ${item} on <hedef>)`;
+        if (item === 'shard' && /vault|kasa/.test(target)) {
+          return unlockRoomCommand(`vault with ${item}`);
+        }
+        return `use: ${item}, ${target} uzerinde bir ise yaramiyor.`;
+      };
+
+      // Oracle'a sorulan soruya dunya durumunu (konum + canta + seviye) baglam olarak ekler.
+      const buildWorldContext = () => {
+        const items = (state.inventory || []).join(', ') || 'bos';
+        const levelName = levels[Math.min(state.level, levels.length - 1)];
+        return `[Convivium terminali. Konum: ${virtualCwd}. Canta: ${items}. Seviye: ${levelName}.]`;
+      };
+
+      // ask/sor girdisinden saf konuyu cikarir (oracle about / hakkinda gibi sarmalari atar).
+      const extractAskTopic = (raw = '') => raw
+        .replace(/^\s*(oracle|deb|nova)\b/i, '')
+        .replace(/^\s*(about|hakkinda|hakkında|dair|uzerine)\b/i, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      // Gunluk sinyal (Faz 3): bulut tablosundan; yoksa deterministik lokal havuzdan.
+      const dailySignalFallback = () => {
+        const pool = [
+          'sinyal: Bir esik sec, examine et, gerisi acilir.',
+          'sinyal: Cantanda ne tasidigin, hangi muhru acacagini soyler.',
+          'sinyal: Bugun hic girmedigin bir dizine cd et.',
+          'sinyal: Soguk tutulan sistem uzun yasar. pipe hattini tamamla.'
+        ];
+        const day = Math.floor(Date.now() / 86400000);
+        return pool[day % pool.length];
+      };
+
+      const dailySignalCommand = async () => {
+        const backend = window.ConviviumBackend;
+        if (backend?.fetchDailySignal && backend.isConfigured?.()) {
+          try {
+            const row = await backend.fetchDailySignal();
+            if (row?.body) return `daily ${row.signal_date}\n${row.body}`;
+          } catch {
+            // sessiz: lokal havuza dus.
+          }
+        }
+        return dailySignalFallback();
+      };
+
+      // --- Faz 4: asenkron duvar (graffiti). Okuma public; yazma sadece giris yapmis
+      // kullaniciya acik. Gosterim textContent ile yapilir => XSS yapisal olarak imkansiz.
+      const formatWallStamp = (iso) => {
+        const d = new Date(iso);
+        if (Number.isNaN(d.getTime())) return '';
+        return d.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
+      };
+
+      const readWallCommand = async () => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.fetchWallMarks || !backend.isConfigured?.()) {
+          return 'wall: duvar cevrimdisi.';
+        }
+        try {
+          const marks = await backend.fetchWallMarks(virtualCwd, 8);
+          if (!marks.length) return `wall ${virtualCwd}: henuz iz yok. "mark <mesaj>" ile birak.`;
+          const lines = marks.map((m) => `  ${formatWallStamp(m.created_at)} | ${m.body}`);
+          return [`wall ${virtualCwd} (son ${marks.length}):`, ...lines].join('\n');
+        } catch {
+          return 'wall: duvar simdilik okunamiyor.';
+        }
+      };
+
+      const leaveMarkCommand = async (text) => {
+        const backend = window.ConviviumBackend;
+        const body = (text || '').trim();
+        if (!body) return 'mark: usage mark <mesaj>';
+        if (!backend?.leaveWallMark || !backend.isConfigured?.()) {
+          return 'mark: duvar cevrimdisi.';
+        }
+        try {
+          await backend.leaveWallMark({ room: virtualCwd, body });
+          audioCue('system.unlock');
+          return `iz birakildi: ${virtualCwd}. (wall ile oku)`;
+        } catch (error) {
+          const msg = String(error?.message || '');
+          if (/giris/i.test(msg)) return 'mark: iz birakmak icin once giris yap (auth.html).';
+          return 'mark: iz birakilamadi.';
+        }
       };
 
       const uptimeCommand = () => {
@@ -2232,6 +2530,16 @@
         if (result.ok) {
           award(Math.max(state.level, 2));
           pulse(720, 0.09);
+          // Pipe'i cozmek dunyaya baglanir: coolant kazandirir ve /core muhrunu acar (Faz 5).
+          if (!(state.unlocked || []).includes('/core')) {
+            state.inventory = [...new Set([...(state.inventory || []), 'coolant'])];
+            state.unlocked = [...new Set([...(state.unlocked || []), '/core'])];
+            state.easterTrail = [...(state.easterTrail || []), 'unlock:/core'].slice(-4);
+            persist();
+            scheduleWorldSave();
+            updateAccess();
+            pipeGame.status = `CORE COOLING / muhur cozuldu: /core acildi (cd core) / ${pipeGame.score} pts`;
+          }
         } else {
           pulse(130, 0.08);
         }
@@ -2408,6 +2716,48 @@
           description: 'komut ve route arar',
           aliases: ['search'],
           action: () => 'find: usage find <term>'
+        },
+        {
+          command: 'look',
+          description: 'bulundugun esigi tasvir eder, incelenebilirleri listeler',
+          aliases: ['bak', 'l', 'incele etraf'],
+          action: () => lookCommand()
+        },
+        {
+          command: 'examine',
+          description: 'bir nesneyi yakindan inceler',
+          aliases: ['ex', 'incele', 'x'],
+          action: () => 'examine: usage examine <nesne>'
+        },
+        {
+          command: 'take',
+          description: 'odadaki bir nesneyi cantaya alir',
+          aliases: ['al', 'pick', 'pick up'],
+          action: () => 'take: usage take <nesne>'
+        },
+        {
+          command: 'inventory',
+          description: 'cantandaki nesneleri listeler',
+          aliases: ['inv', 'i', 'canta', 'bag'],
+          action: inventoryCommand
+        },
+        {
+          command: 'unlock',
+          description: 'muhurlu bir esigi dogru anahtarla acar',
+          aliases: ['ac', 'muhur ac', 'open seal'],
+          action: () => 'unlock: usage unlock <oda> [with <anahtar>]'
+        },
+        {
+          command: 'use',
+          description: 'cantadaki bir nesneyi bir hedef uzerinde kullanir',
+          aliases: ['kullan'],
+          action: () => 'use: usage use <nesne> on <hedef>'
+        },
+        {
+          command: 'ask',
+          description: 'oracle\'a dunya baglamiyla soru sorar (deb aciksa onun sesiyle)',
+          aliases: ['sor', 'deb ask', 'nova ask'],
+          action: () => 'ask: usage ask <konu> (ornek: ask vault)'
         },
         {
           command: 'uptime',
@@ -2591,6 +2941,24 @@
           description: 'kisa yerel sinyal uretir',
           aliases: ['ping', 'pulse'],
           action: signalCommand
+        },
+        {
+          command: 'daily',
+          description: 'gunun sinyalini gosterir (bulut; yoksa lokal)',
+          aliases: ['gunluk', 'gunluk sinyal', 'today', 'gunun sinyali'],
+          action: dailySignalCommand
+        },
+        {
+          command: 'wall',
+          description: 'bulundugun esikteki asenkron izleri okur',
+          aliases: ['read wall', 'duvar', 'duvari oku'],
+          action: readWallCommand
+        },
+        {
+          command: 'mark',
+          description: 'bulundugun esige iz birakir (giris gerekir)',
+          aliases: ['leave mark', 'iz birak', 'duvara yaz'],
+          action: () => 'mark: usage mark <mesaj>'
         },
         {
           command: 'oracle',
@@ -2801,11 +3169,19 @@
         'terminal:',
         'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',
         '',
+        'world:',
+        'look, examine <nesne>, take <nesne>, inventory, use <x> on <y>, unlock <oda> -- esikleri kesfet, shard\'i bul, /vault muhrunu coz',
+        'ask <konu> / sor <konu> -- oracle\'a dunya baglamiyla sor (deb aciksa onun sesiyle)',
+        'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
+        'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
+        '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
                 '',
         'hidden:',
-        'signal -> oracle -> manifest -> unlock hidden, clues, offline node'
+        'signal -> oracle -> manifest -> unlock hidden, clues, offline node',
+        'thread 1: notes -> examine clues -> take shard -> unlock vault -> cd vault',
+        'thread 2: lab -> pipe (coolant\'i cekirdege ulastir) -> cd core'
       ].join('\n');
 
       const commandMap = commandDefinitions.reduce((map, item) => {
@@ -3016,6 +3392,23 @@
         }
       };
 
+      // Dunya baglami enjekte edilmis Oracle sorgusu. deb companion aciksa cevabi onun
+      // sesi/gorseli olarak sunar (NPC baglama).
+      const askOracleAbout = async (topic) => {
+        const clean = extractAskTopic(topic);
+        if (!clean) {
+          if (commandOutput) commandOutput.textContent = 'ask: usage ask <konu> (ornek: ask vault, sor convivium nedir).';
+          return;
+        }
+        const deb = window.DebCompanion || window.NovaCompanion;
+        const debActive = deb?.getState?.().active;
+        if (debActive) {
+          deb.trigger?.('bloom');
+          if (microOracle) microOracle.textContent = 'deb relaying oracle';
+        }
+        await sendOracleQuery(`${buildWorldContext()} Soru: ${clean}`);
+      };
+
       const runCommand = async (raw) => {
         const query = raw.trim().slice(0, 520);
         const command = normalizeCommand(query);
@@ -3040,6 +3433,24 @@
           await sendOracleQuery(confirmedQuery);
           return;
         }
+        const askPrefix = ['ask ', 'sor ', 'deb ask ', 'nova ask '].find(prefix => command.startsWith(prefix));
+        if (askPrefix) {
+          commandInput.value = '';
+          clearCommandSuggestions();
+          await askOracleAbout(command.slice(askPrefix.length));
+          return;
+        }
+        const markPrefix = ['leave mark ', 'iz birak ', 'duvara yaz ', 'mark '].find(prefix => command.startsWith(prefix));
+        if (markPrefix) {
+          // Ham metni kullan (normalize edilmemis) ki kullanici mesaji oldugu gibi kalsin.
+          const rawBody = query.replace(/^\s*(leave mark|iz birak|duvara yaz|mark)\s+/i, '');
+          const result = await leaveMarkCommand(rawBody);
+          if (commandOutput) commandOutput.textContent = result;
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
         const action = commandMap[command];
         const parameterActions = [
           ['ls ', value => lsCommand(value)],
@@ -3050,6 +3461,16 @@
           ['type ', value => catCommand(value)],
           ['find ', value => findCommand(value)],
           ['search ', value => findCommand(value)],
+          ['look ', value => lookCommand(value)],
+          ['bak ', value => lookCommand(value)],
+          ['examine ', value => examineCommand(value)],
+          ['incele ', value => examineCommand(value)],
+          ['take ', value => takeCommand(value)],
+          ['al ', value => takeCommand(value)],
+          ['unlock ', value => unlockRoomCommand(value)],
+          ['ac ', value => unlockRoomCommand(value)],
+          ['use ', value => useCommand(value)],
+          ['kullan ', value => useCommand(value)],
           ['theme ', value => themeCommand(value)],
           ['color ', value => themeCommand(value)],
           ['volume ', value => volumeCommand(value)],
