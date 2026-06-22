@@ -645,6 +645,92 @@
     return data || [];
   }
 
+  async function fetchWorldState() {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) return null;
+    const { data, error } = await client
+      .from('world_state')
+      .select('unlocked, inventory, discovered, level, updated_at')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function saveWorldState(worldState) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('World state icin once giris yapmalisiniz.');
+    const toArray = (value) => Array.isArray(value)
+      ? [...new Set(value.map((item) => String(item).slice(0, 120)))].slice(0, 200)
+      : [];
+    const payload = {
+      user_id: user.id,
+      unlocked: toArray(worldState.unlocked),
+      inventory: toArray(worldState.inventory),
+      discovered: toArray(worldState.discovered),
+      level: Math.max(0, Math.min(99, Number(worldState.level) || 0)),
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await client
+      .from('world_state')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select('unlocked, inventory, discovered, level, updated_at')
+      .single();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function fetchDailySignal(signalDate) {
+    const client = await requireClient();
+    const today = signalDate || new Date().toISOString().slice(0, 10);
+    const { data, error } = await client
+      .from('daily_signal')
+      .select('signal_date, body')
+      .eq('signal_date', today)
+      .maybeSingle();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function fetchWallMarks(room, limit = 8) {
+    const client = await requireClient();
+    let query = client
+      .from('wall_marks')
+      .select('id, room, body, created_at')
+      .order('created_at', { ascending: false })
+      .limit(Math.max(1, Math.min(50, Number(limit) || 8)));
+    if (room) query = query.eq('room', String(room).slice(0, 64));
+    const { data, error } = await query;
+    if (error) throw new Error(toMessage(error));
+    return data || [];
+  }
+
+  async function leaveWallMark(mark) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Iz birakmak icin once giris yapmalisiniz.');
+    const body = String(mark.body || '')
+      .replace(/[\x00-\x1f\x7f]/g, " ")
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 280);
+    if (!body) throw new Error('Bos iz birakilamaz.');
+    const payload = {
+      user_id: user.id,
+      room: String(mark.room || '/').slice(0, 64),
+      body
+    };
+    const { data, error } = await client
+      .from('wall_marks')
+      .insert(payload)
+      .select('id, room, body, created_at')
+      .single();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
   function validateArticlePayload(payload) {
     if (!payload.title) throw new Error('Baslik gerekli.');
     if (!payload.slug) throw new Error('Gecerli bir slug gerekli.');
@@ -685,6 +771,11 @@
     fetchOracleProfile,
     upsertOracleProfile,
     updateRecommendationOutcome,
+    fetchWorldState,
+    saveWorldState,
+    fetchDailySignal,
+    fetchWallMarks,
+    leaveWallMark,
     slugify
   };
 })();
