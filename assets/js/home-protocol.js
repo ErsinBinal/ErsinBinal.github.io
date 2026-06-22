@@ -723,9 +723,9 @@
       ];
 
       const commandReadyText = () => [
-        'READY',
-        `level: ${levels[state.level] || levels[0]} / nodes: ${state.opened.length}`,
-        "yeni misin? 'basla' yaz · etrafa bakmak icin 'look' · komutlar 'help'"
+        'CONVIVIUM // READY',
+        `${levels[state.level] || levels[0]} · nodes ${state.opened.length}`,
+        '] look    ] basla    ] help'
       ].join('\n');
 
       const renderCommandBoot = () => {
@@ -1913,7 +1913,8 @@
         '/core': 'Cekirdek'
       };
 
-      // Bulundugun odadan gidebilecegin esikler; kilitliler 🔒, gizli /core sadece acilinca.
+      // Bulundugun odadan gidebilecegin esikler (ProDOS CATALOG tarzi, BUYUK harf).
+      // Kilitliler '*' ile isaretlenir (ProDOS kilit konvansiyonu); gizli /core acilinca gorunur.
       const roomExits = (path) => {
         const unlocked = new Set(state.unlocked || []);
         const order = ['/', '/routes', '/lab', '/notes', '/system', '/vault', '/core'];
@@ -1921,11 +1922,11 @@
         order.forEach((p) => {
           if (p === path) return;
           if (p === '/core' && !unlocked.has('/core')) return; // gizli kalir
-          const name = p === '/' ? '/ (geri)' : p.replace(/^\//, '');
+          const name = (p === '/' ? '/' : p.replace(/^\//, '')).toUpperCase();
           const locked = worldRooms[p]?.locked && !unlocked.has(p);
-          parts.push(locked ? `${name}🔒` : name);
+          parts.push(locked ? `${name}*` : name);
         });
-        return parts.join(' · ');
+        return parts.join('  ');
       };
 
       // "Simdi ne yapmaliyim" satiri: ilerlemeye gore guncellenir.
@@ -1947,22 +1948,31 @@
         return done >= 2 ? 'KEEPER' : done === 1 ? 'INITIATE' : 'GEZGIN';
       };
 
-      // Oda "kokpiti": konum + tasvir + incelenebilirler + cikislar + cep + gorev.
+      // ProDOS volumu tarzi yol: '/' -> /CONVIVIUM, '/notes' -> /CONVIVIUM/NOTES
+      const prodosPath = (path) => path === '/' ? '/CONVIVIUM' : `/CONVIVIUM${path.toUpperCase()}`;
+      const padField = (label) => (`${label}        `).slice(0, 8);
+
+      // Oda "kokpiti" - Apple ProDOS CATALOG estetigi, modern bosluklu. Cerceve/ok yok;
+      // sade durum gosterimi. Komutlari 'basla' ogretir.
       const roomPanel = (path) => {
         const room = worldRooms[path];
-        if (!room) return `look: ${path}: bu esikte gorulecek bir sey yok.`;
-        const title = roomTitles[path] || path;
+        if (!room) return `?NO SUCH VOLUME: ${path}`;
+        const title = (roomTitles[path] || path).toUpperCase();
         const objs = Object.keys(room.objects || {});
         const inv = state.inventory || [];
+        const exits = roomExits(path);
+        const lockHint = exits.includes('*') ? '    (* kilitli)' : '';
         const lines = [];
-        lines.push(`+- KONUM: ${path} - ${title}  [${rankTitle()}]`);
-        lines.push(`| ${room.look}`);
-        lines.push('|');
-        if (objs.length) lines.push(`| incele  : ${objs.join(', ')}   -> examine <sey>`);
-        lines.push(`| cikislar: ${roomExits(path)}   -> cd <oda>`);
-        lines.push(`| cebin   : ${inv.length ? inv.join(', ') : 'bos'}   -> inventory`);
-        lines.push(`| > gorev : ${currentObjective()}`);
-        lines.push('+----------------------------------------------');
+        lines.push(`] ${prodosPath(path)}`);
+        lines.push('');
+        lines.push(`  ${title}  ::  ${rankTitle()}`);
+        lines.push(`  ${room.look}`);
+        lines.push('');
+        if (objs.length) lines.push(`  ${padField('INCELE')}${objs.join('  ')}`);
+        lines.push(`  ${padField('GIT')}${exits}${lockHint}`);
+        lines.push(`  ${padField('CANTA')}${inv.length ? inv.join('  ') : '(bos)'}`);
+        lines.push(`  ${padField('GOREV')}${currentObjective()}`);
+        lines.push(']');
         return lines.join('\n');
       };
 
@@ -2051,22 +2061,24 @@
         return unlockCeremony(path, roomName);
       };
 
-      // Muhur cozulunce gosterilen torensel mesaj + kazanilan unvan (gorunur odul).
+      // Muhur cozulunce gosterilen torensel mesaj + kazanilan unvan (ProDOS prompt tarzi).
       const unlockCeremony = (path, roomName) => {
         const both = (state.unlocked || []).includes('/vault') && (state.unlocked || []).includes('/core');
         const lines = [
-          '*** MUHUR COZULDU ***',
-          `>> ${path} acildi.`,
-          `unvan: ${rankTitle()}`,
+          '] MUHUR COZULDU',
+          '',
+          `  ${prodosPath(path)} acildi.`,
+          `  unvan: ${rankTitle()}`,
           ''
         ];
         if (both) {
-          lines.push('Iki iz de tamamlandi. Artik bir KEEPER\'sin.');
-          lines.push('Yeni: wall ile iz birak, daily ile gunun sinyalini izle.');
+          lines.push('  Iki iz de tamamlandi. Artik bir KEEPER\'sin.');
+          lines.push('  Yeni: wall (iz birak) · daily (gunun sinyali)');
         } else {
-          lines.push(`Simdi: cd ${roomName} ile iceri gir.`);
-          lines.push(`Sonraki iz -> ${currentObjective()}`);
+          lines.push(`  simdi: cd ${roomName}`);
+          lines.push(`  sonraki: ${currentObjective()}`);
         }
+        lines.push(']');
         return lines.join('\n');
       };
 
@@ -2721,7 +2733,7 @@
         {
           command: 'basla',
           description: 'yeni gelenler icin adim adim baslangic rehberi',
-          aliases: ['başla', 'tutorial', 'nasil', 'nasıl', 'baslangic', 'rehber', 'start'],
+          aliases: ['başla', 'rehber'],
           action: () => baslaCommand()
         },
         {
@@ -3247,24 +3259,25 @@
 
       const keyboardHelpText = () => 'keyboard: D dossier, L logic, T signal, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, Tab complete, Up/Down history, ESC close';
 
-      // Yeni gelene yonelik kisa, adim adim baslangic rehberi.
+      // Yeni gelene yonelik kisa, adim adim baslangic rehberi (ProDOS prompt tarzi).
       const baslaCommand = () => [
-        '+- BASLANGIC ---------------------------------',
-        '| Convivium bir terminal-dunyasi. Kelimelerle gezilir.',
-        '|',
-        '| 1) look        -> neredesin, etrafinda ne var',
-        '| 2) examine <x> -> bir seye yakindan bak (ipucu/esya)',
-        '| 3) take <x>    -> esyayi cebine al  (inventory ile bak)',
-        '| 4) cd <oda>    -> baska esige gec   (cikislar look\'ta yazar)',
-        '| 5) unlock <oda>-> dogru esyayla kilidi ac',
-        '|',
-        `| > su anki gorevin: ${currentObjective()}`,
-        '| ipucu: simdi "look" yaz ve takip et.',
-        '+----------------------------------------------'
+        '] BASLANGIC',
+        '',
+        '  Convivium kelimelerle gezilen bir terminal-dunyasi.',
+        '',
+        '  look          neredesin, etrafinda ne var',
+        '  examine <x>   bir seye yakindan bak (ipucu/esya)',
+        '  take <x>      esyayi cebine al',
+        '  cd <oda>      baska esige gec',
+        '  unlock <oda>  dogru esyayla kilidi ac',
+        '',
+        `  GOREV   ${currentObjective()}`,
+        '  ipucu: simdi "look" yaz.',
+        ']'
       ].join('\n');
 
       const commandHelpText = () => [
-        'BASLANGIC: "basla" yaz (adim adim rehber) · "look" ile etrafa bak',
+        '] basla -> adim adim rehber',
         '',
         'world (kesif):',
         'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
