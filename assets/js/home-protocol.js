@@ -725,7 +725,7 @@
       const commandReadyText = () => [
         'READY',
         `level: ${levels[state.level] || levels[0]} / nodes: ${state.opened.length}`,
-        'type help or ask anything'
+        "yeni misin? 'basla' yaz · etrafa bakmak icin 'look' · komutlar 'help'"
       ].join('\n');
 
       const renderCommandBoot = () => {
@@ -1799,8 +1799,14 @@
         }
         virtualCwd = path;
         persistUserPreferences({ virtualCwd });
-        const look = room?.look;
-        return look ? `${virtualCwd}\n${look}` : virtualCwd;
+        if (worldRooms[path]) {
+          if (!state.discovered.includes(path)) {
+            state.discovered = [...new Set([...state.discovered, path])];
+            persist();
+          }
+          return roomPanel(path);
+        }
+        return virtualCwd;
       };
 
       const catCommand = (target = '') => {
@@ -1897,6 +1903,69 @@
         }
       };
 
+      const roomTitles = {
+        '/': 'Ana Hat',
+        '/routes': 'Rotalar',
+        '/lab': 'Laboratuvar',
+        '/notes': 'Saha Notlari',
+        '/system': 'Sistem',
+        '/vault': 'Kasa',
+        '/core': 'Cekirdek'
+      };
+
+      // Bulundugun odadan gidebilecegin esikler; kilitliler 🔒, gizli /core sadece acilinca.
+      const roomExits = (path) => {
+        const unlocked = new Set(state.unlocked || []);
+        const order = ['/', '/routes', '/lab', '/notes', '/system', '/vault', '/core'];
+        const parts = [];
+        order.forEach((p) => {
+          if (p === path) return;
+          if (p === '/core' && !unlocked.has('/core')) return; // gizli kalir
+          const name = p === '/' ? '/ (geri)' : p.replace(/^\//, '');
+          const locked = worldRooms[p]?.locked && !unlocked.has(p);
+          parts.push(locked ? `${name}🔒` : name);
+        });
+        return parts.join(' · ');
+      };
+
+      // "Simdi ne yapmaliyim" satiri: ilerlemeye gore guncellenir.
+      const currentObjective = () => {
+        const inv = new Set(state.inventory || []);
+        const unlocked = new Set(state.unlocked || []);
+        if (!unlocked.has('/vault')) {
+          if (!inv.has('shard')) return "notes esigine git, 'clue' incele, shard'i al";
+          return 'unlock vault ile kasayi ac, sonra cd vault';
+        }
+        if (!unlocked.has('/core')) return "lab esigine git, pipe bulmacasini coz (-> /core acilir)";
+        return 'iki iz de tamam · wall ile iz birak, daily ile gunun sinyali';
+      };
+
+      // Ilerlemeye gore kazanilan unvan (gorunur odul).
+      const rankTitle = () => {
+        const unlocked = new Set(state.unlocked || []);
+        const done = (unlocked.has('/vault') ? 1 : 0) + (unlocked.has('/core') ? 1 : 0);
+        return done >= 2 ? 'KEEPER' : done === 1 ? 'INITIATE' : 'GEZGIN';
+      };
+
+      // Oda "kokpiti": konum + tasvir + incelenebilirler + cikislar + cep + gorev.
+      const roomPanel = (path) => {
+        const room = worldRooms[path];
+        if (!room) return `look: ${path}: bu esikte gorulecek bir sey yok.`;
+        const title = roomTitles[path] || path;
+        const objs = Object.keys(room.objects || {});
+        const inv = state.inventory || [];
+        const lines = [];
+        lines.push(`+- KONUM: ${path} - ${title}  [${rankTitle()}]`);
+        lines.push(`| ${room.look}`);
+        lines.push('|');
+        if (objs.length) lines.push(`| incele  : ${objs.join(', ')}   -> examine <sey>`);
+        lines.push(`| cikislar: ${roomExits(path)}   -> cd <oda>`);
+        lines.push(`| cebin   : ${inv.length ? inv.join(', ') : 'bos'}   -> inventory`);
+        lines.push(`| > gorev : ${currentObjective()}`);
+        lines.push('+----------------------------------------------');
+        return lines.join('\n');
+      };
+
       const currentRoom = () => worldRooms[virtualCwd] || null;
 
       const roomObjectKey = (room, target) => {
@@ -1916,10 +1985,7 @@
           state.discovered = [...new Set([...state.discovered, virtualCwd])];
           persist();
         }
-        const objects = Object.keys(room.objects || {});
-        const lines = [room.look];
-        if (objects.length) lines.push(`incelenebilir: ${objects.join(', ')} (examine <nesne>)`);
-        return lines.join('\n');
+        return roomPanel(virtualCwd);
       };
 
       const examineCommand = (target = '') => {
@@ -1982,7 +2048,26 @@
         award(3);
         updateAccess();
         audioCue('system.unlock');
-        return `muhur cozuldu: ${path}. simdi cd ${roomName} ile gir.`;
+        return unlockCeremony(path, roomName);
+      };
+
+      // Muhur cozulunce gosterilen torensel mesaj + kazanilan unvan (gorunur odul).
+      const unlockCeremony = (path, roomName) => {
+        const both = (state.unlocked || []).includes('/vault') && (state.unlocked || []).includes('/core');
+        const lines = [
+          '*** MUHUR COZULDU ***',
+          `>> ${path} acildi.`,
+          `unvan: ${rankTitle()}`,
+          ''
+        ];
+        if (both) {
+          lines.push('Iki iz de tamamlandi. Artik bir KEEPER\'sin.');
+          lines.push('Yeni: wall ile iz birak, daily ile gunun sinyalini izle.');
+        } else {
+          lines.push(`Simdi: cd ${roomName} ile iceri gir.`);
+          lines.push(`Sonraki iz -> ${currentObjective()}`);
+        }
+        return lines.join('\n');
       };
 
       // use <nesne> on <hedef>: cantadaki nesneyi dunyada kullan (genisletilebilir).
@@ -2634,6 +2719,12 @@
 
       const commandDefinitions = [
         {
+          command: 'basla',
+          description: 'yeni gelenler icin adim adim baslangic rehberi',
+          aliases: ['başla', 'tutorial', 'nasil', 'nasıl', 'baslangic', 'rehber', 'start'],
+          action: () => baslaCommand()
+        },
+        {
           command: 'help',
           description: 'tum kisayol komutlarini listeler',
           aliases: ['?', 'yardim', 'komutlar', 'commands', 'shortcuts'],
@@ -3156,7 +3247,28 @@
 
       const keyboardHelpText = () => 'keyboard: D dossier, L logic, T signal, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, Tab complete, Up/Down history, ESC close';
 
+      // Yeni gelene yonelik kisa, adim adim baslangic rehberi.
+      const baslaCommand = () => [
+        '+- BASLANGIC ---------------------------------',
+        '| Convivium bir terminal-dunyasi. Kelimelerle gezilir.',
+        '|',
+        '| 1) look        -> neredesin, etrafinda ne var',
+        '| 2) examine <x> -> bir seye yakindan bak (ipucu/esya)',
+        '| 3) take <x>    -> esyayi cebine al  (inventory ile bak)',
+        '| 4) cd <oda>    -> baska esige gec   (cikislar look\'ta yazar)',
+        '| 5) unlock <oda>-> dogru esyayla kilidi ac',
+        '|',
+        `| > su anki gorevin: ${currentObjective()}`,
+        '| ipucu: simdi "look" yaz ve takip et.',
+        '+----------------------------------------------'
+      ].join('\n');
+
       const commandHelpText = () => [
+        'BASLANGIC: "basla" yaz (adim adim rehber) · "look" ile etrafa bak',
+        '',
+        'world (kesif):',
+        'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
+        '',
         'routes:',
         'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
         '',
