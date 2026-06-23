@@ -730,6 +730,7 @@
 
       const renderCommandBoot = () => {
         if (!commandShell || !commandOutput || commandInFlight) return;
+        if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-booting');
@@ -765,6 +766,7 @@
 
       const closeCommandWithMatrix = () => {
         if (!commandShell || !commandShell.classList.contains('is-open')) return;
+        if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.remove('is-booting');
@@ -814,6 +816,7 @@
       const closeCommand = () => {
         if (!commandShell) return;
         audioCue('terminal.close');
+        if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
@@ -3470,6 +3473,42 @@
         writeNext();
       });
 
+      // Komut ciktilari icin hizli, atlanabilir teletype efekti (terminal hissi).
+      // Uzunluk ne olursa olsun toplam sure sabit (~0.5sn); reduce-motion'da aninda.
+      let terminalTypeTimer = null;
+      let terminalTypeFull = '';
+      const flushTerminalType = () => {
+        if (terminalTypeTimer === null) return false;
+        window.clearInterval(terminalTypeTimer);
+        terminalTypeTimer = null;
+        if (commandOutput) commandOutput.textContent = terminalTypeFull;
+        return true;
+      };
+      const printTerminal = (text) => {
+        if (!commandOutput) return;
+        flushTerminalType();
+        const full = String(text ?? '');
+        terminalTypeFull = full;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || full.length < 24) {
+          commandOutput.textContent = full;
+          return;
+        }
+        commandOutput.textContent = '';
+        let index = 0;
+        const step = Math.max(1, Math.ceil(full.length / 48)); // ~48 kare -> sabit kisa sure
+        terminalTypeTimer = window.setInterval(() => {
+          index += step;
+          if (index >= full.length) {
+            window.clearInterval(terminalTypeTimer);
+            terminalTypeTimer = null;
+            commandOutput.textContent = full;
+            return;
+          }
+          commandOutput.textContent = full.slice(0, index);
+        }, 12);
+      };
+
       const sendOracleQuery = async (query) => {
         if (commandOutput) commandOutput.textContent = oracleWaitLines[0];
         if (microOracle) microOracle.textContent = 'external oracle channel';
@@ -3560,7 +3599,7 @@
           // Ham metni kullan (normalize edilmemis) ki kullanici mesaji oldugu gibi kalsin.
           const rawBody = query.replace(/^\s*(leave mark|iz birak|duvara yaz|mark)\s+/i, '');
           const result = await leaveMarkCommand(rawBody);
-          if (commandOutput) commandOutput.textContent = result;
+          printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
@@ -3596,7 +3635,7 @@
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
           const result = parameterMatch[1](command.slice(parameterMatch[0].length));
-          if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
+          printTerminal(result !== undefined ? result : `executing: ${query}`);
           audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
@@ -3604,7 +3643,7 @@
         }
         if (action) {
           const result = await action();
-          if (commandOutput) commandOutput.textContent = result !== undefined ? result : `executing: ${query}`;
+          printTerminal(result !== undefined ? result : `executing: ${query}`);
           audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
@@ -3623,6 +3662,8 @@
       };
 
       commandInput?.addEventListener('keydown', event => {
+        // Teletype suruyorsa herhangi bir tusa basinca aninda tamamlansin (atlanabilir).
+        if (terminalTypeTimer !== null) flushTerminalType();
         const matches = matchingCommands(commandInput.value);
         if (pipeGame?.active) {
           const key = event.key.toLowerCase();
