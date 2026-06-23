@@ -3322,6 +3322,55 @@
 
       const commandChoices = commandDefinitions.flatMap(item => [item.command, ...(item.aliases || [])]);
 
+      // --- Akilli parser (Dalga 2): esanlamli verb haritasi + yazim toleransi ---
+      // Niyet-esanlamlilari (cogu zaten alias; burasi alias olmayan dogal fiiller icin).
+      // Belirsiz Turkce kelimeler (git/gel...) bilinerek disarida; dogal sorulari kacirmasin.
+      const COMMAND_SYNONYMS = {
+        go: 'cd', goto: 'cd', enter: 'cd', move: 'cd',
+        inspect: 'examine',
+        grab: 'take', get: 'take', pickup: 'take',
+        items: 'inventory',
+        guide: 'basla'
+      };
+      const applySynonyms = (cmd) => {
+        const sp = cmd.indexOf(' ');
+        const first = sp === -1 ? cmd : cmd.slice(0, sp);
+        const canon = COMMAND_SYNONYMS[first];
+        return canon ? canon + (sp === -1 ? '' : cmd.slice(sp)) : cmd;
+      };
+      // Komut sozlugu: tum komut/alias'larin ilk kelimesi (tekil).
+      const commandVocab = [...new Set(
+        commandChoices.map(choice => normalizeCommand(choice).split(' ')[0]).filter(word => word.length >= 2)
+      )];
+      // Kucuk Levenshtein (uzunluk farki 2'den fazlaysa erken cik).
+      const editDistance = (a, b) => {
+        if (Math.abs(a.length - b.length) > 2) return 99;
+        const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+        for (let i = 0; i <= a.length; i += 1) dp[i][0] = i;
+        for (let j = 0; j <= b.length; j += 1) dp[0][j] = j;
+        for (let i = 1; i <= a.length; i += 1) {
+          for (let j = 1; j <= b.length; j += 1) {
+            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+          }
+        }
+        return dp[a.length][b.length];
+      };
+      // Komut-benzeri ama eslesmeyen girdiye en yakin komutu onerir (yoksa null).
+      const suggestNearestCommand = (cmd) => {
+        const words = cmd.split(' ').filter(Boolean);
+        const first = words[0] || '';
+        if (first.length < 3 || words.length > 3) return null;
+        let best = null;
+        let bestD = 3;
+        commandVocab.forEach((word) => {
+          const d = editDistance(first, word);
+          if (d < bestD) { bestD = d; best = word; }
+        });
+        if (!best || bestD === 0 || bestD > 2) return null;
+        const rest = words.slice(1).join(' ');
+        return rest ? `${best} ${rest}` : best;
+      };
+
       const matchingCommands = (raw) => {
         const query = normalizeCommand(raw);
         if (!query) return commandChoices.slice(0, 6);
@@ -3585,7 +3634,7 @@
 
       const runCommand = async (raw) => {
         const query = raw.trim().slice(0, 520);
-        const command = normalizeCommand(query);
+        const command = applySynonyms(normalizeCommand(query));
         if (!query || commandInFlight) return;
         state.commands += 1;
         state.commandLog = [...(state.commandLog || []), query].slice(-8);
@@ -3673,6 +3722,15 @@
         }
         if (isCreatorQuery(command)) {
           location.href = 'ozgecmisim.html';
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+
+        // Oracle'a dusmeden once: komut-benzeri bir yazim hatasi mi? "bunu mu demek istedin?"
+        const suggestion = suggestNearestCommand(command);
+        if (suggestion) {
+          printTerminal(`bilinmeyen komut: ${command}\nbunu mu demek istedin? -> ${suggestion}`);
           commandInput.value = '';
           clearCommandSuggestions();
           return;
