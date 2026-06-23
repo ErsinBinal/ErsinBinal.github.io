@@ -137,6 +137,7 @@
       let screenSaverStart = 0;
       let screenSaverPlanetOrder = [];
       let virtualCwd = '/';
+      let transcript = '';
       let pipeGame = null;
       let pipeAnimationTimers = [];
       let selectedTheme = 'green';
@@ -748,14 +749,14 @@
             commandBootTimer = null;
             window.setTimeout(() => {
               if (!commandShell.classList.contains('is-open') || commandInFlight) return;
-              commandOutput.textContent = commandReadyText();
+              transcriptReset(commandReadyText());
               commandShell.classList.remove('is-booting');
             }, 420);
           }
         };
 
         if (reduceMotion) {
-          commandOutput.textContent = commandReadyText();
+          transcriptReset(commandReadyText());
           commandShell.classList.remove('is-booting');
           return;
         }
@@ -1736,7 +1737,7 @@
       };
 
       const clearCommand = () => {
-        if (commandOutput) commandOutput.textContent = '';
+        transcriptReset();
         return '';
       };
 
@@ -3436,44 +3437,51 @@
         if (commandShell) commandShell.setAttribute('aria-busy', String(busy));
       };
 
+      // --- Scrollback / transcript modeli ---
+      // commandOutput artik silinmiyor; akan bir gunluk. Komut ekosu (] girdi) + ciktilar
+      // eklenir, en alta kaydirilir. "pending" parametresi henuz commit edilmemis (teletype
+      // suren ya da gecici "oracle bekliyor") metni gosterir.
+      const TRANSCRIPT_MAX = 16000;
+      const scrollTranscriptToEnd = () => { if (commandOutput) commandOutput.scrollTop = commandOutput.scrollHeight; };
+      const renderTranscript = (pending = '') => {
+        if (!commandOutput) return;
+        commandOutput.textContent = transcript + pending;
+        scrollTranscriptToEnd();
+      };
+      const commitTranscript = (text) => {
+        transcript += text;
+        if (transcript.length > TRANSCRIPT_MAX) transcript = transcript.slice(-TRANSCRIPT_MAX);
+      };
+      const transcriptReset = (seed = '') => {
+        transcript = seed ? `${seed}\n` : '';
+        renderTranscript();
+      };
+      const transcriptEcho = (input) => {
+        commitTranscript(`] ${input}\n`);
+        renderTranscript();
+      };
+
+      // Oracle cevabi transcript'e daktilo ile eklenir (yavas, "dusunuyor" cadence).
       const typeOracleOutput = (text) => new Promise((resolve) => {
-        if (!commandOutput) {
-          resolve();
-          return;
-        }
-
         const output = String(text || '');
+        if (!commandOutput) { resolve(); return; }
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion || output.length < 12) {
-          commandOutput.textContent = output;
-          resolve();
-          return;
-        }
-
-        commandOutput.textContent = '';
+        const finish = () => { commitTranscript(`${output}\n`); renderTranscript(); resolve(); };
+        if (reduceMotion || output.length < 12) { finish(); return; }
         let index = 0;
         const writeNext = () => {
-          if (!commandInFlight) {
-            resolve();
-            return;
-          }
-
+          if (!commandInFlight) { finish(); return; }
           index += 1;
-          commandOutput.textContent = output.slice(0, index);
-          if (index >= output.length) {
-            resolve();
-            return;
-          }
-
+          renderTranscript(output.slice(0, index));
+          if (index >= output.length) { finish(); return; }
           const char = output[index - 1];
           const delay = /[.!?]/.test(char) ? 90 : /[,;:]/.test(char) ? 45 : char === '\n' ? 70 : 14;
           window.setTimeout(writeNext, delay);
         };
-
         writeNext();
       });
 
-      // Komut ciktilari icin hizli, atlanabilir teletype efekti (terminal hissi).
+      // Komut ciktilari icin hizli, atlanabilir teletype; transcript'e eklenir.
       // Uzunluk ne olursa olsun toplam sure sabit (~0.5sn); reduce-motion'da aninda.
       let terminalTypeTimer = null;
       let terminalTypeFull = '';
@@ -3481,43 +3489,57 @@
         if (terminalTypeTimer === null) return false;
         window.clearInterval(terminalTypeTimer);
         terminalTypeTimer = null;
-        if (commandOutput) commandOutput.textContent = terminalTypeFull;
+        commitTranscript(`${terminalTypeFull}\n`);
+        renderTranscript();
         return true;
       };
       const printTerminal = (text) => {
         if (!commandOutput) return;
         flushTerminalType();
-        const full = String(text ?? '');
-        terminalTypeFull = full;
+        const body = String(text ?? '');
+        if (body === '') { renderTranscript(); return; } // bos cikti: sadece yenile (clear sonrasi)
+        terminalTypeFull = body;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion || full.length < 24) {
-          commandOutput.textContent = full;
+        if (reduceMotion || body.length < 24) {
+          commitTranscript(`${body}\n`);
+          renderTranscript();
           return;
         }
-        commandOutput.textContent = '';
         let index = 0;
-        const step = Math.max(1, Math.ceil(full.length / 48)); // ~48 kare -> sabit kisa sure
+        const step = Math.max(1, Math.ceil(body.length / 48)); // ~48 kare -> sabit kisa sure
         terminalTypeTimer = window.setInterval(() => {
           index += step;
-          if (index >= full.length) {
+          if (index >= body.length) {
             window.clearInterval(terminalTypeTimer);
             terminalTypeTimer = null;
-            commandOutput.textContent = full;
+            commitTranscript(`${body}\n`);
+            renderTranscript();
             return;
           }
-          commandOutput.textContent = full.slice(0, index);
+          renderTranscript(body.slice(0, index));
         }, 12);
       };
 
+      // Pipe oyunu ekrani sahiplenir (her kare tam tahta); transcript'e spam etmez.
+      // Oyun aktifse dogrudan yaz, degilse transcript'e ekle.
+      const emitResult = (result, query) => {
+        const text = result !== undefined ? result : `executing: ${query}`;
+        if (pipeGame?.active) {
+          if (commandOutput) commandOutput.textContent = text;
+        } else {
+          printTerminal(text);
+        }
+      };
+
       const sendOracleQuery = async (query) => {
-        if (commandOutput) commandOutput.textContent = oracleWaitLines[0];
+        renderTranscript(oracleWaitLines[0]); // gecici "bekliyor" gostergesi (commit edilmez)
         if (microOracle) microOracle.textContent = 'external oracle channel';
         setCommandBusy(true);
         let waitLineIndex = 0;
         let waitSignal = window.setInterval(() => {
           if (!commandInFlight || !commandOutput) return;
           waitLineIndex = (waitLineIndex + 1) % oracleWaitLines.length;
-          commandOutput.textContent = oracleWaitLines[waitLineIndex];
+          renderTranscript(oracleWaitLines[waitLineIndex]);
         }, 7000);
 
         try {
@@ -3532,11 +3554,9 @@
           pulse(520, 0.07);
         } catch (error) {
           const status = error?.status || 0;
-          if (commandOutput) {
-            commandOutput.textContent = status === 429
-              ? 'oracle mesgul. dis servis limitine takildi; biraz sonra tekrar dene.'
-              : 'oracle channel noisy. dis servis su an yanit vermiyor; biraz sonra tekrar dene.';
-          }
+          printTerminal(status === 429
+            ? 'oracle mesgul. dis servis limitine takildi; biraz sonra tekrar dene.'
+            : 'oracle channel noisy. dis servis su an yanit vermiyor; biraz sonra tekrar dene.');
           if (microOracle) microOracle.textContent = 'oracle unavailable';
           pulse(150, 0.08);
         } finally {
@@ -3551,7 +3571,7 @@
       const askOracleAbout = async (topic) => {
         const clean = extractAskTopic(topic);
         if (!clean) {
-          if (commandOutput) commandOutput.textContent = 'ask: usage ask <konu> (ornek: ask vault, sor convivium nedir).';
+          printTerminal('ask: usage ask <konu> (ornek: ask vault, sor convivium nedir).');
           return;
         }
         const deb = window.DebCompanion || window.NovaCompanion;
@@ -3573,9 +3593,11 @@
         persist();
         audioCue('terminal.run');
         pulse(390, 0.055);
+        // Komut ekosu transcript'e (pipe oyunu ekrani sahiplenirken atla).
+        if (!pipeGame?.active) transcriptEcho(query);
         if (['oracle yes', 'ask oracle', 'confirm oracle'].includes(command)) {
           if (!pendingOracleQuery) {
-            if (commandOutput) commandOutput.textContent = 'oracle: bekleyen sorgu yok. Once serbest bir soru yaz.';
+            printTerminal('oracle: bekleyen sorgu yok. Once serbest bir soru yaz.');
             commandInput.value = '';
             clearCommandSuggestions();
             return;
@@ -3635,7 +3657,7 @@
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
           const result = parameterMatch[1](command.slice(parameterMatch[0].length));
-          printTerminal(result !== undefined ? result : `executing: ${query}`);
+          emitResult(result, query);
           audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
@@ -3643,7 +3665,7 @@
         }
         if (action) {
           const result = await action();
-          printTerminal(result !== undefined ? result : `executing: ${query}`);
+          emitResult(result, query);
           audioCue('terminal.complete');
           commandInput.value = '';
           clearCommandSuggestions();
@@ -3705,7 +3727,8 @@
           }
           if (pipeShortcutMode && key === 'q') {
             event.preventDefault();
-            if (commandOutput) commandOutput.textContent = pipeCommand('quit');
+            const closeMsg = pipeCommand('quit'); // pipeGame=null olur; transcript geri gelir
+            printTerminal(closeMsg);
             return;
           }
           if (event.key === 'Enter' && !commandInput.value.trim()) {
