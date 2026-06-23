@@ -2881,18 +2881,25 @@
       // checkpoint catallanmasi, palmiyeler, 293 km/s tavan hiz.
       // ============================================================
       const OUTRUN_W = 61;
-      const OUTRUN_H = 19;
-      const OUTRUN_HORIZON = 5;
-      const OUTRUN_TICK = 55; // ms (~18 fps)
+      const OUTRUN_H = 20;
+      const OUTRUN_HORIZON = 6;
+      const OUTRUN_TICK = 45; // ms (~22 fps)
       const OUTRUN_DEPTH = 6;  // her satir = 6 yol birimi
+      const OUTRUN_VMAX = 305; // km/s tavan (donem havasi)
 
+      // Zorluk rampasi: ileri etaplar daha keskin viraj, daha yogun trafik, daha kit zaman.
+      // time = o etabin checkpoint'inde EKLENEN saniye (etap 0 = baslangic suresi).
       const outrunStages = [
-        { name: 'CONVIVIUM COAST', curve: 0.9, traffic: 0.85, palm: 'Y' },
-        { name: 'NEON DELTA',      curve: 1.6, traffic: 1.05, palm: 'î' },
-        { name: 'CORE TUNNELS',    curve: 2.2, traffic: 1.30, palm: 'I' },
-        { name: 'VAULT RIDGE',     curve: 1.9, traffic: 1.15, palm: 'î' },
-        { name: 'ATLAS SUMMIT',    curve: 2.5, traffic: 1.40, palm: 'Y' }
+        { name: 'CONVIVIUM COAST', curve: 1.05, traffic: 0.95, len: 1500, time: 34, sky: 'dawn',   scen: 'palm'  },
+        { name: 'NEON DELTA',      curve: 1.75, traffic: 1.25, len: 1650, time: 32, sky: 'dusk',   scen: 'neon'  },
+        { name: 'CORE TUNNELS',    curve: 2.45, traffic: 1.55, len: 1700, time: 31, sky: 'tunnel', scen: 'pylon' },
+        { name: 'VAULT RIDGE',     curve: 2.15, traffic: 1.45, len: 1750, time: 30, sky: 'storm',  scen: 'rock'  },
+        { name: 'ATLAS SUMMIT',    curve: 2.85, traffic: 1.75, len: 1850, time: 30, sky: 'aurora', scen: 'palm'  }
       ];
+
+      const outrunBestKey = 'convivium.outrun.best';
+      const readOutrunBest = () => { try { return parseInt(window.localStorage.getItem(outrunBestKey) || '0', 10) || 0; } catch { return 0; } };
+      const writeOutrunBest = (v) => { try { window.localStorage.setItem(outrunBestKey, String(v)); } catch {} };
 
       const outrunRadio = [
         { id: 'magical', label: 'MAGICAL SOUND SHOWER', tone: 392 },
@@ -2921,13 +2928,40 @@
       ) * mult;
 
       const outrunSpawnCar = () => {
-        const stage = outrunStages[outrun.stageIndex];
+        const depthSpan = (OUTRUN_H - 1) - OUTRUN_HORIZON;
+        const truck = Math.random() < 0.24;
+        // Kume halinde gelsinler ki weave gerektirsin: bazen iki seridi birden kapat.
         outrun.cars.push({
-          dist: outrun.pos + (OUTRUN_H - OUTRUN_HORIZON) * OUTRUN_DEPTH + 30 + Math.random() * 90,
-          lane: (Math.random() * 1.6) - 0.8,
-          speed: 4 + Math.random() * 3,
-          glyph: Math.random() < 0.3 ? 'truck' : 'car'
+          dist: outrun.pos + (depthSpan + 2) * OUTRUN_DEPTH + Math.random() * 80,
+          lane: clamp((Math.random() * 2 - 1) * 0.9, -0.92, 0.92),
+          speed: truck ? 2.0 + Math.random() * 1.4 : 4.5 + Math.random() * 4.5,
+          truck,
+          scored: false
         });
+      };
+
+      // Sahneye gore gokyuzu dolgu karakteri (donem havasi).
+      const outrunSkyGlyph = (sky, x, y, pos) => {
+        const tw = (x * 7 + y * 13 + Math.floor(pos * 0.06)) % 29;
+        switch (sky) {
+          case 'dawn':   return tw === 0 ? '.' : (y === 0 && tw === 14 ? '~' : ' ');
+          case 'dusk':   return tw === 0 ? '·' : (tw === 9 ? '`' : ' ');
+          case 'tunnel': return (x % 6 === (Math.floor(pos * 0.2) % 6)) ? '│' : (tw === 0 ? '.' : ' ');
+          case 'storm':  return tw === 0 ? ',' : (tw === 5 ? '`' : ' ');
+          case 'aurora': return ((x + y * 2 + Math.floor(pos * 0.1)) % 7 === 0) ? '/' : (tw === 0 ? '.' : ' ');
+          default:       return tw === 0 ? '.' : ' ';
+        }
+      };
+
+      // Sahneye gore yol kenari dekoru.
+      const outrunScenGlyph = (scen, seed) => {
+        switch (scen) {
+          case 'palm':  return seed % 2 ? 'Y' : '♣';
+          case 'neon':  return seed % 3 === 0 ? '╪' : (seed % 3 === 1 ? '◊' : '†');
+          case 'pylon': return 'I';
+          case 'rock':  return seed % 2 ? '▲' : 'Δ';
+          default:      return '|';
+        }
       };
 
       const renderOutrun = () => {
@@ -2936,55 +2970,60 @@
         const grid = Array.from({ length: H }, () => new Array(W).fill(' '));
         const stage = outrunStages[outrun.stageIndex];
         const depthSpan = (H - 1) - horizon;
+        const spd = outrun.speed;
+        const shakeAmt = outrun.shake > 0 ? (Math.floor(outrun.pos) % 2 === 0 ? 1 : -1) * Math.min(2, outrun.shake) : 0;
 
-        // Gokyuzu / horizon bandi (hafif desen, sahneye gore yildiz/bulut).
+        // Gokyuzu / horizon bandi (sahneye gore).
         for (let y = 0; y < horizon; y++) {
-          for (let x = 0; x < W; x++) {
-            const tw = (x * 7 + y * 13 + Math.floor(outrun.pos * 0.05)) % 23;
-            grid[y][x] = tw === 0 ? '.' : (tw === 11 && y === 0 ? '·' : ' ');
-          }
+          for (let x = 0; x < W; x++) grid[y][x] = outrunSkyGlyph(stage.sky, x, y, outrun.pos);
         }
-        // Horizon cizgisi.
         for (let x = 0; x < W; x++) grid[horizon - 1][x] = '━';
 
-        // Yol: yakindan (alt) uzaga (ust) tara, kavisi entegre et.
+        // Yol: kamera yola ortali (alt merkez = W/2); kavis ust satirlari buker.
         const rows = [];
         let curve = 0;
-        let center = (W / 2) + outrun.playerX * (W * 0.10);
+        let center = (W / 2) + shakeAmt;
         for (let y = H - 1; y >= horizon; y--) {
           const depth = (H - 1) - y;
           const t = depth / depthSpan;                 // 0 yakin .. 1 uzak
           const segDist = outrun.pos + depth * OUTRUN_DEPTH;
-          curve += outrunCurveAt(segDist, stage.curve) * 0.10;
+          curve += outrunCurveAt(segDist, stage.curve) * 0.085;
           center += curve;
-          const halfW = Math.max(2, Math.round((W * 0.44) * (1 - t * 0.84)));
+          const halfW = Math.max(2, Math.round((W * 0.46) * (1 - t * 0.85)));
           const cInt = Math.round(center);
           const left = cInt - halfW;
           const right = cInt + halfW;
-          const band = Math.floor((segDist) / 5) % 2; // hareket bandi
-          // Cim/kenar disi
+          const band = Math.floor(segDist / 5) % 2;        // hareket bandi
+          // Cim + hiza bagli hiz cizgileri
           for (let x = 0; x < W; x++) {
-            if (x < left - 1 || x > right + 1) grid[y][x] = band ? ',' : '`';
+            if (x < left - 1 || x > right + 1) {
+              const fast = spd > 0.6 && ((x * 3 + Math.floor(outrun.pos * (0.4 + spd))) % 7 === 0);
+              grid[y][x] = fast ? '-' : (band ? ',' : '`');
+            }
           }
-          // Yol yuzeyi
-          for (let x = Math.max(0, left); x <= Math.min(W - 1, right); x++) grid[y][x] = band ? '·' : ' ';
-          // Kenar serisi (kirmizi-beyaz rumble)
-          const edge = band ? '#' : '|';
+          // Yol yuzeyi (hizla artan tarama dokusu)
+          for (let x = Math.max(0, left); x <= Math.min(W - 1, right); x++) {
+            grid[y][x] = band ? (spd > 0.75 ? '·' : ' ') : ' ';
+          }
+          // Kirmizi/beyaz rumble kenarlar
+          const edge = band ? '▓' : '▌';
+          const edgeR = band ? '▓' : '▐';
           if (left >= 0 && left < W) grid[y][left] = edge;
-          if (right >= 0 && right < W) grid[y][right] = edge;
+          if (right >= 0 && right < W) grid[y][right] = edgeR;
           // Orta serit
           const dash = Math.floor(segDist / 3) % 2;
-          if (dash && halfW > 3 && cInt >= 0 && cInt < W) grid[y][cInt] = ':';
-          // Yol kenari palmiye/dekoru (her birkac derinlikte)
-          if (depth % 4 === 0) {
+          if (dash && halfW > 3 && cInt >= 0 && cInt < W) grid[y][cInt] = '┊';
+          // Yol kenari dekoru
+          if (depth % 4 === Math.floor(outrun.pos / OUTRUN_DEPTH) % 4 && depth > 1) {
+            const g = outrunScenGlyph(stage.scen, depth + Math.floor(segDist / 24));
             const pl = left - 2, pr = right + 2;
-            if (pl >= 0 && pl < W) grid[y][pl] = stage.palm;
-            if (pr >= 0 && pr < W) grid[y][pr] = stage.palm;
+            if (pl >= 0 && pl < W) grid[y][pl] = g;
+            if (pr >= 0 && pr < W) grid[y][pr] = g;
           }
-          rows.push({ y, center: cInt, halfW });
+          rows.push({ y, depth, center: cInt, halfW });
         }
 
-        // Trafik: derinlige gore projeksiyon.
+        // Trafik: derinlige gore projeksiyon (yakinda buyur).
         outrun.cars.forEach(car => {
           const rel = (car.dist - outrun.pos) / OUTRUN_DEPTH;
           if (rel < 0 || rel > depthSpan) return;
@@ -2992,8 +3031,10 @@
           const row = rows.find(r => r.y === y);
           if (!row) return;
           const x = Math.round(row.center + car.lane * (row.halfW - 1));
-          const near = rel < depthSpan * 0.4;
-          const sprite = car.glyph === 'truck' ? (near ? '▐█▌' : 'm') : (near ? '╓╥╖' : 'o');
+          const near = rel < depthSpan * 0.45;
+          const sprite = car.truck
+            ? (near ? '▐███▌' : (rel < depthSpan * 0.75 ? '▟█▙' : 'm'))
+            : (near ? '╓╥╥╖' : (rel < depthSpan * 0.75 ? '╓╥╖' : 'o'));
           const start = x - Math.floor(sprite.length / 2);
           for (let i = 0; i < sprite.length; i++) {
             const xi = start + i;
@@ -3001,65 +3042,90 @@
           }
         });
 
-        // Oyuncu Ferrari'si (alt iki satir), ofis-yolu disindaysa titrer.
-        const px = Math.round(W / 2 + outrun.playerX * (W * 0.30));
-        const shake = (outrun.stun > 0 && Math.floor(outrun.pos) % 2 === 0) ? 1 : 0;
-        const carTop = '▕▀█▀▏';
-        const carBot = '╰◯═◯╯';
-        const drawCar = (str, row) => {
-          const s = px - Math.floor(str.length / 2) + shake;
-          for (let i = 0; i < str.length; i++) {
-            const xi = s + i;
-            if (xi >= 0 && xi < W && row >= 0 && row < H) grid[row][xi] = str[i];
+        // Oyuncu arabasi: yola ortali serit konumunda, 3 satir. Fren/spin'de degisir.
+        const near0 = rows[0]; // en alt (en yakin) satir
+        const px = Math.round(near0.center + outrun.playerX * near0.halfW) + shakeAmt;
+        const braking = Boolean(outrun.input?.brake);
+        let carArt;
+        if (outrun.spin > 0) {
+          carArt = (Math.floor(outrun.pos) % 2 === 0) ? [' ╲╳╱ ', '▸ ✸ ◂', ' ╱╳╲ '] : [' ╱╳╲ ', '◂ ✸ ▸', ' ╲╳╱ '];
+        } else {
+          carArt = [' ▄█▄ ', '▟███▙', braking ? '▀◉═◉▀' : '▀╨─╨▀'];
+        }
+        carArt.forEach((str, i) => {
+          const row = H - carArt.length + i;
+          const s = px - Math.floor(str.length / 2);
+          for (let k = 0; k < str.length; k++) {
+            const xi = s + k;
+            if (xi >= 0 && xi < W && row >= horizon && row < H) grid[row][xi] = str[k];
           }
-        };
-        drawCar(carTop, H - 2);
-        drawCar(carBot, H - 1);
+        });
 
-        // HUD (Out Run tarzi).
-        const kmh = Math.round(outrun.speed * 293);
+        // HUD
+        const kmh = Math.round(spd * OUTRUN_VMAX);
+        const lowTime = outrun.time <= 5;
         const timeStr = Math.max(0, outrun.time).toFixed(1).padStart(5, ' ');
         const stageNo = outrun.stageIndex + 1;
-        const meter = (val, max, w) => {
+        const toGo = Math.max(0, Math.round(stage.len - outrun.stageDist));
+        const meter = (val, max, w, full = '█', empty = '░') => {
           const n = Math.round(clamp(val / max, 0, 1) * w);
-          return '█'.repeat(n) + '░'.repeat(Math.max(0, w - n));
+          return full.repeat(n) + empty.repeat(Math.max(0, w - n));
         };
-        const bar = (s) => '║' + s.slice(0, W).padEnd(W, ' ') + '║'; // ic genislik = W
+        // Viraj uyari gostergesi (yaklasan kavis yonu/siddeti)
+        const aheadCurve = outrunCurveAt(outrun.pos + depthSpan * OUTRUN_DEPTH * 0.6, stage.curve);
+        const cm = Math.min(3, Math.round(Math.abs(aheadCurve) * 1.3));
+        const curveSig = cm === 0 ? '  STRAIGHT  ' : (aheadCurve < 0 ? ('«'.repeat(cm) + ' LEFT ').padStart(12, ' ') : (' RIGHT ' + '»'.repeat(cm)).padEnd(12, ' '));
+        const combo = outrun.combo > 1 ? `  x${outrun.combo}` : '';
+        const bar = (s) => '║' + s.slice(0, W).padEnd(W, ' ') + '║';
         const head = [
           `╔${'═'.repeat(W)}╗`,
-          bar(` OUTRUN'86  S${stageNo}/5  ${stage.name.padEnd(15, ' ')} ♪ ${outrun.radio}`),
-          bar(` TIME ${timeStr}s  SPEED ${String(kmh).padStart(3, ' ')}km/h [${meter(outrun.speed, 1, 14)}]  SCORE ${String(outrun.score).padStart(6, '0')}`),
+          bar(` OUTRUN'86  S${stageNo}/5 ${stage.name.padEnd(15, ' ')} ♪${outrun.radio.slice(0, 14)}`),
+          bar(` TIME ${timeStr}s${lowTime ? ' ⚠' : '  '} TACHO[${meter(spd, 1, 16, '▌', '·')}] ${String(kmh).padStart(3, ' ')}km/h`),
+          bar(` SCORE ${String(outrun.score).padStart(7, '0')}${combo}   BEST ${String(outrun.best || 0).padStart(7, '0')}   NEXT ${String(toGo).padStart(4, ' ')}m`),
+          bar(` CURVE ${curveSig}`),
           `╠${'═'.repeat(W)}╣`
         ];
         const body = grid.map(line => '║' + line.join('') + '║');
         const foot = [
           `╚${'═'.repeat(W)}╝`,
           (outrun.msg || '').slice(0, W + 2),
-          'DRIVE: ← → steer · ↑/SPACE gas · ↓ brake   ·   type: outrun quit'
+          'DRIVE  ← → steer · ↑/SPACE gas · ↓ brake   ·   type: outrun quit'
         ];
         return [...head, ...body, ...foot].join('\n');
       };
 
       const outrunFinale = (success) => {
-        const stage = outrunStages[outrun.stageIndex];
+        const stage = outrunStages[Math.min(outrun.stageIndex, outrunStages.length - 1)];
         const flag = success
-          ? ['  ▟▙▟▙▟▙▟▙', '  ▜▛▜▛▜▛▜▛', '   G O A L !']
-          : ['   .  *  .', '  OUT OF TIME', '   .  *  .'];
+          ? ['   ▟▙▟▙▟▙▟▙▟▙', '   ▜▛▜▛▜▛▜▛▜▛', '    ★  G O A L  ★']
+          : ['     .  ✸  .', '    OUT OF TIME', '     `  .  `'];
+        const record = outrun.newRecord ? '   ✦✦✦ NEW RECORD ✦✦✦' : '';
         return [
-          `OUT RUN '86 — ${success ? 'STAGE CLEARED' : 'GAME OVER'}`,
+          `OUT RUN '86 — ${success ? 'ALL STAGES CLEARED!' : 'GAME OVER'}`,
           ...flag,
-          '',
-          `STAGE   : ${stage.name}`,
-          `DISTANCE: ${Math.round(outrun.dist)} m`,
-          `SCORE   : ${String(outrun.score).padStart(6, '0')}`,
+          record,
+          `STAGE    : ${stage.name} (${outrun.checkpoints}/5 checkpoint)`,
+          `DISTANCE : ${Math.round(outrun.dist)} m`,
+          success ? `TIME BONUS: +${outrun.timeBonus}` : `TIME OUT at ${Math.round(outrun.dist)} m`,
+          `SCORE    : ${String(outrun.score).padStart(7, '0')}`,
+          `BEST     : ${String(outrun.best || 0).padStart(7, '0')}`,
           '',
           'tekrar: outrun new   ·   cikis: outrun quit'
-        ].join('\n');
+        ].filter(l => l !== '').join('\n');
       };
 
       const endOutrun = (success) => {
         clearOutrun();
         if (!outrun) return;
+        outrun.timeBonus = 0;
+        if (success) {
+          outrun.timeBonus = Math.round(Math.max(0, outrun.time) * 60);
+          outrun.score += outrun.timeBonus;
+        }
+        const prevBest = readOutrunBest();
+        outrun.newRecord = outrun.score > prevBest;
+        outrun.best = Math.max(prevBest, outrun.score);
+        if (outrun.newRecord) writeOutrunBest(outrun.best);
         outrun.active = false;
         outrun.over = true;
         outrun.input = {};
@@ -3075,70 +3141,104 @@
         const dt = OUTRUN_TICK / 1000;
         const stage = outrunStages[outrun.stageIndex];
         const inp = outrun.input || {};
+        const spinning = outrun.spin > 0;
+        if (outrun.shake > 0) outrun.shake -= 1;
 
-        // Hiz
-        if (inp.accel) outrun.speed += 0.020;
-        else outrun.speed -= 0.010;
-        if (inp.brake) outrun.speed -= 0.055;
-        if (outrun.stun > 0) { outrun.stun -= dt; outrun.speed = Math.min(outrun.speed, 0.18); }
+        // --- Hiz: gaz/fren; spin ve cimde kontrol kaybi ---
+        if (spinning) {
+          outrun.spin -= dt;
+          outrun.speed -= 0.030;            // spin: surekli yavasla
+        } else {
+          if (inp.accel) outrun.speed += 0.017;
+          else outrun.speed -= 0.011;
+          if (inp.brake) outrun.speed -= 0.060;
+        }
+
+        // --- Direksiyon + merkezkaç (hiz² ile cezalandirir) ---
+        const nearCurve = outrunCurveAt(outrun.pos, stage.curve);
+        const steer = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+        if (!spinning) outrun.playerX += steer * 0.052 * (0.5 + outrun.speed * 0.8);
+        // Yuksek hizda keskin viraj seni disari atar; frenlemek merkezkaci azaltir.
+        outrun.playerX -= nearCurve * 0.034 * (outrun.speed * outrun.speed);
+
+        // --- Yol disi (cim/cakil): agir ceza ---
+        const offRoad = Math.abs(outrun.playerX) > 1.0;
+        if (offRoad) {
+          outrun.speed = Math.min(outrun.speed, 0.36);     // cimde surunme
+          outrun.speed -= 0.022;                            // ek surtunme
+          outrun.playerX += Math.sign(outrun.playerX) * 0.018; // cakil disari ceker
+          outrun.shake = 2;
+          outrun.combo = 0;
+          if (!outrun.offMsgAt || outrun.dist - outrun.offMsgAt > 40) { outrun.msg = '⚠ CIMDE — yola don!'; outrun.offMsgAt = outrun.dist; }
+        }
+        outrun.playerX = clamp(outrun.playerX, -2.3, 2.3);
         outrun.speed = clamp(outrun.speed, 0, 1);
 
-        // Direksiyon + savrulma (kaviste disari iter)
-        const steer = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
-        outrun.playerX += steer * 0.07 * (0.45 + outrun.speed);
-        outrun.playerX -= outrunCurveAt(outrun.pos, stage.curve) * 0.010 * outrun.speed;
-        outrun.playerX = clamp(outrun.playerX, -1.7, 1.7);
-
-        // Yol disi = cim, yavasla
-        const offRoad = Math.abs(outrun.playerX) > 1.06;
-        if (offRoad && outrun.speed > 0.42) { outrun.speed = 0.42; outrun.msg = '! CIMDE — yola don'; }
-
-        // Ilerle
-        const v = outrun.speed * 15;
+        // --- Ilerle ---
+        const v = outrun.speed * 18;
         outrun.pos += v;
         outrun.dist += v;
-        if (!offRoad) outrun.score += Math.round(v * (1 + outrun.stageIndex * 0.25));
+        outrun.stageDist += v;
+        if (!offRoad && !spinning) outrun.score += Math.round(v * (1 + outrun.stageIndex * 0.3));
 
-        // Trafik ilerlet + temizle + spawn
+        // --- Trafik: ilerlet, temizle, spawn (kume) ---
         outrun.cars.forEach(c => { c.dist += c.speed; });
-        outrun.cars = outrun.cars.filter(c => c.dist > outrun.pos - 18);
-        const wantCars = Math.round(2 + stage.traffic * 2);
-        if (outrun.cars.length < wantCars && Math.random() < 0.04 + stage.traffic * 0.03) outrunSpawnCar();
+        outrun.cars = outrun.cars.filter(c => c.dist > outrun.pos - 24);
+        const wantCars = Math.round(2 + stage.traffic * 2.0);
+        if (outrun.cars.length < wantCars && Math.random() < 0.045 + stage.traffic * 0.04) {
+          outrunSpawnCar();
+          if (Math.random() < stage.traffic * 0.10) outrunSpawnCar(); // ara sira ikinci serit kapanir
+        }
 
-        // Carpisma: cok yakin ve yatayda ortusen
-        if (outrun.stun <= 0) {
+        // --- Carpisma + near-miss ---
+        if (!spinning) {
           for (const c of outrun.cars) {
             const rel = (c.dist - outrun.pos) / OUTRUN_DEPTH;
-            if (rel < 0 || rel > 1.6) continue;
-            const playerLane = outrun.playerX; // ~ -1..1
-            if (Math.abs(playerLane - c.lane) < 0.42) {
-              outrun.stun = 1.1;
-              outrun.speed *= 0.25;
-              outrun.time -= 2.5;
-              outrun.msg = '✸ CARPISMA! -2.5s';
+            const dx = Math.abs(outrun.playerX - c.lane);
+            const hitW = c.truck ? 0.58 : 0.42;
+            if (rel >= -0.4 && rel <= 1.5 && dx < hitW) {
+              outrun.spin = 1.2;
+              outrun.speed *= 0.16;
+              outrun.time -= 2.0;
+              outrun.combo = 0;
+              outrun.shake = 3;
+              outrun.msg = c.truck ? '✸ KAMYON! spin-out -2s' : '✸ CARPISMA! spin-out -2s';
               audioCue('terminal.error');
-              pulse(70, 0.1);
-              c.dist = outrun.pos - 20; // arkaya at
+              pulse(70, 0.12);
+              c.dist = outrun.pos - 26;
+              c.scored = true;
               break;
+            }
+            // Near-miss: yakindan siyirip gectin (yuksek hizda) -> combo skoru
+            if (!c.scored && rel < 0 && rel > -1.1 && dx < hitW + 0.45 && outrun.speed > 0.62) {
+              c.scored = true;
+              outrun.combo = Math.min((outrun.combo || 0) + 1, 9);
+              const bonus = 120 * outrun.combo;
+              outrun.score += bonus;
+              outrun.msg = `≈ NEAR MISS x${outrun.combo}  +${bonus}`;
+              audioCue('terminal.suggest');
+              pulse(700 + outrun.combo * 30, 0.05);
             }
           }
         }
 
-        // Checkpoint / catallanma
-        if (outrun.dist >= outrun.nextCheck) {
+        // --- Checkpoint / etap gecisi ---
+        if (outrun.stageDist >= stage.len) {
           outrun.stageIndex += 1;
+          outrun.checkpoints += 1;
           if (outrun.stageIndex >= outrunStages.length) { outrun.finished = true; return endOutrun(true); }
-          outrun.time += 22;
-          outrun.nextCheck += 1500 + outrun.stageIndex * 150;
-          const fork = outrun.playerX <= 0 ? '◀ COAST' : 'INLAND ▶';
           const next = outrunStages[outrun.stageIndex];
-          outrun.msg = `✔ CHECKPOINT +22s · FORK ${fork} → ${next.name}`;
+          outrun.time += next.time;
+          outrun.stageDist = 0;
           outrun.cars = [];
+          outrun.score += 1500; // checkpoint bonusu
+          const fork = outrun.playerX <= 0 ? '◀ COAST' : 'INLAND ▶';
+          outrun.msg = `✔ CHECKPOINT ${outrun.checkpoints} +${next.time}s · ${fork} → ${next.name}`;
           audioCue('terminal.complete');
-          pulse(440, 0.09);
+          pulse(523, 0.1);
         }
 
-        // Zaman
+        // --- Zaman ---
         outrun.time -= dt;
         if (outrun.time <= 0) { outrun.time = 0; return endOutrun(false); }
 
@@ -3155,14 +3255,15 @@
         setOutrunMode(true);
         outrun = {
           active: true, over: false, finished: false,
-          pos: 0, dist: 0, speed: 0, playerX: 0,
-          time: 70, score: 0, stun: 0,
-          stageIndex: 0, nextCheck: 1400,
+          pos: 0, dist: 0, stageDist: 0, speed: 0, playerX: 0,
+          time: outrunStages[0].time, score: 0, spin: 0, shake: 0, combo: 0,
+          stageIndex: 0, checkpoints: 0,
           cars: [], input: {},
+          best: readOutrunBest(),
           radio: radioLabel || outrunRadio[0].label,
           msg: 'GREEN LIGHT — GO!'
         };
-        for (let i = 0; i < 3; i++) outrunSpawnCar();
+        for (let i = 0; i < 4; i++) outrunSpawnCar();
         if (commandOutput) commandOutput.textContent = renderOutrun();
         outrunTimer = window.setInterval(outrunTick, OUTRUN_TICK);
         pulse(523, 0.12);
@@ -3216,12 +3317,16 @@
 
       const outrunHelpText = () => [
         "OUT RUN '86 — kontroller:",
-        '  ← →  : direksiyon',
-        '  ↑ / SPACE : gaz',
-        '  ↓  : fren',
-        '  (giris alani BOS iken calisir)',
-        'komutlar: outrun new | outrun quit | outrun help',
-        'checkpoint gec, zamani uzat, 5 etabi bitir.'
+        '  ← →  : direksiyon   ↑/SPACE : gaz   ↓ : fren',
+        '  (oklar her zaman; giris alanina yazi da yazabilirsin)',
+        '',
+        'puf noktasi:',
+        '  • Viraja YUKSEK hizda girersen merkezkac seni cime atar.',
+        '    CURVE gostergesine bak, gerekirse FRENLE + viraja kir.',
+        '  • Cim = agir yavaslama. Trafige carpma = spin-out + -2s.',
+        '  • Trafigi yuksek hizda siyirip gec -> NEAR MISS combo skoru.',
+        '  • Her checkpoint sure ekler; ileri etaplar daha sert.',
+        'komutlar: outrun new | outrun quit | outrun help'
       ].join('\n');
 
       const outrunCommand = (action = '') => {
