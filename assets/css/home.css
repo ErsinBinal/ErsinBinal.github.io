@@ -1788,6 +1788,42 @@
       opacity: 0.55;
     }
 
+    /* PROTOTIP (donem derinlestirme): yavasca kayan CRT refresh isin bandi.
+       Klasik tup-ekran yenileme cubugu; salt gorsel, etkilesimi engellemez. */
+    .command-shell.is-crt .command-output::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 38%;
+      pointer-events: none;
+      z-index: 2;
+      background: linear-gradient(to bottom, transparent 0, rgba(0, 255, 102, 0.05) 45%, rgba(120, 255, 170, 0.09) 50%, rgba(0, 255, 102, 0.05) 55%, transparent 100%);
+      animation: cmdCrtBeam 6.5s linear infinite;
+      mix-blend-mode: screen;
+    }
+
+    /* PROTOTIP: cok hafif fosfor titremesi (parlaklik nefesi). */
+    .command-shell.is-crt .command-output {
+      animation: cmdCrtPhosphor 4.2s steps(2, end) infinite;
+    }
+
+    @keyframes cmdCrtBeam {
+      0% { transform: translateY(-45%); }
+      100% { transform: translateY(265%); }
+    }
+
+    @keyframes cmdCrtPhosphor {
+      0%, 100% { filter: brightness(1); }
+      48% { filter: brightness(1.04); }
+      52% { filter: brightness(0.985); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .command-shell.is-crt .command-output::before { animation: none; opacity: 0; }
+      .command-shell.is-crt .command-output { animation: none; }
+    }
+
     .command-shell.is-game-mode .command-output {
       min-height: 360px;
       max-height: calc(100vh - 214px);
