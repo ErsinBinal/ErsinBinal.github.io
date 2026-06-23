@@ -144,6 +144,7 @@
       let transcript = '';
       let pipeGame = null;
       let pipeAnimationTimers = [];
+      let pipeIntroActive = false;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -2401,9 +2402,69 @@
         commandShell?.classList.toggle('is-game-mode', Boolean(active));
       };
 
+      // Pipe giris sinematigi (konuya uygun): reaktor coolant alarm + priming sekansi.
+      // schedulePipeFinale ile ayni dil; tahta acilmadan once kisa bir sahne oynar.
+      const pipeIntroFrames = () => ([
+        [
+          '╔══════════════════════════════════════╗',
+          '║  PIPE-90  ·  TOKAMAK COOLANT CONTROL   ║',
+          '╚══════════════════════════════════════╝',
+          '',
+          '  ⚠  ALARM — COOLANT LOOP OFFLINE',
+          '     CORE TEMP 9200K ▲ RISING'
+        ].join('\n'),
+        [
+          '  ▸ priming pump ........... [████░░░░░░]',
+          '  ▸ pressurizing line ...... [██░░░░░░░░]',
+          '',
+          '     CORE TEMP 9200K ▲'
+        ].join('\n'),
+        [
+          '  ▸ priming pump ........... [██████████] OK',
+          '  ▸ charging plasma ring ... [███████░░░]',
+          '',
+          '     containment field forming...'
+        ].join('\n'),
+        [
+          '  ▸ all systems primed ..... [██████████]',
+          '',
+          '     >>> OPERATOR REQUIRED <<<',
+          '     route coolant: PUMP → CORE before meltdown'
+        ].join('\n')
+      ]);
+
       const startPipeGame = () => {
         clearPipeAnimation();
         setPipeGameMode(true);
+        pipeGame = null;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || !commandOutput) {
+          pipeIntroActive = false;
+          return buildPipeGame();
+        }
+        pipeIntroActive = true;
+        const frames = pipeIntroFrames();
+        const step = 560;
+        frames.forEach((frame, index) => {
+          const timer = window.setTimeout(() => {
+            if (pipeGame || !commandShell?.classList.contains('is-open')) return;
+            commandOutput.textContent = frame;
+            pulse(110);
+            audioCue('terminal.suggest');
+          }, index * step);
+          pipeAnimationTimers.push(timer);
+        });
+        const finishTimer = window.setTimeout(() => {
+          pipeIntroActive = false;
+          if (!commandShell?.classList.contains('is-open')) { setPipeGameMode(false); return; }
+          commandOutput.textContent = buildPipeGame();
+          pulse(260);
+        }, frames.length * step + 220);
+        pipeAnimationTimers.push(finishTimer);
+        return frames[0];
+      };
+
+      const buildPipeGame = () => {
         const rows = 7;
         const cols = 8;
         const drainRow = 1 + Math.floor(Math.random() * 5);
@@ -2769,6 +2830,7 @@
 
       const pipeCommand = (action = '') => {
         const command = normalizeCommand(action || 'new');
+        if (pipeIntroActive) return 'pipe: reaktör hazırlanıyor...';
         if (!pipeGame?.active || ['new', 'start', 'play'].includes(command)) return startPipeGame();
         if (['rotate', 'r'].includes(command)) return rotatePipe();
         if (['place', 'put', 'enter'].includes(command)) return placePipe();
