@@ -71,7 +71,8 @@
         offlineNode: false,
         easterTrail: [],
         inventory: [],
-        discovered: []
+        discovered: [],
+        aliases: {}
       });
       const readState = () => {
         try {
@@ -114,6 +115,7 @@
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
       state.inventory = Array.isArray(state.inventory) ? [...new Set(state.inventory)] : [];
       state.discovered = Array.isArray(state.discovered) ? [...new Set(state.discovered)] : [];
+      state.aliases = (state.aliases && typeof state.aliases === 'object' && !Array.isArray(state.aliases)) ? state.aliases : {};
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       let signalIndex = 0;
@@ -368,6 +370,7 @@
         try {
           if (typeof prefs.audioEnabled === 'boolean') setAudioEnabled(prefs.audioEnabled);
           if (prefs.theme) themeCommand(prefs.theme);
+          if (prefs.crt) setCrt(true);
           if (prefs.virtualCwd && virtualFs[prefs.virtualCwd]) virtualCwd = prefs.virtualCwd;
 
           if (prefs.bugyV4Skin) {
@@ -2247,6 +2250,16 @@
         return `theme: ${theme}`;
       };
 
+      // CRT tarama-cizgisi gorunumu (Dalga 7): salt gorsel overlay, etkilesimi engellemez.
+      const setCrt = (on) => { commandShell?.classList.toggle('is-crt', Boolean(on)); };
+      const crtCommand = (target = '') => {
+        const t = normalizeCommand(target);
+        const on = t === 'on' || t === 'ac' ? true : t === 'off' || t === 'kapat' ? false : !commandShell?.classList.contains('is-crt');
+        setCrt(on);
+        persistUserPreferences({ crt: on });
+        return `crt: ${on ? 'on' : 'off'}`;
+      };
+
       const volumeCommand = (target = '') => {
         const action = normalizeCommand(target);
         if (['mute', 'off', 'kapali', 'kapat'].includes(action)) {
@@ -2758,6 +2771,36 @@
         ].join('\n');
       };
 
+      // Kisisel alias/makro (Dalga 8): alias <ad> <komut> / unalias <ad> / alias (liste).
+      const aliasCommand = (arg = '') => {
+        const norm = normalizeCommand(arg).trim();
+        if (!norm) {
+          const entries = Object.entries(state.aliases || {});
+          if (!entries.length) return 'alias: tanimli alias yok. ornek: alias l look';
+          return ['] ALIAS', '', ...entries.map(([k, v]) => `  ${k} -> ${v}`), ']'].join('\n');
+        }
+        const sp = norm.indexOf(' ');
+        if (sp === -1) return 'alias: usage alias <ad> <komut> (ornek: alias l look)';
+        const name = norm.slice(0, sp).trim();
+        const target = norm.slice(sp + 1).trim();
+        if (!name || !target) return 'alias: usage alias <ad> <komut>';
+        if (COMMAND_SYNONYMS[name]) return `alias: "${name}" yerlesik bir esanlamli, kullanilamaz.`;
+        if (name === target.split(' ')[0]) return 'alias: kendine isaret eden alias olmaz.';
+        state.aliases = { ...(state.aliases || {}), [name]: target };
+        persist();
+        return `alias eklendi: ${name} -> ${target}`;
+      };
+      const unaliasCommand = (arg = '') => {
+        const name = normalizeCommand(arg).split(' ')[0];
+        if (!name) return 'unalias: usage unalias <ad>';
+        if (!(state.aliases || {})[name]) return `unalias: "${name}" diye bir alias yok.`;
+        const next = { ...state.aliases };
+        delete next[name];
+        state.aliases = next;
+        persist();
+        return `alias silindi: ${name}`;
+      };
+
       // man <komut> (Dalga 5): bir komutun aciklamasi + esanlamlilari.
       const manCommand = (target = '') => {
         const key = normalizeCommand(target);
@@ -3055,6 +3098,12 @@
           action: () => 'theme: usage theme green|cyan|amber'
         },
         {
+          command: 'crt',
+          description: 'tarama-cizgisi (CRT) gorunumunu acar/kapatir',
+          aliases: ['scanlines', 'retro'],
+          action: () => crtCommand('')
+        },
+        {
           command: 'volume',
           description: 'terminal sesini komuttan yonetir',
           aliases: ['audio', 'sound'],
@@ -3125,6 +3174,18 @@
           description: 'bir komutun kilavuzunu gosterir (man <komut>)',
           aliases: ['kilavuz', 'manual'],
           action: () => 'man: usage man <komut> (ornek: man examine)'
+        },
+        {
+          command: 'alias',
+          description: 'kisisel kisayol tanimlar/listeler (alias <ad> <komut>)',
+          aliases: ['aliaslar'],
+          action: () => aliasCommand()
+        },
+        {
+          command: 'unalias',
+          description: 'bir alias siler (unalias <ad>)',
+          aliases: [],
+          action: () => 'unalias: usage unalias <ad>'
         },
         {
           command: 'oracle',
@@ -3363,6 +3424,7 @@
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
+        'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
@@ -3397,6 +3459,13 @@
         const first = sp === -1 ? cmd : cmd.slice(0, sp);
         const canon = COMMAND_SYNONYMS[first];
         return canon ? canon + (sp === -1 ? '' : cmd.slice(sp)) : cmd;
+      };
+      // Kullanici alias'i (Dalga 8): tek seviye genisletme (dongu yok).
+      const expandAlias = (cmd) => {
+        const sp = cmd.indexOf(' ');
+        const first = sp === -1 ? cmd : cmd.slice(0, sp);
+        const exp = (state.aliases || {})[first];
+        return exp ? exp + (sp === -1 ? '' : cmd.slice(sp)) : cmd;
       };
       // Komut sozlugu: tum komut/alias'larin ilk kelimesi (tekil).
       const commandVocab = [...new Set(
@@ -3711,7 +3780,7 @@
 
       const runCommand = async (raw) => {
         const query = raw.trim().slice(0, 520);
-        const command = applySynonyms(normalizeCommand(query));
+        const command = expandAlias(applySynonyms(normalizeCommand(query)));
         if (!query || commandInFlight) return;
         state.commands += 1;
         state.commandLog = [...(state.commandLog || []), query].slice(-8);
@@ -3775,8 +3844,11 @@
           ['kullan ', value => useCommand(value)],
           ['man ', value => manCommand(value)],
           ['kilavuz ', value => manCommand(value)],
+          ['alias ', value => aliasCommand(value)],
+          ['unalias ', value => unaliasCommand(value)],
           ['theme ', value => themeCommand(value)],
           ['color ', value => themeCommand(value)],
+          ['crt ', value => crtCommand(value)],
           ['volume ', value => volumeCommand(value)],
           ['audio ', value => volumeCommand(value)],
           ['sound ', value => volumeCommand(value)],
@@ -3823,6 +3895,8 @@
       commandInput?.addEventListener('keydown', event => {
         // Teletype suruyorsa herhangi bir tusa basinca aninda tamamlansin (atlanabilir).
         if (terminalTypeTimer !== null) flushTerminalType();
+        // Hafif tus-tik sesi (yalniz tek karakter; audio kapaliysa zaten sessiz).
+        if (event.key && event.key.length === 1) audioCue('terminal.suggest');
         const matches = matchingCommands(commandInput.value);
         if (pipeGame?.active) {
           const key = event.key.toLowerCase();
