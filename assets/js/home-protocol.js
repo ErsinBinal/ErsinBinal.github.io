@@ -2667,8 +2667,8 @@
         rows.push(`QUEUE: ${pipeQueuePreview()}`);
         rows.push(`ACTIVE: ${pipeGlyph(next)} ${next.id.toUpperCase()}   STATUS: ${pipeGame.status}`);
         rows.push('');
-        rows.push('KEYS (giris bos iken): arrows move | SPACE rotate | ENTER weld');
-        rows.push('TYPE: pipe flow | pipe dump | pipe quit | pipe rotate | pipe new');
+        rows.push('KEYS: arrows move | SPACE/R rotate | ENTER weld | F flow | X dump | Q quit');
+        rows.push('(oklar her zaman; harf kisayollari giris bos iken — "pipe flow" de yazabilirsin)');
         return rows.join('\n');
       };
 
@@ -4452,49 +4452,36 @@
         // Hafif tus-tik sesi (yalniz tek karakter; audio kapaliysa zaten sessiz).
         if (event.key && event.key.length === 1) audioCue('terminal.suggest');
         const matches = matchingCommands(commandInput.value);
-        // OUT RUN: gercek-zamanli surus. Tuslar basili tutuldukca input bayraklari
-        // kalir, keyup ile birakilir. Yalniz giris alani bos iken yakalanir.
-        if (outrun?.active && !commandInput.value.trim()) {
+        // OUT RUN: gercek-zamanli surus. Oklar HER ZAMAN direksiyon/gaz/fren olur,
+        // boylece giris alaninda stray karakter olsa bile direksiyon kilitlenmez.
+        // Space (gaz) ve form-gonderme yalniz giris bos iken yakalanir; "outrun quit"
+        // 'o' ile basladigi icin yazimla cakismaz.
+        if (outrun?.active) {
           if (event.key === 'ArrowLeft') { event.preventDefault(); outrun.input.left = true; return; }
           if (event.key === 'ArrowRight') { event.preventDefault(); outrun.input.right = true; return; }
-          if (event.key === 'ArrowUp' || event.key === ' ') { event.preventDefault(); outrun.input.accel = true; return; }
+          if (event.key === 'ArrowUp') { event.preventDefault(); outrun.input.accel = true; return; }
           if (event.key === 'ArrowDown') { event.preventDefault(); outrun.input.brake = true; return; }
-          if (event.key === 'Enter') { event.preventDefault(); return; } // form gondermeyi engelle
+          if (!commandInput.value.trim()) {
+            if (event.key === ' ') { event.preventDefault(); outrun.input.accel = true; return; }
+            if (event.key === 'Enter') { event.preventDefault(); return; } // form gondermeyi engelle
+          }
         }
-        // Oyun kisayollari YALNIZ giris alani bossken calisir; boylece kullanici
-        // herhangi bir harf yazmaya basladigi an tum tuslar metne gider (yazi yazilabilir).
-        // Komutlar ayrica yazilabilir: "pipe flow | pipe dump | pipe quit | pipe rotate".
-        if (pipeGame?.active && !commandInput.value.trim()) {
-          const key = event.key.toLowerCase();
-          if (event.key === 'ArrowUp') {
-            event.preventDefault();
-            movePipeCursor(-1, 0);
-            return;
-          }
-          if (event.key === 'ArrowDown') {
-            event.preventDefault();
-            movePipeCursor(1, 0);
-            return;
-          }
-          if (event.key === 'ArrowLeft') {
-            event.preventDefault();
-            movePipeCursor(0, -1);
-            return;
-          }
-          if (event.key === 'ArrowRight') {
-            event.preventDefault();
-            movePipeCursor(0, 1);
-            return;
-          }
-          if (key === ' ') {
-            event.preventDefault();
-            if (commandOutput) commandOutput.textContent = rotatePipe();
-            return;
-          }
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            if (commandOutput) commandOutput.textContent = placePipe();
-            return;
+        // PIPE: oklar HER ZAMAN imleci tasir (giris alaninda stray karakter olsa bile
+        // kontroller kilitlenmesin). Eylem kisayollari (R/SPACE cevir, F akit, X dump,
+        // Q cik, ENTER kaynak) yalniz giris bos iken calisir. "pipe ..." komutlari 'p'
+        // ile basladigi icin bu harf kisayollariyla cakismaz; yazi yazmak serbest kalir.
+        if (pipeGame?.active) {
+          if (event.key === 'ArrowUp') { event.preventDefault(); movePipeCursor(-1, 0); return; }
+          if (event.key === 'ArrowDown') { event.preventDefault(); movePipeCursor(1, 0); return; }
+          if (event.key === 'ArrowLeft') { event.preventDefault(); movePipeCursor(0, -1); return; }
+          if (event.key === 'ArrowRight') { event.preventDefault(); movePipeCursor(0, 1); return; }
+          if (!commandInput.value.trim()) {
+            const key = event.key.toLowerCase();
+            if (key === ' ' || key === 'r') { event.preventDefault(); if (commandOutput) commandOutput.textContent = rotatePipe(); return; }
+            if (key === 'f') { event.preventDefault(); if (commandOutput) commandOutput.textContent = flowPipe(); return; }
+            if (key === 'x') { event.preventDefault(); if (commandOutput) commandOutput.textContent = dumpPipe(); return; }
+            if (key === 'q') { event.preventDefault(); printTerminal(pipeCommand('quit')); return; }
+            if (event.key === 'Enter') { event.preventDefault(); if (commandOutput) commandOutput.textContent = placePipe(); return; }
           }
         }
         if (event.key === 'Enter') {
