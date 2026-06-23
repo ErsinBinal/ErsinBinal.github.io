@@ -2435,7 +2435,9 @@
 
       const startPipeGame = () => {
         clearPipeAnimation();
-        setPipeGameMode(true);
+        // Intro sirasinda buyuk oyun-modu kutusuna GECME; aksi halde cikti kutusu
+        // birden buyuyup intro metni giris alaninin altina kayiyor. Tahta hazir
+        // olunca buildPipeGame() oyun modunu acar.
         pipeGame = null;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduceMotion || !commandOutput) {
@@ -2465,6 +2467,7 @@
       };
 
       const buildPipeGame = () => {
+        setPipeGameMode(true);
         const rows = 7;
         const cols = 8;
         const drainRow = 1 + Math.floor(Math.random() * 5);
@@ -2640,8 +2643,8 @@
         rows.push(`QUEUE: ${pipeQueuePreview()}`);
         rows.push(`ACTIVE: ${pipeGlyph(next)} ${next.id.toUpperCase()}   STATUS: ${pipeGame.status}`);
         rows.push('');
-        rows.push('KEYS: arrows move | SPACE/R rotate | ENTER weld | F coolant | X dump | Q quit');
-        rows.push('CMDS: pipe rotate | pipe place | pipe flow | pipe dump | pipe quit | pipe new');
+        rows.push('KEYS (giris bos iken): arrows move | SPACE rotate | ENTER weld');
+        rows.push('TYPE: pipe flow | pipe dump | pipe quit | pipe rotate | pipe new');
         return rows.join('\n');
       };
 
@@ -4054,9 +4057,11 @@
         // Hafif tus-tik sesi (yalniz tek karakter; audio kapaliysa zaten sessiz).
         if (event.key && event.key.length === 1) audioCue('terminal.suggest');
         const matches = matchingCommands(commandInput.value);
-        if (pipeGame?.active) {
+        // Oyun kisayollari YALNIZ giris alani bossken calisir; boylece kullanici
+        // herhangi bir harf yazmaya basladigi an tum tuslar metne gider (yazi yazilabilir).
+        // Komutlar ayrica yazilabilir: "pipe flow | pipe dump | pipe quit | pipe rotate".
+        if (pipeGame?.active && !commandInput.value.trim()) {
           const key = event.key.toLowerCase();
-          const pipeShortcutMode = !commandInput.value.trim();
           if (event.key === 'ArrowUp') {
             event.preventDefault();
             movePipeCursor(-1, 0);
@@ -4077,28 +4082,12 @@
             movePipeCursor(0, 1);
             return;
           }
-          if (pipeShortcutMode && (key === ' ' || key === 'r')) {
+          if (key === ' ') {
             event.preventDefault();
             if (commandOutput) commandOutput.textContent = rotatePipe();
             return;
           }
-          if (pipeShortcutMode && key === 'f') {
-            event.preventDefault();
-            if (commandOutput) commandOutput.textContent = flowPipe();
-            return;
-          }
-          if (pipeShortcutMode && key === 'x') {
-            event.preventDefault();
-            if (commandOutput) commandOutput.textContent = dumpPipe();
-            return;
-          }
-          if (pipeShortcutMode && key === 'q') {
-            event.preventDefault();
-            const closeMsg = pipeCommand('quit'); // pipeGame=null olur; transcript geri gelir
-            printTerminal(closeMsg);
-            return;
-          }
-          if (event.key === 'Enter' && !commandInput.value.trim()) {
+          if (event.key === 'Enter') {
             event.preventDefault();
             if (commandOutput) commandOutput.textContent = placePipe();
             return;
