@@ -196,6 +196,11 @@
     ]),
     'terminal.type': cue('ui', [tone(980, 0.018, { volume: 0.08 })]),
     'terminal.suggest': cue('ui', [tone(740, 0.032, { type: 'triangle', volume: 0.12 })]),
+    'terminal.error': cue('ui', [
+      tone(180, 0.060, { type: 'square', volume: 0.18 }),
+      tone(120, 0.090, { at: 0.050, type: 'sawtooth', volume: 0.17 }),
+      noise(0.070, { at: 0.040, volume: 0.16, seed: 13, band: 1 })
+    ]),
     'system.unlock': cue('ui', [
       noise(0.28, { volume: 0.13, seed: 12, band: 2 }),
       tone(220, 0.075, { volume: 0.16 }),

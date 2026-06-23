@@ -145,6 +145,10 @@
       let pipeGame = null;
       let pipeAnimationTimers = [];
       let pipeIntroActive = false;
+      let outrun = null;
+      let outrunTimer = null;
+      let outrunIntroTimers = [];
+      let outrunIntroActive = false;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -776,6 +780,7 @@
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
+        if (outrun) { clearOutrun(); outrun = null; setOutrunMode(false); }
         commandShell.classList.remove('is-booting');
         commandShell.classList.add('is-closing');
         clearCommandSuggestions();
@@ -810,6 +815,21 @@
         commandShell.setAttribute('aria-hidden', 'false');
         renderCommandSuggestions(commandInput.value);
         commandInput.focus();
+        if (outrun?.active) {
+          // Surus oyununa geri don: modu ac, donguyu yeniden baslat (kapaliyken durmustu).
+          setOutrunMode(true);
+          if (outrun.input) outrun.input = {};
+          if (commandOutput) commandOutput.textContent = renderOutrun();
+          if (outrunTimer === null) outrunTimer = window.setInterval(outrunTick, OUTRUN_TICK);
+          pulse(260);
+          return;
+        }
+        if (outrun?.over) {
+          setOutrunMode(true);
+          if (commandOutput) commandOutput.textContent = outrunFinale(Boolean(outrun.finished));
+          pulse(260);
+          return;
+        }
         if (pipeGame?.active) {
           setPipeGameMode(true);
           setPipeOutput();
@@ -826,6 +846,7 @@
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
+        clearOutrun(); // surus dongusunu durdur (durum korunur, acilinca devam eder)
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
         commandShell.setAttribute('aria-hidden', 'true');
         clearCommandSuggestions();
@@ -1774,7 +1795,7 @@
       const virtualFs = {
         '/': ['routes', 'lab', 'notes', 'system', 'vault'],
         '/routes': ['home', 'map', 'archive', 'notes', 'open dossier'],
-        '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe'],
+        '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe', 'outrun'],
         '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
         '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver'],
         '/vault': ['satir'],
@@ -1843,7 +1864,8 @@
         '|   |-- run signal',
         '|   |-- run ash',
         '|   |-- run flow',
-        '|   `-- pipe',
+        '|   |-- pipe',
+        '|   `-- outrun',
         '|-- notes',
         '|   |-- note',
         '|   |-- quote',
@@ -1881,10 +1903,12 @@
           }
         },
         '/lab': {
-          look: 'Lab esigi. Oynanabilir deneyler ve companion ritleri burada calisir. Bir kosede pipe reaktoru bekliyor.',
+          look: 'Lab esigi. Oynanabilir deneyler ve companion ritleri burada calisir. Bir kosede pipe reaktoru, yaninda tozlu bir arcade kabini bekliyor.',
           objects: {
             'reactor': 'Pipe reaktoru bekleme modunda. "pipe" yazip coolant hattini cekirdege ulastiran birine /core mühru acilir.',
-            'pipe': 'Reaktorun kontrol paneli. pipe komutu ile coolant bulmacasini baslat; cozersen cekirdek (/core) erisilir olur.'
+            'pipe': 'Reaktorun kontrol paneli. pipe komutu ile coolant bulmacasini baslat; cozersen cekirdek (/core) erisilir olur.',
+            'cabinet': "1986 yapimi bir OUT RUN kabini. Anahtar uzerinde. \"outrun\" yaz, kontagi cevir, sahili tuttur.",
+            'arcade': "Tozlu arcade kabini: OUT RUN '86. \"outrun\" komutu motoru calistirir."
           }
         },
         '/notes': {
@@ -2850,6 +2874,370 @@
         return 'pipe: usage pipe new|rotate|place|flow|dump|quit';
       };
 
+      // ============================================================
+      // OUT RUN '86 // CONVIVIUM COAST
+      // Sozde-3B ASCII yol surusu. Gercek-zamanli dongu; is-game-mode'u
+      // pipe ile paylasir. Donem dokunuslari: radyo istasyonu secimi,
+      // checkpoint catallanmasi, palmiyeler, 293 km/s tavan hiz.
+      // ============================================================
+      const OUTRUN_W = 61;
+      const OUTRUN_H = 19;
+      const OUTRUN_HORIZON = 5;
+      const OUTRUN_TICK = 55; // ms (~18 fps)
+      const OUTRUN_DEPTH = 6;  // her satir = 6 yol birimi
+
+      const outrunStages = [
+        { name: 'CONVIVIUM COAST', curve: 0.9, traffic: 0.85, palm: 'Y' },
+        { name: 'NEON DELTA',      curve: 1.6, traffic: 1.05, palm: 'î' },
+        { name: 'CORE TUNNELS',    curve: 2.2, traffic: 1.30, palm: 'I' },
+        { name: 'VAULT RIDGE',     curve: 1.9, traffic: 1.15, palm: 'î' },
+        { name: 'ATLAS SUMMIT',    curve: 2.5, traffic: 1.40, palm: 'Y' }
+      ];
+
+      const outrunRadio = [
+        { id: 'magical', label: 'MAGICAL SOUND SHOWER', tone: 392 },
+        { id: 'breeze',  label: 'PASSING BREEZE',       tone: 440 },
+        { id: 'splash',  label: 'SPLASH WAVE',          tone: 523 }
+      ];
+
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+      const clearOutrun = () => {
+        if (outrunTimer !== null) { window.clearInterval(outrunTimer); outrunTimer = null; }
+        outrunIntroTimers.forEach(t => window.clearTimeout(t));
+        outrunIntroTimers = [];
+      };
+
+      const setOutrunMode = (active) => {
+        commandShell?.classList.toggle('is-game-mode', Boolean(active));
+        // Gercek-zamanli oyun saniyede ~18 kez ciktiyi tazeler; ekran okuyucuyu bogmamak icin sus.
+        if (commandOutput) commandOutput.setAttribute('aria-live', active ? 'off' : 'polite');
+      };
+
+      const outrunCurveAt = (d, mult) => (
+        Math.sin(d * 0.0180) * 0.9 +
+        Math.sin(d * 0.0067 + 1.3) * 0.55 +
+        Math.sin(d * 0.0310 + 0.7) * 0.22
+      ) * mult;
+
+      const outrunSpawnCar = () => {
+        const stage = outrunStages[outrun.stageIndex];
+        outrun.cars.push({
+          dist: outrun.pos + (OUTRUN_H - OUTRUN_HORIZON) * OUTRUN_DEPTH + 30 + Math.random() * 90,
+          lane: (Math.random() * 1.6) - 0.8,
+          speed: 4 + Math.random() * 3,
+          glyph: Math.random() < 0.3 ? 'truck' : 'car'
+        });
+      };
+
+      const renderOutrun = () => {
+        if (!outrun) return 'outrun: inactive';
+        const W = OUTRUN_W, H = OUTRUN_H, horizon = OUTRUN_HORIZON;
+        const grid = Array.from({ length: H }, () => new Array(W).fill(' '));
+        const stage = outrunStages[outrun.stageIndex];
+        const depthSpan = (H - 1) - horizon;
+
+        // Gokyuzu / horizon bandi (hafif desen, sahneye gore yildiz/bulut).
+        for (let y = 0; y < horizon; y++) {
+          for (let x = 0; x < W; x++) {
+            const tw = (x * 7 + y * 13 + Math.floor(outrun.pos * 0.05)) % 23;
+            grid[y][x] = tw === 0 ? '.' : (tw === 11 && y === 0 ? '·' : ' ');
+          }
+        }
+        // Horizon cizgisi.
+        for (let x = 0; x < W; x++) grid[horizon - 1][x] = '━';
+
+        // Yol: yakindan (alt) uzaga (ust) tara, kavisi entegre et.
+        const rows = [];
+        let curve = 0;
+        let center = (W / 2) + outrun.playerX * (W * 0.10);
+        for (let y = H - 1; y >= horizon; y--) {
+          const depth = (H - 1) - y;
+          const t = depth / depthSpan;                 // 0 yakin .. 1 uzak
+          const segDist = outrun.pos + depth * OUTRUN_DEPTH;
+          curve += outrunCurveAt(segDist, stage.curve) * 0.10;
+          center += curve;
+          const halfW = Math.max(2, Math.round((W * 0.44) * (1 - t * 0.84)));
+          const cInt = Math.round(center);
+          const left = cInt - halfW;
+          const right = cInt + halfW;
+          const band = Math.floor((segDist) / 5) % 2; // hareket bandi
+          // Cim/kenar disi
+          for (let x = 0; x < W; x++) {
+            if (x < left - 1 || x > right + 1) grid[y][x] = band ? ',' : '`';
+          }
+          // Yol yuzeyi
+          for (let x = Math.max(0, left); x <= Math.min(W - 1, right); x++) grid[y][x] = band ? '·' : ' ';
+          // Kenar serisi (kirmizi-beyaz rumble)
+          const edge = band ? '#' : '|';
+          if (left >= 0 && left < W) grid[y][left] = edge;
+          if (right >= 0 && right < W) grid[y][right] = edge;
+          // Orta serit
+          const dash = Math.floor(segDist / 3) % 2;
+          if (dash && halfW > 3 && cInt >= 0 && cInt < W) grid[y][cInt] = ':';
+          // Yol kenari palmiye/dekoru (her birkac derinlikte)
+          if (depth % 4 === 0) {
+            const pl = left - 2, pr = right + 2;
+            if (pl >= 0 && pl < W) grid[y][pl] = stage.palm;
+            if (pr >= 0 && pr < W) grid[y][pr] = stage.palm;
+          }
+          rows.push({ y, center: cInt, halfW });
+        }
+
+        // Trafik: derinlige gore projeksiyon.
+        outrun.cars.forEach(car => {
+          const rel = (car.dist - outrun.pos) / OUTRUN_DEPTH;
+          if (rel < 0 || rel > depthSpan) return;
+          const y = (H - 1) - Math.round(rel);
+          const row = rows.find(r => r.y === y);
+          if (!row) return;
+          const x = Math.round(row.center + car.lane * (row.halfW - 1));
+          const near = rel < depthSpan * 0.4;
+          const sprite = car.glyph === 'truck' ? (near ? '▐█▌' : 'm') : (near ? '╓╥╖' : 'o');
+          const start = x - Math.floor(sprite.length / 2);
+          for (let i = 0; i < sprite.length; i++) {
+            const xi = start + i;
+            if (xi >= 0 && xi < W && y >= horizon) grid[y][xi] = sprite[i];
+          }
+        });
+
+        // Oyuncu Ferrari'si (alt iki satir), ofis-yolu disindaysa titrer.
+        const px = Math.round(W / 2 + outrun.playerX * (W * 0.30));
+        const shake = (outrun.stun > 0 && Math.floor(outrun.pos) % 2 === 0) ? 1 : 0;
+        const carTop = '▕▀█▀▏';
+        const carBot = '╰◯═◯╯';
+        const drawCar = (str, row) => {
+          const s = px - Math.floor(str.length / 2) + shake;
+          for (let i = 0; i < str.length; i++) {
+            const xi = s + i;
+            if (xi >= 0 && xi < W && row >= 0 && row < H) grid[row][xi] = str[i];
+          }
+        };
+        drawCar(carTop, H - 2);
+        drawCar(carBot, H - 1);
+
+        // HUD (Out Run tarzi).
+        const kmh = Math.round(outrun.speed * 293);
+        const timeStr = Math.max(0, outrun.time).toFixed(1).padStart(5, ' ');
+        const stageNo = outrun.stageIndex + 1;
+        const meter = (val, max, w) => {
+          const n = Math.round(clamp(val / max, 0, 1) * w);
+          return '█'.repeat(n) + '░'.repeat(Math.max(0, w - n));
+        };
+        const bar = (s) => '║' + s.slice(0, W).padEnd(W, ' ') + '║'; // ic genislik = W
+        const head = [
+          `╔${'═'.repeat(W)}╗`,
+          bar(` OUTRUN'86  S${stageNo}/5  ${stage.name.padEnd(15, ' ')} ♪ ${outrun.radio}`),
+          bar(` TIME ${timeStr}s  SPEED ${String(kmh).padStart(3, ' ')}km/h [${meter(outrun.speed, 1, 14)}]  SCORE ${String(outrun.score).padStart(6, '0')}`),
+          `╠${'═'.repeat(W)}╣`
+        ];
+        const body = grid.map(line => '║' + line.join('') + '║');
+        const foot = [
+          `╚${'═'.repeat(W)}╝`,
+          (outrun.msg || '').slice(0, W + 2),
+          'DRIVE: ← → steer · ↑/SPACE gas · ↓ brake   ·   type: outrun quit'
+        ];
+        return [...head, ...body, ...foot].join('\n');
+      };
+
+      const outrunFinale = (success) => {
+        const stage = outrunStages[outrun.stageIndex];
+        const flag = success
+          ? ['  ▟▙▟▙▟▙▟▙', '  ▜▛▜▛▜▛▜▛', '   G O A L !']
+          : ['   .  *  .', '  OUT OF TIME', '   .  *  .'];
+        return [
+          `OUT RUN '86 — ${success ? 'STAGE CLEARED' : 'GAME OVER'}`,
+          ...flag,
+          '',
+          `STAGE   : ${stage.name}`,
+          `DISTANCE: ${Math.round(outrun.dist)} m`,
+          `SCORE   : ${String(outrun.score).padStart(6, '0')}`,
+          '',
+          'tekrar: outrun new   ·   cikis: outrun quit'
+        ].join('\n');
+      };
+
+      const endOutrun = (success) => {
+        clearOutrun();
+        if (!outrun) return;
+        outrun.active = false;
+        outrun.over = true;
+        outrun.input = {};
+        audioCue(success ? 'terminal.complete' : 'terminal.error');
+        pulse(success ? 320 : 90, 0.12);
+        if (commandOutput && commandShell?.classList.contains('is-open')) {
+          commandOutput.textContent = outrunFinale(success);
+        }
+      };
+
+      const outrunTick = () => {
+        if (!outrun?.active) return;
+        const dt = OUTRUN_TICK / 1000;
+        const stage = outrunStages[outrun.stageIndex];
+        const inp = outrun.input || {};
+
+        // Hiz
+        if (inp.accel) outrun.speed += 0.020;
+        else outrun.speed -= 0.010;
+        if (inp.brake) outrun.speed -= 0.055;
+        if (outrun.stun > 0) { outrun.stun -= dt; outrun.speed = Math.min(outrun.speed, 0.18); }
+        outrun.speed = clamp(outrun.speed, 0, 1);
+
+        // Direksiyon + savrulma (kaviste disari iter)
+        const steer = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
+        outrun.playerX += steer * 0.07 * (0.45 + outrun.speed);
+        outrun.playerX -= outrunCurveAt(outrun.pos, stage.curve) * 0.010 * outrun.speed;
+        outrun.playerX = clamp(outrun.playerX, -1.7, 1.7);
+
+        // Yol disi = cim, yavasla
+        const offRoad = Math.abs(outrun.playerX) > 1.06;
+        if (offRoad && outrun.speed > 0.42) { outrun.speed = 0.42; outrun.msg = '! CIMDE — yola don'; }
+
+        // Ilerle
+        const v = outrun.speed * 15;
+        outrun.pos += v;
+        outrun.dist += v;
+        if (!offRoad) outrun.score += Math.round(v * (1 + outrun.stageIndex * 0.25));
+
+        // Trafik ilerlet + temizle + spawn
+        outrun.cars.forEach(c => { c.dist += c.speed; });
+        outrun.cars = outrun.cars.filter(c => c.dist > outrun.pos - 18);
+        const wantCars = Math.round(2 + stage.traffic * 2);
+        if (outrun.cars.length < wantCars && Math.random() < 0.04 + stage.traffic * 0.03) outrunSpawnCar();
+
+        // Carpisma: cok yakin ve yatayda ortusen
+        if (outrun.stun <= 0) {
+          for (const c of outrun.cars) {
+            const rel = (c.dist - outrun.pos) / OUTRUN_DEPTH;
+            if (rel < 0 || rel > 1.6) continue;
+            const playerLane = outrun.playerX; // ~ -1..1
+            if (Math.abs(playerLane - c.lane) < 0.42) {
+              outrun.stun = 1.1;
+              outrun.speed *= 0.25;
+              outrun.time -= 2.5;
+              outrun.msg = '✸ CARPISMA! -2.5s';
+              audioCue('terminal.error');
+              pulse(70, 0.1);
+              c.dist = outrun.pos - 20; // arkaya at
+              break;
+            }
+          }
+        }
+
+        // Checkpoint / catallanma
+        if (outrun.dist >= outrun.nextCheck) {
+          outrun.stageIndex += 1;
+          if (outrun.stageIndex >= outrunStages.length) { outrun.finished = true; return endOutrun(true); }
+          outrun.time += 22;
+          outrun.nextCheck += 1500 + outrun.stageIndex * 150;
+          const fork = outrun.playerX <= 0 ? '◀ COAST' : 'INLAND ▶';
+          const next = outrunStages[outrun.stageIndex];
+          outrun.msg = `✔ CHECKPOINT +22s · FORK ${fork} → ${next.name}`;
+          outrun.cars = [];
+          audioCue('terminal.complete');
+          pulse(440, 0.09);
+        }
+
+        // Zaman
+        outrun.time -= dt;
+        if (outrun.time <= 0) { outrun.time = 0; return endOutrun(false); }
+
+        if (commandOutput && commandShell?.classList.contains('is-open')) {
+          commandOutput.textContent = renderOutrun();
+        }
+      };
+
+      const launchOutrun = (radioLabel) => {
+        clearOutrun();
+        clearPipeAnimation();
+        pipeGame = null;
+        outrunIntroActive = false;
+        setOutrunMode(true);
+        outrun = {
+          active: true, over: false, finished: false,
+          pos: 0, dist: 0, speed: 0, playerX: 0,
+          time: 70, score: 0, stun: 0,
+          stageIndex: 0, nextCheck: 1400,
+          cars: [], input: {},
+          radio: radioLabel || outrunRadio[0].label,
+          msg: 'GREEN LIGHT — GO!'
+        };
+        for (let i = 0; i < 3; i++) outrunSpawnCar();
+        if (commandOutput) commandOutput.textContent = renderOutrun();
+        outrunTimer = window.setInterval(outrunTick, OUTRUN_TICK);
+        pulse(523, 0.12);
+      };
+
+      const startOutrun = () => {
+        clearOutrun();
+        clearPipeAnimation();
+        pipeGame = null;
+        outrun = null;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduceMotion || !commandOutput) {
+          outrunIntroActive = false;
+          launchOutrun(outrunRadio[0].label);
+          return outrun ? 'OUT RUN: kontak aci4ldi (oklarla sur, outrun quit ile cik)' : '';
+        }
+        // Donem dokunusu: motor kontagi + radyo istasyonu secim sekansi (normal kutuda, kompakt).
+        outrunIntroActive = true;
+        const car = ['        ___', '   __/  |_ \\__', '  |_o____o___|'];
+        const baseLines = (radioIndex, sub) => [
+          "OUT RUN '86  //  CONVIVIUM COAST",
+          ...car,
+          '',
+          'IGNITION... ' + sub,
+          'SELECT RADIO:',
+          ...outrunRadio.map((r, i) => `  ${i === radioIndex ? '▶' : ' '} ♪ ${r.label}`)
+        ].join('\n');
+        const frames = [
+          baseLines(0, 'priming engine'),
+          baseLines(1, 'engine warm'),
+          baseLines(2, 'tires gripping'),
+          baseLines(0, 'READY')
+        ];
+        const step = 560;
+        frames.forEach((frame, index) => {
+          const timer = window.setTimeout(() => {
+            if (outrun || !commandShell?.classList.contains('is-open')) return;
+            commandOutput.textContent = frame;
+            pulse(outrunRadio[index % outrunRadio.length].tone, 0.06);
+          }, index * step);
+          outrunIntroTimers.push(timer);
+        });
+        const finishTimer = window.setTimeout(() => {
+          outrunIntroActive = false;
+          if (!commandShell?.classList.contains('is-open')) { setOutrunMode(false); return; }
+          launchOutrun(outrunRadio[0].label);
+        }, frames.length * step + 220);
+        outrunIntroTimers.push(finishTimer);
+        return frames[0];
+      };
+
+      const outrunHelpText = () => [
+        "OUT RUN '86 — kontroller:",
+        '  ← →  : direksiyon',
+        '  ↑ / SPACE : gaz',
+        '  ↓  : fren',
+        '  (giris alani BOS iken calisir)',
+        'komutlar: outrun new | outrun quit | outrun help',
+        'checkpoint gec, zamani uzat, 5 etabi bitir.'
+      ].join('\n');
+
+      const outrunCommand = (action = '') => {
+        const command = normalizeCommand(action || 'new');
+        if (outrunIntroActive) return 'outrun: motor isiniyor...';
+        if (['quit', 'exit', 'q', 'stop', 'kapat'].includes(command)) {
+          clearOutrun();
+          setOutrunMode(false);
+          outrun = null;
+          return 'OUT RUN: kontak kapatildi';
+        }
+        if (['help', '?', 'yardim', 'yardım'].includes(command)) return outrunHelpText();
+        if (!outrun?.active || ['new', 'start', 'play', 'restart', 'yeni'].includes(command)) return startOutrun();
+        return renderOutrun();
+      };
+
       // deb diyalogu (Dalga 6): konustukca bond artar, satirlar derinlesir.
       const debTalk = () => {
         const deb = window.DebCompanion || window.NovaCompanion;
@@ -3164,6 +3552,12 @@
           description: 'fuzyon reaktoru sogutma oyunu Pipe-90i acar',
           aliases: ['pipes', 'pipe game', 'pipe86', 'pipe90', 'boru oyunu', 'reactor', 'reaktor', 'coolant'],
           action: () => pipeCommand('new')
+        },
+        {
+          command: 'outrun',
+          description: "sozde-3B arcade surus oyunu Out Run '86i acar",
+          aliases: ['out run', 'outrun86', 'ferrari', 'drive', 'surus', 'sürüş', 'sur', 'sür', 'race', 'yaris', 'yarış', 'arcade'],
+          action: () => outrunCommand('new')
         },
         {
           command: 'random',
@@ -3568,7 +3962,7 @@
         'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
         '',
         'lab:',
-        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, pipe dump',
+        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, outrun',
         '',
         'system:',
         'whoami, uptime, date, version, memory, ps, log, clear, random, shutdown, restart, screen saver',
@@ -3947,8 +4341,8 @@
         persist();
         audioCue('terminal.run');
         pulse(390, 0.055);
-        // Komut ekosu transcript'e (pipe oyunu ekrani sahiplenirken atla).
-        if (!pipeGame?.active) transcriptEcho(query);
+        // Komut ekosu transcript'e (pipe/outrun oyunu ekrani sahiplenirken atla).
+        if (!pipeGame?.active && !outrun?.active) transcriptEcho(query);
         if (['oracle yes', 'ask oracle', 'confirm oracle'].includes(command)) {
           if (!pendingOracleQuery) {
             printTerminal('oracle: bekleyen sorgu yok. Once serbest bir soru yaz.');
@@ -4011,7 +4405,8 @@
           ['volume ', value => volumeCommand(value)],
           ['audio ', value => volumeCommand(value)],
           ['sound ', value => volumeCommand(value)],
-          ['pipe ', value => pipeCommand(value)]
+          ['pipe ', value => pipeCommand(value)],
+          ['outrun ', value => outrunCommand(value)]
         ];
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
@@ -4057,6 +4452,15 @@
         // Hafif tus-tik sesi (yalniz tek karakter; audio kapaliysa zaten sessiz).
         if (event.key && event.key.length === 1) audioCue('terminal.suggest');
         const matches = matchingCommands(commandInput.value);
+        // OUT RUN: gercek-zamanli surus. Tuslar basili tutuldukca input bayraklari
+        // kalir, keyup ile birakilir. Yalniz giris alani bos iken yakalanir.
+        if (outrun?.active && !commandInput.value.trim()) {
+          if (event.key === 'ArrowLeft') { event.preventDefault(); outrun.input.left = true; return; }
+          if (event.key === 'ArrowRight') { event.preventDefault(); outrun.input.right = true; return; }
+          if (event.key === 'ArrowUp' || event.key === ' ') { event.preventDefault(); outrun.input.accel = true; return; }
+          if (event.key === 'ArrowDown') { event.preventDefault(); outrun.input.brake = true; return; }
+          if (event.key === 'Enter') { event.preventDefault(); return; } // form gondermeyi engelle
+        }
         // Oyun kisayollari YALNIZ giris alani bossken calisir; boylece kullanici
         // herhangi bir harf yazmaya basladigi an tum tuslar metne gider (yazi yazilabilir).
         // Komutlar ayrica yazilabilir: "pipe flow | pipe dump | pipe quit | pipe rotate".
@@ -4117,6 +4521,17 @@
           closeCommand();
         }
       });
+
+      // OUT RUN: tus birakildiginda kontrol bayragini sifirla.
+      commandInput?.addEventListener('keyup', event => {
+        if (!outrun?.active) return;
+        if (event.key === 'ArrowLeft') outrun.input.left = false;
+        else if (event.key === 'ArrowRight') outrun.input.right = false;
+        else if (event.key === 'ArrowUp' || event.key === ' ') outrun.input.accel = false;
+        else if (event.key === 'ArrowDown') outrun.input.brake = false;
+      });
+      // Odak/sekme kaybinda yapisik tus kalmasin.
+      commandInput?.addEventListener('blur', () => { if (outrun) outrun.input = {}; });
 
       commandInput?.addEventListener('input', (event) => {
         commandHistoryIndex = -1;
