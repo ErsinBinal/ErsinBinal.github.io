@@ -72,7 +72,8 @@
         easterTrail: [],
         inventory: [],
         discovered: [],
-        aliases: {}
+        aliases: {},
+        debBond: 0
       });
       const readState = () => {
         try {
@@ -116,6 +117,7 @@
       state.inventory = Array.isArray(state.inventory) ? [...new Set(state.inventory)] : [];
       state.discovered = Array.isArray(state.discovered) ? [...new Set(state.discovered)] : [];
       state.aliases = (state.aliases && typeof state.aliases === 'object' && !Array.isArray(state.aliases)) ? state.aliases : {};
+      state.debBond = Number.isFinite(state.debBond) ? state.debBond : 0;
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       let signalIndex = 0;
@@ -1775,7 +1777,8 @@
         '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
         '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver'],
         '/vault': ['satir'],
-        '/core': ['cekirdek', 'gunluk']
+        '/core': ['cekirdek', 'gunluk'],
+        '/atlas': ['harita', 'imza']
       };
 
       const virtualDocs = {
@@ -1911,7 +1914,16 @@
           key: 'coolant',
           objects: {
             'cekirdek': 'Soguyan cekirdek. Reaktoru sen soguttun; ikinci iz tamamlandi.',
-            'gunluk': 'Gunluk: "Bir sistemi anlamak, onu soguk tutabilmektir. Convivium da boyle nefes alir."'
+            'gunluk': 'Gunluk: "Bir sistemi anlamak, onu soguk tutabilmektir." Notun altinda: "shard ile coolant bir araya gelince yol acilir."'
+          }
+        },
+        '/atlas': {
+          look: 'Atlas. Convivium\'un gizli haritasi: tum esikler, tum izler tek bir desende. Burayi yalnizca iki izi de tamamlayip prizmayi doku biri gorur.',
+          locked: true,
+          key: 'prism',
+          objects: {
+            'harita': 'Butun rotalarin ortak deseni. Artik kabugu sen de okuyabiliyorsun.',
+            'imza': 'Kosede tek satir: "Burayi gormus biri artik bir ARCHITECT\'tir. Convivium senin de evindir."'
           }
         }
       };
@@ -1923,18 +1935,21 @@
         '/notes': 'Saha Notlari',
         '/system': 'Sistem',
         '/vault': 'Kasa',
-        '/core': 'Cekirdek'
+        '/core': 'Cekirdek',
+        '/atlas': 'Atlas'
       };
 
       // Bulundugun odadan gidebilecegin esikler (ProDOS CATALOG tarzi, BUYUK harf).
       // Kilitliler '*' ile isaretlenir (ProDOS kilit konvansiyonu); gizli /core acilinca gorunur.
       const roomExits = (path) => {
         const unlocked = new Set(state.unlocked || []);
-        const order = ['/', '/routes', '/lab', '/notes', '/system', '/vault', '/core'];
+        const bothThreads = unlocked.has('/vault') && unlocked.has('/core');
+        const order = ['/', '/routes', '/lab', '/notes', '/system', '/vault', '/core', '/atlas'];
         const parts = [];
         order.forEach((p) => {
           if (p === path) return;
           if (p === '/core' && !unlocked.has('/core')) return; // gizli kalir
+          if (p === '/atlas' && !bothThreads && !unlocked.has('/atlas')) return; // iki iz bitmeden gizli
           const name = (p === '/' ? '/' : p.replace(/^\//, '')).toUpperCase();
           const locked = worldRooms[p]?.locked && !unlocked.has(p);
           parts.push(locked ? `${name}*` : name);
@@ -1951,12 +1966,17 @@
           return 'unlock vault ile kasayi ac, sonra cd vault';
         }
         if (!unlocked.has('/core')) return "lab esigine git, pipe bulmacasini coz (-> /core acilir)";
-        return 'iki iz de tamam · wall ile iz birak, daily ile gunun sinyali';
+        if (!unlocked.has('/atlas')) {
+          if (!inv.has('prism')) return "shard'i coolant ile birlestir: use shard on coolant";
+          return 'unlock atlas ile son odayi ac, sonra cd atlas';
+        }
+        return 'her sey tamam, ARCHITECT · wall ile iz birak, daily ile gunun sinyali';
       };
 
       // Ilerlemeye gore kazanilan unvan (gorunur odul).
       const rankTitle = () => {
         const unlocked = new Set(state.unlocked || []);
+        if (unlocked.has('/atlas')) return 'ARCHITECT';
         const done = (unlocked.has('/vault') ? 1 : 0) + (unlocked.has('/core') ? 1 : 0);
         return done >= 2 ? 'KEEPER' : done === 1 ? 'INITIATE' : 'GEZGIN';
       };
@@ -2076,7 +2096,8 @@
 
       // Muhur cozulunce gosterilen torensel mesaj + kazanilan unvan (ProDOS prompt tarzi).
       const unlockCeremony = (path, roomName) => {
-        const both = (state.unlocked || []).includes('/vault') && (state.unlocked || []).includes('/core');
+        const unlocked = new Set(state.unlocked || []);
+        const both = unlocked.has('/vault') && unlocked.has('/core');
         const lines = [
           '] MUHUR COZULDU',
           '',
@@ -2084,9 +2105,12 @@
           `  unvan: ${rankTitle()}`,
           ''
         ];
-        if (both) {
-          lines.push('  Iki iz de tamamlandi. Artik bir KEEPER\'sin.');
-          lines.push('  Yeni: wall (iz birak) · daily (gunun sinyali)');
+        if (path === '/atlas') {
+          lines.push('  Tum izler tamam. Artik bir ARCHITECT\'sin.');
+          lines.push('  cd atlas ile son odayi gor.');
+        } else if (both) {
+          lines.push('  Iki iz de tamamlandi (KEEPER).');
+          lines.push(`  son iz: ${currentObjective()}`);
         } else {
           lines.push(`  simdi: cd ${roomName}`);
           lines.push(`  sonraki: ${currentObjective()}`);
@@ -2107,6 +2131,20 @@
         if (!target) return `use: ${item} neyin uzerinde? (use ${item} on <hedef>)`;
         if (item === 'shard' && /vault|kasa/.test(target)) {
           return unlockRoomCommand(`vault with ${item}`);
+        }
+        // Final kombinasyon: shard + coolant -> prism (iki iz de tamamsa).
+        if ((item === 'shard' && /coolant/.test(target)) || (item === 'coolant' && /shard/.test(target))) {
+          const inv = state.inventory || [];
+          if (!inv.includes('shard') || !inv.includes('coolant')) {
+            return 'use: prizma icin hem shard hem coolant gerekiyor (iki izi de bitir).';
+          }
+          if (inv.includes('prism')) return 'use: prizmayi zaten doktun. (unlock atlas)';
+          state.inventory = [...new Set([...inv, 'prism'])];
+          state.easterTrail = [...(state.easterTrail || []), 'forge:prism'].slice(-4);
+          persist();
+          scheduleWorldSave();
+          audioCue('system.unlock');
+          return 'shard ve coolant birlesti -> prism doktun. simdi: unlock atlas';
         }
         return `use: ${item}, ${target} uzerinde bir ise yaramiyor.`;
       };
@@ -2158,16 +2196,37 @@
         return d.toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' });
       };
 
+      // "X once" sosyal sinyal (Dalga 9): birinin yakinda burada oldugu hissi.
+      const relativeTime = (iso) => {
+        const t = new Date(iso).getTime();
+        if (Number.isNaN(t)) return '';
+        const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
+        if (s < 60) return 'az once';
+        const m = Math.floor(s / 60);
+        if (m < 60) return `${m} dk once`;
+        const h = Math.floor(m / 60);
+        if (h < 24) return `${h} saat once`;
+        return `${Math.floor(h / 24)} gun once`;
+      };
+
       const readWallCommand = async () => {
         const backend = window.ConviviumBackend;
         if (!backend?.fetchWallMarks || !backend.isConfigured?.()) {
           return 'wall: duvar cevrimdisi.';
         }
         try {
-          const marks = await backend.fetchWallMarks(virtualCwd, 8);
-          if (!marks.length) return `wall ${virtualCwd}: henuz iz yok. "mark <mesaj>" ile birak.`;
-          const lines = marks.map((m) => `  ${formatWallStamp(m.created_at)} | ${m.body}`);
-          return [`wall ${virtualCwd} (son ${marks.length}):`, ...lines].join('\n');
+          const marks = await backend.fetchWallMarks(virtualCwd, 50); // presence icin genis cek
+          if (!marks.length) return `wall ${virtualCwd}: henuz iz yok. ilk izi sen birak: "mark <mesaj>"`;
+          const newest = relativeTime(marks[0].created_at);
+          const shown = marks.slice(0, 8);
+          const lines = shown.map((m) => `  ${formatWallStamp(m.created_at)} | ${m.body}`);
+          return [
+            `] DUVAR ${prodosPath(virtualCwd)}`,
+            `  ${marks.length} iz · en yeni: ${newest}`,
+            '',
+            ...lines,
+            ']'
+          ].join('\n');
         } catch {
           return 'wall: duvar simdilik okunamiyor.';
         }
@@ -2726,12 +2785,34 @@
         return 'pipe: usage pipe new|rotate|place|flow|dump|quit';
       };
 
+      // deb diyalogu (Dalga 6): konustukca bond artar, satirlar derinlesir.
+      const debTalk = () => {
+        const deb = window.DebCompanion || window.NovaCompanion;
+        if (deb && !deb.getState?.().active) deb.summon?.();
+        const lines = [
+          'deb: ...ilk kez konusuyoruz. ben kabugun icinde dolasan kucuk bir sinyalim.',
+          'deb: geri geldin. esikleri benden once sen aciyorsun; hosuma gidiyor.',
+          'deb: artik tanidik geliyorsun. istersen rotalari fisildayabilirim.',
+          'deb: dostuz sayilir artik. (deb whisper dene)'
+        ];
+        state.debBond = (state.debBond || 0) + 1;
+        persist();
+        deb?.trigger?.('bloom');
+        return lines[Math.min(state.debBond - 1, lines.length - 1)];
+      };
+
       const debCommand = (action = 'summon') => {
         const deb = window.DebCompanion || window.NovaCompanion;
         if (!deb) return 'deb: module not ready';
+        if (action === 'talk') return debTalk();
+        if (action === 'whisper') {
+          if ((state.debBond || 0) < 4) return 'deb: (henuz o kadar yakin degiliz; biraz daha "deb talk")';
+          deb.trigger?.('mirror');
+          return `deb (fisilti): ${currentObjective()}`;
+        }
         if (action === 'summon') {
           deb.summon();
-          return 'deb: companion online. try deb scan / deb meteor / deb blackhole / deb deathstar.';
+          return 'deb: companion online. try deb talk / deb scan / deb meteor / deb blackhole.';
         }
         if (action === 'off') {
           return deb.deactivate()
@@ -3030,6 +3111,18 @@
           description: 'DEB alternatif companion katmanini acar',
           aliases: ['summon deb', 'deb summon', 'deb companion', 'nova', 'summon nova', 'nova summon', 'nova companion'],
           action: () => debCommand('summon')
+        },
+        {
+          command: 'deb talk',
+          description: 'DEB ile konus (konustukca yakinlasir)',
+          aliases: ['deb konus', 'talk deb', 'nova talk', 'nova konus'],
+          action: () => debCommand('talk')
+        },
+        {
+          command: 'deb whisper',
+          description: 'DEB yeterince yakinsa sana siradaki izi fisildar',
+          aliases: ['deb fisilti', 'nova whisper'],
+          action: () => debCommand('whisper')
         },
         {
           command: 'deb scan',
@@ -3427,12 +3520,13 @@
         'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
         '',
         'deb ops:',
-        'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
+        'deb talk (konus), deb whisper, deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
                 '',
         'hidden:',
         'signal -> oracle -> manifest -> unlock hidden, clues, offline node',
         'thread 1: notes -> examine clues -> take shard -> unlock vault -> cd vault',
-        'thread 2: lab -> pipe (coolant\'i cekirdege ulastir) -> cd core'
+        'thread 2: lab -> pipe (coolant\'i cekirdege ulastir) -> cd core',
+        'thread 3: use shard on coolant -> prism -> unlock atlas -> cd atlas (ARCHITECT)'
       ].join('\n');
 
       const commandMap = commandDefinitions.reduce((map, item) => {
