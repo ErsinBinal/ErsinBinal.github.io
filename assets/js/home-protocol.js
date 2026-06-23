@@ -1721,12 +1721,18 @@
       const whoamiCommand = () => {
         const level = levels[Math.min(state.level, levels.length - 1)];
         const auth = authState.granted ? `granted / ${authState.user?.email || 'user'}` : authState.checked ? 'guest' : 'checking';
+        const unlocked = new Set(state.unlocked || []);
+        const threads = (unlocked.has('/vault') ? 1 : 0) + (unlocked.has('/core') ? 1 : 0);
+        const inv = state.inventory || [];
         return [
-          `identity: ${auth}`,
-          `access level: ${level}`,
-          `visits: ${state.visits}`,
-          `commands: ${state.commands}`,
-          `opened: ${(state.opened || []).length} nodes`
+          '] WHOAMI',
+          '',
+          `  kimlik  : ${auth}`,
+          `  unvan   : ${rankTitle()}   (access: ${level})`,
+          `  izler   : ${threads}/2 tamam`,
+          `  canta   : ${inv.length ? inv.join(', ') : 'bos'}`,
+          `  ziyaret : ${state.visits}   komut: ${state.commands}   node: ${(state.opened || []).length}`,
+          ']'
         ].join('\n');
       };
 
@@ -2733,6 +2739,47 @@
           : 'bugy: classic companion restored';
       };
 
+      // Gorev kutugu (Dalga 4): ilerlemeyi tek ekranda gosterir.
+      const journalCommand = () => {
+        const unlocked = new Set(state.unlocked || []);
+        const inv = state.inventory || [];
+        const mark = (cond) => (cond ? '[x]' : '[ ]');
+        return [
+          '] GOREV KUTUGU',
+          '',
+          `  unvan: ${rankTitle()}`,
+          '',
+          `  ${mark(unlocked.has('/vault'))} iz-1  kasa (/vault)    -- notes: clue -> shard -> unlock vault`,
+          `  ${mark(unlocked.has('/core'))} iz-2  cekirdek (/core)  -- lab: pipe bulmacasini coz`,
+          '',
+          `  canta: ${inv.length ? inv.join(', ') : 'bos'}`,
+          `  > siradaki: ${currentObjective()}`,
+          ']'
+        ].join('\n');
+      };
+
+      // man <komut> (Dalga 5): bir komutun aciklamasi + esanlamlilari.
+      const manCommand = (target = '') => {
+        const key = normalizeCommand(target);
+        if (!key) return 'man: usage man <komut> (ornek: man examine)';
+        const entry = commandDefinitions.find((item) =>
+          normalizeCommand(item.command) === key ||
+          (item.aliases || []).some((alias) => normalizeCommand(alias) === key)
+        );
+        if (!entry) {
+          const near = suggestNearestCommand(key);
+          return near ? `man: "${target}" yok. bunu mu? -> ${near}` : `man: "${target}" diye bir komut yok.`;
+        }
+        const aliases = (entry.aliases || []).slice(0, 6).join(', ');
+        return [
+          `] MAN ${entry.command.toUpperCase()}`,
+          '',
+          `  ${entry.description || '(aciklama yok)'}`,
+          aliases ? `  esanlamli: ${aliases}` : '',
+          ']'
+        ].filter(Boolean).join('\n');
+      };
+
       const commandDefinitions = [
         {
           command: 'basla',
@@ -3068,6 +3115,18 @@
           action: () => 'mark: usage mark <mesaj>'
         },
         {
+          command: 'journal',
+          description: 'gorev kutugu: ilerleme, izler ve siradaki hedef',
+          aliases: ['gorevler', 'görevler', 'quests', 'ilerleme'],
+          action: journalCommand
+        },
+        {
+          command: 'man',
+          description: 'bir komutun kilavuzunu gosterir (man <komut>)',
+          aliases: ['kilavuz', 'manual'],
+          action: () => 'man: usage man <komut> (ornek: man examine)'
+        },
+        {
           command: 'oracle',
           description: 'yerel oracle sinyali verir',
           aliases: ['omen', 'kahin', 'kâhin'],
@@ -3303,6 +3362,7 @@
         'ask <konu> / sor <konu> -- oracle\'a dunya baglamiyla sor (deb aciksa onun sesiyle)',
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
+        'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
         '',
         'deb ops:',
         'deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
@@ -3369,6 +3429,23 @@
         if (!best || bestD === 0 || bestD > 2) return null;
         const rest = words.slice(1).join(' ');
         return rest ? `${best} ${rest}` : best;
+      };
+
+      // Inline tab-completion (Dalga 3): yazarken benzersiz komut tamamlamasini input'a
+      // yazip eklenen eki SECILI birakir (tarayici autocomplete tarzi). Overlay/CSS yok.
+      // -> ya da End/Enter ile kabul; yazmaya devam edince secili ek degisir; backspace siler.
+      const completeInput = (event) => {
+        if (!commandInput || pipeGame?.active) return;
+        if (event && event.inputType && event.inputType !== 'insertText') return; // silerken tamamlama yok
+        const val = commandInput.value;
+        if (!val || /\s/.test(val)) return; // sadece ilk kelime (bosluk yoksa)
+        const typed = normalizeCommand(val);
+        if (typed.length < 2) return;
+        const uniq = [...new Set(commandVocab.filter(word => word.startsWith(typed)))];
+        if (uniq.length !== 1 || uniq[0] === typed) return;
+        const full = uniq[0];
+        commandInput.value = full;
+        try { commandInput.setSelectionRange(typed.length, full.length); } catch { /* ignore */ }
       };
 
       const matchingCommands = (raw) => {
@@ -3696,6 +3773,8 @@
           ['ac ', value => unlockRoomCommand(value)],
           ['use ', value => useCommand(value)],
           ['kullan ', value => useCommand(value)],
+          ['man ', value => manCommand(value)],
+          ['kilavuz ', value => manCommand(value)],
           ['theme ', value => themeCommand(value)],
           ['color ', value => themeCommand(value)],
           ['volume ', value => volumeCommand(value)],
@@ -3820,10 +3899,10 @@
         }
       });
 
-      commandInput?.addEventListener('input', () => {
+      commandInput?.addEventListener('input', (event) => {
         commandHistoryIndex = -1;
         activeSuggestionIndex = 0;
-        renderCommandSuggestions(commandInput.value);
+        completeInput(event);
       });
 
       document.querySelectorAll('.command-trigger').forEach(trigger => {
