@@ -3340,20 +3340,10 @@
         if (run) runCommand(value);
       };
 
-      const renderCommandSuggestions = (raw = '') => {
-        if (!commandSuggestions || !commandShell) return;
-        const matches = matchingCommands(raw);
-        activeSuggestionIndex = Math.min(activeSuggestionIndex, Math.max(matches.length - 1, 0));
-        commandSuggestions.textContent = '';
-        commandShell.classList.toggle('has-suggestions', Boolean(matches.length));
-        matches.forEach((match, index) => {
-          const button = document.createElement('button');
-          button.type = 'button';
-          button.className = `command-suggestion${index === activeSuggestionIndex ? ' is-active' : ''}`;
-          button.textContent = match;
-          button.addEventListener('click', () => applySuggestion(match, true));
-          commandSuggestions.appendChild(button);
-        });
+      // Oneri cipleri kaldirildi (kullanici istegi): kabuk daha sade dursun.
+      // Tab ile tamamlama gorunmez sekilde calismaya devam eder (matchingCommands).
+      const renderCommandSuggestions = () => {
+        clearCommandSuggestions();
       };
 
       const isCreatorQuery = (command) => {
