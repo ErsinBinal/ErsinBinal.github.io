@@ -2,7 +2,7 @@
 
 ## Project Shape
 
-This repository is a mostly static GitHub Pages site for the Convivium personal/experimental web space. The root is reserved for the main entry point, GitHub Pages platform files, and legacy redirect wrappers. Canonical product pages live under purpose-based folders, with shared assets under `assets/`.
+This repository is a mostly static GitHub Pages site for the Convivium personal/experimental web space. The root is reserved for the main entry point and GitHub Pages platform files. Canonical product pages live under purpose-based folders, with shared assets under `assets/`.
 
 Important areas:
 
