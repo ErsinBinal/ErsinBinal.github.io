@@ -172,6 +172,25 @@ hakkında bilgiler edinsin.
         ihtiyaçları doldurur, mood'u (mutlu/sakin/huysuz) günceller, bugy-v4
         animasyonu tetikler, Supabase+localStorage'a yazar.
       - Pet tıklama = kozmik aksiyonlar (next) korundu; bakım ayrı butonda.
-  [ ] FAZ 3: büyüme/evrim aşamaları + canavarlaşma görselleştirme.
-  [ ] FAZ 4: dashboard "Bugy" inceleme paneli.
-  [ ] FAZ 5: site aktivitesiyle besleme + kozmik aksiyonları koru.
+  [x] FAZ 3 (TAMAMLANDI): büyüme/evrim + canavarlaşma.
+      - care_points eşikleriyle aşama: yavru -> genç (12) -> yetişkin (40).
+        Aşama atlayınca 'evrim!' toast + tada animasyonu.
+      - Canavarlaşma (feral): ortalama ihtiyaç <18 ya da bir ihtiyaç ~0 olunca
+        mood='feral'; companion'a kırmızı hue filtresi + titreme + bugy-v4
+        'morph'. Bakımla ihtiyaç yükselince otomatik normalleşir (ölüm yok).
+  [x] FAZ 4 (TAMAMLANDI): dashboard "Bugy" inceleme paneli.
+      - account/dashboard.html'e Bugy paneli; dashboard.js fetchBugyPet ile
+        salt-okunur gösterim: ad, tür, aşama, mood, 4 ihtiyaç metresi (aynı
+        zaman-damgalı düşüşle), bakım puanı, doğum tarihi, feral uyarısı.
+      - bugy-pet.css dashboard'a da yüklendi (metre stilleri paylaşıldı).
+  [x] FAZ 5 (TAMAMLANDI): aktiviteyle besleme + kozmik aksiyonlar.
+      - articles.js makale okurken decoupled 'convivium:activity' eventi
+        yayar; bugy-pet bunu dinleyip kısıtlı (8 dk/throttle) küçük ödül verir
+        (bağ+okuma). Evrimi hızlandırmaz (care_points sadece bilinçli bakımla).
+      - window.BugyPet.reward(kind) API'si ileride başka sayfalardan beslemeye
+        açık. Kozmik/oyuncu aksiyonlar bugy-v4 cycling ile zaten korunuyor
+        (pet'e tıkla: tada/think/alert/wave/magic/search/morph).
+
+  KALAN (bilinçli takip): index.html companion konsolidasyonu (deb + v2/v3/v4),
+  ozgecmisim.html'e backend + pet, ve istenirse pet'in daha fazla içerik
+  sayfasına yayılması. Supabase bugy_pets tablosu MCP ile uygulandi (canli).

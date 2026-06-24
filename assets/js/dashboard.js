@@ -7,6 +7,7 @@
   const gamesEl = document.getElementById('dashboardGames');
   const recommendationsEl = document.getElementById('dashboardRecommendations');
   const sessionsEl = document.getElementById('dashboardSessions');
+  const bugyEl = document.getElementById('dashboardBugy');
   const dartStatsEl = document.getElementById('dashboardDartStats');
   const leaderboardEl = document.getElementById('dashboardDartLeaderboard');
   const signOutButton = document.getElementById('dashboardSignOut');
@@ -140,6 +141,67 @@
       `<span>${escapeHtml(session.user.email || session.user.id)}</span>`,
       `<span>Rol: ${escapeHtml(profile?.role || 'reader')}</span>`
     ].join('');
+  }
+
+  // --- Bugy / Ped inceleme (salt okunur; bakim companion uzerinden yapilir) ---
+  const BUGY_NEEDS = [['hunger', 'Açlık'], ['energy', 'Enerji'], ['hygiene', 'Hijyen'], ['bond', 'Bağ']];
+  const BUGY_DECAY = { hunger: 4, energy: 3, hygiene: 2.5, bond: 1.5 };
+  const BUGY_STAGE = { egg: 'yumurta', hatchling: 'yavru', juvenile: 'genç', adult: 'yetişkin' };
+  const BUGY_MOOD = { happy: 'mutlu', neutral: 'sakin', grumpy: 'huysuz', feral: 'canavar' };
+  const BUGY_SPECIES = {
+    clippy: 'Clippy', merlin: 'Merlin', rover: 'Rover', f1: 'F1 / K-9',
+    genie: 'Genie', scribble: 'Scribble', dot: 'The Dot'
+  };
+
+  function bugyCurrentNeeds(pet) {
+    const hours = Math.max(0, (Date.now() - new Date(pet.last_care_at).getTime()) / 3600000);
+    const out = {};
+    BUGY_NEEDS.forEach(([k]) => {
+      out[k] = Math.max(0, Math.min(100, Math.round((Number(pet[k]) || 0) - BUGY_DECAY[k] * hours)));
+    });
+    return out;
+  }
+
+  function bugyMood(needs) {
+    const vals = BUGY_NEEDS.map(([k]) => needs[k]);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const min = Math.min(...vals);
+    if (avg < 18 || min <= 2) return 'feral';
+    if (avg >= 70) return 'happy';
+    if (avg >= 35) return 'neutral';
+    return 'grumpy';
+  }
+
+  function renderBugy(pet) {
+    if (!bugyEl) return;
+    if (!pet) {
+      empty(bugyEl, 'Henuz bir Bugy yok. Icerik sayfalarinda (orn. Makaleler) beliren yumurtayi kirip Bugy\'ni sec.');
+      return;
+    }
+    const needs = bugyCurrentNeeds(pet);
+    const mood = bugyMood(needs);
+    const meters = BUGY_NEEDS.map(([k, label]) => {
+      const v = needs[k];
+      const level = v < 30 ? 'low' : v < 60 ? 'mid' : 'high';
+      return `
+        <div class="bugy-meter" data-level="${level}">
+          <div class="bugy-meter-top"><span>${label}</span><span>${v}</span></div>
+          <div class="bugy-meter-track"><i style="width:${v}%"></i></div>
+        </div>`;
+    }).join('');
+    bugyEl.innerHTML = `
+      <article class="bugy-dash bugy-mood-${mood}">
+        <div class="bugy-dash-head">
+          <strong>${escapeHtml(pet.name)}</strong>
+          <span>${escapeHtml(BUGY_SPECIES[pet.species] || pet.species)} · ${BUGY_STAGE[pet.stage] || pet.stage} · ${BUGY_MOOD[mood] || mood}</span>
+        </div>
+        <div class="bugy-meters">${meters}</div>
+        <div class="bugy-dash-foot">
+          <span>Bakım puanı: ${Number(pet.care_points) || 0}</span>
+          <span>Doğum: ${formatDay(pet.born_at)}</span>
+        </div>
+        ${mood === 'feral' ? '<p class="bugy-dash-warn">⚠ Canavarlaştı — bir içerik sayfasında bakım yaparak sakinleştir.</p>' : ''}
+      </article>`;
   }
 
   function renderGames(scores) {
@@ -522,17 +584,21 @@
         return;
       }
 
-      const [profile, scores, recommendations, sessions, dartStats] = await Promise.all([
+      const [profile, scores, recommendations, sessions, dartStats, bugy] = await Promise.all([
         backend.getProfile(),
         backend.fetchUserGameScores(40),
         backend.fetchUserAppRecommendations(30),
         backend.fetchUserAppSessions(40),
         backend.fetchUserDartStats
           ? backend.fetchUserDartStats(12).catch((error) => ({ error }))
+          : Promise.resolve(null),
+        backend.fetchBugyPet
+          ? backend.fetchBugyPet().catch(() => null)
           : Promise.resolve(null)
       ]);
 
       renderProfile(session, profile);
+      renderBugy(bugy);
       renderGames(scores);
       renderRecommendations(recommendations);
       renderDartStats(dartStats);

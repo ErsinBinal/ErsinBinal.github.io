@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v127';
+const CACHE_NAME = 'convivium-v128';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -38,7 +38,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
   '/assets/css/bugy-v4.css?v=1',
-  '/assets/css/bugy-pet.css?v=2',
+  '/assets/css/bugy-pet.css?v=3',
   '/assets/css/deb-companion.css?v=2',
   '/assets/css/home.css?v=21',
   '/assets/css/bugy-studio.css?v=2',
@@ -50,7 +50,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-v2.js?v=2',
   '/assets/js/bugy-v3-loader.js?v=6',
   '/assets/js/bugy-v4.js?v=3',
-  '/assets/js/bugy-pet.js?v=2',
+  '/assets/js/bugy-pet.js?v=3',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=1',
   '/assets/js/sfx.js?v=15',
@@ -79,7 +79,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
   '/assets/js/supabase-client.js?v=28',
-  '/assets/js/articles.js?v=3',
+  '/assets/js/articles.js?v=4',
   '/assets/js/auth-gate.js?v=21',
   '/assets/js/dart-board-svg.js?v=3',
   '/assets/js/dart-online.js?v=1',
@@ -88,7 +88,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/dart-skorbord.js?v=9',
   '/assets/js/auth.js',
   '/assets/js/admin.js?v=37',
-  '/assets/js/dashboard.js?v=29',
+  '/assets/js/dashboard.js?v=30',
   '/manifest.json'
 ];
 

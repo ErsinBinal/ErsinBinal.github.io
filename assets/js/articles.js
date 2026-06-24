@@ -481,6 +481,8 @@
 
     if (options.updateHash !== false) {
       history.replaceState(null, '', `#${article.slug}`);
+      // Kullanici-kaynakli okuma sinyali (Bugy gibi dinleyiciler besleyebilir).
+      window.dispatchEvent(new CustomEvent('convivium:activity', { detail: { kind: 'read', id: article.id } }));
     }
 
     if (window.toggleProgress) window.toggleProgress(reader);

@@ -128,6 +128,8 @@
     if (v4.setSkin) v4.setSkin(SPECIES[pet.species] ? pet.species : 'clippy');
     if (v4.activate) v4.activate();
     mountCareButton();
+    const feral = applyVisualState(pet);
+    if (feral && v4.trigger) v4.trigger('morph');
   }
   function hideCompanion() {
     const v4 = window.BugyV4;
@@ -145,11 +147,55 @@
     return out;
   }
 
+  function needsAvg(needs) {
+    return NEEDS.reduce((sum, { key }) => sum + needs[key], 0) / NEEDS.length;
+  }
+
   function moodFromNeeds(needs) {
-    const avg = NEEDS.reduce((sum, { key }) => sum + needs[key], 0) / NEEDS.length;
+    const avg = needsAvg(needs);
+    const min = Math.min(...NEEDS.map(({ key }) => needs[key]));
+    // Canavarlasma: ortalama dibe vurunca ya da bir ihtiyac tamamen tukenince.
+    if (avg < 18 || min <= 2) return 'feral';
     if (avg >= 70) return 'happy';
     if (avg >= 35) return 'neutral';
-    return 'grumpy'; // 'feral' Faz 3'te dibe vurunca devreye girecek.
+    return 'grumpy';
+  }
+
+  // --- Buyume / evrim ------------------------------------------------------
+  // care_points biriktikce asama atlar (hatchling -> juvenile -> adult).
+  const STAGE_THRESHOLDS = [
+    { stage: 'adult', min: 40 },
+    { stage: 'juvenile', min: 12 },
+    { stage: 'hatchling', min: 0 }
+  ];
+  const STAGE_LABEL = { egg: 'yumurta', hatchling: 'yavru', juvenile: 'genç', adult: 'yetişkin' };
+
+  function stageFor(carePoints) {
+    const cp = Number(carePoints) || 0;
+    return (STAGE_THRESHOLDS.find((t) => cp >= t.min) || STAGE_THRESHOLDS[2]).stage;
+  }
+
+  // Companion'a asama + canavar (feral) gorsel durumunu yansit.
+  function applyVisualState(pet) {
+    const layer = document.getElementById('bugy-v4-layer');
+    const char = layer ? layer.querySelector('.bugy-v4-char') : null;
+    const target = char || layer;
+    if (!target) return;
+    ['hatchling', 'juvenile', 'adult'].forEach((s) => target.classList.remove(`bugy-stage-${s}`));
+    target.classList.add(`bugy-stage-${pet.stage || 'hatchling'}`);
+    const feral = moodFromNeeds(currentNeeds(pet)) === 'feral';
+    target.classList.toggle('bugy-feral', feral);
+    return feral;
+  }
+
+  // Kisa bir bildirim baloncugu (evrim / canavarlasma).
+  function toast(message) {
+    const el = document.createElement('div');
+    el.className = 'bugy-toast bugy-onboard';
+    el.textContent = message;
+    document.body.appendChild(el);
+    window.setTimeout(() => { el.classList.add('is-out'); }, 2400);
+    window.setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3000);
   }
 
   async function applyCare(type) {
@@ -161,12 +207,61 @@
     });
     currentPet.last_care_at = new Date().toISOString();
     currentPet.care_points = (Number(currentPet.care_points) || 0) + 1;
+
+    const prevStage = currentPet.stage;
+    const prevFeral = currentPet.mood_state === 'feral';
+    currentPet.stage = stageFor(currentPet.care_points);
     currentPet.mood_state = moodFromNeeds(currentPet); // depolanan = yeni anlik goruntu
+
     renderCarePanel();
     const v4 = window.BugyV4;
-    if (v4 && v4.trigger) v4.trigger(CARE[type].mood);
+    const feralNow = applyVisualState(currentPet);
+    if (currentPet.stage !== prevStage) {
+      if (v4 && v4.trigger) v4.trigger('tada');
+      toast(`✦ ${currentPet.name} evrim geçirdi: ${STAGE_LABEL[currentPet.stage]}!`);
+    } else {
+      if (prevFeral && !feralNow) toast(`${currentPet.name} sakinleşti.`);
+      if (v4 && v4.trigger) v4.trigger(CARE[type].mood);
+    }
     await savePet(currentPet);
   }
+
+  // --- Aktiviteyle besleme -------------------------------------------------
+  // Site aktivitesi (orn. makale okuma) pet'e kucuk, kisitli odul verir.
+  // care_points'i ARTIRMAZ; evrim yalnizca bilincli bakimla ilerlesin.
+  const REWARD = {
+    read: { d: { bond: 6, hunger: 2 }, mood: 'think', throttleMs: 8 * 60 * 1000 }
+  };
+
+  async function applyReward(cfg) {
+    if (!currentPet) return;
+    const base = currentNeeds(currentPet);
+    NEEDS.forEach(({ key }) => { currentPet[key] = clampPct(base[key] + (cfg.d[key] || 0)); });
+    currentPet.last_care_at = new Date().toISOString();
+    currentPet.mood_state = moodFromNeeds(currentPet);
+    renderCarePanel();
+    applyVisualState(currentPet);
+    const v4 = window.BugyV4;
+    if (v4 && v4.trigger && cfg.mood) v4.trigger(cfg.mood);
+    await savePet(currentPet);
+  }
+
+  function reward(kind) {
+    const cfg = REWARD[kind];
+    if (!cfg || !currentPet) return;
+    const tkey = `convivium.bugy.reward.${kind}`;
+    try {
+      const last = Number(localStorage.getItem(tkey) || 0);
+      if (Date.now() - last < cfg.throttleMs) return;
+      localStorage.setItem(tkey, String(Date.now()));
+    } catch { /* storage kapali: yine de bir kez odullendir */ }
+    applyReward(cfg);
+  }
+
+  window.addEventListener('convivium:activity', (event) => {
+    const kind = event && event.detail && event.detail.kind;
+    if (kind) reward(kind);
+  });
 
   // --- Bakim UI ------------------------------------------------------------
   let careBtn = null;
@@ -237,7 +332,7 @@
     carePanel.innerHTML = `
       <div class="bugy-care-head">
         <strong>${escapeText(currentPet.name)}</strong>
-        <span>${escapeText(speciesLabel)} · ${MOOD_LABEL[mood] || mood}</span>
+        <span>${escapeText(speciesLabel)} · ${STAGE_LABEL[currentPet.stage] || ''} · ${MOOD_LABEL[mood] || mood}</span>
         <button type="button" class="bugy-care-close" aria-label="Kapat">×</button>
       </div>
       <div class="bugy-meters">${meters}</div>
@@ -362,7 +457,8 @@
     init,
     species: () => ({ ...SPECIES }),
     get: loadPet,
-    save: savePet
+    save: savePet,
+    reward
   };
   window.BugyPet = api;
 
