@@ -164,7 +164,14 @@ hakkında bilgiler edinsin.
         Bilinçli takip: index.html (mevcut deb+v2/v3/v4 companion sistemiyle
         konsolidasyon gerek), ozgecmisim.html (backend yok), oracle (app olarak
         etiketli, kapsam dışı).
-  [ ] FAZ 2: ihtiyaç düşüşü (zaman damgalı) + tıklamayla açılan bakım menüsü.
+  [x] FAZ 2 (TAMAMLANDI): ihtiyaç düşüşü + bakım menüsü.
+      - 4 ihtiyaç (Açlık/Enerji/Hijyen/Bağ) last_care_at'ten zaman damgalı
+        düşer (DECAY saat başına; depolanan değer = anlık görüntü).
+      - Companion yanında 🩺 bakım butonu; ihtiyaç <30 olunca uyarı noktası.
+        Tıkla -> panel: 4 metre + Besle/Uyut/Temizle/Oyna. Her bakım ilgili
+        ihtiyaçları doldurur, mood'u (mutlu/sakin/huysuz) günceller, bugy-v4
+        animasyonu tetikler, Supabase+localStorage'a yazar.
+      - Pet tıklama = kozmik aksiyonlar (next) korundu; bakım ayrı butonda.
   [ ] FAZ 3: büyüme/evrim aşamaları + canavarlaşma görselleştirme.
   [ ] FAZ 4: dashboard "Bugy" inceleme paneli.
   [ ] FAZ 5: site aktivitesiyle besleme + kozmik aksiyonları koru.

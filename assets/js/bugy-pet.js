@@ -33,6 +33,26 @@
   };
   const SPECIES_KEYS = Object.keys(SPECIES);
 
+  // Saat basina ihtiyac dususu (gercek zaman; last_care_at uzerinden hesaplanir).
+  // Yumusak tutuldu: gunluk ugrayan kullanici rahatca dengeyi korur.
+  const DECAY = { hunger: 4, energy: 3, hygiene: 2.5, bond: 1.5 };
+
+  // Bakim aksiyonlari: ihtiyac deltalari + companion mood animasyonu (bugy-v4).
+  const CARE = {
+    feed:  { label: 'Besle',   icon: '🍙', mood: 'tada',  d: { hunger: 38, hygiene: -6, bond: 4 } },
+    rest:  { label: 'Uyut',    icon: '🌙', mood: 'think', d: { energy: 42, bond: 2 } },
+    clean: { label: 'Temizle', icon: '🧼', mood: 'magic', d: { hygiene: 46, bond: 3 } },
+    play:  { label: 'Oyna',    icon: '🎈', mood: 'wave',  d: { bond: 26, energy: -12, hunger: -6 } }
+  };
+  const NEEDS = [
+    { key: 'hunger',  label: 'Açlık' },
+    { key: 'energy',  label: 'Enerji' },
+    { key: 'hygiene', label: 'Hijyen' },
+    { key: 'bond',    label: 'Bağ' }
+  ];
+
+  const clampPct = (v) => Math.max(0, Math.min(100, Math.round(v)));
+
   const backend = () => window.ConviviumBackend;
 
   // --- Kalicilik -----------------------------------------------------------
@@ -97,16 +117,141 @@
   }
 
   // --- Companion surucusu (bugy-v4) ---------------------------------------
+  // Aktif pet (bakim UI'i bunun uzerinde calisir).
+  let currentPet = null;
+
   function activateCompanion(pet) {
+    currentPet = pet;
     const v4 = window.BugyV4;
     if (!v4) return;
     try { localStorage.setItem(ENGINE_KEY, 'v4'); } catch { /* yok say */ }
     if (v4.setSkin) v4.setSkin(SPECIES[pet.species] ? pet.species : 'clippy');
     if (v4.activate) v4.activate();
+    mountCareButton();
   }
   function hideCompanion() {
     const v4 = window.BugyV4;
     if (v4 && v4.deactivate) v4.deactivate();
+    unmountCare();
+  }
+
+  // --- Ihtiyac dususu + bakim ---------------------------------------------
+  // Depolanan ihtiyac degerleri last_care_at anindaki "anlik goruntu"dur.
+  // Guncel degerler = anlik goruntu - DECAY * gecen_saat.
+  function currentNeeds(pet) {
+    const hours = Math.max(0, (Date.now() - new Date(pet.last_care_at).getTime()) / 3600000);
+    const out = {};
+    NEEDS.forEach(({ key }) => { out[key] = clampPct((Number(pet[key]) || 0) - DECAY[key] * hours); });
+    return out;
+  }
+
+  function moodFromNeeds(needs) {
+    const avg = NEEDS.reduce((sum, { key }) => sum + needs[key], 0) / NEEDS.length;
+    if (avg >= 70) return 'happy';
+    if (avg >= 35) return 'neutral';
+    return 'grumpy'; // 'feral' Faz 3'te dibe vurunca devreye girecek.
+  }
+
+  async function applyCare(type) {
+    if (!currentPet || !CARE[type]) return;
+    const base = currentNeeds(currentPet);     // once dususu uygula
+    const deltas = CARE[type].d;
+    NEEDS.forEach(({ key }) => {
+      currentPet[key] = clampPct(base[key] + (deltas[key] || 0));
+    });
+    currentPet.last_care_at = new Date().toISOString();
+    currentPet.care_points = (Number(currentPet.care_points) || 0) + 1;
+    currentPet.mood_state = moodFromNeeds(currentPet); // depolanan = yeni anlik goruntu
+    renderCarePanel();
+    const v4 = window.BugyV4;
+    if (v4 && v4.trigger) v4.trigger(CARE[type].mood);
+    await savePet(currentPet);
+  }
+
+  // --- Bakim UI ------------------------------------------------------------
+  let careBtn = null;
+  let carePanel = null;
+
+  function unmountCare() {
+    if (careBtn && careBtn.parentNode) careBtn.parentNode.removeChild(careBtn);
+    if (carePanel && carePanel.parentNode) carePanel.parentNode.removeChild(carePanel);
+    careBtn = null;
+    carePanel = null;
+  }
+
+  function mountCareButton() {
+    if (careBtn) { refreshCareBadge(); return; }
+    careBtn = document.createElement('button');
+    careBtn.type = 'button';
+    careBtn.className = 'bugy-care-btn bugy-onboard';
+    careBtn.setAttribute('aria-label', 'Bugy bakım menüsü');
+    careBtn.innerHTML = '<span aria-hidden="true">🩺</span>';
+    careBtn.addEventListener('click', toggleCarePanel);
+    document.body.appendChild(careBtn);
+    refreshCareBadge();
+  }
+
+  function refreshCareBadge() {
+    if (!careBtn || !currentPet) return;
+    const needs = currentNeeds(currentPet);
+    const low = NEEDS.some(({ key }) => needs[key] < 30);
+    careBtn.classList.toggle('has-alert', low);
+  }
+
+  function toggleCarePanel() {
+    if (carePanel) { unmountPanel(); return; }
+    carePanel = document.createElement('div');
+    carePanel.className = 'bugy-care-panel bugy-onboard';
+    carePanel.setAttribute('role', 'dialog');
+    carePanel.setAttribute('aria-label', 'Bugy bakımı');
+    document.body.appendChild(carePanel);
+    renderCarePanel();
+  }
+
+  function unmountPanel() {
+    if (carePanel && carePanel.parentNode) carePanel.parentNode.removeChild(carePanel);
+    carePanel = null;
+  }
+
+  const MOOD_LABEL = { happy: 'mutlu', neutral: 'sakin', grumpy: 'huysuz', feral: 'canavar' };
+
+  function renderCarePanel() {
+    refreshCareBadge();
+    if (!carePanel || !currentPet) return;
+    const needs = currentNeeds(currentPet);
+    const mood = moodFromNeeds(needs);
+    const meters = NEEDS.map(({ key, label }) => {
+      const v = needs[key];
+      const level = v < 30 ? 'low' : v < 60 ? 'mid' : 'high';
+      return `
+        <div class="bugy-meter" data-level="${level}">
+          <div class="bugy-meter-top"><span>${label}</span><span>${v}</span></div>
+          <div class="bugy-meter-track"><i style="width:${v}%"></i></div>
+        </div>`;
+    }).join('');
+    const buttons = Object.keys(CARE).map((type) => `
+      <button type="button" class="bugy-care-action" data-care="${type}">
+        <span aria-hidden="true">${CARE[type].icon}</span>${CARE[type].label}
+      </button>`).join('');
+    const speciesLabel = SPECIES[currentPet.species] ? SPECIES[currentPet.species].label : currentPet.species;
+    carePanel.innerHTML = `
+      <div class="bugy-care-head">
+        <strong>${escapeText(currentPet.name)}</strong>
+        <span>${escapeText(speciesLabel)} · ${MOOD_LABEL[mood] || mood}</span>
+        <button type="button" class="bugy-care-close" aria-label="Kapat">×</button>
+      </div>
+      <div class="bugy-meters">${meters}</div>
+      <div class="bugy-care-actions">${buttons}</div>`;
+    carePanel.querySelector('.bugy-care-close').addEventListener('click', unmountPanel);
+    carePanel.querySelectorAll('.bugy-care-action').forEach((btn) => {
+      btn.addEventListener('click', () => applyCare(btn.dataset.care));
+    });
+  }
+
+  function escapeText(value) {
+    return String(value ?? '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
   }
 
   // --- Onboarding UI -------------------------------------------------------
