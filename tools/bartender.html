@@ -180,6 +180,16 @@
         @keyframes fadeIn { to { opacity: 1; } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @media (max-width: 600px) { .options-grid { grid-template-columns: 1fr; } }
+
+        /* Hareket azaltma tercihine saygi: animasyon/gecisleri sustur. */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+            scroll-behavior: auto !important;
+          }
+        }
     </style>
 </head>
 <body>

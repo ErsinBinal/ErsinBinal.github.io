@@ -46,8 +46,22 @@ B) Orta — UX iyileştirmeleri (tarayıcıda test etmen iyi olur)
 
   8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
      (Supabase verisi zaten var).
-  9. Tema: şu an theme.js var; sayfalar arası tema tercihinin tutarlı
+  [x] 9. Tema: şu an theme.js var; sayfalar arası tema tercihinin tutarlı
      uygulandığını ve "reduced-motion" ile uyumunu gözden geçirmek.
+     -> TAMAMLANDI (2026-06-24):
+        TEMA: theme.js yalnızca index + makaleler'de yükleniyordu. common.css
+        tema değişkenlerini kullanıp theme.js'i olmayan 5 sayfaya (auth,
+        dashboard, admin, bugy-studio, dart-skorbord) eklendi; kayıtlı tema
+        artık bu sayfalarda da uygulanıyor. Kendi bağımsız renk sistemi olan
+        oyun/bar sayfaları kapsam dışı (tema değişkenlerini kullanmıyorlar).
+        REDUCED-MOTION: kendi CSS animasyonu olup guard'ı olmayan 3 sayfaya
+        (universe-2, barista, bartender) global @media(prefers-reduced-motion)
+        nötrleştirici eklendi. common.css yükleyen sayfalar zaten global
+        guard'a sahip; canvas/Phaser oyunlar (ash-runner, neon-river) rAF
+        tabanlı, CSS guard'ı gerekmez.
+        NOT: theme.js'in body'ye eklediği ".reduced-motion" sınıfını hiçbir
+        CSS/JS tüketmiyor (ölü kod); zararsız olduğu için bırakıldı, gerçek
+        mekanizma @media + JS matchMedia.
 
 C) Daha büyük / tartışmalı (önce birlikte karar verelim)
 
