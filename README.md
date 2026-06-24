@@ -20,10 +20,14 @@ Ziyaretci icin site bir rota agi gibi akar:
 
 - `index.html`: terminal estetikli ana sayfa, command shell ve proje haritasi.
 - `/pages/makaleler.html`: is modeli, dijital donusum, fiyatlandirma ve teknoloji notlari.
+- `/pages/ozgecmisim.html`: ozgecmis, deneyim ve iletisim sayfasi.
 - `/oracle/`: kapali isaretler, kisa okumalar ve oracle deneyimi.
-- `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/neon-river.html`: oynanabilir deneyler.
+- `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/neon-river.html`, `/games/universe-2.html`: oynanabilir deneyler.
 - `/tools/bartender.html`, `/tools/barista.html`, `/tools/barista-v2.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
 - `/tools/dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
+- `/tools/paradox-terminal.html`: paradokslar ve kisa felsefi notlar icin retro terminal sayfasi.
+- `/tools/bugy-studio.html`: bugy motorlarini (v1/v2/v3) ve DEB yoldasini yoneten kontrol merkezi.
+- `/account/`, `/admin/`: Supabase tabanli oturum, profil ve yonetim ekranlari.
 
 ## Teknik Yapi
 
