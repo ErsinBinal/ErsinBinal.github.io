@@ -112,7 +112,7 @@
       state.commands = Number.isFinite(state.commands) ? state.commands : 0;
       state.opened = Array.isArray(state.opened) ? state.opened : [];
       state.unlocked = Array.isArray(state.unlocked) ? state.unlocked : [];
-      state.commandLog = Array.isArray(state.commandLog) ? state.commandLog.slice(-8) : [];
+      state.commandLog = Array.isArray(state.commandLog) ? state.commandLog.slice(-30) : [];
       state.rituals = Number.isFinite(state.rituals) ? state.rituals : 0;
       state.offlineNode = Boolean(state.offlineNode);
       state.easterTrail = Array.isArray(state.easterTrail) ? state.easterTrail.slice(-4) : [];
@@ -4569,7 +4569,11 @@
         const command = expandAlias(applySynonyms(normalizeCommand(query)));
         if (!query || commandInFlight) return;
         state.commands += 1;
-        state.commandLog = [...(state.commandLog || []), query].slice(-8);
+        const prevLog = state.commandLog || [];
+        // Ardisik tekrari yazma (bash ignoredups); gecmis son 30 komutu tutar.
+        state.commandLog = prevLog[prevLog.length - 1] === query
+          ? prevLog.slice(-30)
+          : [...prevLog, query].slice(-30);
         if (state.commands >= 3) award(2);
         persist();
         audioCue('terminal.run');

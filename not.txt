@@ -32,10 +32,17 @@ A) Düşük risk, hızlı kazanım (test gerektirmez)
         için kapsam dışı bırakıldı.
 
 B) Orta — UX iyileştirmeleri (tarayıcıda test etmen iyi olur)
-  5. Komut satırına (command-shell) komut geçmişi: yukarı/aşağı ok ile
+  [x] 5. Komut satırına (command-shell) komut geçmişi: yukarı/aşağı ok ile
      son komutları gezme + localStorage'da saklama.
-  6. command-input için basit otomatik tamamlama/öneri zenginleştirme
+     -> ZATEN MEVCUTTU (önceki oturumda yapılmış): ↑/↓ geçmiş gezme +
+        state.commandLog ile localStorage kalıcılığı çalışıyor.
+        İYİLEŞTİRME (2026-06-24): geçmiş derinliği 8 -> 30; ardışık tekrar
+        eden komutlar artık geçmişe yazılmıyor (bash ignoredups gibi).
+  [~] 6. command-input için basit otomatik tamamlama/öneri zenginleştirme
      (zaten command-suggestions alanı var, içeriğini güçlendirmek).
+     -> ZATEN MEVCUTTU: Tab ile tamamlama + yazarken inline tamamlama
+        (completeInput) çalışıyor. Görsel öneri çipleri ise bilinçli olarak
+        kaldırılmıştı ("kabuk sade dursun" tercihi); geri eklenmedi.
 
   8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
      (Supabase verisi zaten var).
