@@ -22,7 +22,6 @@ Canonical product pages live under purpose-based folders:
 - `oracle/`: Oracle experience
 - `account/`: auth and user dashboard
 - `admin/`: private/admin-facing static surfaces
-- `Candy_Pop/`: existing commerce prototype area until it is promoted or archived
 
 New public pages should not be added to the repository root. If an old URL must keep working, add a small redirect wrapper in root and put the real page in the canonical folder.
 

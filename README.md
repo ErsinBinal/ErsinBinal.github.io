@@ -24,7 +24,6 @@ Ziyaretci icin site bir rota agi gibi akar:
 - `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/neon-river.html`: oynanabilir deneyler.
 - `/tools/bartender.html`, `/tools/barista.html`, `/tools/barista-v2.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
 - `/tools/dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
-- `Candy_Pop/`: e-ticaret ve mobil uygulama akislari icin deneysel prototipler.
 
 ## Teknik Yapi
 

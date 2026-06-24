@@ -18,7 +18,6 @@
     baristaV2: '/tools/barista-v2.html',
     realistsBar: '/tools/the-realists-bar.html',
     paradox: '/tools/paradox-terminal.html',
-    bugyStudio: '/tools/bugy-studio.html',
-    candyPop: '/Candy_Pop/'
+    bugyStudio: '/tools/bugy-studio.html'
   });
 })();

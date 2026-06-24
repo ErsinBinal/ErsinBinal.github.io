@@ -87,7 +87,6 @@ for (const file of browserFiles) {
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');
-  if (relative(file).startsWith('Candy_Pop')) continue;
   if (/<script\s+src=["']https:\/\/[^"']*latest/i.test(html)) {
     addError(`${relative(file)} CDN script latest etiketi kullaniyor`);
   }
