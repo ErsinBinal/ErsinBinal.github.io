@@ -90,3 +90,60 @@ GÜVENLİK / İZLEME (sadece hatırlatma, bilgi paylaşmıyorum)
     konuşuruz (statik sitede sınırları net, abartmaya değmez).
 
 Hangilerini istersen "EVET" diye yanına yaz, dönünce ona göre ilerlerim.
+
+
+YENİ UYGULAMA / OYUN ÖNERİLERİ
+==============================
+Sitenin mevcut dili (terminal/neon, vanilla HTML+CSS+JS, Supabase, küçük
+"ritüel/protokol" araçları) ile uyumlu, framework gerektirmeyen fikirler.
+Sıralama kaba bir "yapım kolaylığı -> efor" eksenidir.
+
+OYUNLAR
+  1. Snake / Neon Serpent — klasik yılan, neon ızgarada; Supabase skor
+     tablosu mevcut dart/oyun altyapısına bağlanır. (kolay, yüksek getiri)
+  2. Terminal Wordle (TR) — günlük 5 harfli Türkçe kelime; tamamen
+     istemci tarafı, paylaşılabilir sonuç emoji ızgarası. (kolay)
+  3. Minesweeper / Mayın Tarlası — retro terminal teması, zamanlı,
+     skor kaydı. (kolay-orta)
+  4. 2048 — neon varyant; dokunmatik + klavye. (kolay)
+  5. Memory / Hafıza — glyph eşleştirme (sitedeki ∴ ∑ λ ◇ ∞ sembolleri
+     ile tematik). (kolay)
+  6. Typing Test / "Signal Speed" — terminal estetiğinde hız/doğruluk
+     testi, WPM skoru Supabase'e. (orta)
+  7. Roguelike mini-zindan — zaten Kenney roguelike sprite'ları repoda
+     (assets/vendor/kenney); küçük tile tabanlı kaçış oyunu. (orta-zor)
+  8. Light-out / Devre bulmaca — "cyberpunk logic" ile akraba, ızgara
+     ışık söndürme. (kolay-orta)
+  9. Idle/clicker "Signal Miner" — küçük artımlı oyun, localStorage;
+     siteyle tematik (sinyal toplama). (orta)
+  10. Çok oyunculu sıra-tabanlı (XOX/Reversi) — dart-online.js zaten
+      Supabase realtime kullanıyor, aynı kanal mantığı tekrar kullanılır.
+      (orta-zor)
+
+ARAÇLAR / UYGULAMALAR
+  11. Pomodoro / Odak Terminali — neon geri sayım + seans kaydı; "ritüel"
+      temasına çok oturur. (kolay)
+  12. ASCII/glyph üreteç — yazıyı banner ASCII'ye çeviren terminal aracı,
+      kopyala butonu. (kolay)
+  13. Renk paleti / tema üreteci — sitenin neon paletinden varyant üretip
+      CSS değişkeni olarak verir. (kolay)
+  14. Markdown -> terminal önizleme not defteri (localStorage). (orta)
+  15. "Karar çarkı" / rastgele seçici — bartender/barista ile aynı ruhta,
+      ikilemde rastgele yön veren mini araç. (kolay)
+  16. QR üreteç — istemci tarafı, link/iletişim paylaşımı için. (kolay,
+      ufak bir kütüphane gerekebilir; CSP'ye dikkat)
+  17. Mood/journal "sinyal günlüğü" — kısa günlük girişleri, Supabase'e
+      kayıt, dashboard'da görünür. (orta)
+  18. Birim/oran çevirici (para, zaman dilimi) — pratik, terminal arayüz.
+      (kolay-orta; kur için API gerekir, statikte sabit/elle de olur)
+
+İÇERİK / DENEYSEL
+  19. "Oracle" için günlük tek kart/kehanet modu (günde bir, paylaşılır).
+  20. İnteraktif CV (ozgecmisim.html) — terminal komutlarıyla gezilen
+      "whoami / skills / experience" arayüzü.
+  21. Site içi mini ARG/iz sürme genişletmesi — mevcut "hidden room" ve
+      canary temasını bir bulmaca zincirine bağlamak.
+
+Not: Hepsi vanilla + mevcut altyapıyla (Supabase skor/oturum, sfx.js,
+arcade-kit) yapılabilir; dış bağımlılık minimumda tutulur, CSP'ye uygun
+kalınır. Beğendiklerinin yanına "EVET" yaz, önceliklendirip başlarım.
