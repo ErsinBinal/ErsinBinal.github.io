@@ -1,0 +1,46 @@
+NOT — Claude oturum özeti (2026-06-24)
+=======================================
+
+Selam Ersin, sen ofisten çıkınca yaptığım geliştirme bu dosyada özetli.
+Okuyup silebilirsin (zaten senin için bıraktım).
+
+YAPILAN: Özel 404 sayfası (404.html)
+------------------------------------
+Sorun: Sitede özel bir 404 sayfası yoktu. GitHub Pages, var olmayan bir
+rotaya girildiğinde kendi sade/çirkin varsayılan 404'ünü gösteriyordu.
+
+Çözüm: Site estetiğine (terminal / yeşil neon, offline.html ile aynı dil)
+uygun, bağımsız bir 404.html ekledim. İçinde:
+  - "404 / KAYIP SİNYAL" terminal ekranı
+  - İstenen yolu (location.pathname) gösteren küçük iz/trace kutusu
+  - Rastgele bir "echo" satırı (ufak karakter dokunuşu)
+  - Bilinen rotalara dönüş kartları: Ana Sinyal, Makaleler, Oracle, Oyunlar
+  - <meta robots: noindex, follow> (404 indekslenmesin diye)
+
+Sahiplik imzaları (mevcut şemaya birebir uyumlu):
+  - Görünür katman: origin-id CVM-AA8EB2FE  (= MD5("404.html") ilk 8 hex)
+    + <meta name="x-convivium-origin" ...> + telif yorumu
+  - Görünmez katman: </body> öncesi zero-width canary, içeriği
+    "EB|CVM-AA8EB2FE|ersinbinal.github.io" olacak şekilde üretildi.
+    (Encoder'ı önce index.html'in mevcut canary'sini birebir yeniden
+     üreterek doğruladım, sonra 404 için ürettim — kodlama tutarlı.)
+  - origin-beacon.js eklendi; beacon pikselinin çalışması için CSP'de
+    img-src'e sadece convivium-oracle.convivium.workers.dev eklendi.
+
+NEDEN SW / cache'e dokunmadım:
+  - Navigasyon isteklerinde service worker önce ağa gidiyor; GitHub Pages
+    404'ü doğrudan sunuyor (status 200 olmadığı için cache'lenmiyor zaten).
+  - Rastgele hatalı bir URL cache'te /404.html ile eşleşmeyeceği için
+    404'ü precache'e koymanın faydası olmazdı; gereksiz tam cache
+    invalidasyonundan (CACHE_NAME bump) kaçındım.
+
+DOĞRULAMA NOTU:
+  - Bu makinede node/npm yok, "npm run check" çalıştıramadım. JS'i elle
+    inceledim (basit, IIFE, tek dosya). Tarayıcıda hızlıca görmek için:
+    canlıya çıkınca https://ersinbinal.github.io/var-olmayan-sayfa aç.
+  - İstersen kontrol için: 404.html içindeki gizli canary'yi çözdüğünde
+    "EB|CVM-AA8EB2FE|ersinbinal.github.io" çıkmalı.
+
+Bu kadar — tek, sağlam ve bağımsız bir ekleme yaptım; sen yokken test
+edemediğim çok sayıda riskli değişiklik yerine bunu temiz tutmayı seçtim.
+Bir sonraki tur için fikir havuzu hazır, dönünce konuşuruz.
