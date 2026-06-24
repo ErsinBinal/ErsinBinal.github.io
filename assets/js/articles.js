@@ -10,7 +10,7 @@
       summary: 'Dijital icerik platformlarinin buyumesiyle abonelik modelleri isletmelerin oncelikli stratejisi oldu.',
       content: `
         <figure class="article-image">
-          <img class="responsive" src="/assets/icons/og-image.png" alt="Convivium terminal arayuzu" loading="lazy" decoding="async">
+          <img class="responsive" src="/assets/icons/og-image.png" alt="Convivium terminal arayuzu" width="1200" height="630" loading="lazy" decoding="async">
           <figcaption>Surekli gelir modelleri, urun kadar ritim tasarimi da ister.</figcaption>
         </figure>
         <h2>Abonelik Ekonomisinin Evrimi</h2>

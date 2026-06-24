@@ -1,95 +1,52 @@
 NOT — Claude oturum özeti (2026-06-24)
 =======================================
 
-Selam Ersin, sen ofisten çıkınca yaptığım geliştirme bu dosyada özetli.
-Okuyup silebilirsin (zaten senin için bıraktım).
-
-YAPILAN: Özel 404 sayfası (404.html)
-------------------------------------
-Sorun: Sitede özel bir 404 sayfası yoktu. GitHub Pages, var olmayan bir
-rotaya girildiğinde kendi sade/çirkin varsayılan 404'ünü gösteriyordu.
-
-Çözüm: Site estetiğine (terminal / yeşil neon, offline.html ile aynı dil)
-uygun, bağımsız bir 404.html ekledim. İçinde:
-  - "404 / KAYIP SİNYAL" terminal ekranı
-  - İstenen yolu (location.pathname) gösteren küçük iz/trace kutusu
-  - Rastgele bir "echo" satırı (ufak karakter dokunuşu)
-  - Bilinen rotalara dönüş kartları: Ana Sinyal, Makaleler, Oracle, Oyunlar
-  - <meta robots: noindex, follow> (404 indekslenmesin diye)
-
-Sahiplik imzaları (mevcut şemaya birebir uyumlu):
-  - Görünür katman: origin-id CVM-AA8EB2FE  (= MD5("404.html") ilk 8 hex)
-    + <meta name="x-convivium-origin" ...> + telif yorumu
-  - Görünmez katman: </body> öncesi zero-width canary, içeriği
-    "EB|CVM-AA8EB2FE|ersinbinal.github.io" olacak şekilde üretildi.
-    (Encoder'ı önce index.html'in mevcut canary'sini birebir yeniden
-     üreterek doğruladım, sonra 404 için ürettim — kodlama tutarlı.)
-  - origin-beacon.js eklendi; beacon pikselinin çalışması için CSP'de
-    img-src'e sadece convivium-oracle.convivium.workers.dev eklendi.
-
-NEDEN SW / cache'e dokunmadım:
-  - Navigasyon isteklerinde service worker önce ağa gidiyor; GitHub Pages
-    404'ü doğrudan sunuyor (status 200 olmadığı için cache'lenmiyor zaten).
-  - Rastgele hatalı bir URL cache'te /404.html ile eşleşmeyeceği için
-    404'ü precache'e koymanın faydası olmazdı; gereksiz tam cache
-    invalidasyonundan (CACHE_NAME bump) kaçındım.
-
-DOĞRULAMA NOTU:
-  - Bu makinede node/npm yok, "npm run check" çalıştıramadım. JS'i elle
-    inceledim (basit, IIFE, tek dosya). Tarayıcıda hızlıca görmek için:
-    canlıya çıkınca https://ersinbinal.github.io/var-olmayan-sayfa aç.
-  - İstersen kontrol için: 404.html içindeki gizli canary'yi çözdüğünde
-    "EB|CVM-AA8EB2FE|ersinbinal.github.io" çıkmalı.
-
-Bu kadar — tek, sağlam ve bağımsız bir ekleme yaptım; sen yokken test
-edemediğim çok sayıda riskli değişiklik yerine bunu temiz tutmayı seçtim.
-
-
 SONRAKİ TUR İÇİN FİKİR HAVUZU
 =============================
 Eve gidince incele, hangilerini istersen işaretle; ben sıradakinde
 sadece onayladıklarını yaparım. Riski/etkisi düşükten yükseğe sıraladım.
 
 A) Düşük risk, hızlı kazanım (test gerektirmez)
-  1. paradox-terminal & barista/bartender sayfalarına da özel 404 mantığı
+  [x] 1. paradox-terminal & barista/bartender sayfalarına da özel 404 mantığı
      gibi tutarlılık: tüm tool sayfalarında <meta name="robots"> ve OG
      etiketlerinin eksiksiz olduğunu denetleyip standartlaştırmak.
-  2. index.html'deki açılış loader'ı: home-protocol.js zaten ~3.6sn'de
-     kapatıyor ama inline yedek script hâlâ 4.2sn. Yedeği 3.6 ile
-     hizalayıp ölü kodu sadeleştirmek (görsel davranış değişmez).
-  3. Tüm sayfalarda dış bağlantılarda rel="noopener" denetimi (güvenlik
+     -> TAMAMLANDI (2026-06-24): 21 HTML sayfasının tamamı denetlendi.
+        Indekslenebilir sayfalara robots="index, follow" + eksik og:url /
+        og:image / Twitter card eklendi; account/admin/offline gibi özel
+        sayfalara robots="noindex, nofollow" verildi. og:image olarak ortak
+        /assets/icons/og-image.png standartlaştırıldı.
+
+  [x] 3. Tüm sayfalarda dış bağlantılarda rel="noopener" denetimi (güvenlik
      + ufak performans), eksik olanlara eklemek.
-  4. Görsellerde width/height attribute denetimi -> layout shift (CLS)
+     -> TAMAMLANDI (2026-06-24): tüm HTML+JS tarandı; window.open yok.
+        Eksik 2 dış bağlantıya (barista.html YouTube linki, bartender.html
+        fiyat butonu) rel="noopener noreferrer" eklendi. Diğer _blank
+        linkleri zaten noopener içeriyordu.
+  [x] 4. Görsellerde width/height attribute denetimi -> layout shift (CLS)
      azaltma; lighthouse skoruna doğrudan yarar.
+     -> TAMAMLANDI (2026-06-24): cyberpunk gif (220x424) ve makale
+        og-image (1200x630) için intrinsic width/height eklendi. Lightbox
+        overlay (sized via viewport) ve .reader-media (object-fit:cover +
+        min-height ile zaten yer ayırıyor) CLS açısından sorunsuz olduğundan
+        dokunulmadı; admin editör kullanıcı görselleri boyutu bilinmediği
+        için kapsam dışı bırakıldı.
 
 B) Orta — UX iyileştirmeleri (tarayıcıda test etmen iyi olur)
   5. Komut satırına (command-shell) komut geçmişi: yukarı/aşağı ok ile
      son komutları gezme + localStorage'da saklama.
   6. command-input için basit otomatik tamamlama/öneri zenginleştirme
      (zaten command-suggestions alanı var, içeriğini güçlendirmek).
-  7. Oyunlar için ortak "nasıl oynanır / kontroller" yardım katmanı —
-     ilk girişte kısa overlay, sonra gizlenir (localStorage flag).
+
   8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
      (Supabase verisi zaten var).
   9. Tema: şu an theme.js var; sayfalar arası tema tercihinin tutarlı
      uygulandığını ve "reduced-motion" ile uyumunu gözden geçirmek.
 
 C) Daha büyük / tartışmalı (önce birlikte karar verelim)
-  10. Tool sayfalarının (barista v1/v2, bartender, the-realists-bar)
-      tek bir "ritüel motoru" altında birleştirilmesi — çok kod paylaşımı
-      var, bakım kolaylaşır ama riskli refactor.
-  11. Makaleler sayfasına etiket/filtre + arama.
+
   12. PWA: "yeni sürüm hazır, yenile" bildirimi (SW update akışı) —
       kullanıcı bayat cache'te kalmasın.
-  13. Basit bir /changelog veya "son güncellemeler" sayfası.
-
-GÜVENLİK / İZLEME (sadece hatırlatma, bilgi paylaşmıyorum)
-  - origin-beacon worker'ının deploy edildiğinden emin olmak; "foreign"
-    log'larını ara ara kontrol etmek.
-  - Henüz uygulanmayan domain-lock / JS obfuscation konularını istersen
-    konuşuruz (statik sitede sınırları net, abartmaya değmez).
-
-Hangilerini istersen "EVET" diye yanına yaz, dönünce ona göre ilerlerim.
+  13. Basit bir /changelog veya "son güncellemeler" sayfası. Command alanına eklenebilir 
 
 
 YENİ UYGULAMA / OYUN ÖNERİLERİ
@@ -128,8 +85,6 @@ ARAÇLAR / UYGULAMALAR
   13. Renk paleti / tema üreteci — sitenin neon paletinden varyant üretip
       CSS değişkeni olarak verir. (kolay)
   14. Markdown -> terminal önizleme not defteri (localStorage). (orta)
-  15. "Karar çarkı" / rastgele seçici — bartender/barista ile aynı ruhta,
-      ikilemde rastgele yön veren mini araç. (kolay)
   16. QR üreteç — istemci tarafı, link/iletişim paylaşımı için. (kolay,
       ufak bir kütüphane gerekebilir; CSP'ye dikkat)
   17. Mood/journal "sinyal günlüğü" — kısa günlük girişleri, Supabase'e
@@ -146,4 +101,4 @@ ARAÇLAR / UYGULAMALAR
 
 Not: Hepsi vanilla + mevcut altyapıyla (Supabase skor/oturum, sfx.js,
 arcade-kit) yapılabilir; dış bağımlılık minimumda tutulur, CSP'ye uygun
-kalınır. Beğendiklerinin yanına "EVET" yaz, önceliklendirip başlarım.
+kalınır. 
