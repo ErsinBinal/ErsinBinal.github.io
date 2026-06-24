@@ -1,0 +1,12 @@
+# Guvenlik HTTP header'lari.
+# NOT: GitHub Pages ozel header desteklemez ve bu dosyayi yok sayar.
+# Cloudflare Pages / Netlify'a tasinirsa bu header'lar otomatik uygulanir.
+# CSP, sayfa basina <meta http-equiv> ile yonetiliyor; burada tekrarlanmaz.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
