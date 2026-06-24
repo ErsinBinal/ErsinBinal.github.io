@@ -256,14 +256,221 @@ const isOwnedContext = (host, proto, env) => {
   return beaconOwnedHosts(env).includes(normalizedHost);
 };
 
-const handleBeacon = (request, env) => {
+// ---------------------------------------------------------------------------
+// Klon triyaji: foreign beacon -> lokal kalip -> (gerekirse) LLM -> aksiyon.
+//
+// 5 katman:
+//   1) Kalip katalogu (classifyForeignHost) - arsiv/cache/ceviri gibi bilinen
+//      zararsiz host'lar bedava ve aninda elenir; LLM cagrilmaz.
+//   2) Anomali kapisi - kalibla eslesmeyen host "sira disi" sayilir, eskale edilir.
+//   3) Prompt sablonu (askTriageAI) - olay, ciktisi kisitli (JSON enum) bir
+//      promta cevrilir; model serbest yorum yapamaz.
+//   4) Aksiyon eslemesi (TRIAGE_ACTIONS) - donen action bir allowlist'e karsi
+//      dogrulanir; sadece tanidik refleksler calisir, yikici islem yoktur.
+//   5) Dedup (wasRecentlyTriaged) - ayni host bir pencere boyunca tek kez
+//      degerlendirilir, boylece LLM bosa yorulmaz.
+// ---------------------------------------------------------------------------
+
+// Bilinen zararsiz host kaliplari: arsiv, cache, ceviri, AMP, proxy.
+const TRIAGE_BENIGN_PATTERNS = [
+  /(^|\.)web\.archive\.org$/,
+  /(^|\.)archive\.(ph|today|is|li|vn|md|fo)$/,
+  /(^|\.)webcache\.googleusercontent\.com$/,
+  /(^|\.)googleusercontent\.com$/,
+  /(^|\.)translate\.goog$/,
+  /(^|\.)translate\.google\.com$/,
+  /(^|\.)cdn\.ampproject\.org$/,
+  /(^|\.)12ft\.io$/,
+  /(^|\.)cachedview\./
+];
+
+// 1) Lokal kalip katalogu. Eslesirse {action,...} doner, bilinmiyorsa null.
+const classifyForeignHost = (host, env) => {
+  const normalized = String(host || '').toLowerCase();
+  if (!normalized) return null;
+
+  const extraBenign = String(env.TRIAGE_BENIGN_HOSTS || '')
+    .split(',')
+    .map(item => item.trim().toLowerCase())
+    .filter(Boolean);
+  if (extraBenign.some(base => normalized === base || normalized.endsWith(`.${base}`))) {
+    return { action: 'ignore', severity: 'low', reason: 'env benign host' };
+  }
+
+  if (TRIAGE_BENIGN_PATTERNS.some(pattern => pattern.test(normalized))) {
+    return { action: 'ignore', severity: 'low', reason: 'arsiv/cache/ceviri/proxy kalibi' };
+  }
+
+  return null; // bilinmiyor -> LLM'e eskale
+};
+
+const TRIAGE_SYSTEM_PROMPT = [
+  'Sen bir icerik-hirsizligi triyaj siniflandiricisisin.',
+  'Sana baska bir host\'ta bizim imzamizi tasiyan bir sayfa sinyali verilecek.',
+  'SADECE su JSON\'u dondur: {"action":"ignore|watch|alert","severity":"low|medium|high","reason":"kisa gerekce"}.',
+  'ignore = arsiv/cache/ceviri/proxy gibi zararsiz erisim.',
+  'watch = supheli ama belirsiz; insan incelemesi gerekir.',
+  'alert = olasi tam kopya / icerik hirsizligi.',
+  'JSON disinda hicbir metin yazma.'
+].join(' ');
+
+const triageUserPayload = (event) => JSON.stringify({
+  host: event.host,
+  proto: event.proto,
+  page: event.page,
+  ref: event.ref,
+  id: event.id,
+  country: event.country,
+  ua: event.ua
+});
+
+const VALID_TRIAGE_ACTIONS = ['ignore', 'watch', 'alert'];
+const VALID_TRIAGE_SEVERITY = ['low', 'medium', 'high'];
+
+// Modelden donen ham metinden ilk JSON nesnesini cek.
+const extractJson = (text) => {
+  const match = String(text || '').match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+};
+
+// LLM ciktisini guvenli sinirlara cek; bilinmeyen deger -> 'watch' (insana birak).
+const normalizeDecision = (raw) => {
+  const action = VALID_TRIAGE_ACTIONS.includes(raw?.action) ? raw.action : 'watch';
+  const severity = VALID_TRIAGE_SEVERITY.includes(raw?.severity)
+    ? raw.severity
+    : (action === 'alert' ? 'high' : 'medium');
+  const reason = normalizeAnswer(raw?.reason || '').slice(0, 240) || 'gerekce yok';
+  return { action, severity, reason };
+};
+
+const askTriageCloudflare = async (event, env) => {
+  if (!env.AI) throw new Error('cloudflare ai binding missing');
+  const response = await env.AI.run(env.CLOUDFLARE_AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
+    messages: [
+      { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
+      { role: 'user', content: triageUserPayload(event) }
+    ],
+    max_tokens: 160,
+    temperature: 0.1
+  });
+  const decision = extractJson(response?.response || response?.result?.response);
+  if (!decision) throw new Error('triage cloudflare parse failed');
+  return decision;
+};
+
+const askTriagePollinations = async (event, signal) => {
+  const prompt = `${TRIAGE_SYSTEM_PROMPT}\n${triageUserPayload(event)}`;
+  const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`, { signal });
+  if (!response.ok) throw new Error(`pollinations status ${response.status}`);
+  const decision = extractJson(await response.text());
+  if (!decision) throw new Error('triage pollinations parse failed');
+  return decision;
+};
+
+// 3) Eskalasyon: saglayicilari sirayla dene, hepsi duserse guvenli orta yola dus.
+const askTriageAI = async (event, env) => {
+  const providers = [
+    () => askTriageCloudflare(event, env),
+    signal => askTriagePollinations(event, signal)
+  ];
+
+  for (const ask of providers) {
+    try {
+      const raw = await withTimeout(ask, 12000);
+      return normalizeDecision(raw);
+    } catch (error) {
+      console.warn('triage-provider-failed', JSON.stringify({ message: error?.message || String(error) }));
+    }
+  }
+
+  return { action: 'watch', severity: 'medium', reason: 'saglayici yok; manuel inceleme' };
+};
+
+// Opsiyonel: ALERT_WEBHOOK tanimliysa yuksek onemli olaylari disari yolla.
+const notifyWebhook = async (event, decision, env) => {
+  if (!env.ALERT_WEBHOOK) return;
+  try {
+    await fetch(env.ALERT_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'clone-alert', decision, event })
+    });
+  } catch (error) {
+    console.warn('triage-webhook-failed', JSON.stringify({ message: error?.message || String(error) }));
+  }
+};
+
+// 4) Aksiyon allowlist'i. LLM yalnizca bu anahtarlardan birini secebilir.
+const TRIAGE_ACTIONS = {
+  ignore: async (event, decision) => {
+    console.log('triage-ignore', JSON.stringify({
+      host: event.host, reason: decision.reason, source: decision.source
+    }));
+  },
+  watch: async (event, decision) => {
+    console.warn('triage-watch', JSON.stringify({
+      host: event.host, page: event.page, severity: decision.severity,
+      reason: decision.reason, source: decision.source
+    }));
+  },
+  alert: async (event, decision, env) => {
+    console.error('triage-alert', JSON.stringify({
+      host: event.host, page: event.page, ref: event.ref, country: event.country,
+      severity: decision.severity, reason: decision.reason, source: decision.source
+    }));
+    await notifyWebhook(event, decision, env);
+  }
+};
+
+// 5) Dedup: ayni host'u kisa surede tekrar tekrar degerlendirme.
+const TRIAGE_DEDUP_TTL = 21600; // 6 saat
+const triageDedupKey = (host) => new Request(`https://oracle.triage/${encodeURIComponent(String(host).toLowerCase())}`);
+const wasRecentlyTriaged = async (host) => Boolean(await readCache(triageDedupKey(host)));
+const markTriaged = async (host) => {
+  try {
+    await caches.default.put(triageDedupKey(host), new Response('1', {
+      headers: { 'Cache-Control': `max-age=${TRIAGE_DEDUP_TTL}` }
+    }));
+  } catch {
+    // Dedup best-effort; kayit basarisiz olsa da triyaj calismaya devam eder.
+  }
+};
+
+// Foreign beacon olayini karar mekanizmasindan gecir. Arka planda calisir.
+const triageClone = async (event, env) => {
+  try {
+    if (!event.host) return;
+    if (await wasRecentlyTriaged(event.host)) return;
+    await markTriaged(event.host);
+
+    const local = classifyForeignHost(event.host, env);
+    const decision = local
+      ? { ...local, source: 'local' }
+      : { ...(await askTriageAI(event, env)), source: 'ai' };
+
+    const action = TRIAGE_ACTIONS[decision.action] ? decision.action : 'watch';
+    await TRIAGE_ACTIONS[action](event, decision, env);
+  } catch (error) {
+    // Triyaj asla beacon'i veya worker'i dusurmesin.
+    console.warn('triage-fallback', JSON.stringify({
+      host: event?.host || '', error: error?.message || String(error)
+    }));
+  }
+};
+
+const handleBeacon = (request, env, ctx) => {
   try {
     const url = new URL(request.url);
     const host = url.searchParams.get('h') || '';
     const proto = url.searchParams.get('p') || '';
     if (!isOwnedContext(host, proto, env)) {
       // Foreign host = possible clone. Surfaces in `wrangler tail` and dashboard logs.
-      console.warn('beacon-foreign', JSON.stringify({
+      const event = {
         host,
         proto,
         page: (url.searchParams.get('u') || '').slice(0, 300),
@@ -273,7 +480,13 @@ const handleBeacon = (request, env) => {
         country: request.cf?.country || '',
         ua: (request.headers.get('User-Agent') || '').slice(0, 200),
         at: new Date().toISOString()
-      }));
+      };
+      console.warn('beacon-foreign', JSON.stringify(event));
+
+      // Triyaj arka planda; pixel cevabini asla bekletme.
+      if (ctx && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(triageClone(event, env));
+      }
     }
   } catch (error) {
     console.error('beacon error', error?.message || String(error));
@@ -282,9 +495,9 @@ const handleBeacon = (request, env) => {
 };
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (new URL(request.url).pathname.endsWith('/beacon')) {
-      return handleBeacon(request, env);
+      return handleBeacon(request, env, ctx);
     }
 
     const cors = corsHeaders(request, env);

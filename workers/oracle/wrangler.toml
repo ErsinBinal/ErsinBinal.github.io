@@ -10,6 +10,12 @@ BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
+# Klon triyaji: arsiv/cache disinda kendi bildigin zararsiz host'lari ekle
+# (ornek "cache.example.com,proxy.example.net"). LLM'e eskale edilmeden ignore'lanir.
+TRIAGE_BENIGN_HOSTS = ""
+# Opsiyonel: yuksek onemli "alert" olaylarinda POST atilacak webhook (Slack/Discord/kendi
+# endpoint'in). Gizli tutmak istersen vars yerine `wrangler secret put ALERT_WEBHOOK` kullan.
+# ALERT_WEBHOOK = ""
 
 [ai]
 binding = "AI"
