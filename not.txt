@@ -132,3 +132,39 @@ ARAÇLAR / UYGULAMALAR
 Not: Hepsi vanilla + mevcut altyapıyla (Supabase skor/oturum, sfx.js,
 arcade-kit) yapılabilir; dış bağımlılık minimumda tutulur, CSP'ye uygun
 kalınır. 
+
+Ped geliştirme / bugy
+
+sitedeki bugy'leri (Peds) geliştirmek istiyorum. kullacı siteye kayıt 
+olduktan sonra uygulama ve oyunlar haricindeki sayfalarda aktif olacak,
+ekrana bir yumurta gelecek kullanıcı tıkladığında yumurta kırılma efektiyle 
+Bugy aktif olur. kullacıya Bugy'sini seçmesi için bir seçim ekranı ekranda belirir
+seçimini yaptıktan sonra Tamagotchi benzeri bir süreç başlar (İhtiyaçlar, beslenme,
+büyüme/dönüşüm, uyku, tuvalet yapma ve bunun gibi ihtiyaçlar için tıklamayla açılan
+ihtiyaçlar listesi üzerinden seçim yaparak bakım) şu anki uzaylı kaçırmaı, ışınlanma
+gibi aksiyonlar yine kalsın. kullanıcı kendi panelinden Bugy'sini inceleyebilsin, onun
+hakkında bilgiler edinsin.
+
+  --- PLAN & İLERLEME (2026-06-24) -----------------------------------------
+  Kararlar: kalıcılık = Supabase + localStorage; ölüm YOK ama ihmal edilince
+  "canavarlaşma" (feral) + bakımla normalleşme; kanonik render = bugy-v4 skin.
+  Fazlar: 1) gating+yumurta+seçim+kalıcılık  2) ihtiyaç/bakım menüsü
+          3) büyüme/evrim + feral  4) dashboard paneli  5) aktivite besleme.
+
+  [x] FAZ 1 (TAMAMLANDI): yumurta onboarding'i + tür seçimi + isim + kalıcılık.
+      - docs/database/2026-06-24-bugy-pets.sql (kullanıcı başına tek pet + RLS).
+        !! Bu SQL'i Supabase SQL Editor'de bir kez çalıştırman gerekiyor;
+           çalıştırılana kadar pet localStorage'da tutulur (zarif düşüş).
+      - supabase-client.js: fetchBugyPet / upsertBugyPet.
+      - assets/js/bugy-pet.js + assets/css/bugy-pet.css (yeni): girişli kullanıcı
+        + içerik sayfası gating'i; yumurta -> tık -> kırılma -> 7 skin seçimi ->
+        isim -> bugy-v4 companion aktive. Veri modeli ihtiyaç/feral alanlarını
+        şimdiden taşıyor.
+      - Şimdilik sadece pages/makaleler.html'e bağlandı (net içerik sayfası).
+        Bilinçli takip: index.html (mevcut deb+v2/v3/v4 companion sistemiyle
+        konsolidasyon gerek), ozgecmisim.html (backend yok), oracle (app olarak
+        etiketli, kapsam dışı).
+  [ ] FAZ 2: ihtiyaç düşüşü (zaman damgalı) + tıklamayla açılan bakım menüsü.
+  [ ] FAZ 3: büyüme/evrim aşamaları + canavarlaşma görselleştirme.
+  [ ] FAZ 4: dashboard "Bugy" inceleme paneli.
+  [ ] FAZ 5: site aktivitesiyle besleme + kozmik aksiyonları koru.

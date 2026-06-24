@@ -529,6 +529,57 @@
     return data;
   }
 
+  // --- Bugy / Ped sanal evcil hayvan ---------------------------------------
+  async function fetchBugyPet() {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) return null;
+    const { data, error } = await client
+      .from('bugy_pets')
+      .select('*')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function upsertBugyPet(pet) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Bugy icin once giris yapmalisiniz.');
+    const clampPct = (value, fallback) => {
+      const n = Number(value);
+      return Math.max(0, Math.min(100, Number.isFinite(n) ? Math.round(n) : fallback));
+    };
+    const stages = ['egg', 'hatchling', 'juvenile', 'adult'];
+    const moods = ['happy', 'neutral', 'grumpy', 'feral'];
+    const payload = {
+      user_id: user.id,
+      species: String(pet.species || 'clippy').slice(0, 40),
+      name: String(pet.name || 'Bugy').slice(0, 60),
+      stage: stages.includes(pet.stage) ? pet.stage : 'hatchling',
+      hatched: pet.hatched !== false,
+      hunger: clampPct(pet.hunger, 80),
+      energy: clampPct(pet.energy, 80),
+      hygiene: clampPct(pet.hygiene, 80),
+      bond: clampPct(pet.bond, 40),
+      mood_state: moods.includes(pet.mood_state) ? pet.mood_state : 'neutral',
+      care_points: Math.max(0, Number(pet.care_points) || 0),
+      born_at: pet.born_at || new Date().toISOString(),
+      last_care_at: pet.last_care_at || new Date().toISOString(),
+      last_seen_at: new Date().toISOString(),
+      meta: pet.meta && typeof pet.meta === 'object' ? pet.meta : {},
+      updated_at: new Date().toISOString()
+    };
+    const { data, error } = await client
+      .from('bugy_pets')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single();
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
   async function fetchUserDartStats(limit = 12) {
     const client = await requireClient();
     const user = await getUser();
@@ -768,6 +819,8 @@
     saveDartThrowsWithClient,
     fetchUserDartStats,
     fetchDartLeaderboard,
+    fetchBugyPet,
+    upsertBugyPet,
     fetchOracleProfile,
     upsertOracleProfile,
     updateRecommendationOutcome,
