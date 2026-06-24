@@ -1,0 +1,28 @@
+name: Deploy Oracle Worker
+
+# Worker'i Cloudflare'e deploy eder. Yerelde Node gerekmez.
+# Gereken tek sey: repo Settings > Secrets > Actions altinda
+#   CLOUDFLARE_API_TOKEN  (zorunlu, "Edit Cloudflare Workers" yetkili token)
+#   CLOUDFLARE_ACCOUNT_ID (token tek hesaba bagliysa opsiyonel)
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - main
+    paths:
+      - 'workers/oracle/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with Wrangler
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: workers/oracle
+          command: deploy
