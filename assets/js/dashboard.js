@@ -83,6 +83,57 @@
     container.innerHTML = `<p class="dashboard-empty">${escapeHtml(message)}</p>`;
   }
 
+  // Genel sparkline: kronolojik (eski -> yeni) deger dizisini kucuk SVG cizgiye cevirir.
+  // Dart trendiyle ayni gorsel dil; statik SVG oldugu icin reduced-motion sorunu yok.
+  function sparkline(values, headLabel, rangeText) {
+    if (!Array.isArray(values) || values.length < 2) return '';
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const W = 280;
+    const H = 46;
+    const pad = 3;
+    const span = max - min || 1;
+    const pts = values.map((v, i) => {
+      const x = pad + (i / (values.length - 1)) * (W - 2 * pad);
+      const y = H - pad - ((v - min) / span) * (H - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `
+      <div class="spark-trend">
+        <div class="spark-trend-head"><span>${escapeHtml(headLabel)}</span><span>${escapeHtml(rangeText)}</span></div>
+        <svg viewBox="0 0 ${W} ${H}" class="spark-line" preserveAspectRatio="none"><polyline points="${pts}"></polyline></svg>
+        <div class="spark-trend-foot"><span>ESKİ</span><span>YENİ</span></div>
+      </div>`;
+  }
+
+  // Oyun skorlari (yeni -> eski gelir) icin oyun bazli skor trend grafikleri.
+  function gameTrends(scores) {
+    const byGame = {};
+    scores.forEach((s) => {
+      const key = s.game_key;
+      (byGame[key] = byGame[key] || []).push(s);
+    });
+    return Object.keys(byGame).map((key) => {
+      const chrono = byGame[key].slice().reverse(); // eski -> yeni
+      const vals = chrono.map((s) => Number(s.score) || 0);
+      if (vals.length < 2) return '';
+      const name = gameNames[key] || key;
+      const min = Math.min(...vals).toLocaleString('tr-TR');
+      const max = Math.max(...vals).toLocaleString('tr-TR');
+      return sparkline(vals, `${name} · skor`, `${min} – ${max}`);
+    }).join('');
+  }
+
+  // Oturum sureleri (yeni -> eski gelir) icin tek bir sure trend grafigi.
+  function sessionTrend(sessions) {
+    const chrono = sessions.slice(0, 24).reverse(); // eski -> yeni
+    const vals = chrono.map((s) => Math.max(0, Number(s.duration_seconds) || 0));
+    if (vals.filter((v) => v > 0).length < 2) return '';
+    const min = formatDuration(Math.min(...vals));
+    const max = formatDuration(Math.max(...vals));
+    return sparkline(vals, 'Oturum süresi / zaman', `${min} – ${max}`);
+  }
+
   function renderProfile(session, profile) {
     profileEl.innerHTML = [
       `<strong>${escapeHtml(profile?.display_name || session.user.email || 'Convivium kullanicisi')}</strong>`,
@@ -97,7 +148,7 @@
       return;
     }
 
-    gamesEl.innerHTML = scores.map((score) => `
+    gamesEl.innerHTML = gameTrends(scores) + scores.map((score) => `
       <article class="dashboard-row">
         <div>
           <strong>${escapeHtml(gameNames[score.game_key] || score.game_key)}</strong>
@@ -134,7 +185,7 @@
       return;
     }
 
-    sessionsEl.innerHTML = sessions.slice(0, 12).map((session) => `
+    sessionsEl.innerHTML = sessionTrend(sessions) + sessions.slice(0, 12).map((session) => `
       <article class="dashboard-row">
         <div>
           <strong>${escapeHtml(session.item_title)}</strong>

@@ -44,8 +44,17 @@ B) Orta — UX iyileştirmeleri (tarayıcıda test etmen iyi olur)
         (completeInput) çalışıyor. Görsel öneri çipleri ise bilinçli olarak
         kaldırılmıştı ("kabuk sade dursun" tercihi); geri eklenmedi.
 
-  8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
+  [x] 8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
      (Supabase verisi zaten var).
+     -> TAMAMLANDI (2026-06-24): dart 3-ok ortalaması için zaten sparkline
+        vardı; aynı görsel dile uygun genel bir sparkline() helper'ı eklenip
+        (a) "Oyun Geçmişi" panelinde oyun bazlı skor trendleri, (b) "Son
+        Oturumlar" panelinde oturum süresi trendi olarak gösterildi. Yeni
+        generic .spark-* CSS (dart-dashboard.css), dashboard.js/css ve SW
+        precache sürümleri bump edildi (CACHE_NAME v124->v125). Statik SVG,
+        reduced-motion sorunu yok. check:syntax + site integrity geçti.
+        NOT: tarayıcıda görsel teyit Supabase girişi + veri gerektirdiği
+        için yapılmadı; mantık ve sözdizimi doğrulandı.
   [x] 9. Tema: şu an theme.js var; sayfalar arası tema tercihinin tutarlı
      uygulandığını ve "reduced-motion" ile uyumunu gözden geçirmek.
      -> TAMAMLANDI (2026-06-24):
