@@ -225,8 +225,68 @@ const answerOracle = async (question, env) => {
   };
 };
 
+// 1x1 transparent GIF used as the phone-home pixel response.
+const BEACON_PIXEL = Uint8Array.from(
+  atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'),
+  char => char.charCodeAt(0)
+);
+
+const beaconPixel = () => new Response(BEACON_PIXEL, {
+  status: 200,
+  headers: {
+    'Content-Type': 'image/gif',
+    'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+    'Access-Control-Allow-Origin': '*'
+  }
+});
+
+const beaconOwnedHosts = (env) => String(env.BEACON_ALLOWED_HOSTS || 'ersinbinal.github.io,localhost,127.0.0.1')
+  .split(',')
+  .map(item => item.trim().toLowerCase())
+  .filter(Boolean);
+
+// A request is "owned" when it runs on our domains, on localhost, inside a
+// native app shell (file:// has no hostname; capacitor/ionic/app/tauri schemes),
+// so legit domain moves or app wrappers do not raise false clone alerts.
+const isOwnedContext = (host, proto, env) => {
+  const normalizedHost = String(host || '').toLowerCase();
+  const normalizedProto = String(proto || '').toLowerCase();
+  if (!normalizedHost) return true;
+  if (['capacitor:', 'ionic:', 'app:', 'tauri:', 'file:'].includes(normalizedProto)) return true;
+  return beaconOwnedHosts(env).includes(normalizedHost);
+};
+
+const handleBeacon = (request, env) => {
+  try {
+    const url = new URL(request.url);
+    const host = url.searchParams.get('h') || '';
+    const proto = url.searchParams.get('p') || '';
+    if (!isOwnedContext(host, proto, env)) {
+      // Foreign host = possible clone. Surfaces in `wrangler tail` and dashboard logs.
+      console.warn('beacon-foreign', JSON.stringify({
+        host,
+        proto,
+        page: (url.searchParams.get('u') || '').slice(0, 300),
+        id: url.searchParams.get('id') || '',
+        ref: (url.searchParams.get('r') || '').slice(0, 300),
+        ip: request.headers.get('CF-Connecting-IP') || '',
+        country: request.cf?.country || '',
+        ua: (request.headers.get('User-Agent') || '').slice(0, 200),
+        at: new Date().toISOString()
+      }));
+    }
+  } catch (error) {
+    console.error('beacon error', error?.message || String(error));
+  }
+  return beaconPixel();
+};
+
 export default {
   async fetch(request, env) {
+    if (new URL(request.url).pathname.endsWith('/beacon')) {
+      return handleBeacon(request, env);
+    }
+
     const cors = corsHeaders(request, env);
 
     if (request.method === 'OPTIONS') {

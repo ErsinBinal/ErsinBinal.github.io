@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v120';
+const CACHE_NAME = 'convivium-v121';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -55,6 +55,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home-protocol.js?v=50',
   '/assets/js/bugy-studio.js?v=3',
   '/assets/js/service-worker-register.js?v=2',
+  '/assets/js/origin-beacon.js?v=1',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff00.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff04.png?v=1',

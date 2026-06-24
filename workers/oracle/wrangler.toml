@@ -4,6 +4,9 @@ compatibility_date = "2026-06-05"
 
 [vars]
 ALLOWED_ORIGINS = "https://ersinbinal.github.io,http://localhost:8000,http://127.0.0.1:8000"
+# Beacon icin "sahip oldugun" host listesi. Yeni domaine tasiyinca veya app
+# kabugu eklesinde buraya ekle ki kendi kendine klon alarmi uretmesin.
+BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
