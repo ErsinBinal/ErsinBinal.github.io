@@ -211,12 +211,14 @@
                 <div id="playlist-container" class="playlist-box"></div>
                 
                 <a id="price-btn" href="#" target="_blank" class="btn-full highlight">Fiyat Araştırması</a>
-                <button onclick="location.reload()" class="btn-full">Yeniden Başlat</button>
+                <button type="button" id="restart-btn" class="btn-full">Yeniden Başlat</button>
             </div>
         </div>
     </div>
 
     <script>
+        document.getElementById('restart-btn')?.addEventListener('click', () => location.reload());
+
         const glassPaths = {
             martini: { path: "M10,10 L50,60 L90,10 Z M50,60 L50,95 M30,95 L70,95", fill: "M15,15 L50,55 L85,15 Z" },
             rocks: { path: "M15,20 L20,90 L80,90 L85,20 Z", fill: "M22,85 L78,85 L82,30 L18,30 Z" },

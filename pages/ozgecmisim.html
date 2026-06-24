@@ -211,7 +211,7 @@
             </header>
 
             <main role="main">
-            <button class="section-button" onclick="toggleSection('about')">Özetle</button>
+            <button type="button" class="section-button" data-section="about">Özetle</button>
             <div id="about" class="content">
            <p>1982 yılında İstanbul’da doğdum ve Beşiktaş, Ulus’ta büyüdüm. Dijital dünyaya olan ilgim, çocukluğumdan bu yanasüregelen oyun tutkum kadar derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda, ailemle birlikte seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri deneyimlemeyi seviyorum. Boş anlarımda ise kitaplara dalmayı ihmal etmiyorum; her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum. </p>
          
@@ -219,7 +219,7 @@
         </div>
     </main>
 
-        <button class="section-button" onclick="toggleSection('education')">EĞİTİM</button>
+        <button type="button" class="section-button" data-section="education">EĞİTİM</button>
         <div id="education" class="content">
             <div class="experience-item">
                 > Beykent Üniversitesi (2016)<br>
@@ -227,7 +227,7 @@
             </div>
         </div>
 
-        <button class="section-button" onclick="toggleSection('experience')">İŞ DENEYİMİ</button>
+        <button type="button" class="section-button" data-section="experience">İŞ DENEYİMİ</button>
         <div id="experience" class="content">
             <div class="experience-item">
                 > Full Supplement<br>
@@ -293,6 +293,10 @@
     </div>
 
  <script>
+        document.querySelectorAll('.section-button[data-section]').forEach((btn) => {
+            btn.addEventListener('click', () => toggleSection(btn.dataset.section));
+        });
+
         let audioCtx;
 
         function initAudio() {

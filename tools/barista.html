@@ -367,12 +367,14 @@
                     <div id="playlist-container"></div>
                 </div>
                 
-                <button onclick="location.reload()" class="btn-action">YENİ SİPARİŞ OLUŞTUR</button>
+                <button type="button" id="reload-btn" class="btn-action">YENİ SİPARİŞ OLUŞTUR</button>
             </div>
         </div>
     </div>
 
     <script>
+        document.getElementById('reload-btn')?.addEventListener('click', () => location.reload());
+
         // --- ETKİLEŞİMLİ MOUSE PARALLAX (HUD) ---
         const stage = document.getElementById('stage-area');
         const hudLayer = document.getElementById('layer-idle');
