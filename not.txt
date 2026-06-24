@@ -43,4 +43,50 @@ DOĞRULAMA NOTU:
 
 Bu kadar — tek, sağlam ve bağımsız bir ekleme yaptım; sen yokken test
 edemediğim çok sayıda riskli değişiklik yerine bunu temiz tutmayı seçtim.
-Bir sonraki tur için fikir havuzu hazır, dönünce konuşuruz.
+
+
+SONRAKİ TUR İÇİN FİKİR HAVUZU
+=============================
+Eve gidince incele, hangilerini istersen işaretle; ben sıradakinde
+sadece onayladıklarını yaparım. Riski/etkisi düşükten yükseğe sıraladım.
+
+A) Düşük risk, hızlı kazanım (test gerektirmez)
+  1. paradox-terminal & barista/bartender sayfalarına da özel 404 mantığı
+     gibi tutarlılık: tüm tool sayfalarında <meta name="robots"> ve OG
+     etiketlerinin eksiksiz olduğunu denetleyip standartlaştırmak.
+  2. index.html'deki açılış loader'ı: home-protocol.js zaten ~3.6sn'de
+     kapatıyor ama inline yedek script hâlâ 4.2sn. Yedeği 3.6 ile
+     hizalayıp ölü kodu sadeleştirmek (görsel davranış değişmez).
+  3. Tüm sayfalarda dış bağlantılarda rel="noopener" denetimi (güvenlik
+     + ufak performans), eksik olanlara eklemek.
+  4. Görsellerde width/height attribute denetimi -> layout shift (CLS)
+     azaltma; lighthouse skoruna doğrudan yarar.
+
+B) Orta — UX iyileştirmeleri (tarayıcıda test etmen iyi olur)
+  5. Komut satırına (command-shell) komut geçmişi: yukarı/aşağı ok ile
+     son komutları gezme + localStorage'da saklama.
+  6. command-input için basit otomatik tamamlama/öneri zenginleştirme
+     (zaten command-suggestions alanı var, içeriğini güçlendirmek).
+  7. Oyunlar için ortak "nasıl oynanır / kontroller" yardım katmanı —
+     ilk girişte kısa overlay, sonra gizlenir (localStorage flag).
+  8. Dashboard'da skor/süre verilerini küçük sparkline/grafikle göstermek
+     (Supabase verisi zaten var).
+  9. Tema: şu an theme.js var; sayfalar arası tema tercihinin tutarlı
+     uygulandığını ve "reduced-motion" ile uyumunu gözden geçirmek.
+
+C) Daha büyük / tartışmalı (önce birlikte karar verelim)
+  10. Tool sayfalarının (barista v1/v2, bartender, the-realists-bar)
+      tek bir "ritüel motoru" altında birleştirilmesi — çok kod paylaşımı
+      var, bakım kolaylaşır ama riskli refactor.
+  11. Makaleler sayfasına etiket/filtre + arama.
+  12. PWA: "yeni sürüm hazır, yenile" bildirimi (SW update akışı) —
+      kullanıcı bayat cache'te kalmasın.
+  13. Basit bir /changelog veya "son güncellemeler" sayfası.
+
+GÜVENLİK / İZLEME (sadece hatırlatma, bilgi paylaşmıyorum)
+  - origin-beacon worker'ının deploy edildiğinden emin olmak; "foreign"
+    log'larını ara ara kontrol etmek.
+  - Henüz uygulanmayan domain-lock / JS obfuscation konularını istersen
+    konuşuruz (statik sitede sınırları net, abartmaya değmez).
+
+Hangilerini istersen "EVET" diye yanına yaz, dönünce ona göre ilerlerim.
