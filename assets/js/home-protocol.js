@@ -4162,8 +4162,16 @@
       const baslaCommand = () => [
         '] BASLANGIC',
         '',
-        '  Convivium kelimelerle gezilen bir terminal-dunyasi.',
+        '  Convivium bir portfolyo degil; gezilen bir terminal-dunyasi.',
+        '  Makaleler, oyunlar, oracle, rituel araclari ve kiside kalan izler ayni agda durur.',
         '',
+        '  hizli rota:',
+        '    open dossier   makaleler ve notlar',
+        '    run logic      kisa bulmaca oyunu',
+        '    open oracle    isaret ve karar deneyimi',
+        '    dashboard      kaydedilen skorlar ve izler',
+        '',
+        '  kesif komutlari:',
         '  look          neredesin, etrafinda ne var',
         '  examine <x>   bir seye yakindan bak (ipucu/esya)',
         '  take <x>      esyayi cebine al',
@@ -4171,7 +4179,7 @@
         '  unlock <oda>  dogru esyayla kilidi ac',
         '',
         `  GOREV   ${currentObjective()}`,
-        '  ipucu: simdi "look" yaz.',
+        '  ipucu: once "look", sonra "open dossier" ya da "open oracle" dene.',
         ']'
       ].join('\n');
 
@@ -4182,7 +4190,7 @@
         'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
         '',
         'routes:',
-        'home, map, archive, notes, open dossier, run logic, run signal, run ash, run flow',
+        'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow',
         '',
         'lab:',
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, outrun',
