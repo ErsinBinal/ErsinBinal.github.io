@@ -19,11 +19,11 @@ Convivium'un ana fikri su: arayuzler sadece bilgi gosteren yuzeyler degil, dusun
 Ziyaretci icin site bir rota agi gibi akar:
 
 - `index.html`: terminal estetikli ana sayfa, command shell ve proje haritasi.
-- `makaleler.html`: is modeli, dijital donusum, fiyatlandirma ve teknoloji notlari.
-- `TheOracle.html`: kapali isaretler, kisa okumalar ve oracle deneyimi.
-- `cyberpunk-logic-game.html`, `three-body-signal.html`, `ash-runner.html`, `neon-river.html`: oynanabilir deneyler.
-- `Bartender.html`, `Barista.html`, `Barista_V2.html`, `TheRealistsBar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
-- `dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
+- `/pages/makaleler.html`: is modeli, dijital donusum, fiyatlandirma ve teknoloji notlari.
+- `/oracle/`: kapali isaretler, kisa okumalar ve oracle deneyimi.
+- `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/neon-river.html`: oynanabilir deneyler.
+- `/tools/bartender.html`, `/tools/barista.html`, `/tools/barista-v2.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
+- `/tools/dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
 - `Candy_Pop/`: e-ticaret ve mobil uygulama akislari icin deneysel prototipler.
 
 ## Teknik Yapi
@@ -59,6 +59,7 @@ Bu repo public bir GitHub Pages sitesidir. Bu nedenle:
 
 ```bash
 npm run check
+npm run sync:cache
 npm run convert-images
 npm run build:bugy-v3-atlas
 ```
@@ -78,11 +79,16 @@ Worker deploy olmadan command shell lokal/canned Oracle cevaplariyla calisir.
 ```text
 .
 ├── index.html
-├── TheOracle.html
-├── makaleler.html
+├── /oracle/
+├── /pages/
+├── /games/
+├── /tools/
+├── /account/
+├── /admin/
 ├── assets/
 │   ├── css/
 │   ├── js/
+│   ├── js/home/
 │   └── icons/
 ├── workers/oracle/
 ├── docs/database/

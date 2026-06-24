@@ -11,5 +11,5 @@
 window.CONVIVIUM_SUPABASE = {
   url: 'https://airmhxfgtslsgrdhvfin.supabase.co',
   anonKey: 'sb_publishable_S7saLZ-v0bXJTwd7kdE5Aw_IJyU3y4Q',
-  redirectTo: `${window.location.origin}/auth.html`
+  redirectTo: `${window.location.origin}/account/auth.html`
 };

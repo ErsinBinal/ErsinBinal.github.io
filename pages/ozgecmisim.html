@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kariyerim - Ersin Binal</title>
+    <meta name="description" content="Ersin Binal'in ozgecmisi, deneyimleri ve iletisim bilgileri. Dijital proje yonetimi ve e-ticaret deneyimi.">
+    <meta name="author" content="Ersin Binal">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="canonical" href="https://ersinbinal.github.io/pages/ozgecmisim.html">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self';">
+
+    <!-- OpenGraph Meta Tags -->
+    <meta property="og:site_name" content="Convivium">
+    <meta property="og:title" content="Kariyerim - Ersin Binal">
+    <meta property="og:description" content="Ersin Binal'in ozgecmisi ve deneyimleri.">
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="https://ersinbinal.github.io/pages/ozgecmisim.html">
+    <meta property="og:locale" content="tr_TR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Kariyerim - Ersin Binal">
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#00ff00">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    { "@context": "https://schema.org", "@type": "ProfilePage", "name": "Ersin Binal - Kariyer", "url": "https://ersinbinal.github.io/pages/ozgecmisim.html" }
+    </script>
+    <style>
+        :root {
+            --main-bg: #000;
+            --terminal-green: #00ff00;
+            --terminal-dim: #007700;
+            --scan-line-color: rgba(0, 255, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+            color: var(--terminal-green);
+        }
+
+        body {
+            background: var(--main-bg);
+            padding: 20px;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Scan line animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                transparent 50%,
+                var(--scan-line-color) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 2px solid var(--terminal-green);
+            box-shadow: 0 0 20px var(--terminal-dim);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--terminal-green);
+            padding-bottom: 20px;
+        }
+
+        .section-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: transparent;
+            border: 1px solid var(--terminal-green);
+            cursor: pointer;
+            text-align: left;
+            font-size: 1.2em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-button::before {
+            content: '> ';
+        }
+
+        .section-button:hover {
+            background: var(--terminal-dim);
+        }
+
+        .section-button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: var(--terminal-green);
+            animation: scan-line 2s linear infinite;
+        }
+
+        @keyframes scan-line {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .content {
+            display: none;
+            padding: 20px;
+            border: 1px solid var(--terminal-dim);
+            margin-top: -10px;
+            margin-bottom: 10px;
+        }
+
+        .content.active {
+            display: block;
+            animation: typewriter 0.5s steps(40);
+        }
+
+        @keyframes typewriter {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+        }
+            .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
+
+        .contact-info {
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px solid var(--terminal-green);
+        }
+
+        .experience-item {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    .container {
+        max-width: 90%;
+        padding: 10px;
+    }
+
+    .section-button {
+        font-size: 1em;
+        padding: 10px;
+    }
+
+    .content {
+        padding: 15px;
+    }
+
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
+        <div class="container" id="main-content">
+            <header class="header">
+                <h1>ERSİN BİNAL<span class="blink">_</span></h1>
+                <p>Dijital Proje Yöneticisi</p>
+            </header>
+
+            <main role="main">
+            <button class="section-button" onclick="toggleSection('about')">Özetle</button>
+            <div id="about" class="content">
+           <p>1982 yılında İstanbul’da doğdum ve Beşiktaş, Ulus’ta büyüdüm. Dijital dünyaya olan ilgim, çocukluğumdan bu yanasüregelen oyun tutkum kadar derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda, ailemle birlikte seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri deneyimlemeyi seviyorum. Boş anlarımda ise kitaplara dalmayı ihmal etmiyorum; her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum. </p>
+         
+           <p>İşim; Pazarlama, performans ve dijital dönüşüm alanlarında proje yönetimi.</p>
+        </div>
+    </main>
+
+        <button class="section-button" onclick="toggleSection('education')">EĞİTİM</button>
+        <div id="education" class="content">
+            <div class="experience-item">
+                > Beykent Üniversitesi (2016)<br>
+                > Bilgisayar Teknolojisi ve Programlama
+            </div>
+        </div>
+
+        <button class="section-button" onclick="toggleSection('experience')">İŞ DENEYİMİ</button>
+        <div id="experience" class="content">
+            <div class="experience-item">
+                > Full Supplement<br>
+                > Etcaret Müdürü<br>
+            </div>
+            <div class="experience-item">
+                > Daniel Klein Group<br>
+                > E-Ticaret Direktörü<br>            </div>
+            <div class="experience-item">
+                > Gezer Ayakkabı<br>
+                > E-Ticaret Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Spor Dünyası<br>
+                > E-Ticaret Müdürü<br>
+            </div>
+            <div class="experience-item">
+                > Süvari<br>
+                > Online Satış Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Binal Elektronik<br>
+                > Kurucu<br>
+            </div>
+            <div class="experience-item">
+                > Turkcell Superonline<br>
+                > Metronet Marmara Bölge Satış Yöneticisi<br>
+            </div>
+            <div class="experience-item">
+                > Trio Araştırma ve Tanıtım Hizmetleri<br>
+                > Bilgi İşlem Uzmanı<br>
+            </div>
+            <div class="experience-item">
+                > Meta Bilişim<br>
+                > Kurucu Ortak<br>
+            </div>
+            <div class="experience-item">
+                > Bürsan Bilgi İşlem<br>
+                > Kurumsal Satış Danışmanı<br>
+            </div>
+            <div class="experience-item">
+                > Proje Bazlı Hizmet Sağladığım Markalar<br>
+                   _Nettree Market<br>
+                   _Yazıcı Ayakkabı<br>
+                   _Venüs Ayakkabı<br>
+                   _Macfit<br>
+                   _Şen Piliç<br>
+                   _Ak Sigorta<br>
+                   _Upon Insight<br>
+                   _Ulus Copy Center<br>
+                   _MEF Üniversitesi<br>
+                   
+
+            </div>
+            <!-- Additional experience items -->
+        </div>
+
+        <div class="contact-info">
+            
+            <p>> EMAIL: ersinbinal@cloud.com</p>
+            
+        </div>
+    </div>
+
+ <script>
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playTone(freq, type, duration, vol) {
+            if (!audioCtx) return;
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            
+            // SES AYARI: Daha duyulabilir bir seviye (0.1)
+            // Başlangıçta ses var, sonra hızla azalarak bitiyor (Fade-out)
+            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function toggleSection(sectionId) {
+            initAudio(); 
+            
+            const content = document.getElementById(sectionId);
+            const allContents = document.getElementsByClassName('content');
+            
+            Array.from(allContents).forEach(elem => {
+                if (elem !== content) elem.classList.remove('active');
+            });
+            
+            const isActive = content.classList.toggle('active');
+            
+            // YENİ SES EFEKTİ: "Interface On" Melodisi
+            // Taramalı ses yerine, artan frekanslı 3 kısa "bip" (Do-Mi-Sol gibi)
+            if (isActive) {
+                // 1. Ses (Daha bas)
+                playTone(300, 'sine', 0.15, 0.1);
+
+                // 2. Ses (Orta - 80ms sonra)
+                setTimeout(() => {
+                    playTone(400, 'sine', 0.15, 0.1);
+                }, 80);
+
+                // 3. Ses (Tiz - 160ms sonra)
+                setTimeout(() => {
+                    playTone(500, 'sine', 0.3, 0.08); // Bitiş biraz daha kısa
+                }, 160);
+            } else {
+                // Kapanırken tek bir tok ses (İsteğe bağlı)
+                playTone(200, 'triangle', 0.15, 0.08);
+            }
+        }
+    </script>
+  <script src="/assets/js/sfx.js?v=15" defer></script>
+</body>
+</html>
+

@@ -467,7 +467,7 @@
       setStatus('Dashboard yukleniyor...');
       const session = await backend.getSession();
       if (!session) {
-        location.replace(`/auth.html?returnTo=${encodeURIComponent('/dashboard.html')}`);
+        location.replace(`/account/auth.html?returnTo=${encodeURIComponent('/account/dashboard.html')}`);
         return;
       }
 
@@ -499,7 +499,7 @@
     try {
       setStatus('Oturum kapatiliyor...');
       await backend.signOut();
-      location.href = '/auth.html';
+      location.href = '/account/auth.html';
     } catch (error) {
       setStatus(error.message, 'error');
     }

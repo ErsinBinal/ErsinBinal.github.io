@@ -1,84 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=/account/dashboard.html">
+  <link rel="canonical" href="https://ersinbinal.github.io/account/dashboard.html">
   <title>Dashboard - Convivium</title>
-  <meta name="description" content="Convivium kullanici dashboard'u: oyun skorları, oynama suresi ve uygulama onerileri.">
-  <meta name="author" content="Ersin Binal">
-  <link rel="canonical" href="https://ersinbinal.github.io/dashboard.html">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
-  <meta name="theme-color" content="#00ff00">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
-  <link rel="stylesheet" href="/assets/css/common.css">
-  <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=31">
-  <link rel="stylesheet" href="/assets/css/dart-dashboard.css?v=5">
 </head>
-<body class="dashboard-page">
-  <a class="skip-link" href="#content">Icerigi atla</a>
-
-  <div class="site site-wide">
-    <header class="site-header dashboard-header" role="banner">
-      <div>
-        <p class="auth-kicker">CONVIVIUM ACCOUNT</p>
-        <h1>Dashboard</h1>
-        <p>Oyun skorları, oynama suresi ve uygulamalardan gelen son oneriler.</p>
-      </div>
-      <nav class="auth-nav" role="navigation" aria-label="Site navigasyonu">
-        <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
-        <a href="auth.html" class="btn">Uyelik</a>
-        <a href="bugy-studio.html" class="btn">Bugy Studio</a>
-        <button id="dashboardSignOut" class="btn" type="button">Oturumu Kapat</button>
-      </nav>
-    </header>
-
-    <main id="content" class="dashboard-layout" role="main">
-      <section class="system-status dashboard-status" aria-live="polite">
-        <strong>Durum</strong>
-        <p id="dashboardStatus">Yukleniyor...</p>
-      </section>
-
-      <section class="dashboard-profile system-status">
-        <strong>Profil</strong>
-        <div id="dashboardProfile" class="dashboard-profile-lines"></div>
-      </section>
-
-      <section class="dashboard-grid">
-        <article class="dashboard-panel">
-          <h2>Oyun Gecmisi</h2>
-          <div id="dashboardGames" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel">
-          <h2>Son Oneriler</h2>
-          <div id="dashboardRecommendations" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Dart Istatistikleri</h2>
-          <div id="dashboardDartStats" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Dart Siralamasi</h2>
-          <div id="dashboardDartLeaderboard" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Son Oturumlar</h2>
-          <div id="dashboardSessions" class="dashboard-list"></div>
-        </article>
-      </section>
-    </main>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=28" defer></script>
-  <script src="/assets/js/dart-board-svg.js?v=3" defer></script>
-  <script src="/assets/js/dashboard.js?v=28" defer></script>
-  <script src="/assets/js/sfx.js?v=15" defer></script>
+<body>
+  <p>Bu sayfa tasindi: <a href="/account/dashboard.html">/account/dashboard.html</a></p>
+  <script>location.replace('/account/dashboard.html' + location.search + location.hash);</script>
 </body>
 </html>

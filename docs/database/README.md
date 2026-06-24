@@ -15,7 +15,7 @@ Bu repo GitHub Pages uzerinde calistigi icin kendi icinde backend veya gizli ser
    - Project URL
    - anon public key
 4. `assets/js/supabase-config.js` dosyasindaki `url` ve `anonKey` alanlarini doldur.
-5. `auth.html` sayfasindan kendi hesabini olustur.
+5. `/account/auth.html` sayfasindan kendi hesabini olustur.
 6. Supabase Dashboard > Authentication > Users ekranindan kendi user id degerini kopyala.
 7. SQL Editor'de su komutu calistir:
 
@@ -25,15 +25,15 @@ set role = 'admin'
 where user_id = '<your-auth-user-id>';
 ```
 
-8. `admin.html` sayfasindan makale ekleyip `published` durumuna al.
-9. `makaleler.html` sayfasi artik veritabanindaki yayinlanmis makaleleri de okur.
+8. `/admin/` sayfasindan makale ekleyip `published` durumuna al.
+9. `/pages/makaleler.html` sayfasi artik veritabanindaki yayinlanmis makaleleri de okur.
 
 ## Mevcut Kuruluma Faz 2 Ekleme
 
 Daha once ilk SQL semasini calistirdiyseniz tum dosyayi tekrar calistirmak yerine:
 
 1. `docs/database/2026-05-12-game-scores.sql` dosyasini SQL Editor'de calistirin.
-2. `cyberpunk-logic-game.html` uzerinden giris yapmis bir kullaniciyla skor kaydedin.
+2. `/games/cyberpunk-logic-game.html` uzerinden giris yapmis bir kullaniciyla skor kaydedin.
 3. Skor kaydi basarili olursa oyun `GLOBAL SCOREBOARD` listesini gosterir.
 
 ## Mevcut Kuruluma Faz 3 Ekleme
@@ -41,7 +41,7 @@ Daha once ilk SQL semasini calistirdiyseniz tum dosyayi tekrar calistirmak yerin
 Dashboard, oyun/uygulama erisim kapisi ve uygulama onerisi kayitlari icin:
 
 1. `docs/database/2026-05-18-dashboard-activity.sql` dosyasini SQL Editor'de calistirin.
-2. `dashboard.html` sayfasina giris yapmis bir kullaniciyla gidin.
+2. `/account/dashboard.html` sayfasina giris yapmis bir kullaniciyla gidin.
 3. Bir oyun bitirin ya da Barista/Bartender/Oracle gibi bir uygulamada sonuc uretin; dashboard son skor ve onerileri gosterir.
 
 ## Mevcut Kuruluma Faz 4 Ekleme
@@ -49,8 +49,8 @@ Dashboard, oyun/uygulama erisim kapisi ve uygulama onerisi kayitlari icin:
 Dart Skorbord maclari, iki oyunculu oturum ve detayli ok atisi istatistikleri icin:
 
 1. `docs/database/2026-06-01-dart-skorbord.sql` dosyasini SQL Editor'de calistirin.
-2. `dart-skorbord.html` sayfasinda kirmizi ve mavi oyuncuyu iki farkli hesapla giris yaptirin.
-3. Mac tamamlandiginda `dashboard.html` uzerinde Dart Istatistikleri paneli guncellenir.
+2. `/tools/dart-skorbord.html` sayfasinda kirmizi ve mavi oyuncuyu iki farkli hesapla giris yaptirin.
+3. Mac tamamlandiginda `/account/dashboard.html` uzerinde Dart Istatistikleri paneli guncellenir.
 
 ## Guvenlik Notlari
 

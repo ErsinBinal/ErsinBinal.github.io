@@ -3,14 +3,20 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 
-const htmlDirs = ['.', 'Candy_Pop'];
-const htmlFiles = htmlDirs.flatMap((dir) => {
-  const fullDir = path.join(root, dir);
-  if (!fs.existsSync(fullDir)) return [];
-  return fs.readdirSync(fullDir)
-    .filter((file) => file.endsWith('.html'))
-    .map((file) => path.join(fullDir, file));
-});
+const ignoredDirs = new Set(['.git', 'node_modules', '.wrangler']);
+
+function listFiles(dir, predicate) {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.flatMap((entry) => {
+    if (ignoredDirs.has(entry.name)) return [];
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) return listFiles(fullPath, predicate);
+    return predicate(fullPath) ? [fullPath] : [];
+  });
+}
+
+const htmlFiles = listFiles(root, (file) => file.endsWith('.html'));
 
 const errors = [];
 const versionedAssets = new Map();
@@ -51,8 +57,8 @@ for (const file of htmlFiles) {
     if (!policy.includes("base-uri 'self'")) {
       addError(`${relative(file)} CSP eksik: base-uri 'self'`);
     }
-    if (path.basename(file) === 'TheOracle.html' && !policy.includes('https://*.workers.dev')) {
-      addError('TheOracle.html CSP connect-src workers.dev icermiyor');
+    if (relative(file) === path.join('oracle', 'index.html') && !policy.includes('https://*.workers.dev')) {
+      addError('/oracle/ CSP connect-src workers.dev icermiyor');
     }
     if (html.includes('/assets/js/sfx.js') && !policy.includes("media-src 'self' data: blob:")) {
       addError(`${relative(file)} CSP eksik: media-src 'self' data: blob:`);
@@ -79,6 +85,14 @@ for (const file of browserFiles) {
   }
 }
 
+for (const file of htmlFiles) {
+  const html = fs.readFileSync(file, 'utf8');
+  if (relative(file).startsWith('Candy_Pop')) continue;
+  if (/<script\s+src=["']https:\/\/[^"']*latest/i.test(html)) {
+    addError(`${relative(file)} CDN script latest etiketi kullaniyor`);
+  }
+}
+
 const swPath = path.join(root, 'service-worker.js');
 const sw = fs.readFileSync(swPath, 'utf8');
 const precacheMatch = sw.match(/const\s+PRECACHE_ASSETS\s*=\s*\[([\s\S]*?)\];/);
@@ -93,9 +107,16 @@ if (!precacheMatch) {
 }
 
 const mustPrecache = [
+  '/',
+  '/index.html',
+  '/pages/makaleler.html',
+  '/account/auth.html',
+  '/account/dashboard.html',
+  '/oracle/',
   '/offline.html',
   '/assets/css/components.css?v=31',
   '/assets/js/deb-companion.js?v=4',
+  '/assets/js/home/routes.js?v=1',
   '/assets/js/supabase-client.js?v=28',
   '/assets/js/sfx.js?v=15',
   '/assets/js/home-protocol.js?v=50',

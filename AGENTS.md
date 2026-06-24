@@ -2,12 +2,17 @@
 
 ## Project Shape
 
-This repository is a mostly static GitHub Pages site for the Convivium personal/experimental web space. Most experiences are standalone HTML/CSS/JS files in the repository root, with shared assets under `assets/`.
+This repository is a mostly static GitHub Pages site for the Convivium personal/experimental web space. The root is reserved for the main entry point, GitHub Pages platform files, and legacy redirect wrappers. Canonical product pages live under purpose-based folders, with shared assets under `assets/`.
 
 Important areas:
 
-- `index.html` and `assets/js/home-protocol.js`: main terminal-style landing page and command protocol.
-- `TheOracle.html`: standalone oracle experience.
+- `index.html`, `assets/js/home/routes.js`, and `assets/js/home-protocol.js`: main terminal-style landing page, route map, and command protocol.
+- `/oracle/`: standalone oracle experience.
+- `/pages/`: durable content such as articles and profile pages.
+- `/games/`: playable experiences.
+- `/tools/`: ritual tools, scoreboards, studios, and terminals.
+- `/account/`: auth and dashboard pages.
+- `/admin/`: admin-facing static surfaces.
 - `workers/oracle/src/index.js`: Cloudflare Worker AI proxy for public command/oracle answers.
 - `workers/oracle/README.md`: deploy notes for the Worker.
 - `assets/js/*.js` and `assets/css/*.css`: shared frontend behavior and styling.
@@ -32,6 +37,7 @@ Do not expose local developer agents, shells, files, or repository write access 
 Common commands:
 
 - `npm run deploy:oracle`: deploy the Oracle Cloudflare Worker.
+- `npm run sync:cache`: sync managed asset query versions into service worker checks.
 - `npm run convert-images`: convert local image assets.
 - `npm run build:bugy-v3-atlas`: build the Bugy v3 SVG atlas.
 

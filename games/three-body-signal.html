@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uc Gunes Sinyali | Convivium</title>
+  <meta name="description" content="Uc cisim kaosu etrafinda kurulan, terminal komutlariyla oynanan kisa bilimkurgu mini oyun.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/games/three-body-signal.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self';">
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Uc Gunes Sinyali | Convivium">
+  <meta property="og:description" content="Terminal tabanli 15 dakikalik bilimkurgu mini oyun.">
+  <meta property="og:type" content="game">
+  <meta property="og:locale" content="tr_TR">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#08f7fe">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <style>
+    :root {
+      --bg: #05070a;
+      --panel: rgba(8, 14, 19, 0.92);
+      --panel-2: rgba(11, 24, 31, 0.86);
+      --cyan: #08f7fe;
+      --green: #48ff91;
+      --amber: #ffd166;
+      --red: #ff5c7a;
+      --violet: #b893ff;
+      --ink: #d9fff7;
+      --muted: #7fa9a6;
+      --line: rgba(8, 247, 254, 0.34);
+      --shadow: 0 0 28px rgba(8, 247, 254, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Courier New", Consolas, monospace;
+      background:
+        radial-gradient(circle at 15% 12%, rgba(8, 247, 254, 0.16), transparent 24rem),
+        radial-gradient(circle at 82% 18%, rgba(255, 209, 102, 0.12), transparent 20rem),
+        linear-gradient(135deg, #020305 0%, #071018 52%, #020305 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%),
+        linear-gradient(90deg, rgba(255, 0, 92, 0.025), rgba(0, 255, 170, 0.02), rgba(0, 110, 255, 0.025));
+      background-size: 100% 4px, 7px 100%;
+      mix-blend-mode: screen;
+      opacity: 0.45;
+      z-index: 5;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .skip-link {
+      position: fixed;
+      left: 12px;
+      top: -80px;
+      z-index: 20;
+      background: var(--cyan);
+      color: #001014;
+      padding: 10px 12px;
+      text-decoration: none;
+    }
+
+    .skip-link:focus {
+      top: 12px;
+    }
+
+    .shell {
+      width: min(1380px, calc(100% - 28px));
+      min-height: calc(100vh - 28px);
+      margin: 14px auto;
+      display: grid;
+      grid-template-columns: minmax(260px, 0.8fr) minmax(360px, 1.55fr) minmax(260px, 0.75fr);
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+    }
+
+    .topbar {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: stretch;
+      border: 1px solid var(--line);
+      background: rgba(4, 10, 13, 0.86);
+      box-shadow: var(--shadow);
+      padding: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand > div:last-child {
+      min-width: 0;
+    }
+
+    .mark {
+      width: 52px;
+      height: 52px;
+      border: 1px solid var(--cyan);
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      text-shadow: 0 0 12px var(--cyan);
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .mark::before,
+    .mark::after {
+      content: "";
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 14px var(--amber);
+    }
+
+    .mark::before {
+      left: 9px;
+      top: 11px;
+    }
+
+    .mark::after {
+      right: 9px;
+      bottom: 11px;
+      background: var(--violet);
+      box-shadow: 0 0 14px var(--violet);
+    }
+
+    h1 {
+      margin: 0 0 4px;
+      font-size: clamp(1.35rem, 2.4vw, 2.5rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+      color: #f2fffc;
+      text-transform: uppercase;
+    }
+
+    .subline {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 38px;
+      border: 1px solid rgba(72, 255, 145, 0.62);
+      color: var(--green);
+      background: rgba(0, 28, 20, 0.76);
+      cursor: pointer;
+      padding: 8px 11px;
+      text-decoration: none;
+      transition: background 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .btn:hover,
+    .btn:focus-visible {
+      background: var(--green);
+      color: #00120a;
+      box-shadow: 0 0 16px rgba(72, 255, 145, 0.42);
+      outline: none;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      color: var(--cyan);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    .panel-title small {
+      color: var(--muted);
+      text-transform: none;
+    }
+
+    .map-panel {
+      display: grid;
+      grid-template-rows: auto minmax(220px, 1fr) auto;
+    }
+
+    .star-map {
+      position: relative;
+      min-height: 330px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(8, 247, 254, 0.08), transparent 18rem),
+        #03070a;
+    }
+
+    #orbit-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .map-readout {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .readout {
+      border: 1px solid rgba(8, 247, 254, 0.24);
+      background: rgba(1, 10, 13, 0.72);
+      padding: 8px;
+      min-width: 0;
+    }
+
+    .readout span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .readout strong {
+      display: block;
+      color: var(--ink);
+      margin-top: 4px;
+      font-size: 0.84rem;
+      overflow-wrap: anywhere;
+    }
+
+    .nodes {
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .node {
+      width: 100%;
+      border: 1px solid rgba(127, 169, 166, 0.32);
+      color: var(--muted);
+      background: rgba(2, 8, 10, 0.7);
+      padding: 10px;
+      text-align: left;
+      cursor: pointer;
+      min-height: 60px;
+    }
+
+    .node.is-unlocked {
+      color: var(--ink);
+      border-color: rgba(8, 247, 254, 0.42);
+    }
+
+    .node.is-active {
+      color: #001014;
+      background: var(--cyan);
+      box-shadow: 0 0 18px rgba(8, 247, 254, 0.36);
+    }
+
+    .node strong,
+    .node span {
+      display: block;
+    }
+
+    .node span {
+      margin-top: 5px;
+      font-size: 0.76rem;
+    }
+
+    .terminal-panel {
+      display: grid;
+      grid-template-rows: auto minmax(420px, 1fr) auto;
+      min-height: 650px;
+    }
+
+    .terminal-output {
+      padding: 14px;
+      overflow-y: auto;
+      background:
+        linear-gradient(180deg, rgba(72, 255, 145, 0.03), transparent 28%),
+        rgba(1, 5, 7, 0.84);
+      line-height: 1.42;
+      scrollbar-color: var(--cyan) #041014;
+    }
+
+    .line {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      margin: 0 0 8px;
+      color: var(--ink);
+    }
+
+    .line.command {
+      color: var(--green);
+    }
+
+    .line.system {
+      color: var(--cyan);
+    }
+
+    .line.warn {
+      color: var(--amber);
+    }
+
+    .line.error {
+      color: var(--red);
+    }
+
+    .line.story {
+      color: #eafff9;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      background: rgba(3, 11, 14, 0.96);
+    }
+
+    .prompt {
+      color: var(--green);
+    }
+
+    #command-input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid rgba(72, 255, 145, 0.3);
+      background: rgba(0, 0, 0, 0.58);
+      color: var(--ink);
+      padding: 10px;
+      outline: none;
+    }
+
+    #command-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(72, 255, 145, 0.25);
+    }
+
+    .side-panel {
+      display: grid;
+      grid-template-rows: auto auto auto minmax(160px, 1fr);
+      gap: 0;
+    }
+
+    .mission {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: var(--panel-2);
+    }
+
+    .mission h2 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+      color: var(--amber);
+      letter-spacing: 0;
+    }
+
+    .mission p {
+      margin: 0;
+      color: var(--ink);
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .progress-wrap {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .progress-track {
+      height: 10px;
+      border: 1px solid rgba(8, 247, 254, 0.38);
+      background: rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--green), var(--cyan), var(--amber));
+      transition: width 0.28s ease;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .stat {
+      border: 1px solid rgba(127, 169, 166, 0.22);
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.28);
+      min-width: 0;
+    }
+
+    .stat span,
+    .stat strong {
+      display: block;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.72rem;
+    }
+
+    .stat strong {
+      margin-top: 4px;
+      color: var(--ink);
+      font-size: 0.86rem;
+      overflow-wrap: anywhere;
+    }
+
+    .quick-commands {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .quick {
+      min-height: 38px;
+      border: 1px solid rgba(8, 247, 254, 0.34);
+      color: var(--cyan);
+      background: rgba(0, 20, 27, 0.78);
+      cursor: pointer;
+      padding: 8px;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    .quick:hover,
+    .quick:focus-visible {
+      color: #001014;
+      background: var(--cyan);
+      outline: none;
+    }
+
+    .files {
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .files h3 {
+      margin: 0 0 10px;
+      color: var(--cyan);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+
+    .file-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .file {
+      border: 1px solid rgba(127, 169, 166, 0.22);
+      padding: 8px;
+      color: var(--muted);
+      background: rgba(0, 0, 0, 0.28);
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .file.is-read {
+      color: var(--green);
+      border-color: rgba(72, 255, 145, 0.32);
+    }
+
+    .ending {
+      margin-top: 12px;
+      border: 1px solid rgba(255, 209, 102, 0.46);
+      background: rgba(255, 209, 102, 0.09);
+      padding: 12px;
+      color: var(--amber);
+      display: none;
+    }
+
+    .ending.is-visible {
+      display: block;
+    }
+
+    @media (max-width: 1080px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .terminal-panel {
+        order: 1;
+      }
+
+      .map-panel {
+        order: 2;
+      }
+
+      .side-panel {
+        order: 3;
+      }
+
+      .terminal-panel {
+        min-height: 560px;
+      }
+
+      .side-panel,
+      .map-panel {
+        min-height: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        width: 100vw;
+        margin: 0;
+        padding: 7px;
+        gap: 8px;
+      }
+
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .top-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+        min-width: 0;
+        width: 100%;
+      }
+
+      .top-actions .btn {
+        text-align: center;
+        min-width: 0;
+      }
+
+      .top-actions .btn:last-child {
+        grid-column: auto;
+      }
+
+      .brand {
+        align-items: flex-start;
+      }
+
+      .mark {
+        width: 42px;
+        height: 42px;
+      }
+
+      .panel-title small {
+        display: none;
+      }
+
+      .terminal-panel {
+        min-height: 72vh;
+      }
+
+      .terminal-output {
+        padding: 10px;
+        font-size: 0.92rem;
+      }
+
+      .input-row {
+        grid-template-columns: auto 1fr;
+      }
+
+      .input-row .btn {
+        grid-column: 1 / -1;
+        width: 100%;
+      }
+
+      .map-readout,
+      .stats,
+      .quick-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#terminal-output">Terminale atla</a>
+  <main class="shell" aria-label="Uc Gunes Sinyali oyunu">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">3B</div>
+        <div>
+          <h1>Uc Gunes Sinyali<span aria-hidden="true">_</span></h1>
+          <p class="subline">Terminal mini op / 15 dk</p>
+        </div>
+      </div>
+      <nav class="top-actions" aria-label="Oyun gezinme">
+        <a class="btn" href="/">Ana sayfa</a>
+        <button class="btn" id="new-run" type="button">Yeni operasyon</button>
+        <button class="btn" id="help-button" type="button">Yardim</button>
+      </nav>
+    </header>
+
+    <section class="panel map-panel" aria-label="Sinyal haritasi">
+      <div class="panel-title"><span>Orbit sim</span><small id="orbit-state">chaotic drift</small></div>
+      <div class="star-map">
+        <canvas id="orbit-canvas" aria-label="Uc yildizli sistem simülasyonu"></canvas>
+        <div class="map-readout">
+          <div class="readout"><span>stability</span><strong id="stability-readout">0.18</strong></div>
+          <div class="readout"><span>window</span><strong id="window-readout">unknown</strong></div>
+          <div class="readout"><span>relay</span><strong id="relay-readout">locked</strong></div>
+        </div>
+      </div>
+      <div class="nodes" id="node-list" aria-label="Ag dugumleri"></div>
+    </section>
+
+    <section class="panel terminal-panel" aria-label="Operasyon terminali">
+      <div class="panel-title"><span>Convivium secure terminal</span><small id="session-readout">session: cold</small></div>
+      <div class="terminal-output" id="terminal-output" tabindex="0" aria-live="polite"></div>
+      <form class="input-row" id="command-form" autocomplete="off">
+        <span class="prompt" aria-hidden="true">&gt;</span>
+        <input id="command-input" name="command" type="text" autocomplete="off" spellcheck="false" aria-label="Komut gir" placeholder="komut yaz">
+        <button class="btn" type="submit">Gonder</button>
+      </form>
+    </section>
+
+    <aside class="panel side-panel" aria-label="Gorev paneli">
+      <div class="panel-title"><span>Mission board</span><small>spoiler-light</small></div>
+      <section class="mission">
+        <h2 id="mission-title">Baglanti bekleniyor</h2>
+        <p id="mission-text">Terminalden scan komutunu calistir.</p>
+        <div class="ending" id="ending-box"></div>
+      </section>
+      <section class="progress-wrap" aria-label="Operasyon ilerlemesi">
+        <div class="progress-track"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="stats">
+          <div class="stat"><span>stage</span><strong id="stage-readout">0/6</strong></div>
+          <div class="stat"><span>risk</span><strong id="risk-readout">low</strong></div>
+          <div class="stat"><span>node</span><strong id="active-node-readout">offline</strong></div>
+          <div class="stat"><span>score</span><strong id="score-readout">0</strong></div>
+        </div>
+      </section>
+      <section class="quick-commands" aria-label="Hizli komutlar">
+        <div class="quick-grid" id="quick-grid"></div>
+      </section>
+      <section class="files" aria-label="Okunan dosyalar">
+        <h3>Read buffer</h3>
+        <div class="file-list" id="file-list"></div>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+
+    const terminalOutput = $('#terminal-output');
+    const commandInput = $('#command-input');
+    const commandForm = $('#command-form');
+    const quickGrid = $('#quick-grid');
+    const nodeList = $('#node-list');
+    const fileList = $('#file-list');
+    const missionTitle = $('#mission-title');
+    const missionText = $('#mission-text');
+    const endingBox = $('#ending-box');
+    const progressBar = $('#progress-bar');
+    const canvas = $('#orbit-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const nodes = {
+      'gaia-lab': {
+        label: 'GAIA-LAB',
+        meta: 'Dunya alici istasyonu',
+        files: {
+          'briefing.txt': [
+            'briefing.txt',
+            'Uc gunesli uzak bir sistemden gelen dar bantli bir sinyal yakalandi.',
+            'Sinyal matematiksel, ama icinde sakli rota basliklari var.',
+            'Isin kotu tarafi: bizim cevap protokolumuz da koordinat sizdiriyor.',
+            'Ilk hedef: gozlem dugumune gec, kaotik pencereyi hesapla.'
+          ].join('\\n'),
+          'ops.note': [
+            'ops.note',
+            'Komutlar: scan, connect <node>, ls, cat <file>, decrypt <file> <key>, run <program>, transmit <mode>.',
+            'Bu terminalde iyi karar, hizdan degerlidir.'
+          ].join('\\n')
+        }
+      },
+      observatory: {
+        label: 'OBSERVATORY',
+        meta: 'Uc cisim izleme dizisi',
+        lockedUntil: 2,
+        files: {
+          'orbit.log': [
+            'orbit.log',
+            'Model notu: uc kutle birbirini kararlı bir takvim gibi degil, gecici pencereler gibi iter.',
+            'Son gozlemde sessiz pencere perihelion etiketiyle isaretlendi.',
+            'Sifreli dosya: cycle.lock. Anahtar: perihelion.'
+          ].join('\\n'),
+          'cycle.lock': 'encrypted://unstable-calendar'
+        }
+      },
+      listener: {
+        label: 'LISTENER',
+        meta: 'Derin uzay cevap filtresi',
+        lockedUntil: 3,
+        files: {
+          'inbound.txt': [
+            'inbound.txt',
+            'Mesaj parcasi: "Bizde mevsim yok, sadece hesaplanamayan ates var."',
+            'Filtre motoru frekans toplamiyla aciliyor: 3 gunes + 5 sessiz saat.',
+            'Program: run filter <toplam>'
+          ].join('\\n'),
+          'reply.draft': [
+            'reply.draft',
+            'Taslak cevap koordinat basliklarini acik birakiyor.',
+            'Guvenli rota bulunmadan cevap gonderme.'
+          ].join('\\n')
+        }
+      },
+      archive: {
+        label: 'ARCHIVE',
+        meta: 'Etik ve rota deposu',
+        lockedUntil: 4,
+        files: {
+          'ethics.txt': [
+            'ethics.txt',
+            'Tam sessizlik merhamet olabilir; tam yayin kibir olabilir.',
+            'Ama matematiksel selam, koordinatsiz gonderilirse iki turu da oldurmez.',
+            'Rota motoru icin komut: route shadow'
+          ].join('\\n'),
+          'contact.memo': [
+            'contact.memo',
+            'Bir uygarligin korkusu, baska bir uygarligin kaynak planina donusebilir.',
+            'Bu operasyonun amaci zafer degil: yerimizi saklayip anlamli bir selam birakmak.'
+          ].join('\\n')
+        }
+      },
+      beacon: {
+        label: 'BEACON',
+        meta: 'Son yayin tamponu',
+        lockedUntil: 5,
+        files: {
+          'final.txt': [
+            'final.txt',
+            'Uc secenek hazir:',
+            'transmit coordinates  -> hizli, parlak, felaket',
+            'transmit silence      -> koordinatsiz matematiksel selam',
+            'transmit purge        -> tum kanali yakar, iz de birakmaz'
+          ].join('\\n')
+        }
+      }
+    };
+
+    const missions = [
+      { title: 'Soguk baslatma', text: 'Ag katmanini gormek icin scan komutunu calistir.', quick: ['scan', 'help'] },
+      { title: 'Brifingi oku', text: 'connect gaia-lab, sonra ls ve cat briefing.txt komutlariyla gorevi ac.', quick: ['connect gaia-lab', 'ls', 'cat briefing.txt'] },
+      { title: 'Kaotik pencere', text: 'Observatory dugumunde orbit.log dosyasini oku ve cycle.lock sifresini coz.', quick: ['connect observatory', 'cat orbit.log', 'decrypt cycle.lock perihelion'] },
+      { title: 'Filtreyi calistir', text: 'Listener dugumunde gelen mesaji oku; frekans toplamiyla filtreyi baslat.', quick: ['connect listener', 'cat inbound.txt', 'run filter 8'] },
+      { title: 'Rotayi perdele', text: 'Archive dosyalarindan etik rotayi bul ve yayin basliklarini karart.', quick: ['connect archive', 'cat ethics.txt', 'route shadow'] },
+      { title: 'Son karar', text: 'Beacon dugumune gec. Koordinatsiz selam icin dogru transmit komutunu sec.', quick: ['connect beacon', 'cat final.txt', 'transmit silence'] },
+      { title: 'Operasyon tamam', text: 'Sinyal koordinatsiz gonderildi. Uc gunesli korkuya cevap verildi, Dunya haritadan silindi.', quick: ['restart', 'scan'] }
+    ];
+
+    const state = {
+      stage: 0,
+      score: 0,
+      activeNode: null,
+      unlocked: new Set(['gaia-lab']),
+      readFiles: new Set(),
+      decrypted: new Set(),
+      routeShielded: false,
+      filterReady: false,
+      ended: false,
+      history: [],
+      historyIndex: -1,
+      bootedAt: Date.now()
+    };
+
+    const normalize = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+    const write = (text, type = 'system') => {
+      const line = document.createElement('p');
+      line.className = `line ${type}`;
+      line.textContent = text;
+      terminalOutput.appendChild(line);
+      terminalOutput.scrollTop = terminalOutput.scrollHeight;
+    };
+
+    const award = (points) => {
+      state.score = Math.max(0, state.score + points);
+      render();
+    };
+
+    const advanceTo = (stage) => {
+      if (stage > state.stage) {
+        state.stage = stage;
+        award(120 + stage * 25);
+        Object.entries(nodes).forEach(([id, node]) => {
+          if ((node.lockedUntil || 0) <= state.stage) state.unlocked.add(id);
+        });
+        write(`mission: ${missions[state.stage].title}`, 'system');
+        write(missions[state.stage].text, 'story');
+      }
+      render();
+    };
+
+    const activeNode = () => state.activeNode ? nodes[state.activeNode] : null;
+
+    const readCurrentFile = (fileName) => {
+      const node = activeNode();
+      if (!node) {
+        write('node yok. Once connect <node> kullan.', 'warn');
+        return;
+      }
+      const file = node.files[fileName];
+      if (!file) {
+        write(`${fileName} bulunamadi. ls ile dosyalari kontrol et.`, 'error');
+        return;
+      }
+      if (file.startsWith('encrypted://') && !state.decrypted.has(fileName)) {
+        write(`${fileName} sifreli. decrypt ${fileName} <key> kullan.`, 'warn');
+        return;
+      }
+      write(file, 'story');
+      state.readFiles.add(`${state.activeNode}/${fileName}`);
+      if (state.activeNode === 'gaia-lab' && fileName === 'briefing.txt') advanceTo(2);
+      render();
+    };
+
+    const commands = {
+      help() {
+        write([
+          'komutlar:',
+          'scan                         ag dugumlerini gosterir',
+          'connect <node>               dugume baglanir',
+          'ls                           aktif dugum dosyalarini listeler',
+          'cat <file>                   dosya okur',
+          'decrypt <file> <key>         sifreli dosyayi acar',
+          'run filter <number>          cevap filtresini baslatir',
+          'route shadow                 koordinat basliklarini perdeler',
+          'transmit silence             final yayinini gonderir',
+          'hint, status, clear, restart'
+        ].join('\\n'), 'system');
+      },
+      scan() {
+        write('scan: yerel ag + derin uzay relay indeksleniyor...', 'system');
+        Object.entries(nodes).forEach(([id, node]) => {
+          const open = state.unlocked.has(id);
+          write(`${open ? 'open ' : 'lock '} ${id.padEnd(12)} ${node.meta}`, open ? 'system' : 'warn');
+        });
+        if (state.stage === 0) advanceTo(1);
+      },
+      connect(args) {
+        const target = normalize(args);
+        if (!target || !nodes[target]) {
+          write('bilinmeyen dugum. scan ile liste al.', 'error');
+          return;
+        }
+        if (!state.unlocked.has(target)) {
+          write(`${target} kilitli. Once mevcut gorevi tamamla.`, 'warn');
+          return;
+        }
+        state.activeNode = target;
+        write(`connected: ${nodes[target].label}`, 'system');
+        if (target === 'observatory' && state.stage < 2) advanceTo(2);
+        render();
+      },
+      ls() {
+        const node = activeNode();
+        if (!node) {
+          write('node yok. Once connect <node> kullan.', 'warn');
+          return;
+        }
+        write(Object.keys(node.files).map(file => `- ${file}`).join('\\n'), 'system');
+      },
+      cat(args) {
+        readCurrentFile(normalize(args));
+      },
+      decrypt(args) {
+        const [fileName, key] = normalize(args).split(' ');
+        if (state.activeNode !== 'observatory' || fileName !== 'cycle.lock') {
+          write('decrypt hedefi gecersiz veya yanlis dugum.', 'error');
+          return;
+        }
+        if (key !== 'perihelion') {
+          write('anahtar reddedildi. orbit.log icinde isaretli etiketi ara.', 'error');
+          return;
+        }
+        state.decrypted.add('cycle.lock');
+        nodes.observatory.files['cycle.lock'] = [
+          'cycle.lock',
+          'Sifre cozuldu: kararsiz takvim icinde 8 dakikalik sessiz pencere var.',
+          'Listener dugumu acildi. Cevap filtresi ancak dogru toplamla calisir.'
+        ].join('\\n');
+        write(nodes.observatory.files['cycle.lock'], 'story');
+        advanceTo(3);
+      },
+      run(args) {
+        const parts = normalize(args).split(' ');
+        if (parts[0] !== 'filter') {
+          write('calistirilabilir program bulunamadi. Ornek: run filter 8', 'error');
+          return;
+        }
+        if (state.activeNode !== 'listener') {
+          write('filter yalniz listener dugumunde calisir.', 'warn');
+          return;
+        }
+        if (parts[1] !== '8') {
+          write('filter reddedildi. inbound.txt frekans toplamlarini soyluyor.', 'error');
+          return;
+        }
+        state.filterReady = true;
+        write('filter: koordinat kokleri ayrildi, metin kanali temizlendi.', 'system');
+        advanceTo(4);
+      },
+      route(args) {
+        if (normalize(args) !== 'shadow') {
+          write('rota modu taninmadi. Archive icindeki etik notu oku.', 'error');
+          return;
+        }
+        if (state.activeNode !== 'archive') {
+          write('route motoru archive dugumunden imzalanmali.', 'warn');
+          return;
+        }
+        state.routeShielded = true;
+        write('route: shadow aktif. Dunya koordinatlari yayin basligindan dusuruldu.', 'system');
+        advanceTo(5);
+      },
+      transmit(args) {
+        const mode = normalize(args);
+        if (state.activeNode !== 'beacon') {
+          write('transmit yalniz beacon dugumunde yapilabilir.', 'warn');
+          return;
+        }
+        state.ended = true;
+        if (mode === 'silence' && state.routeShielded && state.filterReady) {
+          write('transmit: silence', 'command');
+          write('Matematiksel selam gonderildi. Koordinat yok. Tehdit yok. Sadece: "Buradayiz, ama harita degiliz."', 'story');
+          endingBox.textContent = 'En iyi son: Dunya yerini sakladi; uc gunesli uygarliga savas degil, temkinli bir anlam birakti.';
+          endingBox.classList.add('is-visible');
+          advanceTo(6);
+          award(500);
+          return;
+        }
+        if (mode === 'coordinates') {
+          write('transmit: coordinates', 'error');
+          write('Beacon parladi. Harita da parladi. Birilerinin uzun yolculugu simdi bizim ev adresimize dogru.', 'error');
+          endingBox.textContent = 'Kotu son: Hizin bedeli koordinat oldu.';
+        } else if (mode === 'purge') {
+          write('transmit: purge', 'warn');
+          write('Kanal yandi. Dunya saklandi, ama karsidaki korkuya yalnizca karanlik dondu.', 'warn');
+          endingBox.textContent = 'Sessiz son: Guvenli, ama meraksiz.';
+        } else {
+          write('final modu gecersiz. final.txt seceneklerini oku.', 'error');
+          state.ended = false;
+          return;
+        }
+        endingBox.classList.add('is-visible');
+        render();
+      },
+      status() {
+        write(`stage=${state.stage}/6 node=${state.activeNode || 'none'} score=${state.score} shield=${state.routeShielded ? 'on' : 'off'} filter=${state.filterReady ? 'ready' : 'cold'}`, 'system');
+      },
+      hint() {
+        write(`hint: ${missions[state.stage].text}`, 'warn');
+      },
+      clear() {
+        terminalOutput.textContent = '';
+      },
+      restart() {
+        location.reload();
+      }
+    };
+
+    const execute = (raw) => {
+      const input = normalize(raw);
+      if (!input) return;
+      write(`> ${raw}`, 'command');
+      state.history.unshift(raw);
+      state.history = state.history.slice(0, 40);
+      state.historyIndex = -1;
+      const [name, ...rest] = input.split(' ');
+      const handler = commands[name];
+      if (!handler) {
+        write('komut taninmadi. help yaz.', 'error');
+        return;
+      }
+      handler(rest.join(' '));
+      render();
+    };
+
+    const render = () => {
+      const mission = missions[state.stage];
+      missionTitle.textContent = mission.title;
+      missionText.textContent = mission.text;
+      progressBar.style.width = `${Math.min(100, (state.stage / 6) * 100)}%`;
+      $('#stage-readout').textContent = `${state.stage}/6`;
+      $('#score-readout').textContent = String(state.score);
+      $('#risk-readout').textContent = state.routeShielded ? 'masked' : state.stage >= 5 ? 'critical' : state.stage >= 3 ? 'medium' : 'low';
+      $('#active-node-readout').textContent = state.activeNode || 'offline';
+      $('#session-readout').textContent = `session: ${Math.floor((Date.now() - state.bootedAt) / 1000)}s`;
+      $('#stability-readout').textContent = (0.18 + state.stage * 0.11).toFixed(2);
+      $('#window-readout').textContent = state.stage >= 3 ? '8 min' : 'unknown';
+      $('#relay-readout').textContent = state.routeShielded ? 'shadow' : state.stage >= 5 ? 'armed' : 'locked';
+      $('#orbit-state').textContent = state.routeShielded ? 'masked window' : state.stage >= 3 ? 'window found' : 'chaotic drift';
+
+      quickGrid.textContent = '';
+      mission.quick.forEach(command => {
+        const button = document.createElement('button');
+        button.className = 'quick';
+        button.type = 'button';
+        button.textContent = command;
+        button.addEventListener('click', () => execute(command));
+        quickGrid.appendChild(button);
+      });
+
+      nodeList.textContent = '';
+      Object.entries(nodes).forEach(([id, node]) => {
+        const button = document.createElement('button');
+        button.className = 'node';
+        if (state.unlocked.has(id)) button.classList.add('is-unlocked');
+        if (state.activeNode === id) button.classList.add('is-active');
+        button.type = 'button';
+        button.disabled = !state.unlocked.has(id);
+        button.innerHTML = `<strong>${node.label}</strong><span>${state.unlocked.has(id) ? node.meta : 'locked'}</span>`;
+        button.addEventListener('click', () => execute(`connect ${id}`));
+        nodeList.appendChild(button);
+      });
+
+      fileList.textContent = '';
+      if (state.readFiles.size === 0) {
+        const item = document.createElement('div');
+        item.className = 'file';
+        item.textContent = 'buffer bos';
+        fileList.appendChild(item);
+      } else {
+        [...state.readFiles].forEach(file => {
+          const item = document.createElement('div');
+          item.className = 'file is-read';
+          item.textContent = file;
+          fileList.appendChild(item);
+        });
+      }
+    };
+
+    commandForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const value = commandInput.value;
+      commandInput.value = '';
+      execute(value);
+      commandInput.focus();
+    });
+
+    commandInput.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        state.historyIndex = Math.min(state.history.length - 1, state.historyIndex + 1);
+        commandInput.value = state.history[state.historyIndex] || commandInput.value;
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        state.historyIndex = Math.max(-1, state.historyIndex - 1);
+        commandInput.value = state.historyIndex === -1 ? '' : state.history[state.historyIndex] || '';
+      }
+    });
+
+    $('#help-button').addEventListener('click', () => execute('help'));
+    $('#new-run').addEventListener('click', () => execute('restart'));
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(320, Math.floor(rect.width * ratio));
+      canvas.height = Math.max(240, Math.floor(rect.height * ratio));
+    };
+
+    const drawOrbit = (time) => {
+      const width = canvas.width;
+      const height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#020609';
+      ctx.fillRect(0, 0, width, height);
+      const cx = width / 2;
+      const cy = height / 2;
+      const scale = Math.min(width, height) * 0.28;
+      const t = time * 0.00035;
+      const stars = [
+        { x: Math.cos(t) * scale, y: Math.sin(t * 1.7) * scale * 0.64, c: '#ffd166', r: 16 },
+        { x: Math.cos(t * 1.31 + 2.1) * scale * 0.92, y: Math.sin(t * 0.86 + 1.2) * scale, c: '#08f7fe', r: 13 },
+        { x: Math.cos(t * 0.72 + 4.2) * scale * 0.78, y: Math.sin(t * 1.22 + 3.3) * scale * 0.88, c: '#b893ff', r: 11 }
+      ];
+      ctx.strokeStyle = state.routeShielded ? 'rgba(72,255,145,0.38)' : 'rgba(8,247,254,0.18)';
+      ctx.lineWidth = Math.max(1, width / 600);
+      for (let i = 0; i < stars.length; i++) {
+        for (let j = i + 1; j < stars.length; j++) {
+          ctx.beginPath();
+          ctx.moveTo(cx + stars[i].x, cy + stars[i].y);
+          ctx.lineTo(cx + stars[j].x, cy + stars[j].y);
+          ctx.stroke();
+        }
+      }
+      stars.forEach((star) => {
+        const x = cx + star.x;
+        const y = cy + star.y;
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, star.r * 5);
+        glow.addColorStop(0, star.c);
+        glow.addColorStop(0.25, `${star.c}88`);
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(x, y, star.r * 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = star.c;
+        ctx.beginPath();
+        ctx.arc(x, y, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.strokeStyle = state.stage >= 5 ? 'rgba(255,92,122,0.62)' : 'rgba(72,255,145,0.34)';
+      ctx.setLineDash([8, 10]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, scale * (state.routeShielded ? 0.36 : 0.52), 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      requestAnimationFrame(drawOrbit);
+    };
+
+    window.addEventListener('resize', resize);
+    resize();
+    requestAnimationFrame(drawOrbit);
+
+    write('boot: Convivium secure relay v3.0', 'system');
+    write('operator: Dunya cevap protokolu koordinat sizdiriyor. Ilk komut: scan', 'story');
+    render();
+    setInterval(render, 1000);
+  </script>
+  <script src="/assets/js/sfx.js?v=15" defer></script>
+</body>
+</html>

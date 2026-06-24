@@ -96,6 +96,8 @@
       const oracleProxyIsRelative = oracleProxyEndpoint.startsWith('/');
       const oracleProxyIsUsable = Boolean(oracleProxyEndpoint) &&
         !(location.hostname.endsWith('github.io') && oracleProxyIsRelative);
+      const routes = window.ConviviumRoutes || {};
+      const route = (key, fallback = '/') => routes[key] || fallback;
       const oracleWaitLines = [
         'oracle channel opening...',
         'signal queued. cevap bekleniyor...',
@@ -489,7 +491,7 @@
         state.opened?.forEach(id => document.getElementById(id)?.classList.add('is-visited'));
       };
 
-      const loginHref = () => `auth.html?returnTo=${encodeURIComponent(`${location.pathname}${location.hash}`)}`;
+      const loginHref = () => `${route('auth', '/account/auth.html')}?returnTo=${encodeURIComponent(`${location.pathname}${location.hash}`)}`;
 
       const requestLogin = () => {
         if (consoleLine) consoleLine.textContent = 'access initiate: login required';
@@ -1622,16 +1624,16 @@
       ];
 
       const randomRoutes = [
-        ['makaleler.html', 'dossier'],
-        ['cyberpunk-logic-game.html', 'logic'],
-        ['three-body-signal.html', 'three body signal'],
-        ['ash-runner.html', 'ash runner'],
-        ['neon-river.html', 'neon river'],
-        ['Bartender.html', 'bartender'],
-        ['Barista.html', 'barista'],
-        ['TheOracle.html', 'oracle room'],
-        ['Paradox_Terminal.html', 'paradox terminal'],
-        ['dart-skorbord.html', 'dart skorbord']
+        [route('dossier', '/pages/makaleler.html'), 'dossier'],
+        [route('logic', '/games/cyberpunk-logic-game.html'), 'logic'],
+        [route('signal', '/games/three-body-signal.html'), 'three body signal'],
+        [route('ash', '/games/ash-runner.html'), 'ash runner'],
+        [route('flow', '/games/neon-river.html'), 'neon river'],
+        ['/tools/bartender.html', 'bartender'],
+        ['/tools/barista.html', 'barista'],
+        ['/oracle/', 'oracle room'],
+        ['/tools/paradox-terminal.html', 'paradox terminal'],
+        [route('dart', '/tools/dart-skorbord.html'), 'dart skorbord']
       ];
 
       const sample = (items) => items[Math.floor(Math.random() * items.length)];
@@ -2272,7 +2274,7 @@
           return `iz birakildi: ${virtualCwd}. (wall ile oku)`;
         } catch (error) {
           const msg = String(error?.message || '');
-          if (/giris/i.test(msg)) return 'mark: iz birakmak icin once giris yap (auth.html).';
+          if (/giris/i.test(msg)) return 'mark: iz birakmak icin once giris yap (/account/auth.html).';
           return 'mark: iz birakilamadi.';
         }
       };
@@ -4020,73 +4022,73 @@
           command: 'open dossier',
           description: 'makaleler ve notlar',
           aliases: ['dossier', 'makaleler', 'makale', 'articles'],
-          action: goTo('makaleler.html')
+          action: goTo(route('dossier', '/pages/makaleler.html'))
         },
         {
           command: 'run logic',
           description: 'Cyberpunk Logic oyununu acar',
           aliases: ['logic', 'cyberpunk logic', 'logic game', 'mantik', 'mantık'],
-          action: goTo('cyberpunk-logic-game.html')
+          action: goTo(route('logic', '/games/cyberpunk-logic-game.html'))
         },
         {
           command: 'run signal',
           description: 'Uc Gunes Sinyali oyununu acar',
           aliases: ['signal game', 'three body', 'three body signal', 'uc gunes', 'üç güneş', 'uc cisim', 'üç cisim', 'relay'],
-          action: goTo('three-body-signal.html')
+          action: goTo(route('signal', '/games/three-body-signal.html'))
         },
         {
           command: 'run ash',
           description: 'Ash Runner oyununu acar',
           aliases: ['ash', 'ash runner', 'scrap', 'brawler'],
-          action: goTo('ash-runner.html')
+          action: goTo(route('ash', '/games/ash-runner.html'))
         },
         {
           command: 'run flow',
           description: 'Neon River deneyimini acar',
           aliases: ['flow', 'neon river', 'river'],
-          action: goTo('neon-river.html')
+          action: goTo(route('flow', '/games/neon-river.html'))
         },
         {
           command: 'dart',
           description: 'dart skorboard ekranini acar',
           aliases: ['skorbord', 'scoreboard', 'dart skorbord', 'dart skor', 'scores'],
-          action: goTo('dart-skorbord.html')
+          action: goTo(route('dart', '/tools/dart-skorbord.html'))
         },
         {
           command: 'bartender',
           description: 'kokteyl asistani',
           aliases: ['bar', 'cocktail', 'kokteyl'],
-          action: goTo('Bartender.html')
+          action: goTo(route('bartender', '/tools/bartender.html'))
         },
         {
           command: 'barista',
           description: 'kahve asistani',
           aliases: ['coffee', 'kahve'],
-          action: goTo('Barista.html')
+          action: goTo(route('barista', '/tools/barista.html'))
         },
         {
           command: 'barista v2',
           description: 'ikinci kahve asistani',
           aliases: ['barista 2', 'coffee v2', 'kahve v2'],
-          action: goTo('Barista_V2.html')
+          action: goTo(route('baristaV2', '/tools/barista-v2.html'))
         },
         {
           command: 'realists bar',
           description: 'The Realists Bar sayfasi',
           aliases: ['the realists bar', 'realists'],
-          action: goTo('TheRealistsBar.html')
+          action: goTo(route('realistsBar', '/tools/the-realists-bar.html'))
         },
         {
           command: 'open oracle',
           description: 'The Oracle deneyimini acar',
           aliases: ['the oracle', 'oracle page'],
-          action: goTo('TheOracle.html')
+          action: goTo(route('oracle', '/oracle/'))
         },
         {
           command: 'paradox',
           description: 'Paradox Terminal sayfasi',
           aliases: ['paradox terminal', 'terminal'],
-          action: goTo('Paradox_Terminal.html')
+          action: goTo(route('paradox', '/tools/paradox-terminal.html'))
         },
         {
           command: 'about',
@@ -4110,31 +4112,31 @@
             'kim yaptı',
             'kim yapti'
           ],
-          action: goTo('ozgecmisim.html')
+          action: goTo(route('profile', '/pages/ozgecmisim.html'))
         },
         {
           command: 'access',
           description: 'giris ekranini acar',
           aliases: ['login', 'auth', 'giris', 'giriş'],
-          action: goTo('auth.html')
+          action: goTo(route('auth', '/account/auth.html'))
         },
         {
           command: 'dashboard',
           description: 'dashboard ekranini acar',
           aliases: ['dash', 'panel'],
-          action: goTo('dashboard.html')
+          action: goTo(route('dashboard', '/account/dashboard.html'))
         },
         {
           command: 'admin',
           description: 'admin ekranini acar',
           aliases: ['manage', 'yonetim', 'yönetim'],
-          action: goTo('admin.html')
+          action: goTo(route('admin', '/admin/'))
         },
         {
           command: 'universe',
           description: 'Universe-2 deneyimini acar',
           aliases: ['universe 2', 'u2', 'evren'],
-          action: goTo('universe-2.html')
+          action: goTo(route('universe', '/games/universe-2.html'))
         },
         {
           command: 'open manifest',
@@ -4657,7 +4659,7 @@
           return;
         }
         if (isCreatorQuery(command)) {
-          location.href = 'ozgecmisim.html';
+          location.href = '/pages/ozgecmisim.html';
           commandInput.value = '';
           clearCommandSuggestions();
           return;
@@ -4772,7 +4774,7 @@
           requestLogin();
           return;
         }
-        location.href = 'auth.html';
+        location.href = '/account/auth.html';
       });
 
       setAudioEnabled(audioEnabled);
@@ -4850,14 +4852,14 @@
             gate.classList.remove('is-open');
             updateGateButton(gate);
           });
-        } else if (key === 'd') location.href = 'makaleler.html';
-        else if (key === 'l') location.href = 'cyberpunk-logic-game.html';
-        else if (key === 't') location.href = 'three-body-signal.html';
-        else if (key === 'b') location.href = 'ash-runner.html';
-        else if (key === 'f') location.href = 'neon-river.html';
+        } else if (key === 'd') location.href = '/pages/makaleler.html';
+        else if (key === 'l') location.href = '/games/cyberpunk-logic-game.html';
+        else if (key === 't') location.href = '/games/three-body-signal.html';
+        else if (key === 'b') location.href = '/games/ash-runner.html';
+        else if (key === 'f') location.href = '/games/neon-river.html';
         else if (key === 'm') scrollToSection('map', 'signal map');
         else if (key === 'n') scrollToSection('notes', 'field notes');
-        else if (key === 'a') location.href = 'auth.html';
+        else if (key === 'a') location.href = '/account/auth.html';
       });
 
       document.querySelectorAll('a, button').forEach(item => {

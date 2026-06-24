@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Content Studio - Convivium</title>
+  <meta name="description" content="Convivium makale yonetimi ve yayinlama paneli.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/admin/">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta name="theme-color" content="#00ff00">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css?v=31">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=3">
+</head>
+<body class="admin-page">
+  <a class="skip-link" href="#content">Icerigi atla</a>
+
+  <main id="content" class="content-studio" role="main">
+    <section id="adminGate" class="studio-gate" aria-live="polite">Yukleniyor...</section>
+
+    <section id="adminWorkspace" class="studio-workspace" hidden>
+      <header class="studio-topbar">
+        <div class="studio-title">
+          <p>CONVIVIUM / CONTENT STUDIO</p>
+          <h1>Makale Merkezi</h1>
+          <span id="adminStatus" aria-live="polite">Hazir.</span>
+        </div>
+        <nav class="studio-actions" aria-label="Editor aksiyonlari">
+          <a class="btn" href="/">&#8592; Ana Sayfa</a>
+          <a class="btn" href="/pages/makaleler.html">Makaleler</a>
+          <a class="btn" href="/tools/bugy-studio.html">Bugy Studio</a>
+          <button id="clearForm" class="btn" type="button">Yeni</button>
+          <button id="saveDraft" class="btn" type="button">Taslak Kaydet</button>
+          <button id="publishArticle" class="btn btn-primary" type="button">Yayinla</button>
+        </nav>
+      </header>
+
+      <div class="studio-grid">
+        <aside class="studio-sidebar" aria-label="Makale arsivi">
+          <div class="sidebar-head">
+            <strong>Arsiv</strong>
+            <span id="articleTotal">0</span>
+          </div>
+          <div class="sidebar-tools">
+            <input id="articleSearch" class="studio-input" type="search" placeholder="Makalelerde ara" aria-label="Makalelerde ara">
+            <select id="statusFilter" class="studio-input" aria-label="Durum filtrele">
+              <option value="all">Tum durumlar</option>
+              <option value="draft">Taslak</option>
+              <option value="published">Yayinda</option>
+              <option value="archived">Arsiv</option>
+            </select>
+          </div>
+          <ul id="articleList" class="studio-list"></ul>
+        </aside>
+
+        <form id="articleForm" class="studio-editor" autocomplete="off">
+          <input type="hidden" name="id">
+          <textarea id="content_html" name="content_html" hidden required></textarea>
+
+          <section class="studio-panel title-panel" aria-label="Makale bilgileri">
+            <input id="title" name="title" class="title-input" type="text" required maxlength="160" placeholder="Basliksiz makale">
+            <div class="title-meta-row">
+              <label>
+                Slug
+                <input id="slug" name="slug" class="studio-input" type="text" required maxlength="96" pattern="[a-z0-9-]+" placeholder="otomatik-olusturulur">
+              </label>
+              <label>
+                Yayin zamani
+                <input name="published_at" class="studio-input" type="datetime-local">
+              </label>
+            </div>
+            <label>
+              Ozet
+              <textarea name="summary" class="studio-input summary-input" rows="3" required maxlength="320" placeholder="Okuyucunun listede gorecegi kisa ozet"></textarea>
+            </label>
+          </section>
+
+          <section class="studio-panel composer-panel" aria-label="Makale editoru">
+            <div class="composer-toolbar" aria-label="Bicimlendirme araclari">
+              <button class="tool-btn" type="button" data-command="formatBlock" data-value="h2" title="Bolum basligi">H2</button>
+              <button class="tool-btn" type="button" data-command="formatBlock" data-value="h3" title="Alt baslik">H3</button>
+              <button class="tool-btn" type="button" data-command="bold" title="Kalin">B</button>
+              <button class="tool-btn" type="button" data-command="italic" title="Italik">I</button>
+              <button class="tool-btn" type="button" data-command="formatBlock" data-value="blockquote" title="Alinti">"</button>
+              <button class="tool-btn" type="button" data-command="insertUnorderedList" title="Liste">•</button>
+              <button class="tool-btn" type="button" data-insert="link" title="Link">↗</button>
+              <button class="tool-btn" type="button" data-insert="image" title="Gorsel">□</button>
+              <button class="tool-btn" type="button" data-insert="video" title="Video">▶</button>
+              <button class="tool-btn" type="button" data-command="removeFormat" title="Format temizle">Tx</button>
+            </div>
+
+            <div id="visualEditor" class="visual-editor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Makale icerigi" data-placeholder="Buraya yazmaya baslayin. Baslik, gorsel, video ve alintilar editor araclarindan eklenebilir."></div>
+
+            <footer class="editor-stats">
+              <span id="wordCount">0 kelime</span>
+              <span id="readTime">~1 dk okuma</span>
+              <span id="dirtyState">Degisiklik yok</span>
+            </footer>
+          </section>
+        </form>
+
+        <aside class="studio-inspector" aria-label="Yayin ayarlari">
+          <section class="studio-panel inspector-card">
+            <h2>Yayin</h2>
+            <label>
+              Durum
+              <select name="status" form="articleForm" class="studio-input">
+                <option value="draft">Taslak</option>
+                <option value="published">Yayinda</option>
+                <option value="archived">Arsiv</option>
+              </select>
+            </label>
+            <div class="publish-actions">
+              <button id="submitArticle" class="btn btn-primary" type="submit" form="articleForm">Kaydet</button>
+              <button id="deleteArticle" class="btn" type="button" disabled>Sil</button>
+            </div>
+          </section>
+
+          <section class="studio-panel inspector-card">
+            <h2>Icerik Aktar</h2>
+            <label class="file-import-label">
+              Dosya sec
+              <input id="articleImportFile" type="file" accept=".txt,.md,.markdown,.html,.htm,.docx,.pdf,text/plain,text/markdown,text/html,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+            </label>
+            <div class="import-actions">
+              <button id="pasteAsMarkdown" class="btn" type="button">Markdown Yapistir</button>
+              <button id="cleanHtml" class="btn" type="button">Icerigi Temizle</button>
+            </div>
+            <p id="importStatus" class="editor-helper" aria-live="polite">TXT, Markdown, HTML, DOCX ve metin tabanli PDF aktarimi desteklenir.</p>
+          </section>
+
+          <section class="studio-panel inspector-card">
+            <h2>Canli Onizleme</h2>
+            <div class="preview-frame studio-preview">
+              <div id="articlePreview" class="reader-content">
+                <p>Onizleme burada gorunur.</p>
+              </div>
+            </div>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=28" defer></script>
+  <script src="/assets/js/articles.js?v=3" defer></script>
+  <script src="/assets/js/admin.js?v=37" defer></script>
+</body>
+</html>

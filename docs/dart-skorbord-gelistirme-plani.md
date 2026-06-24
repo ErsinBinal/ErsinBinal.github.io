@@ -16,7 +16,7 @@
 
 ## 1. Yönetici Özeti
 
-Mevcut `dart-skorbord.html` + `assets/js/dart-skorbord.js`; iki slotlu (RED/BLUE) 501
+Mevcut `/tools/dart-skorbord.html` + `assets/js/dart-skorbord.js`; iki slotlu (RED/BLUE) 501
 dart skorbordudur. Supabase Auth + RLS üzerinde atış-bazlı istatistik kaydeder, beş
 sabit CPU rakip içerir, manuel/keypad skor girişi sunar. Oyun çekirdeği (bust kuralı,
 checkout tablosu, ortalama/tur hesapları, atış granülerliği) sağlamdır.
@@ -39,13 +39,13 @@ edilmesine zemin hazırlar.
 
 | Dosya | Rol |
 |---|---|
-| `dart-skorbord.html` | Skorbord arayüzü, oturum kartları, keypad, overlay |
+| `/tools/dart-skorbord.html` | Skorbord arayüzü, oturum kartları, keypad, overlay |
 | `assets/js/dart-skorbord.js` | Tüm oyun mantığı + CPU + Supabase kalıcılık (IIFE, ~790 satır) |
 | `assets/css/dart-skorbord.css` | Skorbord stilleri |
 | `docs/database/2026-06-01-dart-skorbord.sql` | `dart_matches` + `dart_throws` şeması + RLS |
 | `docs/database/2026-06-12-dart-solo-matches.sql` | Tekli oyuncu (CPU/misafir) için kısıt gevşetme migrasyonu |
 | `assets/js/supabase-client.js` | Backend yardımcıları (`createDartMatchWithClient`, `saveDartThrowsWithClient`, `fetchUserDartStats`) |
-| `dashboard.html` + `assets/js/dashboard.js` | Dart istatistiklerinin gösterimi |
+| `/account/dashboard.html` + `assets/js/dashboard.js` | Dart istatistiklerinin gösterimi |
 
 ### 2.2 Oyun çekirdeği (çalışıyor — KORUNACAK, refactor edilecek)
 
@@ -136,7 +136,7 @@ Motor `mode` parametresiyle çoğullanır (Faz A'daki ayrıştırma sayesinde):
 - Hepsinin motoru `convivium-darts` reposunda referans implementasyona sahip.
 
 ### Faz E — Derin dashboard
-Mevcut `dashboard.html` / `dashboard.js` üzerine:
+Mevcut `/account/dashboard.html` / `dashboard.js` üzerine:
 - 3-dart average, first-9 average, checkout %, en yüksek checkout, 180 sayısı,
   140+/100+ tur, bust oranı, kazanma oranı, galibiyet serisi.
 - **Tahta heatmap'i** (Faz B'deki segment kaydından).

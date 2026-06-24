@@ -31,7 +31,7 @@
 
   function loginUrl() {
     const returnTo = `${location.pathname}${location.search}${location.hash}`;
-    return `/auth.html?returnTo=${encodeURIComponent(returnTo)}`;
+    return `/account/auth.html?returnTo=${encodeURIComponent(returnTo)}`;
   }
 
   function setGateMessage(message) {

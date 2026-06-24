@@ -1,140 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=/pages/makaleler.html">
+  <link rel="canonical" href="https://ersinbinal.github.io/pages/makaleler.html">
   <title>Makaleler - Convivium</title>
-  <meta name="description" content="Convivium makale merkezi. Teknoloji, pazarlama, gelir modelleri ve dijital donusum uzerine okunabilir, gorsel ve terminal estetikli notlar.">
-  <meta name="author" content="Ersin Binal">
-  <link rel="canonical" href="https://ersinbinal.github.io/makaleler.html">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
-
-  <meta property="og:site_name" content="Convivium">
-  <meta property="og:title" content="Makaleler - Convivium">
-  <meta property="og:description" content="Terminal estetikli modern makale merkezi.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://ersinbinal.github.io/makaleler.html">
-  <meta property="og:locale" content="tr_TR">
-  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Makaleler - Convivium">
-  <meta name="twitter:description" content="Teknoloji, pazarlama ve dijital donusum uzerine makaleler.">
-  <meta name="twitter:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
-
-  <meta name="theme-color" content="#00ff00">
-  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="/assets/css/common.css">
-  <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=31">
-  <link rel="stylesheet" href="/assets/css/articles.css?v=3">
 </head>
-<body class="articles-page">
-  <a class="skip-link" href="#content">Icerigi atla</a>
-
-  <div class="read-progress active" id="readProgress">
-    <div class="read-progress-bar" id="readProgressBar"></div>
-  </div>
-
-  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Gorsel buyutme">
-    <button class="lightbox-close" id="lightboxClose" aria-label="Kapat">&times;</button>
-    <img id="lightboxImg" src="" alt="">
-  </div>
-
-  <button class="back-to-top" id="backToTop" aria-label="Basa don">&#8593;</button>
-
-  <div class="site articles-site">
-    <header class="articles-hero" role="banner">
-      <nav class="articles-nav" role="navigation" aria-label="Site navigasyonu">
-        <a href="index.html" class="btn">&#8592; Ana Sayfa</a>
-        <a href="dashboard.html" class="btn">Dashboard</a>
-        <a href="admin.html" class="btn">Yonetim</a>
-      </nav>
-
-      <div class="terminal-hero-grid">
-        <div class="terminal-hero-copy">
-          <p class="terminal-kicker">CONVIVIUM / READING ROOM</p>
-          <h1>Makaleler</h1>
-          <p>Gelir modelleri, yapay zeka, platform mantigi ve dijital donusum uzerine okunabilir, gorsel ve sakin bir arastirma arsivi.</p>
-        </div>
-        <div class="terminal-panel" aria-label="Makale merkezi ozeti">
-          <div class="terminal-panel-row"><span>Durum</span><strong id="articleSource">Hazirlaniyor</strong></div>
-          <div class="terminal-panel-row"><span>Yazi</span><strong id="articleCount">0</strong></div>
-          <div class="terminal-panel-row"><span>Okuma</span><strong>Odak modu</strong></div>
-        </div>
-      </div>
-    </header>
-
-    <main id="content" class="articles-workspace" role="main">
-      <section class="articles-console" aria-label="Makale arama ve filtreleme">
-        <div class="console-command">
-          <span>&gt;</span>
-          <input id="search" type="search" autocomplete="off" placeholder="Baslik, konu veya icerikte ara" aria-label="Makale ara">
-        </div>
-        <div class="console-filters" id="topicFilters" aria-label="Konu filtreleri"></div>
-        <p id="contentSourceStatus" class="content-source-status" aria-live="polite">Arsiv hazirlaniyor...</p>
-      </section>
-
-      <section class="reader-shell" aria-label="Makale okuyucu">
-        <aside class="article-stack-panel">
-          <div class="stack-heading">
-            <span>YAZILAR</span>
-            <strong id="visibleCount">0</strong>
-          </div>
-          <div id="articles" class="article-stack" aria-live="polite"></div>
-        </aside>
-
-        <article id="reader" class="reader-panel" tabindex="-1">
-          <div class="reader-empty">
-            <span class="reader-empty-mark">_</span>
-            <p>Bir makale secildiginde okuma modu burada acilir.</p>
-          </div>
-        </article>
-      </section>
-    </main>
-  </div>
-
-  <template id="article-card-template">
-    <button class="article-row" type="button">
-      <span class="article-row-index"></span>
-      <span class="article-row-main">
-        <strong class="article-row-title"></strong>
-        <span class="article-row-summary"></span>
-        <span class="article-row-meta"></span>
-      </span>
-    </button>
-  </template>
-
-  <script src="/assets/js/lazy-load.js" defer></script>
-  <script src="/assets/js/theme.js" defer></script>
-  <script src="/assets/js/utils.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-  <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=28" defer></script>
-  <script src="/assets/js/articles.js?v=3" defer></script>
-
-  <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-      .catch(err => console.warn('[SW] Registration failed:', err));
-  }
-  </script>
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Blog",
-    "name": "Convivium Makaleler",
-    "description": "Teknoloji, pazarlama, gelir modelleri ve dijital donusum uzerine makaleler",
-    "url": "https://ersinbinal.github.io/makaleler.html",
-    "author": {
-      "@type": "Person",
-      "name": "Ersin Binal"
-    }
-  }
-  </script>
-  <script src="/assets/js/sfx.js?v=15" defer></script>
+<body>
+  <p>Bu sayfa tasindi: <a href="/pages/makaleler.html">/pages/makaleler.html</a></p>
+  <script>location.replace('/pages/makaleler.html' + location.search + location.hash);</script>
 </body>
 </html>

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dart Skorbord | Convivium</title>
+  <meta name="description" content="Iki kullanicili, Supabase istatistik destekli 501 dart skorbord deneyimi.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/tools/dart-skorbord.html">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/dart-skorbord.css?v=3">
+</head>
+<body class="dart-page">
+  <a class="skip-link" href="#dartApp">Icerigi atla</a>
+
+  <header class="dart-shell dart-topbar" role="banner">
+    <div>
+      <p class="dart-kicker">CONVIVIUM MATCH ROOM</p>
+      <h1>Dart Skorbord</h1>
+    </div>
+    <nav class="dart-nav" aria-label="Site navigasyonu">
+      <a href="/">Ana Sayfa</a>
+      <a href="/account/dashboard.html">Dashboard</a>
+      <a href="/account/auth.html">Uyelik</a>
+    </nav>
+  </header>
+
+  <main id="dartApp" class="dart-shell dart-app" role="main">
+    <section class="dart-status-panel" aria-live="polite">
+      <div>
+        <strong id="turnIndicator">Siradaki: Kirmizi Oyuncu</strong>
+        <span id="syncStatus">Misafir modu aktif. Iki oyuncu giris yaparsa mac istatistikleri kaydedilir.</span>
+      </div>
+      <div class="dart-status-actions">
+        <div class="dart-mode-select" role="group" aria-label="Oyun modu">
+          <button type="button" class="dart-mode-btn is-active" data-mode="x01">501</button>
+          <button type="button" class="dart-mode-btn" data-mode="atc">Around the Clock</button>
+          <button type="button" class="dart-mode-btn" data-mode="cricket">Cricket</button>
+        </div>
+        <label class="dart-rule-toggle" id="doubleOutWrap" title="Bitis icin son ok double olmali">
+          <input type="checkbox" id="doubleOutToggle" checked>
+          <span>Double-out</span>
+        </label>
+        <button id="newMatchButton" type="button">Yeni Mac</button>
+      </div>
+    </section>
+
+    <section class="dart-online" aria-label="Online oyun">
+      <div class="dart-online-head">
+        <strong>Online Oyun</strong>
+        <span id="onlineStatus">Oda kurun ya da bir kod ile katilin. Misafir olarak da oynanabilir.</span>
+      </div>
+      <div class="dart-online-controls">
+        <input id="onlineName" type="text" maxlength="24" placeholder="Goruntu adin (opsiyonel)" autocomplete="off">
+        <button id="onlineCreate" type="button">Oda Kur</button>
+        <input id="onlineCodeInput" type="text" maxlength="5" placeholder="ODA KODU" autocomplete="off">
+        <button id="onlineJoin" type="button">Katil</button>
+        <button id="onlineLeave" type="button" hidden>Ayril</button>
+      </div>
+      <p class="dart-online-code">Oda kodu: <strong id="onlineCode" hidden></strong></p>
+    </section>
+
+    <section class="dart-auth-grid" aria-label="Oyuncu girisleri">
+      <article class="dart-auth-card dart-auth-red">
+        <div class="dart-card-head">
+          <span>Player 01</span>
+          <strong id="redAuthName">Kirmizi Oyuncu</strong>
+        </div>
+        <form id="redAuthForm" class="dart-login-form" data-slot="RED">
+          <input name="email" type="email" placeholder="E-posta" autocomplete="email">
+          <input name="password" type="password" placeholder="Sifre" autocomplete="current-password">
+          <button type="submit">Giris</button>
+          <button id="redSignOut" type="button">Cikis</button>
+        </form>
+        <p id="redAuthStatus" class="dart-auth-status">Misafir.</p>
+        <div class="dart-cpu-section" id="redCpuSection">
+          <span class="dart-cpu-divider">— ya da CPU rakip —</span>
+          <div class="dart-cpu-grid" id="redCpuGrid">
+            <button type="button" class="dart-cpu-btn" data-slot="RED" data-cpu-id="littler"><span>2025</span><strong>Littler</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="RED" data-cpu-id="humphries"><span>2024</span><strong>Humphries</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="RED" data-cpu-id="msmith"><span>2023</span><strong>M. Smith</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="RED" data-cpu-id="wright"><span>2022</span><strong>Wright</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="RED" data-cpu-id="price"><span>2021</span><strong>Price</strong></button>
+          </div>
+        </div>
+      </article>
+
+      <article class="dart-auth-card dart-auth-blue">
+        <div class="dart-card-head">
+          <span>Player 02</span>
+          <strong id="blueAuthName">Mavi Oyuncu</strong>
+        </div>
+        <form id="blueAuthForm" class="dart-login-form" data-slot="BLUE">
+          <input name="email" type="email" placeholder="E-posta" autocomplete="email">
+          <input name="password" type="password" placeholder="Sifre" autocomplete="current-password">
+          <button type="submit">Giris</button>
+          <button id="blueSignOut" type="button">Cikis</button>
+        </form>
+        <p id="blueAuthStatus" class="dart-auth-status">Misafir.</p>
+        <div class="dart-cpu-section" id="blueCpuSection">
+          <span class="dart-cpu-divider">— ya da CPU rakip —</span>
+          <div class="dart-cpu-grid" id="blueCpuGrid">
+            <button type="button" class="dart-cpu-btn" data-slot="BLUE" data-cpu-id="littler"><span>2025</span><strong>Littler</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="BLUE" data-cpu-id="humphries"><span>2024</span><strong>Humphries</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="BLUE" data-cpu-id="msmith"><span>2023</span><strong>M. Smith</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="BLUE" data-cpu-id="wright"><span>2022</span><strong>Wright</strong></button>
+            <button type="button" class="dart-cpu-btn" data-slot="BLUE" data-cpu-id="price"><span>2021</span><strong>Price</strong></button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="dart-board" aria-label="Skor paneli">
+      <article id="cardRED" class="dart-player dart-player-red is-active">
+        <div class="dart-player-meta">
+          <span>RED</span>
+          <strong id="labelRED">Kirmizi Oyuncu</strong>
+        </div>
+        <div id="checkoutRED" class="dart-checkout"></div>
+        <div id="scoreRED" class="dart-score">501</div>
+        <div class="dart-metrics">
+          <span>Ortalama <strong id="avgRED">0.0</strong></span>
+          <span>Sira <strong id="turnsRED">0</strong></span>
+          <span>En Yuksek <strong id="highRED">0</strong></span>
+        </div>
+      </article>
+
+      <article id="cardBLUE" class="dart-player dart-player-blue">
+        <div class="dart-player-meta">
+          <span>BLUE</span>
+          <strong id="labelBLUE">Mavi Oyuncu</strong>
+        </div>
+        <div id="checkoutBLUE" class="dart-checkout"></div>
+        <div id="scoreBLUE" class="dart-score">501</div>
+        <div class="dart-metrics">
+          <span>Ortalama <strong id="avgBLUE">0.0</strong></span>
+          <span>Sira <strong id="turnsBLUE">0</strong></span>
+          <span>En Yuksek <strong id="highBLUE">0</strong></span>
+        </div>
+      </article>
+    </section>
+
+    <section id="atcSection" class="atc-board" hidden aria-label="Around the Clock skor paneli">
+      <article id="atcRED" class="atc-player atc-red is-active">
+        <div class="atc-meta"><span>RED</span><strong id="atcNameRED">Kirmizi Oyuncu</strong></div>
+        <div class="atc-target-label">Hedef</div>
+        <div class="atc-target"><strong id="atcTargetRED">1</strong></div>
+        <div class="atc-progress" id="atcProgRED">0 / 21</div>
+      </article>
+      <article id="atcBLUE" class="atc-player atc-blue">
+        <div class="atc-meta"><span>BLUE</span><strong id="atcNameBLUE">Mavi Oyuncu</strong></div>
+        <div class="atc-target-label">Hedef</div>
+        <div class="atc-target"><strong id="atcTargetBLUE">1</strong></div>
+        <div class="atc-progress" id="atcProgBLUE">0 / 21</div>
+      </article>
+      <div class="atc-turn-strip">
+        <span class="dart-panel-label">Bu tur</span>
+        <div id="atcBadges" class="atc-badges"></div>
+      </div>
+    </section>
+
+    <section id="cricketSection" class="cricket-board" hidden aria-label="Cricket skor paneli">
+      <header class="cricket-head">
+        <div class="cricket-player cricket-red is-active" id="cricketHeadRED">
+          <span>RED</span>
+          <strong id="cricketNameRED">Kirmizi Oyuncu</strong>
+          <div class="cricket-score" id="cricketScoreRED">0</div>
+        </div>
+        <div class="cricket-player cricket-blue" id="cricketHeadBLUE">
+          <span>BLUE</span>
+          <strong id="cricketNameBLUE">Mavi Oyuncu</strong>
+          <div class="cricket-score" id="cricketScoreBLUE">0</div>
+        </div>
+      </header>
+      <div id="cricketGrid" class="cricket-grid"></div>
+      <div class="cricket-turn-strip">
+        <span class="dart-panel-label">Bu tur</span>
+        <div id="cricketBadges" class="atc-badges"></div>
+      </div>
+    </section>
+
+    <section class="dart-turn-panel" aria-label="Mevcut sira">
+      <div>
+        <span class="dart-panel-label">Mevcut atislar</span>
+        <div id="dartBadges" class="dart-badges"></div>
+      </div>
+      <div class="dart-turn-total">
+        <span>Set Toplami</span>
+        <strong id="turnTotal">0</strong>
+      </div>
+      <button id="undoButton" type="button">Geri Al</button>
+    </section>
+
+    <section class="dart-board-wrap" aria-label="Gorsel dart tahtasi">
+      <svg id="dartBoardSvg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <p class="dart-board-hint">Tahtadan segmente dokun: tek / triple / double otomatik hesaplanir. Klasik tus takimi ve manuel giris asagida korunur.</p>
+    </section>
+
+    <section class="dart-controls" aria-label="Skor girisi">
+      <form id="manualScoreForm" class="dart-manual-form">
+        <input id="keyboardInput" type="number" inputmode="numeric" min="0" placeholder="Ok skoru (0-60)">
+        <button type="submit">Onayla</button>
+      </form>
+      <div class="dart-keypad">
+        <button type="button" data-score="0" data-segment="MISS">MISS</button>
+        <button type="button" data-multiplier="2">2×</button>
+        <button type="button" data-multiplier="3">3×</button>
+        <button type="button" data-score="20" data-segment="S20">20</button>
+        <button type="button" data-score="25" data-segment="OUTER_BULL">BULL</button>
+        <button type="button" data-score="40" data-segment="D20" data-double="1">D20</button>
+        <button type="button" data-score="50" data-segment="BULL" data-double="1">D-BULL</button>
+        <button type="button" data-score="60" data-segment="T20">T20</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="dartOverlay" class="dart-overlay" hidden>
+    <div class="dart-overlay-card">
+      <strong id="overlayTitle">Mac</strong>
+      <p id="overlayText"></p>
+      <button id="overlayResetButton" type="button" hidden>Yeni Mac Baslat</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=28" defer></script>
+  <script src="/assets/js/dart-board-svg.js?v=3" defer></script>
+  <script src="/assets/js/dart-online.js?v=1" defer></script>
+  <script src="/assets/js/dart-atc.js?v=4" defer></script>
+  <script src="/assets/js/dart-cricket.js?v=3" defer></script>
+  <script src="/assets/js/dart-skorbord.js?v=9" defer></script>
+  <script src="/assets/js/sfx.js?v=15" defer></script>
+</body>
+</html>

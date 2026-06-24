@@ -142,7 +142,7 @@
       email,
       password,
       options: {
-        emailRedirectTo: config.redirectTo || `${window.location.origin}/auth.html`,
+        emailRedirectTo: config.redirectTo || `${window.location.origin}/account/auth.html`,
         data: { display_name: displayName || '' }
       }
     });

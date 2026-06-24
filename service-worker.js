@@ -3,23 +3,31 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v119';
+const CACHE_NAME = 'convivium-v120';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
-  '/ash-runner.html',
-  '/cyberpunk-logic-game.html',
-  '/three-body-signal.html',
-  '/dart-skorbord.html',
-  '/universe-2.html',
-  '/makaleler.html',
-  '/auth.html',
-  '/admin.html',
-  '/dashboard.html',
-  '/bugy-studio.html',
+  '/games/ash-runner.html',
+  '/games/cyberpunk-logic-game.html',
+  '/games/neon-river.html',
+  '/games/three-body-signal.html',
+  '/games/universe-2.html',
+  '/pages/makaleler.html',
+  '/pages/ozgecmisim.html',
+  '/account/auth.html',
+  '/account/dashboard.html',
+  '/admin/',
+  '/oracle/',
+  '/tools/barista.html',
+  '/tools/barista-v2.html',
+  '/tools/bartender.html',
+  '/tools/bugy-studio.html',
+  '/tools/dart-skorbord.html',
+  '/tools/paradox-terminal.html',
+  '/tools/the-realists-bar.html',
   '/offline.html',
   '/assets/css/common.css',
   '/assets/css/animations.css',
@@ -42,6 +50,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-v3-loader.js?v=6',
   '/assets/js/bugy-v4.js?v=3',
   '/assets/js/deb-companion.js?v=4',
+  '/assets/js/home/routes.js?v=1',
   '/assets/js/sfx.js?v=15',
   '/assets/js/home-protocol.js?v=50',
   '/assets/js/bugy-studio.js?v=3',

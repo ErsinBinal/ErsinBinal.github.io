@@ -16,19 +16,19 @@ The product goal is to preserve that strange charm while making the site easier 
    - Terminal onboarding, commands, route map, hidden world progression
 
 2. Public AI and Oracle
-   - `TheOracle.html`
+   - `/oracle/`
    - `workers/oracle/src/index.js`
    - Browser requests must go through the Worker boundary.
 
 3. Account, persistence, and dashboard
-   - `auth.html`
-   - `dashboard.html`
+   - `/account/auth.html`
+   - `/account/dashboard.html`
    - `assets/js/supabase-client.js`
    - Supabase Auth, profiles, scores, sessions, recommendations, world state
 
 4. Content and publishing
-   - `makaleler.html`
-   - `admin.html`
+   - `/pages/makaleler.html`
+   - `/admin/`
    - Article publishing, SEO, sitemap, content taxonomy
 
 5. Labs and playable experiences
@@ -53,13 +53,14 @@ The product goal is to preserve that strange charm while making the site easier 
 ### P2: Maintainability
 
 - Split `home-protocol.js` into smaller modules once behavior stabilizes:
+  - route map (`assets/js/home/routes.js` exists)
   - command registry
   - world state
   - oracle client
   - shell UI
   - persistence and auth sync
 - Move large inline game scripts out of HTML only when there is a clear maintenance win.
-- Reduce manual cache version drift.
+- Keep manual cache version drift low through `npm run sync:cache`.
 
 ### P3: Measurement
 
@@ -81,10 +82,10 @@ The product goal is to preserve that strange charm while making the site easier 
 - Confirm sitemap includes public pages and excludes internal-only artifacts.
 - Smoke-test:
   - `/`
-  - `/makaleler.html`
-  - `/TheOracle.html`
-  - `/auth.html`
-  - `/dashboard.html`
+  - `/pages/makaleler.html`
+  - `/oracle/`
+  - `/account/auth.html`
+  - `/account/dashboard.html`
   - one game page
 
 ## Next Backlog
@@ -93,4 +94,4 @@ The product goal is to preserve that strange charm while making the site easier 
 2. Add a visible Oracle degraded/offline state.
 3. Add release notes to `README.md`.
 4. Decide whether Candy_Pop remains public-indexed or becomes a hidden prototype area.
-5. Investigate replacing manual `?v=` cache bumps with a scripted manifest.
+5. Promote or archive Candy_Pop so prototype dependencies do not leak into the main product standard.

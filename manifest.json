@@ -79,35 +79,35 @@
       "name": "Makaleler",
       "short_name": "Makaleler",
       "description": "Makaleleri oku",
-      "url": "/makaleler.html",
+      "url": "/pages/makaleler.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Cyberpunk Game",
       "short_name": "Game",
       "description": "Bulmaca oyunu oyna",
-      "url": "/cyberpunk-logic-game.html",
+      "url": "/games/cyberpunk-logic-game.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Uc Gunes Sinyali",
       "short_name": "Signal",
       "description": "Terminal tabanli bilimkurgu oyununu ac",
-      "url": "/three-body-signal.html",
+      "url": "/games/three-body-signal.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "The Oracle",
       "short_name": "Oracle",
       "description": "The Oracle deneyimini aç",
-      "url": "/TheOracle.html",
+      "url": "/oracle/",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Dart Skorbord",
       "short_name": "Dart",
       "description": "501 dart skorbordunu aç",
-      "url": "/dart-skorbord.html",
+      "url": "/tools/dart-skorbord.html",
       "icons": [{ "src": "/assets/icons/icon-96.png", "sizes": "96x96" }]
     }
   ]
