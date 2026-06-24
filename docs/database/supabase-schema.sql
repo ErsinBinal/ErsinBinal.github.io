@@ -141,6 +141,7 @@ create index if not exists dart_throws_user_created_idx
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();
@@ -172,6 +173,9 @@ begin
 end;
 $$;
 
+-- handle_new_user yalniz trigger olarak calismali; RPC ile cagrilmasini engelle.
+revoke execute on function public.handle_new_user() from anon, authenticated, public;
+
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
@@ -192,7 +196,10 @@ as $$
   );
 $$;
 
-grant execute on function public.is_admin() to anon, authenticated;
+-- is_admin yalniz authenticated tarafindan calistirilir (RLS politikalari icin).
+-- anon'a/PUBLIC'e acmak gereksiz; varsayilan PUBLIC iznini de kaldir.
+revoke execute on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.articles enable row level security;
