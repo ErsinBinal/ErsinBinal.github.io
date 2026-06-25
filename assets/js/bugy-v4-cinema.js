@@ -56,6 +56,7 @@
   const rings = [];
   const bolts = [];
   const sprites = [];
+  const beams = [];
 
   let canvas, ctx, dpr = 1;
   let screen, flashEl, scanEl;          // ekran-uzayi efekt katmanlari
@@ -118,7 +119,7 @@
   }
 
   // --- Render dongusu (yalnizca efekt varken calisir) ----------------------
-  const liveFx = () => particles.length || rings.length || bolts.length || sprites.length;
+  const liveFx = () => particles.length || rings.length || bolts.length || sprites.length || beams.length;
   function startLoop() {
     if (state.raf) return;
     state.last = performance.now();
@@ -133,6 +134,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'lighter';
 
+    for (let i = beams.length - 1; i >= 0; i--) { if (!stepBeam(beams[i], dt)) beams.splice(i, 1); }
     for (let i = bolts.length - 1; i >= 0; i--) { if (!stepBolt(bolts[i], dt)) bolts.splice(i, 1); }
     for (let i = rings.length - 1; i >= 0; i--) { if (!stepRing(rings[i], dt)) rings.splice(i, 1); }
     for (let i = particles.length - 1; i >= 0; i--) { if (!stepParticle(particles[i], dt)) particles.splice(i, 1); }
@@ -209,6 +211,21 @@
     ctx.lineTo(x2, y2);
     ctx.stroke();
   }
+  // dikey isik huzmesi (ay isigi / kolon)
+  function stepBeam(b, dt) {
+    b.life -= dt;
+    if (b.life <= 0) return false;
+    const a = clamp(b.life / b.maxLife, 0, 1);
+    const g = ctx.createLinearGradient(0, b.top, 0, b.bottom);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(0.5, b.color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = a * 0.5;
+    ctx.fillStyle = g;
+    ctx.fillRect(b.x - b.w / 2, b.top, b.w, b.bottom - b.top);
+    ctx.globalAlpha = 1;
+    return true;
+  }
   // Kenney sprite (kare)
   function stepSprite(s, dt) {
     s.life -= dt;
@@ -262,6 +279,24 @@
     startLoop();
   };
   const addSprite = (name, x, y, base, ms) => { sprites.push({ name, x, y, base: base || 80, life: (ms || 360) / 1000, maxLife: (ms || 360) / 1000 }); startLoop(); };
+  // Ekran geneli "yagmur": kod/kar/damla — tepeden duser.
+  const addRain = (color, n, opts = {}) => {
+    n = cap(n || 24);
+    for (let i = 0; i < n; i++) {
+      particles.push({
+        x: rand(0, window.innerWidth), y: rand(-40, 0),
+        vx: rand(-20, 20), vy: rand(opts.vyMin || 140, opts.vyMax || 340),
+        life: rand(opts.lifeMin || 0.7, opts.lifeMax || 1.4), maxLife: 1.4,
+        size: rand(opts.sizeMin || 1.5, opts.sizeMax || 3), grav: opts.grav != null ? opts.grav : 40, color
+      });
+    }
+    startLoop();
+  };
+  // Dikey isik huzmesi.
+  const addBeam = (x, w, color, top, bottom, life = 0.7) => {
+    beams.push({ x, w: w || 60, color, top: top || 0, bottom: bottom != null ? bottom : window.innerHeight, life, maxLife: life });
+    startLoop();
+  };
   const hitStop = (ms) => { if (!reduceMotion()) state.freezeUntil = performance.now() + ms; };
 
   function flash(color, peak, dur) {
@@ -300,7 +335,8 @@
       say: (t) => { const v = bv4(); if (v && v.say) v.say(t); },
       sfx, wait,
       flash, scan, shake, hitStop,
-      particles: addParticles, converge: addConverging, ring: addRing, bolt: addBolt, sprite: addSprite
+      particles: addParticles, converge: addConverging, ring: addRing, bolt: addBolt,
+      sprite: addSprite, rain: addRain, beam: addBeam
     };
   }
 
@@ -371,7 +407,155 @@
     if (el) el.classList.remove('is-cine-cast');
   }
 
-  const MOVES = { volt: voltThunder };
+  // Glupi - "Dalga": su sutunu + ekrani supuren dalga + damla yagmuru
+  async function aquaWave(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('system.unlock');
+    c.converge(c.cx, c.cy, c.accent, big ? 20 : 12);
+    await c.wait(420);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('game.power'); c.sfx('ui.transmit');
+    c.particles(c.cx, c.groundY, { count: big ? 26 : 16, color: c.accent, dir: -Math.PI / 2, spread: 0.5, spdMax: 340, lift: 120, grav: 380, sizeMax: 4.5 });
+    c.flash(c.accent, big ? 0.4 : 0.3, 240);
+    c.ring({ x: c.cx, y: c.groundY, r: 10, vr: big ? 5 : 3.6, width: 5, color: c.accent, life: big ? 0.9 : 0.7, maxLife: big ? 0.9 : 0.7 });
+    c.ring({ x: c.cx, y: c.groundY, r: 10, vr: big ? 3.4 : 2.4, width: 3, color: c.accent2, life: big ? 0.9 : 0.7, maxLife: big ? 0.9 : 0.7 });
+    c.particles(c.cx, c.groundY - 10, { count: big ? 18 : 12, color: c.accent2, dir: 0, spread: 0.35, spdMax: 380, grav: 120 });
+    c.particles(c.cx, c.groundY - 10, { count: big ? 18 : 12, color: c.accent2, dir: Math.PI, spread: 0.35, spdMax: 380, grav: 120 });
+    c.shake(big ? 7 : 4, 360);
+    c.hitStop(60);
+    if (c.critical) setTimeout(() => { c.rain(c.accent, 30, { vyMax: 400 }); c.sfx('ui.transmit'); }, 200);
+    await c.wait(140);
+    c.rain(c.accent, big ? 22 : 14, { vyMin: 160, vyMax: 360 });
+    c.say(c.critical ? '🌊 DALGA!' : '🌊 Dalga!');
+    await c.wait(big ? 820 : 640);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  // Korcuk - "Yangin": cekirdek patlamasi + yukselen alev + duman + hazard
+  async function emberInferno(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('system.unlock');
+    c.converge(c.cx, c.cy, c.accent, big ? 20 : 12);
+    await c.wait(420);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('game.explosion'); c.sfx('game.hazard');
+    c.sprite('explosion06', c.cx, c.cy, big ? 200 : 140, 420);
+    c.sprite('blackSmoke08', c.cx, c.cy - 24, big ? 160 : 110, 720);
+    c.flash(c.accent, big ? 0.7 : 0.5, 240);
+    c.shake(big ? 11 : 6, big ? 460 : 340);
+    c.hitStop(80);
+    c.particles(c.cx, c.cy, { count: big ? 30 : 18, color: c.accent2, dir: -Math.PI / 2, spread: 0.7, spdMax: 300, lift: 80, grav: -60, lifeMax: 1.1, sizeMax: 5 });
+    c.particles(c.cx, c.cy, { count: big ? 18 : 12, color: c.accent, dir: -Math.PI / 2, spread: 0.9, spdMax: 240, grav: -30 });
+    c.ring({ x: c.cx, y: c.groundY, r: 8, vr: big ? 2.6 : 1.8, width: 4, color: c.accent2, life: 0.6, maxLife: 0.6 });
+    if (c.critical) setTimeout(() => { c.sprite('explosion00', c.cx + rand(-30, 30), c.cy - rand(0, 30), 150, 360); c.shake(8, 300); c.sfx('game.hazard'); }, 180);
+    if (big) c.scan(300);
+    c.say(c.critical ? '🔥 YANGIN!' : '🔥 Yangın!');
+    await c.wait(big ? 820 : 640);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  // Bitik - "Asiri Yuk": EMP halkasi + datamosh (scanline/RGB glitch + kod yagmuru)
+  async function sparkOverload(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('ui.glitch'); c.scan(180);
+    c.converge(c.cx, c.cy, c.accent, big ? 22 : 14);
+    await c.wait(420);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('system.unlock'); c.sfx('game.power');
+    c.ring({ x: c.cx, y: c.cy, r: 6, vr: big ? 6 : 4.2, width: 5, color: c.accent, life: big ? 0.7 : 0.55, maxLife: big ? 0.7 : 0.55 });
+    c.ring({ x: c.cx, y: c.cy, r: 6, vr: big ? 4.4 : 3, width: 3, color: c.accent2, life: big ? 0.7 : 0.55, maxLife: big ? 0.7 : 0.55 });
+    c.flash(c.accent, big ? 0.6 : 0.45, 200);
+    c.shake(big ? 9 : 5, 340);
+    c.hitStop(70);
+    c.scan(big ? 520 : 340);
+    setTimeout(() => c.scan(big ? 420 : 220), 260);
+    c.rain(c.accent, big ? 40 : 24, { vyMin: 200, vyMax: 520, sizeMin: 1, sizeMax: 2.6 });
+    if (c.critical) setTimeout(() => { c.scan(420); c.rain(c.accent2, 30, { vyMax: 560 }); c.sfx('ui.glitch'); }, 220);
+    c.say(c.critical ? '▚ AŞIRI YÜK!' : '▚ Aşırı Yük!');
+    await c.wait(big ? 880 : 680);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  // Filizo - "Cicek": sarmasiklar buyur + cicek/bokeh patlamasi (yumusak)
+  async function leafBloom(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('ui.reveal');
+    c.converge(c.cx, c.cy, c.accent, big ? 18 : 12);
+    await c.wait(440);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('oracle.draw'); c.sfx('game.pickup');
+    const vines = big ? 5 : 3;
+    for (let i = 0; i < vines; i++) {
+      const ang = -Math.PI / 2 + rand(-0.8, 0.8);
+      const len = rand(60, 120);
+      c.bolt({ x1: c.cx, y1: c.groundY, x2: c.cx + Math.cos(ang) * len, y2: c.groundY + Math.sin(ang) * len, color: c.accent, width: 3, life: 0.5, maxLife: 0.5, branches: 1 });
+    }
+    c.flash(c.accent, big ? 0.4 : 0.3, 260);
+    c.particles(c.cx, c.cy, { count: big ? 28 : 18, color: c.accent2, spdMax: 200, grav: -20, lifeMax: 1.2, sizeMax: 5 });
+    c.particles(c.cx, c.cy, { count: big ? 16 : 10, color: '#ffd23f', spdMax: 160, grav: 0, lifeMax: 1.0, sizeMax: 3 });
+    c.ring({ x: c.cx, y: c.groundY, r: 8, vr: big ? 2.2 : 1.5, width: 3, color: c.accent, life: 0.7, maxLife: 0.7 });
+    c.shake(big ? 4 : 2, 240);
+    if (c.critical) setTimeout(() => c.rain(c.accent2, 24, { vyMin: 60, vyMax: 160, sizeMax: 4 }), 220);
+    c.say(c.critical ? '🌸 ÇİÇEK!' : '🌸 Çiçek!');
+    await c.wait(big ? 820 : 660);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  // Buzcuk - "Tipi": ekran donar + kar + kristal kirilmasi (shatter)
+  async function frostBlizzard(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('system.unlock');
+    c.converge(c.cx, c.cy, c.accent, big ? 20 : 12);
+    await c.wait(440);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('game.power');
+    c.flash('#bfeeff', big ? 0.5 : 0.38, 600);
+    c.rain(c.accent, big ? 44 : 26, { vyMin: 90, vyMax: 240, sizeMin: 1.5, sizeMax: 3.5 });
+    c.ring({ x: c.cx, y: c.cy, r: 8, vr: big ? 3.2 : 2.2, width: 4, color: c.accent2, life: 0.7, maxLife: 0.7 });
+    c.particles(c.cx, c.cy, { count: big ? 22 : 14, color: c.accent, spdMax: 220, grav: 60, lifeMax: 1.1 });
+    await c.wait(big ? 520 : 380);
+    c.sfx('ui.glitch'); c.sfx('game.hazard');
+    c.sprite('flash04', c.cx, c.cy, big ? 180 : 120, 320);
+    c.flash('#ffffff', big ? 0.7 : 0.5, 200);
+    c.shake(big ? 10 : 6, 360);
+    c.hitStop(70);
+    c.particles(c.cx, c.cy, { count: big ? 30 : 18, color: c.accent2, spdMax: 360, grav: 140, sizeMax: 4 });
+    if (c.critical) setTimeout(() => { c.rain(c.accent2, 30, { vyMax: 300 }); c.shake(6, 260); }, 180);
+    c.say(c.critical ? '❄ TİPİ!' : '❄ Tipi!');
+    await c.wait(big ? 640 : 520);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  // Pufmis - "Ay Tozu": ay isigi huzmesi + yercekimi kaldirmasi (suzulen toz)
+  async function lunaMoondust(c) {
+    const big = c.stage === 'adult' || c.critical;
+    const el = charEl(); if (el) el.classList.add('is-cine-charge');
+    c.sfx('oracle.stir');
+    c.converge(c.cx, c.cy, c.accent, big ? 18 : 12);
+    await c.wait(440);
+    if (el) { el.classList.remove('is-cine-charge'); el.classList.add('is-cine-cast'); }
+    c.sfx('system.unlock'); c.sfx('game.portal');
+    c.beam(c.cx, big ? 70 : 50, c.accent2, 0, c.groundY + 8, big ? 0.9 : 0.7);
+    c.flash(c.accent2, big ? 0.4 : 0.3, 300);
+    c.particles(c.cx, c.groundY - 10, { count: big ? 30 : 18, color: c.accent, dir: -Math.PI / 2, spread: 1.2, spdMax: 160, grav: -120, lifeMax: 1.4, sizeMax: 4 });
+    c.particles(c.cx, c.cy, { count: big ? 20 : 12, color: c.accent2, grav: -80, spdMax: 120, lifeMax: 1.3 });
+    c.ring({ x: c.cx, y: c.cy, r: 8, vr: big ? 2.4 : 1.6, width: 3, color: c.accent2, life: 0.7, maxLife: 0.7 });
+    c.shake(big ? 5 : 3, 300);
+    if (c.critical) setTimeout(() => { c.beam(c.cx, 100, c.accent, 0, c.groundY + 8, 0.7); c.particles(c.cx, c.cy, { count: 20, color: '#ffffff', grav: -100, spdMax: 140 }); }, 220);
+    c.say(c.critical ? '✦ AY TOZU!' : '✦ Ay Tozu!');
+    await c.wait(big ? 860 : 680);
+    if (el) el.classList.remove('is-cine-cast');
+  }
+
+  const MOVES = {
+    volt: voltThunder, aqua: aquaWave, ember: emberInferno,
+    spark: sparkOverload, leaf: leafBloom, frost: frostBlizzard, luna: lunaMoondust
+  };
   const moveFor = (skin) => MOVES[skin] || genericSurge;
 
   // --- Cast akisi ----------------------------------------------------------

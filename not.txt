@@ -322,7 +322,25 @@ hakkında bilgiler edinsin.
   [x] Diger 6 tur: simdilik "genericSurge" (accent renginde sade cinematik)
       kullanir; Faz C'de her ture OZEL move gelecek (su Dalga, ates Yangin,
       spark datamosh/EMP, frost ekran donar, leaf sarmasik, luna gravity-lift).
-  KALAN (Faz C/D): 6 ture ozel sinematik move; combo/nadir varyant; director
-  ambient mikro-davranislar; studio'ya cinema telemetrisi/test butonu.
   NOT: Node yok; mantik/sozdizimi elle dogrulandi. Sinematigin GORSEL teyidi
   (yetenek butonu, simsek, sarsinti, ses) tarayicida yapilmali.
+
+  --- FAZ C: 6 TURE OZEL SINEMATIK (2026-06-25) --------------------------
+  [x] genericSurge yerine her ture OZEL move (amiral gemisi kalitesinde):
+        aqua/Glupi  -> "Dalga": su sutunu + ekrani supuren cift halka + yatay
+                       sweep + damla yagmuru (rain).
+        ember/Korcuk-> "Yangin": cekirdek patlamasi + yukselen alev (negatif
+                       grav) + Kenney blackSmoke duman + hazard flas.
+        spark/Bitik -> "Asiri Yuk": EMP cift halka + DATAMOSH (tekrarli scanline
+                       + RGB glitch + yesil kod yagmuru). En cyberpunk olani.
+        leaf/Filizo -> "Cicek": buyuyen sarmasiklar (yesil boltlar) + cicek/
+                       bokeh patlamasi + dusen yapraklar (yumusak, az sarsinti).
+        frost/Buzcuk-> "Tipi": ekran donar (mavi flas) + kar (rain) -> SHATTER
+                       (beyaz flas + kristal kiriklari + sarsinti, 2 fazli).
+        luna/Pufmis -> "Ay Tozu": ay isigi HUZMESI (beam) + yercekimi kaldirmasi
+                       (negatif grav, suzulen toz).
+  [x] Yeni primitifler: addRain (ekran geneli yagmur: kod/kar/damla) +
+      addBeam (dikey isik huzmesi, gradient). ctx.rain / ctx.beam.
+  [x] Hepsi asamaya gore olcekli + critical varyantli; tureye uygun sfx.
+  KALAN (Faz D): combo/nadir varyant, director ambient mikro-davranislar,
+  studio'ya cinema test butonu/telemetri, mob'da partikul ince ayar.
