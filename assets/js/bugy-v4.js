@@ -270,6 +270,11 @@
     char.className = 'bugy-v4-char';
     char.setAttribute('role', 'img');
 
+    // Jest animasyonlari (tada/think/... + evrim) bu ARA katmanda calisir;
+    // boylece karakterin KONUM transform'unu (.bugy-v4-char) silmezler.
+    const gestureEl = document.createElement('div');
+    gestureEl.className = 'bugy-v4-gesture';
+
     const svgWrap = document.createElement('div');
     svgWrap.className = 'bugy-v4-svg-wrap';
 
@@ -279,7 +284,8 @@
     const balloonText = document.createElement('span');
     balloon.appendChild(balloonText);
 
-    char.appendChild(svgWrap);
+    gestureEl.appendChild(svgWrap);
+    char.appendChild(gestureEl);
     layer.append(fx, balloon, char);
     document.body.appendChild(layer);
 
@@ -335,8 +341,10 @@
     const groundTop = () => window.innerHeight - CHAR_H - bottomGap;
 
     const place = (bob = 0) => {
-      char.style.transform =
-        `translate(${Math.round(state.x)}px, ${Math.round(bob)}px) scaleX(${state.dir < 0 ? -1 : 1})`;
+      // Konum + bob YALNIZCA .bugy-v4-char'da; yon ise CSS degiskeniyle iç
+      // katmana (svg-wrap) verilir. Jest animasyonlari konumu artik silmez.
+      char.style.transform = `translate(${Math.round(state.x)}px, ${Math.round(bob)}px)`;
+      char.style.setProperty('--v4-face', state.dir < 0 ? -1 : 1);
       // Dikey: baloncugu yaratigin gercek tepe noktasinin hemen ustune koy
       // (buyume + tur + asama duyarli). Yatay: kuyrugu (left:26px) merkeze denk getir.
       const grow = GROW[state.stage] || 1;

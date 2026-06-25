@@ -24,11 +24,19 @@
   will-change: transform;
 }
 
-/* Asamaya gore fiziksel buyume (govde olcegi). */
+/* Jest katmani: tada/think/... + evrim animasyonlari BURADA calisir; karakterin
+   konum transform'unu (.bugy-v4-char) silmez. */
+.bugy-v4-gesture {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
+}
+
+/* Asamaya gore fiziksel buyume (govde olcegi) + yon (facing). */
 .bugy-v4-svg-wrap {
   width: 100%;
   height: 100%;
-  transform: scale(var(--v4-grow, 1));
+  transform: scale(var(--v4-grow, 1)) scaleX(var(--v4-face, 1));
   transform-origin: 50% 100%;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -146,7 +154,7 @@
    ============================================================ */
 @media (prefers-reduced-motion: no-preference) {
   /* tada — kutlama ziplamasi */
-  .bugy-v4-char.is-tada { animation: v4Tada 1.4s ease; }
+  .bugy-v4-char.is-tada .bugy-v4-gesture { animation: v4Tada 1.4s ease; }
   @keyframes v4Tada {
     0% { transform: translateY(0) scale(1); }
     15% { transform: translateY(-2px) scale(1.06, 0.94); }
@@ -157,14 +165,14 @@
   }
 
   /* think — yana egilip dusunme */
-  .bugy-v4-char.is-think { animation: v4Think 1.8s ease; }
+  .bugy-v4-char.is-think .bugy-v4-gesture { animation: v4Think 1.8s ease; }
   @keyframes v4Think {
     0%, 100% { transform: rotate(0deg); }
     25%, 75% { transform: rotate(-7deg) translateY(-2px); }
   }
 
   /* alert — uyari sarsintisi */
-  .bugy-v4-char.is-alert { animation: v4Alert 0.5s ease 0s 2; }
+  .bugy-v4-char.is-alert .bugy-v4-gesture { animation: v4Alert 0.5s ease 0s 2; }
   @keyframes v4Alert {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-6px) rotate(-3deg); }
@@ -174,7 +182,7 @@
   }
 
   /* wave — selamlama sallanmasi */
-  .bugy-v4-char.is-wave { animation: v4Wave 1.3s ease; transform-origin: 50% 100%; }
+  .bugy-v4-char.is-wave .bugy-v4-gesture { animation: v4Wave 1.3s ease; }
   @keyframes v4Wave {
     0%, 100% { transform: rotate(0deg); }
     20% { transform: rotate(8deg); }
@@ -184,7 +192,7 @@
   }
 
   /* magic — buyu suzulmesi + parilti */
-  .bugy-v4-char.is-magic { animation: v4Magic 1.7s ease; }
+  .bugy-v4-char.is-magic .bugy-v4-gesture { animation: v4Magic 1.7s ease; }
   @keyframes v4Magic {
     0% { transform: translateY(0); }
     50% { transform: translateY(-22px) scale(1.05); }
@@ -197,7 +205,7 @@
   }
 
   /* search — one egilip arama */
-  .bugy-v4-char.is-search { animation: v4Search 1.6s ease; }
+  .bugy-v4-char.is-search .bugy-v4-gesture { animation: v4Search 1.6s ease; }
   @keyframes v4Search {
     0%, 100% { transform: rotate(0deg) translateX(0); }
     25% { transform: rotate(10deg) translateX(8px); }
@@ -206,7 +214,7 @@
   }
 
   /* morph — sekil/renk donusumu (feral tetikleyici) */
-  .bugy-v4-char.is-morph { animation: v4Morph 1.7s ease-in-out; }
+  .bugy-v4-char.is-morph .bugy-v4-gesture { animation: v4Morph 1.7s ease-in-out; }
   @keyframes v4Morph {
     0%, 100% { transform: scale(1, 1); }
     25% { transform: scale(1.18, 0.82); }
@@ -216,7 +224,7 @@
   .bugy-v4-char.is-morph .v4-svg { animation: v4Hue 1.7s linear; }
 
   /* --- Evrim flasi (dramatik form degisimi) --- */
-  .bugy-v4-char.is-evolving { animation: v4EvolveShake 1.4s ease-in-out; }
+  .bugy-v4-char.is-evolving .bugy-v4-gesture { animation: v4EvolveShake 1.4s ease-in-out; }
   .bugy-v4-char.is-evolving .v4-svg { animation: v4EvolveFlash 1.4s ease-in-out; }
   @keyframes v4EvolveShake {
     0%, 100% { transform: scale(1); }
