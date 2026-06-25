@@ -19,21 +19,36 @@ Cloudflare Workers AI currently includes a free daily allocation on Workers Free
 `POST /enrich-profile` `{ "first_name": "...", "last_name": "..." }` alir ve
 kisinin olasi meslek/egitim/departman bilgisini doner.
 
-Saglayici sirasi:
+Yalnizca GERCEK arama kullanilir; arama tutmazsa **uydurma uretilmez**,
+`provider: "unavailable"` doner. Iki ucretsiz saglayici desteklenir (en az
+birini yapilandir):
 
-1. **Gemini + Google Search grounding** — kisiyi internette GERCEKTEN arar
-   (`grounded: true`). `GEMINI_API_KEY` gerektirir.
-2. Cloudflare AI / Pollinations — anahtar yoksa veya arama basarisizsa, isimden
-   eglence amacli TAHMIN (`grounded: false`).
+**1) Google Programmable Search (UCRETSIZ, gunde 100 sorgu) — onerilen**
 
-Gemini anahtarini Google AI Studio'dan al ve gizli olarak ekle:
+Gercek Google sonuc ozetlerini alir, Cloudflare AI (ucretsiz) ile ozetler.
+
+- Arama motoru olustur (tum web'i aramaya ayarla) ve `cx` kimligini al:
+  https://programmablesearchengine.google.com
+- "Custom Search API" anahtari (Google Cloud Console):
+  https://console.cloud.google.com -> APIs & Services -> Custom Search API -> Enable -> Credentials -> API key
 
 ```bash
-wrangler secret put GEMINI_API_KEY
+# cx genelde gizli degildir; wrangler.toml [vars] icine GOOGLE_CSE_CX olarak da koyabilirsin
+wrangler secret put GOOGLE_CSE_KEY
+wrangler secret put GOOGLE_CSE_CX   # veya wrangler.toml [vars]
 ```
 
-Sonuc 24 saat cachelenir. Cevap kullaniciya yazilmadan once frontend'de
-"dogrula" onayindan gecer; kullanici onaylamadan profile kaydedilmez.
+**2) Gemini + Google Search grounding (gunluk ucretsiz kota)**
+
+```bash
+wrangler secret put GEMINI_API_KEY   # https://aistudio.google.com/apikey
+```
+
+Ikisi de tanimliysa once CSE, sonra Gemini denenir. Basarili (bilgi bulunan veya
+"bulunamadi" diyen) sonuc 24 saat cachelenir; basarisiz aramalar (kota/hata)
+CACHELENMEZ, kullanici sonra tekrar deneyebilir. Cevap kullaniciya yazilmadan
+once frontend'de "dogrula" onayindan gecer; kullanici onaylamadan profile
+kaydedilmez.
 
 ## Safety rules
 

@@ -37,6 +37,18 @@ const PROFILE_RESEARCH_SYSTEM_PROMPT = [
 
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
+// Google Programmable Search sonuc OZETLERINDEN profil cikarmak icin (CF AI ile).
+const PROFILE_FROM_SNIPPETS_PROMPT = [
+  'Sen bir profil arastirma asistanisin.',
+  'Sana bir kisinin adi ve GERCEK Google arama sonuclari (baslik + ozet + link) verilecek.',
+  'SADECE bu sonuclardaki bilgilere dayan; sonuclarda olmayan hicbir sey uydurma.',
+  'Sonuclar bu kisiye ait gorunmuyorsa veya yetersizse, ilgili alani bos string birak.',
+  'Kisinin meslegini tek cumlede, egitimini tek cumlede, bolumunu/departmanini tek cumlede ozetle.',
+  'Cevabi SADECE JSON olarak ver. Anahtarlar: profession, education, department, note.',
+  'note alanina ne kadar emin oldugunu veya bilgi bulunamadiysa bunu kisaca yaz.',
+  'JSON disinda hicbir metin yazma. Turkce kullan.'
+].join(' ');
+
 const RATE_LIMITS = new Map();
 const RATE_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 12;
@@ -179,6 +191,57 @@ const askCloudflareAI = async (question, env) => {
   return answer;
 };
 
+// Gercek arama (UCRETSIZ): Google Programmable Search (Custom Search JSON API),
+// gunde 100 ucretsiz sorgu. Ham sonuc ozetlerini dondurur.
+const googleSearchSnippets = async (query, signal, env) => {
+  if (!env.GOOGLE_CSE_KEY || !env.GOOGLE_CSE_CX) throw new Error('google cse not configured');
+  const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_CSE_KEY}&cx=${env.GOOGLE_CSE_CX}&num=6&hl=tr&gl=tr&lr=lang_tr&q=${encodeURIComponent(query)}`;
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`google cse http ${response.status}`);
+  const data = await response.json();
+  const items = Array.isArray(data.items) ? data.items : [];
+  return items.map(it => ({
+    title: String(it.title || ''),
+    snippet: String(it.snippet || ''),
+    link: String(it.link || '')
+  }));
+};
+
+// Google arama sonuclarini Cloudflare AI (ucretsiz) ile ozetleyip profil cikarir.
+const askResearchProfileGoogleCSE = async (firstName, lastName, signal, env) => {
+  if (!env.AI) throw new Error('cloudflare ai binding missing');
+  const fullName = `${firstName} ${lastName}`.trim();
+  const snippets = await googleSearchSnippets(`"${fullName}" kimdir meslek egitim linkedin`, signal, env);
+  if (!snippets.length) throw new Error('google cse no results');
+
+  const context = snippets
+    .map((s, i) => `[${i + 1}] ${s.title}\n${s.snippet}\n${s.link}`)
+    .join('\n\n')
+    .slice(0, 4000);
+
+  const userContent = [
+    `Kisi: "${fullName}"`,
+    'Asagidaki GERCEK Google arama sonuclarina dayan:',
+    context,
+    'Ciktiyi su JSON formunda ver:',
+    '{"profession":"","education":"","department":"","note":""}'
+  ].join('\n\n');
+
+  const response = await env.AI.run(env.CLOUDFLARE_AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
+    messages: [
+      { role: 'system', content: PROFILE_FROM_SNIPPETS_PROMPT },
+      { role: 'user', content: userContent }
+    ],
+    max_tokens: 300,
+    temperature: 0.2
+  });
+
+  const answer = String(response?.response || response?.result?.response || '').trim();
+  const parsed = extractJson(answer);
+  if (!parsed) throw new Error('cse summary parse failed');
+  return parsed;
+};
+
 // Gercek arama: Gemini, Google Search grounding ile kisiyi internette arar.
 const askResearchProfileGemini = async (firstName, lastName, signal, env) => {
   if (!env.GEMINI_API_KEY) throw new Error('gemini api key missing');
@@ -278,42 +341,56 @@ const enrichProfile = async (firstName, lastName, env, skipCache = false) => {
     if (cached) return cached;
   }
 
-  // SADECE gercek arama (Gemini + Google Search grounding). Arama tutmazsa
-  // uydurma tahmin URETILMEZ; "su an yapilamadi" durumu dondurulur.
-  let parsed;
-  try {
-    parsed = await withTimeout(
-      signal => askResearchProfileGemini(firstName, lastName, signal, env),
-      22000
-    );
-  } catch (error) {
-    console.warn('enrich-profile failed', JSON.stringify({ provider: 'gemini-grounded', error: error?.message || String(error) }));
-    // Basarisizligi CACHELEME: kota/gecici hata sonrasi kullanici tekrar deneyebilsin.
-    return {
-      profession: null, education: null, department: null,
-      note: 'Arastirma su an yapilamadi (yogunluk veya gunluk limit). Biraz sonra tekrar dene.',
-      provider: 'unavailable', grounded: false, degraded: true
-    };
+  // SADECE gercek arama. Once UCRETSIZ Google CSE, sonra (anahtar varsa) Gemini.
+  // Hicbiri calismazsa uydurma URETILMEZ; "su an yapilamadi" durumu dondurulur.
+  const providers = [];
+  if (env.GOOGLE_CSE_KEY && env.GOOGLE_CSE_CX) {
+    providers.push({ name: 'google-cse', ask: signal => askResearchProfileGoogleCSE(firstName, lastName, signal, env) });
+  }
+  if (env.GEMINI_API_KEY) {
+    providers.push({ name: 'gemini-grounded', ask: signal => askResearchProfileGemini(firstName, lastName, signal, env) });
   }
 
-  const result = {
-    profession: String(parsed?.profession || '').trim() || null,
-    education: String(parsed?.education || '').trim() || null,
-    department: String(parsed?.department || '').trim() || null,
-    note: String(parsed?.note || '').trim() || null,
-    provider: 'gemini-grounded',
-    grounded: true,
-    degraded: false
+  let emptyResult = null; // arama calisti ama kisi bulunamadi -> son care olarak don.
+  let anyRan = false;
+
+  for (const provider of providers) {
+    try {
+      const parsed = await withTimeout(provider.ask, 22000);
+      anyRan = true;
+      const result = {
+        profession: String(parsed?.profession || '').trim() || null,
+        education: String(parsed?.education || '').trim() || null,
+        department: String(parsed?.department || '').trim() || null,
+        note: String(parsed?.note || '').trim() || null,
+        provider: provider.name,
+        grounded: true,
+        degraded: false
+      };
+      if (result.profession || result.education || result.department) {
+        try { await writeCache(key, result, env, PROFILE_ENRICH_CACHE_TTL); } catch {}
+        return result; // bilgi bulundu -> bitir.
+      }
+      emptyResult = result; // bos sonuc; belki sonraki saglayici bulur.
+    } catch (error) {
+      console.warn('enrich-profile failed', JSON.stringify({ provider: provider.name, error: error?.message || String(error) }));
+    }
+  }
+
+  if (anyRan && emptyResult) {
+    // En az bir arama calisti ama kimse bilgi bulamadi. Bunu cachele (gercek "bulunamadi").
+    try { await writeCache(key, emptyResult, env, PROFILE_ENRICH_CACHE_TTL); } catch {}
+    return emptyResult;
+  }
+
+  // Hicbir saglayici yapilandirilmamis ya da hepsi hata verdi: CACHELEME.
+  return {
+    profession: null, education: null, department: null,
+    note: providers.length
+      ? 'Arastirma su an yapilamadi (yogunluk veya gunluk limit). Biraz sonra tekrar dene.'
+      : 'Arama servisi yapilandirilmamis.',
+    provider: 'unavailable', grounded: false, degraded: true
   };
-
-  // Gercek bir sonuc (bulundu ya da "bulunamadi") 24 saat cachelenebilir.
-  try {
-    await writeCache(key, result, env, PROFILE_ENRICH_CACHE_TTL);
-  } catch {
-    // Cache best-effort.
-  }
-
-  return result;
 };
 
 const writeCache = async (cacheKey, body, env, ttl = cacheTtl(env)) => {

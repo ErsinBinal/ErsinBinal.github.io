@@ -10,11 +10,21 @@ BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
-# /enrich-profile icin gercek web aramasi (Gemini + Google Search grounding).
-# Anahtari Google AI Studio'dan al ve GIZLI tut:
-#   wrangler secret put GEMINI_API_KEY
-# Anahtar yoksa endpoint calismaya devam eder ama eglence amacli tahmine duser.
+# /enrich-profile gercek web aramasi yapar. Iki ucretsiz saglayici desteklenir;
+# en az birini yapilandir (ikisi de varsa once CSE denenir, sonra Gemini).
+#
+# 1) UCRETSIZ Google Programmable Search (gunde 100 sorgu) -- ONERILEN:
+#      GOOGLE_CSE_CX = "arama-motoru-id"   (asagidaki vars; gizli degil)
+#      wrangler secret put GOOGLE_CSE_KEY  (API anahtari; GIZLI)
+#    Kurulum: https://programmablesearchengine.google.com (cx) +
+#             https://console.cloud.google.com -> "Custom Search API" -> API key
+#
+# 2) Gemini + Google Search grounding (gunluk ucretsiz kotasi var):
+#      wrangler secret put GEMINI_API_KEY  (Google AI Studio'dan; GIZLI)
+#
+# Hicbiri yoksa endpoint "arama servisi yapilandirilmamis" doner (uydurma YOK).
 GEMINI_MODEL = "gemini-2.5-flash"
+# GOOGLE_CSE_CX = ""
 # Klon triyaji: arsiv/cache disinda kendi bildigin zararsiz host'lari ekle
 # (ornek "cache.example.com,proxy.example.net"). LLM'e eskale edilmeden ignore'lanir.
 TRIAGE_BENIGN_HOSTS = ""
