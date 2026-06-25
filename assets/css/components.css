@@ -1322,7 +1322,8 @@ img.responsive:hover {
   text-transform: uppercase;
   opacity: 0.8;
 }
-.auth-consent-item {
+/* .form-panel label { display:grid } kuralini ez: checkbox metnin solunda dursun */
+.auth-page .form-panel .auth-consent-item {
   display: flex;
   align-items: flex-start;
   gap: 0.55rem;
