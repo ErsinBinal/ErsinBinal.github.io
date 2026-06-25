@@ -20,10 +20,21 @@ Cloudflare Workers AI currently includes a free daily allocation on Workers Free
 kisinin olasi meslek/egitim/departman bilgisini doner.
 
 Yalnizca GERCEK arama kullanilir; arama tutmazsa **uydurma uretilmez**,
-`provider: "unavailable"` doner. Iki ucretsiz saglayici desteklenir (en az
-birini yapilandir):
+`provider: "unavailable"` doner. Uc ucretsiz saglayici desteklenir (en az
+birini yapilandir). Sira: **Tavily -> Google CSE -> Gemini**.
 
-**1) Google Programmable Search (UCRETSIZ, gunde 100 sorgu) — onerilen**
+**1) Tavily (UCRETSIZ, LLM icin arama API'si) — onerilen**
+
+Kart gerektirmez, aylik ucretsiz kota. Gercek sonuclari Cloudflare AI (ucretsiz)
+ile ozetler.
+
+- Hesap ac ve anahtari al: https://app.tavily.com
+
+```bash
+wrangler secret put TAVILY_API_KEY
+```
+
+**2) Google Programmable Search (UCRETSIZ, gunde 100 sorgu)**
 
 Gercek Google sonuc ozetlerini alir, Cloudflare AI (ucretsiz) ile ozetler.
 

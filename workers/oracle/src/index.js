@@ -191,29 +191,9 @@ const askCloudflareAI = async (question, env) => {
   return answer;
 };
 
-// Gercek arama (UCRETSIZ): Google Programmable Search (Custom Search JSON API),
-// gunde 100 ucretsiz sorgu. Ham sonuc ozetlerini dondurur.
-const googleSearchSnippets = async (query, signal, env) => {
-  if (!env.GOOGLE_CSE_KEY || !env.GOOGLE_CSE_CX) throw new Error('google cse not configured');
-  const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_CSE_KEY}&cx=${env.GOOGLE_CSE_CX}&num=6&hl=tr&gl=tr&lr=lang_tr&q=${encodeURIComponent(query)}`;
-  const response = await fetch(url, { signal });
-  if (!response.ok) throw new Error(`google cse http ${response.status}`);
-  const data = await response.json();
-  const items = Array.isArray(data.items) ? data.items : [];
-  return items.map(it => ({
-    title: String(it.title || ''),
-    snippet: String(it.snippet || ''),
-    link: String(it.link || '')
-  }));
-};
-
-// Google arama sonuclarini Cloudflare AI (ucretsiz) ile ozetleyip profil cikarir.
-const askResearchProfileGoogleCSE = async (firstName, lastName, signal, env) => {
+// Ortak: gercek arama sonuc ozetlerini Cloudflare AI (ucretsiz) ile profile cevirir.
+const summarizeProfileFromSnippets = async (fullName, snippets, env) => {
   if (!env.AI) throw new Error('cloudflare ai binding missing');
-  const fullName = `${firstName} ${lastName}`.trim();
-  const snippets = await googleSearchSnippets(`"${fullName}" kimdir meslek egitim linkedin`, signal, env);
-  if (!snippets.length) throw new Error('google cse no results');
-
   const context = snippets
     .map((s, i) => `[${i + 1}] ${s.title}\n${s.snippet}\n${s.link}`)
     .join('\n\n')
@@ -221,7 +201,7 @@ const askResearchProfileGoogleCSE = async (firstName, lastName, signal, env) => 
 
   const userContent = [
     `Kisi: "${fullName}"`,
-    'Asagidaki GERCEK Google arama sonuclarina dayan:',
+    'Asagidaki GERCEK arama sonuclarina dayan:',
     context,
     'Ciktiyi su JSON formunda ver:',
     '{"profession":"","education":"","department":"","note":""}'
@@ -238,8 +218,65 @@ const askResearchProfileGoogleCSE = async (firstName, lastName, signal, env) => 
 
   const answer = String(response?.response || response?.result?.response || '').trim();
   const parsed = extractJson(answer);
-  if (!parsed) throw new Error('cse summary parse failed');
+  if (!parsed) throw new Error('snippet summary parse failed');
   return parsed;
+};
+
+const profileSearchQuery = (fullName) => `"${fullName}" kimdir meslek egitim linkedin`;
+
+// Gercek arama (UCRETSIZ): Tavily — LLM icin arama API'si, aylik ucretsiz kota.
+const tavilySearchSnippets = async (query, signal, env) => {
+  if (!env.TAVILY_API_KEY) throw new Error('tavily not configured');
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_key: env.TAVILY_API_KEY,
+      query,
+      search_depth: 'basic',
+      topic: 'general',
+      max_results: 6
+    })
+  });
+  if (!response.ok) throw new Error(`tavily http ${response.status}`);
+  const data = await response.json();
+  const results = Array.isArray(data.results) ? data.results : [];
+  return results.map(r => ({
+    title: String(r.title || ''),
+    snippet: String(r.content || ''),
+    link: String(r.url || '')
+  }));
+};
+
+const askResearchProfileTavily = async (firstName, lastName, signal, env) => {
+  const fullName = `${firstName} ${lastName}`.trim();
+  const snippets = await tavilySearchSnippets(profileSearchQuery(fullName), signal, env);
+  if (!snippets.length) throw new Error('tavily no results');
+  return summarizeProfileFromSnippets(fullName, snippets, env);
+};
+
+// Gercek arama (UCRETSIZ): Google Programmable Search (Custom Search JSON API),
+// gunde 100 ucretsiz sorgu.
+const googleSearchSnippets = async (query, signal, env) => {
+  if (!env.GOOGLE_CSE_KEY || !env.GOOGLE_CSE_CX) throw new Error('google cse not configured');
+  const url = `https://www.googleapis.com/customsearch/v1?key=${env.GOOGLE_CSE_KEY}&cx=${env.GOOGLE_CSE_CX}&num=6&hl=tr&gl=tr&lr=lang_tr&q=${encodeURIComponent(query)}`;
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error(`google cse http ${response.status}`);
+  const data = await response.json();
+  const items = Array.isArray(data.items) ? data.items : [];
+  return items.map(it => ({
+    title: String(it.title || ''),
+    snippet: String(it.snippet || ''),
+    link: String(it.link || '')
+  }));
+};
+
+const askResearchProfileGoogleCSE = async (firstName, lastName, signal, env) => {
+  const fullName = `${firstName} ${lastName}`.trim();
+  const snippets = await googleSearchSnippets(profileSearchQuery(fullName), signal, env);
+  if (!snippets.length) throw new Error('google cse no results');
+  return summarizeProfileFromSnippets(fullName, snippets, env);
 };
 
 // Gercek arama: Gemini, Google Search grounding ile kisiyi internette arar.
@@ -344,6 +381,9 @@ const enrichProfile = async (firstName, lastName, env, skipCache = false) => {
   // SADECE gercek arama. Once UCRETSIZ Google CSE, sonra (anahtar varsa) Gemini.
   // Hicbiri calismazsa uydurma URETILMEZ; "su an yapilamadi" durumu dondurulur.
   const providers = [];
+  if (env.TAVILY_API_KEY) {
+    providers.push({ name: 'tavily', ask: signal => askResearchProfileTavily(firstName, lastName, signal, env) });
+  }
   if (env.GOOGLE_CSE_KEY && env.GOOGLE_CSE_CX) {
     providers.push({ name: 'google-cse', ask: signal => askResearchProfileGoogleCSE(firstName, lastName, signal, env) });
   }

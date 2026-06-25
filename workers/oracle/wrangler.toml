@@ -10,16 +10,17 @@ BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
-# /enrich-profile gercek web aramasi yapar. Iki ucretsiz saglayici desteklenir;
-# en az birini yapilandir (ikisi de varsa once CSE denenir, sonra Gemini).
+# /enrich-profile gercek web aramasi yapar. Uc ucretsiz saglayici desteklenir;
+# en az birini yapilandir. Sira: once Tavily, sonra Google CSE, sonra Gemini.
 #
-# 1) UCRETSIZ Google Programmable Search (gunde 100 sorgu) -- ONERILEN:
+# 1) UCRETSIZ Tavily (LLM icin arama API'si, aylik ucretsiz kota) -- ONERILEN:
+#      wrangler secret put TAVILY_API_KEY  (https://app.tavily.com 'dan; GIZLI)
+#
+# 2) UCRETSIZ Google Programmable Search (gunde 100 sorgu):
 #      GOOGLE_CSE_CX = "arama-motoru-id"   (asagidaki vars; gizli degil)
 #      wrangler secret put GOOGLE_CSE_KEY  (API anahtari; GIZLI)
-#    Kurulum: https://programmablesearchengine.google.com (cx) +
-#             https://console.cloud.google.com -> "Custom Search API" -> API key
 #
-# 2) Gemini + Google Search grounding (gunluk ucretsiz kotasi var):
+# 3) Gemini + Google Search grounding (gunluk ucretsiz kota):
 #      wrangler secret put GEMINI_API_KEY  (Google AI Studio'dan; GIZLI)
 #
 # Hicbiri yoksa endpoint "arama servisi yapilandirilmamis" doner (uydurma YOK).
