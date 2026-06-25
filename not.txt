@@ -268,10 +268,11 @@ hakkında bilgiler edinsin.
       KUYRUK (--v4-tail) JS ile yaratik merkezine sabitleniyor; ekran
       kenarinda govde iceride kalsa bile kuyruk karakteri gosterir. Dikey
       hiza zaten getBBox ile yapiliyordu.
-  [x] Bugy Classic kapanmasin: yeni "coexist" tercihi (localStorage
-      convivium.bugy.v4.coexist, VARSAYILAN ACIK). Pet aktifken v1 tamamen
-      susturulmaz; .bugy-v1-ambient ile sonuk (opacity .5, hover .92) kalir.
-      bugy-v4 boot'ta okur; bugy-pet de setClassicCoexist(true) cagirir.
-      Kapatmak istenirse LS'e '0' yazilir (ileride studio'ya toggle eklenebilir).
+  [-] Bugy Classic "coexist/ambient" denemesi GERI ALINDI (2026-06-25):
+      pet aktifken v1'in sonuk arkada kalmasi karmasa yaratti. Eski davranisa
+      donuldu: pet (v4) aktifken Bugy Classic susturulur (.bugy-v1-muted).
+      Classic'i kullanmak isteyen, motor secimiyle (Bugy Studio) v1'e gecer —
+      yani hangi bugy'nin aktif olacagina KULLANICI karar verir. coexistKey /
+      setClassicCoexist / .bugy-v1-ambient tamamen kaldirildi.
   NOT: Pokemon-vari evrim (3 asama + guc + flas) zaten mevcut; bu turda
-  gorsel/diyalog/koexistans rotuslandi.
+  gorsel/diyalog rotuslandi.

@@ -14,7 +14,6 @@
 
   const engineKey = 'convivium.bugy.engine';
   const skinKey = 'convivium.bugy.v4.skin';
-  const coexistKey = 'convivium.bugy.v4.coexist'; // '0' => kapali; varsayilan acik
 
   // Evrensel jestler (geriye donuk uyumluluk: bakim/studio bunlari cagirir).
   const actions = ['tada', 'think', 'alert', 'wave', 'magic', 'search', 'morph'];
@@ -276,9 +275,6 @@
       mood: 'idle',
       stage: 'adult',   // pet bagli degilken tam formda gorunsun
       feral: false,
-      // true: Bugy Classic (v1) susturulmaz, pet ile birlikte (sonuk) ekranda
-      // kalir. Kullanici tercihi; varsayilan ACIK (classic kapanmasin).
-      coexist: readLS(coexistKey) !== '0',
       randomEnabled: true,
       x: window.innerWidth * 0.5,
       dir: 1,
@@ -441,11 +437,9 @@
     const syncVisibility = () => {
       layer.hidden = !state.active;
       document.body.classList.toggle('bugy-v4-active', state.active);
-      // coexist ACIK: v1 tamamen susturulmaz, "ambient" (sonuk) olarak kalir;
-      // boylece Bugy Classic kapanmaz ama pet on planda durur.
-      // coexist KAPALI: eski davranis — v1 susturulur (studio tekil motor).
-      document.body.classList.toggle('bugy-v1-muted', state.active && !state.coexist);
-      document.body.classList.toggle('bugy-v1-ambient', state.active && state.coexist);
+      // Pet (v4) aktifken Bugy Classic (v1) susturulur. Classic'i kullanmak
+      // isteyen, motor secimiyle (Bugy Studio) v1'e gecer — secim kullanicinin.
+      document.body.classList.toggle('bugy-v1-muted', state.active);
     };
 
     const dispatch = () => {
@@ -540,18 +534,6 @@
         // Bilgilendirici: konusmayi/davranisi pet tarafindan suruluyor.
         char.dataset.mood = mood || 'neutral';
         return mood;
-      },
-      // Bugy Classic (v1) ile birlikte yasama modu. true iken pet aktifken
-      // bile v1 susturulmaz (kullanici "classic kapanmasin" istiyor).
-      setClassicCoexist(on) {
-        state.coexist = Boolean(on);
-        writeLS(coexistKey, state.coexist ? '1' : '0');
-        syncVisibility();
-        if (state.coexist && window.Bugy && window.Bugy.summon) {
-          // Classic'in gorunur ve dolasiyor oldugundan emin ol.
-          try { window.Bugy.summon(); } catch { /* yok say */ }
-        }
-        return state.coexist;
       },
       // Dramatik evrim: flas + form degisimi + yeni guc replikasi.
       evolve(stage) {

@@ -220,8 +220,6 @@
     if (!v4) return;
     try { localStorage.setItem(ENGINE_KEY, 'v4'); } catch { /* yok say */ }
     if (v4.setSkin) v4.setSkin(resolveSpecies(pet.species));
-    // Bugy Classic (v1) kapanmasin: pet ile birlikte ekranda kalsin.
-    if (v4.setClassicCoexist) v4.setClassicCoexist(true);
     // Konusmayi pet surur (baglamsal + esprili); v4'un kendi idle quip'i sussun.
     if (v4.setRandom) v4.setRandom(false);
     if (v4.activate) v4.activate();
