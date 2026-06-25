@@ -238,6 +238,27 @@ to authenticated
 using (public.is_admin())
 with check (public.is_admin());
 
+-- Kullanici kendi profilini guncelleyebilir (upsertProfile icin), ancak kendi
+-- role'unu degistiremez: WITH CHECK role'un mevcut degerle ayni kalmasini sart kosar.
+drop policy if exists "Users update own profile" on public.profiles;
+create policy "Users update own profile"
+on public.profiles
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (
+  user_id = auth.uid()
+  and role = (select p.role from public.profiles p where p.user_id = auth.uid())
+);
+
+-- Kullanici kendi profil satirini ekleyebilir (yalniz reader olarak).
+drop policy if exists "Users insert own profile" on public.profiles;
+create policy "Users insert own profile"
+on public.profiles
+for insert
+to authenticated
+with check (user_id = auth.uid() and role = 'reader');
+
 drop policy if exists "Published articles are readable" on public.articles;
 create policy "Published articles are readable"
 on public.articles
