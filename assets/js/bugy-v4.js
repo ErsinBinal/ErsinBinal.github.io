@@ -342,15 +342,17 @@
       const grow = GROW[state.stage] || 1;
       const headFromBottom = bottomGap + CHAR_H * (1 - headY / VB_H) * grow;
       balloon.style.bottom = `${Math.round(headFromBottom + 8)}px`;
-      // Yatay: baloncugu yaratigin uzerinde ortala; ekran kenarinda govdeyi
-      // iceride tut ama KUYRUGU yaratik merkezine sabitle (kopma olmasin).
+      // Yatay: balon DAIMA yaratik merkezine kilitli (translateX(-50%)); kuyruk
+      // tam ortada -> hep karakterin uzerinde acilir. Genislik sabit oldugu icin
+      // (say'de kilitlendi) daktilo sirasinda kaymaz. Yalniz ekrandan tasmamasi
+      // icin merkez minimal kistlanir.
       if (!balloon.hidden) {
-        const centerX = state.x + CHAR_W / 2;
         const w = balloon.offsetWidth || 180;
-        const left = clamp(centerX - w / 2, 8, window.innerWidth - w - 8);
-        const tailX = clamp(centerX - left, 18, Math.max(18, w - 18));
-        balloon.style.transform = `translate(${Math.round(left)}px, ${Math.round(bob)}px)`;
-        balloon.style.setProperty('--v4-tail', `${Math.round(tailX)}px`);
+        const centerX = state.x + CHAR_W / 2;
+        const cx = clamp(centerX, w / 2 + 6, window.innerWidth - w / 2 - 6);
+        // translateX(-50%) ile balon kendi merkezinden cx'e oturur (layout yok,
+        // compositor uzerinde; gecis olmadigi icin de gecikme/kayma yok).
+        balloon.style.transform = `translate(${Math.round(cx)}px, ${Math.round(bob)}px) translateX(-50%)`;
       }
     };
 
@@ -364,6 +366,10 @@
       balloon.hidden = false;
       balloon.classList.add('is-on');
       balloon.classList.toggle('is-feral', state.feral);
+      // Genisligi bastan sabitle: daktilo sirasinda balon buyuyup KAYMASIN.
+      balloon.style.width = 'auto';
+      balloonText.textContent = text;        // tam metni olc
+      balloon.style.width = `${balloon.offsetWidth}px`;
       balloonText.textContent = '';
       let i = 0;
       typeTimer = window.setInterval(() => {

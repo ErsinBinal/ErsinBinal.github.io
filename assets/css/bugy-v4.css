@@ -83,6 +83,7 @@
   position: absolute;
   left: 0;
   bottom: 152px;
+  box-sizing: border-box;
   max-width: 230px;
   padding: 9px 13px;
   background: linear-gradient(180deg, #fffbe0, #fdf2b8);
@@ -95,21 +96,25 @@
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
   pointer-events: none;
   opacity: 0;
-  transform-origin: 0 100%;
-  transition: opacity 0.24s ease, transform 0.24s ease;
+  transform-origin: 50% 100%;
+  /* SADECE opacity gecisli: transform her karede JS ile guncellendigi icin
+     transform'u gecise sokmak baloncugu yaratigin ardindan suruklerdi (kayma). */
+  transition: opacity 0.24s ease;
 }
 .bugy-v4-balloon.is-on { opacity: 1; }
+/* Kuyruk: tam ortada, asagi bakan simetrik ucgen -> hep karakterin uzerinde. */
 .bugy-v4-balloon::after {
   content: '';
   position: absolute;
-  /* Kuyruk yaratik merkezine JS ile hizalanir (--v4-tail). */
-  left: var(--v4-tail, 26px);
-  margin-left: -5px;
-  bottom: -12px;
-  border-width: 12px 10px 0 0;
-  border-style: solid;
-  border-color: #fdf2b8 transparent transparent transparent;
-  filter: drop-shadow(1px 2px 0 #d9b94a);
+  left: 50%;
+  bottom: -11px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 12px solid #fdf2b8;
+  filter: drop-shadow(0 2px 0 #d9b94a);
 }
 /* Canavarlasinca balon da kararir. */
 .bugy-v4-balloon.is-feral {
@@ -118,8 +123,8 @@
   border-color: #ff2e5e;
 }
 .bugy-v4-balloon.is-feral::after {
-  border-color: #3a0d18 transparent transparent transparent;
-  filter: drop-shadow(1px 2px 0 #ff2e5e);
+  border-top-color: #3a0d18;
+  filter: drop-shadow(0 2px 0 #ff2e5e);
 }
 
 /* --- Parcaciklar --- */
