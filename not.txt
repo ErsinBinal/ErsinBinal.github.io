@@ -358,3 +358,24 @@ hakkında bilgiler edinsin.
   cinema v3, cinema.css v2, studio v5, cache v136.
   KALAN (istege bagli): yetenege ozel ikon/renk butonu, dokunmatik long-press
   ince ayar, ses miksaj dengeleri, ileride 2. evrim dali ile yeni move'lar.
+
+  --- GIZLI ODUL: KULUCKA / OFFLINE NODE (2026-06-25) --------------------
+  Karar: Bugy yaratik peti artik GIZLI BIR ODUL. Varsayilan KILITLI; yalnizca
+  mevcut "Offline Node" bulmacasini (offline.html, gercek baglanti kopunca)
+  cozenlerde acilir. Mevcut peti olanlar grandfather (etkilenmez).
+  [x] bugy-pet.js: bugyUnlocked() kapisi -> yumurta yalnizca kilit acikken
+      belirir. Sinyaller: localStorage convivium.bugy.unlocked==='1' VEYA
+      convivium.offline.node.solved VEYA (zaten hatched pet = grandfather).
+      Pet yoksa ve kilit kapaliysa SESSIZCE hicbir sey gosterilmez.
+  [x] offline.html: bulmaca cozulunce convivium.bugy.unlocked set edilir +
+      kapanis metni "kulucka/yaratik hakki" temasiyla guncellendi (bulmaca
+      cevabi 'offline' akrostisi AYNI kaldi).
+  [x] home-protocol.js blackoutCommand: offline node claim edilince
+      convivium.bugy.unlocked='1' + "KULUCKA HAKKI VERILDI" duyurusu +
+      yumurtanin icerik sayfasinda belirecegi yonlendirmesi.
+  [x] dashboard.js: pet yokken mesaj "gizli odul, sinyali kaybedince acilan
+      node" ipucuyla guncellendi (spoiler vermeden).
+  Surumler: bugy-pet v9, home-protocol v51, dashboard v32, offline.html (isimle
+  precache; cache v139). NOT: Node yok; mantik elle dogrulandi. Akis: gercek
+  offline -> offline.html bulmaca (cevap 'offline') -> reconnect -> terminalde
+  'blackout' -> kulucka hakki -> icerik sayfasinda yumurta.

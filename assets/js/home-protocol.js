@@ -1683,13 +1683,21 @@
         state.opened = [...new Set([...(state.opened || []), 'hidden'])];
         award(Math.max(state.level, 3));
         if (consoleLine) consoleLine.textContent = 'blackout seed recovered';
-        if (microOracle) microOracle.textContent = 'offline node remembered';
+        if (microOracle) microOracle.textContent = 'incubator custody granted';
         writeOfflineNode({ claimed: true, claimedAt: node.claimedAt || new Date().toISOString() });
+        // GIZLI ODUL: Offline Node'u cozen kullaniciya Bugy yaratik HAKKI verilir.
+        let firstClaim = false;
+        try { firstClaim = localStorage.getItem('convivium.bugy.unlocked') !== '1'; } catch { /* yok say */ }
+        try { localStorage.setItem('convivium.bugy.unlocked', '1'); } catch { /* yok say */ }
         return [
           'blackout packet / recovered',
           'code: blackout.seed',
           'internet kesilince site kaybolmadi; kendi hafizasina dustu.',
-          'surprise: hidden rota artik seni offline node uzerinden taniyor.'
+          '',
+          '>> KULUCKA HAKKI VERILDI.',
+          firstClaim ? '   Artik bir Bugy yaratigi buyutebilirsin (gizli odul acildi).'
+                     : '   Kulucka hakkin zaten aktifti.',
+          '   Bir icerik sayfasina gec (orn. /pages/makaleler.html) — yumurtan seni bekliyor.'
         ].join('\n');
       };
 

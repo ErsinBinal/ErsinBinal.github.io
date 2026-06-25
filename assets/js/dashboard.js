@@ -192,7 +192,7 @@
   function renderBugy(pet) {
     if (!bugyEl) return;
     if (!pet) {
-      empty(bugyEl, 'Henuz bir Bugy yok. Icerik sayfalarinda (orn. Makaleler) beliren yumurtayi kirip Bugy\'ni sec.');
+      empty(bugyEl, 'Henuz bir Bugy yok. Yaratik buyutme hakki gizli bir oduldur — kazananlara bir icerik sayfasinda yumurta belirir. Ipucu: sinyali kaybedince acilan node.');
       return;
     }
     const needs = bugyCurrentNeeds(pet);

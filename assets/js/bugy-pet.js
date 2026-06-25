@@ -140,6 +140,23 @@
 
   const backend = () => window.ConviviumBackend;
 
+  // --- Kilit: Bugy yaratiklari artik GIZLI bir odul ------------------------
+  // Yumurta yalnizca "Offline Node" bulmacasini cozenlerde belirir. Acilis
+  // sinyalleri: bugy.unlocked bayragi / offline node solved / blackout claim.
+  const UNLOCK_KEY = 'convivium.bugy.unlocked';
+  const OFFLINE_NODE_KEY = 'convivium.offline.node';
+  function bugyUnlocked() {
+    try {
+      if (localStorage.getItem(UNLOCK_KEY) === '1') return true;
+      const node = JSON.parse(localStorage.getItem(OFFLINE_NODE_KEY) || '{}');
+      if (node && node.solved) {
+        try { localStorage.setItem(UNLOCK_KEY, '1'); } catch { /* yok say */ }
+        return true;
+      }
+    } catch { /* storage kapali olabilir */ }
+    return false;
+  }
+
   // --- Kalicilik -----------------------------------------------------------
   const readLocal = () => {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); }
@@ -611,11 +628,14 @@
 
     const pet = await loadPet();
     if (pet && pet.hatched) {
+      // Zaten peti olanlar (grandfather): kilitten etkilenmez.
       activateCompanion(pet);
-    } else {
-      hideCompanion();
-      spawnEgg();
+      return;
     }
+    hideCompanion();
+    // Peti yok: yumurta YALNIZCA kilit acilmissa belirir (Offline Node odulu).
+    if (bugyUnlocked()) spawnEgg();
+    // else: kilitli — sessizce gizli kalir (gizli odul/hak).
   }
 
   const api = {

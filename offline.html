@@ -214,7 +214,9 @@
       </div>
 
       <div class="reconnect" id="reconnect">
-        Paket hazir. Baglanti geri geldiginde ana terminalde <strong>blackout</strong> komutunu dene.
+        Kulucka muhru kirildi. Bu node'un derininde uyuyan bir sey artik senin.
+        Baglanti geri geldiginde ana terminalde <strong>blackout</strong> komutunu calistir:
+        bir <strong>Bugy yaratigi</strong> buyutme hakkini teslim alacaksin.
         <br><br>
         <a class="return-link" href="/">Ana sinyale don</a>
       </div>
@@ -285,7 +287,8 @@
           claimed: false
         });
         document.body.classList.add('is-solved');
-        setStatus('Node kilitlendi. Baglanti geri geldiginde paket acilacak.', 'info');
+        try { localStorage.setItem('convivium.bugy.unlocked', '1'); } catch (e) { /* yok say */ }
+        setStatus('Kulucka muhru kirildi. Baglanti gelince yaratik hakkin teslim edilecek.', 'info');
       });
 
       window.addEventListener('online', syncNetworkState);
