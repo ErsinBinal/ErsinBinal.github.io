@@ -64,31 +64,54 @@
       font-size: 0.78rem;
     }
 
+    /* Tutarli dikey ritim: tek bir gap, dagimik margin yok. */
     .node-body {
-      padding: clamp(20px, 5vw, 34px);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: clamp(22px, 5vw, 36px);
     }
 
     h1 {
-      margin: 0 0 16px;
+      margin: 0;
       color: var(--primary);
       font-size: clamp(1.55rem, 6vw, 3.2rem);
       line-height: 1;
       letter-spacing: 0;
     }
 
+    .intro {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     p {
-      margin: 0 0 16px;
+      margin: 0;
+      max-width: 62ch;
       color: #b8ffc8;
     }
 
     .trace {
       display: grid;
-      gap: 6px;
-      margin: 22px 0;
-      padding: 16px;
+      gap: 7px;
+      margin: 0;
+      padding: 16px 18px;
       border: 1px solid var(--line);
       background: rgba(0, 0, 0, 0.34);
       color: var(--dim);
+      font-size: 0.92rem;
+    }
+
+    .trace span {
+      display: flex;
+      gap: 9px;
+      align-items: baseline;
+    }
+
+    .trace span::before {
+      content: "\203A";
+      color: #1f6b38;
     }
 
     .trace strong {
@@ -101,7 +124,14 @@
     .puzzle {
       display: grid;
       gap: 12px;
-      margin-top: 22px;
+      margin: 0;
+    }
+
+    .puzzle label {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--dim);
     }
 
     .answer-row {
@@ -144,6 +174,18 @@
       color: #001604;
     }
 
+    input,
+    button,
+    .return-link {
+      transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .vault-scene { margin: 0 auto; }
+
+    /* Ag durumu rengi: online yesil, offline sicak (sari). */
+    body.is-online #net-state { color: var(--primary); }
+    body:not(.is-online) #net-state { color: var(--hot); }
+
     .status {
       min-height: 1.55em;
       color: var(--hot);
@@ -156,10 +198,12 @@
     .online-lock,
     .reconnect {
       display: none;
-      margin-top: 18px;
-      padding: 14px;
+      margin: 0;
+      padding: 14px 16px;
       border: 1px dashed var(--line);
+      border-left: 3px solid var(--dim);
       color: #d9ffe1;
+      font-size: 0.92rem;
     }
 
     body.is-online .online-lock { display: block; }
@@ -336,8 +380,10 @@
     </div>
     <div class="node-body">
       <h1 id="node-title">OFFLINE NODE</h1>
-      <p>Bu sayfa hata ekrani degil. Baglanti kesildiginde acilan kucuk bir oda.</p>
-      <p>Node anahtarini bulursan, baglanti geri geldiginde ana terminal sana bir paket teslim edecek.</p>
+      <div class="intro">
+        <p>Bu sayfa hata ekrani degil. Baglanti kesildiginde acilan kucuk bir oda.</p>
+        <p>Node anahtarini bulursan, baglanti geri geldiginde ana terminal sana bir paket teslim edecek.</p>
+      </div>
 
       <div class="vault-scene" aria-hidden="true">
         <div class="server">
