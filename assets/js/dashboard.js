@@ -157,9 +157,15 @@
       lines.push(`<span>Bölüm: ${escapeHtml(profile.department)}</span>`);
     }
 
-    const canPredict = fullName && !(profile?.profession || profile?.education || profile?.department);
-    if (canPredict) {
-      lines.push('<button id="dashboardProfilePredict" class="btn btn-small" type="button">🔍 Bugy seni araştırsın</button>');
+    const profileMissing = fullName && !(profile?.profession || profile?.education || profile?.department);
+    if (profileMissing && profile?.ai_consent) {
+      // Acik riza var: dogrudan otomatik tamamlama butonu.
+      lines.push('<button id="dashboardProfilePredict" class="btn btn-small" type="button">Profilimi otomatik tamamla</button>');
+      lines.push('<div id="dashboardPredictResult"></div>');
+    } else if (profileMissing) {
+      // Acik riza yok: once riza iste (KVKK).
+      lines.push('<p class="muted" style="font-size:.85rem">Profilini internet aramasiyla otomatik doldurmak istersen, KVKK kapsaminda acik riza gerekir.</p>');
+      lines.push('<button id="dashboardAiConsent" class="btn btn-small" type="button">Acik riza ver ve profilimi tamamla</button>');
       lines.push('<div id="dashboardPredictResult"></div>');
     }
 
@@ -169,13 +175,31 @@
     if (predictButton) {
       predictButton.addEventListener('click', () => runProfilePrediction(session, profile, predictButton));
     }
+
+    const consentButton = document.getElementById('dashboardAiConsent');
+    if (consentButton) {
+      consentButton.addEventListener('click', async () => {
+        consentButton.disabled = true;
+        setStatus('Açık rıza kaydediliyor...', 'info');
+        try {
+          const updated = await backend.upsertProfile({ ai_consent: true });
+          renderProfile(session, updated);
+          // Riza alindiktan hemen sonra otomatik tamamlamayi baslat.
+          const btn = document.getElementById('dashboardProfilePredict');
+          if (btn) runProfilePrediction(session, updated, btn);
+        } catch (error) {
+          setStatus(error.message, 'error');
+          consentButton.disabled = false;
+        }
+      });
+    }
   }
 
-  // Eglenceli "fal": AI isimden tahmin eder, KULLANICI onaylarsa profile yazilir.
+  // AI internette arar, KULLANICI onaylarsa profile yazilir (acik riza gerekir).
   async function runProfilePrediction(session, profile, button) {
     const resultEl = document.getElementById('dashboardPredictResult');
     button.disabled = true;
-    setStatus('Bugy seni araştırıyor...', 'info');
+    setStatus('Profilin araştırılıyor...', 'info');
     try {
       const guess = await backend.predictProfileFromName(profile.first_name, profile.last_name);
 

@@ -13,6 +13,10 @@ create table if not exists public.profiles (
   profession text,
   education text,
   department text,
+  terms_accepted_at timestamptz,
+  terms_version text,
+  ai_consent boolean not null default false,
+  ai_consent_at timestamptz,
   role text not null default 'reader' check (role in ('reader', 'editor', 'admin')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -171,7 +175,10 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (user_id, display_name, first_name, last_name)
+  insert into public.profiles (
+    user_id, display_name, first_name, last_name,
+    terms_accepted_at, terms_version, ai_consent, ai_consent_at
+  )
   values (
     new.id,
     coalesce(
@@ -180,7 +187,11 @@ begin
       split_part(new.email, '@', 1)
     ),
     nullif(new.raw_user_meta_data->>'first_name', ''),
-    nullif(new.raw_user_meta_data->>'last_name', '')
+    nullif(new.raw_user_meta_data->>'last_name', ''),
+    case when (new.raw_user_meta_data->>'terms_accepted') = 'true' then now() else null end,
+    nullif(new.raw_user_meta_data->>'terms_version', ''),
+    coalesce((new.raw_user_meta_data->>'ai_consent') = 'true', false),
+    case when (new.raw_user_meta_data->>'ai_consent') = 'true' then now() else null end
   )
   on conflict (user_id) do nothing;
   return new;

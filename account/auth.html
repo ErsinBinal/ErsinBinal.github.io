@@ -103,6 +103,22 @@
           <div class="auth-strength" aria-hidden="true">
             <span></span>
           </div>
+
+          <fieldset class="auth-consent">
+            <legend>Onaylar</legend>
+            <label class="auth-consent-item">
+              <input name="terms_accepted" type="checkbox" required>
+              <span><a href="/legal/kullanim-kosullari.html" target="_blank" rel="noopener">Kullanim Kosullari</a>
+              ve <a href="/legal/kvkk-aydinlatma.html" target="_blank" rel="noopener">KVKK Aydinlatma Metni</a>'ni
+              okudum, kabul ediyorum. <em>(zorunlu)</em></span>
+            </label>
+            <label class="auth-consent-item">
+              <input name="ai_consent" type="checkbox">
+              <span>Profilimin yapay zeka ile internette arastirilip doldurulmasina
+              <strong>acik riza</strong> veriyorum. <em>(istege bagli)</em></span>
+            </label>
+          </fieldset>
+
           <button class="btn btn-primary" type="submit">Uyelik Olustur</button>
         </form>
       </div>
@@ -111,8 +127,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=28" defer></script>
-  <script src="/assets/js/auth.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=29" defer></script>
+  <script src="/assets/js/auth.js?v=2" defer></script>
   <script src="/assets/js/sfx.js?v=15" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌​‌​‌​​​​​‌​​‌‌​‌‌​​‌​​​‌‌​​​‌‌​​‌​​‌​​​‌​‌​‌​​​‌​‌​​‌‌​‌‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>

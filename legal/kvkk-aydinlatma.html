@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KVKK Aydinlatma Metni - Convivium</title>
+  <meta name="description" content="Convivium kisisel verilerin korunmasi (KVKK) aydinlatma metni ve acik riza bilgilendirmesi.">
+  <meta name="author" content="Ersin Binal">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:;">
+  <meta name="theme-color" content="#00ff00">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/animations.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <style>
+    .legal-doc { max-width: 820px; margin: 0 auto; line-height: 1.7; }
+    .legal-doc h2 { margin-top: 2rem; }
+    .legal-doc h3 { margin-top: 1.5rem; }
+    .legal-doc table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .legal-doc th, .legal-doc td { border: 1px solid currentColor; padding: 0.5rem 0.7rem; text-align: left; vertical-align: top; opacity: 0.95; }
+    .legal-doc .legal-meta { opacity: 0.7; font-size: 0.9rem; }
+    .legal-doc .legal-note { border-left: 3px solid #00ff00; padding: 0.5rem 0.9rem; margin: 1rem 0; opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">Icerigi atla</a>
+  <div class="site">
+    <header class="site-header" role="banner">
+      <div>
+        <p class="auth-kicker">CONVIVIUM</p>
+        <h1>KVKK Aydinlatma Metni</h1>
+        <p class="legal-meta">Surum: 26.06.2026 &middot; Son guncelleme: 26.06.2026</p>
+      </div>
+      <nav role="navigation" aria-label="Site navigasyonu">
+        <a href="/account/auth.html" class="btn">&#8592; Uyelik</a>
+        <a href="/" class="btn">Ana Sayfa</a>
+      </nav>
+    </header>
+
+    <main id="content" class="legal-doc" role="main">
+      <p>
+        Bu metin, 6698 sayili Kisisel Verilerin Korunmasi Kanunu ("KVKK") kapsaminda,
+        Convivium (ersinbinal.github.io) uzerinden topladigimiz kisisel verilerin nasil
+        islendigi konusunda sizi bilgilendirmek amaciyla hazirlanmistir.
+      </p>
+
+      <h2>1. Veri Sorumlusu</h2>
+      <p>
+        Veri sorumlusu: <strong>Ersin Binal</strong> (bireysel/kisisel proje).<br>
+        Iletisim: <strong>ersinbinal@gmail.com</strong>
+      </p>
+
+      <h2>2. Islenen Kisisel Veriler</h2>
+      <table>
+        <thead><tr><th>Veri</th><th>Aciklama</th></tr></thead>
+        <tbody>
+          <tr><td>Kimlik</td><td>Ad, soyad</td></tr>
+          <tr><td>Iletisim</td><td>E-posta adresi</td></tr>
+          <tr><td>Hesap</td><td>Sifre (sifrelenmis olarak saklanir), rol, kayit/guncelleme tarihleri</td></tr>
+          <tr><td>Kullanim</td><td>Site ici oyun skorlari, etkilesim ve oturum bilgileri</td></tr>
+          <tr><td>Profil (opsiyonel)</td><td>Yalnizca <strong>acik rizaniz</strong> ile: ad-soyadinizdan yapay zeka destekli internet aramasiyla derlenen olasi meslek, egitim ve calistiginiz kurum/bolum bilgisi</td></tr>
+        </tbody>
+      </table>
+
+      <h2>3. Kisisel Verilerin Islenme Amaclari</h2>
+      <ul>
+        <li>Uyelik kaydinizin olusturulmasi ve oturum yonetimi</li>
+        <li>Profil ve site ozelliklerinin (oyunlastirma, "Bugy" arkadasi vb.) sunulmasi</li>
+        <li>Acik riza vermeniz halinde profilinizin zenginlestirilmesi ve kisisellestirilmis deneyim</li>
+        <li>Guvenlik, kotuye kullanimin onlenmesi ve yasal yukumluluklerin yerine getirilmesi</li>
+      </ul>
+
+      <h2>4. Hukuki Sebepler</h2>
+      <ul>
+        <li><strong>Sozlesmenin kurulmasi/ifasi</strong> (KVKK m.5/2-c): uyelik ve hesap verileri.</li>
+        <li><strong>Mesru menfaat</strong> (KVKK m.5/2-f): guvenlik ve temel site islevleri.</li>
+        <li><strong>Acik riza</strong> (KVKK m.5/1): yapay zeka destekli profil arastirmasi/zenginlestirme ozelligi. Bu ozellik tamamen istege baglidir; riza vermemeniz uyeliginizi etkilemez.</li>
+      </ul>
+
+      <h2>5. Yapay Zeka Destekli Profil Arastirmasi Hakkinda</h2>
+      <p>
+        Acik riza vermeniz halinde, talebinizle birlikte ad ve soyadiniz guvenli bir
+        sunucu (Cloudflare Worker) araciligiyla bir internet arama servisine iletilir;
+        donen <em>kamuya acik</em> sonuclar bir yapay zeka modeli tarafindan ozetlenir.
+        Sonuclar size gosterilir ve <strong>yalnizca siz "dogru" diyerek onayladiginizda</strong>
+        profilinize kaydedilir.
+      </p>
+      <div class="legal-note">
+        Bu sonuclar bir tahmindir ve hatali olabilir; ayni isimli baska kisilere ait
+        bilgiler cikabilir. Dogrulugunu kontrol etmek size aittir. Onaylamadiginiz
+        hicbir bilgi saklanmaz.
+      </div>
+
+      <h2>6. Verilerin Aktarilmasi (Yurt Disi Dahil)</h2>
+      <p>
+        Site, altyapi hizmetlerini bulut saglayicilar uzerinden alir ve bu kapsamda
+        kisisel verileriniz <strong>yurt disindaki sunuculara aktarilabilir</strong>:
+      </p>
+      <ul>
+        <li><strong>Supabase</strong> — hesap ve profil veritabani (sunucu konumu yurt disi).</li>
+        <li><strong>Cloudflare</strong> — guvenli istek araci (Worker).</li>
+        <li><strong>Arama / yapay zeka servisleri</strong> (or. Tavily, Google, Cloudflare AI) — yalnizca acik riza verdiyseniz, profil arastirmasi icin.</li>
+      </ul>
+      <p>Verileriniz bunlarin disinda ucuncu kisilerle pazarlama amaciyla paylasilmaz, satilmaz.</p>
+
+      <h2>7. Saklama Suresi</h2>
+      <p>
+        Verileriniz, uyeliginiz devam ettigi surece ve ilgili mevzuatta ongorulen sureler
+        boyunca saklanir. Hesabinizi sildirmeniz halinde, yasal saklama yukumlulukleri
+        disindaki verileriniz silinir.
+      </p>
+
+      <h2>8. Haklariniz (KVKK m.11)</h2>
+      <p>Kisisel verilerinizle ilgili olarak; islenip islenmedigini ogrenme, bilgi talep etme,
+      amacina uygun kullanilip kullanilmadigini ogrenme, eksik/yanlis islenmisse duzeltilmesini,
+      kosullari olustugunda silinmesini/yok edilmesini isteme, islemelere itiraz etme ve
+      zararin giderilmesini talep etme haklarina sahipsiniz.</p>
+      <p>Bu haklarinizi kullanmak icin <strong>ersinbinal@gmail.com</strong> adresine
+      basvurabilirsiniz.</p>
+
+      <div class="legal-note">
+        Bilgilendirme: Bu metin iyi niyetli bir taslaktir ve hukuki danismanlik yerine
+        gecmez. Resmi/baglayici kullanim oncesinde bir hukuk uzmanina inceletmeniz onerilir.
+      </div>
+
+      <p class="legal-meta"><a href="/legal/kullanim-kosullari.html">&rarr; Kullanim Kosullari ve Uyelik Sozlesmesi</a></p>
+    </main>
+  </div>
+  <script src="/assets/js/theme.js" defer></script>
+</body>
+</html>

@@ -136,7 +136,10 @@
     return data.user;
   }
 
-  async function signUp(email, password, firstName, lastName) {
+  // Onaylanan hukuki metinlerin surumu (legal/*.html ile ayni tutulmali).
+  const CONSENT_VERSION = '2026-06-26';
+
+  async function signUp(email, password, firstName, lastName, consents = {}) {
     const client = await requireClient();
     const displayName = [firstName, lastName].filter(Boolean).join(' ').trim();
     const { data, error } = await client.auth.signUp({
@@ -147,7 +150,10 @@
         data: {
           display_name: displayName || '',
           first_name: firstName || '',
-          last_name: lastName || ''
+          last_name: lastName || '',
+          terms_accepted: consents.termsAccepted === true,
+          terms_version: consents.termsAccepted === true ? CONSENT_VERSION : '',
+          ai_consent: consents.aiConsent === true
         }
       }
     });
@@ -176,7 +182,7 @@
 
     const { data, error } = await client
       .from('profiles')
-      .select('user_id, display_name, first_name, last_name, role, profession, education, department, created_at')
+      .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, created_at')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -209,6 +215,10 @@
     }
     if (profileData.department !== undefined) {
       payload.department = String(profileData.department || '').slice(0, 120) || null;
+    }
+    if (profileData.ai_consent !== undefined) {
+      payload.ai_consent = profileData.ai_consent === true;
+      payload.ai_consent_at = profileData.ai_consent === true ? new Date().toISOString() : null;
     }
     payload.updated_at = new Date().toISOString();
 

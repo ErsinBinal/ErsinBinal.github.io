@@ -98,11 +98,20 @@
   signUpForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = formData(signUpForm);
+
+    if (data.terms_accepted !== 'on') {
+      setStatus('Devam etmek icin Kullanim Kosullari ve KVKK Aydinlatma Metni onayi gereklidir.', 'error');
+      return;
+    }
+
     setStatus('Uyelik olusturuluyor...', 'info');
     setFormBusy(signUpForm, true);
 
     try {
-      await backend.signUp(data.email, data.password, data.first_name, data.last_name);
+      await backend.signUp(data.email, data.password, data.first_name, data.last_name, {
+        termsAccepted: true,
+        aiConsent: data.ai_consent === 'on'
+      });
       signUpForm.reset();
       updatePasswordStrength();
       await refreshSession();
