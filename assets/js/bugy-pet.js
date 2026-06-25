@@ -129,6 +129,7 @@
     else if (/oracle/.test(p)) pool = pool.concat(CONTEXT_LINES.oracle);
     else if (/dashboard/.test(p)) pool = pool.concat(CONTEXT_LINES.dashboard);
     else pool = pool.concat(CONTEXT_LINES.home);
+    pool = pool.concat(profileLines());
     const h = new Date().getHours();
     if (h < 5) pool = pool.concat(TIME_LINES.night);
     else if (h < 11) pool = pool.concat(TIME_LINES.morning);
@@ -230,6 +231,22 @@
   // Aktif pet (bakim UI'i bunun uzerinde calisir).
   let currentPet = null;
   let speakTimer = 0;
+  let userProfile = null;
+
+  function profileLines() {
+    if (!userProfile) return [];
+    const lines = [];
+    if (userProfile.profession) {
+      lines.push(`Sanki bir ${userProfile.profession} havası seziyorum sende, yanılıyor muyum?`);
+    }
+    if (userProfile.department) {
+      lines.push(`${userProfile.department} desem, gülümser misin?`);
+    }
+    if (userProfile.education) {
+      lines.push(`${userProfile.education} hikayeni merak ediyorum doğrusu.`);
+    }
+    return lines;
+  }
 
   function activateCompanion(pet) {
     currentPet = pet;
@@ -625,6 +642,14 @@
     let session = null;
     try { session = await api.getSession(); } catch { session = null; }
     if (!session) { hideCompanion(); return; } // Yalnizca kayitli/girisli kullanicilar.
+
+    if (api && api.getProfile) {
+      try {
+        userProfile = await api.getProfile();
+      } catch {
+        userProfile = null;
+      }
+    }
 
     const pet = await loadPet();
     if (pet && pet.hatched) {

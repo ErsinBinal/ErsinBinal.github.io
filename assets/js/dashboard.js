@@ -157,7 +157,77 @@
       lines.push(`<span>Bölüm: ${escapeHtml(profile.department)}</span>`);
     }
 
+    const canPredict = fullName && !(profile?.profession || profile?.education || profile?.department);
+    if (canPredict) {
+      lines.push('<button id="dashboardProfilePredict" class="btn btn-small" type="button">🔮 Bugy seni tahmin etsin</button>');
+      lines.push('<div id="dashboardPredictResult"></div>');
+    }
+
     profileEl.innerHTML = lines.join('');
+
+    const predictButton = document.getElementById('dashboardProfilePredict');
+    if (predictButton) {
+      predictButton.addEventListener('click', () => runProfilePrediction(session, profile, predictButton));
+    }
+  }
+
+  // Eglenceli "fal": AI isimden tahmin eder, KULLANICI onaylarsa profile yazilir.
+  async function runProfilePrediction(session, profile, button) {
+    const resultEl = document.getElementById('dashboardPredictResult');
+    button.disabled = true;
+    setStatus('Bugy seni tahmin ediyor...', 'info');
+    try {
+      const guess = await backend.predictProfileFromName(profile.first_name, profile.last_name);
+      const rows = [
+        ['Meslek', guess.profession],
+        ['Eğitim', guess.education],
+        ['Bölüm', guess.department]
+      ].filter(([, v]) => v);
+
+      if (!rows.length) {
+        if (resultEl) resultEl.innerHTML = '<p class="muted">Bugy bu sefer bir şey tahmin edemedi.</p>';
+        setStatus('Tahmin çıkmadı, tekrar deneyebilirsin.', 'info');
+        button.disabled = false;
+        return;
+      }
+
+      const list = rows.map(([k, v]) => `<li><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</li>`).join('');
+      if (resultEl) {
+        resultEl.innerHTML = [
+          '<div class="predict-card">',
+          '<p class="muted"><em>Bu sadece bir AI tahmini — gerçek değil, eğlence amaçlı.</em></p>',
+          `<ul>${list}</ul>`,
+          '<button id="dashboardPredictConfirm" class="btn btn-small" type="button">Bunlar doğru, profilime ekle</button>',
+          '<button id="dashboardPredictDismiss" class="btn btn-small btn-ghost" type="button">Boşver</button>',
+          '</div>'
+        ].join('');
+      }
+      setStatus('Bugy tahmin etti. Doğruysa profiline ekleyebilirsin.', 'success');
+
+      document.getElementById('dashboardPredictConfirm')?.addEventListener('click', async () => {
+        setStatus('Profiline kaydediliyor...', 'info');
+        try {
+          const updated = await backend.upsertProfile({
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            profession: guess.profession,
+            education: guess.education,
+            department: guess.department
+          });
+          renderProfile(session, updated);
+          setStatus('Profil bilgilerin kaydedildi.', 'success');
+        } catch (error) {
+          setStatus(error.message, 'error');
+        }
+      });
+      document.getElementById('dashboardPredictDismiss')?.addEventListener('click', () => {
+        if (resultEl) resultEl.innerHTML = '';
+        button.disabled = false;
+      });
+    } catch (error) {
+      setStatus(error.message, 'error');
+      button.disabled = false;
+    }
   }
 
   // --- Bugy / Ped inceleme (salt okunur; bakim companion uzerinden yapilir) ---

@@ -379,3 +379,118 @@ hakkında bilgiler edinsin.
   precache; cache v139). NOT: Node yok; mantik elle dogrulandi. Akis: gercek
   offline -> offline.html bulmaca (cevap 'offline') -> reconnect -> terminalde
   'blackout' -> kulucka hakki -> icerik sayfasinda yumurta.
+
+---
+
+DÜZENLENMİŞ PROMPT (PROFIL ZENGINLESTIRME ve BUGY KISILESTIRME)
+------------------
+"Ad ve Soyadı kaydedilmiş bir kullanıcı için güvenli bir Cloudflare Worker
+aracılığıyla profil zenginleştirmesi yap. Worker `/enrich-profile` endpoint'i
+`first_name` ve `last_name` almalı, AI’dan JSON olarak `profession`,
+`education`, `department`, `note` döndürmeli, yanıt 24 saat cachelenmeli ve
+CORS/rate limit ile korunmalı. Dashboard’da bu alanlar görünmeli; eğer
+kullanıcının meslek/egitim/departman bilgisi yoksa "Profil bilgilerini
+tamamla" butonu çıkmalı. Butona basıldığında tahmin edilen profil değerleri
+`public.profiles` tablosuna kaydedilmeli ve Bugy pet konuşmalarında bu alanlar
+kullanılarak daha kişisel bağlam eklenmeli."
+
+
+2026-06-25 / yapılanlar
+------------------------------------------------------
+- workers/oracle/src/index.js
+  - `/enrich-profile` POST rotası eklendi.
+  - `first_name` / `last_name` girdisiyle AI tabanlı profil zenginleştirmesi yapılır.
+  - Cloudflare AI veya Pollinations sonuçlarından JSON olarak
+    `profession`, `education`, `department`, `note` alanları çıkarılır.
+  - Sonuç 24 saat cachelenir; cache hatası kullanıcı deneyimini bozmaz.
+
+- assets/js/supabase-client.js
+  - `enrichProfileFromName(firstName, lastName)` worker endpoint'ine çağrı yapar.
+  - Dönen tahminler normalize edilip `null` veya boş string haline dönüştürülür.
+  - `upsertProfile()` mevcut profile alanlarını koruyarak yalnızca sağlanan
+    alanları günceller; overwrite riski azaltıldı.
+
+- assets/js/dashboard.js
+  - Profil kartına `Ad Soyad`, `Meslek`, `Eğitim`, `Bölüm` bilgileri eklendi.
+  - `profession` / `education` / `department` yoksa
+    "Profil bilgilerini tamamla" butonu gösterilir.
+  - Butona tıklandığında AI zenginleştirme çağrısı yapılır, sonuçlar kaydedilir
+    ve UI tekrar render edilir.
+
+- assets/js/bugy-pet.js
+  - Kullanıcı profili `getProfile()` ile yüklendi.
+  - `profession`, `department`, `education` alanlarından kısa bağlamsal Bugy
+    replikleri oluşturuldu.
+  - Bu profil satırları Bugy konuşma havuzuna eklendi; sayfa bağlamına ve saate
+    göre daha kişisel diyaloglar sunar.
+
+- Genel
+  - Bu değişiklikler frontend tarafında kullanıcıya daha kişisel bir deneyim
+    verirken AI zenginleştirmesini güvenli bir worker arkasına taşıyor.
+  - `public.profiles` kaydında yeni alanlar artık hem Supabase'ten okunuyor
+    hem de dashboard + Bugy konuşmasında kullanılabiliyor.
+
+---
+
+KARAR (2026-06-25): isimden meslek/egitim "zenginlestirme"si gercek profil
+verisi gibi saklanmak yerine EGLENCELI BIR FAL/TAHMINE cevrildi. Gerekce:
+model isimden meslegi bilemez, uydurur; bunu profil gercegi gibi yazmak hem
+anlamsiz hem de isimden cikarim/bias riski tasir. Yeni akis:
+- AI tahmin eder -> kullaniciya "bu sadece AI tahmini, gercek degil" diye
+  acikca etiketlenmis bir kart gosterilir.
+- profiles tablosuna YALNIZCA kullanici "Bunlar dogru, profilime ekle" derse
+  yazilir (onaya bagli). Boylece veri uydurma degil, kullanici dogrulamasi olur.
+- Bugy replikleri kesin ifade yerine tahmin/soru tonuna cekildi.
+Ad/Soyad + sema + upsertProfile temeli ayri bir commit olarak ayrildi.
+
+YAPMAK ISTEDIGIMIZ
+------------------
+1. Signup / profil veri yapısını tamamla
+   - Kullanıcı kayıt formuna `Ad` ve `Soyad` alanlarını zorunlu ekle.
+   - Supabase auth metadata içinde `first_name`/`last_name` sakla.
+   - `public.profiles` tablosuna `first_name`, `last_name`, `profession`,
+     `education`, `department` sütunlarını ekle/uygun şekilde senkronize et.
+   - Signup sonrası kullanıcı profil kaydı oluşturulurken bu alanları güncelle.
+
+2. Güvenli AI zenginleştirme hattı kur
+   - Tarayıcıdan doğrudan model çağrısı yapma.
+   - Cloudflare Worker içinde `/enrich-profile` endpoint'i oluştur.
+   - Bu endpoint, sadece `first_name` ve `last_name` alıp AI’dan açıkça
+     `profession`, `education`, `department`, `note` JSON cevabı almalı.
+   - Model yanıtını parse ederek belirsiz alanları boş bırak.
+   - Yanıtları 24 saat cachele; istekleri rate limit ve CORS ile koru.
+
+3. Dashboard tarafını zenginleştir
+   - Dashboard profil kartına yeni profile alanlarını yaz.
+   - Eğer kullanıcı adı var ama zenginleştirilmiş profil bilgisi yoksa
+     "Profil bilgilerini tamamla" butonu göster.
+   - Butona tıklandığında worker’dan veri çek, `upsertProfile()` ile kaydet,
+     ve UI’ı yeniden render et.
+   - Hata/yükleniyor durumlarını kullanıcıya bildir.
+
+4. Bugy deneyimini profille bağla
+   - Bugy companion başlatılmadan önce Supabase’ten `getProfile()` çek.
+   - `profession`, `education`, `department` gibi alanlardan kısa bağlamsal
+     satırlar üret.
+   - Bu satırlar Bugy konuşma havuzuna eklenerek daha kişisel bir deneyim ver.
+   - Böylece AI tahmini profil, hem dashboard’dan hem de oyun içi etkileşimden
+     fayda sağlar.
+
+5. Güvenlik ve veri bütünlüğü
+   - `upsertProfile()` mevcut alanları koruyacak şekilde çalışmalı; sadece
+     yeni veya tahmin edilen alanları yazmalı.
+   - Çalıştırılan worker endpoint’i, model anahtarlarını frontend’e sızdırmamalı.
+   - Supabase `public.profiles` RLS/policy’lerinin kendi kullanıcı profillerini
+     okuma/yazma izinlerini sağladığından emin ol.
+
+6. Sonraki adımlar / test planı
+   - Worker endpoint’ini deploy et ve `convivium-oracle-endpoint` meta tag’ini
+     güncelle.
+   - Dashboard’a login olup `Ad Soyad` ile otomatik zenginleştirme butonunu
+     test et.
+   - Bugy pet sayfasında kişisel repliklerin görünmesini doğrula.
+   - Eğer `profession` / `education` / `department` boşsa botun yine düzgün
+     çalıştığını teyit et.
+
+---
+

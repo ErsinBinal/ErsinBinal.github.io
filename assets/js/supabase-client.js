@@ -222,6 +222,47 @@
     return data;
   }
 
+  // Eglence amacli "fal": isimden olasi meslek/egitim/departman TAHMINI uretir.
+  // Donen veri gercek degildir; kullanici onaylamadan profile yazilmaz.
+  async function predictProfileFromName(firstName, lastName) {
+    const endpoint = (
+      window.CONVIVIUM_ORACLE_ENDPOINT ||
+      document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content ||
+      ''
+    ).trim();
+    if (!endpoint) {
+      throw new Error('Oracle endpoint yapilandirilamadi.');
+    }
+
+    const url = `${endpoint.replace(/\/+$|$/, '')}/enrich-profile`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name: String(firstName || '').trim().slice(0, 64),
+        last_name: String(lastName || '').trim().slice(0, 64)
+      })
+    });
+
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('Tahmin cevabi okunamadi.');
+    }
+
+    if (!response.ok) {
+      throw new Error(data?.error || `Tahmin basarisiz: ${response.status}`);
+    }
+
+    return {
+      profession: String(data.profession || '').trim() || null,
+      education: String(data.education || '').trim() || null,
+      department: String(data.department || '').trim() || null,
+      note: String(data.note || '').trim() || null
+    };
+  }
+
   async function isAdmin() {
     const profile = await getProfile();
     return Boolean(profile && profile.role === 'admin');
@@ -865,6 +906,7 @@
     fetchDartLeaderboard,
     fetchBugyPet,
     upsertBugyPet,
+    predictProfileFromName,
     fetchOracleProfile,
     upsertOracleProfile,
     updateRecommendationOutcome,
