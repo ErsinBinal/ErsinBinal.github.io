@@ -14,6 +14,7 @@
 
   const engineKey = 'convivium.bugy.engine';
   const skinKey = 'convivium.bugy.v4.skin';
+  const coexistKey = 'convivium.bugy.v4.coexist'; // '0' => kapali; varsayilan acik
 
   // Evrensel jestler (geriye donuk uyumluluk: bakim/studio bunlari cagirir).
   const actions = ['tada', 'think', 'alert', 'wave', 'magic', 'search', 'morph'];
@@ -42,7 +43,7 @@
     spark: {
       label: 'Bitik', accent: '#00ff88', accent2: '#00f3ff', spark: '▚',
       abilities: { hatchling: 'Tarama', juvenile: 'Derleme', adult: 'Aşırı Yük' },
-      quips: ['01001000 selam!', 'Belleğim seni hatırlıyor.', 'Pikselden büyüyorum.', 'Bir komut ver, koşayım.'],
+      quips: ['Önbelleğimi temizledim ama seni unutmadım.', 'Bugün 99 sekme açtın, biri de bendim.', 'Ben bulutta değilim, hep buradayım.', 'Çekirdeğim ısındı, biraz övgü iyi gelir.'],
       svg: `
         <g class="cr">
           <rect class="cr-body" x="30" y="54" width="60" height="54" rx="15" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="3"/>
@@ -69,7 +70,7 @@
     volt: {
       label: 'Voltik', accent: '#ffd23f', accent2: '#ff4fd8', spark: '⚡',
       abilities: { hatchling: 'Kıvılcım', juvenile: 'Şok', adult: 'Yıldırım' },
-      quips: ['Bzzt! Enerjim taştı.', 'Statik saçlarını dikecek!', 'Koşalım mı? Ben hızlıyım.', 'Şarjım tam, hadi!'],
+      quips: ['Priz nerede? Şaka, sana bakınca şarj oluyorum.', 'Statikten saçların diken diken, kusura bakma.', 'Bugün enerjim 220 volt, sen?', 'Koşalım! Yoksa fazla mesai mi var?'],
       svg: `
         <g class="cr">
           <path class="cr-juv cr-tail" d="M86 96 q26 -4 22 -28 q-2 16 -18 14 q10 -10 6 -20 q-6 14 -16 18 z"
@@ -96,7 +97,7 @@
     aqua: {
       label: 'Glupi', accent: '#38e1ff', accent2: '#3a6bff', spark: '◌',
       abilities: { hatchling: 'Damla', juvenile: 'Kabarcık', adult: 'Dalga' },
-      quips: ['Blop... merhaba.', 'Serin bir gün, değil mi?', 'Akışına bırak.', 'Islanmaya hazır mısın?'],
+      quips: ['Stresliysen akışına bırak, ben öyle yapıyorum.', 'Bugün biraz sulu espri yapsam?', 'Hidrasyon önemli; sen su içtin mi?', 'İçim su gibi, kafam berrak. Seninki?'],
       svg: `
         <g class="cr">
           <path class="cr-body" d="M60 50 C82 50 92 72 92 86 C92 104 78 112 60 112 C42 112 28 104 28 86 C28 72 38 50 60 50 Z"
@@ -122,7 +123,7 @@
     ember: {
       label: 'Korcuk', accent: '#ff7a2f', accent2: '#ffd23f', spark: '✸',
       abilities: { hatchling: 'Kor', juvenile: 'Alev', adult: 'Yangın' },
-      quips: ['Sıcacığım, yaklaş.', 'İçimde bir ateş var!', 'Üşürsen bana sarıl.', 'Cızz! Dikkat, yakarım.'],
+      quips: ['İçimde bir ateş var, umarım deadline değildir.', 'Üşüdüysen sarıl; faturası bedava.', 'Bugün biraz kıvılcımlıyım, dikkat.', 'Soğuk kahve içme, bana ver ısıtayım.'],
       svg: `
         <g class="cr">
           <g class="cr-juv">
@@ -149,7 +150,7 @@
     leaf: {
       label: 'Filizo', accent: '#5dff8f', accent2: '#2fd0a0', spark: '✿',
       abilities: { hatchling: 'Tomurcuk', juvenile: 'Sürgün', adult: 'Çiçek' },
-      quips: ['Güneşi seviyorum.', 'Yavaş büyü, derin kök sal.', 'Bir yaprak, bin nefes.', 'Sula beni, çiçek açayım.'],
+      quips: ['Acele etme, ben bile yavaş büyüyorum.', 'Bugün fotosentez yaptım, ya sen?', 'Beni sulamayı unutma, sevgi de su sayılır.', 'Köklerim derin, dostluğumuz da öyle.'],
       svg: `
         <g class="cr">
           <ellipse class="cr-body" cx="60" cy="86" rx="28" ry="26" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="3"/>
@@ -180,7 +181,7 @@
     frost: {
       label: 'Buzcuk', accent: '#8fe9ff', accent2: '#c9b8ff', spark: '❄',
       abilities: { hatchling: 'Buz', juvenile: 'Kırağı', adult: 'Tipi' },
-      quips: ['Brr... ama mutluyum.', 'Kristalim ışıkta parlar.', 'Sessizliği severim.', 'Dokun, soğuk değilim—pek.'],
+      quips: ['Soğukkanlı kal, benden öğren.', 'Buz gibiyim ama kalbim sıcak, klişe oldu.', 'Mola? Ben buzlu olanı tercih ederim.', 'Sessizlik güzeldir, ama seninle gürültü de iyi.'],
       svg: `
         <g class="cr">
           <polygon class="cr-body" points="60,54 86,74 78,108 42,108 34,74" fill="var(--v4-accent,#8fe9ff)" stroke="#2a6a8a" stroke-width="3" stroke-linejoin="round"/>
@@ -205,7 +206,7 @@
     luna: {
       label: 'Pufmis', accent: '#b98bff', accent2: '#ff8bd6', spark: '✦',
       abilities: { hatchling: 'Toz', juvenile: 'Pırıltı', adult: 'Ay Tozu' },
-      quips: ['Ay beni çağırıyor.', 'Kanatlarım yumuşacık.', 'Geceyi fısıldarım.', 'Işığa doğru süzülelim.'],
+      quips: ['Gece kuşusun, ben de. İyi ekip olduk.', 'Ay ışığında daha komiğim, denesene.', 'Rüyanda beni gördün mü? Ben seni gördüm.', 'Kanatlarım var ama yine de yanında kalıyorum.'],
       svg: `
         <g class="cr">
           <g class="cr-juv cr-wing">
@@ -275,6 +276,9 @@
       mood: 'idle',
       stage: 'adult',   // pet bagli degilken tam formda gorunsun
       feral: false,
+      // true: Bugy Classic (v1) susturulmaz, pet ile birlikte (sonuk) ekranda
+      // kalir. Kullanici tercihi; varsayilan ACIK (classic kapanmasin).
+      coexist: readLS(coexistKey) !== '0',
       randomEnabled: true,
       x: window.innerWidth * 0.5,
       dir: 1,
@@ -327,9 +331,16 @@
       const grow = GROW[state.stage] || 1;
       const headFromBottom = bottomGap + CHAR_H * (1 - headY / VB_H) * grow;
       balloon.style.bottom = `${Math.round(headFromBottom + 8)}px`;
-      const centerX = state.x + CHAR_W / 2;
-      const bx = clamp(centerX - 26, 8, window.innerWidth - 240);
-      balloon.style.transform = `translate(${Math.round(bx)}px, ${Math.round(bob)}px)`;
+      // Yatay: baloncugu yaratigin uzerinde ortala; ekran kenarinda govdeyi
+      // iceride tut ama KUYRUGU yaratik merkezine sabitle (kopma olmasin).
+      if (!balloon.hidden) {
+        const centerX = state.x + CHAR_W / 2;
+        const w = balloon.offsetWidth || 180;
+        const left = clamp(centerX - w / 2, 8, window.innerWidth - w - 8);
+        const tailX = clamp(centerX - left, 18, Math.max(18, w - 18));
+        balloon.style.transform = `translate(${Math.round(left)}px, ${Math.round(bob)}px)`;
+        balloon.style.setProperty('--v4-tail', `${Math.round(tailX)}px`);
+      }
     };
 
     // --- Konusma balonu (daktilo efekti) ---
@@ -430,7 +441,11 @@
     const syncVisibility = () => {
       layer.hidden = !state.active;
       document.body.classList.toggle('bugy-v4-active', state.active);
-      document.body.classList.toggle('bugy-v1-muted', state.active);
+      // coexist ACIK: v1 tamamen susturulmaz, "ambient" (sonuk) olarak kalir;
+      // boylece Bugy Classic kapanmaz ama pet on planda durur.
+      // coexist KAPALI: eski davranis — v1 susturulur (studio tekil motor).
+      document.body.classList.toggle('bugy-v1-muted', state.active && !state.coexist);
+      document.body.classList.toggle('bugy-v1-ambient', state.active && state.coexist);
     };
 
     const dispatch = () => {
@@ -526,6 +541,18 @@
         char.dataset.mood = mood || 'neutral';
         return mood;
       },
+      // Bugy Classic (v1) ile birlikte yasama modu. true iken pet aktifken
+      // bile v1 susturulmaz (kullanici "classic kapanmasin" istiyor).
+      setClassicCoexist(on) {
+        state.coexist = Boolean(on);
+        writeLS(coexistKey, state.coexist ? '1' : '0');
+        syncVisibility();
+        if (state.coexist && window.Bugy && window.Bugy.summon) {
+          // Classic'in gorunur ve dolasiyor oldugundan emin ol.
+          try { window.Bugy.summon(); } catch { /* yok say */ }
+        }
+        return state.coexist;
+      },
       // Dramatik evrim: flas + form degisimi + yeni guc replikasi.
       evolve(stage) {
         if (!state.active) this.activate();
@@ -543,6 +570,13 @@
       },
       // Disaridan (pet) baglama konusma: ihtiyac/duygu ifadesi.
       say(text) { say(text); return true; },
+      // Yaratigin kendi kisilik replikinden birini soyle.
+      quip() {
+        const quips = def().quips;
+        const line = quips[Math.floor(Math.random() * quips.length)];
+        say(line);
+        return line;
+      },
       getState() {
         return {
           engine: 'v4',

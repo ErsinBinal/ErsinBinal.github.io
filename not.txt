@@ -255,3 +255,23 @@ hakkında bilgiler edinsin.
     8. Ikinci bir evrim dali (bakim stiline gore: cok beslenen vs cok
        oynanan farkli yetiskin formu) — Pokemon'daki "branch evolution".
        (zor; veri modeli + ekstra SVG)
+
+  --- TUR 2 RTUSLAR (2026-06-25) -----------------------------------------
+  [x] Cyberpunk gorunum: her yaratiga her zaman acik NEON kenar isigi
+      (.v4-svg drop-shadow accent+accent2) eklendi -> synthwave hissi.
+  [x] Diyaloglar esprili/gunluk + DAVRANIS gondermeleri: bugy-pet artik
+      konusmayi suruyor (v4.setRandom(false)). contextLines() sayfa (makaleler/
+      tools/oracle/dashboard/home) + saat (gece/sabah/aksam) baglamina gore
+      replik secer; DAILY_LINES esprili cyberpunk; makale okuyunca READ_REACT
+      anlik tepki verir. Yaratik kisilik replikleri (v4.quip) de karisir.
+  [x] Konusma balonu kopmasi: balon artik yaratik UZERINDE ortalaniyor,
+      KUYRUK (--v4-tail) JS ile yaratik merkezine sabitleniyor; ekran
+      kenarinda govde iceride kalsa bile kuyruk karakteri gosterir. Dikey
+      hiza zaten getBBox ile yapiliyordu.
+  [x] Bugy Classic kapanmasin: yeni "coexist" tercihi (localStorage
+      convivium.bugy.v4.coexist, VARSAYILAN ACIK). Pet aktifken v1 tamamen
+      susturulmaz; .bugy-v1-ambient ile sonuk (opacity .5, hover .92) kalir.
+      bugy-v4 boot'ta okur; bugy-pet de setClassicCoexist(true) cagirir.
+      Kapatmak istenirse LS'e '0' yazilir (ileride studio'ya toggle eklenebilir).
+  NOT: Pokemon-vari evrim (3 asama + guc + flas) zaten mevcut; bu turda
+  gorsel/diyalog/koexistans rotuslandi.

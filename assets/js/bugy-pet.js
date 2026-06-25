@@ -68,8 +68,73 @@
     hygiene: ['Üstüm kirlendi…', 'Bir duş iyi gelirdi.', 'Kendimi pasaklı hissediyorum.'],
     bond:    ['Biraz ilgi?', 'Yanımda kal, olur mu?', 'Seni özledim.']
   };
-  const FERAL_LINES = ['Grrr…', '*hırlıyor*', 'Yaklaşma… şimdilik.', '…'];
-  const HAPPY_LINES = ['İyi ki buradasın!', 'Bugün harikayım!', 'Seninle olmak güzel.', 'Hadi biraz oynayalım!'];
+  const FERAL_LINES = ['Grrr…', '*hırlıyor*', 'Yaklaşma… şimdilik.', '…', 'Sistem çöktü, sinirlerim de.'];
+  const HAPPY_LINES = ['İyi ki buradasın!', 'Bugün modum 5 yıldız.', 'Seninle olmak güzel.', 'Hadi biraz oynayalım!'];
+
+  // Esprili gunluk + cyberpunk genel replikler (her yaratik kullanir).
+  const DAILY_LINES = [
+    'Veri akışı bugün yoğun, kafam dumanlı.',
+    'Patrona söyleme ama en sevdiğim sensin.',
+    'Wi-Fi’ye bağlıyım ama asıl sana bağlıyım.',
+    'Bir gün evrim geçirip senin yerine geçeceğim. Şaka. Belki.',
+    'Bugünün güncellemesi: biraz sevgi yüklendi.',
+    'Reklamları engelledim, beni engelleme yeter.',
+    'Pil %12 ama moralim %100.'
+  ];
+
+  // Site icindeki davranisa gore gondermeler (sayfa + saat baglami).
+  const CONTEXT_LINES = {
+    articles: [
+      'Yine makale mi? Göz nuru dökme, bana da bak.',
+      'Bu yazıyı bana özetlesene, üşendim.',
+      'Kaydır kaydır… parmağın yorulmadı mı?',
+      'Okumayı sevdiğini biliyordum, entelsin.'
+    ],
+    home: [
+      'Ana üsse döndük, burası güvenli.',
+      'Terminal kokusu… ah, ev gibi.',
+      'Bugün siteyi yine kurcalıyoruz demek.'
+    ],
+    tools: [
+      'Bu araçlar fena değil ama ben daha kullanışlıyım.',
+      'Yine bir şeyler mi kuruyorsun? Bana da görev ver.'
+    ],
+    oracle: [
+      'Kehanet mi? Geleceği gördüm: birazdan beni besleyeceksin.',
+      'Falına bakayım… evet, bugün bana sarılacaksın.'
+    ],
+    dashboard: [
+      'Panelime mi bakıyorsun? Utandım şimdi.',
+      'İstatistiklerim iyi mi? Çok çalışıyorum çünkü.'
+    ]
+  };
+  const TIME_LINES = {
+    night:   ['Saat geç oldu, sen hâlâ ayaktasın. Ben de.', 'Gece kodu daha iyi akar derler ama yat artık.', 'Uyku? O da neymiş, değil mi? (esniyor)'],
+    morning: ['Günaydın! Sistemler ısınıyor.', 'Kahveni aldın mı? Enerjimi senden alıyorum.'],
+    evening: ['Akşam oldu, biraz mola ver.', 'Işıklar süzülmüş, neon vakti.']
+  };
+  // Makale okuma davranisina anlik tepki.
+  const READ_REACT = [
+    'Bu makaleyi birlikte okuduk sayılır.',
+    'Okudukça akıllanıyorsun, bana da bulaşıyor.',
+    '+1 bilgi yüklendi. Bana da +1 sevgi?'
+  ];
+
+  // Sayfa + saate gore baglamsal replik havuzu.
+  function contextLines() {
+    const p = location.pathname;
+    let pool = [];
+    if (/makaleler|articles/.test(p)) pool = pool.concat(CONTEXT_LINES.articles);
+    else if (/\/tools\//.test(p)) pool = pool.concat(CONTEXT_LINES.tools);
+    else if (/oracle/.test(p)) pool = pool.concat(CONTEXT_LINES.oracle);
+    else if (/dashboard/.test(p)) pool = pool.concat(CONTEXT_LINES.dashboard);
+    else pool = pool.concat(CONTEXT_LINES.home);
+    const h = new Date().getHours();
+    if (h < 5) pool = pool.concat(TIME_LINES.night);
+    else if (h < 11) pool = pool.concat(TIME_LINES.morning);
+    else if (h >= 18) pool = pool.concat(TIME_LINES.evening);
+    return pool;
+  }
 
   const clampPct = (v) => Math.max(0, Math.min(100, Math.round(v)));
 
@@ -155,6 +220,10 @@
     if (!v4) return;
     try { localStorage.setItem(ENGINE_KEY, 'v4'); } catch { /* yok say */ }
     if (v4.setSkin) v4.setSkin(resolveSpecies(pet.species));
+    // Bugy Classic (v1) kapanmasin: pet ile birlikte ekranda kalsin.
+    if (v4.setClassicCoexist) v4.setClassicCoexist(true);
+    // Konusmayi pet surur (baglamsal + esprili); v4'un kendi idle quip'i sussun.
+    if (v4.setRandom) v4.setRandom(false);
     if (v4.activate) v4.activate();
     mountCareButton();
     const feral = applyVisualState(pet);
@@ -172,8 +241,8 @@
   // halini ya da mutlulugunu konusma balonuyla soyler.
   function startSpeech() {
     stopSpeech();
-    window.setTimeout(speakState, 6000); // ilk ifade kisa sure sonra
-    speakTimer = window.setInterval(speakState, 26000);
+    window.setTimeout(speakState, 5000); // ilk ifade kisa sure sonra
+    speakTimer = window.setInterval(speakState, 19000);
   }
   function stopSpeech() {
     if (speakTimer) { window.clearInterval(speakTimer); speakTimer = 0; }
@@ -181,6 +250,9 @@
 
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+  // Yaratik ara ara konusur. Oncelik: canavar > kritik ihtiyac. Aksi halde
+  // baglamsal/esprili gunluk replikler ve yaratigin kendi kisilik repliki
+  // karisik kullanilir; boylece site icindeki davranisa gondermeler yapar.
   function speakState() {
     const v4 = window.BugyV4;
     if (!currentPet || !v4 || !v4.say) return;
@@ -189,12 +261,16 @@
     const needs = currentNeeds(currentPet);
     const mood = moodFromNeeds(needs);
     if (mood === 'feral') { v4.say(pick(FERAL_LINES)); return; }
-    // En dusuk ihtiyaci bul; kritikse onu dile getir.
+    // En dusuk ihtiyaci bul; kritikse oncelikle onu dile getir.
     let lowKey = null; let lowVal = 101;
     NEEDS.forEach(({ key }) => { if (needs[key] < lowVal) { lowVal = needs[key]; lowKey = key; } });
-    if (lowKey && lowVal < 35) { v4.say(pick(NEED_LINES[lowKey])); return; }
-    if (mood === 'happy') { v4.say(pick(HAPPY_LINES)); return; }
-    // Sakin: kisilik replikine birak (bugy-v4 idle quip'i halleder).
+    if (lowKey && lowVal < 32 && Math.random() < 0.8) { v4.say(pick(NEED_LINES[lowKey])); return; }
+    // %30 ihtimalle yaratigin kendi kisilik repliki.
+    if (Math.random() < 0.3 && v4.quip) { v4.quip(); return; }
+    // Baglamsal + esprili gunluk havuz (+ mutluysa nese repliki).
+    let pool = contextLines().concat(DAILY_LINES);
+    if (mood === 'happy') pool = pool.concat(HAPPY_LINES);
+    v4.say(pick(pool));
   }
 
   // --- Ihtiyac dususu + bakim ---------------------------------------------
@@ -314,7 +390,7 @@
   // Site aktivitesi (orn. makale okuma) pet'e kucuk, kisitli odul verir.
   // care_points'i ARTIRMAZ; evrim yalnizca bilincli bakimla ilerlesin.
   const REWARD = {
-    read: { d: { bond: 6, hunger: 2 }, mood: 'think', throttleMs: 8 * 60 * 1000 }
+    read: { d: { bond: 6, hunger: 2 }, mood: 'think', lines: READ_REACT, throttleMs: 8 * 60 * 1000 }
   };
 
   async function applyReward(cfg) {
@@ -327,6 +403,8 @@
     applyVisualState(currentPet);
     const v4 = window.BugyV4;
     if (v4 && v4.trigger && cfg.mood) v4.trigger(cfg.mood);
+    // Davranisa anlik gonderme (orn. makale okudun -> okuma replikasi).
+    if (v4 && v4.say && cfg.lines) window.setTimeout(() => v4.say(pick(cfg.lines)), 120);
     await savePet(currentPet);
   }
 

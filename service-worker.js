@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v130';
+const CACHE_NAME = 'convivium-v131';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -37,7 +37,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/dart-skorbord.css?v=3',
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
-  '/assets/css/bugy-v4.css?v=2',
+  '/assets/css/bugy-v4.css?v=3',
   '/assets/css/bugy-pet.css?v=4',
   '/assets/css/deb-companion.css?v=2',
   '/assets/css/home.css?v=21',
@@ -49,8 +49,8 @@ const PRECACHE_ASSETS = [
   '/assets/js/neon-sheep.js?v=29',
   '/assets/js/bugy-v2.js?v=2',
   '/assets/js/bugy-v3-loader.js?v=6',
-  '/assets/js/bugy-v4.js?v=5',
-  '/assets/js/bugy-pet.js?v=4',
+  '/assets/js/bugy-v4.js?v=6',
+  '/assets/js/bugy-pet.js?v=5',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=1',
   '/assets/js/sfx.js?v=15',

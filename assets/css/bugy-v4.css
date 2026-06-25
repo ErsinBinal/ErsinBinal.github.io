@@ -37,7 +37,11 @@
   width: 100%;
   height: 100%;
   overflow: visible;
-  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+  /* Cyberpunk neon kenar isigi + yumusak golge (her yaratiga synthwave hissi). */
+  filter:
+    drop-shadow(0 0 4px color-mix(in srgb, var(--v4-accent, #00f3ff) 70%, transparent))
+    drop-shadow(0 0 9px color-mix(in srgb, var(--v4-accent2, #00f3ff) 45%, transparent))
+    drop-shadow(0 6px 6px rgba(0, 0, 0, 0.4));
 }
 
 .bugy-v4-char:focus-visible {
@@ -98,7 +102,9 @@
 .bugy-v4-balloon::after {
   content: '';
   position: absolute;
-  left: 26px;
+  /* Kuyruk yaratik merkezine JS ile hizalanir (--v4-tail). */
+  left: var(--v4-tail, 26px);
+  margin-left: -5px;
   bottom: -12px;
   border-width: 12px 10px 0 0;
   border-style: solid;
@@ -242,6 +248,18 @@
   0%, 100% { filter: hue-rotate(0deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
   50% { filter: hue-rotate(180deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
 }
+
+/* Bugy Classic (v1) ile birlikte yasama: pet aktifken classic tamamen
+   kapanmaz; sonuk (ambient) kalir ki pet on planda dursun ama kaybolmasin. */
+.bugy-v1-ambient #neon-sheep,
+.bugy-v1-ambient #neon-ufo,
+.bugy-v1-ambient #neon-storm,
+.bugy-v1-ambient #neon-tornado,
+.bugy-v1-ambient #neon-portal {
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+.bugy-v1-ambient #neon-sheep:hover { opacity: 0.92; }
 
 /* Hareket azaltma tercihinde sabit dur */
 @media (prefers-reduced-motion: reduce) {
