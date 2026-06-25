@@ -496,3 +496,79 @@ YAPMAK ISTEDIGIMIZ
 
 ---
 
+==========================================================================
+ERSIN'IN YAPMASI GEREKENLER (adim adim)            -- 2026-06-25
+==========================================================================
+
+DURUM:
+  - Supabase (canli veritabani) TAMAM. Ben yaptim. (kolonlar + trigger +
+    kullanici kendi profilini yazma izinleri eklendi, dogrulandi.)
+  - Kod degisiklikleri 5 yerel commit olarak hazir AMA HENUZ PUSH EDILMEDI.
+  - Geriye 3 adim kaldi; hepsi senin elinle yapilacak.
+
+--------------------------------------------------------------------------
+ADIM 1 — GEMINI API ANAHTARI AL VE WORKER'A EKLE
+--------------------------------------------------------------------------
+  Neden: kisiyi internette GERCEKTEN aratan parca bu anahtarla calisir.
+  (Anahtari ben alamam; senin Google hesabin gerekiyor.)
+
+  1.1) Su linki ac:  https://aistudio.google.com/apikey
+  1.2) "Create API key" / "API anahtari olustur" de, cikan anahtari kopyala.
+       (Ucretsiz katman yeterli.)
+  1.3) Terminalde sunu TEK SATIR olarak calistir:
+
+         cd workers/oracle && npx wrangler secret put GEMINI_API_KEY
+
+       (DIKKAT: "cd" ile wrangler ayri satir olursa "Required Worker name
+        missing" hatasi alirsin. Ikisini && ile ayni satirda calistir.
+        Alternatif: kok klasorden ->
+          npx wrangler secret put GEMINI_API_KEY --config workers/oracle/wrangler.toml )
+
+  1.4) "Enter a secret value" deyince kopyaladigin anahtari YAPISTIR ve Enter.
+       (Ekranda gorunmemesi normaldir, guvenlik icin gizlidir.)
+
+  Not: Bu adimi atlarsan ozellik COKMEZ; sadece gercek arama yerine
+       "AI tahmini" moduna duser.
+
+--------------------------------------------------------------------------
+ADIM 2 — WORKER'I DEPLOY ET (yeni endpoint canliya cikar)
+--------------------------------------------------------------------------
+  (Zaten ersinbinal@gmail.com ile giris yapilmis durumdasin.)
+
+  2.1) Terminalde TEK SATIR olarak:
+
+         cd workers/oracle && npx wrangler deploy
+
+       (Yine "Required Worker name missing" alirsan, kok klasorden ->
+          npx wrangler deploy --config workers/oracle/wrangler.toml )
+
+  2.2) Calistigini test et (istege bagli):
+
+         curl -s https://convivium-oracle.convivium.workers.dev/enrich-profile \
+           -H 'Origin: https://ersinbinal.github.io' \
+           -H 'Content-Type: application/json' \
+           --data '{"first_name":"Ersin","last_name":"Binal"}'
+
+       Cevapta  "grounded": true  gorursen GERCEK arama calisiyor demektir.
+       "grounded": false  gorursen ADIM 1'deki anahtar eksik/yanlistir.
+
+--------------------------------------------------------------------------
+ADIM 3 — SITEYI YAYINLA (en son adim, gorunen siteyi degistirir)
+--------------------------------------------------------------------------
+  3.1) Proje ana klasorunde:
+
+         git push
+
+       Bu, dashboard + JS degisikliklerini GitHub Pages'e canli alir.
+       Bundan sonra dashboard'da "Bugy seni arastirsin" butonu gorunur.
+
+--------------------------------------------------------------------------
+TAVSIYE EDILEN SIRA:  ADIM 1  ->  ADIM 2  ->  (curl ile test)  ->  ADIM 3
+--------------------------------------------------------------------------
+
+GERI ALMAK ISTERSEN (her sey silinsin):
+  git reset --hard 1451d2f
+  (Supabase'e eklenen kolonlar kalir; zararsizdir, durabilir.)
+
+---
+

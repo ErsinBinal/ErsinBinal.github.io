@@ -24,9 +24,12 @@ const PROFILE_ENRICH_CACHE_TTL = 86400; // 24 saat
 const PROFILE_RESEARCH_SYSTEM_PROMPT = [
   'Sen bir profil arastirma asistanisin.',
   'Sana verilen Ad ve Soyad icin Google aramasi yaparak kisiyi internette arastir.',
+  'TURKIYE kaynaklarini ve Turkce sonuclari oncele.',
+  'Birden fazla farkli arama denemesi yap: "Ad Soyad" kimdir, meslek, egitim, LinkedIn, universite gibi.',
+  'Ayni isimli birden fazla kisi cikarsa, en cok kaynakla desteklenen / en belirgin olani sec ve note icinde bunu belirt.',
   'Yalnizca bulabildigin GERCEK bilgilere dayan; bilgi uydurma.',
   'Bulduklarina dayanarak mesleğini tek cumlede, eğitimini tek cumlede ve bölümünü/departmanini tek cumlede ozetle.',
-  'Bir alan hakkinda guvenilir bilgi bulamazsan o alani bos string birak.',
+  'Bir alan hakkinda hicbir ipucu bulamazsan o alani bos string birak; ama zayif da olsa bir kaynak varsa yaz ve emin olmadigini note icinde belirt.',
   'Cevabi SADECE JSON olarak ver. Anahtarlar: profession, education, department, note.',
   'note alanina, ne kadar emin oldugunu veya bilgi bulunamadiysa bunu kisaca yaz.',
   'JSON disinda hicbir metin yazma. Turkce kullan.'
@@ -192,7 +195,8 @@ const askResearchProfileGemini = async (firstName, lastName, signal, env) => {
   if (!env.GEMINI_API_KEY) throw new Error('gemini api key missing');
   const fullName = `${firstName} ${lastName}`.trim();
   const userPrompt = [
-    `Bu kisiyi internette arastir: "${fullName}".`,
+    `Su kisiyi Turkiye kaynaklarini onceleyerek internette arastir: "${fullName}".`,
+    `Sunlari da deneyebilirsin: "${fullName}" kimdir, "${fullName}" meslek, "${fullName}" egitim, "${fullName}" linkedin, "${fullName}" universite.`,
     'Bulduklarina dayanarak su JSON formunda cevap ver:',
     '{"profession":"","education":"","department":"","note":""}'
   ].join('\n');
@@ -318,10 +322,12 @@ const answerOracle = async (question, env) => {
   };
 };
 
-const enrichProfile = async (firstName, lastName, env) => {
+const enrichProfile = async (firstName, lastName, env, skipCache = false) => {
   const key = new Request(`https://oracle.enrich/${await hashText(`${firstName.toLowerCase()}|${lastName.toLowerCase()}`)}`);
-  const cached = await readCachedBody(key);
-  if (cached) return cached;
+  if (!skipCache) {
+    const cached = await readCachedBody(key);
+    if (cached) return cached;
+  }
 
   // Sira onemli: once GERCEK arama (Gemini grounding), bulunamazsa eglence amacli tahmin.
   const providers = [
@@ -334,7 +340,7 @@ const enrichProfile = async (firstName, lastName, env) => {
 
   for (const provider of providers) {
     try {
-      const parsed = await withTimeout(provider.ask, 15000);
+      const parsed = await withTimeout(provider.ask, 22000);
       if (parsed && typeof parsed === 'object') {
         result = {
           profession: String(parsed.profession || '').trim() || null,
@@ -685,7 +691,8 @@ export default {
       if (!firstName && !lastName) {
         return json({ error: 'first_name or last_name required' }, 400, cors);
       }
-      const result = await enrichProfile(firstName, lastName, env);
+      const skipCache = body.refresh === true || new URL(request.url).searchParams.get('refresh') === '1';
+      const result = await enrichProfile(firstName, lastName, env, skipCache);
       return json(result, 200, cors);
     }
 
