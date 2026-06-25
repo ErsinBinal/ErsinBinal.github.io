@@ -261,7 +261,9 @@
       education: String(data.education || '').trim() || null,
       department: String(data.department || '').trim() || null,
       note: String(data.note || '').trim() || null,
-      grounded: Boolean(data.grounded)
+      grounded: Boolean(data.grounded),
+      // Arama hic calistirilamadi mi (kota/gecici hata)? O zaman tekrar denenebilir.
+      available: data.provider !== 'unavailable' && !data.degraded
     };
   }
 

@@ -35,17 +35,6 @@ const PROFILE_RESEARCH_SYSTEM_PROMPT = [
   'JSON disinda hicbir metin yazma. Turkce kullan.'
 ].join(' ');
 
-// Arama yapilamadiginda (anahtar yoksa / hata) kullanilan eglence amacli tahmin.
-const PROFILE_ENRICH_SYSTEM_PROMPT = [
-  'Sen Convivium icin eglenceli bir "fal/tahmin" servisisin.',
-  'Bir kullanicinin yalnizca Ad ve Soyad bilgisinden yola cikarak EGLENCE AMACLI olasi bir meslek, egitim ve departman tahmini yap.',
-  'Bunlar gercek bilgi degil, sadece keyifli bir tahmindir.',
-  'Cevabi sadece JSON olarak ver. Yanitta su anahtarlar olmali: profession, education, department, note.',
-  'Eger alan icin makul bir tahmin yoksa, bos string kullan.',
-  'Geriye sadece JSON metni dondur. Ek aciklama veya yorum yazma.',
-  'Turkce kullan.'
-].join(' ');
-
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const RATE_LIMITS = new Map();
@@ -227,46 +216,6 @@ const askResearchProfileGemini = async (firstName, lastName, signal, env) => {
   return parsed;
 };
 
-const askEnrichProfileCloudflare = async (firstName, lastName, env) => {
-  if (!env.AI) throw new Error('cloudflare ai binding missing');
-  const prompt = [
-    PROFILE_ENRICH_SYSTEM_PROMPT,
-    `first_name: ${firstName}`,
-    `last_name: ${lastName}`,
-    'Ciktiyi asagidaki JSON formunda ver:',
-    '{"profession":"","education":"","department":"","note":""}'
-  ].join('\n');
-
-  const response = await env.AI.run(env.CLOUDFLARE_AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
-    messages: [
-      { role: 'system', content: PROFILE_ENRICH_SYSTEM_PROMPT },
-      { role: 'user', content: prompt }
-    ],
-    max_tokens: 220,
-    temperature: 0.4
-  });
-
-  const answer = String(response?.response || response?.result?.response || '').trim();
-  const parsed = extractJson(answer);
-  if (!parsed) throw new Error('profile enrichment parse failed');
-  return parsed;
-};
-
-const askEnrichProfilePollinations = async (firstName, lastName, signal) => {
-  const prompt = [
-    PROFILE_ENRICH_SYSTEM_PROMPT,
-    `first_name: ${firstName}`,
-    `last_name: ${lastName}`,
-    'Ciktiyi asagidaki JSON formunda ver:',
-    '{"profession":"","education":"","department":"","note":""}'
-  ].join('\n');
-
-  const answer = await askPollinations(prompt, signal);
-  const parsed = extractJson(answer);
-  if (!parsed) throw new Error('profile enrichment parse failed');
-  return parsed;
-};
-
 const withTimeout = async (callback, ms = 18000) => {
   const controller = new AbortController();
   let timeout = null;
@@ -329,40 +278,35 @@ const enrichProfile = async (firstName, lastName, env, skipCache = false) => {
     if (cached) return cached;
   }
 
-  // Sira onemli: once GERCEK arama (Gemini grounding), bulunamazsa eglence amacli tahmin.
-  const providers = [
-    { name: 'gemini-grounded', grounded: true, ask: signal => askResearchProfileGemini(firstName, lastName, signal, env) },
-    { name: 'cloudflare-ai', grounded: false, ask: () => askEnrichProfileCloudflare(firstName, lastName, env) },
-    { name: 'pollinations', grounded: false, ask: signal => askEnrichProfilePollinations(firstName, lastName, signal) }
-  ];
-  const errors = [];
-  let result = { profession: null, education: null, department: null, note: '', provider: 'none', grounded: false, degraded: true };
-
-  for (const provider of providers) {
-    try {
-      const parsed = await withTimeout(provider.ask, 22000);
-      if (parsed && typeof parsed === 'object') {
-        result = {
-          profession: String(parsed.profession || '').trim() || null,
-          education: String(parsed.education || '').trim() || null,
-          department: String(parsed.department || '').trim() || null,
-          note: String(parsed.note || '').trim() || null,
-          provider: provider.name,
-          grounded: Boolean(provider.grounded),
-          degraded: false
-        };
-        break;
-      }
-    } catch (error) {
-      errors.push({ provider: provider.name, message: error?.message || String(error) });
-      console.warn('enrich-profile failed', JSON.stringify({ provider: provider.name, error: error?.message || String(error) }));
-    }
+  // SADECE gercek arama (Gemini + Google Search grounding). Arama tutmazsa
+  // uydurma tahmin URETILMEZ; "su an yapilamadi" durumu dondurulur.
+  let parsed;
+  try {
+    parsed = await withTimeout(
+      signal => askResearchProfileGemini(firstName, lastName, signal, env),
+      22000
+    );
+  } catch (error) {
+    console.warn('enrich-profile failed', JSON.stringify({ provider: 'gemini-grounded', error: error?.message || String(error) }));
+    // Basarisizligi CACHELEME: kota/gecici hata sonrasi kullanici tekrar deneyebilsin.
+    return {
+      profession: null, education: null, department: null,
+      note: 'Arastirma su an yapilamadi (yogunluk veya gunluk limit). Biraz sonra tekrar dene.',
+      provider: 'unavailable', grounded: false, degraded: true
+    };
   }
 
-  if (result.provider === 'none') {
-    result.note = 'Bilgi bulunamadi.';
-  }
+  const result = {
+    profession: String(parsed?.profession || '').trim() || null,
+    education: String(parsed?.education || '').trim() || null,
+    department: String(parsed?.department || '').trim() || null,
+    note: String(parsed?.note || '').trim() || null,
+    provider: 'gemini-grounded',
+    grounded: true,
+    degraded: false
+  };
 
+  // Gercek bir sonuc (bulundu ya da "bulunamadi") 24 saat cachelenebilir.
   try {
     await writeCache(key, result, env, PROFILE_ENRICH_CACHE_TTL);
   } catch {
