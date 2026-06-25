@@ -194,3 +194,64 @@ hakkında bilgiler edinsin.
   KALAN (bilinçli takip): index.html companion konsolidasyonu (deb + v2/v3/v4),
   ozgecmisim.html'e backend + pet, ve istenirse pet'in daha fazla içerik
   sayfasına yayılması. Supabase bugy_pets tablosu MCP ile uygulandi (canli).
+
+  --- SKIN/YARATIK YENIDEN TASARIMI (2026-06-25) --------------------------
+  Istek: makaleler'deki Bugy v4 ped'inin calisma mantigi iyi ama skinler
+  istenildigi gibi degil. Site dokusuna (80-90'lar synthwave/CRT) uygun,
+  Pokemon benzeri; evrimle yeni ozellik kazanan + fiziksel gelisen, bakimsiz
+  kalinca canavarlasan, ara ara konusma baloncuguyla kendini ifade eden
+  yaratiklar.
+
+  [x] TAMAMLANDI (2026-06-25):
+      - bugy-v4.js TAMAMEN yeniden yazildi: "Office asistanlari" (Clippy/
+        Merlin/Rover/F1/Genie/Scribble/Dot) kaldirildi; yerine 7 retro
+        yaratik geldi:
+          spark=Bitik(dijital) volt=Voltik(elektrik) aqua=Glupi(su)
+          ember=Korcuk(ates) leaf=Filizo(bitki) frost=Buzcuk(buz)
+          luna=Pufmis(kozmik).
+      - FIZIKSEL EVRIM: SVG katmanli (.cr-juv / .cr-adult / .cr-feral).
+        Yavru sade -> genc'te yeni uzuvlar (kuyruk/boynuz/kanat/kol) acilir
+        -> yetiskin'de tac/yildirim/antler/cicek/hale eklenir. Govde
+        --v4-grow olcegiyle buyur (0.78/0.92/1.06). Artik sadece renk
+        filtresi degil, gercek form degisimi.
+      - GUC KAZANIMI: her asamada adli bir guc acilir (or. Kivilcim->Sok->
+        Yildirim). Evrimde dramatik FLAS animasyonu (beyaz siluet + sarsinti)
+        + "Yeni guc: X!" baloncugu. Guc; bakim paneli + dashboard'da gorunur.
+      - CANAVARLASMA: gercek ofkeli surat (kirmizi goz/dis/catik kas) SVG'ye
+        gecer (data-feral); kirmizi aura filtresi destekler.
+      - BAGLAMSAL KONUSMA (yeni): yaratik ihtiyacini KENDI soyler. En dusuk
+        ihtiyaci secip ~26 sn'de bir dile getirir: ac="Karnim acikti...",
+        yorgun="Uykum geldi...", kirli="Bir dus iyi gelirdi.", yalniz=
+        "Yanimda kal, olur mu?"; canavarken hirlar, mutluyken sevinir.
+      - YENI v4 API: setStage / setFeral / setMood / evolve / say. Eski API
+        (activate/deactivate/summon/trigger/next/setRandom/setSkin/getState)
+        ve 7 jest (tada/think/...) korundu; studio + bakim kirilmadi.
+      - GOC: eski Office skin anahtarlari yeni yaratiklara otomatik eslenir
+        (clippy->spark, merlin->luna, rover->volt, f1->frost, genie->aqua,
+        scribble->leaf, dot->ember). Supabase semasi DEGISMEDI (species ayni
+        sutun); eski pet bozulmaz.
+      - Dosyalar: bugy-v4.js/.css, bugy-pet.js/.css, dashboard.js,
+        bugy-studio.js + cache surumleri (SW v128->v129, ilgili ?v= damgalari).
+      - NOT: Node yerelde yok; mantik/sozdizimi elle dogrulandi. Yaratiklarin
+        cizimi + evrim flasi + baloncuklarin GORSEL teyidi tarayicida (giris
+        + bakim) yapilmali.
+
+  ONERILER (sonraki tur — onayla, yapayim):
+    1. Yumurta SECIM EKRANINDA yaratik onizlemesi: kartlarda isim/aciklama
+       yerine her yaratigin gercek SVG'sini (yetiskin formu) goster. "Hangi
+       yaratik" korlemesine secilmesin. (orta; v4'ten preview API gerekir)
+    2. Onizleme kartinda evrim zincirini goster (yavru->genc->yetiskin
+       silueti) + kazanilacak gucleri listele. (orta)
+    3. Bakim panelinde "sonraki evrime kalan bakim puani" ilerleme cubugu
+       (su an esikler 12/40 gizli). Motivasyon artar. (kolay)
+    4. Tikla-besle disinda surukle-birak besleme/oksama (mikro-etkilesim) +
+       dokunusa tepki replikleri. (orta)
+    5. Yaratik basina ozgun renk paleti tema degiskenlerinden tureyebilir
+       (site temasiyla uyum). (kolay-orta)
+    6. Gece/gunduz veya sayfa baglamina gore replik cesitliligi (or. dart
+       sayfasinda "skorun nasil?"). (kolay)
+    7. Evrim/canavarlasma anlarinda hafif sfx.js sesi (zaten altyapi var).
+       (kolay; reduced-motion/ses tercihi guard'i ile)
+    8. Ikinci bir evrim dali (bakim stiline gore: cok beslenen vs cok
+       oynanan farkli yetiskin formu) — Pokemon'daki "branch evolution".
+       (zor; veri modeli + ekstra SVG)

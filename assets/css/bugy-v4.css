@@ -1,6 +1,7 @@
-/* Convivium - Bugy v4 "Office Yardimcilari"
-   Kevan J. Atteberry estetigi: yumusak, yuvarlak, dostane illustrasyon hissi.
-   Office 97-2003 asistan animasyonlarindan esinlenen hareketler. */
+/* Convivium - Bugy v4 "Retro Yaratiklar"
+   80-90'lar synthwave/CRT estetigi: Pokemon benzeri, evrim geciren yaratiklar.
+   Asama (hatchling/juvenile/adult) ve canavarlasma (feral) SVG katmanlariyla
+   acilip kapanir; boylece yaratik fiziksel olarak buyur ve degisir. */
 
 .bugy-v4-layer {
   position: fixed;
@@ -23,13 +24,19 @@
   will-change: transform;
 }
 
-.bugy-v4-svg-wrap { width: 100%; height: 100%; }
+/* Asamaya gore fiziksel buyume (govde olcegi). */
+.bugy-v4-svg-wrap {
+  width: 100%;
+  height: 100%;
+  transform: scale(var(--v4-grow, 1));
+  transform-origin: 50% 100%;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
 .v4-svg {
   width: 100%;
   height: 100%;
   overflow: visible;
-  /* Atteberry yumusak golge */
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
 }
 
@@ -39,6 +46,25 @@
   border-radius: 14px;
 }
 
+/* ============================================================
+   Evrim asamasi katmanlari (fiziksel gelisim)
+   ============================================================ */
+/* Varsayilan: ileri-asama uzuvlari ve feral surat gizli. */
+.v4-svg .cr-juv,
+.v4-svg .cr-adult,
+.v4-svg .cr-feral { display: none; }
+
+/* Genc: yavru uzuvlari acilir. */
+.bugy-v4-char[data-stage="juvenile"] .cr-juv,
+.bugy-v4-char[data-stage="adult"] .cr-juv { display: inline; }
+
+/* Yetiskin: tam form. */
+.bugy-v4-char[data-stage="adult"] .cr-adult { display: inline; }
+
+/* Canavarlasma: normal yuz kapanir, feral surat acilir. */
+.bugy-v4-char[data-feral="1"] .cr-eyes { display: none; }
+.bugy-v4-char[data-feral="1"] .cr-feral { display: inline; }
+
 /* --- Goz kirpma --- */
 .v4-pupil {
   transform-box: fill-box;
@@ -46,8 +72,9 @@
   transition: transform 0.08s ease;
 }
 .bugy-v4-char.is-blink .v4-pupil { transform: scaleY(0.12); }
+.bugy-v4-char[data-feral="1"].is-blink .v4-pupil { transform: none; }
 
-/* --- Konusma balonu (klasik Office ipucu) --- */
+/* --- Konusma balonu (retro terminal cizgisi) --- */
 .bugy-v4-balloon {
   position: absolute;
   left: 0;
@@ -56,7 +83,7 @@
   padding: 9px 13px;
   background: linear-gradient(180deg, #fffbe0, #fdf2b8);
   color: #3a2f12;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-mono, 'Courier New', monospace);
   font-size: 0.78rem;
   line-height: 1.4;
   border: 2px solid #d9b94a;
@@ -78,6 +105,16 @@
   border-color: #fdf2b8 transparent transparent transparent;
   filter: drop-shadow(1px 2px 0 #d9b94a);
 }
+/* Canavarlasinca balon da kararir. */
+.bugy-v4-balloon.is-feral {
+  background: linear-gradient(180deg, #2a0710, #3a0d18);
+  color: #ffb3c4;
+  border-color: #ff2e5e;
+}
+.bugy-v4-balloon.is-feral::after {
+  border-color: #3a0d18 transparent transparent transparent;
+  filter: drop-shadow(1px 2px 0 #ff2e5e);
+}
 
 /* --- Parcaciklar --- */
 .v4-particle {
@@ -94,10 +131,10 @@
 }
 
 /* ============================================================
-   Mood animasyonlari (Office asistan jestleri)
+   Mood animasyonlari (jestler)
    ============================================================ */
 @media (prefers-reduced-motion: no-preference) {
-  /* Clippy "tada" — kutlama ziplamasi */
+  /* tada — kutlama ziplamasi */
   .bugy-v4-char.is-tada { animation: v4Tada 1.4s ease; }
   @keyframes v4Tada {
     0% { transform: translateY(0) scale(1); }
@@ -135,10 +172,10 @@
     80% { transform: rotate(-4deg); }
   }
 
-  /* magic — Merlin buyu suzulmesi */
+  /* magic — buyu suzulmesi + parilti */
   .bugy-v4-char.is-magic { animation: v4Magic 1.7s ease; }
   @keyframes v4Magic {
-    0% { transform: translateY(0); filter: drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+    0% { transform: translateY(0); }
     50% { transform: translateY(-22px) scale(1.05); }
     100% { transform: translateY(0); }
   }
@@ -148,7 +185,7 @@
     50% { filter: drop-shadow(0 0 18px var(--v4-accent, #9b6bff)) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
   }
 
-  /* search — Rover one egilip arama */
+  /* search — one egilip arama */
   .bugy-v4-char.is-search { animation: v4Search 1.6s ease; }
   @keyframes v4Search {
     0%, 100% { transform: rotate(0deg) translateX(0); }
@@ -157,7 +194,7 @@
     75% { transform: rotate(-10deg) translateX(-8px); }
   }
 
-  /* morph — The Dot sekil/renk donusumu */
+  /* morph — sekil/renk donusumu (feral tetikleyici) */
   .bugy-v4-char.is-morph { animation: v4Morph 1.7s ease-in-out; }
   @keyframes v4Morph {
     0%, 100% { transform: scale(1, 1); }
@@ -167,21 +204,38 @@
   }
   .bugy-v4-char.is-morph .v4-svg { animation: v4Hue 1.7s linear; }
 
-  /* The Dot surekli renk dongusu + halka donmesi */
-  .bugy-v4-char[data-skin="dot"] .v4-svg { animation: v4HueCycle 7s linear infinite; }
-  .bugy-v4-char[data-skin="dot"] .v4-dot-ring {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: v4Spin 9s linear infinite;
+  /* --- Evrim flasi (dramatik form degisimi) --- */
+  .bugy-v4-char.is-evolving { animation: v4EvolveShake 1.4s ease-in-out; }
+  .bugy-v4-char.is-evolving .v4-svg { animation: v4EvolveFlash 1.4s ease-in-out; }
+  @keyframes v4EvolveShake {
+    0%, 100% { transform: scale(1); }
+    10%, 30%, 50%, 70% { transform: translateX(-4px) scale(1.02); }
+    20%, 40%, 60%, 80% { transform: translateX(4px) scale(1.02); }
+    90% { transform: scale(1.12); }
   }
-  @keyframes v4HueCycle { from { filter: hue-rotate(0deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); } to { filter: hue-rotate(360deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); } }
-  @keyframes v4Spin { to { transform: rotate(360deg); } }
+  @keyframes v4EvolveFlash {
+    0% { filter: brightness(1) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+    35% { filter: brightness(7) saturate(0); }
+    62% { filter: brightness(7) saturate(0); }
+    100% { filter: brightness(1) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
+  }
 
-  /* Merlin yildiz parildamasi */
-  .bugy-v4-char[data-skin="merlin"] .v4-stars circle { animation: v4Twinkle 1.8s ease-in-out infinite; }
-  .bugy-v4-char[data-skin="merlin"] .v4-stars circle:nth-child(2) { animation-delay: 0.6s; }
-  .bugy-v4-char[data-skin="merlin"] .v4-stars circle:nth-child(3) { animation-delay: 1.1s; }
-  @keyframes v4Twinkle { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+  /* --- Tur bazli surekli idle hareketler --- */
+  /* volt: yanak sparklari nabiz, kuyruk salinim */
+  .bugy-v4-char[data-skin="volt"] .cr-cheek { animation: v4Pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  /* ember: alev titremesi */
+  .bugy-v4-char[data-skin="ember"] .cr-flame { animation: v4Flicker 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+  /* leaf: yapraklar esinti */
+  .bugy-v4-char[data-skin="leaf"] .cr-leaf { animation: v4Sway 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+  /* luna: kanat carpisi */
+  .bugy-v4-char[data-skin="luna"] .cr-wing { animation: v4Flap 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 60%; }
+  /* spark: anten parildama */
+  .bugy-v4-char[data-skin="spark"] .cr-ant { animation: v4Pulse 2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+
+  @keyframes v4Pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+  @keyframes v4Flicker { 0%, 100% { transform: scaleY(1) scaleX(1); } 50% { transform: scaleY(1.14) scaleX(0.92); } }
+  @keyframes v4Sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  @keyframes v4Flap { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.82); } }
 }
 
 @keyframes v4Hue {
@@ -192,4 +246,5 @@
 /* Hareket azaltma tercihinde sabit dur */
 @media (prefers-reduced-motion: reduce) {
   .bugy-v4-char { transition: none; }
+  .bugy-v4-svg-wrap { transition: none; }
 }

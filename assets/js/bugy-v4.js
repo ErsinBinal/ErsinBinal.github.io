@@ -1,10 +1,13 @@
 /**
- * Convivium - Bugy v4 "Office Yardimcilari"
- * Kevan J. Atteberry estetiginde, Office 97-2003 asistanlarindan esinlenen
- * SVG tabanli yoldas motoru. Diger bugy motorlariyla ayni API sozlesmesi:
+ * Convivium - Bugy v4 "Retro Yaratiklar"
+ * 80-90'lar synthwave/CRT estetiginde, Pokemon benzeri evrim geciren SVG
+ * yaratik motoru. Her tur 3 evrim asamasinda fiziksel olarak gelisir
+ * (yeni uzuvlar + buyume) ve her asamada yeni bir "guc" kazanir; bakimsiz
+ * birakilinca canavarlasir (feral surat). Diger bugy motorlariyla ayni API:
  *   window.BugyV4 = { version, actions, activate, deactivate, summon,
- *                     trigger, next, setRandom, setSkin, getState }
- * Skin'ler = asistanlar: clippy / merlin / rover / f1 / genie / scribble / dot
+ *                     trigger, next, setRandom, setSkin, getState, ... }
+ * Yeni eklemeler: setStage, setFeral, setMood, evolve, say.
+ * Turler = yaratiklar: spark / volt / aqua / ember / leaf / frost / luna
  */
 (() => {
   'use strict';
@@ -12,162 +15,225 @@
   const engineKey = 'convivium.bugy.engine';
   const skinKey = 'convivium.bugy.v4.skin';
 
+  // Evrensel jestler (geriye donuk uyumluluk: bakim/studio bunlari cagirir).
   const actions = ['tada', 'think', 'alert', 'wave', 'magic', 'search', 'morph'];
 
-  // --- Asistan tanimlari (Atteberry estetigi: yumusak, dostane, yuvarlak) ---
-  const assistants = {
-    clippy: {
-      label: 'Clippy',
-      accent: '#d9e2ec',
-      spark: '✶',
-      quips: [
-        'Bir mektup yaziyor gibisiniz. Yardim edeyim mi?',
-        'Gorunuse gore kod yaziyorsunuz...',
-        'Bir ipucu vereyim mi?',
-        'Ataç gibi her seye tutunurum.'
-      ],
+  const STAGES = ['hatchling', 'juvenile', 'adult'];
+  const GROW = { egg: 0.62, hatchling: 0.78, juvenile: 0.92, adult: 1.06 };
+
+  // Ortak canavar (feral) suratlari govde merkezine gore konumlanir.
+  const feralFace = (cx, cy) => `
+    <g class="cr-feral">
+      <path d="M${cx - 16} ${cy - 8} l11 5 M${cx + 16} ${cy - 8} l-11 5"
+        stroke="#3a0010" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="${cx - 9}" cy="${cy}" r="4.5" fill="#ff2e5e"/>
+      <circle cx="${cx + 9}" cy="${cy}" r="4.5" fill="#ff2e5e"/>
+      <circle cx="${cx - 9}" cy="${cy}" r="1.6" fill="#3a0010"/>
+      <circle cx="${cx + 9}" cy="${cy}" r="1.6" fill="#3a0010"/>
+      <path d="M${cx - 9} ${cy + 12} l5 -6 l5 6 l5 -6 l5 6"
+        fill="none" stroke="#3a0010" stroke-width="3" stroke-linejoin="round"/>
+    </g>`;
+
+  // --- Yaratik tanimlari ----------------------------------------------------
+  // Her yaratik: label, accent (ana), accent2 (vurgu), spark (parcacik glyph),
+  // abilities (asama -> guc adi), quips (kisilik replikleri), svg (katmanli).
+  // SVG katmanlari: .cr-juv (genc+), .cr-adult (yetiskin), .cr-feral, .cr-eyes.
+  const creatures = {
+    spark: {
+      label: 'Bitik', accent: '#00ff88', accent2: '#00f3ff', spark: '▚',
+      abilities: { hatchling: 'Tarama', juvenile: 'Derleme', adult: 'Aşırı Yük' },
+      quips: ['01001000 selam!', 'Belleğim seni hatırlıyor.', 'Pikselden büyüyorum.', 'Bir komut ver, koşayım.'],
       svg: `
-        <path class="v4-paperclip" d="M44 116 V62 a16 16 0 0 1 32 0 V92 a9 9 0 0 1-18 0 V70"
-          fill="none" stroke="#aebccd" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M44 116 V62 a16 16 0 0 1 32 0 V92 a9 9 0 0 1-18 0 V70"
-          fill="none" stroke="#eef3f8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        <g class="v4-face">
-          <ellipse cx="50" cy="44" rx="11" ry="13" fill="#fff" stroke="#23303a" stroke-width="2.4"/>
-          <ellipse cx="70" cy="44" rx="11" ry="13" fill="#fff" stroke="#23303a" stroke-width="2.4"/>
-          <circle class="v4-pupil" cx="52" cy="47" r="4.2" fill="#1b242b"/>
-          <circle class="v4-pupil" cx="72" cy="47" r="4.2" fill="#1b242b"/>
-          <path d="M40 30 q9 -7 19 -2" stroke="#23303a" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-          <path d="M62 28 q10 -4 19 3" stroke="#23303a" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+        <g class="cr">
+          <rect class="cr-body" x="30" y="54" width="60" height="54" rx="15" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="3"/>
+          <rect x="37" y="61" width="22" height="13" rx="5" fill="#ffffff" opacity="0.18"/>
+          <line class="cr-ant" x1="60" y1="54" x2="60" y2="38" stroke="#063b27" stroke-width="3" stroke-linecap="round"/>
+          <circle class="cr-ant" cx="60" cy="34" r="4" fill="var(--v4-accent2,#00f3ff)" stroke="#063b27" stroke-width="2"/>
+          <g class="cr-juv">
+            <rect x="19" y="76" width="13" height="9" rx="4" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="2.5"/>
+            <rect x="88" y="76" width="13" height="9" rx="4" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="2.5"/>
+          </g>
+          <g class="cr-adult">
+            <ellipse cx="60" cy="30" rx="20" ry="6" fill="none" stroke="var(--v4-accent2,#00f3ff)" stroke-width="3" opacity="0.85"/>
+            <rect class="cr-cheek" x="36" y="86" width="9" height="7" rx="3" fill="var(--v4-accent2,#00f3ff)" opacity="0.7"/>
+            <rect class="cr-cheek" x="75" y="86" width="9" height="7" rx="3" fill="var(--v4-accent2,#00f3ff)" opacity="0.7"/>
+          </g>
+          <g class="cr-eyes">
+            <rect class="v4-pupil" x="44" y="70" width="9" height="11" rx="2" fill="#06241a"/>
+            <rect class="v4-pupil" x="67" y="70" width="9" height="11" rx="2" fill="#06241a"/>
+            <path d="M50 90 q10 7 20 0" fill="none" stroke="#06241a" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          ${feralFace(60, 75)}
         </g>`
     },
-    merlin: {
-      label: 'Merlin',
-      accent: '#9b6bff',
-      spark: '★',
-      quips: [
-        'Yildizlar bugun senden yana.',
-        'Sihirli bir sey yapalim mi?',
-        'Abrakadabra! Kod derlensin.',
-        'Gizemi sevenler buraya.'
-      ],
+    volt: {
+      label: 'Voltik', accent: '#ffd23f', accent2: '#ff4fd8', spark: '⚡',
+      abilities: { hatchling: 'Kıvılcım', juvenile: 'Şok', adult: 'Yıldırım' },
+      quips: ['Bzzt! Enerjim taştı.', 'Statik saçlarını dikecek!', 'Koşalım mı? Ben hızlıyım.', 'Şarjım tam, hadi!'],
       svg: `
-        <path d="M34 112 q26 14 52 0 l-6 -34 h-40 z" fill="#5a3aa6" stroke="#2c1b54" stroke-width="2.5" stroke-linejoin="round"/>
-        <circle cx="60" cy="64" r="20" fill="#f3d9b8" stroke="#2c1b54" stroke-width="2.5"/>
-        <path d="M40 70 q20 28 40 0 q-6 22 -20 22 q-14 0 -20 -22 z" fill="#fbfbff" stroke="#d8d8e8" stroke-width="2"/>
-        <path d="M30 52 L60 6 L90 52 q-30 14 -60 0 z" fill="#3a2380" stroke="#2c1b54" stroke-width="2.5" stroke-linejoin="round"/>
-        <circle class="v4-pupil" cx="53" cy="62" r="3.4" fill="#1b242b"/>
-        <circle class="v4-pupil" cx="67" cy="62" r="3.4" fill="#1b242b"/>
-        <g class="v4-stars" fill="#ffe27a">
-          <circle cx="50" cy="30" r="2.6"/><circle cx="70" cy="24" r="2"/><circle cx="60" cy="38" r="1.8"/>
+        <g class="cr">
+          <path class="cr-juv cr-tail" d="M86 96 q26 -4 22 -28 q-2 16 -18 14 q10 -10 6 -20 q-6 14 -16 18 z"
+            fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse class="cr-body" cx="60" cy="82" rx="30" ry="28" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3"/>
+          <path d="M38 58 L30 26 L54 50 Z" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3" stroke-linejoin="round"/>
+          <path d="M82 58 L90 26 L66 50 Z" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3" stroke-linejoin="round"/>
+          <g class="cr-adult">
+            <path d="M33 38 L30 26 L41 37 Z" fill="#2a1a00"/>
+            <path d="M87 38 L90 26 L79 37 Z" fill="#2a1a00"/>
+            <path d="M56 30 l8 -14 l-3 10 l6 -2 l-9 16 l3 -10 z" fill="var(--v4-accent2,#ff4fd8)" stroke="#7a1a55" stroke-width="1.6" stroke-linejoin="round"/>
+          </g>
+          <circle class="cr-cheek" cx="38" cy="86" r="6" fill="var(--v4-accent2,#ff4fd8)" opacity="0.7"/>
+          <circle class="cr-cheek" cx="82" cy="86" r="6" fill="var(--v4-accent2,#ff4fd8)" opacity="0.7"/>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="50" cy="78" r="5" fill="#2a1a00"/>
+            <circle class="v4-pupil" cx="70" cy="78" r="5" fill="#2a1a00"/>
+            <circle cx="48" cy="76" r="1.6" fill="#fff"/><circle cx="68" cy="76" r="1.6" fill="#fff"/>
+            <path d="M55 90 q5 5 10 0" fill="none" stroke="#2a1a00" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          ${feralFace(60, 80)}
         </g>`
     },
-    rover: {
-      label: 'Rover',
-      accent: '#ffc83d',
-      spark: '✦',
-      quips: [
-        'Bir sey mi ariyorsun? Hav!',
-        'Koklayip buluyorum!',
-        'Iste burada, buldum!',
-        'Kuyrugumu sallayarak yardimcdayim.'
-      ],
+    aqua: {
+      label: 'Glupi', accent: '#38e1ff', accent2: '#3a6bff', spark: '◌',
+      abilities: { hatchling: 'Damla', juvenile: 'Kabarcık', adult: 'Dalga' },
+      quips: ['Blop... merhaba.', 'Serin bir gün, değil mi?', 'Akışına bırak.', 'Islanmaya hazır mısın?'],
       svg: `
-        <ellipse cx="60" cy="98" rx="30" ry="22" fill="#f2b32e" stroke="#8a5a12" stroke-width="2.5"/>
-        <circle cx="60" cy="58" r="30" fill="#ffce4a" stroke="#8a5a12" stroke-width="2.5"/>
-        <path d="M30 40 q-12 8 -8 30 q14 4 18 -10 z" fill="#e0962a" stroke="#8a5a12" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M90 40 q12 8 8 30 q-14 4 -18 -10 z" fill="#e0962a" stroke="#8a5a12" stroke-width="2.5" stroke-linejoin="round"/>
-        <ellipse cx="60" cy="70" rx="15" ry="11" fill="#fff3d6" stroke="#8a5a12" stroke-width="2"/>
-        <circle cx="60" cy="66" r="5" fill="#3a2a14"/>
-        <path d="M55 78 q5 6 10 0" stroke="#8a5a12" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-        <path d="M60 78 v8 q4 4 8 1" stroke="#d8607a" stroke-width="4" fill="none" stroke-linecap="round"/>
-        <circle class="v4-pupil" cx="49" cy="52" r="4.4" fill="#1b242b"/>
-        <circle class="v4-pupil" cx="71" cy="52" r="4.4" fill="#1b242b"/>`
+        <g class="cr">
+          <path class="cr-body" d="M60 50 C82 50 92 72 92 86 C92 104 78 112 60 112 C42 112 28 104 28 86 C28 72 38 50 60 50 Z"
+            fill="var(--v4-accent,#38e1ff)" stroke="#0a5b80" stroke-width="3"/>
+          <ellipse cx="48" cy="70" rx="9" ry="6" fill="#ffffff" opacity="0.4"/>
+          <path class="cr-juv" d="M60 108 q-10 14 -20 12 q8 -6 6 -14 M60 108 q10 14 20 12 q-8 -6 -6 -14"
+            fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
+          <g class="cr-adult">
+            <path d="M28 84 q-12 2 -14 14 q12 -2 16 -8 z" fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M92 84 q12 2 14 14 q-12 -2 -16 -8 z" fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M48 50 q4 -12 12 -12 q8 0 12 12" fill="none" stroke="var(--v4-accent2,#3a6bff)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="60" cy="34" r="3.5" fill="var(--v4-accent2,#3a6bff)"/>
+          </g>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="51" cy="80" r="5" fill="#06303f"/>
+            <circle class="v4-pupil" cx="71" cy="80" r="5" fill="#06303f"/>
+            <circle cx="49" cy="78" r="1.6" fill="#fff"/><circle cx="69" cy="78" r="1.6" fill="#fff"/>
+            <path d="M54 92 q6 5 12 0" fill="none" stroke="#06303f" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          ${feralFace(61, 82)}
+        </g>`
     },
-    f1: {
-      label: 'F1 / K-9',
-      accent: '#46d6c2',
-      spark: '▣',
-      quips: [
-        'SISTEM HAZIR. KOMUT BEKLENIYOR.',
-        'BIP BOP. Yardim protokolu aktif.',
-        'Hata bulundu: cok eglenceli.',
-        'Hav modu: dijital.'
-      ],
+    ember: {
+      label: 'Korcuk', accent: '#ff7a2f', accent2: '#ffd23f', spark: '✸',
+      abilities: { hatchling: 'Kor', juvenile: 'Alev', adult: 'Yangın' },
+      quips: ['Sıcacığım, yaklaş.', 'İçimde bir ateş var!', 'Üşürsen bana sarıl.', 'Cızz! Dikkat, yakarım.'],
       svg: `
-        <rect x="34" y="74" width="52" height="34" rx="6" fill="#b6c2cc" stroke="#3a4750" stroke-width="2.5"/>
-        <rect x="40" y="40" width="40" height="34" rx="7" fill="#cfd9e1" stroke="#3a4750" stroke-width="2.5"/>
-        <rect x="26" y="46" width="12" height="22" rx="4" fill="#9aa7b2" stroke="#3a4750" stroke-width="2.2"/>
-        <rect x="82" y="46" width="12" height="22" rx="4" fill="#9aa7b2" stroke="#3a4750" stroke-width="2.2"/>
-        <line x1="60" y1="40" x2="60" y2="24" stroke="#3a4750" stroke-width="2.5"/>
-        <circle cx="60" cy="21" r="4" fill="#46d6c2" stroke="#3a4750" stroke-width="2"/>
-        <rect class="v4-pupil" x="44" y="52" width="9" height="9" rx="2" fill="#46d6c2"/>
-        <rect class="v4-pupil" x="67" y="52" width="9" height="9" rx="2" fill="#46d6c2"/>
-        <rect x="48" y="66" width="24" height="4" rx="2" fill="#3a4750"/>
-        <circle cx="44" cy="100" r="2.4" fill="#3a4750"/><circle cx="76" cy="100" r="2.4" fill="#3a4750"/>`
+        <g class="cr">
+          <g class="cr-juv">
+            <path d="M86 98 q22 6 26 -6 q-10 6 -16 -2 z" fill="var(--v4-accent,#ff7a2f)" stroke="#7a2a00" stroke-width="2.5" stroke-linejoin="round"/>
+            <path class="cr-flame" d="M110 92 q8 -10 2 -18 q0 8 -8 8 q6 4 6 10 z" fill="var(--v4-accent2,#ffd23f)" stroke="#ff7a2f" stroke-width="1.6"/>
+          </g>
+          <ellipse class="cr-body" cx="58" cy="84" rx="30" ry="27" fill="var(--v4-accent,#ff7a2f)" stroke="#7a2a00" stroke-width="3"/>
+          <ellipse cx="58" cy="90" rx="15" ry="15" fill="#ffd9b0" opacity="0.7"/>
+          <path class="cr-flame" d="M50 58 q-2 -22 8 -30 q-2 14 6 18 q4 -8 0 -16 q12 12 6 28 z"
+            fill="var(--v4-accent2,#ffd23f)" stroke="#ff7a2f" stroke-width="2" stroke-linejoin="round"/>
+          <g class="cr-adult">
+            <path d="M34 70 l-8 -10 l12 4 z M30 84 l-12 -4 l12 -4 z" fill="var(--v4-accent2,#ffd23f)" stroke="#7a2a00" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M82 70 l8 -10 l-12 4 z" fill="var(--v4-accent2,#ffd23f)" stroke="#7a2a00" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="49" cy="80" r="5" fill="#3a1500"/>
+            <circle class="v4-pupil" cx="69" cy="80" r="5" fill="#3a1500"/>
+            <circle cx="47" cy="78" r="1.6" fill="#fff"/><circle cx="67" cy="78" r="1.6" fill="#fff"/>
+            <path d="M53 92 q6 5 12 0" fill="none" stroke="#3a1500" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          ${feralFace(59, 82)}
+        </g>`
     },
-    genie: {
-      label: 'Genie',
-      accent: '#3aa0ff',
-      spark: '✺',
-      quips: [
-        'Dile benden ne dilersen!',
-        'Uc dilegin... saka, sinirsiz.',
-        'Lambayi ogusturdun, iste buradayim.',
-        'Tozdan dogdum, isigi seviyorum.'
-      ],
+    leaf: {
+      label: 'Filizo', accent: '#5dff8f', accent2: '#2fd0a0', spark: '✿',
+      abilities: { hatchling: 'Tomurcuk', juvenile: 'Sürgün', adult: 'Çiçek' },
+      quips: ['Güneşi seviyorum.', 'Yavaş büyü, derin kök sal.', 'Bir yaprak, bin nefes.', 'Sula beni, çiçek açayım.'],
       svg: `
-        <path d="M44 118 q-14 -2 -8 -16 q6 -10 24 -10 q18 0 24 10 q6 14 -8 16 z" fill="#f4b740" stroke="#9a6c12" stroke-width="2.5" stroke-linejoin="round"/>
-        <path d="M40 92 q-10 -22 20 -28 q30 6 20 28 q-20 10 -40 0 z" fill="#3a90ef" stroke="#1c4f8a" stroke-width="2.5" stroke-linejoin="round"/>
-        <circle cx="60" cy="50" r="22" fill="#54a6ff" stroke="#1c4f8a" stroke-width="2.5"/>
-        <path d="M52 30 q8 -12 16 0" fill="#2c2c4a" stroke="#1c1c33" stroke-width="2"/>
-        <circle cx="60" cy="26" r="3.5" fill="#2c2c4a"/>
-        <circle class="v4-pupil" cx="53" cy="50" r="3.6" fill="#10243a"/>
-        <circle class="v4-pupil" cx="67" cy="50" r="3.6" fill="#10243a"/>
-        <path d="M53 60 q7 6 14 0" stroke="#10243a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-        <rect x="40" y="84" width="40" height="6" rx="3" fill="#ffd86b" stroke="#9a6c12" stroke-width="1.6"/>`
+        <g class="cr">
+          <ellipse class="cr-body" cx="60" cy="86" rx="28" ry="26" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="3"/>
+          <ellipse cx="60" cy="90" rx="15" ry="14" fill="#e7ffe0" opacity="0.5"/>
+          <path d="M60 60 v-18" stroke="#1c5a2e" stroke-width="3" stroke-linecap="round"/>
+          <path class="cr-leaf" d="M60 50 q-14 -2 -18 -14 q14 -2 18 8 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.4" stroke-linejoin="round"/>
+          <path class="cr-leaf" d="M60 46 q14 -4 18 -16 q-14 0 -18 10 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.4" stroke-linejoin="round"/>
+          <g class="cr-juv">
+            <path d="M32 84 q-14 -2 -18 8 q14 4 20 -2 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M88 84 q14 -2 18 8 q-14 4 -20 -2 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.2" stroke-linejoin="round"/>
+          </g>
+          <g class="cr-adult">
+            <g fill="var(--v4-accent2,#2fd0a0)" stroke="#1c5a2e" stroke-width="1.6">
+              <circle cx="60" cy="26" r="5"/><circle cx="52" cy="30" r="5"/><circle cx="68" cy="30" r="5"/>
+              <circle cx="55" cy="22" r="5"/><circle cx="65" cy="22" r="5"/>
+            </g>
+            <circle cx="60" cy="26" r="3.4" fill="#ffd23f"/>
+          </g>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="51" cy="84" r="5" fill="#103a1c"/>
+            <circle class="v4-pupil" cx="71" cy="84" r="5" fill="#103a1c"/>
+            <circle cx="49" cy="82" r="1.6" fill="#fff"/><circle cx="69" cy="82" r="1.6" fill="#fff"/>
+            <path d="M54 95 q6 5 12 0" fill="none" stroke="#103a1c" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          ${feralFace(61, 86)}
+        </g>`
     },
-    scribble: {
-      label: 'Scribble',
-      accent: '#f2efe6',
-      spark: '✜',
-      quips: [
-        'Mirnav. Kagittan ama gercegim.',
-        'Beni burusturma, sekil veriyorum.',
-        'Pit pit. Origami kedi.',
-        'Bir kativ, bin sekil.'
-      ],
+    frost: {
+      label: 'Buzcuk', accent: '#8fe9ff', accent2: '#c9b8ff', spark: '❄',
+      abilities: { hatchling: 'Buz', juvenile: 'Kırağı', adult: 'Tipi' },
+      quips: ['Brr... ama mutluyum.', 'Kristalim ışıkta parlar.', 'Sessizliği severim.', 'Dokun, soğuk değilim—pek.'],
       svg: `
-        <polygon points="34,108 30,76 26,60 40,64 36,44 52,52 58,38 66,52 82,46 76,66 92,64 86,84 90,108"
-          fill="#f6f3ea" stroke="#b9b29c" stroke-width="2.4" stroke-linejoin="round"/>
-        <polygon points="40,52 36,32 54,46" fill="#efe9d8" stroke="#b9b29c" stroke-width="2.2" stroke-linejoin="round"/>
-        <polygon points="80,52 84,32 66,46" fill="#efe9d8" stroke="#b9b29c" stroke-width="2.2" stroke-linejoin="round"/>
-        <path d="M44 70 q6 -6 12 0 M64 70 q6 -6 12 0" stroke="#7d7660" stroke-width="2" fill="none" stroke-linecap="round"/>
-        <circle class="v4-pupil" cx="52" cy="74" r="3.6" fill="#3a352a"/>
-        <circle class="v4-pupil" cx="70" cy="74" r="3.6" fill="#3a352a"/>
-        <path d="M58 82 l4 4 l4 -4" stroke="#b96b4a" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M50 88 q10 8 22 0" stroke="#7d7660" stroke-width="2" fill="none" stroke-linecap="round"/>`
+        <g class="cr">
+          <polygon class="cr-body" points="60,54 86,74 78,108 42,108 34,74" fill="var(--v4-accent,#8fe9ff)" stroke="#2a6a8a" stroke-width="3" stroke-linejoin="round"/>
+          <polygon points="60,54 78,108 60,100" fill="#ffffff" opacity="0.22"/>
+          <g class="cr-juv">
+            <path d="M44 58 l-6 -16 l10 12 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M76 58 l6 -16 l-10 12 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2.2" stroke-linejoin="round"/>
+          </g>
+          <g class="cr-adult">
+            <path d="M40 56 l-10 -22 l4 12 l-10 -6 l8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M80 56 l10 -22 l-4 12 l10 -6 l-8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
+          </g>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="51" cy="82" r="4.6" fill="#0a3245"/>
+            <circle class="v4-pupil" cx="69" cy="82" r="4.6" fill="#0a3245"/>
+            <circle cx="49" cy="80" r="1.5" fill="#fff"/><circle cx="67" cy="80" r="1.5" fill="#fff"/>
+            <path d="M54 92 q6 4 12 0" fill="none" stroke="#0a3245" stroke-width="2.4" stroke-linecap="round"/>
+          </g>
+          ${feralFace(60, 84)}
+        </g>`
     },
-    dot: {
-      label: 'The Dot',
-      accent: '#ff5fa2',
-      spark: '◆',
-      quips: [
-        'Renk degistiriyorum, bak!',
-        'Geometri guzeldir.',
-        'Yuvarlandim, iste geldim.',
-        'Bir nokta, sonsuz olasilik.'
-      ],
+    luna: {
+      label: 'Pufmis', accent: '#b98bff', accent2: '#ff8bd6', spark: '✦',
+      abilities: { hatchling: 'Toz', juvenile: 'Pırıltı', adult: 'Ay Tozu' },
+      quips: ['Ay beni çağırıyor.', 'Kanatlarım yumuşacık.', 'Geceyi fısıldarım.', 'Işığa doğru süzülelim.'],
       svg: `
-        <circle class="v4-dot-core" cx="60" cy="72" r="36" fill="#ff5fa2" stroke="#fff" stroke-width="2.5"/>
-        <circle class="v4-dot-ring" cx="60" cy="72" r="26" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="6 8"/>
-        <circle cx="60" cy="72" r="14" fill="#ffffff" opacity="0.85"/>
-        <circle class="v4-pupil" cx="54" cy="70" r="3.6" fill="#222"/>
-        <circle class="v4-pupil" cx="66" cy="70" r="3.6" fill="#222"/>
-        <path d="M54 80 q6 6 12 0" stroke="#222" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+        <g class="cr">
+          <g class="cr-juv cr-wing">
+            <path d="M44 84 q-26 -6 -28 12 q18 8 30 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.92"/>
+            <path d="M76 84 q26 -6 28 12 q-18 8 -30 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.92"/>
+          </g>
+          <g class="cr-adult cr-wing">
+            <path d="M42 78 q-34 -18 -34 6 q0 22 36 8 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.85"/>
+            <path d="M78 78 q34 -18 34 6 q0 22 -36 8 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.85"/>
+            <circle cx="22" cy="84" r="3" fill="#fff" opacity="0.8"/><circle cx="98" cy="84" r="3" fill="#fff" opacity="0.8"/>
+          </g>
+          <circle class="cr-body" cx="60" cy="84" r="26" fill="var(--v4-accent,#b98bff)" stroke="#3a1f55" stroke-width="3"/>
+          <path d="M50 60 q-6 -14 -14 -16" fill="none" stroke="#3a1f55" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M70 60 q6 -14 14 -16" fill="none" stroke="#3a1f55" stroke-width="2.4" stroke-linecap="round"/>
+          <circle cx="35" cy="43" r="3" fill="var(--v4-accent2,#ff8bd6)"/><circle cx="85" cy="43" r="3" fill="var(--v4-accent2,#ff8bd6)"/>
+          <g class="cr-eyes">
+            <circle class="v4-pupil" cx="51" cy="84" r="5" fill="#241033"/>
+            <circle class="v4-pupil" cx="71" cy="84" r="5" fill="#241033"/>
+            <circle cx="49" cy="82" r="1.6" fill="#fff"/><circle cx="69" cy="82" r="1.6" fill="#fff"/>
+            <path d="M55 94 q5 4 10 0" fill="none" stroke="#241033" stroke-width="2.6" stroke-linecap="round"/>
+          </g>
+          ${feralFace(61, 86)}
+        </g>`
     }
   };
 
-  const skins = Object.keys(assistants);
+  const skins = Object.keys(creatures);
+  const DEFAULT_SKIN = 'spark';
 
   const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
   const readLS = (k) => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -205,8 +271,10 @@
     // --- Durum ---
     const state = {
       active: false,
-      skin: skins.includes(readLS(skinKey)) ? readLS(skinKey) : 'clippy',
+      skin: skins.includes(readLS(skinKey)) ? readLS(skinKey) : DEFAULT_SKIN,
       mood: 'idle',
+      stage: 'adult',   // pet bagli degilken tam formda gorunsun
+      feral: false,
       randomEnabled: true,
       x: window.innerWidth * 0.5,
       dir: 1,
@@ -221,14 +289,18 @@
     const CHAR_H = 132;
     const bottomGap = 18;
 
-    const def = () => assistants[state.skin];
+    const def = () => creatures[state.skin];
 
     const renderSvg = () => {
       svgWrap.innerHTML =
         `<svg viewBox="0 0 120 140" class="v4-svg" aria-hidden="true">${def().svg}</svg>`;
       char.dataset.skin = state.skin;
-      char.setAttribute('aria-label', `${def().label} yardimcisi`);
+      char.dataset.stage = state.stage;
+      char.dataset.feral = state.feral ? '1' : '0';
+      char.setAttribute('aria-label', `${def().label} yaratığı`);
       char.style.setProperty('--v4-accent', def().accent);
+      char.style.setProperty('--v4-accent2', def().accent2);
+      char.style.setProperty('--v4-grow', GROW[state.stage] || 1);
     };
 
     const groundTop = () => window.innerHeight - CHAR_H - bottomGap;
@@ -236,7 +308,6 @@
     const place = (bob = 0) => {
       char.style.transform =
         `translate(${Math.round(state.x)}px, ${Math.round(bob)}px) scaleX(${state.dir < 0 ? -1 : 1})`;
-      // Balonu daima ekran icinde tut (overflow ile kirpilmasin).
       const bx = clamp(state.x + CHAR_W * 0.55, 8, window.innerWidth - 260);
       balloon.style.transform = `translate(${Math.round(bx)}px, ${Math.round(bob)}px)`;
     };
@@ -245,10 +316,12 @@
     let typeTimer = 0;
     let hideTimer = 0;
     const say = (text) => {
+      if (!text) return;
       window.clearInterval(typeTimer);
       window.clearTimeout(hideTimer);
       balloon.hidden = false;
       balloon.classList.add('is-on');
+      balloon.classList.toggle('is-feral', state.feral);
       balloonText.textContent = '';
       let i = 0;
       typeTimer = window.setInterval(() => {
@@ -259,7 +332,7 @@
           hideTimer = window.setTimeout(() => {
             balloon.classList.remove('is-on');
             window.setTimeout(() => { balloon.hidden = true; }, 260);
-          }, 2600);
+          }, 2800);
         }
       }, 32);
     };
@@ -267,7 +340,7 @@
     // --- Parcacik patlamasi ---
     const burst = (count = 10) => {
       const glyph = def().spark;
-      const color = def().accent;
+      const color = state.feral ? '#ff2e5e' : def().accent2;
       for (let n = 0; n < count; n += 1) {
         const p = document.createElement('span');
         p.className = 'v4-particle';
@@ -288,14 +361,16 @@
     // --- Aksiyon calistirici ---
     const moodDuration = { tada: 1400, think: 1800, alert: 1200, wave: 1300, magic: 1700, search: 1600, morph: 1700 };
     let moodTimer = 0;
-    const runMood = (mood) => {
+    const runMood = (mood, quiet) => {
       state.mood = mood;
       state.busy = true;
       char.classList.remove(...actions.map((a) => `is-${a}`));
       char.classList.add(`is-${mood}`);
       if (mood === 'tada' || mood === 'magic' || mood === 'morph' || mood === 'search') burst(mood === 'magic' ? 14 : 10);
-      const quips = def().quips;
-      say(quips[Math.floor(Math.random() * quips.length)]);
+      if (!quiet) {
+        const quips = def().quips;
+        say(quips[Math.floor(Math.random() * quips.length)]);
+      }
       dispatch();
       window.clearTimeout(moodTimer);
       moodTimer = window.setTimeout(() => {
@@ -324,10 +399,10 @@
         window.setTimeout(() => char.classList.remove('is-blink'), 160);
         state.blinkAt = ts + 2600 + Math.random() * 2600;
       }
-      if (state.randomEnabled && !state.busy && ts > state.idleQuipAt) {
+      if (state.randomEnabled && !state.busy && !state.feral && ts > state.idleQuipAt) {
         const quips = def().quips;
         say(quips[Math.floor(Math.random() * quips.length)]);
-        state.idleQuipAt = ts + 9000 + Math.random() * 8000;
+        state.idleQuipAt = ts + 11000 + Math.random() * 9000;
       }
       state.raf = window.requestAnimationFrame(loop);
     };
@@ -344,11 +419,13 @@
       window.dispatchEvent(new CustomEvent('bugy-v4:state', { detail }));
     };
 
+    const abilityFor = (stage) => def().abilities[stage] || def().abilities.adult;
+
     const api = {
-      version: '4.0.0',
+      version: '4.1.0',
       actions: [...actions],
       assistants: [...skins],
-      assetSource: 'Convivium SVG — Office Assistant tribute (Atteberry estetigi)',
+      assetSource: 'Convivium SVG — retro yaratiklar (synthwave/CRT)',
       activate() {
         state.active = true;
         writeLS(engineKey, 'v4');
@@ -398,13 +475,51 @@
         return state.randomEnabled;
       },
       setSkin(nextSkin) {
-        state.skin = skins.includes(nextSkin) ? nextSkin : 'clippy';
+        state.skin = skins.includes(nextSkin) ? nextSkin : DEFAULT_SKIN;
         writeLS(skinKey, state.skin);
         renderSvg();
         if (state.active) { burst(8); say(def().quips[0]); }
         dispatch();
         return state.skin;
       },
+      // Evrim asamasini ayarla (fiziksel form + buyume). Aninda, animasyonsuz.
+      setStage(stage) {
+        state.stage = STAGES.includes(stage) ? stage : 'hatchling';
+        char.dataset.stage = state.stage;
+        char.style.setProperty('--v4-grow', GROW[state.stage] || 1);
+        dispatch();
+        return state.stage;
+      },
+      // Canavarlasma surati (feral) ac/kapat.
+      setFeral(on) {
+        state.feral = Boolean(on);
+        char.dataset.feral = state.feral ? '1' : '0';
+        char.classList.toggle('bugy-feral', state.feral);
+        dispatch();
+        return state.feral;
+      },
+      setMood(mood) {
+        // Bilgilendirici: konusmayi/davranisi pet tarafindan suruluyor.
+        char.dataset.mood = mood || 'neutral';
+        return mood;
+      },
+      // Dramatik evrim: flas + form degisimi + yeni guc replikasi.
+      evolve(stage) {
+        if (!state.active) this.activate();
+        char.classList.add('is-evolving');
+        burst(12);
+        window.setTimeout(() => {
+          this.setStage(stage);
+        }, 680);
+        window.setTimeout(() => {
+          char.classList.remove('is-evolving');
+          burst(14);
+          say(`Yeni güç: ${abilityFor(stage)}!`);
+        }, 1400);
+        return state.stage;
+      },
+      // Disaridan (pet) baglama konusma: ihtiyac/duygu ifadesi.
+      say(text) { say(text); return true; },
       getState() {
         return {
           engine: 'v4',
@@ -415,6 +530,9 @@
           skin: state.skin,
           skinLabel: def().label,
           skins: [...skins],
+          stage: state.stage,
+          feral: state.feral,
+          ability: abilityFor(state.stage),
           randomEnabled: state.randomEnabled,
           x: Math.round(state.x),
           y: Math.round(groundTop())

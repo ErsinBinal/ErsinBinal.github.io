@@ -45,9 +45,9 @@
     },
     {
       key: 'v4',
-      name: 'Bugy Assistants',
-      tag: 'v4 / office tribute',
-      note: 'Clippy, Merlin, Rover, K-9, Genie, Scribble, The Dot. Atteberry estetigi.',
+      name: 'Bugy Yaratiklar',
+      tag: 'v4 / retro creatures',
+      note: 'Bitik, Voltik, Glupi, Korcuk, Filizo, Buzcuk, Pufmis. Evrim geciren synthwave yaratiklar.',
       api: () => window.BugyV4
     }
   ];
@@ -58,14 +58,14 @@
     ember: 'Ember',
     ghost: 'Ghost',
     royal: 'Royal',
-    // v4 asistanlari
-    clippy: 'Clippy',
-    merlin: 'Merlin',
-    rover: 'Rover',
-    f1: 'F1 / K-9',
-    genie: 'Genie',
-    scribble: 'Scribble',
-    dot: 'The Dot'
+    // v4 retro yaratiklari
+    spark: 'Bitik',
+    volt: 'Voltik',
+    aqua: 'Glupi',
+    ember: 'Korcuk',
+    leaf: 'Filizo',
+    frost: 'Buzcuk',
+    luna: 'Pufmis'
   };
 
   const $ = (id) => document.getElementById(id);

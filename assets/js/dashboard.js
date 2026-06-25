@@ -149,8 +149,25 @@
   const BUGY_STAGE = { egg: 'yumurta', hatchling: 'yavru', juvenile: 'genç', adult: 'yetişkin' };
   const BUGY_MOOD = { happy: 'mutlu', neutral: 'sakin', grumpy: 'huysuz', feral: 'canavar' };
   const BUGY_SPECIES = {
-    clippy: 'Clippy', merlin: 'Merlin', rover: 'Rover', f1: 'F1 / K-9',
-    genie: 'Genie', scribble: 'Scribble', dot: 'The Dot'
+    spark: 'Bitik', volt: 'Voltik', aqua: 'Glupi', ember: 'Korcuk',
+    leaf: 'Filizo', frost: 'Buzcuk', luna: 'Pufmis'
+  };
+  // Eski Office skinlerini yeni yaratiklara esle (gocurme).
+  const BUGY_LEGACY = {
+    clippy: 'spark', merlin: 'luna', rover: 'volt', f1: 'frost',
+    genie: 'aqua', scribble: 'leaf', dot: 'ember'
+  };
+  const BUGY_ABILITIES = {
+    spark: ['Tarama', 'Derleme', 'Aşırı Yük'], volt: ['Kıvılcım', 'Şok', 'Yıldırım'],
+    aqua: ['Damla', 'Kabarcık', 'Dalga'], ember: ['Kor', 'Alev', 'Yangın'],
+    leaf: ['Tomurcuk', 'Sürgün', 'Çiçek'], frost: ['Buz', 'Kırağı', 'Tipi'],
+    luna: ['Toz', 'Pırıltı', 'Ay Tozu']
+  };
+  const BUGY_STAGE_IDX = { egg: 0, hatchling: 0, juvenile: 1, adult: 2 };
+  const bugySpeciesKey = (k) => (BUGY_SPECIES[k] ? k : (BUGY_LEGACY[k] || 'spark'));
+  const bugyAbility = (pet) => {
+    const key = bugySpeciesKey(pet.species);
+    return (BUGY_ABILITIES[key] || [])[BUGY_STAGE_IDX[pet.stage] || 0] || '';
   };
 
   function bugyCurrentNeeds(pet) {
@@ -193,10 +210,11 @@
       <article class="bugy-dash bugy-mood-${mood}">
         <div class="bugy-dash-head">
           <strong>${escapeHtml(pet.name)}</strong>
-          <span>${escapeHtml(BUGY_SPECIES[pet.species] || pet.species)} · ${BUGY_STAGE[pet.stage] || pet.stage} · ${BUGY_MOOD[mood] || mood}</span>
+          <span>${escapeHtml(BUGY_SPECIES[bugySpeciesKey(pet.species)] || pet.species)} · ${BUGY_STAGE[pet.stage] || pet.stage} · ${BUGY_MOOD[mood] || mood}</span>
         </div>
         <div class="bugy-meters">${meters}</div>
         <div class="bugy-dash-foot">
+          <span>Güç: ${escapeHtml(bugyAbility(pet))}</span>
           <span>Bakım puanı: ${Number(pet.care_points) || 0}</span>
           <span>Doğum: ${formatDay(pet.born_at)}</span>
         </div>

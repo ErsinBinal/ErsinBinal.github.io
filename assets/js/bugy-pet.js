@@ -21,17 +21,26 @@
   const BLOCKED_PATH = /\/(games|tools)\//;
   const AUTH_PATH = /\/account\/auth/;
 
-  // Secilebilir turler = bugy-v4 asistan skinleri + kisilik notu.
+  // Secilebilir turler = bugy-v4 retro yaratiklari. Her tur 3 asamada evrim
+  // gecirir (yavru -> genc -> yetiskin) ve asamada bir "guc" kazanir.
   const SPECIES = {
-    clippy:   { label: 'Clippy',   blurb: 'Merakli ve yardimsever; surekli bir seyler onerir.' },
-    merlin:   { label: 'Merlin',   blurb: 'Bilge ve sakin; gizemli isaretlerle konusur.' },
-    rover:    { label: 'Rover',    blurb: 'Sadik bir refakatci; pesinden gelmeyi sever.' },
-    f1:       { label: 'F1 / K-9', blurb: 'Hizli ve mekanik; gorev odakli minik robot.' },
-    genie:    { label: 'Genie',    blurb: 'Capkin bir cin; dilek ve sürprizlere bayilir.' },
-    scribble: { label: 'Scribble', blurb: 'Dagilik ve yaratici; kagit ustunde dans eder.' },
-    dot:      { label: 'The Dot',  blurb: 'Minimal ve hizli; tek nokta, sonsuz enerji.' }
+    spark: { label: 'Bitik',  blurb: 'Dijital terminal yaratigi; pikselden derlenir.', abilities: ['Tarama', 'Derleme', 'Aşırı Yük'] },
+    volt:  { label: 'Voltik', blurb: 'Elektrikli tilki yavrusu; hizli ve cosku dolu.',  abilities: ['Kıvılcım', 'Şok', 'Yıldırım'] },
+    aqua:  { label: 'Glupi',  blurb: 'Serinkanli su damlasi; akisina birakir.',         abilities: ['Damla', 'Kabarcık', 'Dalga'] },
+    ember: { label: 'Korcuk', blurb: 'Ates kertenkelesi; sicacik ama atesli.',          abilities: ['Kor', 'Alev', 'Yangın'] },
+    leaf:  { label: 'Filizo', blurb: 'Sabirli bitki filizi; sevgiyle cicek acar.',      abilities: ['Tomurcuk', 'Sürgün', 'Çiçek'] },
+    frost: { label: 'Buzcuk', blurb: 'Kristal buz yaratigi; sessiz ve parlak.',         abilities: ['Buz', 'Kırağı', 'Tipi'] },
+    luna:  { label: 'Pufmis', blurb: 'Ay pervanesi; yumusacik ve gizemli.',             abilities: ['Toz', 'Pırıltı', 'Ay Tozu'] }
   };
   const SPECIES_KEYS = Object.keys(SPECIES);
+
+  // Eski "Office asistani" skinlerinden yeni yaratiklara gocurme haritasi
+  // (onceden kaydedilmis petler bozulmadan yeni turlere eslenir).
+  const LEGACY_SPECIES = {
+    clippy: 'spark', merlin: 'luna', rover: 'volt', f1: 'frost',
+    genie: 'aqua', scribble: 'leaf', dot: 'ember'
+  };
+  const resolveSpecies = (key) => (SPECIES[key] ? key : (LEGACY_SPECIES[key] || 'spark'));
 
   // Saat basina ihtiyac dususu (gercek zaman; last_care_at uzerinden hesaplanir).
   // Yumusak tutuldu: gunluk ugrayan kullanici rahatca dengeyi korur.
@@ -51,6 +60,17 @@
     { key: 'bond',    label: 'Bağ' }
   ];
 
+  // --- Baglama konusma (yaratik ihtiyaclarini kendi ifade eder) ------------
+  // Dususe gecen ihtiyaca gore replikler; companion balonunda gosterilir.
+  const NEED_LINES = {
+    hunger:  ['Karnım acıktı…', 'Bir lokma alabilir miyim?', 'Mırıl mırıl… açım.'],
+    energy:  ['Uykum geldi…', 'Esniyorum, biraz dinlensem?', 'Gözlerim kapanıyor.'],
+    hygiene: ['Üstüm kirlendi…', 'Bir duş iyi gelirdi.', 'Kendimi pasaklı hissediyorum.'],
+    bond:    ['Biraz ilgi?', 'Yanımda kal, olur mu?', 'Seni özledim.']
+  };
+  const FERAL_LINES = ['Grrr…', '*hırlıyor*', 'Yaklaşma… şimdilik.', '…'];
+  const HAPPY_LINES = ['İyi ki buradasın!', 'Bugün harikayım!', 'Seninle olmak güzel.', 'Hadi biraz oynayalım!'];
+
   const clampPct = (v) => Math.max(0, Math.min(100, Math.round(v)));
 
   const backend = () => window.ConviviumBackend;
@@ -64,21 +84,29 @@
     try { localStorage.setItem(LS_KEY, JSON.stringify(pet)); } catch { /* storage kapali olabilir */ }
   };
 
+  // Eski tur anahtarlarini yeni yaratiklara gocur (Office -> retro yaratik).
+  function migrateSpecies(pet) {
+    if (!pet || !pet.species) return pet;
+    const next = resolveSpecies(pet.species);
+    if (next !== pet.species) pet.species = next;
+    return pet;
+  }
+
   // Supabase'i kaynak kabul et; yoksa/yanlissa localStorage'a dus.
   async function loadPet() {
     const api = backend();
     if (api && api.isConfigured && api.isConfigured() && api.fetchBugyPet) {
       try {
         const remote = await api.fetchBugyPet();
-        if (remote) { writeLocal(remote); return remote; }
+        if (remote) { migrateSpecies(remote); writeLocal(remote); return remote; }
         // remote null = bu kullanicinin henuz peti yok; yerel kopyayi guvenme.
         return null;
       } catch {
         // Tablo yoksa / ag hatasi: yerel kopyayla devam (zarif dusus).
-        return readLocal();
+        return migrateSpecies(readLocal());
       }
     }
-    return readLocal();
+    return migrateSpecies(readLocal());
   }
 
   async function savePet(pet) {
@@ -119,22 +147,54 @@
   // --- Companion surucusu (bugy-v4) ---------------------------------------
   // Aktif pet (bakim UI'i bunun uzerinde calisir).
   let currentPet = null;
+  let speakTimer = 0;
 
   function activateCompanion(pet) {
     currentPet = pet;
     const v4 = window.BugyV4;
     if (!v4) return;
     try { localStorage.setItem(ENGINE_KEY, 'v4'); } catch { /* yok say */ }
-    if (v4.setSkin) v4.setSkin(SPECIES[pet.species] ? pet.species : 'clippy');
+    if (v4.setSkin) v4.setSkin(resolveSpecies(pet.species));
     if (v4.activate) v4.activate();
     mountCareButton();
     const feral = applyVisualState(pet);
     if (feral && v4.trigger) v4.trigger('morph');
+    startSpeech();
   }
   function hideCompanion() {
     const v4 = window.BugyV4;
     if (v4 && v4.deactivate) v4.deactivate();
     unmountCare();
+    stopSpeech();
+  }
+
+  // Yaratik ara ara kendini ifade eder: dususe gecen ihtiyaci, canavar
+  // halini ya da mutlulugunu konusma balonuyla soyler.
+  function startSpeech() {
+    stopSpeech();
+    window.setTimeout(speakState, 6000); // ilk ifade kisa sure sonra
+    speakTimer = window.setInterval(speakState, 26000);
+  }
+  function stopSpeech() {
+    if (speakTimer) { window.clearInterval(speakTimer); speakTimer = 0; }
+  }
+
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  function speakState() {
+    const v4 = window.BugyV4;
+    if (!currentPet || !v4 || !v4.say) return;
+    const st = v4.getState ? v4.getState() : null;
+    if (st && (!st.active || st.state !== 'idle')) return; // jest sirasinda bekle
+    const needs = currentNeeds(currentPet);
+    const mood = moodFromNeeds(needs);
+    if (mood === 'feral') { v4.say(pick(FERAL_LINES)); return; }
+    // En dusuk ihtiyaci bul; kritikse onu dile getir.
+    let lowKey = null; let lowVal = 101;
+    NEEDS.forEach(({ key }) => { if (needs[key] < lowVal) { lowVal = needs[key]; lowKey = key; } });
+    if (lowKey && lowVal < 35) { v4.say(pick(NEED_LINES[lowKey])); return; }
+    if (mood === 'happy') { v4.say(pick(HAPPY_LINES)); return; }
+    // Sakin: kisilik replikine birak (bugy-v4 idle quip'i halleder).
   }
 
   // --- Ihtiyac dususu + bakim ---------------------------------------------
@@ -170,21 +230,37 @@
   ];
   const STAGE_LABEL = { egg: 'yumurta', hatchling: 'yavru', juvenile: 'genç', adult: 'yetişkin' };
 
+  const STAGE_INDEX = { egg: 0, hatchling: 0, juvenile: 1, adult: 2 };
+
   function stageFor(carePoints) {
     const cp = Number(carePoints) || 0;
     return (STAGE_THRESHOLDS.find((t) => cp >= t.min) || STAGE_THRESHOLDS[2]).stage;
   }
 
-  // Companion'a asama + canavar (feral) gorsel durumunu yansit.
+  // Pet'in mevcut asamasindaki gucun adi (dashboard/panel gosterimi icin).
+  function abilityFor(pet) {
+    const sp = SPECIES[resolveSpecies(pet.species)];
+    if (!sp || !sp.abilities) return '';
+    return sp.abilities[STAGE_INDEX[pet.stage] || 0] || sp.abilities[0];
+  }
+
+  // Companion'a asama + canavar (feral) + mood durumunu yansit (bugy-v4 API).
+  // Geriye donuk uyum icin gorsel sinif geçişlerini de korur.
   function applyVisualState(pet) {
-    const layer = document.getElementById('bugy-v4-layer');
-    const char = layer ? layer.querySelector('.bugy-v4-char') : null;
-    const target = char || layer;
-    if (!target) return;
-    ['hatchling', 'juvenile', 'adult'].forEach((s) => target.classList.remove(`bugy-stage-${s}`));
-    target.classList.add(`bugy-stage-${pet.stage || 'hatchling'}`);
-    const feral = moodFromNeeds(currentNeeds(pet)) === 'feral';
-    target.classList.toggle('bugy-feral', feral);
+    const v4 = window.BugyV4;
+    const needs = currentNeeds(pet);
+    const feral = moodFromNeeds(needs) === 'feral';
+    if (v4) {
+      if (v4.setStage) v4.setStage(pet.stage || 'hatchling');
+      if (v4.setFeral) v4.setFeral(feral);
+      if (v4.setMood) v4.setMood(pet.mood_state || moodFromNeeds(needs));
+    }
+    // Eski stil sinif kancalari (zararsiz yedek).
+    const char = document.querySelector('#bugy-v4-layer .bugy-v4-char');
+    if (char) {
+      ['hatchling', 'juvenile', 'adult'].forEach((s) => char.classList.remove(`bugy-stage-${s}`));
+      char.classList.add(`bugy-stage-${pet.stage || 'hatchling'}`);
+    }
     return feral;
   }
 
@@ -215,13 +291,21 @@
 
     renderCarePanel();
     const v4 = window.BugyV4;
-    const feralNow = applyVisualState(currentPet);
     if (currentPet.stage !== prevStage) {
-      if (v4 && v4.trigger) v4.trigger('tada');
-      toast(`✦ ${currentPet.name} evrim geçirdi: ${STAGE_LABEL[currentPet.stage]}!`);
+      // Dramatik evrim: flas + form degisimi + yeni guc replikasi (bugy-v4).
+      if (v4 && v4.setFeral) v4.setFeral(false);
+      if (v4 && v4.setMood) v4.setMood(currentPet.mood_state);
+      if (v4 && v4.evolve) v4.evolve(currentPet.stage);
+      else if (v4 && v4.trigger) v4.trigger('tada');
+      toast(`✦ ${currentPet.name} evrim geçirdi: ${STAGE_LABEL[currentPet.stage]} · ${abilityFor(currentPet)}!`);
     } else {
-      if (prevFeral && !feralNow) toast(`${currentPet.name} sakinleşti.`);
-      if (v4 && v4.trigger) v4.trigger(CARE[type].mood);
+      const feralNow = applyVisualState(currentPet);
+      if (prevFeral && !feralNow) {
+        toast(`${currentPet.name} sakinleşti.`);
+        if (v4 && v4.say) v4.say('Oh… kendime geldim.');
+      } else if (v4 && v4.trigger) {
+        v4.trigger(CARE[type].mood);
+      }
     }
     await savePet(currentPet);
   }
@@ -328,11 +412,14 @@
       <button type="button" class="bugy-care-action" data-care="${type}">
         <span aria-hidden="true">${CARE[type].icon}</span>${CARE[type].label}
       </button>`).join('');
-    const speciesLabel = SPECIES[currentPet.species] ? SPECIES[currentPet.species].label : currentPet.species;
+    const sp = SPECIES[resolveSpecies(currentPet.species)];
+    const speciesLabel = sp ? sp.label : currentPet.species;
+    const ability = abilityFor(currentPet);
     carePanel.innerHTML = `
       <div class="bugy-care-head">
         <strong>${escapeText(currentPet.name)}</strong>
         <span>${escapeText(speciesLabel)} · ${STAGE_LABEL[currentPet.stage] || ''} · ${MOOD_LABEL[mood] || mood}</span>
+        ${ability ? `<span class="bugy-care-ability">⚡ ${escapeText(ability)}</span>` : ''}
         <button type="button" class="bugy-care-close" aria-label="Kapat">×</button>
       </div>
       <div class="bugy-meters">${meters}</div>
