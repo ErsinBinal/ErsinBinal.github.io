@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v135';
+const CACHE_NAME = 'convivium-v136';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -38,7 +38,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
   '/assets/css/bugy-v4.css?v=4',
-  '/assets/css/bugy-cinema.css?v=1',
+  '/assets/css/bugy-cinema.css?v=2',
   '/assets/css/bugy-pet.css?v=4',
   '/assets/css/deb-companion.css?v=2',
   '/assets/css/home.css?v=21',
@@ -51,13 +51,13 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-v2.js?v=2',
   '/assets/js/bugy-v3-loader.js?v=6',
   '/assets/js/bugy-v4.js?v=8',
-  '/assets/js/bugy-v4-cinema.js?v=2',
+  '/assets/js/bugy-v4-cinema.js?v=3',
   '/assets/js/bugy-pet.js?v=8',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=1',
   '/assets/js/sfx.js?v=15',
   '/assets/js/home-protocol.js?v=50',
-  '/assets/js/bugy-studio.js?v=4',
+  '/assets/js/bugy-studio.js?v=5',
   '/assets/js/service-worker-register.js?v=2',
   '/assets/js/origin-beacon.js?v=1',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',

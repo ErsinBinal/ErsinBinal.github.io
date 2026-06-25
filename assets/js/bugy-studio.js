@@ -242,6 +242,10 @@
     flashRow(dl, 'Konum', `x:${st.x ?? '?'}  y:${st.y ?? '?'}`);
     if (st.mode) flashRow(dl, 'Mod', st.mode);
     if (st.assetSource) flashRow(dl, 'Varlik', st.assetSource);
+    if (key === 'v4' && window.BugyCinema && window.BugyCinema.getState) {
+      const cs = window.BugyCinema.getState();
+      flashRow(dl, 'Sinematik', cs.casting ? 'oynatiliyor' : cs.ready ? 'hazir' : `sarj %${Math.round(cs.charge * 100)}`);
+    }
     updateStats();
   }
 
@@ -299,6 +303,20 @@
       btn.addEventListener('click', () => runAction(action));
       els.actionGrid.appendChild(btn);
     });
+    // v4 sinematik imza-yetenek testleri (BugyCinema yuklendiyse).
+    if (key === 'v4' && window.BugyCinema) {
+      const cine = (label, fn) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip chip-action';
+        b.textContent = label;
+        b.addEventListener('click', () => { fn(); session.actions += 1; sfx('ui.confirm'); window.setTimeout(refresh, 700); });
+        els.actionGrid.appendChild(b);
+      };
+      cine('✦ sinematik', () => { window.BugyCinema.addCharge(1); window.BugyCinema.cast({ via: 'studio' }); });
+      cine('✦ critical', () => { window.BugyCinema.addCharge(1); window.BugyCinema.cast({ critical: true, via: 'studio' }); });
+      cine('⚡ şarj+', () => window.BugyCinema.addCharge(0.34));
+    }
     if (els.randomToggle) els.randomToggle.checked = Boolean(st && st.randomEnabled);
   }
 

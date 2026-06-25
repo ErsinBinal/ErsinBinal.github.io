@@ -342,5 +342,19 @@ hakkında bilgiler edinsin.
   [x] Yeni primitifler: addRain (ekran geneli yagmur: kod/kar/damla) +
       addBeam (dikey isik huzmesi, gradient). ctx.rain / ctx.beam.
   [x] Hepsi asamaya gore olcekli + critical varyantli; tureye uygun sfx.
-  KALAN (Faz D): combo/nadir varyant, director ambient mikro-davranislar,
-  studio'ya cinema test butonu/telemetri, mob'da partikul ince ayar.
+  --- FAZ D: COMBO/NADIR + DIRECTOR + STUDIO + MOBIL (2026-06-25) ---------
+  [x] NADIR "overdrive" varyant: her cast'ta %12 ihtimal -> altin flas +
+      "NADİR ✦" rozeti + zirve patlamasi + otomatik critical (otonomda kapali).
+  [x] COMBO: 7 sn icinde ardisik cast -> combo sayaci; >=2'de otomatik critical,
+      buton uzerinde "COMBO xN" rozeti; sure dolunca temizlenir.
+  [x] DIRECTOR ambient tic'leri (cast'tan ayri, sarj YEMEZ): bostayken ara sira
+      ping halkasi / sparkle / RGB flicker / scanline flick. Mood duyarli
+      (feral -> kirmizi, agresif). reduced-motion'da kapali.
+  [x] STUDIO: v4 secili + BugyCinema varsa aksiyon konsoluna "✦ sinematik",
+      "✦ critical", "⚡ şarj+" cipleri + telemetride "Sinematik: hazir/sarj %/
+      oynatiliyor" satiri.
+  [x] MOBIL/dusuk guc: DPR tavani 1.5; genel PARTIKUL TAVANI (mobil 120 / masa
+      260) cap() icinde uygulanir -> runaway yok.
+  cinema v3, cinema.css v2, studio v5, cache v136.
+  KALAN (istege bagli): yetenege ozel ikon/renk butonu, dokunmatik long-press
+  ince ayar, ses miksaj dengeleri, ileride 2. evrim dali ile yeni move'lar.

@@ -50,8 +50,10 @@
   const CHARGE_SECONDS = 38;             // bostan dolusa ~38 sn
   const state = {
     booted: false, active: false, casting: false,
-    charge: 1, ready: true, raf: 0, last: 0, freezeUntil: 0
+    charge: 1, ready: true, raf: 0, last: 0, freezeUntil: 0,
+    combo: 0, lastCastEnd: 0
   };
+  let maxParticles = 260;     // mobilde dusurulur (ensure'da ayarlanir)
   const particles = [];
   const rings = [];
   const bolts = [];
@@ -66,6 +68,7 @@
   function ensure() {
     if (state.booted) return;
     state.booted = true;
+    maxParticles = lowPower() ? 120 : 260;
     preloadSprites();
 
     canvas = document.createElement('canvas');
@@ -91,7 +94,7 @@
 
   function resize() {
     if (!canvas) return;
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(window.devicePixelRatio || 1, lowPower() ? 1.5 : 2);
     canvas.width = Math.floor(window.innerWidth * dpr);
     canvas.height = Math.floor(window.innerHeight * dpr);
     canvas.style.width = window.innerWidth + 'px';
@@ -242,7 +245,11 @@
   }
 
   // --- Efekt primitifleri (move'lar bunlari cagirir) -----------------------
-  const cap = (n) => (lowPower() ? Math.round(n * 0.5) : n);
+  // Mobil/dusuk guc: yariya indir; ayrica genel partikul tavanini asma.
+  const cap = (n) => {
+    const room = Math.max(0, maxParticles - particles.length);
+    return Math.min(lowPower() ? Math.round(n * 0.5) : n, room);
+  };
 
   const addParticles = (x, y, opts = {}) => {
     const n = cap(opts.count || 14);
@@ -568,16 +575,69 @@
       if (!opts.auto) buzzButton();
       return false;
     }
+
+    // Combo: kisa pencere icinde ardisik cast -> yogunluk artar (>=2 critical).
+    const now = performance.now();
+    state.combo = (now - state.lastCastEnd < 7000) ? state.combo + 1 : 1;
+    if (state.combo >= 2) opts.critical = true;
+
+    // Nadir "overdrive" varyant (otonomda kapali) -> altin parlama + critical.
+    const rare = !opts.auto && Math.random() < 0.12;
+    if (rare) { opts.critical = true; opts.rare = true; }
+
     const c = buildCtx(st, opts);
     if (!c) return false;
     state.casting = true;
     setCharge(0);
     updateButton();
     startLoop();
+    if (rare) rareFlourish(c);
+
     Promise.resolve(moveFor(st.skin)(c))
       .catch(() => { /* yok say */ })
-      .finally(() => { state.casting = false; updateButton(); });
+      .finally(() => { state.casting = false; state.lastCastEnd = performance.now(); updateButton(); });
     return true;
+  }
+
+  // Nadir varyant: altin flas + rozet + zirve patlamasi (move'un ustune biner).
+  function rareFlourish(c) {
+    c.sfx('ui.reveal');
+    c.flash('#ffe27a', 0.45, 320);
+    flashRareBadge();
+    setTimeout(() => {
+      c.particles(c.cx, c.cy, { count: 22, color: '#ffe27a', spdMax: 280, grav: -40, lifeMax: 1.3, sizeMax: 4 });
+      c.sprite('flash08', c.cx, c.cy, 160, 360);
+    }, 460);
+  }
+  function flashRareBadge() {
+    const b = document.createElement('div');
+    b.className = 'cine-rare-badge';
+    b.textContent = 'NADİR ✦';
+    document.body.appendChild(b);
+    setTimeout(() => b.classList.add('is-out'), 1200);
+    setTimeout(() => b.remove(), 1700);
+  }
+
+  // --- Director: bostayken kucuk sinematik tic'ler (cast'tan ayri, sarj yemez)
+  function ambientTic() {
+    if (reduceMotion()) return;
+    const a = anchor();
+    if (!a) return;
+    const st = bv4State();
+    const feral = st && st.feral;
+    const kinds = feral ? ['flicker', 'ping', 'flicker'] : ['ping', 'sparkle', 'flicker', 'scanflick'];
+    const k = kinds[Math.floor(Math.random() * kinds.length)];
+    if (k === 'ping') {
+      addRing({ x: a.cx, y: a.cy, r: 4, vr: 1.4, width: 2, color: feral ? '#ff2e5e' : a.accent, life: 0.5, maxLife: 0.5 });
+    } else if (k === 'sparkle') {
+      addParticles(a.cx, a.cy, { count: 4, color: a.accent2, spdMax: 90, grav: -30, lifeMax: 0.8, sizeMax: 2.5 });
+    } else if (k === 'flicker') {
+      const el = charEl();
+      if (el) { el.classList.add('is-cine-glitch'); setTimeout(() => el.classList.remove('is-cine-glitch'), 180); }
+      addParticles(a.cx, a.cy, { count: 3, color: feral ? '#ff2e5e' : a.accent, spdMax: 70, lifeMax: 0.6, sizeMax: 2 });
+    } else {
+      scan(160);
+    }
   }
 
   // --- Sarj + buton --------------------------------------------------------
@@ -612,6 +672,7 @@
     castBtn.style.setProperty('--charge', state.charge.toFixed(3));
     castBtn.classList.toggle('is-ready', state.ready && !state.casting);
     castBtn.classList.toggle('is-casting', state.casting);
+    castBtn.dataset.combo = state.combo >= 2 ? ('COMBO x' + state.combo) : '';
     castBtn.title = state.casting ? 'Yetenek oynatılıyor…'
       : state.ready ? 'İmza yeteneği hazır — tıkla (yaratığa çift-tık / basılı-tut da olur)'
         : `Şarj oluyor… %${Math.round(state.charge * 100)}`;
@@ -644,14 +705,15 @@
     if (!state.active) return;
     bindChar();
     if (!state.casting && state.charge < 1) setCharge(state.charge + 1 / CHARGE_SECONDS);
-    // Otonom: hazir + bosta + gizli degil -> ara sira kendi kendine.
-    if (state.ready && !state.casting && !document.hidden) {
-      const st = bv4State();
-      if (st && st.active && st.state === 'idle') {
-        const p = st.feral ? 0.06 : 0.035;   // feral biraz daha agresif
-        if (Math.random() < p) cast({ auto: true });
-      }
-    }
+    // Combo rozeti suresi dolunca temizle.
+    if (state.combo && performance.now() - state.lastCastEnd > 7000) { state.combo = 0; updateButton(); }
+    if (state.casting || document.hidden) return;
+    const st = bv4State();
+    if (!st || !st.active || st.state !== 'idle') return;
+    // Otonom imza cast (hazirsa, nadiren).
+    if (state.ready && Math.random() < (st.feral ? 0.06 : 0.035)) { cast({ auto: true }); return; }
+    // Director ambient tic'leri (sarj yemez, sik ama hafif).
+    if (Math.random() < 0.1) ambientTic();
   }, 1000);
 
   // --- BugyV4 durum koprusu ------------------------------------------------

@@ -110,6 +110,46 @@
   50% { box-shadow: 0 0 14px rgba(0, 0, 0, 0.5), 0 0 0 7px color-mix(in srgb, var(--cine-accent) 0%, transparent); }
 }
 
+/* Combo rozeti (ardisik cast) — buton uzerinde. */
+.bugy-cinema-cast[data-combo]:not([data-combo=""])::after {
+  content: attr(data-combo);
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.56rem;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  color: #0a0f14;
+  background: var(--cine-accent, #00f3ff);
+  border-radius: 6px;
+  box-shadow: 0 0 8px var(--cine-accent, #00f3ff);
+}
+
+/* Nadir (overdrive) rozeti — sol-altta, kisa sureli altin parlama. */
+.cine-rare-badge {
+  position: fixed;
+  left: 22px;
+  bottom: 80px;
+  z-index: 9300;
+  padding: 5px 11px;
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: 0.78rem;
+  font-weight: bold;
+  letter-spacing: 0.1em;
+  color: #2a1d00;
+  background: linear-gradient(180deg, #ffe27a, #ffc83d);
+  border: 1px solid #fff3c4;
+  border-radius: 8px;
+  box-shadow: 0 0 18px rgba(255, 200, 61, 0.7);
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+.cine-rare-badge.is-out { opacity: 0; transform: translateY(-8px); }
+
 /* Hareket azaltma: sinematigi sustur, butonu sade tut. */
 @media (prefers-reduced-motion: reduce) {
   .bugy-cinema-cast.is-ready { animation: none; }
