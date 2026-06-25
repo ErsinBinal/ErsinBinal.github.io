@@ -40,12 +40,14 @@ const GEMINI_MODEL = 'gemini-2.5-flash';
 // Google Programmable Search sonuc OZETLERINDEN profil cikarmak icin (CF AI ile).
 const PROFILE_FROM_SNIPPETS_PROMPT = [
   'Sen bir profil arastirma asistanisin.',
-  'Sana bir kisinin adi ve GERCEK Google arama sonuclari (baslik + ozet + link) verilecek.',
+  'Sana bir kisinin adi ve GERCEK arama sonuclari (baslik + ozet + link) verilecek.',
   'SADECE bu sonuclardaki bilgilere dayan; sonuclarda olmayan hicbir sey uydurma.',
-  'Sonuclar bu kisiye ait gorunmuyorsa veya yetersizse, ilgili alani bos string birak.',
-  'Kisinin meslegini tek cumlede, egitimini tek cumlede, bolumunu/departmanini tek cumlede ozetle.',
+  'ONEMLI: Sonuclarda ayni isimli BIRDEN FAZLA FARKLI kisi olabilir.',
+  'Farkli kisileri ASLA birlestirme. En cok kaynakla desteklenen / en tutarli TEK bir kisiyi sec ve yalnizca onun bilgilerini ver.',
+  'Hangi kisiyi sectigini ve emin olmadigini note alaninda kisaca belirt.',
+  'Sonuclar tutarsizsa veya kisiye ait gorunmuyorsa, ilgili alani bos string birak.',
+  'Sectigin kisinin meslegini tek cumlede, egitimini tek cumlede, bolumunu/departmanini tek cumlede ozetle.',
   'Cevabi SADECE JSON olarak ver. Anahtarlar: profession, education, department, note.',
-  'note alanina ne kadar emin oldugunu veya bilgi bulunamadiysa bunu kisaca yaz.',
   'JSON disinda hicbir metin yazma. Turkce kullan.'
 ].join(' ');
 
