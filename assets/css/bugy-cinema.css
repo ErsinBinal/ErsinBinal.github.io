@@ -1,0 +1,117 @@
+/* Convivium - Bugy v4 Sinematik Aksiyon Motoru
+   Yaratik imza yeteneklerinin tam ekran FX katmani + sarj butonu.
+   Classic'ten tamamen ayri; kendi z-index bandi ve gorsel dili. */
+
+/* --- Canvas FX (partikul/simsek/halka/sprite) --- */
+#bugy-cinema-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 151;          /* yaratik katmaninin (150) hemen ustu */
+  pointer-events: none;
+}
+
+/* --- Ekran-uzayi efekt katmani (flas + scanline/vignette) --- */
+#bugy-cinema-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9400;
+  pointer-events: none;
+  overflow: hidden;
+}
+.cine-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: #ffffff;
+  mix-blend-mode: screen;
+}
+.cine-scan {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0) 0,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 255, 200, 0.06) 3px,
+      rgba(0, 0, 0, 0.18) 4px
+    ),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.45) 100%);
+  mix-blend-mode: overlay;
+}
+
+/* --- Yaratik cast jestleri (CSS; canvas FX ile senkron) --- */
+@media (prefers-reduced-motion: no-preference) {
+  .bugy-v4-char.is-cine-charge .v4-svg { animation: cineCharge 0.46s ease-in-out; }
+  @keyframes cineCharge {
+    0% { transform: scale(1); }
+    60% { transform: scale(0.9, 1.08) translateY(3px); }
+    100% { transform: scale(0.86, 1.12) translateY(4px); }
+  }
+  .bugy-v4-char.is-cine-cast .v4-svg { animation: cineCast 0.5s cubic-bezier(0.2, 1.6, 0.4, 1); }
+  @keyframes cineCast {
+    0% { transform: scale(0.86, 1.12) translateY(4px); }
+    35% { transform: scale(1.16, 0.86) translateY(-8px); }
+    100% { transform: scale(1) translateY(0); }
+  }
+  /* Cyberpunk RGB-split glitch (scan ile birlikte) */
+  .bugy-v4-char.is-cine-glitch .v4-svg { animation: cineGlitch 0.3s steps(2) 2; }
+  @keyframes cineGlitch {
+    0%, 100% { filter: drop-shadow(0 0 4px var(--v4-accent, #00f3ff)) drop-shadow(0 6px 6px rgba(0, 0, 0, 0.4)); }
+    33% { filter: drop-shadow(3px 0 0 #ff003c) drop-shadow(-3px 0 0 #00f3ff); }
+    66% { filter: drop-shadow(-3px 0 0 #ff003c) drop-shadow(3px 0 0 #00f3ff); }
+  }
+}
+
+/* --- Sarj gostergeli "yetenek" butonu (sol-alt; bakim'dan ayri) --- */
+.bugy-cinema-cast {
+  --charge: 0;
+  --cine-accent: var(--v4-accent, #00f3ff);
+  position: fixed;
+  left: 22px;
+  bottom: 22px;
+  z-index: 9000;
+  display: none;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #d7faff;
+  /* Halka = sarj yuzdesi (conic). Ic disk = govde. */
+  background:
+    radial-gradient(circle at center, rgba(3, 10, 16, 0.96) 0 58%, transparent 59%),
+    conic-gradient(var(--cine-accent) calc(var(--charge) * 360deg), rgba(120, 140, 160, 0.22) 0);
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.18s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+.bugy-cinema-cast.is-shown { display: grid; }
+.cine-cast-glyph {
+  font-size: 20px;
+  line-height: 1;
+  opacity: 0.55;
+  transition: opacity 0.25s ease, text-shadow 0.25s ease;
+}
+.bugy-cinema-cast.is-ready {
+  filter: drop-shadow(0 0 6px var(--cine-accent));
+  animation: cineReadyPulse 1.6s ease-in-out infinite;
+}
+.bugy-cinema-cast.is-ready .cine-cast-glyph {
+  opacity: 1;
+  text-shadow: 0 0 8px var(--cine-accent);
+}
+.bugy-cinema-cast.is-ready:hover { transform: translateY(-2px) scale(1.06); }
+.bugy-cinema-cast.is-casting { opacity: 0.7; cursor: default; }
+@keyframes cineReadyPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(0, 0, 0, 0.5), 0 0 0 0 color-mix(in srgb, var(--cine-accent) 55%, transparent); }
+  50% { box-shadow: 0 0 14px rgba(0, 0, 0, 0.5), 0 0 0 7px color-mix(in srgb, var(--cine-accent) 0%, transparent); }
+}
+
+/* Hareket azaltma: sinematigi sustur, butonu sade tut. */
+@media (prefers-reduced-motion: reduce) {
+  .bugy-cinema-cast.is-ready { animation: none; }
+  .cine-scan { display: none; }
+}

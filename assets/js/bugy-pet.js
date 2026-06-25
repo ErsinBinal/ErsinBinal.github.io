@@ -357,6 +357,8 @@
     });
     currentPet.last_care_at = new Date().toISOString();
     currentPet.care_points = (Number(currentPet.care_points) || 0) + 1;
+    // Bakim, sinematik imza yetenegini de besler (sarj +%25).
+    if (window.BugyCinema && window.BugyCinema.addCharge) window.BugyCinema.addCharge(0.25);
 
     const prevStage = currentPet.stage;
     const prevFeral = currentPet.mood_state === 'feral';

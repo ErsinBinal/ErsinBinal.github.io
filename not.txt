@@ -296,3 +296,33 @@ hakkında bilgiler edinsin.
   [x] Secim ekrani blurb'leri cyber temaya guncellendi.
   NOT: govde renkleri koyu (sasi); site koyu ama CSS neon glow + neon stroke
   okunurlugu sagliyor. spark bilincli olarak acik (Portal beyazi) -> kontrast.
+
+  --- TUR 4: SINEMATIK AKSIYON MOTORU (2026-06-25) -----------------------
+  Karar: yaratik aksiyonlari Bugy Classic'ten TAMAMEN ayri, sinematik bir
+  "imza yetenek" (signature move) motoruna alindi. Kapsam: temel motor +
+  amiral gemisi (Voltik - Yildirim). Onay: Faz A+B.
+  [x] YENI dosyalar: assets/js/bugy-v4-cinema.js + assets/css/bugy-cinema.css
+      (window.BugyCinema). index + makaleler + bugy-studio'ya baglandi.
+  [x] FX motoru: kendi tam ekran <canvas> (z151) + ekran-uzayi katmani (z9400)
+      flas/scanline/vignette. Primitifler: partikul (havuz), sok halkasi,
+      catallanan simsek (bolt), Kenney sprite patlamasi (precache'li kareler),
+      kamera sarsintisi (WAAPI), hit-stop, RGB-split glitch. Sequencer = fazli
+      async (hazirlik->sarj->darbe->halka->toparlanma).
+  [x] Ses: sfx.js cue'lari (system.unlock / game.laser / game.explosion /
+      game.power / game.hazard). Ses + reduced-motion + dusuk-guc fallback'li.
+  [x] Tetikleme (HEPSI): sol-altta sarj gostergeli "yetenek" butonu (bakim
+      🩺'ten ayri, conic-ring) + yaratiga cift-tik (normal) + basili-tut
+      (>=550ms = CRITICAL) + sarj dolu & bostayken ara sira OTONOM (mood
+      duyarli). Sarj ~38 sn'de dolar; bakim her seferinde +%25 sarj verir.
+  [x] AMIRAL GEMISI volt/Voltik "Yildirim": sarj kivilcimlari toplanir ->
+      on-flas -> tepeden catallanan simsek + beyaz flas + kamera sarsintisi +
+      hit-stop + kivilcim patlamasi -> yere sok halkasi + scanline glitch +
+      "⚡ Yildirim!" replikasi. Asamaya gore olcek (yavru kucuk, yetiskin tam);
+      critical'da ikinci bolt + ekstra sarsinti.
+  [x] Diger 6 tur: simdilik "genericSurge" (accent renginde sade cinematik)
+      kullanir; Faz C'de her ture OZEL move gelecek (su Dalga, ates Yangin,
+      spark datamosh/EMP, frost ekran donar, leaf sarmasik, luna gravity-lift).
+  KALAN (Faz C/D): 6 ture ozel sinematik move; combo/nadir varyant; director
+  ambient mikro-davranislar; studio'ya cinema telemetrisi/test butonu.
+  NOT: Node yok; mantik/sozdizimi elle dogrulandi. Sinematigin GORSEL teyidi
+  (yetenek butonu, simsek, sarsinti, ses) tarayicida yapilmali.
