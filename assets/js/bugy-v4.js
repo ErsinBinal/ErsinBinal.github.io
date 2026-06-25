@@ -291,6 +291,19 @@
 
     const def = () => creatures[state.skin];
 
+    // Yaratigin SVG icindeki gercek tepe noktasi (viewBox birimi). Asama/feral
+    // ile gorunen uzuvlar degistikce olculur; baloncuk buna gore hizalanir.
+    let headY = 14;
+    const VB_H = 140;
+    const measureHead = () => {
+      const svg = svgWrap.querySelector('svg');
+      if (!svg || !svg.getBBox) return;
+      try {
+        const bb = svg.getBBox();           // gizliyken (display:none) 0 doner
+        if (bb && bb.height > 0) headY = clamp(bb.y, 0, VB_H - 10);
+      } catch { /* layer gizliyken olcum yapilamaz; onceki degeri koru */ }
+    };
+
     const renderSvg = () => {
       svgWrap.innerHTML =
         `<svg viewBox="0 0 120 140" class="v4-svg" aria-hidden="true">${def().svg}</svg>`;
@@ -301,6 +314,7 @@
       char.style.setProperty('--v4-accent', def().accent);
       char.style.setProperty('--v4-accent2', def().accent2);
       char.style.setProperty('--v4-grow', GROW[state.stage] || 1);
+      measureHead();
     };
 
     const groundTop = () => window.innerHeight - CHAR_H - bottomGap;
@@ -308,7 +322,13 @@
     const place = (bob = 0) => {
       char.style.transform =
         `translate(${Math.round(state.x)}px, ${Math.round(bob)}px) scaleX(${state.dir < 0 ? -1 : 1})`;
-      const bx = clamp(state.x + CHAR_W * 0.55, 8, window.innerWidth - 260);
+      // Dikey: baloncugu yaratigin gercek tepe noktasinin hemen ustune koy
+      // (buyume + tur + asama duyarli). Yatay: kuyrugu (left:26px) merkeze denk getir.
+      const grow = GROW[state.stage] || 1;
+      const headFromBottom = bottomGap + CHAR_H * (1 - headY / VB_H) * grow;
+      balloon.style.bottom = `${Math.round(headFromBottom + 8)}px`;
+      const centerX = state.x + CHAR_W / 2;
+      const bx = clamp(centerX - 26, 8, window.innerWidth - 240);
       balloon.style.transform = `translate(${Math.round(bx)}px, ${Math.round(bob)}px)`;
     };
 
@@ -434,6 +454,7 @@
         renderSvg();
         state.x = clamp(state.x, 6, window.innerWidth - CHAR_W - 6);
         syncVisibility();
+        measureHead(); // gorunur olduktan sonra dogru olcum
         window.cancelAnimationFrame(state.raf);
         state.raf = window.requestAnimationFrame(loop);
         state.blinkAt = 0;
@@ -487,6 +508,7 @@
         state.stage = STAGES.includes(stage) ? stage : 'hatchling';
         char.dataset.stage = state.stage;
         char.style.setProperty('--v4-grow', GROW[state.stage] || 1);
+        measureHead(); // gorunur uzuvlar degisti -> baloncuk hizasi guncellensin
         dispatch();
         return state.stage;
       },
@@ -495,6 +517,7 @@
         state.feral = Boolean(on);
         char.dataset.feral = state.feral ? '1' : '0';
         char.classList.toggle('bugy-feral', state.feral);
+        measureHead();
         dispatch();
         return state.feral;
       },
