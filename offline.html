@@ -507,24 +507,64 @@
         status.dataset.kind = kind || 'info';
       }
 
-      function syncNetworkState() {
-        const online = navigator.onLine;
-        document.body.classList.toggle('is-online', online);
-        netState.textContent = online ? 'online / locked' : 'offline / active';
-        input.disabled = online;
-        // Akis yalnizca online VE odul henuz alinmamisken surer; offline olunca
-        // ya da odul alininca server "kapanir".
-        if (online && !readNode().solved) startStream(); else stopStream();
-        if (online && readNode().solved) {
+      // Bu sayfa "offline node"dur: aksi kanitlanana dek OFFLINE kabul edilir.
+      // navigator.onLine guvenilmez (LAN ayakta olunca internet kesik bile olsa
+      // true doner). Bu yuzden gercek bir baglanti testi (cache-bypass fetch)
+      // yapariz.
+      let online = false;
+      let probing = false;
+
+      async function probeConnectivity() {
+        // Tarayici kesin offline diyorsa istek bile atma.
+        if (!navigator.onLine) return false;
+        try {
+          let signal;
+          let timer;
+          if ('AbortController' in window) {
+            const ctrl = new AbortController();
+            signal = ctrl.signal;
+            timer = setTimeout(() => ctrl.abort(), 4000);
+          }
+          // HEAD istegi SW'yi BYPASS eder (SW yalnizca GET'i isler) -> dogrudan
+          // aga gider, cache'e yazilmaz. Offline ise reddedilir; online ise 200.
+          const res = await fetch('/manifest.json?ping=' + Date.now(), {
+            method: 'HEAD', cache: 'no-store', signal
+          });
+          if (timer) clearTimeout(timer);
+          return !!(res && res.ok);
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function applyNetworkState(isOnline) {
+        online = isOnline;
+        document.body.classList.toggle('is-online', isOnline);
+        netState.textContent = isOnline ? 'online / locked' : 'offline / active';
+        input.disabled = isOnline;
+        // Akis yalnizca online VE odul henuz alinmamisken surer.
+        if (isOnline && !readNode().solved) startStream(); else stopStream();
+        if (isOnline && readNode().solved) {
           document.body.classList.add('is-solved');
           writeNode({ reconnectedAt: new Date().toISOString() });
         }
+        if (!isOnline && !readNode().solved) { try { input.focus(); } catch (e) { /* yok say */ } }
+      }
+
+      async function syncNetworkState() {
+        if (probing) return;
+        probing = true;
+        // Hizli yol: tarayici offline diyorsa hemen ac (istek atmaya gerek yok).
+        if (!navigator.onLine) { applyNetworkState(false); probing = false; return; }
+        const isOnline = await probeConnectivity();
+        applyNetworkState(isOnline);
+        probing = false;
       }
 
       form.addEventListener('submit', (event) => {
         event.preventDefault();
-        if (navigator.onLine) {
-          setStatus('Node online durumda kilitli. Kesinti gerceklesince tekrar dene.', 'error');
+        if (online) {
+          setStatus('Node su an cevrimici gorunuyor. Sinyal gercekten kesilince tekrar dene.', 'error');
           return;
         }
 
@@ -547,8 +587,13 @@
 
       window.addEventListener('online', syncNetworkState);
       window.addEventListener('offline', syncNetworkState);
+      // navigator.onLine olaylari WAN kopmasinda her zaman tetiklenmez; bu yuzden
+      // periyodik olarak gercek baglantiyi yokla (kopma + geri donus icin).
+      window.setInterval(syncNetworkState, 7000);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) syncNetworkState();
+      });
       syncNetworkState();
-      if (!navigator.onLine) input.focus();
     })();
   </script>
   <script src="/assets/js/sfx.js?v=15" defer></script>
