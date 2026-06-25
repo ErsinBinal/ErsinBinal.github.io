@@ -136,14 +136,19 @@
     return data.user;
   }
 
-  async function signUp(email, password, displayName) {
+  async function signUp(email, password, firstName, lastName) {
     const client = await requireClient();
+    const displayName = [firstName, lastName].filter(Boolean).join(' ').trim();
     const { data, error } = await client.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: config.redirectTo || `${window.location.origin}/account/auth.html`,
-        data: { display_name: displayName || '' }
+        data: {
+          display_name: displayName || '',
+          first_name: firstName || '',
+          last_name: lastName || ''
+        }
       }
     });
     if (error) throw new Error(toMessage(error));
@@ -171,9 +176,47 @@
 
     const { data, error } = await client
       .from('profiles')
-      .select('user_id, display_name, role, created_at')
+      .select('user_id, display_name, first_name, last_name, role, profession, education, department, created_at')
       .eq('user_id', user.id)
       .maybeSingle();
+
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function upsertProfile(profileData) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Profil kaydetmek icin once giris yapmalisiniz.');
+
+    const payload = { user_id: user.id };
+    if (profileData.display_name !== undefined) {
+      payload.display_name = String(profileData.display_name || '').slice(0, 80) || null;
+    } else if (profileData.first_name !== undefined || profileData.last_name !== undefined) {
+      payload.display_name = String(`${profileData.first_name || ''} ${profileData.last_name || ''}`.trim()).slice(0, 80) || null;
+    }
+    if (profileData.first_name !== undefined) {
+      payload.first_name = String(profileData.first_name || '').slice(0, 40) || null;
+    }
+    if (profileData.last_name !== undefined) {
+      payload.last_name = String(profileData.last_name || '').slice(0, 40) || null;
+    }
+    if (profileData.profession !== undefined) {
+      payload.profession = String(profileData.profession || '').slice(0, 120) || null;
+    }
+    if (profileData.education !== undefined) {
+      payload.education = String(profileData.education || '').slice(0, 120) || null;
+    }
+    if (profileData.department !== undefined) {
+      payload.department = String(profileData.department || '').slice(0, 120) || null;
+    }
+    payload.updated_at = new Date().toISOString();
+
+    const { data, error } = await client
+      .from('profiles')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single();
 
     if (error) throw new Error(toMessage(error));
     return data;
@@ -799,6 +842,7 @@
     getSession,
     getUser,
     getProfile,
+    upsertProfile,
     isAdmin,
     signUp,
     signIn,

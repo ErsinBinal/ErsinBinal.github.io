@@ -102,7 +102,7 @@
     setFormBusy(signUpForm, true);
 
     try {
-      await backend.signUp(data.email, data.password, data.display_name);
+      await backend.signUp(data.email, data.password, data.first_name, data.last_name);
       signUpForm.reset();
       updatePasswordStrength();
       await refreshSession();

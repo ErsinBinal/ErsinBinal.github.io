@@ -136,11 +136,28 @@
   }
 
   function renderProfile(session, profile) {
-    profileEl.innerHTML = [
-      `<strong>${escapeHtml(profile?.display_name || session.user.email || 'Convivium kullanicisi')}</strong>`,
+    const displayName = escapeHtml(profile?.display_name || `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || session.user.email || 'Convivium kullanicisi');
+    const lines = [
+      `<strong>${displayName}</strong>`,
       `<span>${escapeHtml(session.user.email || session.user.id)}</span>`,
       `<span>Rol: ${escapeHtml(profile?.role || 'reader')}</span>`
-    ].join('');
+    ];
+
+    const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ');
+    if (fullName) {
+      lines.push(`<span>Ad Soyad: ${escapeHtml(fullName)}</span>`);
+    }
+    if (profile?.profession) {
+      lines.push(`<span>Meslek: ${escapeHtml(profile.profession)}</span>`);
+    }
+    if (profile?.education) {
+      lines.push(`<span>Eğitim: ${escapeHtml(profile.education)}</span>`);
+    }
+    if (profile?.department) {
+      lines.push(`<span>Bölüm: ${escapeHtml(profile.department)}</span>`);
+    }
+
+    profileEl.innerHTML = lines.join('');
   }
 
   // --- Bugy / Ped inceleme (salt okunur; bakim companion uzerinden yapilir) ---
