@@ -125,13 +125,12 @@ flowchart LR
   games2 --> scores & daily & wall & world
 
   classDef tracked fill:#0a3a1a,stroke:#0f0,color:#dfffe0
-  classDef untracked fill:#3a360a,stroke:#cc0,color:#fff7cf
-  class profiles,articles,scores,sessions,recos,dmatch,dthrow tracked
-  class bugypets,oraclep,daily,wall,world untracked
+  class profiles,articles,scores,sessions,recos,dmatch,dthrow,bugypets,oraclep,daily,wall,world tracked
 ```
 
-> 🟩 = `docs/database/supabase-schema.sql` içinde tanımlı. 🟨 = kodda kullanılıyor
-> ama tracked şemada yok (canlı DB'de var; şema dosyasına eklenmeli).
+> 🟩 = `docs/database/supabase-schema.sql` içinde tanımlı. Tüm tablolar artık
+> şema dosyasında kayıtlı (ARG/oyun tabloları 2026-06-26'da canlıdan birebir
+> çıkarılıp eklendi).
 
 ---
 
@@ -286,7 +285,7 @@ flowchart TD
 | Profil zenginleştirme (Tavily) | 🟩 | Canlı, test edildi |
 | Google CSE sağlayıcı | 🟨 | Kod hazır; anahtar girilmedi |
 | Gemini sağlayıcı | 🟨 | Yedek; ücretsiz kota sınırlı |
-| Şema dosyası eksik tablolar | 🟨 | bugy_pets, oracle_profiles, daily_signal, wall_marks, world_state şema dosyasında yok |
+| Şema dosyası eksik tablolar | 🟩 | bugy_pets, oracle_profiles, daily_signal, wall_marks, world_state canlıdan birebir eklendi |
 | Bugy sürüm konsolidasyonu | 🟨 | 6+ sürüm; kanonik olan netleşmeli |
 | Eski üyeler için onay ekranı | ⬜ | Henüz yok |
 | Otomatik akış testleri | 🟩 | `tests/` + `flow-check.yml` |

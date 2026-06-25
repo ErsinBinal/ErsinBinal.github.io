@@ -439,3 +439,178 @@ on public.dart_throws
 for delete
 to authenticated
 using (public.is_admin());
+
+-- =====================================================================
+-- ARG / oyun durumu tablolari
+-- (Onceden yalniz canli DB'de vardi; 2026-06-26'da semaya eklendi. Tanimlar
+--  canli veritabanindan birebir cikarildi.)
+-- =====================================================================
+
+-- Bugy evcil hayvan durumu (kullanici basina bir kayit).
+create table if not exists public.bugy_pets (
+  user_id uuid primary key default auth.uid() references auth.users(id) on delete cascade,
+  species text not null default 'clippy',
+  name text not null default 'Bugy',
+  stage text not null default 'hatchling' check (stage in ('egg', 'hatchling', 'juvenile', 'adult')),
+  hatched boolean not null default true,
+  hunger smallint not null default 80 check (hunger >= 0 and hunger <= 100),
+  energy smallint not null default 80 check (energy >= 0 and energy <= 100),
+  hygiene smallint not null default 80 check (hygiene >= 0 and hygiene <= 100),
+  bond smallint not null default 40 check (bond >= 0 and bond <= 100),
+  mood_state text not null default 'neutral' check (mood_state in ('happy', 'neutral', 'grumpy', 'feral')),
+  care_points integer not null default 0 check (care_points >= 0),
+  born_at timestamptz not null default now(),
+  last_care_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now(),
+  meta jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+-- Gunluk sinyal (ARG): tek satir/gun, herkese acik okuma; yalniz admin yazar.
+create table if not exists public.daily_signal (
+  signal_date date primary key,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+-- Oracle profil/istatistikleri (kullanici basina).
+create table if not exists public.oracle_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  reading_count integer not null default 0 check (reading_count >= 0),
+  accepted_count integer not null default 0 check (accepted_count >= 0),
+  refused_count integer not null default 0 check (refused_count >= 0),
+  axis_scores jsonb not null default '{}'::jsonb,
+  accepted_axes jsonb not null default '{}'::jsonb,
+  refused_axes jsonb not null default '{}'::jsonb,
+  dominant_axis text,
+  last_reading_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+-- Duvar yazilari (ARG): herkese acik okuma, kendi kaydini ekleme.
+create table if not exists public.wall_marks (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  room text not null default '/' check (char_length(room) <= 64),
+  body text not null check (char_length(body) >= 1 and char_length(body) <= 280),
+  created_at timestamptz not null default now()
+);
+create index if not exists wall_marks_room_created_idx on public.wall_marks (room, created_at desc);
+
+-- Dunya durumu (ARG ilerleme): kilit/envanter/kesif/seviye.
+create table if not exists public.world_state (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  unlocked text[] not null default '{}'::text[],
+  inventory text[] not null default '{}'::text[],
+  discovered text[] not null default '{}'::text[],
+  level integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.bugy_pets enable row level security;
+alter table public.daily_signal enable row level security;
+alter table public.oracle_profiles enable row level security;
+alter table public.wall_marks enable row level security;
+alter table public.world_state enable row level security;
+
+-- bugy_pets politikalari
+drop policy if exists "Users read own bugy" on public.bugy_pets;
+create policy "Users read own bugy"
+on public.bugy_pets
+for select
+to authenticated
+using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists "Users create own bugy" on public.bugy_pets;
+create policy "Users create own bugy"
+on public.bugy_pets
+for insert
+to authenticated
+with check (user_id = auth.uid());
+
+drop policy if exists "Users update own bugy" on public.bugy_pets;
+create policy "Users update own bugy"
+on public.bugy_pets
+for update
+to authenticated
+using (user_id = auth.uid())
+with check (user_id = auth.uid());
+
+drop policy if exists "Admins delete bugy" on public.bugy_pets;
+create policy "Admins delete bugy"
+on public.bugy_pets
+for delete
+to authenticated
+using (public.is_admin());
+
+-- daily_signal politikalari (roller PUBLIC)
+drop policy if exists "daily_signal_select_public" on public.daily_signal;
+create policy "daily_signal_select_public"
+on public.daily_signal
+for select
+using (true);
+
+drop policy if exists "daily_signal_admin_write" on public.daily_signal;
+create policy "daily_signal_admin_write"
+on public.daily_signal
+for all
+using (public.is_admin())
+with check (public.is_admin());
+
+-- oracle_profiles politikalari (roller PUBLIC)
+drop policy if exists "oracle_profiles_select_own" on public.oracle_profiles;
+create policy "oracle_profiles_select_own"
+on public.oracle_profiles
+for select
+using (auth.uid() = user_id);
+
+drop policy if exists "oracle_profiles_insert_own" on public.oracle_profiles;
+create policy "oracle_profiles_insert_own"
+on public.oracle_profiles
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "oracle_profiles_update_own" on public.oracle_profiles;
+create policy "oracle_profiles_update_own"
+on public.oracle_profiles
+for update
+using (auth.uid() = user_id);
+
+-- wall_marks politikalari (roller PUBLIC)
+drop policy if exists "wall_marks_select_public" on public.wall_marks;
+create policy "wall_marks_select_public"
+on public.wall_marks
+for select
+using (true);
+
+drop policy if exists "wall_marks_insert_own" on public.wall_marks;
+create policy "wall_marks_insert_own"
+on public.wall_marks
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "wall_marks_delete_own_or_admin" on public.wall_marks;
+create policy "wall_marks_delete_own_or_admin"
+on public.wall_marks
+for delete
+using (auth.uid() = user_id or public.is_admin());
+
+-- world_state politikalari (roller PUBLIC)
+drop policy if exists "world_state_select_own" on public.world_state;
+create policy "world_state_select_own"
+on public.world_state
+for select
+using (auth.uid() = user_id);
+
+drop policy if exists "world_state_insert_own" on public.world_state;
+create policy "world_state_insert_own"
+on public.world_state
+for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "world_state_update_own" on public.world_state;
+create policy "world_state_update_own"
+on public.world_state
+for update
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
