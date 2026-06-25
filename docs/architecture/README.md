@@ -129,18 +129,20 @@ flowchart TD
 | Google CSE sağlayıcısı | 🟨 | Kod hazır; anahtar girilmedi |
 | Gemini sağlayıcı | 🟨 | Yedek; ücretsiz kota sınırlı |
 | Eski üyeler için onay ekranı | ⬜ | Henüz yok |
-| Otomatik akış testleri (smoke/E2E) | ⬜ | Bu doküman kapsamında öneriliyor |
+| Otomatik akış testleri (smoke/E2E) | 🟩 | `tests/` + `.github/workflows/flow-check.yml` |
 
 ---
 
-## 5. Otomatik Akış Kontrolü (öneri)
+## 5. Otomatik Akış Kontrolü
 
-- `tests/smoke/` — dış uçları yoklayan hafif kontroller (worker `/enrich-profile`
-  ve `/oracle`, sayfa 200'leri, Supabase erişimi).
-- `tests/e2e/` — Playwright ile gerçek tarayıcı akışı (kayıt → onay → dashboard
-  → zenginleştirme).
-- `.github/workflows/flow-check.yml` — `workflow_dispatch` (elle tetikle) +
-  opsiyonel `schedule` (cron). Kırılan adımda rapor/ekran görüntüsü üretir.
+Kurulu (bkz. [tests/README.md](../../tests/README.md)):
+
+- `tests/smoke/smoke.mjs` — dış uçları yoklar (worker `/enrich-profile` ve
+  `/oracle`, sayfa 200'leri, Supabase erişimi). `npm run test:smoke`.
+- `tests/e2e/` — Playwright ile gerçek tarayıcı akışı (sayfa yüklemeleri, üyelik
+  onay akışı, hukuki bağlantılar; tam kayıt akışı `RUN_SIGNUP=1` ile opsiyonel).
+- `.github/workflows/flow-check.yml` — `workflow_dispatch` ile **elle tetikle**;
+  E2E raporu artifact olarak yüklenir. (İleride `schedule`/cron eklenebilir.)
 
 Bu diyagramları güncel tutmak için: bir akış/sayfa eklediğinde ilgili Mermaid
 bloğuna düğümü ekle ve durum tablosunu güncelle.
