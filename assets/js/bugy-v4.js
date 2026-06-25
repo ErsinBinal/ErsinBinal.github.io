@@ -21,17 +21,17 @@
   const STAGES = ['hatchling', 'juvenile', 'adult'];
   const GROW = { egg: 0.62, hatchling: 0.78, juvenile: 0.92, adult: 1.06 };
 
-  // Ortak canavar (feral) suratlari govde merkezine gore konumlanir.
+  // Ortak canavar (feral) "sistem arizasi" surati: kirmizi neon visor + ofkeli
+  // kaslar + glitch agiz. Govde merkezine gore konumlanir.
   const feralFace = (cx, cy) => `
     <g class="cr-feral">
-      <path d="M${cx - 16} ${cy - 8} l11 5 M${cx + 16} ${cy - 8} l-11 5"
-        stroke="#3a0010" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="${cx - 9}" cy="${cy}" r="4.5" fill="#ff2e5e"/>
-      <circle cx="${cx + 9}" cy="${cy}" r="4.5" fill="#ff2e5e"/>
-      <circle cx="${cx - 9}" cy="${cy}" r="1.6" fill="#3a0010"/>
-      <circle cx="${cx + 9}" cy="${cy}" r="1.6" fill="#3a0010"/>
-      <path d="M${cx - 9} ${cy + 12} l5 -6 l5 6 l5 -6 l5 6"
-        fill="none" stroke="#3a0010" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="${cx - 21}" y="${cy - 8}" width="42" height="16" rx="5" fill="#16030a" stroke="#ff2e5e" stroke-width="2"/>
+      <path d="M${cx - 17} ${cy - 4} l11 4 M${cx + 17} ${cy - 4} l-11 4"
+        stroke="#ff2e5e" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <rect class="v4-pupil" x="${cx - 11}" y="${cy - 2}" width="7" height="7" rx="1.5" fill="#ff2e5e"/>
+      <rect class="v4-pupil" x="${cx + 4}" y="${cy - 2}" width="7" height="7" rx="1.5" fill="#ff2e5e"/>
+      <path d="M${cx - 11} ${cy + 13} l4 -4 l4 4 l4 -4 l4 4"
+        fill="none" stroke="#ff2e5e" stroke-width="2.4" stroke-linejoin="round"/>
     </g>`;
 
   // --- Yaratik tanimlari ----------------------------------------------------
@@ -45,25 +45,28 @@
       quips: ['Önbelleğimi temizledim ama seni unutmadım.', 'Bugün 99 sekme açtın, biri de bendim.', 'Ben bulutta değilim, hep buradayım.', 'Çekirdeğim ısındı, biraz övgü iyi gelir.'],
       svg: `
         <g class="cr">
-          <rect class="cr-body" x="30" y="54" width="60" height="54" rx="15" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="3"/>
-          <rect x="37" y="61" width="22" height="13" rx="5" fill="#ffffff" opacity="0.18"/>
-          <line class="cr-ant" x1="60" y1="54" x2="60" y2="38" stroke="#063b27" stroke-width="3" stroke-linecap="round"/>
-          <circle class="cr-ant" cx="60" cy="34" r="4" fill="var(--v4-accent2,#00f3ff)" stroke="#063b27" stroke-width="2"/>
+          <!-- Aperture/Portal tarzi temiz panel govde -->
+          <rect class="cr-body" x="30" y="52" width="60" height="56" rx="14" fill="#e3eaf1" stroke="#16242f" stroke-width="3"/>
+          <line x1="30" y1="74" x2="90" y2="74" stroke="#9fb2c4" stroke-width="2"/>
+          <rect x="35" y="80" width="50" height="22" rx="6" fill="#cdd9e4" stroke="#16242f" stroke-width="1.5"/>
+          <circle cx="41" cy="91" r="2.4" fill="var(--v4-accent,#00ff88)"/>
+          <circle cx="49" cy="91" r="2.4" fill="var(--v4-accent2,#00f3ff)"/>
+          <line class="cr-ant" x1="60" y1="52" x2="60" y2="38" stroke="#16242f" stroke-width="3" stroke-linecap="round"/>
+          <circle class="cr-ant" cx="60" cy="34" r="4" fill="var(--v4-accent2,#00f3ff)" stroke="#16242f" stroke-width="2"/>
           <g class="cr-juv">
-            <rect x="19" y="76" width="13" height="9" rx="4" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="2.5"/>
-            <rect x="88" y="76" width="13" height="9" rx="4" fill="var(--v4-accent,#00ff88)" stroke="#063b27" stroke-width="2.5"/>
+            <rect x="18" y="76" width="13" height="11" rx="3" fill="#cdd9e4" stroke="#16242f" stroke-width="2.5"/>
+            <rect x="89" y="76" width="13" height="11" rx="3" fill="#cdd9e4" stroke="#16242f" stroke-width="2.5"/>
           </g>
           <g class="cr-adult">
-            <ellipse cx="60" cy="30" rx="20" ry="6" fill="none" stroke="var(--v4-accent2,#00f3ff)" stroke-width="3" opacity="0.85"/>
-            <rect class="cr-cheek" x="36" y="86" width="9" height="7" rx="3" fill="var(--v4-accent2,#00f3ff)" opacity="0.7"/>
-            <rect class="cr-cheek" x="75" y="86" width="9" height="7" rx="3" fill="var(--v4-accent2,#00f3ff)" opacity="0.7"/>
+            <ellipse cx="60" cy="30" rx="20" ry="6" fill="none" stroke="var(--v4-accent2,#00f3ff)" stroke-width="3" opacity="0.9"/>
+            <circle cx="35" cy="58" r="2.4" fill="#16242f"/><circle cx="85" cy="58" r="2.4" fill="#16242f"/>
           </g>
           <g class="cr-eyes">
-            <rect class="v4-pupil" x="44" y="70" width="9" height="11" rx="2" fill="#06241a"/>
-            <rect class="v4-pupil" x="67" y="70" width="9" height="11" rx="2" fill="#06241a"/>
-            <path d="M50 90 q10 7 20 0" fill="none" stroke="#06241a" stroke-width="3" stroke-linecap="round"/>
+            <rect x="38" y="60" width="44" height="16" rx="8" fill="#0e1d27" stroke="#16242f" stroke-width="2"/>
+            <rect class="v4-pupil" x="52" y="63" width="16" height="10" rx="5" fill="var(--v4-accent,#00ff88)"/>
+            <circle cx="56" cy="66" r="1.6" fill="#fff"/>
           </g>
-          ${feralFace(60, 75)}
+          ${feralFace(60, 68)}
         </g>`
     },
     volt: {
@@ -72,25 +75,26 @@
       quips: ['Priz nerede? Şaka, sana bakınca şarj oluyorum.', 'Statikten saçların diken diken, kusura bakma.', 'Bugün enerjim 220 volt, sen?', 'Koşalım! Yoksa fazla mesai mi var?'],
       svg: `
         <g class="cr">
-          <path class="cr-juv cr-tail" d="M86 96 q26 -4 22 -28 q-2 16 -18 14 q10 -10 6 -20 q-6 14 -16 18 z"
-            fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="2.5" stroke-linejoin="round"/>
-          <ellipse class="cr-body" cx="60" cy="82" rx="30" ry="28" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3"/>
-          <path d="M38 58 L30 26 L54 50 Z" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3" stroke-linejoin="round"/>
-          <path d="M82 58 L90 26 L66 50 Z" fill="var(--v4-accent,#ffd23f)" stroke="#7a4a00" stroke-width="3" stroke-linejoin="round"/>
+          <!-- Cyberpunk neon sasi + kablo kuyruk + tesla anten -->
+          <path class="cr-juv cr-tail" d="M84 92 q24 0 24 -22 q-4 14 -16 12 q8 -8 4 -18 q-4 12 -16 14 z"
+            fill="#2b2f3a" stroke="var(--v4-accent,#ffd23f)" stroke-width="2.4" stroke-linejoin="round"/>
+          <rect class="cr-body" x="32" y="56" width="56" height="52" rx="14" fill="#2b2f3a" stroke="var(--v4-accent,#ffd23f)" stroke-width="3"/>
+          <path d="M40 56 L34 30 L52 50 Z" fill="#2b2f3a" stroke="var(--v4-accent,#ffd23f)" stroke-width="2.6" stroke-linejoin="round"/>
+          <path d="M80 56 L86 30 L68 50 Z" fill="#2b2f3a" stroke="var(--v4-accent,#ffd23f)" stroke-width="2.6" stroke-linejoin="round"/>
+          <circle cx="34" cy="30" r="3" fill="var(--v4-accent2,#ff4fd8)"/><circle cx="86" cy="30" r="3" fill="var(--v4-accent2,#ff4fd8)"/>
+          <rect x="40" y="84" width="40" height="16" rx="5" fill="#171a22" stroke="var(--v4-accent2,#ff4fd8)" stroke-width="1.6"/>
+          <path d="M48 88 l6 8 l4 -10 l6 8" stroke="var(--v4-accent,#ffd23f)" stroke-width="2" fill="none" stroke-linejoin="round"/>
           <g class="cr-adult">
-            <path d="M33 38 L30 26 L41 37 Z" fill="#2a1a00"/>
-            <path d="M87 38 L90 26 L79 37 Z" fill="#2a1a00"/>
-            <path d="M56 30 l8 -14 l-3 10 l6 -2 l-9 16 l3 -10 z" fill="var(--v4-accent2,#ff4fd8)" stroke="#7a1a55" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M54 30 l8 -16 l-2 11 l6 -3 l-9 18 l2 -11 z" fill="var(--v4-accent2,#ff4fd8)" stroke="#3a0e2a" stroke-width="1.4" stroke-linejoin="round"/>
+            <circle class="cr-cheek" cx="38" cy="86" r="4" fill="var(--v4-accent2,#ff4fd8)"/>
+            <circle class="cr-cheek" cx="82" cy="86" r="4" fill="var(--v4-accent2,#ff4fd8)"/>
           </g>
-          <circle class="cr-cheek" cx="38" cy="86" r="6" fill="var(--v4-accent2,#ff4fd8)" opacity="0.7"/>
-          <circle class="cr-cheek" cx="82" cy="86" r="6" fill="var(--v4-accent2,#ff4fd8)" opacity="0.7"/>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="50" cy="78" r="5" fill="#2a1a00"/>
-            <circle class="v4-pupil" cx="70" cy="78" r="5" fill="#2a1a00"/>
-            <circle cx="48" cy="76" r="1.6" fill="#fff"/><circle cx="68" cy="76" r="1.6" fill="#fff"/>
-            <path d="M55 90 q5 5 10 0" fill="none" stroke="#2a1a00" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="40" y="64" width="40" height="15" rx="7" fill="#12131a" stroke="var(--v4-accent,#ffd23f)" stroke-width="2"/>
+            <rect class="v4-pupil" x="46" y="67" width="9" height="9" rx="2" fill="var(--v4-accent,#ffd23f)"/>
+            <rect class="v4-pupil" x="65" y="67" width="9" height="9" rx="2" fill="var(--v4-accent,#ffd23f)"/>
           </g>
-          ${feralFace(60, 80)}
+          ${feralFace(60, 71)}
         </g>`
     },
     aqua: {
@@ -99,24 +103,27 @@
       quips: ['Stresliysen akışına bırak, ben öyle yapıyorum.', 'Bugün biraz sulu espri yapsam?', 'Hidrasyon önemli; sen su içtin mi?', 'İçim su gibi, kafam berrak. Seninki?'],
       svg: `
         <g class="cr">
-          <path class="cr-body" d="M60 50 C82 50 92 72 92 86 C92 104 78 112 60 112 C42 112 28 104 28 86 C28 72 38 50 60 50 Z"
-            fill="var(--v4-accent,#38e1ff)" stroke="#0a5b80" stroke-width="3"/>
-          <ellipse cx="48" cy="70" rx="9" ry="6" fill="#ffffff" opacity="0.4"/>
-          <path class="cr-juv" d="M60 108 q-10 14 -20 12 q8 -6 6 -14 M60 108 q10 14 20 12 q-8 -6 -6 -14"
+          <!-- Sogutucu/sivi muhafaza dronu: govde + sivi pencere + LED optik -->
+          <rect class="cr-body" x="30" y="54" width="60" height="56" rx="20" fill="#16323f" stroke="var(--v4-accent,#38e1ff)" stroke-width="3"/>
+          <rect x="38" y="62" width="44" height="42" rx="14" fill="#0b2530" stroke="#0a5b80" stroke-width="2"/>
+          <rect x="40" y="90" width="40" height="12" rx="3" fill="var(--v4-accent,#38e1ff)" opacity="0.5"/>
+          <path d="M40 90 q10 -6 20 0 q10 6 20 0" fill="none" stroke="var(--v4-accent,#38e1ff)" stroke-width="2"/>
+          <path class="cr-juv" d="M60 110 q-9 12 -18 11 q7 -5 5 -12 M60 110 q9 12 18 11 q-7 -5 -5 -12"
             fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
           <g class="cr-adult">
-            <path d="M28 84 q-12 2 -14 14 q12 -2 16 -8 z" fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M92 84 q12 2 14 14 q-12 -2 -16 -8 z" fill="var(--v4-accent2,#3a6bff)" stroke="#0a5b80" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M48 50 q4 -12 12 -12 q8 0 12 12" fill="none" stroke="var(--v4-accent2,#3a6bff)" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="60" cy="34" r="3.5" fill="var(--v4-accent2,#3a6bff)"/>
+            <path d="M30 80 q-12 0 -14 12 q12 2 16 -4 z" fill="#16323f" stroke="var(--v4-accent,#38e1ff)" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M90 80 q12 0 14 12 q-12 2 -16 -4 z" fill="#16323f" stroke="var(--v4-accent,#38e1ff)" stroke-width="2.2" stroke-linejoin="round"/>
+            <rect x="52" y="44" width="16" height="10" rx="3" fill="#16323f" stroke="var(--v4-accent,#38e1ff)" stroke-width="2"/>
+            <line x1="60" y1="44" x2="60" y2="34" stroke="var(--v4-accent,#38e1ff)" stroke-width="2.4"/>
+            <circle cx="60" cy="31" r="3.4" fill="var(--v4-accent2,#3a6bff)"/>
           </g>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="51" cy="80" r="5" fill="#06303f"/>
-            <circle class="v4-pupil" cx="71" cy="80" r="5" fill="#06303f"/>
-            <circle cx="49" cy="78" r="1.6" fill="#fff"/><circle cx="69" cy="78" r="1.6" fill="#fff"/>
-            <path d="M54 92 q6 5 12 0" fill="none" stroke="#06303f" stroke-width="2.6" stroke-linecap="round"/>
+            <circle class="v4-pupil" cx="52" cy="78" r="5" fill="#eafcff"/>
+            <circle cx="52" cy="78" r="2.2" fill="#0a3a4a"/>
+            <circle class="v4-pupil" cx="70" cy="78" r="5" fill="#eafcff"/>
+            <circle cx="70" cy="78" r="2.2" fill="#0a3a4a"/>
           </g>
-          ${feralFace(61, 82)}
+          ${feralFace(61, 78)}
         </g>`
     },
     ember: {
@@ -125,25 +132,27 @@
       quips: ['İçimde bir ateş var, umarım deadline değildir.', 'Üşüdüysen sarıl; faturası bedava.', 'Bugün biraz kıvılcımlıyım, dikkat.', 'Soğuk kahve içme, bana ver ısıtayım.'],
       svg: `
         <g class="cr">
+          <!-- Half-Life tarzi reaktor bot: tehlike seridi + kor cekirdek vent -->
           <g class="cr-juv">
-            <path d="M86 98 q22 6 26 -6 q-10 6 -16 -2 z" fill="var(--v4-accent,#ff7a2f)" stroke="#7a2a00" stroke-width="2.5" stroke-linejoin="round"/>
-            <path class="cr-flame" d="M110 92 q8 -10 2 -18 q0 8 -8 8 q6 4 6 10 z" fill="var(--v4-accent2,#ffd23f)" stroke="#ff7a2f" stroke-width="1.6"/>
+            <path d="M84 96 q22 4 26 -8 q-10 6 -16 -2 z" fill="#3a2418" stroke="var(--v4-accent,#ff7a2f)" stroke-width="2.4" stroke-linejoin="round"/>
+            <path class="cr-flame" d="M110 90 q8 -10 2 -18 q0 8 -8 8 q6 4 6 10 z" fill="var(--v4-accent2,#ffd23f)" stroke="#ff7a2f" stroke-width="1.6"/>
           </g>
-          <ellipse class="cr-body" cx="58" cy="84" rx="30" ry="27" fill="var(--v4-accent,#ff7a2f)" stroke="#7a2a00" stroke-width="3"/>
-          <ellipse cx="58" cy="90" rx="15" ry="15" fill="#ffd9b0" opacity="0.7"/>
-          <path class="cr-flame" d="M50 58 q-2 -22 8 -30 q-2 14 6 18 q4 -8 0 -16 q12 12 6 28 z"
+          <rect class="cr-body" x="30" y="56" width="58" height="52" rx="13" fill="#33271c" stroke="var(--v4-accent,#ff7a2f)" stroke-width="3"/>
+          <path d="M34 101 l8 -8 M44 101 l8 -8 M54 101 l8 -8 M64 101 l8 -8 M74 101 l8 -8" stroke="var(--v4-accent2,#ffd23f)" stroke-width="3"/>
+          <circle class="cr-flame" cx="59" cy="86" r="9" fill="var(--v4-accent2,#ffd23f)" opacity="0.85"/>
+          <circle cx="59" cy="86" r="9" fill="none" stroke="var(--v4-accent,#ff7a2f)" stroke-width="2"/>
+          <path class="cr-flame" d="M50 56 q-2 -20 9 -28 q-2 13 6 16 q4 -7 0 -14 q11 11 5 26 z"
             fill="var(--v4-accent2,#ffd23f)" stroke="#ff7a2f" stroke-width="2" stroke-linejoin="round"/>
           <g class="cr-adult">
-            <path d="M34 70 l-8 -10 l12 4 z M30 84 l-12 -4 l12 -4 z" fill="var(--v4-accent2,#ffd23f)" stroke="#7a2a00" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M82 70 l8 -10 l-12 4 z" fill="var(--v4-accent2,#ffd23f)" stroke="#7a2a00" stroke-width="2" stroke-linejoin="round"/>
+            <rect x="25" y="62" width="6" height="16" rx="2" fill="#33271c" stroke="var(--v4-accent,#ff7a2f)" stroke-width="2"/>
+            <rect x="87" y="62" width="6" height="16" rx="2" fill="#33271c" stroke="var(--v4-accent,#ff7a2f)" stroke-width="2"/>
           </g>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="49" cy="80" r="5" fill="#3a1500"/>
-            <circle class="v4-pupil" cx="69" cy="80" r="5" fill="#3a1500"/>
-            <circle cx="47" cy="78" r="1.6" fill="#fff"/><circle cx="67" cy="78" r="1.6" fill="#fff"/>
-            <path d="M53 92 q6 5 12 0" fill="none" stroke="#3a1500" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="40" y="62" width="38" height="14" rx="6" fill="#160c06" stroke="var(--v4-accent,#ff7a2f)" stroke-width="2"/>
+            <circle class="v4-pupil" cx="50" cy="69" r="4.4" fill="var(--v4-accent2,#ffd23f)"/>
+            <circle class="v4-pupil" cx="68" cy="69" r="4.4" fill="var(--v4-accent2,#ffd23f)"/>
           </g>
-          ${feralFace(59, 82)}
+          ${feralFace(59, 69)}
         </g>`
     },
     leaf: {
@@ -152,29 +161,31 @@
       quips: ['Acele etme, ben bile yavaş büyüyorum.', 'Bugün fotosentez yaptım, ya sen?', 'Beni sulamayı unutma, sevgi de su sayılır.', 'Köklerim derin, dostluğumuz da öyle.'],
       svg: `
         <g class="cr">
-          <ellipse class="cr-body" cx="60" cy="86" rx="28" ry="26" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="3"/>
-          <ellipse cx="60" cy="90" rx="15" ry="14" fill="#e7ffe0" opacity="0.5"/>
-          <path d="M60 60 v-18" stroke="#1c5a2e" stroke-width="3" stroke-linecap="round"/>
-          <path class="cr-leaf" d="M60 50 q-14 -2 -18 -14 q14 -2 18 8 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.4" stroke-linejoin="round"/>
-          <path class="cr-leaf" d="M60 46 q14 -4 18 -16 q-14 0 -18 10 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.4" stroke-linejoin="round"/>
+          <!-- Hidroponik terraryum dronu: cam kubbe filiz + panel + visor -->
+          <rect class="cr-body" x="32" y="68" width="56" height="42" rx="14" fill="#15301f" stroke="var(--v4-accent,#5dff8f)" stroke-width="3"/>
+          <path d="M40 68 a20 20 0 0 1 40 0 z" fill="#0e261a" stroke="var(--v4-accent,#5dff8f)" stroke-width="2"/>
+          <path d="M40 68 a20 20 0 0 1 40 0" fill="none" stroke="#bff7d0" stroke-width="1.4" opacity="0.4"/>
+          <path d="M60 66 v-12" stroke="var(--v4-accent,#5dff8f)" stroke-width="2.6" stroke-linecap="round"/>
+          <path class="cr-leaf" d="M60 58 q-10 -1 -13 -10 q10 -1 13 6 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="1.8" stroke-linejoin="round"/>
+          <path class="cr-leaf" d="M60 55 q10 -3 13 -11 q-10 0 -13 7 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="1.8" stroke-linejoin="round"/>
+          <rect x="42" y="98" width="36" height="8" rx="3" fill="#0e261a" stroke="var(--v4-accent2,#2fd0a0)" stroke-width="1.4"/>
+          <circle cx="48" cy="102" r="2" fill="var(--v4-accent,#5dff8f)"/>
           <g class="cr-juv">
-            <path d="M32 84 q-14 -2 -18 8 q14 4 20 -2 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M88 84 q14 -2 18 8 q-14 4 -20 -2 z" fill="var(--v4-accent,#5dff8f)" stroke="#1c5a2e" stroke-width="2.2" stroke-linejoin="round"/>
+            <rect x="20" y="84" width="13" height="9" rx="3" fill="#15301f" stroke="var(--v4-accent,#5dff8f)" stroke-width="2.2"/>
+            <rect x="87" y="84" width="13" height="9" rx="3" fill="#15301f" stroke="var(--v4-accent,#5dff8f)" stroke-width="2.2"/>
           </g>
           <g class="cr-adult">
-            <g fill="var(--v4-accent2,#2fd0a0)" stroke="#1c5a2e" stroke-width="1.6">
-              <circle cx="60" cy="26" r="5"/><circle cx="52" cy="30" r="5"/><circle cx="68" cy="30" r="5"/>
-              <circle cx="55" cy="22" r="5"/><circle cx="65" cy="22" r="5"/>
+            <g fill="var(--v4-accent2,#2fd0a0)" stroke="#1c5a2e" stroke-width="1.4">
+              <circle cx="60" cy="40" r="4.4"/><circle cx="53" cy="44" r="4.4"/><circle cx="67" cy="44" r="4.4"/>
             </g>
-            <circle cx="60" cy="26" r="3.4" fill="#ffd23f"/>
+            <circle cx="60" cy="42" r="2.6" fill="var(--v4-accent,#5dff8f)"/>
           </g>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="51" cy="84" r="5" fill="#103a1c"/>
-            <circle class="v4-pupil" cx="71" cy="84" r="5" fill="#103a1c"/>
-            <circle cx="49" cy="82" r="1.6" fill="#fff"/><circle cx="69" cy="82" r="1.6" fill="#fff"/>
-            <path d="M54 95 q6 5 12 0" fill="none" stroke="#103a1c" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="40" y="76" width="40" height="14" rx="6" fill="#0c1f14" stroke="var(--v4-accent,#5dff8f)" stroke-width="2"/>
+            <circle class="v4-pupil" cx="51" cy="83" r="4.4" fill="var(--v4-accent,#5dff8f)"/>
+            <circle class="v4-pupil" cx="69" cy="83" r="4.4" fill="var(--v4-accent,#5dff8f)"/>
           </g>
-          ${feralFace(61, 86)}
+          ${feralFace(60, 83)}
         </g>`
     },
     frost: {
@@ -183,23 +194,26 @@
       quips: ['Soğukkanlı kal, benden öğren.', 'Buz gibiyim ama kalbim sıcak, klişe oldu.', 'Mola? Ben buzlu olanı tercih ederim.', 'Sessizlik güzeldir, ama seninle gürültü de iyi.'],
       svg: `
         <g class="cr">
-          <polygon class="cr-body" points="60,54 86,74 78,108 42,108 34,74" fill="var(--v4-accent,#8fe9ff)" stroke="#2a6a8a" stroke-width="3" stroke-linejoin="round"/>
-          <polygon points="60,54 78,108 60,100" fill="#ffffff" opacity="0.22"/>
+          <!-- Kriyo unitesi: kristal sasi + sogutma finleri + LED optik -->
+          <polygon class="cr-body" points="60,54 86,72 80,106 40,106 34,72" fill="#16384a" stroke="var(--v4-accent,#8fe9ff)" stroke-width="3" stroke-linejoin="round"/>
+          <polygon points="60,54 80,106 60,98" fill="#bdf0ff" opacity="0.14"/>
+          <line x1="44" y1="92" x2="76" y2="92" stroke="var(--v4-accent,#8fe9ff)" stroke-width="1.6" opacity="0.7"/>
+          <line x1="46" y1="98" x2="74" y2="98" stroke="var(--v4-accent,#8fe9ff)" stroke-width="1.6" opacity="0.7"/>
           <g class="cr-juv">
-            <path d="M44 58 l-6 -16 l10 12 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M76 58 l6 -16 l-10 12 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2.2" stroke-linejoin="round"/>
+            <path d="M44 58 l-6 -15 l11 11 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M76 58 l6 -15 l-11 11 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
           </g>
           <g class="cr-adult">
-            <path d="M40 56 l-10 -22 l4 12 l-10 -6 l8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M80 56 l10 -22 l-4 12 l10 -6 l-8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M40 56 l-10 -22 l4 12 l-10 -6 l8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M80 56 l10 -22 l-4 12 l10 -6 l-8 14 z" fill="var(--v4-accent2,#c9b8ff)" stroke="#2a6a8a" stroke-width="1.8" stroke-linejoin="round"/>
+            <circle cx="48" cy="100" r="2" fill="var(--v4-accent,#8fe9ff)"/><circle cx="72" cy="100" r="2" fill="var(--v4-accent2,#c9b8ff)"/>
           </g>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="51" cy="82" r="4.6" fill="#0a3245"/>
-            <circle class="v4-pupil" cx="69" cy="82" r="4.6" fill="#0a3245"/>
-            <circle cx="49" cy="80" r="1.5" fill="#fff"/><circle cx="67" cy="80" r="1.5" fill="#fff"/>
-            <path d="M54 92 q6 4 12 0" fill="none" stroke="#0a3245" stroke-width="2.4" stroke-linecap="round"/>
+            <rect x="42" y="74" width="36" height="14" rx="6" fill="#08222e" stroke="var(--v4-accent,#8fe9ff)" stroke-width="2"/>
+            <circle class="v4-pupil" cx="52" cy="81" r="4.2" fill="var(--v4-accent,#8fe9ff)"/>
+            <circle class="v4-pupil" cx="68" cy="81" r="4.2" fill="var(--v4-accent,#8fe9ff)"/>
           </g>
-          ${feralFace(60, 84)}
+          ${feralFace(60, 81)}
         </g>`
     },
     luna: {
@@ -208,26 +222,27 @@
       quips: ['Gece kuşusun, ben de. İyi ekip olduk.', 'Ay ışığında daha komiğim, denesene.', 'Rüyanda beni gördün mü? Ben seni gördüm.', 'Kanatlarım var ama yine de yanında kalıyorum.'],
       svg: `
         <g class="cr">
+          <!-- Kesif holo-dronu: neon hologram kanatlar + anten + buyuk optik -->
           <g class="cr-juv cr-wing">
-            <path d="M44 84 q-26 -6 -28 12 q18 8 30 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.92"/>
-            <path d="M76 84 q26 -6 28 12 q-18 8 -30 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.92"/>
+            <path d="M46 84 q-28 -8 -30 12 q20 8 32 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.2" stroke-linejoin="round" opacity="0.55"/>
+            <path d="M74 84 q28 -8 30 12 q-20 8 -32 -4 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.2" stroke-linejoin="round" opacity="0.55"/>
           </g>
           <g class="cr-adult cr-wing">
-            <path d="M42 78 q-34 -18 -34 6 q0 22 36 8 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.85"/>
-            <path d="M78 78 q34 -18 34 6 q0 22 -36 8 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.4" stroke-linejoin="round" opacity="0.85"/>
-            <circle cx="22" cy="84" r="3" fill="#fff" opacity="0.8"/><circle cx="98" cy="84" r="3" fill="#fff" opacity="0.8"/>
+            <path d="M44 80 q-36 -18 -36 8 q0 22 38 6 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.2" stroke-linejoin="round" opacity="0.45"/>
+            <path d="M76 80 q36 -18 36 8 q0 22 -38 6 z" fill="var(--v4-accent2,#ff8bd6)" stroke="#5a2a6a" stroke-width="2.2" stroke-linejoin="round" opacity="0.45"/>
+            <circle cx="20" cy="84" r="3" fill="#fff" opacity="0.8"/><circle cx="100" cy="84" r="3" fill="#fff" opacity="0.8"/>
           </g>
-          <circle class="cr-body" cx="60" cy="84" r="26" fill="var(--v4-accent,#b98bff)" stroke="#3a1f55" stroke-width="3"/>
-          <path d="M50 60 q-6 -14 -14 -16" fill="none" stroke="#3a1f55" stroke-width="2.4" stroke-linecap="round"/>
-          <path d="M70 60 q6 -14 14 -16" fill="none" stroke="#3a1f55" stroke-width="2.4" stroke-linecap="round"/>
-          <circle cx="35" cy="43" r="3" fill="var(--v4-accent2,#ff8bd6)"/><circle cx="85" cy="43" r="3" fill="var(--v4-accent2,#ff8bd6)"/>
+          <rect class="cr-body" x="36" y="64" width="48" height="44" rx="16" fill="#241a33" stroke="var(--v4-accent,#b98bff)" stroke-width="3"/>
+          <path d="M50 64 q-6 -14 -14 -16" fill="none" stroke="var(--v4-accent,#b98bff)" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M70 64 q6 -14 14 -16" fill="none" stroke="var(--v4-accent,#b98bff)" stroke-width="2.2" stroke-linecap="round"/>
+          <circle cx="35" cy="46" r="3" fill="var(--v4-accent2,#ff8bd6)"/><circle cx="85" cy="46" r="3" fill="var(--v4-accent2,#ff8bd6)"/>
+          <circle cx="48" cy="102" r="2" fill="var(--v4-accent,#b98bff)"/><circle cx="72" cy="102" r="2" fill="var(--v4-accent2,#ff8bd6)"/>
           <g class="cr-eyes">
-            <circle class="v4-pupil" cx="51" cy="84" r="5" fill="#241033"/>
-            <circle class="v4-pupil" cx="71" cy="84" r="5" fill="#241033"/>
-            <circle cx="49" cy="82" r="1.6" fill="#fff"/><circle cx="69" cy="82" r="1.6" fill="#fff"/>
-            <path d="M55 94 q5 4 10 0" fill="none" stroke="#241033" stroke-width="2.6" stroke-linecap="round"/>
+            <rect x="44" y="74" width="32" height="18" rx="9" fill="#120a1c" stroke="var(--v4-accent,#b98bff)" stroke-width="2"/>
+            <circle class="v4-pupil" cx="60" cy="83" r="6" fill="var(--v4-accent2,#ff8bd6)"/>
+            <circle cx="57" cy="80" r="1.8" fill="#fff"/>
           </g>
-          ${feralFace(61, 86)}
+          ${feralFace(60, 83)}
         </g>`
     }
   };

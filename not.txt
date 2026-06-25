@@ -276,3 +276,23 @@ hakkında bilgiler edinsin.
       setClassicCoexist / .bugy-v1-ambient tamamen kaldirildi.
   NOT: Pokemon-vari evrim (3 asama + guc + flas) zaten mevcut; bu turda
   gorsel/diyalog rotuslandi.
+
+  --- TUR 3: CYBERPUNK MODELLEME (2026-06-25) ----------------------------
+  Istek: yaratiklar hala site temasina uymuyor; "sevimli ama cyberpunk"
+  olsunlar. Referans: Cyberpunk 2077 / Half-Life / Portal art work.
+  [x] 7 yaratigin SVG'si bastan cizildi (anahtarlar/abilities/quips/evrim
+      katmanlari ayni; sadece govde tasarimi degisti -> kayitli petler bozulmaz):
+        spark/Bitik  -> Aperture/Portal tarzi temiz beyaz panel bot, optik visor
+        volt/Voltik  -> koyu neon sasi droid, anten kulak, tesla tepe, magenta
+        aqua/Glupi   -> sogutucu sivi muhafaza dronu (sivi pencere + LED goz)
+        ember/Korcuk -> Half-Life reaktor bot, tehlike seridi + kor cekirdek vent
+        leaf/Filizo  -> cam kubbeli hidroponik terraryum dronu
+        frost/Buzcuk -> kriyo kristal unite, sogutma finleri
+        luna/Pufmis  -> hologram kanatli kesif dronu, buyuk tek optik
+      Ortak dil: optik VISOR gozler (glow), panel dikisleri, LED'ler, koyu
+      sasi + neon stroke (CSS her zaman acik neon kenar isigiyla destekler).
+  [x] Feral surat "sistem arizasi"na cevrildi: kirmizi neon visor + ofkeli
+      kaslar + glitch agiz (feralFace helper).
+  [x] Secim ekrani blurb'leri cyber temaya guncellendi.
+  NOT: govde renkleri koyu (sasi); site koyu ama CSS neon glow + neon stroke
+  okunurlugu sagliyor. spark bilincli olarak acik (Portal beyazi) -> kontrast.

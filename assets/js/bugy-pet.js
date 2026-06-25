@@ -24,13 +24,13 @@
   // Secilebilir turler = bugy-v4 retro yaratiklari. Her tur 3 asamada evrim
   // gecirir (yavru -> genc -> yetiskin) ve asamada bir "guc" kazanir.
   const SPECIES = {
-    spark: { label: 'Bitik',  blurb: 'Dijital terminal yaratigi; pikselden derlenir.', abilities: ['Tarama', 'Derleme', 'Aşırı Yük'] },
-    volt:  { label: 'Voltik', blurb: 'Elektrikli tilki yavrusu; hizli ve cosku dolu.',  abilities: ['Kıvılcım', 'Şok', 'Yıldırım'] },
-    aqua:  { label: 'Glupi',  blurb: 'Serinkanli su damlasi; akisina birakir.',         abilities: ['Damla', 'Kabarcık', 'Dalga'] },
-    ember: { label: 'Korcuk', blurb: 'Ates kertenkelesi; sicacik ama atesli.',          abilities: ['Kor', 'Alev', 'Yangın'] },
-    leaf:  { label: 'Filizo', blurb: 'Sabirli bitki filizi; sevgiyle cicek acar.',      abilities: ['Tomurcuk', 'Sürgün', 'Çiçek'] },
-    frost: { label: 'Buzcuk', blurb: 'Kristal buz yaratigi; sessiz ve parlak.',         abilities: ['Buz', 'Kırağı', 'Tipi'] },
-    luna:  { label: 'Pufmis', blurb: 'Ay pervanesi; yumusacik ve gizemli.',             abilities: ['Toz', 'Pırıltı', 'Ay Tozu'] }
+    spark: { label: 'Bitik',  blurb: 'Aperture tarzı panel bot; tek optiği hep açık.',  abilities: ['Tarama', 'Derleme', 'Aşırı Yük'] },
+    volt:  { label: 'Voltik', blurb: 'Neon şasili elektrik droidi; 220 volt coşku.',    abilities: ['Kıvılcım', 'Şok', 'Yıldırım'] },
+    aqua:  { label: 'Glupi',  blurb: 'Soğutucu sıvı muhafaza dronu; serinkanlı.',       abilities: ['Damla', 'Kabarcık', 'Dalga'] },
+    ember: { label: 'Korcuk', blurb: 'Reaktör çekirdekli kor bot; tehlike şeritli.',    abilities: ['Kor', 'Alev', 'Yangın'] },
+    leaf:  { label: 'Filizo', blurb: 'Cam kubbeli terraryum dronu; sabırla büyür.',     abilities: ['Tomurcuk', 'Sürgün', 'Çiçek'] },
+    frost: { label: 'Buzcuk', blurb: 'Kriyo kristal ünite; sessiz ve buz mavisi.',      abilities: ['Buz', 'Kırağı', 'Tipi'] },
+    luna:  { label: 'Pufmis', blurb: 'Hologram kanatlı keşif dronu; gece gezgini.',     abilities: ['Toz', 'Pırıltı', 'Ay Tozu'] }
   };
   const SPECIES_KEYS = Object.keys(SPECIES);
 
