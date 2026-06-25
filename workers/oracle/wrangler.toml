@@ -10,6 +10,11 @@ BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
+# /enrich-profile icin gercek web aramasi (Gemini + Google Search grounding).
+# Anahtari Google AI Studio'dan al ve GIZLI tut:
+#   wrangler secret put GEMINI_API_KEY
+# Anahtar yoksa endpoint calismaya devam eder ama eglence amacli tahmine duser.
+GEMINI_MODEL = "gemini-2.5-flash"
 # Klon triyaji: arsiv/cache disinda kendi bildigin zararsiz host'lari ekle
 # (ornek "cache.example.com,proxy.example.net"). LLM'e eskale edilmeden ignore'lanir.
 TRIAGE_BENIGN_HOSTS = ""

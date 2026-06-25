@@ -432,16 +432,18 @@ kullanılarak daha kişisel bağlam eklenmeli."
 
 ---
 
-KARAR (2026-06-25): isimden meslek/egitim "zenginlestirme"si gercek profil
-verisi gibi saklanmak yerine EGLENCELI BIR FAL/TAHMINE cevrildi. Gerekce:
-model isimden meslegi bilemez, uydurur; bunu profil gercegi gibi yazmak hem
-anlamsiz hem de isimden cikarim/bias riski tasir. Yeni akis:
-- AI tahmin eder -> kullaniciya "bu sadece AI tahmini, gercek degil" diye
-  acikca etiketlenmis bir kart gosterilir.
-- profiles tablosuna YALNIZCA kullanici "Bunlar dogru, profilime ekle" derse
-  yazilir (onaya bagli). Boylece veri uydurma degil, kullanici dogrulamasi olur.
-- Bugy replikleri kesin ifade yerine tahmin/soru tonuna cekildi.
-Ad/Soyad + sema + upsertProfile temeli ayri bir commit olarak ayrildi.
+KARAR (2026-06-25): orijinal fikir (isimden GERCEK web aramasi -> AI ozet ->
+DB -> Bugy diyalogu) korundu; eksik olan "gercek arama" adimi eklendi.
+- Worker /enrich-profile once Gemini + Google Search grounding ile kisiyi
+  internette GERCEKTEN arar (grounded:true). Anahtar yoksa/arama basarisizsa
+  eglence amacli tahmine duser (grounded:false).
+- Gemini anahtari worker secret olarak tutulur (frontend'e sizmaz):
+  wrangler secret put GEMINI_API_KEY
+- Yanlis eslesme (ayni isimli baska biri) riskine karsi: sonuc kullaniciya
+  "dogrula" notuyla gosterilir; profiles'a YALNIZCA kullanici "Bunlar dogru,
+  profilime ekle" derse yazilir.
+- Bugy diyaloglari ad + meslek/egitim/departman alanlarini kullanir.
+Ad/Soyad + sema + upsertProfile temeli ayri bir commit (2dbbe0e) olarak ayrildi.
 
 YAPMAK ISTEDIGIMIZ
 ------------------

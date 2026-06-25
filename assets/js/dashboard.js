@@ -159,7 +159,7 @@
 
     const canPredict = fullName && !(profile?.profession || profile?.education || profile?.department);
     if (canPredict) {
-      lines.push('<button id="dashboardProfilePredict" class="btn btn-small" type="button">🔮 Bugy seni tahmin etsin</button>');
+      lines.push('<button id="dashboardProfilePredict" class="btn btn-small" type="button">🔍 Bugy seni araştırsın</button>');
       lines.push('<div id="dashboardPredictResult"></div>');
     }
 
@@ -175,7 +175,7 @@
   async function runProfilePrediction(session, profile, button) {
     const resultEl = document.getElementById('dashboardPredictResult');
     button.disabled = true;
-    setStatus('Bugy seni tahmin ediyor...', 'info');
+    setStatus('Bugy seni araştırıyor...', 'info');
     try {
       const guess = await backend.predictProfileFromName(profile.first_name, profile.last_name);
       const rows = [
@@ -185,24 +185,27 @@
       ].filter(([, v]) => v);
 
       if (!rows.length) {
-        if (resultEl) resultEl.innerHTML = '<p class="muted">Bugy bu sefer bir şey tahmin edemedi.</p>';
-        setStatus('Tahmin çıkmadı, tekrar deneyebilirsin.', 'info');
+        if (resultEl) resultEl.innerHTML = '<p class="muted">Bugy senin hakkında bir şey bulamadı.</p>';
+        setStatus('Sonuç çıkmadı, tekrar deneyebilirsin.', 'info');
         button.disabled = false;
         return;
       }
 
+      const disclaimer = guess.grounded
+        ? 'Bunlar internette senin adınla bulunan bilgiler. <strong>Sana ait olduklarını doğrula</strong> — aynı isimli başka biri olabilir.'
+        : 'İnternette güvenilir bilgi bulunamadı, bunlar yalnızca bir AI <strong>tahmini</strong> — gerçek olmayabilir.';
       const list = rows.map(([k, v]) => `<li><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</li>`).join('');
       if (resultEl) {
         resultEl.innerHTML = [
           '<div class="predict-card">',
-          '<p class="muted"><em>Bu sadece bir AI tahmini — gerçek değil, eğlence amaçlı.</em></p>',
+          `<p class="muted"><em>${disclaimer}</em></p>`,
           `<ul>${list}</ul>`,
           '<button id="dashboardPredictConfirm" class="btn btn-small" type="button">Bunlar doğru, profilime ekle</button>',
           '<button id="dashboardPredictDismiss" class="btn btn-small btn-ghost" type="button">Boşver</button>',
           '</div>'
         ].join('');
       }
-      setStatus('Bugy tahmin etti. Doğruysa profiline ekleyebilirsin.', 'success');
+      setStatus(guess.grounded ? 'Bugy seni buldu. Doğruysa profiline ekleyebilirsin.' : 'Bugy tahmin etti. Doğruysa profiline ekleyebilirsin.', 'success');
 
       document.getElementById('dashboardPredictConfirm')?.addEventListener('click', async () => {
         setStatus('Profiline kaydediliyor...', 'info');

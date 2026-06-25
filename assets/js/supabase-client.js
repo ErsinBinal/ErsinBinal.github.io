@@ -222,8 +222,9 @@
     return data;
   }
 
-  // Eglence amacli "fal": isimden olasi meslek/egitim/departman TAHMINI uretir.
-  // Donen veri gercek degildir; kullanici onaylamadan profile yazilmaz.
+  // Profil arastirma: worker once Gemini + Google Search ile kisiyi GERCEKTEN
+  // arar (grounded:true). Bulamazsa eglence amacli tahmine duser (grounded:false).
+  // Her durumda kullanici onaylamadan profile yazilmaz.
   async function predictProfileFromName(firstName, lastName) {
     const endpoint = (
       window.CONVIVIUM_ORACLE_ENDPOINT ||
@@ -259,7 +260,8 @@
       profession: String(data.profession || '').trim() || null,
       education: String(data.education || '').trim() || null,
       department: String(data.department || '').trim() || null,
-      note: String(data.note || '').trim() || null
+      note: String(data.note || '').trim() || null,
+      grounded: Boolean(data.grounded)
     };
   }
 

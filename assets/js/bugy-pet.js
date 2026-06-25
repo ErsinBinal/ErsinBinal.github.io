@@ -236,6 +236,9 @@
   function profileLines() {
     if (!userProfile) return [];
     const lines = [];
+    if (userProfile.first_name) {
+      lines.push(`${userProfile.first_name}, seni gördüğüme sevindim.`);
+    }
     if (userProfile.profession) {
       lines.push(`Sanki bir ${userProfile.profession} havası seziyorum sende, yanılıyor muyum?`);
     }

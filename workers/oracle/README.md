@@ -14,6 +14,27 @@ No provider API key is required for the default setup.
 
 Cloudflare Workers AI currently includes a free daily allocation on Workers Free plans. Pollinations is used only as a no-key fallback from the Worker, not directly from the browser.
 
+## Profil arastirma (`/enrich-profile`)
+
+`POST /enrich-profile` `{ "first_name": "...", "last_name": "..." }` alir ve
+kisinin olasi meslek/egitim/departman bilgisini doner.
+
+Saglayici sirasi:
+
+1. **Gemini + Google Search grounding** — kisiyi internette GERCEKTEN arar
+   (`grounded: true`). `GEMINI_API_KEY` gerektirir.
+2. Cloudflare AI / Pollinations — anahtar yoksa veya arama basarisizsa, isimden
+   eglence amacli TAHMIN (`grounded: false`).
+
+Gemini anahtarini Google AI Studio'dan al ve gizli olarak ekle:
+
+```bash
+wrangler secret put GEMINI_API_KEY
+```
+
+Sonuc 24 saat cachelenir. Cevap kullaniciya yazilmadan once frontend'de
+"dogrula" onayindan gecer; kullanici onaylamadan profile kaydedilmez.
+
 ## Safety rules
 
 - Browser requests are accepted only from `ALLOWED_ORIGINS`.

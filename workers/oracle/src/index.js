@@ -19,6 +19,20 @@ const FALLBACK_LINES = [
 ];
 
 const PROFILE_ENRICH_CACHE_TTL = 86400; // 24 saat
+// Gercek arama (Gemini + Google Search grounding) icin: internetten bulunan
+// GERCEK bilgiye dayanir.
+const PROFILE_RESEARCH_SYSTEM_PROMPT = [
+  'Sen bir profil arastirma asistanisin.',
+  'Sana verilen Ad ve Soyad icin Google aramasi yaparak kisiyi internette arastir.',
+  'Yalnizca bulabildigin GERCEK bilgilere dayan; bilgi uydurma.',
+  'Bulduklarina dayanarak mesleğini tek cumlede, eğitimini tek cumlede ve bölümünü/departmanini tek cumlede ozetle.',
+  'Bir alan hakkinda guvenilir bilgi bulamazsan o alani bos string birak.',
+  'Cevabi SADECE JSON olarak ver. Anahtarlar: profession, education, department, note.',
+  'note alanina, ne kadar emin oldugunu veya bilgi bulunamadiysa bunu kisaca yaz.',
+  'JSON disinda hicbir metin yazma. Turkce kullan.'
+].join(' ');
+
+// Arama yapilamadiginda (anahtar yoksa / hata) kullanilan eglence amacli tahmin.
 const PROFILE_ENRICH_SYSTEM_PROMPT = [
   'Sen Convivium icin eglenceli bir "fal/tahmin" servisisin.',
   'Bir kullanicinin yalnizca Ad ve Soyad bilgisinden yola cikarak EGLENCE AMACLI olasi bir meslek, egitim ve departman tahmini yap.',
@@ -28,6 +42,8 @@ const PROFILE_ENRICH_SYSTEM_PROMPT = [
   'Geriye sadece JSON metni dondur. Ek aciklama veya yorum yazma.',
   'Turkce kullan.'
 ].join(' ');
+
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const RATE_LIMITS = new Map();
 const RATE_WINDOW_MS = 60_000;
@@ -171,6 +187,42 @@ const askCloudflareAI = async (question, env) => {
   return answer;
 };
 
+// Gercek arama: Gemini, Google Search grounding ile kisiyi internette arar.
+const askResearchProfileGemini = async (firstName, lastName, signal, env) => {
+  if (!env.GEMINI_API_KEY) throw new Error('gemini api key missing');
+  const fullName = `${firstName} ${lastName}`.trim();
+  const userPrompt = [
+    `Bu kisiyi internette arastir: "${fullName}".`,
+    'Bulduklarina dayanarak su JSON formunda cevap ver:',
+    '{"profession":"","education":"","department":"","note":""}'
+  ].join('\n');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL || GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    signal,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: PROFILE_RESEARCH_SYSTEM_PROMPT }] },
+      contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+      tools: [{ google_search: {} }],
+      generationConfig: { temperature: 0.2, maxOutputTokens: 400 }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`gemini http ${response.status}`);
+  }
+  const data = await response.json();
+  const answer = (data?.candidates?.[0]?.content?.parts || [])
+    .map(part => part?.text || '')
+    .join('')
+    .trim();
+  const parsed = extractJson(answer);
+  if (!parsed) throw new Error('gemini research parse failed');
+  return parsed;
+};
+
 const askEnrichProfileCloudflare = async (firstName, lastName, env) => {
   if (!env.AI) throw new Error('cloudflare ai binding missing');
   const prompt = [
@@ -271,16 +323,18 @@ const enrichProfile = async (firstName, lastName, env) => {
   const cached = await readCachedBody(key);
   if (cached) return cached;
 
+  // Sira onemli: once GERCEK arama (Gemini grounding), bulunamazsa eglence amacli tahmin.
   const providers = [
-    { name: 'cloudflare-ai', ask: () => askEnrichProfileCloudflare(firstName, lastName, env) },
-    { name: 'pollinations', ask: signal => askEnrichProfilePollinations(firstName, lastName, signal) }
+    { name: 'gemini-grounded', grounded: true, ask: signal => askResearchProfileGemini(firstName, lastName, signal, env) },
+    { name: 'cloudflare-ai', grounded: false, ask: () => askEnrichProfileCloudflare(firstName, lastName, env) },
+    { name: 'pollinations', grounded: false, ask: signal => askEnrichProfilePollinations(firstName, lastName, signal) }
   ];
   const errors = [];
-  let result = { profession: null, education: null, department: null, note: '', provider: 'none', degraded: true };
+  let result = { profession: null, education: null, department: null, note: '', provider: 'none', grounded: false, degraded: true };
 
   for (const provider of providers) {
     try {
-      const parsed = await withTimeout(provider.ask, 12000);
+      const parsed = await withTimeout(provider.ask, 15000);
       if (parsed && typeof parsed === 'object') {
         result = {
           profession: String(parsed.profession || '').trim() || null,
@@ -288,6 +342,7 @@ const enrichProfile = async (firstName, lastName, env) => {
           department: String(parsed.department || '').trim() || null,
           note: String(parsed.note || '').trim() || null,
           provider: provider.name,
+          grounded: Boolean(provider.grounded),
           degraded: false
         };
         break;
@@ -299,7 +354,7 @@ const enrichProfile = async (firstName, lastName, env) => {
   }
 
   if (result.provider === 'none') {
-    result.note = 'Tahmin edilemedi.';
+    result.note = 'Bilgi bulunamadi.';
   }
 
   try {
