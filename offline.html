@@ -166,6 +166,93 @@
     body.is-solved .reconnect { display: block; }
     body.is-online .puzzle { opacity: 0.42; pointer-events: none; }
 
+    /* --- Vault sahnesi: server <- sifre akisi <- sandik --- */
+    .vault-scene {
+      display: grid;
+      justify-items: center;
+      gap: 0;
+      margin: 8px auto 12px;
+    }
+
+    /* Server: online'da canli; offline'da KADEMELI kapanir. */
+    .server {
+      display: grid;
+      justify-items: center;
+      gap: 5px;
+      transition: opacity 0.9s ease, filter 0.9s ease;
+    }
+    .server-rack {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: rgba(6, 16, 8, 0.85);
+    }
+    .server-rack .led {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--dim);
+      transition: background 0.9s ease, box-shadow 0.9s ease, opacity 0.9s ease;
+    }
+    .server-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      color: var(--dim);
+      transition: color 0.9s ease;
+    }
+
+    /* Conduit: sandik -> server kanali; bit'ler burada YUKARI akar. */
+    .conduit {
+      position: relative;
+      width: 3px;
+      height: 52px;
+      background: linear-gradient(to top, rgba(116, 255, 155, 0.05), rgba(116, 255, 155, 0.22), rgba(116, 255, 155, 0.05));
+      transition: opacity 0.9s ease;
+    }
+    .bit {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(calc(-50% + var(--x, 0px)));
+      font-size: 11px;
+      line-height: 1;
+      color: var(--primary);
+      text-shadow: 0 0 6px var(--primary);
+      pointer-events: none;
+      animation: bit-up 1.2s linear forwards;
+    }
+    @keyframes bit-up {
+      0% { opacity: 0; bottom: -4px; }
+      18% { opacity: 0.9; }
+      85% { opacity: 0.7; }
+      100% { opacity: 0; bottom: 56px; }
+    }
+
+    /* ONLINE: server LED'leri yanar (akis aktif). */
+    body.is-online .server-rack .led {
+      background: var(--primary);
+      box-shadow: 0 0 7px var(--primary);
+    }
+    body.is-online .server-label { color: var(--primary); }
+    @media (prefers-reduced-motion: no-preference) {
+      body.is-online .server-rack .led { animation: led-blink 1.4s ease-in-out infinite; }
+      body.is-online .server-rack .led:nth-child(2) { animation-delay: 0.3s; }
+      body.is-online .server-rack .led:nth-child(3) { animation-delay: 0.6s; }
+      body.is-online .server-rack .led:nth-child(4) { animation-delay: 0.9s; }
+      @keyframes led-blink { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    }
+
+    /* OFFLINE: server soner, kanal sonuk (akisi JS keser -> bit'ler suzulur). */
+    body:not(.is-online) .server { opacity: 0.32; filter: grayscale(0.7) brightness(0.7); }
+    body:not(.is-online) .conduit { opacity: 0.18; }
+
+    /* Sandik kilit LED'i: online aktif (sicak), offline sonuk. */
+    .chest-lock { transition: fill 0.9s ease; }
+    body:not(.is-online) .chest-lock { fill: var(--dim); }
+
     /* --- Define sandigi + yumurta (sifre cozulunce acilir) --- */
     .chest {
       position: relative;
@@ -182,7 +269,11 @@
     .chest-lid {
       transform-box: fill-box;
       transform-origin: 16% 92%;
+      transition: transform 0.8s cubic-bezier(0.2, 0.9, 0.3, 1);
     }
+    /* Offline + henuz cozulmemis: server kapaninca sandik MUHURDEN cikar,
+       kapak hafifce aralanir (cozmeye davet). */
+    body:not(.is-online):not(.is-solved) .chest-lid { transform: rotate(-16deg); }
     .egg {
       position: absolute;
       left: 50%;
@@ -201,7 +292,7 @@
       body.is-solved .egg { animation: egg-out 1.9s cubic-bezier(0.3, 0.7, 0.35, 1) 0.4s forwards; }
 
       @keyframes chest-open {
-        0% { transform: rotate(0deg); }
+        0% { transform: rotate(-16deg); }
         55% { transform: rotate(-104deg); }
         72% { transform: rotate(-90deg); }
         100% { transform: rotate(-96deg); }
@@ -248,20 +339,29 @@
       <p>Bu sayfa hata ekrani degil. Baglanti kesildiginde acilan kucuk bir oda.</p>
       <p>Node anahtarini bulursan, baglanti geri geldiginde ana terminal sana bir paket teslim edecek.</p>
 
-      <div class="chest" aria-hidden="true">
-        <svg class="chest-svg" viewBox="0 0 120 96" width="124" height="100">
-          <g class="chest-base">
-            <rect x="14" y="46" width="92" height="42" rx="6" fill="#0a1f12" stroke="var(--primary)" stroke-width="2"/>
-            <rect x="14" y="62" width="92" height="5" fill="rgba(116,255,155,0.28)"/>
-            <rect x="52" y="58" width="16" height="20" rx="2" fill="#06140b" stroke="var(--primary)" stroke-width="2"/>
-            <circle cx="60" cy="68" r="2.6" fill="var(--hot)"/>
-          </g>
-          <g class="chest-lid">
-            <path d="M14 48 a46 30 0 0 1 92 0 z" fill="#0c2616" stroke="var(--primary)" stroke-width="2"/>
-            <rect x="50" y="42" width="20" height="10" rx="2" fill="#06140b" stroke="var(--primary)" stroke-width="2"/>
-          </g>
-        </svg>
-        <span class="egg">🥚</span>
+      <div class="vault-scene" aria-hidden="true">
+        <div class="server">
+          <div class="server-rack">
+            <span class="led"></span><span class="led"></span><span class="led"></span><span class="led"></span>
+          </div>
+          <div class="server-label">UPLINK</div>
+        </div>
+        <div class="conduit" id="conduit"></div>
+        <div class="chest">
+          <svg class="chest-svg" viewBox="0 0 120 96" width="124" height="100">
+            <g class="chest-base">
+              <rect x="14" y="46" width="92" height="42" rx="6" fill="#0a1f12" stroke="var(--primary)" stroke-width="2"/>
+              <rect x="14" y="62" width="92" height="5" fill="rgba(116,255,155,0.28)"/>
+              <rect x="52" y="58" width="16" height="20" rx="2" fill="#06140b" stroke="var(--primary)" stroke-width="2"/>
+              <circle class="chest-lock" cx="60" cy="68" r="2.6" fill="var(--hot)"/>
+            </g>
+            <g class="chest-lid">
+              <path d="M14 48 a46 30 0 0 1 92 0 z" fill="#0c2616" stroke="var(--primary)" stroke-width="2"/>
+              <rect x="50" y="42" width="20" height="10" rx="2" fill="#06140b" stroke="var(--primary)" stroke-width="2"/>
+            </g>
+          </svg>
+          <span class="egg">🥚</span>
+        </div>
       </div>
 
       <div class="trace" aria-label="Bulmaca paketleri">
@@ -308,6 +408,32 @@
       const input = document.getElementById('offline-answer');
       const status = document.getElementById('status');
       const netState = document.getElementById('net-state');
+      const conduit = document.getElementById('conduit');
+
+      // --- Sifre akisi: online'da sandiktan server'a bit'ler suzulur. ---
+      const prefersReduce = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const GLYPHS = '01ABCDEF#@$%&*<>=+/x';
+      let streamTimer = null;
+      function spawnBit() {
+        if (!conduit) return;
+        const b = document.createElement('span');
+        b.className = 'bit';
+        b.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+        b.style.setProperty('--x', (Math.random() * 10 - 5).toFixed(1) + 'px');
+        b.style.animationDuration = (1 + Math.random() * 0.7).toFixed(2) + 's';
+        b.addEventListener('animationend', () => b.remove(), { once: true });
+        conduit.appendChild(b);
+      }
+      function startStream() {
+        if (streamTimer || prefersReduce) return;
+        streamTimer = window.setInterval(spawnBit, 130);
+      }
+      function stopStream() {
+        // Yeni bit uretimini kes; mevcut bit'ler kendi animasyonuyla suzulup
+        // biter -> akis KADEMELI durur.
+        if (streamTimer) { window.clearInterval(streamTimer); streamTimer = null; }
+      }
 
       function readNode() {
         try {
@@ -337,6 +463,9 @@
         document.body.classList.toggle('is-online', online);
         netState.textContent = online ? 'online / locked' : 'offline / active';
         input.disabled = online;
+        // Akis yalnizca online VE odul henuz alinmamisken surer; offline olunca
+        // ya da odul alininca server "kapanir".
+        if (online && !readNode().solved) startStream(); else stopStream();
         if (online && readNode().solved) {
           document.body.classList.add('is-solved');
           writeNode({ reconnectedAt: new Date().toISOString() });
