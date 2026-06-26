@@ -123,38 +123,34 @@
   const cue = (bus, layers) => ({ bus, layers });
 
   const recipes = {
+    // --- Game Boy (DMG) cekirdek sesler: kare dalga + arpej + hizli sweep ---
     'ui.click': cue('ui', [
-      tone(404, 0.038, { volume: 0.24 }),
-      tone(512, 0.028, { at: 0.024, volume: 0.14 })
+      tone(720, 0.022, { type: 'square', volume: 0.20 }),
+      tone(1080, 0.016, { at: 0.018, type: 'square', volume: 0.10 })
     ]),
     'ui.nav': cue('ui', [
-      noise(0.18, { volume: 0.22, seed: 2, band: 2 }),
-      tone(460, 0.08, { at: 0.12, type: 'triangle', volume: 0.22 }),
-      tone(380, 0.06, { at: 0.20, type: 'triangle', volume: 0.17 })
+      tone(540, 0.028, { type: 'square', volume: 0.18 }),
+      tone(680, 0.030, { at: 0.030, type: 'square', volume: 0.15 })
     ]),
     'ui.toggleOn': cue('ui', [
-      noise(0.024, { volume: 0.2, seed: 3, band: 3 }),
-      tone(620, 0.075, { at: 0.008, volume: 0.26 })
+      tone(620, 0.050, { type: 'square', volume: 0.22, slide: 260 })
     ]),
     'ui.toggleOff': cue('ui', [
-      noise(0.024, { volume: 0.16, seed: 4, band: 1 }),
-      tone(210, 0.08, { at: 0.008, volume: 0.23 })
+      tone(520, 0.055, { type: 'square', volume: 0.22, slide: -240 })
     ]),
     'ui.select': cue('ui', [
-      tone(660, 0.15, { type: 'sine', volume: 0.25 }),
-      tone(990, 0.09, { at: 0.045, type: 'sine', volume: 0.12 })
+      tone(784, 0.040, { type: 'square', volume: 0.22 }),
+      tone(1175, 0.060, { at: 0.040, type: 'square', volume: 0.17 })
     ]),
     'ui.confirm': cue('ui', [
-      tone(330, 0.12, { type: 'triangle', volume: 0.22 }),
-      tone(415, 0.12, { at: 0.068, type: 'triangle', volume: 0.22 }),
-      tone(495, 0.12, { at: 0.136, type: 'triangle', volume: 0.20 }),
-      tone(660, 0.14, { at: 0.204, type: 'triangle', volume: 0.24 })
+      tone(note.e5, 0.055, { type: 'square', volume: 0.22 }),
+      tone(note.g5, 0.055, { at: 0.060, type: 'square', volume: 0.22 }),
+      tone(1047, 0.110, { at: 0.120, type: 'square', volume: 0.22 })
     ]),
     'ui.error': cue('ui', [
-      tone(440, 0.10, { type: 'saw', volume: 0.23, slide: -40 }),
-      tone(330, 0.10, { at: 0.075, type: 'saw', volume: 0.22, slide: -50 }),
-      tone(220, 0.12, { at: 0.15, type: 'saw', volume: 0.22, slide: -60 }),
-      noise(0.045, { volume: 0.2, seed: 5, band: 3 })
+      tone(300, 0.090, { type: 'square', volume: 0.24, slide: -120 }),
+      tone(180, 0.130, { at: 0.080, type: 'square', volume: 0.22, slide: -60 }),
+      noise(0.05, { volume: 0.16, seed: 5, band: 2 })
     ]),
     'ui.reveal': cue('ui', [
       tone(160, 0.09, { volume: 0.16 }),
@@ -227,21 +223,21 @@
       tone(520, 0.055, { at: 0.16, volume: 0.18 }),
       tone(740, 0.085, { at: 0.34, type: 'triangle', volume: 0.20 })
     ]),
-    'game.jump': cue('game', [tone(176, 0.09, { type: 'saw', volume: 0.28, slide: 180 }), noise(0.045, { volume: 0.12, seed: 16 })]),
+    'game.jump': cue('game', [tone(320, 0.110, { type: 'square', volume: 0.26, slide: 420 })]),
     'game.land': cue('game', [noise(0.075, { volume: 0.28, seed: 17, band: 1 }), tone(88, 0.055, { type: 'triangle', volume: 0.22, slide: -24 })]),
-    'game.hit': cue('game', [noise(0.09, { volume: 0.32, seed: 18, band: 2 }), tone(116, 0.11, { type: 'saw', volume: 0.26, slide: -62 })]),
+    'game.hit': cue('game', [noise(0.07, { volume: 0.30, seed: 18, band: 2 }), tone(150, 0.10, { type: 'square', volume: 0.26, slide: -70 })]),
     'game.start': cue('game', [noise(0.045, { volume: 0.18, seed: 19, band: 3 }), tone(220, 0.060, { volume: 0.25 }), tone(330, 0.060, { at: 0.058, volume: 0.25 }), tone(440, 0.080, { at: 0.116, type: 'triangle', volume: 0.24 })]),
     'game.step': cue('game', [tone(96, 0.040, { type: 'triangle', volume: 0.12, slide: -16 })]),
     'game.correct': cue('game', [tone(660, 0.052, { volume: 0.28 }), tone(990, 0.090, { at: 0.062, type: 'sine', volume: 0.24 })]),
     'game.wrong': cue('game', [tone(320, 0.080, { type: 'saw', volume: 0.24, slide: -120 }), noise(0.045, { volume: 0.20, seed: 20, band: 3 })]),
     'game.timeout': cue('game', [tone(440, 0.060, { volume: 0.22 }), tone(220, 0.080, { at: 0.074, volume: 0.20 }), tone(110, 0.110, { at: 0.148, type: 'saw', volume: 0.20 })]),
-    'game.win': cue('game', [tone(note.g4, 0.08, { type: 'triangle', volume: 0.28 }), tone(note.c5, 0.08, { at: 0.074, type: 'triangle', volume: 0.28 }), tone(note.e5, 0.10, { at: 0.148, type: 'triangle', volume: 0.25 }), tone(note.g5, 0.15, { at: 0.222, type: 'sine', volume: 0.22 })]),
-    'game.fail': cue('game', [tone(260, 0.08, { type: 'saw', volume: 0.22 }), tone(184, 0.09, { at: 0.08, type: 'saw', volume: 0.21 }), tone(130, 0.12, { at: 0.16, volume: 0.20 }), noise(0.22, { at: 0.10, volume: 0.13, seed: 21, band: 1 })]),
+    'game.win': cue('game', [tone(note.c5, 0.070, { type: 'square', volume: 0.26 }), tone(note.e5, 0.070, { at: 0.072, type: 'square', volume: 0.26 }), tone(note.g5, 0.070, { at: 0.144, type: 'square', volume: 0.24 }), tone(1047, 0.150, { at: 0.216, type: 'square', volume: 0.24 })]),
+    'game.fail': cue('game', [tone(note.e5, 0.090, { type: 'square', volume: 0.24, slide: -30 }), tone(note.c5, 0.100, { at: 0.090, type: 'square', volume: 0.23, slide: -40 }), tone(note.g4, 0.150, { at: 0.190, type: 'square', volume: 0.22, slide: -60 }), noise(0.14, { at: 0.12, volume: 0.12, seed: 21, band: 1 })]),
     'game.bust': cue('game', [tone(180, 0.080, { type: 'saw', volume: 0.26, slide: -80 }), noise(0.080, { volume: 0.28, seed: 22, band: 2 })]),
     'game.power': cue('game', [tone(620, 0.060, { type: 'triangle', volume: 0.25 }), tone(880, 0.080, { at: 0.065, type: 'triangle', volume: 0.24 })]),
     'game.hazard': cue('game', [tone(55, 0.150, { type: 'saw', volume: 0.24, slide: -18 })]),
     'game.pickup': cue('game', [tone(340, 0.060, { volume: 0.22 }), tone(560, 0.070, { at: 0.062, volume: 0.21 })]),
-    'game.coin': cue('game', [tone(760, 0.050, { type: 'sine', volume: 0.22 }), tone(1120, 0.090, { at: 0.055, type: 'sine', volume: 0.22 })]),
+    'game.coin': cue('game', [tone(784, 0.045, { type: 'square', volume: 0.22 }), tone(1175, 0.095, { at: 0.050, type: 'square', volume: 0.22 })]),
     'game.laser': cue('game', [tone(1180, 0.035, { type: 'saw', volume: 0.22, slide: 260 }), tone(1540, 0.025, { at: 0.018, type: 'sine', volume: 0.13 })]),
     'game.explosion': cue('game', [noise(0.24, { volume: 0.36, seed: 23, band: 1 }), tone(64, 0.15, { type: 'saw', volume: 0.26, slide: -28 }), tone(144, 0.09, { at: 0.055, volume: 0.20, slide: 80 })]),
     'game.portal': cue('game', [tone(196, 0.09, { type: 'sine', volume: 0.20 }), tone(392, 0.13, { at: 0.054, type: 'saw', volume: 0.24 }), tone(784, 0.16, { at: 0.108, type: 'triangle', volume: 0.18 }), noise(0.12, { volume: 0.12, seed: 24, band: 3 })]),
