@@ -428,9 +428,48 @@ Motor secimi bende -> Phaser (kod tabaniyla uyumlu, 3.60.0).
       durdurma _goScene; boss'un surekli spawn yuzunden cikmamasi; yaya bomba
       modulunun K'ye baglanmamasi; blaster surekli-ates). GORSEL/oynanis teyidi
       tarayicida (giris + canli) yapilmali.
-    KALAN/ONERI (sonraki tur): tureye ozel 2. boss, daha cok dusman cesidi,
-    yaya modunda dikey jetpack katmani, modul agacina 2. evrim dali, sfx.js'e
-    bagli muzik, gorsel cila (gemi hasar durumlari, istasyon bicim cesitliligi).
+[x] TUR 2 (2026-06-29): okunabilirlik + his cilasi.
+    - Boss CAN BARI (ekran ustu, screen-space graphics, renk kademeli).
+    - GUVERTE BANNER'i: her sahneye girince ortada kisa "GUVERTE N / mod" yazisi
+      (yon bulma); reduced-motion'da fade yerine bekle-yok et.
+    - Yaya yildizlarina gercek PARALLAX (uzak yildizlar kamerayla, yakinlar kayar).
+    - CACHE_NAME v149->v150.
+
+  ----------------------------------------------------------------------
+  >>> DEVAM NOTU (baska bilgisayardan acan icin)  -- 2026-06-29
+  ----------------------------------------------------------------------
+  TEK DOSYA: games/ash-runner-2.html (self-contained, Phaser 3.60). Disinda
+  sadece su entegrasyon noktalari dokunuldu: service-worker.js (precache+CACHE_NAME),
+  sitemap.xml, assets/js/home/routes.js (ash2). Supabase SEMA DEGISIKLIGI YOK
+  (mevcut game_scores tablosu, game_key='ash-runner-2').
+
+  CALISMA SEKLI: Node yerelde YOK -> npm run check calismaz. Degisiklikten sonra
+  git push -> GitHub Pages canliya alir -> tarayicida test. SW cache'i atlamak
+  icin CACHE_NAME'i her asset/HTML degisiminde bump et (su an v150). Hard refresh
+  (Ctrl+Shift+R) gerekebilir.
+
+  MIMARI OZET (dosya ici sira):
+    - Sabitler / ChipAudio (kendi WebAudio) / Persist (localStorage:
+      convivium.ashrunner2.save.v1) / MODULES (12 modul) / deriveStats / RUN state
+    - INPUT (klavye+dokunmatik, edge tabanli) / UI (DOM HUD+kartlar) / Flow (akis:
+      _goScene eski sahneyi durdurur)
+    - buildAssets (prosedural piksel) / Particles (kendi havuz) / showBanner / shake
+    - BootScene -> FootScene (yaya) -> ShipScene (gemi)
+  AKIS: start -> Foot(guverte) -> hava kilidi -> Ship(shmup+boss) -> Hangar(modul al)
+        -> deck++ -> Foot ... HP biterse Flow.onDead (skor kaydi + banka).
+
+  KALAN/ONERI (sirayla, sonraki turlar):
+    1. Tureye/guverteye ozel 2. boss tipi + daha cok dusman cesidi (yaya: kalkanli
+       bot; gemi: mayin doseyici).
+    2. Yaya modunda dikey jetpack/katman (W ile zipla, sahte-Z) — bolum I'deki his.
+    3. Modul agacina 2. dal/evrim + "sonraki modul" ipucu HUD'da.
+    4. Muzik: sfx.js veya basit WebAudio loop; ses miksaj dengesi.
+    5. Gorsel cila: gemi hasar durumlari, istasyon bicim/biome cesitliligi,
+       hangar onizleme (modul ikonlari).
+    6. Denge: deck egrisi testi, mobilde FPS/partikul butcesi olcumu, kolay mod.
+    7. Skor tablosu/leaderboard entegrasyonu (fetchGameLeaderboard mevcut).
+  ACIK KARAR: yaya bombasi K'ye fallback bagli (etrafta hurda yoksa). Ayri tusa
+  alinsin mi? (kullaniciya soruldu, yanit bekleniyor.)
 
 ==========================================================================
 PRODUCT OWNER NOTU — YENILIK & TAVSIYE HAVUZU            -- 2026-06-29
