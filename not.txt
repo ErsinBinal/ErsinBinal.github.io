@@ -395,6 +395,107 @@ tamamla" butonu çıkmalı. Butona basıldığında tahmin edilen profil değerl
 kullanılarak daha kişisel bağlam eklenmeli."
 
 
+==========================================================================
+PRODUCT OWNER NOTU — YENILIK & TAVSIYE HAVUZU            -- 2026-06-29
+==========================================================================
+Bu bolum, sitenin su anki olgun haline (bugy peti, sinematik motor, profil
+zenginlestirme, dart skorbordu hepsi canli) bakarak hazirlandi. Amac eskiyi
+tekrar etmek degil; ACIK KALAN BOSLUKLARI ve bir sonraki sicramayi isaret
+etmek. Eve gidince istediginin yanina [x] koy, siradakinde sadece onayladigini
+yaparim. Her madde: ETKI / EFOR / RISK ekseninde etiketli.
+
+P0 — GUVEN & SAGLIK (kullaniciya gorunmez ama kritik)
+-----------------------------------------------------
+  [ ] PO-1. SW guncelleme akisi DUZELT. service-worker.js su an install'da
+      kosulsuz skipWaiting() yapiyor; service-worker-register.js'te update
+      prompt'u YOK. Sonuc: acik kalan sekmeler bayat asset + yeni SW karisimi
+      yasayabilir (asset/cache surum kaymasi riski). Oneri: skipWaiting'i
+      mesajla kontrol et + kose'de sade "yeni surum hazir — yenile" cipi.
+      (not.txt eski C-12 maddesi; hala acik, artik P0.) ETKI:yuksek EFOR:orta RISK:dusuk
+  [ ] PO-2. Otomatik bayat-cache testi. "Node yok" yuzunden her tur "mantik
+      elle dogrulandi" yaziyoruz. GitHub Actions'a kucuk bir job: HTML'deki
+      ?v= damgalari ile service-worker precache surumlerinin uyumunu ve olu
+      link kontrolunu PR'da otomatik kossun. Insan hatasini bitirir.
+      ETKI:yuksek EFOR:orta RISK:dusuk
+  [ ] PO-3. CSP & dis cagri envanteri. Worker endpoint'leri, Supabase,
+      Tavily/Gemini eklenirken CSP buyudu. Tek bir "guvenlik yuzeyi" notu
+      (hangi origin neden whitelisted) + kullanilmayanlari kirp.
+      ETKI:orta EFOR:dusuk RISK:dusuk
+
+P1 — KESIF & ILK ZIYARET (urune deger katan gorunur is)
+-------------------------------------------------------
+  [ ] PO-4. /changelog ("son sinyaller") — eski C-13. Artik gerekli: bugy,
+      sinematik, profil hepsi eklendi ama kullanici hicbirini bilmiyor.
+      Terminalde 'changelog' komutu + kucuk sayfa; RSS-vari sade liste.
+      Geri donen ziyaretciye "ne degisti" verir. ETKI:yuksek EFOR:dusuk RISK:dusuk
+  [ ] PO-5. Gizli odul kesif ipucu dengesi. Bugy artik offline-node bulmacasi
+      ardinda GIZLI. Guzel ama kesfedilebilirligi olcmuyoruz; cogu ziyaretci
+      asla gormeyecek. Oneri: cok hafif, spoiler'siz bir "sinyal" (or. 404 ya
+      da help'te tek satir kirik-baglanti mizahi) bulmacaya dogru itsin.
+      ETKI:orta EFOR:dusuk RISK:orta (gizem-keyfi dengesi)
+  [ ] PO-6. Gizlilik-dostu olcum (plan P3 hic yapilmadi). Su an HICBIR sinyal
+      yok: ilk komut, oracle sorusu, login donusumu, oyun oynanma. Cookie'siz,
+      kendi-host (Supabase'e basit event tablosu ya da sade counter). Neyin
+      ise yaradigini bilmeden urun karari veremiyoruz. ETKI:yuksek EFOR:orta RISK:orta
+
+P2 — ICERIK & BUYUME
+--------------------
+  [x] PO-7. Interaktif CV (eski oneri #20) — ozgecmisim.html terminal komutlariyla
+      gezilen whoami/skills/experience. Sitenin kimligiyle EN tutarli is; portfolyo
+      degerini de yukseltir. ETKI:yuksek EFOR:orta RISK:dusuk
+      -> TAMAMLANDI (2026-06-29): ozgecmisim.html bastan yazildi. Statik buton
+         akordeon yerine GERCEK komut kabugu: input + komut yorumlayici.
+         Komutlar: help/whoami/about/experience(exp)/education(edu)/skills/
+         brands/contact/clear + TR kisaltmalar (kim/iletisim/yardim/temizle).
+         Ozellikler: komut gecmisi (yukari/asagi ok), Tab tamamlama, tiklanabilir
+         komut cipleri (mobil+a11y kesfedilebilirlik), aria-live cikti, sfx.js
+         cue'lari (terminal.run/terminal.error - dogru API ConviviumAudioCue),
+         reduced-motion guard, "ana terminale don" linki. Veri eski sayfadan
+         korundu; iletisime LinkedIn (linkedin.com/in/ersinbinal) + gmail eklendi.
+         Canary/origin-beacon/origin-id markerlari korundu. SW cache v145->v146.
+         NOT: LinkedIn scrape engelli (HTTP 999); veri mevcut sayfadan alindi.
+         Yeni alan eklenecekse (sertifika/dil/lokasyon) elle ver, eklerim.
+         GORSEL teyit tarayicida yapilmali (Node yok).
+  [ ] PO-8. Tek bir HAFIF oyun ekle, dagitma. Eski liste 21 fikir iceriyor;
+      odak kaybi riski. Product onerisi: SADECE "Neon Serpent (yilan)" — mevcut
+      Supabase skor altyapisina baglanir, dashboard'a trend olur, bugy'ye
+      "skorun nasil?" replikleri zaten hazir. Bir oyunu cilala, 5 yarim oyun acma.
+      ETKI:orta EFOR:orta RISK:dusuk
+  [ ] PO-9. Makale SEO derinligi. makaleler.html tek sayfa; her makaleye ayri
+      kanonik URL + JSON-LD Article schema yok (varsa teyit). Arama gorunurlugu
+      icin en yuksek getirili icerik isi. ETKI:orta EFOR:orta RISK:dusuk
+
+P3 — ERISILEBILIRLIK & PERF (sessiz kalite)
+-------------------------------------------
+  [ ] PO-10. Klavye & ekran-okuyucu gecisi. Terminal + bugy + sinematik cok
+      gorsel; aria-live duyurular, focus-trap (modallarda), prefers-reduced-motion
+      sinematik tam kapatma teyidi. ETKI:orta EFOR:orta RISK:dusuk
+  [ ] PO-11. Sinematik/canvas dusuk-guc butce denetimi. Mobilde partikul tavani
+      var ama uzun oturumda bellek/FPS olcumu yok. Bir "lite mode" bayragi +
+      pil/saveData duyarliligi. ETKI:dusuk EFOR:orta RISK:dusuk
+  [ ] PO-12. Bugy yaratiklarini secim ekraninda GORSEL onizle (eski bugy-oneri
+      #1/#2). Hala "korlemesine secim". SVG yetiskin formu + evrim zinciri karti.
+      ETKI:orta EFOR:orta RISK:dusuk
+
+URUN STRATEJI NOTU (birlikte konusalim)
+---------------------------------------
+  * Site artik "deney biriktirme" asamasindan "biriktirileni cilalama"
+    asamasina gecmeli. 21 oyun + N araç fikrini kovalamak yerine: 1 changelog,
+    1 olcum, 1 SW-fix, 1 interaktif CV -> sitenin ANLATISINI netlestirir.
+  * Bugy artik amiral gemisi ozellik. Ona yatirim (secim onizleme + kesif
+    ipucu + 2. evrim dali) yeni oyun acmaktan daha yuksek getirili.
+  * Karar bekleyenler: (a) Candy_Pop public mi gizli mi? (plan'da hala acik)
+    (b) olcum yapilacaksa Supabase event tablosu mu sade counter mi?
+  Onceligini soyle, sirayla gidelim.
+
+  KARARLAR (2026-06-29):
+    * ONCELIK -> PO-7 Interaktif CV (ozgecmisim.html). Siradaki tur ana isi.
+    * Candy_Pop -> GIZLI PROTOTIP yapilacak: public index'ten cikar (robots
+      noindex + sitemap'ten dusur + ana navigasyon/terminal route'lardan gizle),
+      prototip bagimliliklari ana urun standardina sizmasin. (plan #4/#5 kapanir)
+
+==========================================================================
+
 2026-06-25 / yapılanlar
 ------------------------------------------------------
 - workers/oracle/src/index.js

@@ -51,6 +51,7 @@
             --main-bg: #000;
             --terminal-green: #00ff00;
             --terminal-dim: #007700;
+            --terminal-dimmer: #004400;
             --scan-line-color: rgba(0, 255, 0, 0.1);
         }
 
@@ -84,6 +85,7 @@
             );
             background-size: 100% 4px;
             pointer-events: none;
+            z-index: 2;
             animation: scan 8s linear infinite;
         }
 
@@ -93,279 +95,345 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 820px;
             margin: 0 auto;
             padding: 20px;
             border: 2px solid var(--terminal-green);
             box-shadow: 0 0 20px var(--terminal-dim);
+            position: relative;
+            z-index: 1;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 16px;
             border-bottom: 2px solid var(--terminal-green);
-            padding-bottom: 20px;
+            padding-bottom: 16px;
         }
 
-        .section-button {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin: 10px 0;
+        .header h1 { font-size: 1.8em; letter-spacing: 2px; }
+        .header p { color: var(--terminal-dim); margin-top: 4px; }
+
+        /* Terminal */
+        .terminal {
+            min-height: 320px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 8px 4px;
+            line-height: 1.55;
+            font-size: 1em;
+            scrollbar-width: thin;
+            scrollbar-color: var(--terminal-dim) transparent;
+        }
+        .terminal::-webkit-scrollbar { width: 8px; }
+        .terminal::-webkit-scrollbar-thumb { background: var(--terminal-dim); }
+
+        .line { white-space: pre-wrap; word-break: break-word; }
+        .line.cmd-echo { color: var(--terminal-green); }
+        .line.cmd-echo .prompt { color: var(--terminal-dim); }
+        .line.dim { color: var(--terminal-dim); }
+        .line.title { color: var(--terminal-green); text-shadow: 0 0 6px var(--terminal-dim); margin-top: 6px; }
+        .line.err { color: #ff5555; }
+        .line a { color: var(--terminal-green); text-decoration: underline; }
+        .line a:hover { background: var(--terminal-dim); color: #000; }
+        .exp { padding-left: 8px; }
+        .exp .role { color: var(--terminal-dim); }
+
+        /* Input row */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-top: 1px solid var(--terminal-dim);
+            margin-top: 10px;
+            padding-top: 12px;
+        }
+        .input-row .prompt { color: var(--terminal-dim); white-space: nowrap; }
+        #cmd-input {
+            flex: 1;
             background: transparent;
-            border: 1px solid var(--terminal-green);
-            cursor: pointer;
-            text-align: left;
-            font-size: 1.2em;
-            position: relative;
-            overflow: hidden;
+            border: none;
+            outline: none;
+            font-size: 1em;
+            caret-color: var(--terminal-green);
         }
 
-        .section-button::before {
-            content: '> ';
+        /* Command chips (discoverability + mobile + a11y) */
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
         }
-
-        .section-button:hover {
-            background: var(--terminal-dim);
-        }
-
-        .section-button::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 2px;
-            background: var(--terminal-green);
-            animation: scan-line 2s linear infinite;
-        }
-
-        @keyframes scan-line {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-
-        .content {
-            display: none;
-            padding: 20px;
+        .chip {
+            background: transparent;
             border: 1px solid var(--terminal-dim);
-            margin-top: -10px;
-            margin-bottom: 10px;
+            color: var(--terminal-green);
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.9em;
         }
+        .chip::before { content: '> '; color: var(--terminal-dim); }
+        .chip:hover, .chip:focus-visible { background: var(--terminal-dim); color: #000; outline: none; }
+        .chip:focus-visible { box-shadow: 0 0 0 2px var(--terminal-green); }
 
-        .content.active {
-            display: block;
-            animation: typewriter 0.5s steps(40);
-        }
+        .blink { animation: blink 1s step-end infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        @keyframes typewriter {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .back-link { display: inline-block; margin-top: 14px; color: var(--terminal-dim); }
+        .back-link:hover { color: var(--terminal-green); }
+
+        .skip-link { position: absolute; left: -999px; top: auto; overflow: hidden; }
+        .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index: 9999; border-radius: 4px; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { max-width: 100%; padding: 12px; }
+            .header h1 { font-size: 1.4em; }
+            .terminal { font-size: 0.92em; max-height: 55vh; }
         }
 
         @media (prefers-reduced-motion: reduce) {
             * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
         }
-            .skip-link:focus { position: static; left: 12px; top: 12px; background: #00ff00; color: #000; padding: 8px 12px; z-index:9999; border-radius:4px; }
-
-        .contact-info {
-            margin-top: 20px;
-            padding: 10px;
-            border-top: 1px solid var(--terminal-green);
-        }
-
-        .experience-item {
-            margin-bottom: 15px;
-            padding-left: 20px;
-        }
-
-        .blink {
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-    .container {
-        max-width: 90%;
-        padding: 10px;
-    }
-
-    .section-button {
-        font-size: 1em;
-        padding: 10px;
-    }
-
-    .content {
-        padding: 15px;
-    }
-
     </style>
 </head>
 <body>
-    <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
-        <div class="container" id="main-content">
-            <header class="header">
-                <h1>ERSİN BİNAL<span class="blink">_</span></h1>
-                <p>Dijital Proje Yöneticisi</p>
-            </header>
+    <a class="skip-link" href="#cmd-input">İçeriğe atla</a>
+    <div class="container" id="main-content">
+        <header class="header">
+            <h1>ERSİN BİNAL<span class="blink">_</span></h1>
+            <p>Dijital Proje Yöneticisi // interaktif özgeçmiş</p>
+        </header>
 
-            <main role="main">
-            <button type="button" class="section-button" data-section="about">Özetle</button>
-            <div id="about" class="content">
-           <p>1982 yılında İstanbul’da doğdum ve Beşiktaş, Ulus’ta büyüdüm. Dijital dünyaya olan ilgim, çocukluğumdan bu yanasüregelen oyun tutkum kadar derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda, ailemle birlikte seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri deneyimlemeyi seviyorum. Boş anlarımda ise kitaplara dalmayı ihmal etmiyorum; her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum. </p>
-         
-           <p>İşim; Pazarlama, performans ve dijital dönüşüm alanlarında proje yönetimi.</p>
-        </div>
-    </main>
+        <main role="main">
+            <div id="terminal" class="terminal" aria-live="polite" aria-label="Özgeçmiş terminali"></div>
 
-        <button type="button" class="section-button" data-section="education">EĞİTİM</button>
-        <div id="education" class="content">
-            <div class="experience-item">
-                > Beykent Üniversitesi (2016)<br>
-                > Bilgisayar Teknolojisi ve Programlama
+            <div class="input-row">
+                <span class="prompt" aria-hidden="true">ziyaretci@convivium:~$</span>
+                <input id="cmd-input" type="text" autocomplete="off" autocapitalize="off"
+                       autocorrect="off" spellcheck="false"
+                       aria-label="Komut girin. Komutlar: help, whoami, about, experience, education, skills, contact"
+                       placeholder="komut yazın (yardım için: help)">
             </div>
-        </div>
 
-        <button type="button" class="section-button" data-section="experience">İŞ DENEYİMİ</button>
-        <div id="experience" class="content">
-            <div class="experience-item">
-                > Full Supplement<br>
-                > Etcaret Müdürü<br>
-            </div>
-            <div class="experience-item">
-                > Daniel Klein Group<br>
-                > E-Ticaret Direktörü<br>            </div>
-            <div class="experience-item">
-                > Gezer Ayakkabı<br>
-                > E-Ticaret Yöneticisi<br>
-            </div>
-            <div class="experience-item">
-                > Spor Dünyası<br>
-                > E-Ticaret Müdürü<br>
-            </div>
-            <div class="experience-item">
-                > Süvari<br>
-                > Online Satış Yöneticisi<br>
-            </div>
-            <div class="experience-item">
-                > Binal Elektronik<br>
-                > Kurucu<br>
-            </div>
-            <div class="experience-item">
-                > Turkcell Superonline<br>
-                > Metronet Marmara Bölge Satış Yöneticisi<br>
-            </div>
-            <div class="experience-item">
-                > Trio Araştırma ve Tanıtım Hizmetleri<br>
-                > Bilgi İşlem Uzmanı<br>
-            </div>
-            <div class="experience-item">
-                > Meta Bilişim<br>
-                > Kurucu Ortak<br>
-            </div>
-            <div class="experience-item">
-                > Bürsan Bilgi İşlem<br>
-                > Kurumsal Satış Danışmanı<br>
-            </div>
-            <div class="experience-item">
-                > Proje Bazlı Hizmet Sağladığım Markalar<br>
-                   _Nettree Market<br>
-                   _Yazıcı Ayakkabı<br>
-                   _Venüs Ayakkabı<br>
-                   _Macfit<br>
-                   _Şen Piliç<br>
-                   _Ak Sigorta<br>
-                   _Upon Insight<br>
-                   _Ulus Copy Center<br>
-                   _MEF Üniversitesi<br>
-                   
+            <div class="chips" id="chips" role="group" aria-label="Hızlı komutlar"></div>
+        </main>
 
-            </div>
-            <!-- Additional experience items -->
-        </div>
-
-        <div class="contact-info">
-            
-            <p>> EMAIL: ersinbinal@cloud.com</p>
-            
-        </div>
+        <a class="back-link" href="/index.html">&lt; ana terminale dön</a>
     </div>
 
- <script>
-        document.querySelectorAll('.section-button[data-section]').forEach((btn) => {
-            btn.addEventListener('click', () => toggleSection(btn.dataset.section));
+    <script>
+    (() => {
+        // ---- Profil verisi -------------------------------------------------
+        const EMAIL = 'ersinbinal@gmail.com';
+        const LINKEDIN = 'https://www.linkedin.com/in/ersinbinal/';
+
+        const ABOUT = [
+            '1982 yılında İstanbul\'da doğdum ve Beşiktaş, Ulus\'ta büyüdüm. Dijital',
+            'dünyaya olan ilgim, çocukluğumdan bu yana süregelen oyun tutkum kadar',
+            'derinlere uzanıyor. Problemleri çözmek ve yeni bilgiler peşinde koşmak',
+            'bana her zaman keyif veriyor. Sorumluluklarım dışında kalan zamanlarda',
+            'ailemle seyahat etmeyi, yeni yerler keşfetmeyi ve farklı kültürleri',
+            'deneyimlemeyi seviyorum. Boş anlarımda kitaplara dalmayı ihmal etmiyorum;',
+            'her yıl en az 15-20 kitabı bitirmeye özen gösteriyorum.',
+            '',
+            'İşim: pazarlama, performans ve dijital dönüşüm alanlarında proje yönetimi.'
+        ];
+
+        const EXPERIENCE = [
+            ['Full Supplement', 'E-Ticaret Müdürü'],
+            ['Daniel Klein Group', 'E-Ticaret Direktörü'],
+            ['Gezer Ayakkabı', 'E-Ticaret Yöneticisi'],
+            ['Spor Dünyası', 'E-Ticaret Müdürü'],
+            ['Süvari', 'Online Satış Yöneticisi'],
+            ['Binal Elektronik', 'Kurucu'],
+            ['Turkcell Superonline', 'Metronet Marmara Bölge Satış Yöneticisi'],
+            ['Trio Araştırma ve Tanıtım Hizmetleri', 'Bilgi İşlem Uzmanı'],
+            ['Meta Bilişim', 'Kurucu Ortak'],
+            ['Bürsan Bilgi İşlem', 'Kurumsal Satış Danışmanı']
+        ];
+
+        const BRANDS = [
+            'Nettree Market', 'Yazıcı Ayakkabı', 'Venüs Ayakkabı', 'Macfit',
+            'Şen Piliç', 'Ak Sigorta', 'Upon Insight', 'Ulus Copy Center',
+            'MEF Üniversitesi'
+        ];
+
+        const SKILLS = [
+            'Dijital proje yönetimi & dijital dönüşüm',
+            'E-ticaret operasyonu ve büyüme yönetimi',
+            'Performans pazarlaması (SEM / SEO / sosyal)',
+            'Pazar yeri & online satış kanalı yönetimi',
+            'Ekip kurma ve süreç tasarımı',
+            'Veri odaklı karar alma ve raporlama'
+        ];
+
+        // ---- Terminal motoru ----------------------------------------------
+        const term = document.getElementById('terminal');
+        const input = document.getElementById('cmd-input');
+        const chipsBox = document.getElementById('chips');
+        const history = [];
+        let histIdx = -1;
+
+        function print(text, cls) {
+            const div = document.createElement('div');
+            div.className = 'line' + (cls ? ' ' + cls : '');
+            if (text instanceof Node) div.appendChild(text);
+            else div.textContent = text;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        }
+
+        function printLink(href, label) {
+            const a = document.createElement('a');
+            a.href = href;
+            a.textContent = label;
+            if (/^https?:/.test(href)) { a.target = '_blank'; a.rel = 'noopener noreferrer'; }
+            const frag = document.createElement('span');
+            frag.appendChild(document.createTextNode('  '));
+            frag.appendChild(a);
+            print(frag);
+        }
+
+        function echo(cmd) {
+            const span = document.createElement('span');
+            const p = document.createElement('span');
+            p.className = 'prompt';
+            p.textContent = 'ziyaretci@convivium:~$ ';
+            span.appendChild(p);
+            span.appendChild(document.createTextNode(cmd));
+            print(span, 'cmd-echo');
+        }
+
+        const COMMANDS = {
+            help() {
+                print('Kullanılabilir komutlar:', 'title');
+                print('  whoami      kısa kimlik', 'dim');
+                print('  about       özgeçmiş özeti', 'dim');
+                print('  experience  iş deneyimi (kısaltma: exp)', 'dim');
+                print('  education   eğitim (kısaltma: edu)', 'dim');
+                print('  skills      yetkinlikler', 'dim');
+                print('  brands      proje bazlı çalışılan markalar', 'dim');
+                print('  contact     iletişim & sosyal bağlantılar', 'dim');
+                print('  clear       ekranı temizle', 'dim');
+                print('  help        bu liste', 'dim');
+            },
+            whoami() {
+                print('Ersin Binal', 'title');
+                print('Dijital Proje Yöneticisi — İstanbul');
+                print('Pazarlama, performans ve dijital dönüşüm.', 'dim');
+            },
+            about() {
+                print('// ÖZET', 'title');
+                ABOUT.forEach(l => print(l));
+            },
+            experience() {
+                print('// İŞ DENEYİMİ', 'title');
+                EXPERIENCE.forEach(([co, role]) => {
+                    const wrap = document.createElement('span');
+                    wrap.appendChild(document.createTextNode('> ' + co + '  '));
+                    const r = document.createElement('span');
+                    r.className = 'role';
+                    r.textContent = '— ' + role;
+                    wrap.appendChild(r);
+                    const div = document.createElement('div');
+                    div.className = 'line exp';
+                    div.appendChild(wrap);
+                    term.appendChild(div);
+                });
+                term.scrollTop = term.scrollHeight;
+            },
+            education() {
+                print('// EĞİTİM', 'title');
+                print('> Beykent Üniversitesi (2016)');
+                print('  Bilgisayar Teknolojisi ve Programlama', 'dim');
+            },
+            skills() {
+                print('// YETKİNLİKLER', 'title');
+                SKILLS.forEach(s => print('• ' + s));
+            },
+            brands() {
+                print('// PROJE BAZLI HİZMET VERİLEN MARKALAR', 'title');
+                BRANDS.forEach(b => print('  _ ' + b, 'dim'));
+            },
+            contact() {
+                print('// İLETİŞİM', 'title');
+                printLink('mailto:' + EMAIL, EMAIL);
+                printLink(LINKEDIN, 'linkedin.com/in/ersinbinal');
+            },
+            clear() {
+                term.innerHTML = '';
+            }
+        };
+        // Kısaltmalar
+        const ALIASES = { exp: 'experience', edu: 'education', cv: 'about', kim: 'whoami', iletisim: 'contact', yardim: 'help', temizle: 'clear' };
+
+        const CHIP_LIST = ['whoami', 'about', 'experience', 'education', 'skills', 'brands', 'contact', 'help'];
+        const NAMES = Object.keys(COMMANDS).concat(Object.keys(ALIASES));
+
+        function run(raw) {
+            const cmd = raw.trim().toLowerCase();
+            if (!cmd) return;
+            echo(raw.trim());
+            const resolved = ALIASES[cmd] || cmd;
+            if (COMMANDS[resolved]) {
+                try { window.ConviviumAudioCue && window.ConviviumAudioCue('terminal.run'); } catch (e) {}
+                COMMANDS[resolved]();
+            } else {
+                try { window.ConviviumAudioCue && window.ConviviumAudioCue('terminal.error'); } catch (e) {}
+                print('komut bulunamadı: ' + cmd + "  (deneyin: help)", 'err');
+            }
+        }
+
+        // Chips
+        CHIP_LIST.forEach(name => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'chip';
+            b.textContent = name;
+            b.addEventListener('click', () => { run(name); input.focus(); });
+            chipsBox.appendChild(b);
         });
 
-        let audioCtx;
-
-        function initAudio() {
-            if (!audioCtx) {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioCtx = new AudioContext();
+        // Input handling
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const v = input.value;
+                if (v.trim()) { history.push(v.trim()); histIdx = history.length; }
+                run(v);
+                input.value = '';
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (histIdx > 0) { histIdx--; input.value = history[histIdx] || ''; }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (histIdx < history.length - 1) { histIdx++; input.value = history[histIdx] || ''; }
+                else { histIdx = history.length; input.value = ''; }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                const frag = input.value.trim().toLowerCase();
+                if (frag) {
+                    const match = NAMES.find(n => n.startsWith(frag));
+                    if (match) input.value = match;
+                }
             }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
+        });
 
-        function playTone(freq, type, duration, vol) {
-            if (!audioCtx) return;
-            
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            
-            // SES AYARI: Daha duyulabilir bir seviye (0.1)
-            // Başlangıçta ses var, sonra hızla azalarak bitiyor (Fade-out)
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-            
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            
-            osc.start();
-            osc.stop(audioCtx.currentTime + duration);
-        }
+        // Boot
+        print('Convivium // kariyer modülü v2', 'dim');
+        print("'help' yazın ya da aşağıdaki komutlara tıklayın.", 'dim');
+        print('');
+        COMMANDS.whoami();
 
-        function toggleSection(sectionId) {
-            initAudio(); 
-            
-            const content = document.getElementById(sectionId);
-            const allContents = document.getElementsByClassName('content');
-            
-            Array.from(allContents).forEach(elem => {
-                if (elem !== content) elem.classList.remove('active');
-            });
-            
-            const isActive = content.classList.toggle('active');
-            
-            // YENİ SES EFEKTİ: "Interface On" Melodisi
-            // Taramalı ses yerine, artan frekanslı 3 kısa "bip" (Do-Mi-Sol gibi)
-            if (isActive) {
-                // 1. Ses (Daha bas)
-                playTone(300, 'sine', 0.15, 0.1);
-
-                // 2. Ses (Orta - 80ms sonra)
-                setTimeout(() => {
-                    playTone(400, 'sine', 0.15, 0.1);
-                }, 80);
-
-                // 3. Ses (Tiz - 160ms sonra)
-                setTimeout(() => {
-                    playTone(500, 'sine', 0.3, 0.08); // Bitiş biraz daha kısa
-                }, 160);
-            } else {
-                // Kapanırken tek bir tok ses (İsteğe bağlı)
-                playTone(200, 'triangle', 0.15, 0.08);
-            }
-        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('button') && !e.target.closest('a')) input.focus();
+        });
+        input.focus();
+    })();
     </script>
-  <script src="/assets/js/sfx.js?v=18" defer></script>
-<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​‌‌‌​‌​​​‌​‌​‌​​​​​‌​‌​​​‌​​​​‌‌​‌​​​‌​​​‌‌​​​‌‌‌​​‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+    <script src="/assets/js/sfx.js?v=18" defer></script>
+<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌‌​​​​​‌‌​‌‌‌​‌​​​‌​‌​‌​​​​​‌​‌​​​‌​​​​‌‌​‌​​​‌​​​‌‌​​​‌‌‌​​‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
 <script src="/assets/js/origin-beacon.js?v=1"></script>
 </body>
 </html>
-
