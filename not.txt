@@ -435,6 +435,23 @@ Motor secimi bende -> Phaser (kod tabaniyla uyumlu, 3.60.0).
     - Yaya yildizlarina gercek PARALLAX (uzak yildizlar kamerayla, yakinlar kayar).
     - CACHE_NAME v149->v150.
 
+[x] TUR 3 (2026-06-29): KULLANICI GERI BILDIRIMI -> silah hissi + gorsel yukseltme.
+    Geri bildirim: "ates edince mermiler uzaga gitmiyor" + "eski oyundan gorsel
+    ustun durmuyor, cok daha ustun bir deneyim olmali".
+    - SILAH: yaya artik BASTAN blastere sahip (eskiden modul gerekiyordu -> J sadece
+      kisa yumruk atiyordu, "mermi gitmiyor" hissi bundandi). "blaster" modulu
+      yeniden konumlandi -> "Otomatik Blaster" (atis hizi +75%, menzil/mermi hizi).
+      Mermiler hizli + uzun menzilli + parlak (additive) tracer.
+    - GORSEL: additive GLOW altyapisi (glow dokulari + flashSprite + boom helper).
+      Namlu flasi, parlak mermiler, gemi itki izi + glow, kahraman giysi glow'u.
+      Patlamalar artik boom() (isik + kivilcim + buyukse ekran flasi). Vurulunca
+      kirmizi ekran flasi. NEBULA + GEZEGEN arka plan (her iki mod), gemi yildizlari
+      daha yogun, gezegen parallax (scrollFactor).
+    - CACHE_NAME v150->v151.
+    NOT: gorsel his hala "tam AAA" degil; tek dosya/prosedural piksel siniri var.
+    Daha ileri: gercek spritesheet/atlas, post-process shader (bloom), tile-based
+    istasyon. Kullanici test edip yon verecek.
+
   ----------------------------------------------------------------------
   >>> DEVAM NOTU (baska bilgisayardan acan icin)  -- 2026-06-29
   ----------------------------------------------------------------------

@@ -376,7 +376,7 @@
       hp2:     { name: "Ağır Zırh",     branch: "def", cost: 110, req: "hp1", desc: "+50 maksimum HP." },
       shield:  { name: "Kalkan Halkası", branch: "def", cost: 130, req: "hp1", desc: "1 vuruşu emen, ~6 sn'de dolan kalkan." },
       o2:      { name: "Genişletilmiş O2", branch: "def", cost: 60, desc: "Oksijen kapasitesi +60%." },
-      blaster: { name: "El Blasteri",   branch: "off", cost: 50,  desc: "Yaya modunda blaster ateşi açılır." },
+      blaster: { name: "Otomatik Blaster", branch: "off", cost: 60, desc: "Atış hızı +75%, menzil ve mermi hızı artar." },
       dmg1:    { name: "Güçlü Hücre",   branch: "off", cost: 90,  req: "blaster", desc: "Tüm atış hasarı +50%." },
       dual:    { name: "Çift Namlu",    branch: "off", cost: 150, req: "dmg1", desc: "Çift paralel atış." },
       pierce:  { name: "Delici Uç",     branch: "off", cost: 120, req: "dmg1", desc: "Mermi bir hedeften geçer." },
@@ -404,7 +404,8 @@
       if (owned.has("speed")) speedMul *= 1.2;
       return {
         maxHp, maxO2, dmgMul, speedMul,
-        hasBlaster: owned.has("blaster"),
+        hasBlaster: true,                  // artık herkes baştan blastere sahip
+        rapid: owned.has("blaster"),       // modül atış hızını/menzili artırır
         dual: owned.has("dual"),
         pierce: owned.has("pierce"),
         hasShield: owned.has("shield"),
@@ -774,15 +775,54 @@
         px(8, 8, 14, 40, 0x101622); px(10, 12, 10, 6, 0x53d5ff, 0.5);
         px(12, 26, 6, 18, 0x7dffb0, 0.4); px(2, 2, 26, 2, 0x53d5ff, 0.6);
       });
-      // Mermiler
-      makeTexture(scene, "shot", 8, 4, px => { px(0, 1, 6, 2, 0xffce5a); px(5, 0, 3, 4, 0x53d5ff); });
-      makeTexture(scene, "shot-big", 12, 6, px => { px(0, 2, 9, 2, 0xfff0c0); px(7, 0, 5, 6, 0x53d5ff); });
-      makeTexture(scene, "ebullet", 7, 5, px => { px(0, 1, 5, 3, 0xff5a6a); px(4, 0, 3, 5, 0xffce5a); });
+      // Mermiler — parlak çekirdek + iz
+      makeTexture(scene, "shot", 16, 5, px => {
+        px(0, 2, 9, 1, 0x53d5ff); px(2, 1, 9, 3, 0xaef0ff); px(8, 0, 6, 5, 0xffffff); px(13, 1, 3, 3, 0x53d5ff);
+      });
+      makeTexture(scene, "shot-big", 20, 7, px => {
+        px(0, 3, 11, 1, 0x53d5ff); px(2, 2, 11, 3, 0xaef0ff); px(10, 0, 8, 7, 0xffffff); px(17, 2, 3, 3, 0x53d5ff);
+      });
+      makeTexture(scene, "ebullet", 11, 6, px => {
+        px(0, 2, 6, 2, 0xff8a5a); px(3, 1, 6, 4, 0xffce5a); px(6, 0, 5, 6, 0xff5a6a);
+      });
+      // Glow (additive blend için yumuşak ışık diski)
+      const glow = (key, color) => makeTexture(scene, key, 32, 32, (px, g) => {
+        for (let r = 16; r > 0; r--) { g.fillStyle(color, 0.05); g.fillCircle(16, 16, r); }
+      });
+      glow("glow", 0xffffff); glow("glow-c", 0x53d5ff); glow("glow-m", 0xff5ad0); glow("glow-a", 0xffce5a); glow("glow-r", 0xff5a6a);
+      // Gezegen (arka plan)
+      makeTexture(scene, "planet", 120, 120, (px, g) => {
+        g.fillStyle(0x1a2348, 1); g.fillCircle(60, 60, 56);
+        g.fillStyle(0x2a3a70, 1); g.fillCircle(54, 52, 50);
+        g.fillStyle(0x3a5a9e, 0.7); g.fillCircle(46, 44, 34);
+        g.fillStyle(0x53d5ff, 0.18); g.fillCircle(40, 38, 18);
+        g.fillStyle(0x0c1430, 0.5); g.fillCircle(80, 78, 40);
+        g.lineStyle(3, 0x9b6bff, 0.4); g.strokeEllipse(60, 60, 132, 36);
+      });
       // Partikül / gölge
       makeTexture(scene, "spark", 3, 3, px => { px(1, 0, 1, 3, 0xfff0c0); px(0, 1, 3, 1, 0xffce5a); });
       makeTexture(scene, "spark-c", 3, 3, px => { px(1, 0, 1, 3, 0xd8e6ff); px(0, 1, 3, 1, 0x53d5ff); });
+      makeTexture(scene, "spark-m", 3, 3, px => { px(1, 0, 1, 3, 0xffd0f0); px(0, 1, 3, 1, 0xff5ad0); });
+      makeTexture(scene, "ember", 4, 4, px => { px(1, 0, 2, 4, 0xffce5a); px(0, 1, 4, 2, 0xff8a3a); });
       makeTexture(scene, "shadow", 22, 7, (px, g) => { g.fillStyle(0x000000, 0.4); g.fillEllipse(11, 3, 22, 7); });
       makeTexture(scene, "star", 2, 2, px => { px(0, 0, 2, 2, 0xffffff); });
+    }
+
+    // Additive ışık parlaması (büyüyüp sönen)
+    function flashSprite(scene, x, y, key, color, scale, life, depth) {
+      const img = scene.add.image(x, y, key).setBlendMode(Phaser.BlendModes.ADD).setDepth(depth || 9100);
+      if (color != null) img.setTint(color);
+      img.setScale(scale * 0.35);
+      if (reduceMotion) { scene.time.delayedCall(life * 600, () => img.destroy()); return img; }
+      scene.tweens.add({ targets: img, scale: scale, alpha: 0, duration: life * 1000, ease: "Quad.easeOut", onComplete: () => img.destroy() });
+      return img;
+    }
+
+    // Patlama: ışık + kıvılcım + (büyükse) flaş
+    function boom(scene, x, y, size, glowKey, sparkTex) {
+      flashSprite(scene, x, y, glowKey || "glow-a", null, size, 0.45);
+      scene.particles.burst(x, y, Math.floor(6 + size * 6), { texture: sparkTex || "spark", speed: 90 + size * 50, life: 0.45 + size * 0.1, gravity: 30 });
+      if (size >= 2.2 && !reduceMotion) scene.cameras.main.flash(90, 120, 180, 255);
     }
 
     // ====================================================================
@@ -880,6 +920,7 @@
         // oyuncu
         this.player = {
           x: 60, y: 168, w: 16, h: 26, dir: 1,
+          glow: this.add.image(60, 150, "glow-c").setOrigin(0.5).setDepth(18).setBlendMode(Phaser.BlendModes.ADD).setScale(1.1).setAlpha(0.35),
           sprite: this.add.image(60, 168, "eva").setOrigin(0.5, 1).setDepth(500),
           shadow: this.add.image(60, 169, "shadow").setOrigin(0.5, 0.5).setDepth(20),
           carry: null, walkT: 0, iframe: 0, fireCd: 0, dashCd: 0, dashT: 0, hurtFlash: 0, chargeT: 0
@@ -931,6 +972,15 @@
       }
 
       buildBackground() {
+        // derin uzay nebula (ekran-sabit gradyan bantlar)
+        const neb = this.add.graphics().setDepth(0).setScrollFactor(0);
+        neb.fillStyle(0x0a0e22, 1).fillRect(0, 0, GAME_W, 110);
+        neb.fillStyle(0x1a1340, 0.5).fillEllipse(90, 40, 260, 120);
+        neb.fillStyle(0x2a1850, 0.4).fillEllipse(300, 60, 300, 140);
+        neb.fillStyle(0x103a55, 0.3).fillEllipse(200, 24, 360, 90);
+        // uzak gezegen (yavaş parallax)
+        this.planet = this.add.image(300, 58, "planet").setDepth(0).setScrollFactor(0.12).setScale(0.9).setAlpha(0.9);
+        this.planetGlow = this.add.image(300, 58, "glow-c").setDepth(0).setScrollFactor(0.12).setScale(5).setAlpha(0.12).setBlendMode(Phaser.BlendModes.ADD);
         // uzak yıldızlar (parallax)
         this.stars = [];
         for (let i = 0; i < 70; i++) {
@@ -1006,18 +1056,18 @@
 
       fireBlaster() {
         const p = this.player;
-        if (!RUN.stats.hasBlaster || p.fireCd > 0) return;
-        p.fireCd = 0.26;
+        if (p.fireCd > 0) return;
+        p.fireCd = RUN.stats.rapid ? 0.15 : 0.27;
+        const vx = p.dir * (RUN.stats.rapid ? 460 : 360);
         const dmg = 12 * RUN.stats.dmgMul;
         const spawn = (off) => {
-          this.pShots.push({
-            x: p.x + p.dir * 12, y: p.y - 14 + off, vx: p.dir * 300, vy: 0,
-            w: 8, h: 4, dmg, pierce: RUN.stats.pierce, hits: 0,
-            sprite: this.add.image(p.x, p.y - 14 + off, "shot").setOrigin(0.5).setDepth(300).setFlipX(p.dir < 0)
-          });
+          const spr = this.add.image(p.x + p.dir * 12, p.y - 14 + off, "shot").setOrigin(0.5).setDepth(300).setFlipX(p.dir < 0).setBlendMode(Phaser.BlendModes.ADD);
+          this.pShots.push({ x: p.x + p.dir * 12, y: p.y - 14 + off, vx, vy: 0, w: 12, h: 5, dmg, pierce: RUN.stats.pierce, hits: 0, sprite: spr });
         };
         spawn(0);
-        if (RUN.stats.dual) spawn(-6);
+        if (RUN.stats.dual) spawn(-7);
+        // namlu flaşı
+        flashSprite(this, p.x + p.dir * 14, p.y - 14, "glow-c", null, 0.7, 0.18, 320);
         audio.fire();
       }
 
@@ -1065,8 +1115,8 @@
           e.dead = true; e.sprite.destroy(); e.shadow.destroy();
           RUN.score += e.score;
           this.dropShards(e.x, e.y, e.kind === "gunbot" ? 4 : 2);
-          this.particles.burst(e.x, e.y - e.h / 2, 12, { texture: "spark", speed: 130, life: 0.45 });
-          audio.break(); this.hitStop(0.05); shake(this, 0.12, 0.006);
+          boom(this, e.x, e.y - e.h / 2, 1.7, "glow-a", "ember");
+          audio.explode(); this.hitStop(0.06); shake(this, 0.14, 0.008);
         }
       }
 
@@ -1086,6 +1136,7 @@
         if (RUN.shield > 0) { RUN.shield = 0; p.iframe = 0.6; this.shieldT = 6; audio.hit(); this.particles.burst(p.x, p.y - 12, 10, { texture: "spark-c", speed: 120, life: 0.4 }); return; }
         RUN.hp -= dmg; p.iframe = 0.7; p.hurtFlash = 0.3;
         audio.hurt(); shake(this, 0.16, 0.009);
+        if (!reduceMotion) this.cameras.main.flash(110, 90, 10, 10);
         if (RUN.hp <= 0) this.endRun();
       }
 
@@ -1151,6 +1202,8 @@
         p.sprite.setFlipX(p.dir < 0);
         p.sprite.setPosition(Math.round(p.x), Math.round(p.y));
         p.shadow.setPosition(Math.round(p.x), Math.round(p.y + 1));
+        p.glow.setPosition(Math.round(p.x), Math.round(p.y - 13));
+        p.glow.setDepth(Math.round(p.y * 10) - 1);
         p.sprite.setDepth(Math.round(p.y * 10));
         p.sprite.setTintFill ? (p.hurtFlash > 0 ? p.sprite.setTintFill(0xffffff) : p.sprite.clearTint()) : null;
 
@@ -1343,9 +1396,18 @@
         this.over = false; this.cleared = false; this.freeze = 0;
         this.shards = []; this.bombCd = 0; this.shieldT = 0;
 
+        // derin uzay nebula + gezegen
+        const neb = this.add.graphics().setDepth(0);
+        neb.fillStyle(0x070a1c, 1).fillRect(0, 0, GAME_W, GAME_H);
+        neb.fillStyle(0x1a1340, 0.55).fillEllipse(70, 70, 280, 200);
+        neb.fillStyle(0x2a1850, 0.4).fillEllipse(320, 150, 300, 220);
+        neb.fillStyle(0x123a55, 0.3).fillEllipse(200, 40, 360, 140);
+        this.add.image(330, 50, "planet").setDepth(0).setScale(1.1).setAlpha(0.85);
+        this.add.image(330, 50, "glow-c").setDepth(0).setScale(6).setAlpha(0.1).setBlendMode(Phaser.BlendModes.ADD);
+
         // yıldız alanı (3 katman)
         this.stars = [];
-        for (let i = 0; i < 90; i++) {
+        for (let i = 0; i < 110; i++) {
           const layer = Math.random() < 0.5 ? 1 : (Math.random() < 0.6 ? 2 : 3);
           this.stars.push({
             img: this.add.image(Math.random() * GAME_W, Math.random() * GAME_H, "star").setDepth(1).setAlpha(0.2 + layer * 0.22).setScale(layer === 3 ? 1.5 : 1),
@@ -1355,9 +1417,10 @@
 
         // oyuncu gemisi
         this.player = {
-          x: 56, y: GAME_H / 2, w: 26, h: 14, fireCd: 0, dashCd: 0, dashT: 0, iframe: 1.0, hurtFlash: 0,
+          x: 56, y: GAME_H / 2, w: 26, h: 14, fireCd: 0, dashCd: 0, dashT: 0, iframe: 1.0, hurtFlash: 0, trailT: 0,
+          glow: this.add.image(56, GAME_H / 2, "glow-c").setOrigin(0.5).setDepth(498).setBlendMode(Phaser.BlendModes.ADD).setScale(1.4).setAlpha(0.5),
           sprite: this.add.image(56, GAME_H / 2, "ship").setOrigin(0.5).setDepth(500),
-          flame: this.add.image(40, GAME_H / 2, "ship-flame").setOrigin(0.5).setDepth(499)
+          flame: this.add.image(40, GAME_H / 2, "ship-flame").setOrigin(0.5).setDepth(499).setBlendMode(Phaser.BlendModes.ADD)
         };
 
         this.pShots = []; this.eShots = [];
@@ -1380,23 +1443,23 @@
         if (p.iframe > 0 || p.dashT > 0) return;
         if (RUN.shield > 0) { RUN.shield = 0; this.shieldT = 6; p.iframe = 0.7; audio.hit(); this.particles.burst(p.x, p.y, 12, { texture: "spark-c", speed: 130, life: 0.4 }); return; }
         RUN.hp -= dmg; p.iframe = 0.9; p.hurtFlash = 0.3; audio.hurt(); shake(this, 0.18, 0.01);
+        if (!reduceMotion) this.cameras.main.flash(110, 90, 10, 10);
         if (RUN.hp <= 0) this.endRun();
       }
 
       fire() {
         const p = this.player;
         if (p.fireCd > 0) return;
-        p.fireCd = 0.18;
+        p.fireCd = RUN.stats.rapid ? 0.12 : 0.18;
         const dmg = 10 * RUN.stats.dmgMul;
+        const big = RUN.stats.dmgMul > 1.4;
         const mk = (off) => {
-          const big = RUN.stats.dmgMul > 1.4;
-          this.pShots.push({
-            x: p.x + 14, y: p.y + off, vx: 360, w: big ? 12 : 8, h: big ? 6 : 4, dmg, pierce: RUN.stats.pierce, hits: 0,
-            sprite: this.add.image(p.x + 14, p.y + off, big ? "shot-big" : "shot").setOrigin(0.5).setDepth(300)
-          });
+          const spr = this.add.image(p.x + 16, p.y + off, big ? "shot-big" : "shot").setOrigin(0.5).setDepth(300).setBlendMode(Phaser.BlendModes.ADD);
+          this.pShots.push({ x: p.x + 16, y: p.y + off, vx: 420, w: big ? 18 : 12, h: big ? 7 : 5, dmg, pierce: RUN.stats.pierce, hits: 0, sprite: spr });
         };
         mk(0);
-        if (RUN.stats.dual) { mk(-5); mk(5); }
+        if (RUN.stats.dual) { mk(-6); mk(6); }
+        flashSprite(this, p.x + 18, p.y, "glow-c", null, 0.7, 0.16, 320);
         audio.fire();
       }
 
@@ -1478,8 +1541,8 @@
         if (e.hp <= 0) {
           e.dead = true; e.sprite.destroy(); RUN.score += e.score;
           this.dropShards(e.x, e.y, 3);
-          this.particles.burst(e.x, e.y, 12, { texture: "spark", speed: 130, life: 0.45 });
-          audio.break(); this.hitStop(0.04);
+          boom(this, e.x, e.y, 1.7, "glow-r", "ember");
+          audio.explode(); this.hitStop(0.05);
         } else audio.hit();
       }
 
@@ -1487,7 +1550,7 @@
         if (!r || r.dead) return;
         r.dead = true; r.sprite.destroy(); RUN.score += r.score;
         this.dropShards(r.x, r.y, 2);
-        this.particles.burst(r.x, r.y, 10, { texture: "spark", speed: 110, life: 0.4 });
+        boom(this, r.x, r.y, 1.3, "glow-a", "spark");
         audio.break();
       }
 
@@ -1503,9 +1566,9 @@
         RUN.score += 600 + this.deck * 120;
         this.dropShards(b.x, b.y, 14);
         audio.boss(); shake(this, 0.6, 0.02);
-        for (let i = 0; i < 6; i++) this.time.delayedCall(i * 90, () => {
+        for (let i = 0; i < 8; i++) this.time.delayedCall(i * 80, () => {
           if (!b.sprite.active) return;
-          this.particles.burst(b.x - 24 + Math.random() * 48, b.y - 16 + Math.random() * 32, 14, { texture: "spark", speed: 150, life: 0.6 });
+          boom(this, b.x - 28 + Math.random() * 56, b.y - 18 + Math.random() * 36, 2 + Math.random() * 1.4, "glow-m", "ember");
           audio.explode();
         });
         b.sprite.destroy(); this.boss = null;
@@ -1571,7 +1634,12 @@
         p.sprite.setAlpha(p.iframe > 0 && Math.floor(this.elapsed * 20) % 2 ? 0.5 : 1);
         this.hurtFlashApply(p.sprite, p.hurtFlash > 0);
         p.flame.setPosition(Math.round(p.x - 16), Math.round(p.y));
-        p.flame.setScale(0.7 + Math.random() * 0.5, 1);
+        p.flame.setScale(0.9 + Math.random() * 0.6, 1.1);
+        p.glow.setPosition(Math.round(p.x), Math.round(p.y));
+        p.glow.setAlpha(0.4 + Math.random() * 0.18);
+        // itki izi
+        p.trailT -= dt;
+        if (p.trailT <= 0) { p.trailT = 0.03; this.particles.burst(p.x - 18, p.y + (Math.random() * 4 - 2), 1, { texture: "ember", speed: 30, life: 0.35 }); }
 
         // spawn akışı: süre dolana kadar düşman/enkaz; sonra spawn durur, alan temizlenince boss gelir
         this.bombCd = Math.max(0, this.bombCd - dt);
