@@ -242,6 +242,7 @@
         ];
 
         const EXPERIENCE = [
+            ['Belbim', 'Dijital Proje Yöneticisi', 'halen'],
             ['Full Supplement', 'E-Ticaret Müdürü'],
             ['Daniel Klein Group', 'E-Ticaret Direktörü'],
             ['Gezer Ayakkabı', 'E-Ticaret Yöneticisi'],
@@ -330,9 +331,9 @@
             },
             experience() {
                 print('// İŞ DENEYİMİ', 'title');
-                EXPERIENCE.forEach(([co, role]) => {
+                EXPERIENCE.forEach(([co, role, period]) => {
                     const wrap = document.createElement('span');
-                    wrap.appendChild(document.createTextNode('> ' + co + '  '));
+                    wrap.appendChild(document.createTextNode('> ' + co + (period ? ' [' + period + ']' : '') + '  '));
                     const r = document.createElement('span');
                     r.className = 'role';
                     r.textContent = '— ' + role;
