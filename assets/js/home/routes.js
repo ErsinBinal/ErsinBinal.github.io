@@ -10,6 +10,7 @@
     logic: '/games/cyberpunk-logic-game.html',
     signal: '/games/three-body-signal.html',
     ash: '/games/ash-runner.html',
+    ash2: '/games/ash-runner-2.html',
     flow: '/games/neon-river.html',
     universe: '/games/universe-2.html',
     dart: '/tools/dart-skorbord.html',

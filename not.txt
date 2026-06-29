@@ -396,6 +396,43 @@ kullanılarak daha kişisel bağlam eklenmeli."
 
 
 ==========================================================================
+YENI OYUN: KUL HATTI II — YORUNGE (devam oyunu)         -- 2026-06-29
+==========================================================================
+Brief (kullanici): Kul Hatti'nin sonunda kahraman mekige binip uzaya cikiyor;
+bu onun devami, uzayda gecsin. Ayri dosya. Hibrit format (yaya + gemi).
+Progression = yetenek agaci/moduller. Gelistir: his+icerik+progression+denge.
+Motor secimi bende -> Phaser (kod tabaniyla uyumlu, 3.60.0).
+
+[x] YAPILDI (2026-06-29): games/ash-runner-2.html (yeni, ~1100 satir, self-contained).
+    - HIBRIT 2 mod: FootScene (istasyon ici beat'em-up, sahte derinlik bandi,
+      hurda kaldir/firlat, yumruk, O2/vakum mekanigi + atmosfer pad'leri,
+      hava kilidine ulasinca guverte temizlenir) + ShipScene (yatay shmup:
+      uc/ates, asteroit + avci dalgalari, suru dolunca KRUVAZOR boss 3 atis
+      paterniyle). Akis: Foot -> Ship -> Hangar -> (deck++) -> Foot ... olene dek.
+    - PROGRESSION: 12 modullu yetenek agaci (off/def/mob dallari, on-kosullu).
+      Hurda (currency) ile hangarda alinir; localStorage'da KALICI
+      (convivium.ashrunner2.save.v1: moduller + hurda bankasi + en iyi skor).
+      deriveStats() ile HP/O2/hasar/hiz/cift-atis/delici/kalkan/dash/miknatis/bomba.
+    - JUICE: ekran sarsintisi (reduced-motion guard'li), hit-stop, kendi partikul
+      havuzu (Phaser 3.60 emitter API'sinden bilincli kacis), ChipAudio (WebAudio,
+      uzay cue'lari), flash/fade gecisler, hurt-flash tint.
+    - ERISILEBILIRLIK/MOBIL: klavye (WASD/ok + J/K/Bosluk) + dokunmatik dpad/3 buton,
+      prefers-reduced-motion, --vh mobil yukseklik, aria-live HUD.
+    - ENTEGRASYON: auth-gate (data-item-key=ash-runner-2), skor kaydi best-effort
+      ConviviumActivity.recordGameScore (game_scores), canary/origin-id (CVM-A5E2F1C0)
+      + origin-beacon, CSP (supabase + jsdelivr phaser). SW precache + sitemap +
+      home/routes.js (ash2) eklendi. CACHE_NAME v148->v149.
+    - DOGRULAMA: Node yerelde yok; mantik elle gozden gecirildi, parantez/blok
+      dengesi otomatik dogrulandi (423/423, 1503/1503, 46/46). Birkac mantik
+      hatasi yazarken yakalandi ve duzeltildi (sahne gecislerinde eski sahneyi
+      durdurma _goScene; boss'un surekli spawn yuzunden cikmamasi; yaya bomba
+      modulunun K'ye baglanmamasi; blaster surekli-ates). GORSEL/oynanis teyidi
+      tarayicida (giris + canli) yapilmali.
+    KALAN/ONERI (sonraki tur): tureye ozel 2. boss, daha cok dusman cesidi,
+    yaya modunda dikey jetpack katmani, modul agacina 2. evrim dali, sfx.js'e
+    bagli muzik, gorsel cila (gemi hasar durumlari, istasyon bicim cesitliligi).
+
+==========================================================================
 PRODUCT OWNER NOTU — YENILIK & TAVSIYE HAVUZU            -- 2026-06-29
 ==========================================================================
 Bu bolum, sitenin su anki olgun haline (bugy peti, sinematik motor, profil
