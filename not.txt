@@ -452,6 +452,18 @@ Motor secimi bende -> Phaser (kod tabaniyla uyumlu, 3.60.0).
     Daha ileri: gercek spritesheet/atlas, post-process shader (bloom), tile-based
     istasyon. Kullanici test edip yon verecek.
 
+[x] TUR 4 (2026-06-29): "daha ileri" -> Phaser 3.60 yerlesik FX + derinlik.
+    - POST-PROCESS: kamera bloom + vignette (applyCameraFX, WebGL guard'li,
+      try/catch). 384x216 ic cozunurlukte ucuz; additive glow'lari gercekten
+      parlatir -> en buyuk gorsel sicrama.
+    - DERINLIK: yaya'da on-plan koyu kiris siluetleri (scrollFactor>1, kameradan
+      hizli gecer). Gemi'de on-plan hiz tozu (additive, hizla sola akar).
+    - SPRITE CILASI: oyuncu gemisi + kruvazor boss yeniden cizildi (parlak neon
+      aksanlar, kruvazore parlak "zayif nokta cekirdek"). Bloom ile pop eder.
+    - CACHE_NAME v151->v152.
+    DAHA ILERI (sonraki): gercek atlas/spritesheet, dusman cesidi, 2. boss,
+    chromatic/scanline shader, tile-based istasyon, ekran-sarsinti curve'leri.
+
   ----------------------------------------------------------------------
   >>> DEVAM NOTU (baska bilgisayardan acan icin)  -- 2026-06-29
   ----------------------------------------------------------------------

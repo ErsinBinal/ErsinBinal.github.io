@@ -714,14 +714,17 @@
         px(8, 16, 4, 11, 0x8090b4); px(12, 16, 4, 11, 0x8090b4);
         px(6, 27, 5, 3, 0x4a556e); px(13, 27, 5, 3, 0x4a556e);
       });
-      // Gemi (shmup)
+      // Gemi (shmup) — sleek avcı, neon aksanlar (bloom ile parlar)
       makeTexture(scene, "ship", 34, 20, px => {
-        px(2, 8, 24, 5, 0x4a87b8); px(8, 4, 16, 12, 0x6fb0d8); // gövde
-        px(20, 6, 12, 8, 0xb4d6f0);   // burun
-        px(24, 8, 5, 3, 0x53d5ff);    // kokpit
-        px(0, 5, 6, 3, 0xff5a6a); px(0, 12, 6, 3, 0xff5a6a); // kanat arkası
-        px(4, 9, 3, 3, 0xffce5a);     // motor
-        px(2, 2, 10, 3, 0x2b3550); px(2, 15, 10, 3, 0x2b3550); // kanatlar
+        px(3, 9, 26, 6, 0x2c5a82);                 // gövde gölge
+        px(6, 6, 22, 9, 0x5aa0cf);                 // ana gövde
+        px(8, 5, 16, 4, 0x8fd0f0);                 // üst highlight
+        px(22, 7, 11, 6, 0xcfeaff); px(30, 9, 3, 2, 0xffffff); // burun + parlak uç
+        px(23, 8, 5, 3, 0x53d5ff); px(24, 8, 2, 1, 0xffffff);  // kokpit
+        px(2, 2, 12, 3, 0x244055); px(2, 15, 12, 3, 0x244055); // kanatlar
+        px(4, 3, 8, 1, 0x53d5ff); px(4, 16, 8, 1, 0x53d5ff);   // kanat neon
+        px(0, 6, 5, 3, 0xff5a6a); px(0, 11, 5, 3, 0xff5a6a);   // kuyruk
+        px(4, 9, 3, 3, 0xffce5a); px(5, 10, 1, 1, 0xffffff);   // motor
       });
       makeTexture(scene, "ship-flame", 8, 8, px => {
         px(4, 2, 4, 4, 0xffce5a); px(2, 3, 3, 2, 0xff8a3a); px(0, 3, 2, 2, 0xff5a6a);
@@ -748,10 +751,13 @@
         px(8, 6, 4, 4, 0x3e382e); px(13, 9, 3, 4, 0x3e382e); px(7, 12, 3, 3, 0x46403a);
       });
       makeTexture(scene, "cruiser", 70, 40, px => {
-        px(6, 10, 58, 20, 0x4a3a5a); px(12, 5, 46, 30, 0x6a4e7e);
-        px(2, 14, 8, 12, 0x39304a); px(50, 8, 18, 8, 0x2b2440);
-        px(18, 12, 8, 6, 0xff5ad0); px(34, 12, 8, 6, 0x53d5ff); px(46, 16, 6, 5, 0xffce5a);
-        px(8, 30, 54, 4, 0x241d33); px(20, 22, 30, 4, 0x9b6bff);
+        px(6, 12, 58, 18, 0x3a2e55); px(10, 6, 50, 28, 0x584274);  // gövde
+        px(14, 8, 44, 6, 0x7a5ca0);                                 // üst highlight
+        px(2, 16, 8, 10, 0x281f3a); px(0, 18, 4, 6, 0xff5a6a);      // arka motor + kırmızı
+        px(20, 14, 6, 4, 0x53d5ff); px(34, 14, 6, 4, 0xff5ad0); px(46, 16, 6, 4, 0xffce5a); // pencere/neon
+        px(12, 28, 50, 3, 0x1c1530);
+        px(50, 15, 12, 10, 0x9b6bff); px(52, 17, 8, 6, 0xff5ad0); px(55, 19, 3, 2, 0xffffff); // zayıf nokta çekirdek (parlak)
+        px(20, 24, 30, 2, 0x9b6bff);
       });
       // Eşya
       makeTexture(scene, "crate", 18, 16, px => {
@@ -816,6 +822,19 @@
       if (reduceMotion) { scene.time.delayedCall(life * 600, () => img.destroy()); return img; }
       scene.tweens.add({ targets: img, scale: scale, alpha: 0, duration: life * 1000, ease: "Quad.easeOut", onComplete: () => img.destroy() });
       return img;
+    }
+
+    // Kamera post-process: bloom + vignette (Phaser 3.60 FX, sadece WebGL).
+    // 384x216 ic cozunurlukte ucuz; tum additive glow'lari gercekten parlatir.
+    function applyCameraFX(scene) {
+      try {
+        const r = scene.game.renderer;
+        const cam = scene.cameras.main;
+        if (r && r.type === Phaser.WEBGL && cam.postFX) {
+          cam.postFX.addVignette(0.5, 0.5, 0.92, 0.32);
+          cam.postFX.addBloom(0xffffff, 1, 1, 1.05, 1.15, 4);
+        }
+      } catch (e) { /* FX yoksa sessizce devam */ }
     }
 
     // Patlama: ışık + kıvılcım + (büyükse) flaş
@@ -967,6 +986,16 @@
         UI.setHint(RUN.stats.hasBlaster
           ? "J: blaster · K: hurda kaldır/fırlat · Boşluk: dash · O2'ye dikkat"
           : "J: yumruk · K: hurda kaldır/fırlat · Boşluk: dash · O2'ye dikkat");
+        // ön-plan derinlik: kameradan hızlı geçen koyu kiriş siluetleri (yakınlık hissi)
+        this.fg = [];
+        for (let i = 0; i < 6; i++) {
+          const fx = 200 + i * (this.worldW / 6);
+          const beam = this.add.rectangle(fx, 100, 6 + Math.random() * 7, 120, 0x05060f, 0.32)
+            .setOrigin(0.5, 0).setDepth(620).setScrollFactor(1.5 + Math.random() * 0.4);
+          this.fg.push(beam);
+        }
+
+        applyCameraFX(this);
         showBanner(this, "GÜVERTE " + deck, "İSTASYON · hava kilidine ulaş");
         UI.updateHUD("foot");
       }
@@ -1434,6 +1463,14 @@
 
         UI.setTitle("KUL HATTI II // GEMİ");
         UI.setHint("WASD/Ok: uç · J: ateş" + (RUN.stats.hasBomb ? " · K: şok bombası" : "") + (RUN.stats.hasDash ? " · Boşluk: dash" : ""));
+        // ön-plan hız çizgileri (yakın toz, hız hissi)
+        this.dust = [];
+        for (let i = 0; i < 18; i++) {
+          this.dust.push(this.add.image(Math.random() * GAME_W, Math.random() * GAME_H, "star")
+            .setDepth(620).setScrollFactor(0).setScale(Math.random() < 0.5 ? 2.4 : 1.6, 0.8).setAlpha(0.5).setBlendMode(Phaser.BlendModes.ADD));
+        }
+
+        applyCameraFX(this);
         showBanner(this, "GÜVERTE " + this.deck, "GEMİ · enkazı yar, kruvazörü bekle");
         UI.updateHUD("ship");
       }
@@ -1607,8 +1644,9 @@
         if (this.freeze > 0) { this.freeze -= dt; return; }
         this.elapsed += dt;
 
-        // yıldızlar
+        // yıldızlar + ön-plan toz
         for (const st of this.stars) { st.img.x -= st.sp * dt; if (st.img.x < 0) { st.img.x = GAME_W; st.img.y = Math.random() * GAME_H; } }
+        for (const d of this.dust) { d.x -= 340 * dt; if (d.x < -6) { d.x = GAME_W + 6; d.y = Math.random() * GAME_H; } }
 
         const p = this.player;
         const speed = 130 * RUN.stats.speedMul * (p.dashT > 0 ? 2.2 : 1);
