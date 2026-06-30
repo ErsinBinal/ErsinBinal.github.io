@@ -464,6 +464,20 @@ Motor secimi bende -> Phaser (kod tabaniyla uyumlu, 3.60.0).
     DAHA ILERI (sonraki): gercek atlas/spritesheet, dusman cesidi, 2. boss,
     chromatic/scanline shader, tile-based istasyon, ekran-sarsinti curve'leri.
 
+[x] TUR 5 (2026-06-29): "sirayla hepsi" plani basladi. Bloom ARTIRILDI
+    (strength 1.15->1.7, blur 1.2, steps 6). ICERIK adimi-1: yeni dusmanlar.
+    - YAYA kalkanli bot (shield/shieldbot): onden ENERJI atisini (blaster) emer;
+      sadece FIRLATILAN hurda/yumruk/bomba (fiziksel) kirar. damageEnemy(e,dmg,type)
+      tiplemesi eklendi (energy|physical); blaster=energy, firlatma/yumruk/bomba=
+      physical. deck>=2'de spawn olur, +scrap/parlak patlama.
+    - GEMI mayin doseyici (minelayer) + MAYIN sistemi: ust banttan gecer, periyodik
+      mayin birakir; mayin suzulur, carpinca hasar+patlar, atisla/bomba ile yok edilir
+      (pulse glow). deck>=2'de %30 ihtimalle fighter yerine.
+    - CACHE_NAME v152->v153.
+    SIRADAKI (plan): icerik-2 = 2. boss tipi (Hasat/reaper, farkli patern) ->
+    gorsel (scanline/chromatic, animasyonlu dusman) -> oynanis (jetpack katman+combo)
+    -> progression (2. modul dali + leaderboard).
+
   ----------------------------------------------------------------------
   >>> DEVAM NOTU (baska bilgisayardan acan icin)  -- 2026-06-29
   ----------------------------------------------------------------------

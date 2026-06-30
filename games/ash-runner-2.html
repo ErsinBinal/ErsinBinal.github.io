@@ -741,6 +741,23 @@
         px(8, 5, 3, 3, 0x53d5ff); px(13, 5, 2, 2, 0xff5a6a);
         px(6, 11, 4, 8, 0x2b3142); px(12, 11, 4, 8, 0x2b3142);
       });
+      makeTexture(scene, "shieldbot", 24, 24, px => {
+        px(6, 3, 12, 7, 0x5a6480); px(5, 9, 14, 9, 0x44506c);   // gövde
+        px(8, 6, 3, 3, 0xff5a6a); px(13, 6, 2, 2, 0xffce5a);    // gözler
+        px(6, 18, 4, 6, 0x2b3142); px(13, 18, 4, 6, 0x2b3142);  // bacaklar
+        px(20, 2, 3, 20, 0x53d5ff); px(21, 3, 1, 18, 0xaef0ff); // ön kalkan (parlak)
+        px(19, 1, 2, 2, 0xaef0ff); px(19, 21, 2, 2, 0xaef0ff);
+      });
+      makeTexture(scene, "mine", 14, 14, (px, g) => {
+        g.fillStyle(0x3a2030, 1); g.fillCircle(7, 7, 6);
+        px(6, 0, 2, 3, 0xff5a6a); px(6, 11, 2, 3, 0xff5a6a); px(0, 6, 3, 2, 0xff5a6a); px(11, 6, 3, 2, 0xff5a6a);
+        px(5, 5, 4, 4, 0xffce5a); px(6, 6, 2, 2, 0xffffff);
+      });
+      makeTexture(scene, "minelayer", 28, 18, px => {
+        px(3, 4, 22, 8, 0x4a5a44); px(2, 6, 4, 5, 0x2a3326); px(22, 5, 5, 5, 0x2a3326);
+        px(8, 6, 3, 3, 0xffce5a); px(15, 6, 2, 2, 0x8dff7a);
+        px(6, 12, 16, 3, 0x1a2016); px(10, 14, 8, 3, 0x3a2030);
+      });
       makeTexture(scene, "fighter", 26, 18, px => {
         px(2, 6, 18, 6, 0x7a3a52); px(6, 3, 12, 11, 0xb84e6e);
         px(2, 7, 5, 4, 0xff5a6a); px(0, 4, 4, 3, 0xff8aa0); px(0, 11, 4, 3, 0xff8aa0);
@@ -831,8 +848,8 @@
         const r = scene.game.renderer;
         const cam = scene.cameras.main;
         if (r && r.type === Phaser.WEBGL && cam.postFX) {
-          cam.postFX.addVignette(0.5, 0.5, 0.92, 0.32);
-          cam.postFX.addBloom(0xffffff, 1, 1, 1.05, 1.15, 4);
+          cam.postFX.addVignette(0.5, 0.5, 0.92, 0.34);
+          cam.postFX.addBloom(0xffffff, 1, 1, 1.2, 1.7, 6);
         }
       } catch (e) { /* FX yoksa sessizce devam */ }
     }
@@ -972,7 +989,9 @@
         for (let i = 0; i < enemyCount; i++) {
           const ex = 320 + Math.random() * (this.worldW - 460);
           const ey = FOOT_TOP + Math.random() * (FOOT_BOTTOM - FOOT_TOP);
-          const kind = Math.random() < 0.6 ? "sentry" : "gunbot";
+          const r = Math.random();
+          let kind = r < 0.55 ? "sentry" : "gunbot";
+          if (deck >= 2 && r > 0.82) kind = "shield"; // kalkanlı bot (deck 2+): fırlatma/yumrukla kır
           this.enemies.push(this.makeEnemy(ex, ey, kind));
         }
 
@@ -1043,13 +1062,15 @@
       }
 
       makeEnemy(x, y, kind) {
-        const base = kind === "gunbot"
-          ? { hp: 22, speed: 22, w: 16, h: 18, range: 120, shootCd: 1.4, contact: 10, score: 60 }
-          : { hp: 16, speed: 36, w: 14, h: 20, range: 0, shootCd: 0, contact: 14, score: 40 };
+        let base;
+        if (kind === "gunbot") base = { hp: 22, speed: 22, w: 16, h: 18, range: 120, shootCd: 1.4, contact: 10, score: 60 };
+        else if (kind === "shield") base = { hp: 34, speed: 18, w: 18, h: 22, range: 0, shootCd: 0, contact: 16, score: 90, shielded: true };
+        else base = { hp: 16, speed: 36, w: 14, h: 20, range: 0, shootCd: 0, contact: 14, score: 40 };
         base.hp += this.deck * 4;
+        const tex = kind === "shield" ? "shieldbot" : kind;
         return {
           x, y, kind, ...base, maxHp: base.hp, vx: 0, vy: 0, dir: -1, hurt: 0, cd: Math.random() * base.shootCd,
-          sprite: this.add.image(x, y, kind).setOrigin(0.5, 1).setDepth(120),
+          sprite: this.add.image(x, y, tex).setOrigin(0.5, 1).setDepth(120),
           shadow: this.add.image(x, y + 1, "shadow").setOrigin(0.5, 0.5).setDepth(18).setScale(0.8),
           dead: false
         };
@@ -1129,22 +1150,29 @@
         const cx = this.cameras.main.scrollX;
         this.enemies.forEach(e => {
           if (e.dead) return;
-          if (e.x > cx - 20 && e.x < cx + GAME_W + 20) this.damageEnemy(e, 30 * RUN.stats.dmgMul);
+          if (e.x > cx - 20 && e.x < cx + GAME_W + 20) this.damageEnemy(e, 30 * RUN.stats.dmgMul, "physical");
         });
         this.particles.burst(this.player.x, this.player.y - 12, 24, { texture: "spark", speed: 160, life: 0.5 });
         return true;
       }
 
-      damageEnemy(e, dmg) {
+      damageEnemy(e, dmg, type) {
         if (e.dead) return;
+        // kalkanlı bot: enerji (blaster) atışını önden emer; sadece fırlatma/yumruk/bomba (fiziksel) işler
+        if (e.shielded && type === "energy") {
+          flashSprite(this, e.x + 10, e.y - e.h / 2, "glow-c", null, 0.5, 0.16, 320);
+          this.particles.burst(e.x + 10, e.y - e.h / 2, 3, { texture: "spark-c", speed: 70, life: 0.2 });
+          audio.hit();
+          return;
+        }
         e.hp -= dmg; e.hurt = 0.12;
         this.particles.burst(e.x, e.y - e.h / 2, 4, { texture: "spark", speed: 80, life: 0.3 });
         audio.hit();
         if (e.hp <= 0) {
           e.dead = true; e.sprite.destroy(); e.shadow.destroy();
           RUN.score += e.score;
-          this.dropShards(e.x, e.y, e.kind === "gunbot" ? 4 : 2);
-          boom(this, e.x, e.y - e.h / 2, 1.7, "glow-a", "ember");
+          this.dropShards(e.x, e.y, e.kind === "shield" ? 5 : (e.kind === "gunbot" ? 4 : 2));
+          boom(this, e.x, e.y - e.h / 2, e.kind === "shield" ? 2 : 1.7, "glow-a", "ember");
           audio.explode(); this.hitStop(0.06); shake(this, 0.14, 0.008);
         }
       }
@@ -1275,7 +1303,7 @@
         for (const e of this.enemies) {
           if (e.dead) continue;
           if ((e.x - p.x) * p.dir > 0 && Math.abs(e.x - p.x) < 26 && Math.abs(e.y - p.y) < 18) {
-            this.damageEnemy(e, 14 * RUN.stats.dmgMul);
+            this.damageEnemy(e, 14 * RUN.stats.dmgMul, "physical");
             e.vx = p.dir * 120; hit = true;
           }
         }
@@ -1307,7 +1335,7 @@
             for (const e of this.enemies) {
               if (e.dead) continue;
               if (overlap(d.x, d.y, d.w, d.h, e.x, e.y - e.h / 2, e.w, e.h)) {
-                this.damageEnemy(e, d.dmg * RUN.stats.dmgMul);
+                this.damageEnemy(e, d.dmg * RUN.stats.dmgMul, "physical");
                 this.breakDebris(d); break;
               }
             }
@@ -1329,7 +1357,8 @@
           const dx = p.x - e.x, dy = p.y - e.y;
           const dist = Math.hypot(dx, dy);
           e.dir = dx < 0 ? -1 : 1;
-          if (e.kind === "sentry") {
+          if (e.kind === "sentry" || e.kind === "shield") {
+            // yaklaşan tip (kalkanlı dahil): oyuncuya doğru yürür, ateş etmez
             const nx = dx / (dist || 1), ny = dy / (dist || 1);
             e.x += nx * e.speed * dt; e.y = clamp(e.y + ny * e.speed * dt, FOOT_TOP, FOOT_BOTTOM);
           } else {
@@ -1368,8 +1397,8 @@
           for (const e of this.enemies) {
             if (e.dead) continue;
             if (overlap(s.x, s.y, s.w, s.h, e.x, e.y - e.h / 2, e.w, e.h)) {
-              this.damageEnemy(e, s.dmg); s.hits++;
-              if (!s.pierce || s.hits >= 2) { remove = true; }
+              this.damageEnemy(e, s.dmg, "energy"); s.hits++;
+              if (e.shielded || !s.pierce || s.hits >= 2) { remove = true; }
               break;
             }
           }
@@ -1453,7 +1482,7 @@
         };
 
         this.pShots = []; this.eShots = [];
-        this.enemies = []; this.rocks = [];
+        this.enemies = []; this.rocks = []; this.mines = [];
         this.spawnT = 0; this.rockT = 0;
         this.elapsed = 0;
         this.bossPhase = false; this.boss = null;
@@ -1513,6 +1542,7 @@
         audio.explode(); shake(this, 0.24, 0.012);
         this.enemies.forEach(e => this.damageEnemy(e, 24 * RUN.stats.dmgMul));
         this.rocks.forEach(r => this.breakRock(r));
+        this.mines.forEach(m => this.destroyMine(m, true));
         if (this.boss) this.damageBoss(40 * RUN.stats.dmgMul);
         this.particles.burst(p_safe(this).x, p_safe(this).y, 26, { texture: "spark", speed: 170, life: 0.5 });
       }
@@ -1520,10 +1550,34 @@
       spawnFighter() {
         const y = 30 + Math.random() * (GAME_H - 60);
         const e = {
-          x: GAME_W + 16, y, w: 22, h: 14, hp: 14 + this.deck * 3, vx: -50 - this.deck * 4, cd: 0.6 + Math.random(), wob: Math.random() * Math.PI * 2, y0: y, score: 70,
+          x: GAME_W + 16, y, w: 22, h: 14, hp: 14 + this.deck * 3, vx: -50 - this.deck * 4, cd: 0.6 + Math.random(), wob: Math.random() * Math.PI * 2, y0: y, score: 70, kind: "fighter",
           sprite: this.add.image(GAME_W + 16, y, "fighter").setOrigin(0.5).setDepth(200), dead: false, hurt: 0
         };
         this.enemies.push(e);
+      }
+
+      spawnMinelayer() {
+        const y = 24 + Math.random() * 50; // üst banttan geçer
+        const e = {
+          x: GAME_W + 18, y, w: 24, h: 14, hp: 20 + this.deck * 3, vx: -38 - this.deck * 2, cd: 1.4, wob: Math.random() * Math.PI * 2, y0: y, score: 110, kind: "minelayer",
+          sprite: this.add.image(GAME_W + 18, y, "minelayer").setOrigin(0.5).setDepth(200), dead: false, hurt: 0
+        };
+        this.enemies.push(e);
+      }
+
+      dropMine(x, y) {
+        this.mines.push({
+          x, y, w: 12, h: 12, hp: 6, vx: -34 - Math.random() * 16, vy: 14 + Math.random() * 14, t: Math.random() * 6.28, dead: false,
+          sprite: this.add.image(x, y, "mine").setOrigin(0.5).setDepth(190),
+          glow: this.add.image(x, y, "glow-r").setOrigin(0.5).setDepth(189).setBlendMode(Phaser.BlendModes.ADD).setScale(0.9).setAlpha(0.5)
+        });
+      }
+
+      destroyMine(m, byPlayer) {
+        if (m.dead) return;
+        m.dead = true; m.sprite.destroy(); m.glow.destroy();
+        boom(this, m.x, m.y, 1.4, "glow-r", "ember"); audio.explode();
+        if (byPlayer) { RUN.score += 30; this.dropShards(m.x, m.y, 1); }
       }
 
       spawnRock() {
@@ -1684,15 +1738,19 @@
         if (!this.bossPhase) {
           if (this.elapsed < this.duration) {
             this.spawnT -= dt; this.rockT -= dt;
-            if (this.spawnT <= 0) { this.spawnT = Math.max(0.7, 1.8 - this.deck * 0.08); this.spawnFighter(); }
+            if (this.spawnT <= 0) {
+              this.spawnT = Math.max(0.7, 1.8 - this.deck * 0.08);
+              if (this.deck >= 2 && Math.random() < 0.3) this.spawnMinelayer(); else this.spawnFighter();
+            }
             if (this.rockT <= 0) { this.rockT = Math.max(0.5, 1.1 - this.deck * 0.04); this.spawnRock(); }
-          } else if (this.enemies.filter(e => !e.dead).length === 0 && this.rocks.length === 0) {
+          } else if (this.enemies.filter(e => !e.dead).length === 0 && this.rocks.length === 0 && this.mines.length === 0) {
             this.spawnBoss();
           }
         }
 
         this.updateShipEnemies(dt);
         this.updateRocks(dt);
+        this.updateMines(dt);
         this.updateBoss(dt);
         this.updateShipShots(dt);
         this.updateShipShards(dt);
@@ -1704,13 +1762,19 @@
         for (const e of this.enemies) {
           if (e.dead) continue;
           e.wob += dt * 2;
-          e.x += e.vx * dt; e.y = e.y0 + Math.sin(e.wob) * 18;
+          e.x += e.vx * dt; e.y = e.y0 + Math.sin(e.wob) * (e.kind === "minelayer" ? 8 : 18);
           e.cd -= dt;
           if (e.cd <= 0 && e.x < GAME_W - 10 && e.x > 40) {
-            e.cd = 1.1 + Math.random() * 0.6;
-            const ang = Math.atan2(p.y - e.y, p.x - e.x);
-            this.eShots.push({ x: e.x, y: e.y, vx: Math.cos(ang) * 170, vy: Math.sin(ang) * 170, w: 7, h: 5, sprite: this.add.image(e.x, e.y, "ebullet").setOrigin(0.5).setDepth(300) });
-            audio.alarm();
+            if (e.kind === "minelayer") {
+              e.cd = 1.3 + Math.random() * 0.5;
+              this.dropMine(e.x, e.y + 8);
+              audio.lift();
+            } else {
+              e.cd = 1.1 + Math.random() * 0.6;
+              const ang = Math.atan2(p.y - e.y, p.x - e.x);
+              this.eShots.push({ x: e.x, y: e.y, vx: Math.cos(ang) * 170, vy: Math.sin(ang) * 170, w: 7, h: 5, sprite: this.add.image(e.x, e.y, "ebullet").setOrigin(0.5).setDepth(300) });
+              audio.alarm();
+            }
           }
           e.hurt = Math.max(0, e.hurt - dt);
           this.hurtFlashApply(e.sprite, e.hurt > 0);
@@ -1719,6 +1783,23 @@
           if (e.x < -24) { e.dead = true; e.sprite.destroy(); }
         }
         this.enemies = this.enemies.filter(e => !e.dead);
+      }
+
+      updateMines(dt) {
+        const p = this.player;
+        for (const m of this.mines) {
+          if (m.dead) continue;
+          m.t += dt * 6;
+          m.x += m.vx * dt; m.y = clamp(m.y + m.vy * dt, 10, GAME_H - 10);
+          if (m.y >= GAME_H - 10 || m.y <= 10) m.vy *= -1;
+          m.sprite.setPosition(Math.round(m.x), Math.round(m.y));
+          m.glow.setPosition(Math.round(m.x), Math.round(m.y));
+          m.glow.setAlpha(0.4 + Math.sin(m.t) * 0.2);
+          m.glow.setScale(0.85 + Math.sin(m.t) * 0.15);
+          if (overlap(m.x, m.y, m.w, m.h, p.x, p.y, p.w, p.h)) { this.hurtPlayer(14); this.destroyMine(m, false); }
+          else if (m.x < -16) { this.destroyMine(m, false); }
+        }
+        this.mines = this.mines.filter(m => !m.dead);
       }
 
       updateRocks(dt) {
@@ -1764,6 +1845,7 @@
           let rm = s.x > GAME_W + 20;
           for (const e of this.enemies) { if (!e.dead && overlap(s.x, s.y, s.w, s.h, e.x, e.y, e.w, e.h)) { this.damageEnemy(e, s.dmg); s.hits++; if (!s.pierce || s.hits >= 2) rm = true; break; } }
           if (!rm) for (const r of this.rocks) { if (!r.dead && overlap(s.x, s.y, s.w, s.h, r.x, r.y, r.w, r.h)) { r.hp -= s.dmg; if (r.hp <= 0) this.breakRock(r); else audio.hit(); s.hits++; if (!s.pierce || s.hits >= 2) rm = true; break; } }
+          if (!rm) for (const m of this.mines) { if (!m.dead && overlap(s.x, s.y, s.w, s.h, m.x, m.y, m.w, m.h)) { m.hp -= s.dmg; if (m.hp <= 0) this.destroyMine(m, true); else audio.hit(); s.hits++; if (!s.pierce || s.hits >= 2) rm = true; break; } }
           if (!rm && this.boss && !this.boss.enter && overlap(s.x, s.y, s.w, s.h, this.boss.x, this.boss.y, this.boss.w, this.boss.h)) { this.damageBoss(s.dmg); rm = true; }
           if (rm) { s.sprite.destroy(); this.pShots.splice(i, 1); }
         }
