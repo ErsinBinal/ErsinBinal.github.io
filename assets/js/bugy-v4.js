@@ -541,6 +541,29 @@
         dispatch();
         return state.skin;
       },
+      // Statik onizleme (secim ekrani/vitrin): motoru aktive etmeden istenen
+      // asamanin bagimsiz SVG'sini dondurur. Katman gorunurlugu CSS'e degil
+      // display attribute'una baglanir; boylece her kapsayicida dogru cizilir.
+      // Icerik tamamen bu dosyadaki statik tanimlardan gelir (kullanici girdisi yok).
+      previewSvg(skin, stage = 'adult') {
+        const key = skins.includes(skin) ? skin : DEFAULT_SKIN;
+        const d = creatures[key];
+        const st = STAGES.includes(stage) ? stage : 'adult';
+        let body = d.svg;
+        const hidden = ['cr-feral'];
+        if (st === 'hatchling') hidden.push('cr-juv', 'cr-adult');
+        else if (st === 'juvenile') hidden.push('cr-adult');
+        hidden.forEach((cls) => {
+          body = body.split(`class="${cls}`).join(`display="none" class="${cls}`);
+        });
+        return `<svg viewBox="0 0 120 140" class="v4-preview-svg" aria-hidden="true" style="--v4-accent:${d.accent};--v4-accent2:${d.accent2}">${body}</svg>`;
+      },
+      // Yaratik kunyesi: ad, renkler, asama basina guc adlari (onizleme kartlari icin).
+      creatureInfo(skin) {
+        const key = skins.includes(skin) ? skin : DEFAULT_SKIN;
+        const d = creatures[key];
+        return { skin: key, label: d.label, accent: d.accent, accent2: d.accent2, abilities: { ...d.abilities } };
+      },
       // Evrim asamasini ayarla (fiziksel form + buyume). Aninda, animasyonsuz.
       setStage(stage) {
         state.stage = STAGES.includes(stage) ? stage : 'hatchling';

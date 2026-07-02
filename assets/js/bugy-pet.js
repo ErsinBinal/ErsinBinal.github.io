@@ -587,11 +587,22 @@
     rootEl.setAttribute('aria-modal', 'true');
     rootEl.setAttribute('aria-label', 'Bugy secimi');
 
-    const cards = SPECIES_KEYS.map((key) => `
+    // Onizleme (PO-12): kartta yaratigin YETISKIN formunun gercek SVG'si +
+    // evrim guc zinciri gorunur; secim artik korlemesine degil. previewSvg
+    // statik ic tanimlardan uretilir (kullanici girdisi icermez); BugyV4
+    // yuklenmemisse kart eski metin haliyle calisir (zarif dusus).
+    const v4 = window.BugyV4;
+    const cards = SPECIES_KEYS.map((key) => {
+      const figure = v4?.previewSvg ? `<span class="bugy-card-figure" aria-hidden="true">${v4.previewSvg(key, 'adult')}</span>` : '';
+      const evo = SPECIES[key].abilities.join(' → ');
+      return `
       <button type="button" class="bugy-card" data-species="${key}">
+        ${figure}
         <strong>${SPECIES[key].label}</strong>
         <span>${SPECIES[key].blurb}</span>
-      </button>`).join('');
+        <span class="bugy-card-evo">güçler: ${evo}</span>
+      </button>`;
+    }).join('');
 
     rootEl.innerHTML = `
       <div class="bugy-select">

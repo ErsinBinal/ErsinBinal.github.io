@@ -127,6 +127,19 @@
 .bugy-card strong { font-size: 0.95rem; color: var(--bp-primary); }
 .bugy-card span { font-size: 0.74rem; opacity: 0.8; line-height: 1.35; }
 
+/* Secim kartinda yetiskin form onizlemesi (PO-12) */
+.bugy-card-figure {
+  display: grid;
+  place-items: center;
+  height: 84px;
+  margin: -2px 0 2px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 60%, rgba(0, 255, 102, 0.08), transparent 70%);
+}
+.bugy-card-figure svg { width: 72px; height: 84px; filter: drop-shadow(0 0 6px rgba(0, 255, 102, 0.25)); }
+.bugy-card.is-active .bugy-card-figure svg { filter: drop-shadow(0 0 10px var(--bp-primary)); }
+.bugy-card-evo { font-size: 0.66rem !important; opacity: 0.65 !important; color: var(--bp-primary); }
+
 .bugy-name-row {
   display: flex;
   gap: 10px;
