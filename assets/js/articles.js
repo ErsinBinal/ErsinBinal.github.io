@@ -485,9 +485,37 @@
       window.dispatchEvent(new CustomEvent('convivium:activity', { detail: { kind: 'read', id: article.id } }));
     }
 
+    updateArticleSeo(article);
     if (window.toggleProgress) window.toggleProgress(reader);
     renderList();
     reader.focus({ preventScroll: true });
+  }
+
+  // SEO (PO-9): acilan makale icin sayfa basligi + JSON-LD Article schema.
+  // JSON, </script> kacisiyla (<) yazilir; icerik enjeksiyonuna kapali.
+  function updateArticleSeo(article) {
+    document.title = `${article.title} | Convivium Makaleler`;
+    const url = `https://ersinbinal.github.io/pages/makaleler.html#${encodeURIComponent(article.slug)}`;
+    const data = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: String(article.title || '').slice(0, 110),
+      description: String(article.summary || '').slice(0, 200),
+      datePublished: article.date || undefined,
+      inLanguage: 'tr',
+      url,
+      mainEntityOfPage: url,
+      author: { '@type': 'Person', name: 'Ersin Binal', url: 'https://ersinbinal.github.io/' },
+      publisher: { '@type': 'Person', name: 'Ersin Binal' }
+    };
+    let node = document.getElementById('article-jsonld');
+    if (!node) {
+      node = document.createElement('script');
+      node.type = 'application/ld+json';
+      node.id = 'article-jsonld';
+      document.head.appendChild(node);
+    }
+    node.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
   }
 
   function renderRelated(related) {
