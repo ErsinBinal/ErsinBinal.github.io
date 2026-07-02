@@ -122,6 +122,8 @@
       state.debBond = Number.isFinite(state.debBond) ? state.debBond : 0;
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
+      // Gizlilik-dostu sayac: kimliksiz sayfa gorunumu (oturumda 1; tablo yoksa no-op).
+      window.ConviviumBackend?.recordSiteEvent?.('home.view', '/');
       let signalIndex = 0;
       let audioEnabled = window.ConviviumSFX?.enabled ?? false;
       let audioContext = null; // artık ConviviumSFX yönetiyor; eski kod uyumluluğu için bırakıldı
@@ -1689,6 +1691,7 @@
         let firstClaim = false;
         try { firstClaim = localStorage.getItem('convivium.bugy.unlocked') !== '1'; } catch { /* yok say */ }
         try { localStorage.setItem('convivium.bugy.unlocked', '1'); } catch { /* yok say */ }
+        if (firstClaim) window.ConviviumBackend?.recordSiteEvent?.('offline.node.solved', '/');
         return [
           'blackout packet / recovered',
           'code: blackout.seed',
@@ -4812,6 +4815,7 @@
       };
 
       const sendOracleQuery = async (query) => {
+        window.ConviviumBackend?.recordSiteEvent?.('oracle.ask', '/');
         renderTranscript(oracleWaitLines[0]); // gecici "bekliyor" gostergesi (commit edilmez)
         if (microOracle) microOracle.textContent = 'external oracle channel';
         setCommandBusy(true);
@@ -5077,6 +5081,8 @@
       const runCommand = async (raw) => {
         let query = raw.trim().slice(0, 520);
         if (!query || commandInFlight) return;
+        // Gizlilik-dostu sayac: oturumun ILK komutu (kimliksiz, oturumda 1 kez).
+        window.ConviviumBackend?.recordSiteEvent?.('command.first', '/');
         // Gecmis genisletme (bash "!"): komut kaydindan ONCE cozulur.
         if (/^!/.test(query)) {
           const hist = expandHistory(query);

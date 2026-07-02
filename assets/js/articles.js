@@ -502,6 +502,8 @@
     if (!document.body.classList.contains('articles-page')) return;
 
     const backend = window.ConviviumBackend;
+    // Gizlilik-dostu sayac: kimliksiz gorunum (oturumda 1; tablo yoksa no-op).
+    backend?.recordSiteEvent?.('articles.view', '/pages/makaleler.html');
     const localArticles = loadLocalArticles();
     let remoteArticles = [];
 

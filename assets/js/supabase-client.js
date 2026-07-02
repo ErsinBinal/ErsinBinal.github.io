@@ -880,6 +880,32 @@
     return data;
   }
 
+  // Gizlilik-dostu olcum (PO-6): cerezsiz, kimliksiz olay sayaci.
+  // - Kimlik YOK: user_id/IP/fingerprint gonderilmez; yalnizca olay adi + sayfa.
+  // - Oturum basina olay basi 1 kayit (sessionStorage tekillestirme).
+  // - Tablo yoksa / Supabase kapaliysa SESSIZCE no-op (deneyim bozulmaz).
+  // Sema: docs/database/2026-07-02-site-events.sql (anon yalniz INSERT; SELECT yok).
+  const SITE_EVENT_KEYS = new Set([
+    'home.view', 'articles.view', 'command.first', 'oracle.ask',
+    'game.start', 'login.done', 'offline.node.solved'
+  ]);
+  async function recordSiteEvent(eventKey, page) {
+    try {
+      if (!SITE_EVENT_KEYS.has(eventKey)) return false;
+      const dedupeKey = `convivium.evt.${eventKey}`;
+      if (sessionStorage.getItem(dedupeKey)) return false;
+      sessionStorage.setItem(dedupeKey, '1');
+      const client = await requireClient();
+      const { error } = await client.from('site_events').insert({
+        event_key: eventKey,
+        page: String(page || location.pathname).slice(0, 80)
+      });
+      return !error;
+    } catch {
+      return false; // olcum asla deneyimi bozmaz
+    }
+  }
+
   function validateArticlePayload(payload) {
     if (!payload.title) throw new Error('Baslik gerekli.');
     if (!payload.slug) throw new Error('Gecerli bir slug gerekli.');
@@ -929,6 +955,7 @@
     fetchDailySignal,
     fetchWallMarks,
     leaveWallMark,
+    recordSiteEvent,
     slugify
   };
 })();

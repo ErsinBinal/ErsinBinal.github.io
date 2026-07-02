@@ -87,6 +87,8 @@
       }
 
       unlockPage();
+      // Gizlilik-dostu sayac (kimliksiz; oturum basina 1; tablo yoksa no-op).
+      if (item.type === 'game') window.ConviviumBackend?.recordSiteEvent?.('game.start', item.key);
       if (document.body) {
         document.body.classList.add('auth-granted');
         document.body.dataset.authUser = session.user.email || session.user.id;
