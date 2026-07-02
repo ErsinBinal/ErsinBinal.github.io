@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-C5B90093
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-C5B90093">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Neon Serpent | Convivium</title>
+  <meta name="description" content="Neon izgarada klasik yilan: sinyalleri topla, gridi asma, skorunu Convivium tablosuna yaz.">
+  <meta name="author" content="Ersin Binal">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ersinbinal.github.io/games/neon-serpent.html">
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';">
+
+  <!-- OpenGraph -->
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Neon Serpent | Convivium">
+  <meta property="og:description" content="Neon izgarada klasik yilan; skor tablosu Supabase'te.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/games/neon-serpent.html">
+  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+  <meta property="og:locale" content="tr_TR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Neon Serpent | Convivium">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#00ffcc">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/supabase-client.js?v=30"></script>
+  <script src="/assets/js/auth-gate.js?v=22" data-item-key="neon-serpent" data-item-type="game" data-item-title="Neon Serpent"></script>
+
+  <style>
+    :root {
+      --bg: #04070d;
+      --panel: rgba(8, 14, 24, 0.94);
+      --accent: #00ffcc;
+      --accent2: #ff2ea8;
+      --amber: #ffce5a;
+      --ink: #d8f5ec;
+      --muted: #5f7f76;
+      --vh: 1vh;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: calc(var(--vh) * 100);
+      padding: 10px 10px calc(14px + env(safe-area-inset-bottom));
+      overflow: hidden;
+      touch-action: none;
+    }
+    header.bar {
+      width: min(94vw, 560px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      padding: 4px 2px 8px;
+    }
+    header.bar a { color: var(--muted); text-decoration: none; }
+    header.bar a:hover { color: var(--accent); }
+    header.bar .score { color: var(--accent); font-weight: 700; letter-spacing: 1px; }
+    header.bar .best { color: var(--amber); }
+    #stage {
+      position: relative;
+      width: min(94vw, 560px, calc(var(--vh) * 74));
+      aspect-ratio: 1 / 1;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 1px solid rgba(0, 255, 204, 0.35);
+      border-radius: 10px;
+      background: #050a12;
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.12), inset 0 0 60px rgba(0, 0, 0, 0.55);
+    }
+    .card {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: rgba(4, 7, 13, 0.82);
+      border-radius: 10px;
+      text-align: center;
+      padding: 18px;
+    }
+    .card.is-hidden { display: none; }
+    .card h1, .card h2 { color: var(--accent); letter-spacing: 2px; text-transform: uppercase; font-size: 1.1rem; }
+    .card p { color: var(--muted); font-size: 0.78rem; line-height: 1.5; max-width: 40ch; margin: 10px auto; }
+    .card .lb { margin: 8px auto 2px; font-size: 0.72rem; text-align: left; min-width: 220px; }
+    .card .lb div { display: flex; justify-content: space-between; gap: 14px; padding: 1px 0; color: var(--muted); }
+    .card .lb div strong { color: var(--accent); font-weight: 700; }
+    .card .lb .me { color: var(--amber); }
+    button.neo {
+      font: inherit;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(0, 255, 204, 0.08);
+      border: 1px solid rgba(0, 255, 204, 0.6);
+      border-radius: 8px;
+      padding: 10px 22px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      margin: 4px;
+      min-height: 44px;
+    }
+    button.neo:hover, button.neo:focus-visible { background: rgba(0, 255, 204, 0.18); }
+    .hint { font-size: 0.66rem; color: var(--muted); margin-top: 10px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .card h1 { animation: pulseGlow 2.4s ease-in-out infinite; }
+      @keyframes pulseGlow { 50% { text-shadow: 0 0 18px var(--accent); } }
+    }
+  </style>
+</head>
+<body>
+  <header class="bar">
+    <a href="/">&larr; index</a>
+    <span class="score" id="score" aria-live="polite">SKOR 0</span>
+    <span class="best" id="best">EN İYİ 0</span>
+    <button class="neo" id="mute" type="button" style="padding:4px 10px;min-height:30px;font-size:0.66rem" aria-pressed="false">ses açık</button>
+  </header>
+
+  <div id="stage">
+    <canvas id="game" width="576" height="576" aria-label="Neon Serpent oyun alanı" role="img"></canvas>
+
+    <div class="card" id="intro">
+      <div>
+        <h1>Neon Serpent</h1>
+        <p>Izgaradaki sinyalleri topla, kendi kuyruğuna ve duvara çarpma.
+        Mor <strong>glitch</strong> sinyali kısa süreliğine belirir — bonus puan.
+        Hız, skorunla birlikte artar.</p>
+        <button class="neo" id="start" type="button">Başlat</button>
+        <p class="hint">yön: ok / WASD / kaydırma · duraklat: P · yeniden: R</p>
+      </div>
+    </div>
+
+    <div class="card is-hidden" id="over">
+      <div>
+        <h2 id="over-title">Sinyal kesildi</h2>
+        <p id="over-copy">Yılan kendi izine bastı.</p>
+        <div class="lb" id="lb"></div>
+        <button class="neo" id="again" type="button">Tekrar</button>
+        <p class="hint" id="save-note"></p>
+      </div>
+    </div>
+
+    <div class="card is-hidden" id="paused">
+      <div><h2>Duraklatıldı</h2><p>Devam etmek için P ya da dokun.</p></div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // --- Mobil yükseklik + reduce motion ---
+    const setVh = () => document.documentElement.style.setProperty("--vh", `${window.innerHeight * 0.01}px`);
+    setVh(); window.addEventListener("resize", setVh);
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // --- Küçük WebAudio motoru (harici dosya yok) ---
+    const audio = {
+      ctx: null, enabled: true,
+      init() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch { this.enabled = false; } } },
+      tone(freq, dur = 0.07, type = "square", gain = 0.05) {
+        if (!this.enabled || !this.ctx) return;
+        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(gain, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+      },
+      eat() { this.tone(660, 0.06); this.tone(880, 0.05); },
+      bonus() { this.tone(520, 0.05); setTimeout(() => this.tone(1040, 0.09, "sawtooth", 0.04), 50); },
+      die() { this.tone(180, 0.3, "sawtooth", 0.06); setTimeout(() => this.tone(90, 0.4, "sawtooth", 0.05), 120); },
+      turn() { this.tone(240, 0.02, "square", 0.015); }
+    };
+    const muteBtn = document.getElementById("mute");
+    muteBtn.addEventListener("click", () => {
+      audio.enabled = !audio.enabled;
+      if (audio.enabled) audio.init();
+      muteBtn.textContent = audio.enabled ? "ses açık" : "ses kapalı";
+      muteBtn.setAttribute("aria-pressed", String(!audio.enabled));
+    });
+
+    // --- Oyun durumu ---
+    const N = 24;                       // izgara boyutu
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const CELL = canvas.width / N;
+    const BEST_KEY = "convivium.serpent.best";
+
+    let snake, dir, nextDir, food, glitch, glitchT, score, best, speedMs, timer;
+    let running = false, paused = false, dead = false, combo = 0, comboT = 0, shakeT = 0;
+    let maxLen = 3;
+
+    try { best = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0; } catch { best = 0; }
+    const scoreEl = document.getElementById("score");
+    const bestEl = document.getElementById("best");
+    const drawHud = () => { scoreEl.textContent = `SKOR ${score || 0}`; bestEl.textContent = `EN İYİ ${best}`; };
+    drawHud();
+
+    const randCell = () => ({ x: Math.floor(Math.random() * N), y: Math.floor(Math.random() * N) });
+    const onSnake = (c) => snake.some((s) => s.x === c.x && s.y === c.y);
+    const freeCell = () => { let c; do { c = randCell(); } while (onSnake(c) || (food && c.x === food.x && c.y === food.y)); return c; };
+
+    function reset() {
+      snake = [{ x: 8, y: 12 }, { x: 7, y: 12 }, { x: 6, y: 12 }];
+      dir = { x: 1, y: 0 }; nextDir = dir;
+      food = freeCell(); glitch = null; glitchT = 0;
+      score = 0; speedMs = 150; combo = 0; comboT = 0; maxLen = 3; dead = false;
+      drawHud();
+    }
+
+    // --- Girdi: klavye + kaydırma ---
+    const setDir = (x, y) => {
+      if (!running || paused || dead) return;
+      if (x === -dir.x && y === -dir.y) return; // 180 derece yasak
+      if (x !== nextDir.x || y !== nextDir.y) audio.turn();
+      nextDir = { x, y };
+    };
+    document.addEventListener("keydown", (e) => {
+      const k = e.key.toLowerCase();
+      if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(e.key.toLowerCase()) || ["w", "a", "s", "d"].includes(k)) e.preventDefault();
+      if (k === "arrowup" || k === "w") setDir(0, -1);
+      else if (k === "arrowdown" || k === "s") setDir(0, 1);
+      else if (k === "arrowleft" || k === "a") setDir(-1, 0);
+      else if (k === "arrowright" || k === "d") setDir(1, 0);
+      else if (k === "p") togglePause();
+      else if (k === "r" || (k === "enter" && dead)) { if (running) restart(); }
+    }, { passive: false });
+
+    let touchStart = null;
+    document.addEventListener("touchstart", (e) => { touchStart = e.touches[0]; if (paused) togglePause(); }, { passive: true });
+    document.addEventListener("touchend", (e) => {
+      if (!touchStart) return;
+      const t = e.changedTouches[0];
+      const dx = t.clientX - touchStart.clientX, dy = t.clientY - touchStart.clientY;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) return;
+      if (Math.abs(dx) > Math.abs(dy)) setDir(Math.sign(dx), 0); else setDir(0, Math.sign(dy));
+      touchStart = null;
+    }, { passive: true });
+
+    function togglePause() {
+      if (!running || dead) return;
+      paused = !paused;
+      document.getElementById("paused").classList.toggle("is-hidden", !paused);
+      if (!paused) tickLoop();
+      else clearTimeout(timer);
+    }
+
+    // --- Döngü ---
+    function tickLoop() {
+      clearTimeout(timer);
+      if (!running || paused || dead) return;
+      timer = setTimeout(() => { step(); render(); tickLoop(); }, speedMs);
+    }
+
+    function step() {
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+      // duvar ya da kuyruk = ölüm
+      if (head.x < 0 || head.y < 0 || head.x >= N || head.y >= N || onSnake(head)) return die(head.x < 0 || head.y < 0 || head.x >= N || head.y >= N);
+      snake.unshift(head);
+
+      let ate = false;
+      if (head.x === food.x && head.y === food.y) {
+        ate = true;
+        combo = comboT > 0 ? combo + 1 : 1;
+        comboT = 24; // ~yem arasi hizli olursa combo
+        score += 10 + Math.min(combo - 1, 5) * 2;
+        food = freeCell();
+        speedMs = Math.max(72, 150 - Math.floor(score / 40) * 6);
+        audio.eat();
+        if (!reduceMotion) shakeT = 2;
+        // %18: glitch bonus dogar (sinirli omur)
+        if (!glitch && Math.random() < 0.18) { glitch = freeCell(); glitchT = 46; }
+      }
+      if (glitch && head.x === glitch.x && head.y === glitch.y) {
+        score += 40; glitch = null; glitchT = 0; audio.bonus();
+        if (!reduceMotion) shakeT = 4;
+      }
+      if (!ate) snake.pop();
+      maxLen = Math.max(maxLen, snake.length);
+      if (glitch && --glitchT <= 0) glitch = null;
+      if (comboT > 0) comboT -= 1; else combo = 0;
+      drawHud();
+    }
+
+    function die(hitWall) {
+      dead = true;
+      audio.die();
+      clearTimeout(timer);
+      if (score > best) { best = score; try { localStorage.setItem(BEST_KEY, String(best)); } catch { /* dolu */ } }
+      drawHud();
+      document.getElementById("over-title").textContent = hitWall ? "Izgara sınırı" : "Kendi izine bastın";
+      document.getElementById("over-copy").textContent = `Skor ${score} · uzunluk ${maxLen} · en iyi ${best}`;
+      document.getElementById("over").classList.remove("is-hidden");
+      saveScore();
+      renderLeaderboard();
+      render();
+    }
+
+    // --- Skor kaydı + tablo (best-effort; backend yoksa sessiz) ---
+    function saveScore() {
+      const note = document.getElementById("save-note");
+      try {
+        if (window.ConviviumActivity?.recordGameScore) {
+          window.ConviviumActivity.recordGameScore({
+            game_key: "neon-serpent",
+            score,
+            duration_seconds: window.ConviviumActivity.getElapsedSeconds?.() || 0,
+            best_streak: maxLen
+          });
+          note.textContent = "skor tabloya gönderildi";
+        }
+      } catch { note.textContent = ""; }
+    }
+
+    let lbCache = null, lbAt = 0;
+    async function renderLeaderboard() {
+      const box = document.getElementById("lb");
+      box.textContent = "";
+      const draw = (rows) => {
+        box.textContent = "";
+        if (!rows || !rows.length) return;
+        rows.forEach((r, i) => {
+          const row = document.createElement("div");
+          const who = document.createElement("span");
+          who.textContent = `${i + 1}. ${(r.initials || "???").toUpperCase().slice(0, 6)}`;
+          const val = document.createElement("strong");
+          val.textContent = String(r.score || 0);
+          if ((r.score || 0) <= score && i === rows.findIndex((x) => (x.score || 0) <= score)) row.className = "me";
+          row.appendChild(who); row.appendChild(val);
+          box.appendChild(row);
+        });
+      };
+      if (lbCache && Date.now() - lbAt < 60000) { draw(lbCache); return; }
+      try {
+        const rows = await window.ConviviumBackend?.fetchGameLeaderboard?.("neon-serpent", 8);
+        if (rows) { lbCache = rows; lbAt = Date.now(); }
+        draw(rows);
+      } catch { draw(lbCache); }
+    }
+
+    // --- Çizim ---
+    function render() {
+      const w = canvas.width, h = canvas.height;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (shakeT > 0 && !reduceMotion) {
+        ctx.translate((Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5);
+        shakeT -= 1;
+      }
+      ctx.fillStyle = "#050a12";
+      ctx.fillRect(-8, -8, w + 16, h + 16);
+
+      // izgara
+      ctx.strokeStyle = "rgba(0,255,204,0.06)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < N; i += 1) {
+        ctx.beginPath(); ctx.moveTo(i * CELL, 0); ctx.lineTo(i * CELL, h); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i * CELL); ctx.lineTo(w, i * CELL); ctx.stroke();
+      }
+
+      const cellRect = (c, pad) => [c.x * CELL + pad, c.y * CELL + pad, CELL - pad * 2, CELL - pad * 2];
+
+      // yem: nabız atan sinyal
+      const pulse = reduceMotion ? 0 : Math.sin(Date.now() / 180) * 1.6;
+      ctx.shadowColor = "#00ffcc"; ctx.shadowBlur = 14;
+      ctx.fillStyle = "#00ffcc";
+      ctx.beginPath();
+      ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL * 0.28 + pulse, 0, Math.PI * 2);
+      ctx.fill();
+
+      // glitch bonus: mor kare, titrer
+      if (glitch) {
+        ctx.shadowColor = "#ff2ea8"; ctx.shadowBlur = 16;
+        ctx.fillStyle = glitchT % 6 < 3 || reduceMotion ? "#ff2ea8" : "#ffce5a";
+        const jx = reduceMotion ? 0 : (Math.random() - 0.5) * 2;
+        ctx.fillRect(glitch.x * CELL + 5 + jx, glitch.y * CELL + 5, CELL - 10, CELL - 10);
+      }
+
+      // yılan: baştan kuyruğa solan neon
+      snake.forEach((s, i) => {
+        const t = i / Math.max(snake.length - 1, 1);
+        ctx.shadowColor = "#00ffcc";
+        ctx.shadowBlur = i === 0 ? 18 : 8 * (1 - t);
+        ctx.fillStyle = i === 0 ? "#d8fff5" : `rgba(0, 255, 204, ${0.9 - t * 0.6})`;
+        const pad = i === 0 ? 2 : 3 + t * 2;
+        const [x, y, cw, ch] = cellRect(s, pad);
+        // roundRect eski Safari'de yok; duz kareye zarif dusus
+        if (ctx.roundRect) {
+          ctx.beginPath();
+          ctx.roundRect(x, y, cw, ch, i === 0 ? 6 : 4);
+          ctx.fill();
+        } else {
+          ctx.fillRect(x, y, cw, ch);
+        }
+      });
+      ctx.shadowBlur = 0;
+
+      // ölümde kırmızı perde
+      if (dead) {
+        ctx.fillStyle = "rgba(255, 46, 94, 0.12)";
+        ctx.fillRect(0, 0, w, h);
+      }
+    }
+
+    function restart() {
+      document.getElementById("over").classList.add("is-hidden");
+      reset(); render(); tickLoop();
+    }
+
+    document.getElementById("start").addEventListener("click", () => {
+      audio.init();
+      running = true;
+      document.getElementById("intro").classList.add("is-hidden");
+      reset(); render(); tickLoop();
+    });
+    document.getElementById("again").addEventListener("click", restart);
+
+    reset();
+    render();
+  })();
+  </script>
+<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​​‌‌​​‌‌​‌​‌​‌​​​​‌​​​‌‌‌​​‌​​‌‌​​​​​​‌‌​​​​​​‌‌‌​​‌​​‌‌​​‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+<script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>

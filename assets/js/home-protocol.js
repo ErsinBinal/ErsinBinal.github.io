@@ -4346,6 +4346,12 @@
           action: goTo(route('flow', '/games/neon-river.html'))
         },
         {
+          command: 'run serpent',
+          description: 'Neon Serpent (yilan) oyununu acar',
+          aliases: ['serpent', 'snake', 'yilan', 'yılan', 'neon serpent'],
+          action: goTo(route('serpent', '/games/neon-serpent.html'))
+        },
+        {
           command: 'dart',
           description: 'dart skorboard ekranini acar',
           aliases: ['skorbord', 'scoreboard', 'dart skorbord', 'dart skor', 'scores'],
@@ -4489,7 +4495,7 @@
         'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
         '',
         'routes:',
-        'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow',
+        'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
         '',
         'lab:',
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, outrun',

@@ -14,6 +14,7 @@ const PRECACHE_ASSETS = [
   '/games/ash-runner-2.html',
   '/games/cyberpunk-logic-game.html',
   '/games/neon-river.html',
+  '/games/neon-serpent.html',
   '/games/three-body-signal.html',
   '/games/universe-2.html',
   '/pages/makaleler.html',

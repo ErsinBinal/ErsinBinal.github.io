@@ -13,6 +13,7 @@
     ash: '/games/ash-runner.html',
     ash2: '/games/ash-runner-2.html',
     flow: '/games/neon-river.html',
+    serpent: '/games/neon-serpent.html',
     universe: '/games/universe-2.html',
     dart: '/tools/dart-skorbord.html',
     bartender: '/tools/bartender.html',
