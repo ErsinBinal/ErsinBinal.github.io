@@ -1,7 +1,10 @@
 name: Flow Check (smoke + e2e)
 
-# Elle tetiklenir: Actions sekmesi -> "Flow Check" -> Run workflow.
+# Her main push'unda smoke otomatik kosar (Node yerelde yok -> tek dogrulama
+# hatti burasi). E2E varsayilan olarak sadece elle tetiklemede kosar.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       run_e2e:
