@@ -20,7 +20,7 @@
     <meta name="robots" content="index, follow">
 
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https: https://*.supabase.co wss://*.supabase.co;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
     <!-- OpenGraph -->
     <meta property="og:site_name" content="Convivium">
@@ -42,7 +42,7 @@
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
 
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@2.0.12/dist/lottie-player.js"></script>
+    <!-- lottie-player kaldirildi (2026-07-02): sayfada hicbir <lottie-player> ogesi yoktu; olu yuk + genis CSP gerektiriyordu. -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="/assets/js/supabase-config.js"></script>
     <script src="/assets/js/supabase-client.js?v=29"></script>

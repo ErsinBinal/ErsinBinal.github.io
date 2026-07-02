@@ -4516,7 +4516,8 @@
         'signal -> oracle -> manifest -> unlock hidden, clues, offline node',
         'thread 1: notes -> examine clues -> take shard -> unlock vault -> cd vault',
         'thread 2: lab -> pipe (coolant\'i cekirdege ulastir) -> cd core',
-        'thread 3: use shard on coolant -> prism -> unlock atlas -> cd atlas (ARCHITECT)'
+        'thread 3: use shard on coolant -> prism -> unlock atlas -> cd atlas (ARCHITECT)',
+        '(soylenti: sinyal TAMAMEN koptugunda terminal baska bir yuz gosterirmis. kablonu cek, gor.)'
       ].join('\n');
 
       const commandMap = commandDefinitions.reduce((map, item) => {
