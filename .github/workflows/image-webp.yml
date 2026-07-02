@@ -20,8 +20,12 @@ jobs:
         with:
           node-version: '18'
 
+      # npm ci degil: package-lock.json, @playwright/test eklenirken (abcc6c0)
+      # yenilenmedigi icin package.json ile senkron degil ve ci hata veriyor.
+      # Lock yerelde Node olmadigindan yeniden uretilemiyor; flow-check gibi
+      # npm install kullaniyoruz. Lock tazelenirse ci'ye geri donulebilir.
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Convert images to WebP
         run: npm run convert-images
