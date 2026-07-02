@@ -88,29 +88,47 @@ yaratici ama guvenlik acigi yaratmadan. home-protocol.js Dalga 9 (a/b/c):
   cowsay, echo selam $USER > ilk.txt && cat ilk.txt, help | grep oyun.
 
 ==========================================================================
-ACIK ISLER (oncelik sirasiyla)
+TUR OZETI (2026-07-02 / 3. tur) — ACIK ISLER TOPLU KAPANIS
 ==========================================================================
-P0/P1
-  [ ] PO-3. CSP & dis cagri envanteri: hangi origin neden whitelisted,
-      tek "guvenlik yuzeyi" notu + kullanilmayanlari kirp. (dusuk efor)
-  [ ] PO-5. Gizli odul (bugy kulucka) kesif ipucu dengesi: spoiler'siz
-      minik sinyal (404/help'te kirik-baglanti mizahi). (dusuk efor)
-  [ ] PO-6. Gizlilik-dostu olcum: cookie'siz, kendi-host event sayaci
-      (Supabase event tablosu mu sade counter mi — KARAR BEKLIYOR).
+  [x] PO-5 KAPANDI: 404 echo havuzuna 2 satir + help "hidden" bolumune
+      "(soylenti: sinyal TAMAMEN koptugunda...)" imasi. Spoiler yok.
+  [x] PO-3 KAPANDI: docs/guvenlik-yuzeyi.md (origin envanteri + gerekce +
+      kontrol listesi). KIRPILDI: barista'da kullanilmayan lottie-player
+      (unpkg) + connect-src'teki asiri genis "https:"; index/makaleler
+      CSP'sinden olu unpkg; index'ten karsiliksiz cdnjs preconnect.
+  [x] PO-6 KAPANDI (frontend): recordSiteEvent — cerezsiz/kimliksiz sayac.
+      Olaylar: home.view, command.first, oracle.ask, articles.view,
+      game.start (auth-gate), offline.node.solved. sessionStorage ile
+      oturum basi 1; whitelist disi yazilamaz; tablo yoksa no-op.
+      !! docs/database/2026-07-02-site-events.sql Supabase'de BIR KEZ
+         calistirilmali (anon yalniz INSERT; SELECT yok). O zamana dek
+         olcum sessizce devre disi.
+  [x] PO-12 KAPANDI: bugy-v4'e previewSvg/creatureInfo API'si; secim
+      kartlarinda yetiskin SVG + "gucler: X -> Y -> Z" zinciri.
+  [x] PO-8 KAPANDI: games/neon-serpent.html — neon yilan (canvas, glow,
+      glitch bonusu, combo, artan hiz, WebAudio, dokunmatik kaydirma,
+      reduced-motion). auth-gate'li; skor game_scores'a (neon-serpent),
+      oyun sonu top-8 leaderboard. Terminal: run serpent / yilan / snake.
+      Canary CVM-C5B90093. Sitemap+SW+changelog+README tam.
+  [x] PO-9 KAPANDI: makale acilinca document.title + JSON-LD Article
+      enjeksiyonu (tek node, </script> kacisli). #slug kalici linkler
+      zaten vardi.
+  Surumler: supabase-client v30, auth-gate v22, home-protocol v54,
+  articles v5, bugy-v4 v11, bugy-pet v10, bugy-pet.css v5, routes v3;
+  CACHE v155 -> v156 (19 dosyada damga suprumu).
+  GORSEL TEYIT: yumurta secim kartlari (giris + kulucka hakki gerek),
+  neon-serpent oynanisi (klavye+mobil), makale JSON-LD (devtools head),
+  404 yeni echo'lari.
 
-P2 — icerik/buyume
-  [ ] PO-8. Tek hafif oyun: "Neon Serpent" (yilan) — mevcut skor
-      altyapisina baglanir; once bunu cilala, yeni oyun acma.
-  [ ] PO-9. Makale SEO: makaleye ayri kanonik URL + JSON-LD Article.
+==========================================================================
+ACIK ISLER (kalan)
+==========================================================================
   [ ] Kul Hatti II devami: yaya jetpack/katman (W ziplama), modul agacina
       2. dal, muzik loop'u, denge/kolay mod, gemi hasar gorselleri.
   [ ] ACIK KARAR: yaya bombasi K fallback'te; ayri tusa alinsin mi?
-
-P3 — sessiz kalite
   [ ] PO-10. Klavye & ekran-okuyucu gecisi (focus-trap, aria-live teyidi).
   [ ] PO-11. Sinematik/canvas dusuk-guc "lite mode" + pil/saveData.
-  [ ] PO-12. Bugy secim ekraninda gorsel onizleme (SVG yetiskin formu +
-      evrim zinciri + guc listesi).
+  [ ] PO-6 tamamlama: site-events.sql'i Supabase'de calistir (kullanici).
 
 Bugy sonraki adaylar (arsivdeki oneri havuzundan):
   surukle-birak besleme, tur bazli tema paleti, sayfa baglamina gore
