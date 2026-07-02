@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v153';
+const CACHE_NAME = 'convivium-v154';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -18,6 +18,7 @@ const PRECACHE_ASSETS = [
   '/games/universe-2.html',
   '/pages/makaleler.html',
   '/pages/ozgecmisim.html',
+  '/pages/changelog.html',
   '/account/auth.html',
   '/account/dashboard.html',
   '/admin/',
@@ -55,11 +56,11 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-v4-cinema.js?v=3',
   '/assets/js/bugy-pet.js?v=9',
   '/assets/js/deb-companion.js?v=4',
-  '/assets/js/home/routes.js?v=1',
+  '/assets/js/home/routes.js?v=2',
   '/assets/js/sfx.js?v=15',
-  '/assets/js/home-protocol.js?v=51',
+  '/assets/js/home-protocol.js?v=52',
   '/assets/js/bugy-studio.js?v=5',
-  '/assets/js/service-worker-register.js?v=2',
+  '/assets/js/service-worker-register.js?v=3',
   '/assets/js/origin-beacon.js?v=1',
   '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1',
   '/assets/vendor/kenney/smoke-particles/whitePuff00.png?v=1',
@@ -103,14 +104,18 @@ self.addEventListener('install', (event) => {
         console.log('[SW] Precaching assets');
         return cache.addAll(PRECACHE_ASSETS);
       })
-      .then(() => {
-        // Hemen aktif ol
-        return self.skipWaiting();
-      })
       .catch((err) => {
         console.error('[SW] Precache failed:', err);
       })
   );
+});
+
+// Yeni surum "waiting" durumunda bekler; sayfa "yenile" onayi verince
+// SKIP_WAITING mesajiyla aktive olur (bayat sekme + karisik asset riskine son).
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Activate event - clean old caches

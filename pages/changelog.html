@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-792B517A
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-792B517A">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Son Sinyaller - Convivium Changelog</title>
+    <meta name="description" content="Convivium sitesine eklenen yeni ozellikler, oyunlar ve deneyler. Sitenin degisim gunlugu.">
+    <meta name="author" content="Ersin Binal">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://ersinbinal.github.io/pages/changelog.html">
+
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self';">
+
+    <!-- OpenGraph Meta Tags -->
+    <meta property="og:site_name" content="Convivium">
+    <meta property="og:title" content="Son Sinyaller - Convivium Changelog">
+    <meta property="og:description" content="Siteye eklenen yeni ozellikler, oyunlar ve deneyler.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ersinbinal.github.io/pages/changelog.html">
+    <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+    <meta property="og:locale" content="tr_TR">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Son Sinyaller - Convivium Changelog">
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#00ffcc">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
+    <style>
+        :root {
+            --bg: #05070d;
+            --panel: rgba(10, 16, 28, 0.92);
+            --accent: #00ffcc;
+            --accent-dim: rgba(0, 255, 204, 0.35);
+            --text: #d7e6e2;
+            --dim: #6f8a85;
+            --warn: #ffb347;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            padding: 24px 16px 64px;
+            background-image:
+                radial-gradient(circle at 20% 0%, rgba(0, 255, 204, 0.06), transparent 45%),
+                radial-gradient(circle at 90% 100%, rgba(255, 0, 170, 0.05), transparent 40%);
+        }
+
+        .wrap { max-width: 760px; margin: 0 auto; }
+
+        header {
+            border: 1px solid var(--accent-dim);
+            background: var(--panel);
+            border-radius: 10px;
+            padding: 18px 20px;
+            margin-bottom: 22px;
+            box-shadow: 0 0 24px rgba(0, 255, 204, 0.08);
+        }
+
+        header h1 {
+            color: var(--accent);
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        header h1::before { content: '~$ '; color: var(--dim); }
+
+        header p { color: var(--dim); margin-top: 8px; font-size: 0.85rem; line-height: 1.5; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 14px;
+            color: var(--dim);
+            text-decoration: none;
+            font-size: 0.8rem;
+        }
+        .back-link:hover, .back-link:focus { color: var(--accent); }
+
+        .entry {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-left: 3px solid var(--accent-dim);
+            background: var(--panel);
+            border-radius: 8px;
+            padding: 14px 18px;
+            margin-bottom: 14px;
+        }
+
+        .entry time {
+            color: var(--accent);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .entry .tag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 1px 8px;
+            border: 1px solid var(--accent-dim);
+            border-radius: 999px;
+            font-size: 0.65rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .entry h2 { font-size: 0.95rem; color: var(--text); margin: 6px 0 4px; }
+
+        .entry p { color: var(--dim); font-size: 0.82rem; line-height: 1.55; }
+
+        .entry a { color: var(--accent); text-decoration: none; }
+        .entry a:hover, .entry a:focus { text-decoration: underline; }
+
+        .hint {
+            margin-top: 26px;
+            text-align: center;
+            color: var(--dim);
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .entry { transition: border-color 0.2s ease, transform 0.2s ease; }
+            .entry:hover { border-left-color: var(--accent); transform: translateX(2px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <a class="back-link" href="/">&larr; ana terminale don</a>
+
+        <header>
+            <h1>son sinyaller</h1>
+            <p>Convivium surekli evrilen bir web laboratuvari. Bu sayfa siteye dusen
+            yeni ozellikleri, oyunlari ve deneyleri kronolojik olarak listeler.
+            Ana terminalde <strong>changelog</strong> yazarak da buraya ulasabilirsin.</p>
+        </header>
+
+        <article class="entry">
+            <time datetime="2026-07-02">2026-07-02</time><span class="tag">sistem</span>
+            <h2>Yeni surum bildirimi + bu sayfa</h2>
+            <p>Site guncellenince acik sekmelerde artik "yeni surum hazir — yenile"
+            cipi beliriyor; bayat onbellekte kalma derdi bitti. Ayrica bu changelog
+            sayfasi ve terminale <em>changelog</em> komutu eklendi.</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-29">2026-06-29</time><span class="tag">oyun</span>
+            <h2>Kul Hatti II — Yorunge</h2>
+            <p>Kul Hatti'nin uzayda gecen devam oyunu: istasyon icinde yaya
+            beat'em-up + gemiyle yatay shmup hibrit dongusu, 12 modullu yetenek
+            agaci, boss savaslari, bloom/vignette gorsel efektler.
+            <a href="/games/ash-runner-2.html">Oyna &rarr;</a></p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-29">2026-06-29</time><span class="tag">sayfa</span>
+            <h2>Interaktif ozgecmis terminali</h2>
+            <p>Ozgecmis sayfasi gercek bir komut kabuguna donustu:
+            <em>whoami / experience / skills / contact</em> komutlariyla gezilir,
+            Tab tamamlama ve komut gecmisi destekli.
+            <a href="/pages/ozgecmisim.html">Dene &rarr;</a></p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-26">2026-06-26</time><span class="tag">ozellik</span>
+            <h2>"Bugy seni arastirsin" — profil zenginlestirme</h2>
+            <p>Kayitli kullanicilar icin Bugy, adiyla internette gercek bir arama
+            yapip meslek/egitim tahmini sunar; sonuc yalnizca kullanici onaylarsa
+            profile yazilir ve Bugy diyaloglari kisisellesir.</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-25">2026-06-25</time><span class="tag">bugy</span>
+            <h2>Sinematik imza yetenekleri</h2>
+            <p>Her Bugy yaratigi kendi imza yetenegini kazandi: Yildirim, Dalga,
+            Yangin, Asiri Yuk, Cicek, Tipi, Ay Tozu. Sarj gostergeli yetenek
+            butonu, combo sayaci ve nadir "overdrive" varyantlariyla.</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-25">2026-06-25</time><span class="tag">bugy</span>
+            <h2>Yaratiklar cyberpunk formuna evrildi</h2>
+            <p>7 retro yaratik; optik visor gozler, neon kenar isigi, evrimle
+            buyuyen govde ve yeni uzuvlar. Ihtiyaclarini kendi soyler, ihmal
+            edilirse "sistem arizasi"na girer — bakimla normale doner.</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-25">2026-06-25</time><span class="tag">gizem</span>
+            <h2>Kulucka hakki</h2>
+            <p>Yeni bir yol ancak sinyal tamamen kaybolunca acilir. Fazlasini
+            soylemek olmaz; kopan baglantilar bazen bir kapidir.</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-06-24">2026-06-24</time><span class="tag">sistem</span>
+            <h2>Tema tutarliligi + dashboard trendleri</h2>
+            <p>Kayitli tema tercihi artik tum hesap/arac sayfalarinda uygulanir;
+            dashboard'a oyun skoru ve oturum suresi sparkline grafikleri eklendi.</p>
+        </article>
+
+        <p class="hint">eski sinyaller arsivde soluyor &mdash; yenileri dustukce bu liste buyur</p>
+    </div>
+
+<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌​‌‌‌​​‌‌‌​​‌​​‌‌​​‌​​‌​​​​‌​​​‌‌​‌​‌​​‌‌​​​‌​​‌‌​‌‌‌​‌​​​​​‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+<script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>

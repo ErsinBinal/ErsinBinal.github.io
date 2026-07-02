@@ -2,6 +2,7 @@
   window.ConviviumRoutes = Object.freeze({
     home: '/',
     dossier: '/pages/makaleler.html',
+    changelog: '/pages/changelog.html',
     profile: '/pages/ozgecmisim.html',
     auth: '/account/auth.html',
     dashboard: '/account/dashboard.html',

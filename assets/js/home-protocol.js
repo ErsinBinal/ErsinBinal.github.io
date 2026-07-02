@@ -3640,6 +3640,12 @@
           action: logCommand
         },
         {
+          command: 'changelog',
+          description: 'siteye dusen son sinyalleri (yeni ozellikleri) acar',
+          aliases: ['sinyaller', 'son sinyaller', 'news', 'updates', 'yenilikler'],
+          action: goTo(route('changelog', '/pages/changelog.html'))
+        },
+        {
           command: 'clear',
           description: 'komut ciktisini temizler',
           aliases: ['cls', 'reset output'],
@@ -4206,7 +4212,7 @@
         'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, outrun',
         '',
         'system:',
-        'whoami, uptime, date, version, memory, ps, log, clear, random, shutdown, restart, screen saver',
+        'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver',
         '',
         'terminal:',
         'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',

@@ -84,27 +84,12 @@
     applyTheme(themeNames[nextIndex]);
   }
 
-  // Reduced motion tercihini kontrol et
-  function checkReducedMotion() {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-    function handleChange(e) {
-      if (e.matches) {
-        document.body.classList.add('reduced-motion');
-      } else {
-        document.body.classList.remove('reduced-motion');
-      }
-    }
-
-    handleChange(prefersReducedMotion);
-    prefersReducedMotion.addEventListener('change', handleChange);
-  }
-
   // Baslangicta temayi yükle
+  // (Not: reduced-motion, sayfalarda @media prefers-reduced-motion ve
+  // matchMedia guard'lariyla ele aliniyor; burada body sinifi gerekmiyor.)
   function init() {
     const savedTheme = getCurrentTheme();
     applyTheme(savedTheme);
-    checkReducedMotion();
   }
 
   // DOM hazir oldugunda baslat
