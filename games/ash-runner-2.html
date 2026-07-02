@@ -148,6 +148,19 @@
     .mod.is-locked { opacity: 0.5; }
     .mod.is-locked button { border-color: var(--muted); color: var(--muted); cursor: not-allowed; }
 
+    .lb { margin-top: 14px; border-top: 1px dashed rgba(216, 230, 255, 0.2); padding-top: 10px; }
+    .lb h3 { color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    .lb ol { list-style: none; display: grid; gap: 3px; }
+    .lb li {
+      display: grid; grid-template-columns: 1.4em 1fr auto auto; gap: 8px; align-items: baseline;
+      font-size: 0.72rem; color: var(--muted); padding: 2px 4px;
+    }
+    .lb li .lb-rank { color: var(--amber); }
+    .lb li .lb-name { color: var(--ink); letter-spacing: 1px; }
+    .lb li .lb-deck { font-size: 0.62rem; }
+    .lb li .lb-score { color: var(--accent); font-weight: 700; }
+    .lb li.lb-note { display: block; font-size: 0.68rem; }
+
     .touch-pad {
       position: fixed; inset: auto calc(14px + var(--safe-right)) calc(14px + var(--safe-bottom)) calc(14px + var(--safe-left));
       z-index: 10; display: none; justify-content: space-between; align-items: end; pointer-events: none; gap: 16px;
@@ -221,6 +234,10 @@
     <h2>Hangar // Modül Tezgâhı</h2>
     <p class="dim">Toplanan hurda: <span class="scrap-tag" id="hangar-scrap">0</span>. Modüller kalıcıdır; bir sonraki güverteye taşınır.</p>
     <div class="modules" id="module-list"></div>
+    <div class="lb" id="lb-panel">
+      <h3>KÜL-7 Kayıt Defteri // En İyi Pilotlar</h3>
+      <ol id="lb-list"><li class="lb-note">kayıtlar taranıyor…</li></ol>
+    </div>
     <div class="actions">
       <button id="launch-next" type="button">Sonraki Güverte</button>
     </div>
@@ -596,6 +613,7 @@
       },
       _openHangar(onLaunch) {
         renderHangar();
+        renderLeaderboard();
         UI.hideAll(); UI.el.hangar.classList.remove("is-hidden");
         document.getElementById("launch-next").onclick = () => { onLaunch(); };
       },
@@ -659,6 +677,41 @@
         row.appendChild(title); row.appendChild(btn); row.appendChild(desc);
         list.appendChild(row);
       });
+    }
+
+    // Hangar skor tablosu (best-effort: backend yoksa yerel en iyi skoru gösterir)
+    let lbCache = null, lbFetchedAt = 0;
+    function renderLeaderboard() {
+      const list = document.getElementById("lb-list");
+      if (!list) return;
+      const draw = (rows) => {
+        list.innerHTML = "";
+        if (!rows || !rows.length) {
+          const li = document.createElement("li");
+          li.className = "lb-note";
+          li.textContent = "Henüz kayıt yok — ilk pilot sen ol. (Yerel en iyi: " + UI.pad(RUN.best) + ")";
+          list.appendChild(li);
+          return;
+        }
+        rows.forEach((r, i) => {
+          const li = document.createElement("li");
+          const rank = document.createElement("span"); rank.className = "lb-rank"; rank.textContent = (i + 1) + ".";
+          const name = document.createElement("span"); name.className = "lb-name";
+          name.textContent = (r.initials || "???").toUpperCase().slice(0, 6);
+          const deck = document.createElement("span"); deck.className = "lb-deck";
+          deck.textContent = "güverte " + (r.best_streak || 1);
+          const score = document.createElement("span"); score.className = "lb-score"; score.textContent = UI.pad(r.score || 0);
+          li.appendChild(rank); li.appendChild(name); li.appendChild(deck); li.appendChild(score);
+          list.appendChild(li);
+        });
+      };
+      // 60 sn'lik cache: hangar her açılışında Supabase'i dövmesin
+      if (lbCache && Date.now() - lbFetchedAt < 60000) { draw(lbCache); return; }
+      const backend = window.ConviviumBackend;
+      if (!backend || !backend.fetchGameLeaderboard) { draw(null); return; }
+      backend.fetchGameLeaderboard("ash-runner-2", 8)
+        .then((rows) => { lbCache = rows; lbFetchedAt = Date.now(); draw(rows); })
+        .catch(() => { draw(lbCache); });
     }
 
     // Kart düğmeleri
@@ -775,6 +828,18 @@
         px(12, 28, 50, 3, 0x1c1530);
         px(50, 15, 12, 10, 0x9b6bff); px(52, 17, 8, 6, 0xff5ad0); px(55, 19, 3, 2, 0xffffff); // zayıf nokta çekirdek (parlak)
         px(20, 24, 30, 2, 0x9b6bff);
+      });
+      makeTexture(scene, "reaper", 58, 44, px => {
+        // Hasat gemisi: orak biçimli hurda toplayıcı — yeşil/amber palet
+        px(18, 16, 34, 12, 0x24402e); px(22, 12, 28, 20, 0x35594a);   // gövde
+        px(26, 14, 20, 4, 0x4f8a66);                                   // üst highlight
+        px(46, 18, 10, 8, 0x18281e); px(54, 20, 4, 4, 0xffce5a);       // arka motor + amber egzoz
+        // öne kıvrılan orak bıçağı (sol)
+        px(8, 2, 6, 8, 0x7dffb0); px(4, 8, 6, 10, 0x59d68c); px(2, 16, 5, 12, 0x7dffb0);
+        px(4, 26, 6, 10, 0x59d68c); px(8, 34, 6, 8, 0x7dffb0);
+        px(12, 6, 4, 6, 0x2c4a38); px(10, 30, 4, 6, 0x2c4a38);         // bıçak kökleri
+        px(30, 20, 8, 6, 0xffce5a); px(32, 22, 4, 2, 0xffffff);        // hasat çekirdeği (zayıf nokta)
+        px(24, 30, 22, 2, 0x59d68c);
       });
       // Eşya
       makeTexture(scene, "crate", 18, 16, px => {
@@ -1591,19 +1656,31 @@
 
       spawnBoss() {
         this.bossPhase = true;
-        this.boss = {
-          x: GAME_W + 60, y: GAME_H / 2, w: 64, h: 38, hp: 300 + this.deck * 90, maxHp: 300 + this.deck * 90,
-          cd: 1.0, pattern: 0, enter: true, hurt: 0,
-          sprite: this.add.image(GAME_W + 60, GAME_H / 2, "cruiser").setOrigin(0.5).setDepth(220)
-        };
+        // çift güvertelerde Hasat gemisi (reaper), teklerde kruvazör
+        const kind = this.deck % 2 === 0 ? "reaper" : "cruiser";
+        if (kind === "reaper") {
+          this.boss = {
+            kind, x: GAME_W + 60, y: GAME_H / 2, w: 50, h: 40, hp: 260 + this.deck * 80, maxHp: 260 + this.deck * 80,
+            cd: 1.2, pattern: 0, enter: true, hurt: 0, state: "hover", stateT: 4.5, spiralA: 0,
+            sprite: this.add.image(GAME_W + 60, GAME_H / 2, "reaper").setOrigin(0.5).setDepth(220)
+          };
+        } else {
+          this.boss = {
+            kind, x: GAME_W + 60, y: GAME_H / 2, w: 64, h: 38, hp: 300 + this.deck * 90, maxHp: 300 + this.deck * 90,
+            cd: 1.0, pattern: 0, enter: true, hurt: 0,
+            sprite: this.add.image(GAME_W + 60, GAME_H / 2, "cruiser").setOrigin(0.5).setDepth(220)
+          };
+        }
         // ekran üstü boss can barı (screen-space)
         this.bossBarBg = this.add.graphics().setDepth(9400).setScrollFactor(0);
         this.bossBarFg = this.add.graphics().setDepth(9401).setScrollFactor(0);
-        this.bossLabel = this.add.text(GAME_W / 2, 8, "KRUVAZÖR", {
-          fontFamily: "Courier New", fontSize: "8px", color: "#ff5ad0", fontStyle: "bold"
+        this.bossLabel = this.add.text(GAME_W / 2, 8, kind === "reaper" ? "HASAT GEMİSİ" : "KRUVAZÖR", {
+          fontFamily: "Courier New", fontSize: "8px", color: kind === "reaper" ? "#7dffb0" : "#ff5ad0", fontStyle: "bold"
         }).setOrigin(0.5, 0).setDepth(9402).setScrollFactor(0);
         this.drawBossBar();
-        UI.setHint("KRUVAZÖR // ateşten kaç, zayıf noktayı vur");
+        UI.setHint(kind === "reaper"
+          ? "HASAT GEMİSİ // orak süpürmesinden kaç, çekirdeği vur"
+          : "KRUVAZÖR // ateşten kaç, zayıf noktayı vur");
         audio.boss();
       }
 
@@ -1611,9 +1688,10 @@
         if (!this.boss || !this.bossBarBg) return;
         const x = 40, y = 18, w = GAME_W - 80, h = 5;
         const ratio = clamp(this.boss.hp / this.boss.maxHp, 0, 1);
+        const edge = this.boss.kind === "reaper" ? 0x7dffb0 : 0xff5ad0;
         this.bossBarBg.clear();
         this.bossBarBg.fillStyle(0x1a1030, 0.9).fillRect(x - 1, y - 1, w + 2, h + 2);
-        this.bossBarBg.lineStyle(1, 0xff5ad0, 0.8).strokeRect(x - 1, y - 1, w + 2, h + 2);
+        this.bossBarBg.lineStyle(1, edge, 0.8).strokeRect(x - 1, y - 1, w + 2, h + 2);
         this.bossBarFg.clear();
         const col = ratio > 0.5 ? 0xff5ad0 : (ratio > 0.22 ? 0xffce5a : 0xff5a6a);
         this.bossBarFg.fillStyle(col, 1).fillRect(x, y, Math.max(0, w * ratio), h);
@@ -1816,15 +1894,53 @@
 
       updateBoss(dt) {
         const b = this.boss; if (!b) return;
+        const shoot = (ang, sp) => this.eShots.push({ x: b.x - 28, y: b.y, vx: Math.cos(ang) * (sp || 150), vy: Math.sin(ang) * (sp || 150), w: 7, h: 5, sprite: this.add.image(b.x - 28, b.y, "ebullet").setOrigin(0.5).setDepth(300) });
         if (b.enter) {
           b.x -= 60 * dt; if (b.x <= GAME_W - 60) { b.x = GAME_W - 60; b.enter = false; }
+        } else if (b.kind === "reaper") {
+          // HASAT: oyuncuyu dikeyde takip eder, ara ara ekranı soldan sağa
+          // "orak süpürmesi" ile biçer; hover'da spiral/mayın saçar.
+          if (b.state === "hover") {
+            b.x += (GAME_W - 60 - b.x) * dt * 3;
+            b.y += clamp(this.player.y - b.y, -80, 80) * dt * 1.6;  // yumuşak takip
+            b.stateT -= dt;
+            if (b.stateT <= 0) {
+              b.state = "sweep"; b.stateT = 0;
+              audio.dash(); shake(this, 0.2, 0.01);
+            }
+            b.cd -= dt;
+            if (b.cd <= 0) {
+              b.cd = Math.max(0.7, 1.5 - this.deck * 0.05);
+              b.pattern = (b.pattern + 1) % 3;
+              if (b.pattern === 0) {
+                // dönen spiral halka
+                for (let i = 0; i < 8; i++) shoot(b.spiralA + i * (Math.PI / 4), 120);
+                b.spiralA += 0.5;
+              } else if (b.pattern === 1) {
+                const a = Math.atan2(this.player.y - b.y, this.player.x - b.x);
+                shoot(a, 200); shoot(a + 0.2, 160); shoot(a - 0.2, 160);
+              } else {
+                this.dropMine(b.x - 20, b.y - 10); this.dropMine(b.x - 20, b.y + 10);
+              }
+              audio.alarm();
+            }
+          } else if (b.state === "sweep") {
+            // oyuncunun hizasına kilitlenip soldan biçer
+            b.x -= 250 * dt;
+            b.y += clamp(this.player.y - b.y, -34, 34) * dt * 1.1; // hafif izler, tam kilitlenmez
+            this.particles.burst(b.x + 20, b.y, 1, { texture: "spark-c", speed: 60, life: 0.25 });
+            if (b.x < 26) { b.state = "return"; }
+          } else { // return
+            b.x += 180 * dt;
+            b.y += (GAME_H / 2 - b.y) * dt * 1.2;
+            if (b.x >= GAME_W - 60) { b.x = GAME_W - 60; b.state = "hover"; b.stateT = 4 + Math.random() * 2; b.cd = 0.8; }
+          }
         } else {
           b.y = GAME_H / 2 + Math.sin(this.elapsed * 1.1) * 46;  // dikey salınım
           b.cd -= dt;
           if (b.cd <= 0) {
             b.cd = Math.max(0.5, 1.2 - this.deck * 0.04);
             b.pattern = (b.pattern + 1) % 3;
-            const shoot = (ang) => this.eShots.push({ x: b.x - 28, y: b.y, vx: Math.cos(ang) * 150, vy: Math.sin(ang) * 150, w: 7, h: 5, sprite: this.add.image(b.x - 28, b.y, "ebullet").setOrigin(0.5).setDepth(300) });
             if (b.pattern === 0) { for (let i = -2; i <= 2; i++) shoot(Math.PI + i * 0.18); }
             else if (b.pattern === 1) { const a = Math.atan2(this.player.y - b.y, this.player.x - b.x); shoot(a); shoot(a + 0.12); shoot(a - 0.12); }
             else { for (let i = 0; i < 6; i++) shoot(Math.PI - 0.5 + i * 0.2); }
@@ -1834,7 +1950,7 @@
         b.hurt = Math.max(0, b.hurt - dt);
         this.hurtFlashApply(b.sprite, b.hurt > 0);
         b.sprite.setPosition(Math.round(b.x), Math.round(b.y));
-        if (overlap(b.x, b.y, b.w, b.h, this.player.x, this.player.y, this.player.w, this.player.h)) this.hurtPlayer(16);
+        if (overlap(b.x, b.y, b.w, b.h, this.player.x, this.player.y, this.player.w, this.player.h)) this.hurtPlayer(b.kind === "reaper" && b.state === "sweep" ? 20 : 16);
         this.drawBossBar();
       }
 
