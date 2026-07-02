@@ -1804,15 +1804,104 @@
         return `random route: ${label}`;
       };
 
+      // --- Kabuk cekirdegi (Dalga 9a): kalici sanal dosyalar (/home) + env ---
+      // Guvenlik: tum icerik textContent ile basilir (HTML yorumlanmaz), eval yok,
+      // localStorage ayni-origin'dir; ad/boyut/adet tavanlari asagida zorlanir.
+      const VFS_KEY = 'convivium.shell.files';
+      const VFS_MAX_FILES = 24;
+      const VFS_MAX_NAME = 32;
+      const VFS_MAX_CONTENT = 4000;
+      const vfsLoad = () => {
+        try {
+          const raw = JSON.parse(localStorage.getItem(VFS_KEY) || '{}');
+          return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+        } catch { return {}; }
+      };
+      const vfsSave = (files) => {
+        try { localStorage.setItem(VFS_KEY, JSON.stringify(files)); } catch { /* dolu/kapali */ }
+      };
+      // Dosya adi: kucuk-harf slug (+ opsiyonel .txt/.md/.log uzantisi), yol ayraci yok.
+      const vfsName = (input = '') => {
+        const cleaned = String(input).toLowerCase().trim()
+          .replace(/^\/?(home\/)?/, '')
+          .replace(/[ıİ]/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
+          .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
+          .replace(/[^a-z0-9._-]+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
+        if (!cleaned || cleaned.length > VFS_MAX_NAME) return null;
+        return cleaned;
+      };
+      const vfsList = () => Object.keys(vfsLoad()).sort();
+      const vfsRead = (name) => {
+        const key = vfsName(name);
+        if (!key) return null;
+        const files = vfsLoad();
+        return Object.prototype.hasOwnProperty.call(files, key) ? files[key] : null;
+      };
+      const vfsWrite = (name, content, append = false) => {
+        const key = vfsName(name);
+        if (!key) return `yaz: gecersiz dosya adi (kucuk harf, rakam, tire; en cok ${VFS_MAX_NAME} karakter).`;
+        const files = vfsLoad();
+        const exists = Object.prototype.hasOwnProperty.call(files, key);
+        if (!exists && Object.keys(files).length >= VFS_MAX_FILES) {
+          return `yaz: /home dolu (en cok ${VFS_MAX_FILES} dosya). "rm <ad>" ile yer ac.`;
+        }
+        const body = (append && exists ? files[key] + '\n' : '') + String(content ?? '');
+        if (body.length > VFS_MAX_CONTENT) return `yaz: dosya cok buyuk (tavan ${VFS_MAX_CONTENT} karakter).`;
+        files[key] = body;
+        vfsSave(files);
+        return `${append && exists ? 'eklendi' : 'yazildi'}: /home/${key} (${body.length} karakter)`;
+      };
+      const vfsRemove = (name) => {
+        const key = vfsName(name);
+        const files = vfsLoad();
+        if (!key || !Object.prototype.hasOwnProperty.call(files, key)) return `rm: ${name || '?'}: /home altinda boyle bir dosya yok`;
+        delete files[key];
+        vfsSave(files);
+        return `silindi: /home/${key}`;
+      };
+
+      const ENV_KEY = 'convivium.shell.env';
+      const ENV_MAX_VARS = 16;
+      const envLoad = () => {
+        try {
+          const raw = JSON.parse(localStorage.getItem(ENV_KEY) || '{}');
+          return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+        } catch { return {}; }
+      };
+      const envSave = (vars) => {
+        try { localStorage.setItem(ENV_KEY, JSON.stringify(vars)); } catch { /* sessiz */ }
+      };
+      const envSet = (name, value) => {
+        if (!/^[A-Za-z_]\w{0,15}$/.test(name)) return 'export: gecersiz ad (harf/alt cizgi ile baslar, en cok 16 karakter).';
+        const vars = envLoad();
+        if (!Object.prototype.hasOwnProperty.call(vars, name) && Object.keys(vars).length >= ENV_MAX_VARS) {
+          return `export: degisken tavani (${ENV_MAX_VARS}). "unset <AD>" ile yer ac.`;
+        }
+        vars[name] = String(value ?? '').slice(0, 120);
+        envSave(vars);
+        return `export ${name}="${vars[name]}"`;
+      };
+      // Tek gecisli genisletme (ic ice/tekrarli cozum yok -> dongu kurulamaz).
+      const envExpand = (text) => String(text).replace(/\$\{?([A-Za-z_]\w{0,15})\}?/g, (m, name) => {
+        if (name === 'CWD') return virtualCwd;
+        if (name === 'USER') return 'ziyaretci';
+        if (name === 'RANDOM') return String(Math.floor(Math.random() * 32768));
+        if (name === 'DATE') return new Date().toLocaleDateString('tr-TR');
+        if (name === 'CMDS') return String(state.commands || 0);
+        const vars = envLoad();
+        return Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : m;
+      });
+
       const virtualFs = {
-        '/': ['routes', 'lab', 'notes', 'system', 'vault'],
+        '/': ['routes', 'lab', 'notes', 'system', 'vault', 'home'],
         '/routes': ['home', 'map', 'archive', 'notes', 'open dossier'],
         '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe', 'outrun'],
         '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
         '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver'],
         '/vault': ['satir'],
         '/core': ['cekirdek', 'gunluk'],
-        '/atlas': ['harita', 'imza']
+        '/atlas': ['harita', 'imza'],
+        '/home': []
       };
 
       const virtualDocs = {
@@ -1837,6 +1926,12 @@
         const path = resolveVirtualPath(target);
         const items = virtualFs[path];
         if (!items) return `ls: ${path}: not found`;
+        if (path === '/home') {
+          const files = vfsLoad();
+          const names = Object.keys(files).sort();
+          if (!names.length) return '/home: (bos) — "echo merhaba > not.txt" ile ilk dosyani yaz.';
+          return [`/home: ${names.length}/${VFS_MAX_FILES} dosya`, ...names.map(n => `  ${n}  (${files[n].length}b)`)].join('\n');
+        }
         return [`${path}:`, ...items.map(item => `  ${item}`)].join('\n');
       };
 
@@ -1860,6 +1955,9 @@
       };
 
       const catCommand = (target = '') => {
+        // Once kullanicinin /home dosyalari (echo > ile yazilanlar), sonra public dokumanlar.
+        const file = vfsRead(target);
+        if (file !== null) return file === '' ? '(bos dosya)' : file;
         const key = normalizeCommand(target || 'about');
         return virtualDocs[key] || `cat: ${target || 'empty'}: public document not found`;
       };
@@ -1887,6 +1985,7 @@
         '|   |-- memory',
         '|   |-- ps',
         '|   `-- power',
+        '|-- home  [kisisel: echo/touch/rm]',
         '`-- vault  [muhurlu]'
       ].join('\n');
 
@@ -3538,6 +3637,109 @@
         ].join('\n');
       };
 
+      // --- Kabuk cekirdegi (Dalga 9b): terminal komutlari ---
+      const FORTUNES = [
+        'Sinyal, onu dinleyecek kadar yavaslayan icin tasir.',
+        'Kirik baglanti bazen bir kapidir. (bkz: sinyal kaybi)',
+        'En hizli kod, yazilmayan koddur; en iyi arayuz, fark edilmeyendir.',
+        'Cache her seyi hatirlar; sen CACHE_NAME bumplamayi unutursun.',
+        'Bir terminalin isigi, soru soranin yuzune vurur.',
+        'Neon soner, log kalir.',
+        'Butun buyuk sistemler kucuk bir "merhaba dunya" ile basladi.',
+        'Once calisir hale getir, sonra dogru hale getir, sonra neon ekle.',
+        'Gercek hata mesaji, kendine durustluktur.',
+        'Bir rota kaybolduysa haritayi buyut: tree.',
+        'Ritual, dikkati sifirlayan kucuk bir protokoldur.',
+        'Yedegi alinmayan veri, cesur bir soylentidir.',
+        'Kabugun derinligi, sordugun sorunun derinligi kadardir.',
+        'Pipe her ciktiyi tasir; anlami sen suzersin. | grep anlam'
+      ];
+      const fortuneCommand = () => `fortune: ${FORTUNES[Math.floor(Math.random() * FORTUNES.length)]}`;
+
+      // cowsay: bugy'nin ASCII hali konusur. Metin textContent ile basildigi icin guvenli.
+      const cowsayCommand = (text = '') => {
+        const msg = (String(text).trim() || 'pipe beni: fortune | cowsay').slice(0, 120);
+        const lines = [];
+        for (let i = 0; i < msg.length; i += 38) lines.push(msg.slice(i, i + 38));
+        const width = Math.max(...lines.map(l => l.length));
+        const top = ' ' + '_'.repeat(width + 2);
+        const bottom = ' ' + '-'.repeat(width + 2);
+        const body = lines.map((l, i) => {
+          const pad = l.padEnd(width);
+          if (lines.length === 1) return `< ${pad} >`;
+          if (i === 0) return `/ ${pad} \\`;
+          if (i === lines.length - 1) return `\\ ${pad} /`;
+          return `| ${pad} |`;
+        });
+        return [top, ...body, bottom,
+          '     \\   [o_o]',
+          '      \\  /|_|\\   *bzzt*',
+          '         d   b'
+        ].join('\n');
+      };
+
+      const envCommand = () => {
+        const vars = envLoad();
+        const entries = Object.entries(vars);
+        const builtins = '  (yerlesik: $USER $CWD $RANDOM $DATE $CMDS)';
+        if (!entries.length) return ['env: tanimli degisken yok. ornek: export AD=neo', builtins].join('\n');
+        return ['] ENV', '', ...entries.map(([k, v]) => `  ${k}=${v}`), '', builtins, ']'].join('\n');
+      };
+      const unsetCommand = (name = '') => {
+        const key = String(name).trim();
+        const vars = envLoad();
+        if (!key || !Object.prototype.hasOwnProperty.call(vars, key)) return `unset: "${key || '?'}" tanimli degil.`;
+        delete vars[key];
+        envSave(vars);
+        return `unset ${key}`;
+      };
+
+      const historyCommand = () => {
+        const log = state.commandLog || [];
+        if (!log.length) return 'history: gecmis bos.';
+        return log.map((cmd, i) => `  ${String(i + 1).padStart(3)}  ${cmd}`).join('\n')
+          + '\n  ("!N" ile tekrar calistir, "!!" son komut)';
+      };
+
+      const whichCommand = (target = '') => {
+        const key = normalizeCommand(target).split(' ')[0];
+        if (!key) return 'which: usage which <komut>';
+        if ((state.aliases || {})[key]) return `${key}: alias -> ${state.aliases[key]}`;
+        if (COMMAND_SYNONYMS[key]) return `${key}: yerlesik esanlamli -> ${COMMAND_SYNONYMS[key]}`;
+        if (commandVocab.includes(key)) return `${key}: yerlesik terminal komutu`;
+        return `which: ${key}: bulunamadi (oracle'a duser)`;
+      };
+
+      const sudoCommand = (arg = '') => {
+        const what = normalizeCommand(arg);
+        if (/sandvic|sandwich/.test(what)) return 'sudo: peki. (bir sandvic yapildi) 🥪';
+        if (!what) return 'sudo: usage sudo <komut>';
+        return [
+          'sudo: yetki reddedildi.',
+          'bu terminalde root yok; herkes ziyaretci, herkes esit.',
+          `(istersen dogrudan dene: ${what})`
+        ].join('\n');
+      };
+
+      const shellGuideCommand = () => [
+        '] KABUK KILAVUZU',
+        '',
+        '  boru hatti : komut | filtre | filtre',
+        '     ornek   : help | grep oyun',
+        '     filtreler: grep [-iv] <desen>, head [n], tail [n], wc [-l],',
+        '                sort [-r], uniq, rev, nl, cowsay, tee <dosya>',
+        '  yonlendirme: komut > dosya   (yaz)   komut >> dosya (ekle)',
+        '     ornek   : fortune > gunun-sozu.txt   /  cat gunun-sozu.txt',
+        '  zincir     : komut1 && komut2   (basarili olursa devam)',
+        '               komut1 ;  komut2   (her durumda devam)',
+        '  degiskenler: export AD=neo  /  echo selam $AD  /  env  /  unset AD',
+        '               yerlesik: $USER $CWD $RANDOM $DATE $CMDS',
+        '  gecmis     : history, !! (son komut), !N (N. komut), Ctrl+R (ara)',
+        '  dosyalar   : /home altinda kalici: echo, touch, rm, cat, ls home',
+        '  kisayollar : Ctrl+L temizle, Ctrl+U satiri sil, Ctrl+C iptal',
+        ']'
+      ].join('\n');
+
       // Kisisel alias/makro (Dalga 8): alias <ad> <komut> / unalias <ad> / alias (liste).
       const aliasCommand = (arg = '') => {
         const norm = normalizeCommand(arg).trim();
@@ -3636,14 +3838,92 @@
         {
           command: 'log',
           description: 'son komutlari ve gezilen node listesini gosterir',
-          aliases: ['history', 'trace log'],
+          aliases: ['trace log'],
           action: logCommand
+        },
+        {
+          command: 'history',
+          description: 'numarali komut gecmisi (!N ile tekrar calistir)',
+          aliases: ['gecmis', 'geçmiş'],
+          action: historyCommand
         },
         {
           command: 'changelog',
           description: 'siteye dusen son sinyalleri (yeni ozellikleri) acar',
           aliases: ['sinyaller', 'son sinyaller', 'news', 'updates', 'yenilikler'],
           action: goTo(route('changelog', '/pages/changelog.html'))
+        },
+        {
+          command: 'shell',
+          description: 'kabuk kilavuzu: pipe, yonlendirme, degisken, gecmis genisletme',
+          aliases: ['kabuk', 'pipes', 'kilavuz kabuk'],
+          action: shellGuideCommand
+        },
+        {
+          command: 'echo',
+          description: 'metni yazar; $DEGISKEN genisletir; "> dosya" ile /home\'a yazar',
+          aliases: ['yazdir', 'yazdır'],
+          action: () => 'echo: usage echo <metin>  (echo selam $USER > not.txt)'
+        },
+        {
+          command: 'env',
+          description: 'tanimli kabuk degiskenlerini listeler',
+          aliases: ['printenv', 'degiskenler'],
+          action: envCommand
+        },
+        {
+          command: 'export',
+          description: 'kabuk degiskeni tanimlar (export AD=deger)',
+          aliases: ['set'],
+          action: () => 'export: usage export AD=deger (sonra: echo $AD)'
+        },
+        {
+          command: 'unset',
+          description: 'kabuk degiskenini siler',
+          aliases: [],
+          action: () => 'unset: usage unset <AD>'
+        },
+        {
+          command: 'touch',
+          description: '/home altinda bos dosya olusturur',
+          aliases: [],
+          action: () => 'touch: usage touch <dosya-adi>'
+        },
+        {
+          command: 'rm',
+          description: '/home altindaki bir dosyayi siler',
+          aliases: ['del'],
+          action: () => 'rm: usage rm <dosya-adi> (ls home ile listele)'
+        },
+        {
+          command: 'which',
+          description: 'bir komutun yerlesik mi, alias mi oldugunu soyler',
+          aliases: [],
+          action: () => 'which: usage which <komut>'
+        },
+        {
+          command: 'grep',
+          description: 'pipe filtresi: satirlari desene gore suzer (komut | grep desen)',
+          aliases: [],
+          action: () => 'grep: pipe icinde kullanilir. ornek: help | grep oyun  (bkz: shell)'
+        },
+        {
+          command: 'fortune',
+          description: 'gunun terminal kehaneti',
+          aliases: ['kehanet', 'soz'],
+          action: fortuneCommand
+        },
+        {
+          command: 'cowsay',
+          description: 'ASCII bugy soyler (cowsay <metin> ya da fortune | cowsay)',
+          aliases: ['bugysay'],
+          action: () => cowsayCommand('')
+        },
+        {
+          command: 'sudo',
+          description: 'yetki dener (bu terminalde root yok)',
+          aliases: [],
+          action: () => sudoCommand('')
         },
         {
           command: 'clear',
@@ -4217,6 +4497,10 @@
         'terminal:',
         'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',
         '',
+        'kabuk (ayrinti: shell):',
+        'echo, export, env, touch, rm, which, history, fortune, cowsay, sudo',
+        'boru hatti: help | grep oyun · yonlendirme: fortune > soz.txt · zincir: cd lab && look · gecmis: !!, !3, Ctrl+R',
+        '',
         'world:',
         'look, examine <nesne>, take <nesne>, inventory, use <x> on <y>, unlock <oda> -- esikleri kesfet, shard\'i bul, /vault muhrunu coz',
         'ask <konu> / sor <konu> -- oracle\'a dunya baglamiyla sor (deb aciksa onun sesiyle)',
@@ -4578,10 +4862,233 @@
         await sendOracleQuery(`${buildWorldContext()} Soru: ${clean}`);
       };
 
+      // --- Kabuk cekirdegi (Dalga 9c): parcali yurutme + boru hatti motoru ---
+      // parameterActions runCommand ve boru hatti motoru tarafindan paylasilir.
+      const parameterActions = [
+        ['ls ', value => lsCommand(value)],
+        ['dir ', value => lsCommand(value)],
+        ['cd ', value => cdCommand(value)],
+        ['chdir ', value => cdCommand(value)],
+        ['cat ', value => catCommand(value)],
+        ['type ', value => catCommand(value)],
+        ['find ', value => findCommand(value)],
+        ['search ', value => findCommand(value)],
+        ['look ', value => lookCommand(value)],
+        ['bak ', value => lookCommand(value)],
+        ['examine ', value => examineCommand(value)],
+        ['incele ', value => examineCommand(value)],
+        ['take ', value => takeCommand(value)],
+        ['al ', value => takeCommand(value)],
+        ['unlock ', value => unlockRoomCommand(value)],
+        ['ac ', value => unlockRoomCommand(value)],
+        ['use ', value => useCommand(value)],
+        ['kullan ', value => useCommand(value)],
+        ['man ', value => manCommand(value)],
+        ['kilavuz ', value => manCommand(value)],
+        ['alias ', value => aliasCommand(value)],
+        ['unalias ', value => unaliasCommand(value)],
+        ['theme ', value => themeCommand(value)],
+        ['color ', value => themeCommand(value)],
+        ['crt ', value => crtCommand(value)],
+        ['volume ', value => volumeCommand(value)],
+        ['audio ', value => volumeCommand(value)],
+        ['sound ', value => volumeCommand(value)],
+        ['pipe ', value => pipeCommand(value)],
+        ['outrun ', value => outrunCommand(value)],
+        ['grep ', value => `grep: tek basina degil, boru hattinda kullanilir. ornek: help | grep ${value || 'oyun'}`]
+      ];
+
+      // Ham (buyuk/kucuk harf ve ozel karakter koruyan) argumanli komutlar.
+      // Kabuk motoru bunlari normalizasyondan ONCE ele alir; echo icerigi bozulmaz.
+      const RAW_SHELL_COMMANDS = new Set(['echo', 'export', 'set', 'unset', 'touch', 'rm', 'del', 'which', 'cowsay', 'bugysay', 'sudo']);
+
+      // Tek kabuk asamasi: cikti dizesi dondurur; YAZDIRMAZ, input'a dokunmaz.
+      const execStage = async (rawStage) => {
+        const stage = envExpand(String(rawStage).trim().slice(0, 520));
+        if (!stage) return { ok: false, out: '' };
+        const firstRaw = (stage.split(/\s+/)[0] || '').toLowerCase();
+        const argRaw = stage.includes(' ') ? stage.slice(stage.indexOf(' ') + 1).trim() : '';
+        if (RAW_SHELL_COMMANDS.has(firstRaw)) {
+          switch (firstRaw) {
+            case 'echo': return { ok: true, out: argRaw };
+            case 'export': case 'set': {
+              const m = argRaw.match(/^([A-Za-z_]\w*)\s*=\s*(.*)$/) || argRaw.match(/^([A-Za-z_]\w*)\s+(.+)$/);
+              if (!m) return { ok: false, out: 'export: usage export AD=deger' };
+              const res = envSet(m[1], m[2]);
+              return { ok: !res.startsWith('export:'), out: res };
+            }
+            case 'unset': return { ok: true, out: unsetCommand(argRaw) };
+            case 'touch': {
+              const key = vfsName(argRaw);
+              if (!key) return { ok: false, out: 'touch: gecersiz dosya adi.' };
+              if (vfsRead(key) !== null) return { ok: true, out: `touch: /home/${key} zaten var (${vfsRead(key).length}b)` };
+              return { ok: true, out: vfsWrite(key, '') };
+            }
+            case 'rm': case 'del': {
+              if (/^-rf?\b/.test(argRaw)) return { ok: false, out: 'rm: guzel deneme. bu evren korumali; /home disinda silinecek bir sey yok.' };
+              if (!argRaw) return { ok: false, out: 'rm: usage rm <dosya-adi>' };
+              const res = vfsRemove(argRaw);
+              return { ok: !res.startsWith('rm:'), out: res };
+            }
+            case 'which': return { ok: true, out: whichCommand(argRaw) };
+            case 'cowsay': case 'bugysay': return { ok: true, out: cowsayCommand(argRaw) };
+            case 'sudo': return { ok: true, out: sudoCommand(argRaw) };
+          }
+        }
+        const command = expandAlias(applySynonyms(normalizeCommand(stage)));
+        const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
+        if (parameterMatch) {
+          const result = parameterMatch[1](command.slice(parameterMatch[0].length));
+          return { ok: true, out: result !== undefined ? String(result) : '' };
+        }
+        const action = commandMap[command];
+        if (action) {
+          const result = await action();
+          return { ok: true, out: result !== undefined ? String(result) : '' };
+        }
+        return { ok: false, out: `bilinmeyen komut: ${command || stage}` };
+      };
+
+      // Boru hatti filtreleri (grep/head/tail/wc/sort/uniq/rev/nl/cowsay/tee).
+      // Not: filtre argumanlarina normalizeCommand uygulanmaz (-i, -v, desen korunur).
+      const applyFilter = (spec, input) => {
+        const parts = envExpand(String(spec).trim()).split(/\s+/).filter(Boolean);
+        const name = (parts.shift() || '').toLowerCase();
+        const lines = String(input).split('\n');
+        if (name === 'grep') {
+          const flags = { i: false, v: false };
+          while (parts[0] && /^-[iv]+$/.test(parts[0])) {
+            const f = parts.shift();
+            flags.i = flags.i || f.includes('i');
+            flags.v = flags.v || f.includes('v');
+          }
+          const pattern = parts.join(' ').slice(0, 64);
+          if (!pattern) return { ok: false, out: 'grep: desen gerekli (grep [-iv] <desen>)' };
+          const needle = flags.i ? pattern.toLowerCase() : pattern;
+          const hit = (l) => (flags.i ? l.toLowerCase() : l).includes(needle);
+          const outLines = lines.filter(l => (flags.v ? !hit(l) : hit(l)));
+          return { ok: true, out: outLines.length ? outLines.join('\n') : '(eslesme yok)' };
+        }
+        if (name === 'head' || name === 'tail') {
+          let n = 10;
+          const flagIdx = parts.indexOf('-n');
+          if (flagIdx !== -1 && /^\d+$/.test(parts[flagIdx + 1] || '')) n = parseInt(parts[flagIdx + 1], 10);
+          else if (/^\d+$/.test(parts[0] || '')) n = parseInt(parts[0], 10);
+          n = Math.max(1, Math.min(n, 200));
+          return { ok: true, out: (name === 'head' ? lines.slice(0, n) : lines.slice(-n)).join('\n') };
+        }
+        if (name === 'wc') {
+          const text = String(input);
+          if (parts.includes('-l')) return { ok: true, out: String(lines.length) };
+          if (parts.includes('-w')) return { ok: true, out: String(text.split(/\s+/).filter(Boolean).length) };
+          if (parts.includes('-c')) return { ok: true, out: String(text.length) };
+          return { ok: true, out: `${lines.length} satir  ${text.split(/\s+/).filter(Boolean).length} kelime  ${text.length} karakter` };
+        }
+        if (name === 'sort') {
+          const numeric = parts.includes('-n');
+          const sorted = [...lines].sort(numeric ? (a, b) => parseFloat(a) - parseFloat(b) : (a, b) => a.localeCompare(b, 'tr'));
+          if (parts.includes('-r')) sorted.reverse();
+          return { ok: true, out: sorted.join('\n') };
+        }
+        if (name === 'uniq') {
+          const withCount = parts.includes('-c');
+          const outLines = [];
+          let prev = null, count = 0;
+          const flush = () => { if (prev !== null) outLines.push(withCount ? `${String(count).padStart(4)} ${prev}` : prev); };
+          for (const l of lines) {
+            if (l === prev) { count += 1; continue; }
+            flush(); prev = l; count = 1;
+          }
+          flush();
+          return { ok: true, out: outLines.join('\n') };
+        }
+        if (name === 'rev') return { ok: true, out: lines.map(l => [...l].reverse().join('')).join('\n') };
+        if (name === 'nl') return { ok: true, out: lines.map((l, i) => `${String(i + 1).padStart(4)}  ${l}`).join('\n') };
+        if (name === 'cowsay' || name === 'bugysay') {
+          return { ok: true, out: cowsayCommand(lines.join(' / ').slice(0, 120)) };
+        }
+        if (name === 'tee') {
+          if (!parts[0]) return { ok: false, out: 'tee: dosya adi gerekli (tee <dosya>)' };
+          const res = vfsWrite(parts[0], input);
+          return { ok: true, out: `${String(input)}\n[${res}]` };
+        }
+        return { ok: false, out: `${name || '?'}: boru hatti filtresi degil (grep/head/tail/wc/sort/uniq/rev/nl/cowsay/tee — bkz: shell)` };
+      };
+
+      // Kabuk satiri operator iceriyor mu? (pipe, zincir, yonlendirme, gecmis, ham komut)
+      const isShellLine = (query) => {
+        if (/^!/.test(query)) return true;
+        if (query.includes('|') || query.includes('&&') || query.includes(';')) return true;
+        if (/\s>>?\s*[\w.$-]+\s*$/.test(query)) return true;
+        const first = (query.split(/\s+/)[0] || '').toLowerCase();
+        return RAW_SHELL_COMMANDS.has(first);
+      };
+
+      // Kabuk satirini calistir: zincir (&& ;) -> her parcada boru hatti (|) ->
+      // sonda yonlendirme (> >>). Tek birlesik cikti dondurur.
+      const runShellLine = async (rawLine) => {
+        const chainParts = String(rawLine).split(/(&&|;)/);
+        const outputs = [];
+        let lastOk = true;
+        for (let i = 0; i < chainParts.length; i += 2) {
+          const segment = (chainParts[i] || '').trim();
+          const joiner = chainParts[i - 1]; // segmentten onceki operator
+          if (joiner === '&&' && !lastOk) { outputs.push('(onceki komut basarisiz; && zinciri durdu)'); break; }
+          if (!segment) continue;
+          // Yonlendirme: sondaki "> dosya" / ">> dosya"
+          let body = segment;
+          let redirect = null;
+          const rd = segment.match(/^(.*?)\s*(>>|>)\s*([\w.$-]+)\s*$/);
+          if (rd && rd[1].trim()) { body = rd[1].trim(); redirect = { file: rd[3], append: rd[2] === '>>' }; }
+          // Boru hatti
+          const stages = body.split('|').map(s => s.trim()).filter(Boolean);
+          if (!stages.length) { lastOk = false; outputs.push('kabuk: bos komut'); continue; }
+          let result = await execStage(stages[0]);
+          for (let s = 1; s < stages.length && result.ok; s += 1) {
+            result = applyFilter(stages[s], result.out);
+          }
+          lastOk = result.ok;
+          if (redirect && result.ok) {
+            const written = vfsWrite(envExpand(redirect.file), result.out, redirect.append);
+            outputs.push(written);
+            lastOk = !written.startsWith('yaz:');
+          } else if (result.out !== '') {
+            outputs.push(result.out);
+          }
+        }
+        return outputs.join('\n');
+      };
+
+      // Gecmis genisletme: !! (son), !N (N. komut), !metin (o metinle baslayan son).
+      const expandHistory = (query) => {
+        if (!/^!/.test(query)) return { query, expanded: false };
+        const log = state.commandLog || [];
+        const rest = query.slice(1).trim();
+        let resolved = null;
+        if (query.startsWith('!!')) resolved = (log[log.length - 1] || null) && log[log.length - 1] + query.slice(2);
+        else if (/^\d+$/.test(rest)) resolved = log[parseInt(rest, 10) - 1] || null;
+        else if (rest) resolved = [...log].reverse().find(c => c.startsWith(rest)) || null;
+        return resolved
+          ? { query: resolved, expanded: true }
+          : { query, expanded: false, error: `kabuk: ${query}: gecmiste bulunamadi (history ile listele)` };
+      };
+
       const runCommand = async (raw) => {
-        const query = raw.trim().slice(0, 520);
-        const command = expandAlias(applySynonyms(normalizeCommand(query)));
+        let query = raw.trim().slice(0, 520);
         if (!query || commandInFlight) return;
+        // Gecmis genisletme (bash "!"): komut kaydindan ONCE cozulur.
+        if (/^!/.test(query)) {
+          const hist = expandHistory(query);
+          if (hist.error) {
+            transcriptEcho(query);
+            printTerminal(hist.error);
+            commandInput.value = '';
+            clearCommandSuggestions();
+            return;
+          }
+          if (hist.expanded) query = hist.query.trim().slice(0, 520);
+        }
+        const command = expandAlias(applySynonyms(normalizeCommand(query)));
         state.commands += 1;
         const prevLog = state.commandLog || [];
         // Ardisik tekrari yazma (bash ignoredups); gecmis son 30 komutu tutar.
@@ -4626,39 +5133,17 @@
           clearCommandSuggestions();
           return;
         }
+        // Kabuk satiri (pipe / && / ; / yonlendirme / ham komutlar): motor calisir.
+        // Oracle'a DUSMEZ; bilinmeyen komut kabuk hatasi olarak doner.
+        if (isShellLine(query)) {
+          const shellOut = await runShellLine(query);
+          emitResult(shellOut, query);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
         const action = commandMap[command];
-        const parameterActions = [
-          ['ls ', value => lsCommand(value)],
-          ['dir ', value => lsCommand(value)],
-          ['cd ', value => cdCommand(value)],
-          ['chdir ', value => cdCommand(value)],
-          ['cat ', value => catCommand(value)],
-          ['type ', value => catCommand(value)],
-          ['find ', value => findCommand(value)],
-          ['search ', value => findCommand(value)],
-          ['look ', value => lookCommand(value)],
-          ['bak ', value => lookCommand(value)],
-          ['examine ', value => examineCommand(value)],
-          ['incele ', value => examineCommand(value)],
-          ['take ', value => takeCommand(value)],
-          ['al ', value => takeCommand(value)],
-          ['unlock ', value => unlockRoomCommand(value)],
-          ['ac ', value => unlockRoomCommand(value)],
-          ['use ', value => useCommand(value)],
-          ['kullan ', value => useCommand(value)],
-          ['man ', value => manCommand(value)],
-          ['kilavuz ', value => manCommand(value)],
-          ['alias ', value => aliasCommand(value)],
-          ['unalias ', value => unaliasCommand(value)],
-          ['theme ', value => themeCommand(value)],
-          ['color ', value => themeCommand(value)],
-          ['crt ', value => crtCommand(value)],
-          ['volume ', value => volumeCommand(value)],
-          ['audio ', value => volumeCommand(value)],
-          ['sound ', value => volumeCommand(value)],
-          ['pipe ', value => pipeCommand(value)],
-          ['outrun ', value => outrunCommand(value)]
-        ];
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
           const result = parameterMatch[1](command.slice(parameterMatch[0].length));
@@ -4697,9 +5182,51 @@
         clearCommandSuggestions();
       };
 
+      // Ctrl+R ters gecmis aramasi durumu (yazinca sifirlanir).
+      let reverseSearch = null; // { needle, index }
+
       commandInput?.addEventListener('keydown', event => {
         // Teletype suruyorsa herhangi bir tusa basinca aninda tamamlansin (atlanabilir).
         if (terminalTypeTimer !== null) flushTerminalType();
+        // Gercek terminal kisayollari (Ctrl+L/U/C/R). Kopyalama (Ctrl+C secimliyken)
+        // bozulmasin diye ^C yalniz secim yokken komut iptali sayilir.
+        if (event.ctrlKey && !event.altKey && !event.metaKey) {
+          const ck = event.key.toLowerCase();
+          if (ck === 'l') {
+            event.preventDefault();
+            emitResult(clearCommand(), 'clear');
+            return;
+          }
+          if (ck === 'u') {
+            event.preventDefault();
+            commandInput.value = '';
+            reverseSearch = null;
+            renderCommandSuggestions('');
+            return;
+          }
+          if (ck === 'c' && commandInput.selectionStart === commandInput.selectionEnd) {
+            event.preventDefault();
+            if (commandInput.value) transcriptEcho(`${commandInput.value}^C`);
+            commandInput.value = '';
+            reverseSearch = null;
+            return;
+          }
+          if (ck === 'r') {
+            event.preventDefault();
+            const log = state.commandLog || [];
+            if (!log.length) return;
+            if (!reverseSearch) reverseSearch = { needle: commandInput.value.trim(), index: log.length };
+            for (let i = reverseSearch.index - 1; i >= 0; i -= 1) {
+              if (!reverseSearch.needle || log[i].includes(reverseSearch.needle)) {
+                reverseSearch.index = i;
+                commandInput.value = log[i];
+                return;
+              }
+            }
+            reverseSearch.index = log.length; // basa sar (tekrar Ctrl+R en yeniden baslar)
+            return;
+          }
+        }
         // Hafif tus-tik sesi (yalniz tek karakter; audio kapaliysa zaten sessiz).
         if (event.key && event.key.length === 1) audioCue('terminal.suggest');
         const matches = matchingCommands(commandInput.value);
@@ -4774,6 +5301,7 @@
       commandInput?.addEventListener('input', (event) => {
         commandHistoryIndex = -1;
         activeSuggestionIndex = 0;
+        reverseSearch = null;
         completeInput(event);
       });
 

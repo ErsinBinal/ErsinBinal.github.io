@@ -53,6 +53,41 @@ TUR OZETI (2026-07-02) — P0 kapanislari + Kul Hatti II icerik
   gerekir), Hasat Gemisi (2. guverteye ulasmak gerekir).
 
 ==========================================================================
+TUR OZETI (2026-07-02 / 2. tur) — KABUK CEKIRDEGI (gercek terminal hissi)
+==========================================================================
+Istek: command shell'i "neredeyse gercek terminal" seviyesine tasi;
+yaratici ama guvenlik acigi yaratmadan. home-protocol.js Dalga 9 (a/b/c):
+  [x] BORU HATTI: komut | filtre | filtre. Filtreler: grep [-iv], head [n],
+      tail [n], wc [-l/-w/-c], sort [-r/-n], uniq [-c], rev, nl, cowsay,
+      tee <dosya>. ornek: help | grep oyun, history | tail 5.
+  [x] YONLENDIRME + KALICI /home: echo metin > not.txt (>> ekler),
+      touch/rm/cat/ls home. localStorage (convivium.shell.files); tavanlar:
+      24 dosya, 32 kr ad (slug), 4000 kr icerik. tree + ls entegre.
+  [x] DEGISKENLER: export AD=deger, $AD genisletme (tek gecis, dongu yok),
+      env, unset. Yerlesik: $USER $CWD $RANDOM $DATE $CMDS. localStorage
+      (convivium.shell.env), 16 degisken x 120 kr tavan.
+  [x] ZINCIR: komut1 && komut2 (hataya kadar) / komut1 ; komut2 (kosulsuz).
+  [x] GECMIS GENISLETME: !! (son), !N (numara), !metin (onek); history
+      komutu numarali liste. Ctrl+R ters gecmis arama (tekrarli).
+  [x] KISAYOLLAR: Ctrl+L temizle, Ctrl+U satir sil, Ctrl+C iptal (^C eko;
+      secim varken kopyalamayi bozmaz).
+  [x] YENI KOMUTLAR: echo, env, export/set, unset, touch, rm/del, which,
+      history, fortune (14 TR kehanet), cowsay/bugysay (ASCII bugy),
+      sudo (saka; sandvic easter egg), shell (kabuk kilavuzu). help'e
+      "kabuk" bolumu; man hepsini otomatik gorur (commandDefinitions).
+  GUVENLIK: eval yok; tum cikti textContent (HTML yorumlanmaz -> XSS'e
+  yapisal kapali); kullanici verisi ayni-origin localStorage'da boyut/adet
+  tavanli; $ genisletme tek gecis; grep substring (regex yok -> ReDoS yok);
+  bilinmeyen kabuk komutu oracle'a DUSMEZ (veri sizintisi onlenir).
+  MIMARI: parameterActions runCommand'dan cikarilip paylasildi; execStage
+  (tek asama) + applyFilter (boru) + runShellLine (zincir+yonlendirme) +
+  isShellLine (operator tespiti; ask/mark oncelikli kalir, dogal sorular
+  oracle'a gitmeye devam eder). log'un 'history' alias'i yeni history
+  komutuna tasindi. Surum: home-protocol v53, CACHE v154->v155.
+  GORSEL TEYIT: tarayicida "shell" yaz -> kilavuz; ornekler: fortune |
+  cowsay, echo selam $USER > ilk.txt && cat ilk.txt, help | grep oyun.
+
+==========================================================================
 ACIK ISLER (oncelik sirasiyla)
 ==========================================================================
 P0/P1
