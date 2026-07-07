@@ -21,6 +21,19 @@
   // v1'i sondurmek icin v1 disindaki tum kaplama (overlay) motorlari.
   const OVERLAYS = ['v2', 'v3', 'v4'];
 
+  // KILIT: v4 "Bugy Yaratiklar" offline node bulmacasinin oduludur.
+  // Bulmacayi cozmeyen studioda da bu motoru goremez/etkinlestiremez.
+  const LOCKED_ENGINES = ['v4'];
+  const UNLOCK_KEY = 'convivium.bugy.unlocked';
+  function bugyUnlocked() {
+    try {
+      if (localStorage.getItem(UNLOCK_KEY) === '1') return true;
+      const node = JSON.parse(localStorage.getItem('convivium.offline.node') || '{}');
+      return Boolean(node && node.solved);
+    } catch { return false; }
+  }
+  const engineLocked = (key) => LOCKED_ENGINES.includes(key) && !bugyUnlocked();
+
   const ENGINES = [
     {
       key: 'v1',
@@ -144,6 +157,12 @@
 
   // ---- Motor degistirme (tum kaplama motorlari karsilikli dislar) ----
   function setEngine(key) {
+    // Kilit: cozmeyen v4'u etkinlestiremez.
+    if (engineLocked(key)) {
+      log(`motor kilitli: ${key} — offline node bulmacasini coz`);
+      sfx('ui.error');
+      return;
+    }
     writeLS(ENGINE_KEY, key);
     // Hedef disindaki tum overlay motorlarini kapat.
     OVERLAYS.filter((k) => k !== key).forEach((k) => {
@@ -168,33 +187,38 @@
     ENGINES.forEach((def) => {
       const api = def.api();
       const loaded = Boolean(api);
-      const isActive = def.key === active;
+      const locked = engineLocked(def.key);
+      const isActive = def.key === active && !locked;
       const card = document.createElement('article');
-      card.className = 'engine-card' + (isActive ? ' is-active' : '') + (loaded ? '' : ' is-offline');
+      card.className = 'engine-card' + (isActive ? ' is-active' : '')
+        + (loaded && !locked ? '' : ' is-offline') + (locked ? ' is-locked' : '');
 
       const head = document.createElement('div');
       head.className = 'engine-card-head';
       const name = document.createElement('strong');
-      name.textContent = def.name;
+      // Kilitliyken isim maskelenir (gizli odul ele verilmesin).
+      name.textContent = locked ? '🔒 Bugy ???' : def.name;
       const ver = document.createElement('span');
       ver.className = 'engine-ver';
       const st = loaded && api.getState ? api.getState() : null;
-      ver.textContent = st && st.version ? `v${st.version}` : def.tag;
+      ver.textContent = locked ? 'kilitli' : (st && st.version ? `v${st.version}` : def.tag);
       head.append(name, ver);
 
       const note = document.createElement('p');
       note.className = 'engine-note';
-      note.textContent = def.note;
+      note.textContent = locked
+        ? 'Gizli ödül — sinyali kaybedince açılan offline node bulmacasını çöz.'
+        : def.note;
 
       const status = document.createElement('span');
       status.className = 'engine-flag';
-      status.textContent = !loaded ? 'YUKLENMEDI' : isActive ? 'AKTIF' : 'BEKLEMEDE';
+      status.textContent = locked ? 'KİLİTLİ' : !loaded ? 'YUKLENMEDI' : isActive ? 'AKTIF' : 'BEKLEMEDE';
 
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'btn' + (isActive ? '' : ' btn-primary');
-      btn.textContent = isActive ? 'Aktif' : 'Etkinlestir';
-      btn.disabled = !loaded || isActive;
+      btn.textContent = locked ? '🔒 Kilitli' : isActive ? 'Aktif' : 'Etkinlestir';
+      btn.disabled = locked || !loaded || isActive;
       btn.addEventListener('click', () => setEngine(def.key));
 
       card.append(head, note, status, btn);
@@ -537,6 +561,7 @@
 
   // ---- Toplu yenileme ----
   function refresh() {
+    sanitizeLockedEngine(); // gec aktive olan kilitli motoru da yakala
     renderEngines();
     renderTelemetry();
     renderSkins();
@@ -630,8 +655,29 @@
 
   // Motorlar defer ile yuklendigi icin DOMContentLoaded sonrasi boot ediyoruz;
   // bir kac kez tekrar deneyerek gec gelen motorlari da yakaliyoruz.
+  // Kilitli motor (v4) kayitli/aktifse ve hak yoksa: kapat, v1'e don.
+  // Motorlar localStorage'dan kendiliginden aktive oldugu icin gerekli.
+  function sanitizeLockedEngine() {
+    if (!engineLocked('v4')) return;
+    let touched = false;
+    LOCKED_ENGINES.forEach((k) => {
+      const api = overlayApi(k);
+      try {
+        const st = api && api.getState ? api.getState() : null;
+        if (st && st.active && api.deactivate) { api.deactivate(); touched = true; }
+      } catch { /* motor hazir degil */ }
+    });
+    if (LOCKED_ENGINES.includes(readLS(ENGINE_KEY))) {
+      writeLS(ENGINE_KEY, 'v1');
+      window.Bugy && window.Bugy.summon && window.Bugy.summon();
+      touched = true;
+    }
+    if (touched) log('kilitli motor kapatildi (v1)');
+  }
+
   function boot() {
     wire();
+    sanitizeLockedEngine();
     initRadar();
     syncSoundToggle();
     radarLoop();

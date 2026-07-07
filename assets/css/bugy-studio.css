@@ -136,6 +136,14 @@
 
 .engine-card.is-offline { opacity: 0.55; }
 
+.engine-card.is-locked {
+  opacity: 0.7;
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--color-primary, #00ff66) 30%, transparent);
+}
+
+.engine-card.is-locked .engine-flag { color: var(--color-muted, #8aa); }
+
 .engine-card-head {
   display: flex;
   align-items: baseline;
