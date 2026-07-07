@@ -9,6 +9,7 @@
   'use strict';
 
   const PREF_KEY = 'convivium.audio.enabled';
+  const PREF_UPDATED_KEY = 'convivium.audio.updatedAt';
   const BUS_VOLUME_KEY = 'convivium.audio.busVolumes';
   const SAMPLE_RATE = 22050;
   const POOL_SIZE = 3;
@@ -471,7 +472,10 @@
     const next = Boolean(value);
     if (withSound && enabled && !next) play('ui.toggleOff');
     enabled = next;
-    try { localStorage.setItem(PREF_KEY, String(enabled)); } catch {}
+    try {
+      localStorage.setItem(PREF_KEY, String(enabled));
+      localStorage.setItem(PREF_UPDATED_KEY, String(Date.now()));
+    } catch {}
     syncToggles();
     emitState();
     if (!enabled) {

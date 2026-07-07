@@ -357,6 +357,17 @@
         writeUserPreferences({ ...currentPreferenceSnapshot(), ...patch });
       };
 
+      const localAudioPreference = () => {
+        try {
+          const raw = localStorage.getItem('convivium.audio.enabled');
+          if (raw !== 'true' && raw !== 'false') return null;
+          const updatedAt = Number(localStorage.getItem('convivium.audio.updatedAt') || '0') || 0;
+          return { enabled: raw === 'true', updatedAt };
+        } catch {
+          return null;
+        }
+      };
+
       const restorePowerOffPreference = () => {
         const overlay = ensurePowerOverlay();
         window.clearTimeout(commandCloseTimer);
@@ -380,7 +391,12 @@
 
         restoringUserPreferences = true;
         try {
-          if (typeof prefs.audioEnabled === 'boolean') setAudioEnabled(prefs.audioEnabled);
+          const localAudio = localAudioPreference();
+          if (localAudio) {
+            setAudioEnabled(localAudio.enabled);
+          } else if (typeof prefs.audioEnabled === 'boolean') {
+            setAudioEnabled(prefs.audioEnabled);
+          }
           if (prefs.theme) themeCommand(prefs.theme);
           if (prefs.crt) setCrt(true);
           if (prefs.virtualCwd && virtualFs[prefs.virtualCwd]) virtualCwd = prefs.virtualCwd;
@@ -5343,11 +5359,6 @@
         location.href = '/account/auth.html';
       });
 
-      setAudioEnabled(audioEnabled);
-      soundToggle?.addEventListener('click', () => {
-        setAudioEnabled(!audioEnabled, true);
-      });
-
       window.addEventListener('convivium:audio-state', event => {
         if (typeof event.detail?.enabled !== 'boolean') return;
         audioEnabled = event.detail.enabled;
@@ -5355,6 +5366,7 @@
           soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
           soundToggle.setAttribute('aria-pressed', String(audioEnabled));
         }
+        persistUserPreferences({ audioEnabled });
       });
 
       window.addEventListener('bugy-v4:state', event => {
