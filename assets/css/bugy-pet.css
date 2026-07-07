@@ -3,6 +3,11 @@
 .bugy-onboard {
   --bp-primary: var(--color-primary, #00ff66);
   --bp-text: var(--color-text, #c9ffd6);
+  --bp-edge: clamp(14px, 3vw, 22px);
+  --bp-gutter: clamp(28px, 6vw, 44px);
+  --bp-care-button-size: 48px;
+  --bp-v4-reserved-bottom: calc(18px + 132px + 16px);
+  --bp-care-panel-bottom: calc(var(--bp-v4-reserved-bottom) + var(--bp-care-button-size) + 10px);
   font-family: 'Courier New', Courier, monospace;
 }
 
@@ -184,13 +189,13 @@
 /* --- Bakim butonu --- */
 .bugy-care-btn {
   position: fixed;
-  right: 22px;
-  bottom: 22px;
+  right: var(--bp-edge);
+  bottom: var(--bp-v4-reserved-bottom);
   z-index: 9000;
   display: grid;
   place-items: center;
-  width: 48px;
-  height: 48px;
+  width: var(--bp-care-button-size);
+  height: var(--bp-care-button-size);
   font-size: 22px;
   border: 1px solid color-mix(in srgb, var(--bp-primary) 55%, transparent);
   border-radius: 50%;
@@ -223,10 +228,10 @@
 /* --- Bakim paneli --- */
 .bugy-care-panel {
   position: fixed;
-  right: 22px;
-  bottom: 80px;
+  right: var(--bp-edge);
+  bottom: var(--bp-care-panel-bottom);
   z-index: 9050;
-  width: min(300px, calc(100vw - 44px));
+  width: min(300px, calc(100vw - var(--bp-gutter)));
   padding: 14px 16px 16px;
   border: 1px solid color-mix(in srgb, var(--bp-primary) 45%, transparent);
   border-radius: 14px;
@@ -381,10 +386,10 @@
 /* --- Bildirim baloncugu (evrim / sakinlesme) --- */
 .bugy-toast {
   position: fixed;
-  right: 22px;
-  bottom: 140px;
+  right: var(--bp-edge);
+  bottom: var(--bp-care-panel-bottom);
   z-index: 9200;
-  max-width: min(280px, calc(100vw - 44px));
+  max-width: min(280px, calc(100vw - var(--bp-gutter)));
   padding: 10px 14px;
   border: 1px solid color-mix(in srgb, var(--bp-primary) 55%, transparent);
   border-radius: 10px;
