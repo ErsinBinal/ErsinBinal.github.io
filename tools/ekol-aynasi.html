@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-67B3C50D
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-67B3C50D">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ekol Aynası | Convivium</title>
+  <meta name="description" content="Gündelik senaryolara verdiğin yanıtlardan sana en yakın siyasi düşünce ekolünü bulan ayna. Teşhis değil; tanıma.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/tools/ekol-aynasi.html">
+  <meta name="robots" content="index, follow">
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+
+  <!-- OpenGraph -->
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Ekol Aynası | Convivium">
+  <meta property="og:description" content="Yaşanmışlık senaryolarından siyasi düşünce ekolünü bulan ayna.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/tools/ekol-aynasi.html">
+  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+  <meta property="og:locale" content="tr_TR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ekol Aynası | Convivium">
+  <meta name="twitter:description" content="Yaşanmışlık senaryolarından siyasi düşünce ekolünü bulan ayna.">
+  <meta name="twitter:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#c9a35f">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/supabase-client.js?v=30"></script>
+  <script src="/assets/js/auth-gate.js?v=22" data-item-key="ekol-aynasi" data-item-type="app" data-item-title="Ekol Aynası"></script>
+  <style>
+    /* --- MİMARİ NOT: TASARIM DİLİ ---
+       Convivium'un karanlık terminal kimliği korunur (mono meta etiketler),
+       ama bu araç bir "harp odası aynası": bronz vurgu + serif senaryo metni.
+       Teori arka planda, ayna önde. */
+    :root {
+      --bg: #0b0b10;
+      --panel: #14141d;
+      --panel-2: #191926;
+      --line: #2a2a3a;
+      --ink: #e8e2d3;
+      --muted: #9a93a5;
+      --bronze: #c9a35f;
+      --bronze-dim: #8a6f3e;
+      --teal: #6fd3b8;
+      --danger: #e57373;
+      --serif: Georgia, 'Times New Roman', serif;
+      --mono: 'Courier New', Courier, monospace;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background:
+        radial-gradient(1200px 600px at 70% -10%, rgba(201,163,95,0.07), transparent 60%),
+        radial-gradient(900px 500px at 10% 110%, rgba(111,211,184,0.05), transparent 60%),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--serif);
+      margin: 0;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 90px; }
+
+    header.masthead { text-align: center; padding: 26px 0 10px; border-bottom: 1px solid var(--line); }
+    .masthead .sysline { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .masthead h1 { margin: 10px 0 4px; font-weight: 400; letter-spacing: 6px; font-size: 1.9rem; color: var(--bronze); text-shadow: 0 0 22px rgba(201,163,95,0.25); }
+    .masthead p.sub { margin: 0 0 16px; color: var(--muted); font-size: 0.95rem; font-style: italic; }
+
+    .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 26px 26px 30px; margin-top: 26px; box-shadow: 0 14px 40px rgba(0,0,0,0.35); }
+    .panel .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--bronze-dim); margin-bottom: 12px; }
+
+    /* --- INTRO --- */
+    .claims { display: grid; gap: 12px; margin: 18px 0 8px; }
+    .claim { border-left: 2px solid var(--bronze-dim); padding: 4px 0 4px 14px; color: var(--ink); }
+    .claim em { color: var(--bronze); font-style: normal; }
+    .claim small { display: block; color: var(--muted); font-size: 0.85rem; }
+    .mirror-note { margin-top: 18px; padding: 12px 14px; background: rgba(201,163,95,0.06); border: 1px dashed var(--bronze-dim); border-radius: 8px; color: var(--muted); font-size: 0.9rem; }
+    .mirror-note strong { color: var(--bronze); font-weight: 400; }
+
+    button.btn {
+      font-family: var(--mono); font-size: 0.95rem; letter-spacing: 1px;
+      background: transparent; color: var(--bronze); border: 1px solid var(--bronze-dim);
+      border-radius: 6px; padding: 12px 26px; cursor: pointer; margin-top: 20px;
+      transition: background .2s, color .2s, box-shadow .2s;
+    }
+    button.btn:hover, button.btn:focus-visible { background: rgba(201,163,95,0.12); box-shadow: 0 0 18px rgba(201,163,95,0.18); outline: none; }
+    button.btn.ghost { color: var(--muted); border-color: var(--line); }
+    button.btn.ghost:hover { color: var(--ink); box-shadow: none; }
+
+    /* --- SORU EKRANI --- */
+    .qmeta { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-family: var(--mono); font-size: 0.72rem; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; }
+    .qmeta .stage-tag { color: var(--teal); }
+    .progress { display: flex; gap: 6px; margin: 14px 0 20px; }
+    .progress i { width: 100%; height: 2px; background: var(--line); border-radius: 2px; transition: background .3s; }
+    .progress i.done { background: var(--bronze-dim); }
+    .progress i.now { background: var(--bronze); box-shadow: 0 0 8px rgba(201,163,95,0.5); }
+
+    .scenario { font-size: 1.15rem; line-height: 1.7; margin: 6px 0 22px; }
+    .options { display: grid; gap: 10px; }
+    .opt {
+      text-align: left; font-family: var(--serif); font-size: 0.98rem; line-height: 1.5;
+      background: var(--panel-2); color: var(--ink); border: 1px solid var(--line);
+      border-radius: 8px; padding: 13px 16px 13px 44px; cursor: pointer; position: relative;
+      transition: border-color .18s, background .18s, transform .18s;
+    }
+    .opt::before {
+      content: attr(data-key); position: absolute; left: 14px; top: 13px;
+      font-family: var(--mono); font-size: 0.8rem; color: var(--bronze-dim);
+    }
+    .opt:hover, .opt:focus-visible { border-color: var(--bronze-dim); background: #1d1d2b; transform: translateX(3px); outline: none; }
+    .qfoot { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .qfoot .hint { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 1px; }
+    .linkish { background: none; border: none; color: var(--muted); font-family: var(--mono); font-size: 0.78rem; cursor: pointer; letter-spacing: 1px; padding: 4px 6px; }
+    .linkish:hover { color: var(--bronze); }
+
+    /* --- RAPOR --- */
+    .report h2.school { font-weight: 400; font-size: 1.7rem; color: var(--bronze); margin: 4px 0 2px; letter-spacing: 1px; }
+    .report .family-tag { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; color: var(--teal); }
+    .verdict { font-family: var(--mono); font-size: 0.8rem; color: var(--muted); margin: 8px 0 20px; letter-spacing: 1px; }
+    .verdict b { color: var(--ink); font-weight: 400; }
+    .coreline { font-size: 1.08rem; font-style: italic; color: var(--ink); border-left: 3px solid var(--bronze); padding: 8px 16px; margin: 18px 0; background: rgba(201,163,95,0.05); border-radius: 0 8px 8px 0; }
+    .rsec { margin-top: 26px; }
+    .rsec h3 { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--bronze-dim); font-weight: 400; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    .rsec ul { padding-left: 18px; margin: 10px 0; }
+    .rsec li { margin: 8px 0; }
+    .axis-name { font-family: var(--mono); font-size: 0.72rem; color: var(--teal); letter-spacing: 1px; }
+    .pullbox { padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); margin-top: 10px; }
+    .pullbox .mode { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 2px; color: var(--bronze); text-transform: uppercase; display: block; margin-bottom: 6px; }
+    .blind { color: var(--muted); font-style: italic; }
+    .suntzu { border: 1px dashed var(--teal); border-radius: 8px; padding: 12px 16px; margin-top: 10px; color: var(--ink); background: rgba(111,211,184,0.05); }
+    .ethics { border: 1px solid var(--danger); border-radius: 8px; padding: 12px 16px; margin-top: 10px; color: #f0c9c9; background: rgba(229,115,115,0.07); font-size: 0.92rem; }
+    .ranking { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); letter-spacing: 0.5px; }
+    .ranking b { color: var(--ink); font-weight: 400; }
+
+    .hidden { display: none; }
+    footer.pagefoot { text-align: center; margin-top: 40px; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 1.5px; }
+    footer.pagefoot a { color: var(--bronze-dim); text-decoration: none; }
+    footer.pagefoot a:hover { color: var(--bronze); }
+
+    @media (max-width: 640px) {
+      .panel { padding: 18px 14px 24px; }
+      .masthead h1 { font-size: 1.4rem; letter-spacing: 4px; }
+      .scenario { font-size: 1.05rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    }
+    .skip-link:focus { position: static; background: var(--bronze); color: #000; padding: 8px 12px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
+  <script type="application/ld+json">{ "@context":"https://schema.org","@type":"WebSite","name":"Convivium - Ersin Binal","url":"https://ersinbinal.github.io/" }</script>
+
+  <div class="wrap" id="main-content">
+    <header class="masthead">
+      <div class="sysline">convivium // strategic-schools.mirror</div>
+      <h1>EKOL AYNASI</h1>
+      <p class="sub">Teori bilmene gerek yok. Sezgilerin zaten bir ekole ait.</p>
+    </header>
+
+    <!-- ============ INTRO ============ -->
+    <section class="panel" id="screen-intro">
+      <div class="kicker">protokol / giriş</div>
+      <p>Sana gündelik hayattan sahneler soracağım: apartman, iş yeri, mahalle. Yanıtların arka planda sekiz eksende bir iz bırakacak; o iz, yüzyıllardır tartışılan on dört yönetim ekolünden birine düşecek.</p>
+      <div class="claims">
+        <div class="claim"><em>01</em> — İnsanlar teori bilmeden de tutarlı siyasi sezgilere sahiptir. Kimse "sonuççuyum" demez; ama "yeter ki sorun çözülsün, gerisi teferruat" der.<small>Bu ayna, o örtük cümleyi görünür kılar.</small></div>
+        <div class="claim"><em>02</em> — Her ekol, birkaç ayırt edici eksende bir konumdur. Senin yanıtların da aynı eksenlerde bir konum üretir.<small>Eşleşme, iki konumun yakınlığıdır; fal değil, hesaptır.</small></div>
+        <div class="claim"><em>03</em> — Tutarsızlık bir hata değil, bir bilgidir. Baskın ekolünden saptığın yer, senin hakkındaki en ilginç şeydir.<small>Sapman ya ekolün mantığına asimile edilir ya da seni komşu bir ekole çeken gerilim olarak okunur.</small></div>
+      </div>
+      <div class="mirror-note"><strong>Bu bir teşhis değil, bir aynadır.</strong> "Doğru olan budur" demez; "senin sezgilerine en çok bu yakın duruyor" der. Hiçbir ekol olumlanmaz ya da kötülenmez; her sonucun gücü de kör noktası da birlikte gösterilir.</div>
+      <button class="btn" id="btn-start">▸ aynaya bak</button>
+    </section>
+
+    <!-- ============ SORU ============ -->
+    <section class="panel hidden" id="screen-question">
+      <div class="qmeta"><span id="q-counter">soru 1</span><span class="stage-tag" id="q-stage">geniş tur</span></div>
+      <div class="progress" id="q-progress"></div>
+      <p class="scenario" id="q-prompt"></p>
+      <div class="options" id="q-options"></div>
+      <div class="qfoot">
+        <button class="linkish" id="btn-back" type="button">← geri</button>
+        <span class="hint">1–5 tuşları da çalışır</span>
+      </div>
+    </section>
+
+    <!-- ============ RAPOR ============ -->
+    <section class="panel report hidden" id="screen-report">
+      <div class="kicker">değerlendirme raporu</div>
+      <div id="r-body"></div>
+      <button class="btn ghost" id="btn-restart">↺ baştan bak</button>
+    </section>
+
+    <footer class="pagefoot">
+      <a href="/">◂ convivium</a> · ayna yargılamaz, yansıtır
+    </footer>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* ==================================================================
+       1) EKSENLER — matrisin sütunları
+       Sıralı eksenler -1..+1; kategorikler değer + yakınlık tablosu.
+       ends_means ve legitimacy en ayırt edici -> yüksek ağırlık.
+       ================================================================== */
+    const AXES = {
+      human_nature:    { type: 'ord', w: 1.0, label: 'insan doğası' },
+      legitimacy:      { type: 'cat', w: 1.3, label: 'meşruiyet kaynağı' },
+      ends_means:      { type: 'cat', w: 1.3, label: 'amaç–araç etiği' },
+      authority_locus: { type: 'ord', w: 1.1, label: 'otoritenin yeri' },
+      change:          { type: 'ord', w: 0.9, label: 'değişime tutum' },
+      order_liberty:   { type: 'ord', w: 1.1, label: 'düzen–özgürlük' },
+      instrument:      { type: 'cat', w: 1.0, label: 'yönetim aracı' },
+      conflict:        { type: 'cat', w: 0.8, label: 'çatışmaya bakış' }
+    };
+
+    // Kategorik yakınlık tabloları (simetrik; aynı=1, tanımsız=0)
+    const PROX = {
+      legitimacy: {
+        'riza|hukuk': 0.5, 'riza|erdem': 0.3, 'erdem|gelenek': 0.5, 'erdem|hukuk': 0.3,
+        'erdem|uzmanlik': 0.5, 'hukuk|gelenek': 0.4, 'guc|hukuk': 0.3, 'guc|sinif': 0.3,
+        'hukuk|uzmanlik': 0.3, 'riza|sinif': 0.2
+      },
+      ends_means: { 'kuralci|erdemci': 0.4, 'sonuccu|erdemci': 0.25 },
+      instrument: {
+        'hukuk|muzakere': 0.4, 'ornek|muzakere': 0.4, 'zor|propaganda': 0.5,
+        'hukuk|zor': 0.3, 'tesvik|hukuk': 0.3, 'ornek|tesvik': 0.2
+      },
+      conflict: { 'kurucu|uretken': 0.3, 'patoloji|uretken': 0.2 }
+    };
+    const prox = (axis, a, b) => a === b ? 1 : (PROX[axis][a + '|' + b] ?? PROX[axis][b + '|' + a] ?? 0);
+
+    /* ==================================================================
+       2) EKOLLER — konum vektörü + çekirdek doğrusal + kör nokta
+       hooks: asimilasyon cümleleri (eksen -> ekolün iç mantığıyla okuma)
+       ================================================================== */
+    const FAMILIES = {
+      A: 'İktidar-Realist Küme', B: 'Liberal-Anayasal Küme', C: 'Cumhuriyet-Erdem Kümesi',
+      D: 'Gelenek Kümesi', E: 'Radikal-Özgürleşimci Küme', F: 'Teknokratik Küme'
+    };
+
+    const SCHOOLS = [
+      {
+        id: 'machiavellian', label: 'Makyavelci Realizm', family: 'A',
+        core: 'İktidarı elde etmek ve korumak nihai ölçüttür; erdem görünürde, etkililik gerçekte gereklidir.',
+        blind: 'Herkesi oyuncu gibi okuyan göz, güvenin de bir sermaye olduğunu geç fark eder; sürekli manevra, etrafında manevra yapan insanlar üretir.',
+        vector: { human_nature: -0.8, legitimacy: 'guc', ends_means: 'sonuccu', authority_locus: -0.8, change: 0.0, order_liberty: -0.5, instrument: 'zor', conflict: 'kurucu' },
+        hooks: {
+          order_liberty: 'Halkın kendini özgür hissetmesi, iktidarın nefret toplamadan sürmesinin aracıdır; özgürlük vurgun bir çelişki değil, etkili yönetimin enstrümanıdır.',
+          instrument: 'İkna ve görünen erdem, zorun maliyetini düşüren araçlardır; yumuşak araç tercihin, gücün ekonomisidir.',
+          legitimacy: 'Rıza da hukuk da iktidarın elinde birer görünümdür; onlara verdiğin değer, iktidarı meşru göstermenin en ucuz yoludur.'
+        },
+        neighbors: ['hobbesian', 'legalism']
+      },
+      {
+        id: 'hobbesian', label: 'Hobbesçu Güvenlik-Mutlakiyeti', family: 'A',
+        core: 'Düzensizlik en büyük kötülüktür; güvenlik uğruna mutlak egemene yetki devredilir.',
+        blind: 'Kaos korkusu, itaatin bedelini görünmez kılar; güvenlik adına devredilen yetki nadiren geri gelir.',
+        vector: { human_nature: -0.9, legitimacy: 'riza', ends_means: 'sonuccu', authority_locus: -1, change: 0.6, order_liberty: -0.9, instrument: 'hukuk', conflict: 'patoloji' },
+        hooks: {
+          legitimacy: 'Egemene verilen yetki bir sözleşmedir: rıza vurgun çelişki değil, mutlak otoritenin kuruluş belgesidir.',
+          order_liberty: 'Egemenin sustuğu yerde herkes serbesttir; özgürlük eğilimin, güvenliği sarsmadığı sürece sistemin boşluklarında yaşar.',
+          authority_locus: 'Yetki dağılsın istemen, egemenin henüz güveni tesis edemediğinin işaretidir; düzen kurulunca bu ihtiyaç söner.'
+        },
+        neighbors: ['machiavellian', 'legalism']
+      },
+      {
+        id: 'legalism', label: 'Legalizm (Han Feizi)', family: 'A',
+        core: 'İnsana değil sisteme güven; tek tip yasa ve katı ödül-ceza düzeni her şeyi yönetir.',
+        blind: 'Sisteme duyulan güven, sistemin kimin elinde olduğunu sormayı unutturur; katı kural, kuralı yazanı denetleyemez.',
+        vector: { human_nature: -0.9, legitimacy: 'hukuk', ends_means: 'sonuccu', authority_locus: -1, change: -0.3, order_liberty: -0.8, instrument: 'hukuk', conflict: 'patoloji' },
+        hooks: {
+          ends_means: 'Kurala verdiğin değer amaçtan bağımsız değildir: katı kural, sonucun en verimli üreticisi olduğu için vardır.',
+          human_nature: 'İnsana beslediğin iyimserlik sistemi bozmaz; iyi insan, iyi kurulmuş ödül-ceza düzeninin çıktısıdır.',
+          instrument: 'İkna ve örneklik, cezanın gölgesinde işleyen ucuz tamamlayıcılardır; sistem yine cezayla ayakta durur.'
+        },
+        neighbors: ['hobbesian', 'machiavellian']
+      },
+      {
+        id: 'organic_authoritarian', label: 'Organik Otoriter Korporatizm', family: 'A', critical: true,
+        core: 'Bütün bireyden önce gelir; birlik lider ve ortak mit etrafında sağlanır.',
+        blind: 'Birlik miti farklılığı hastalık gibi kodlar; tarih bu ekolün faturasını baskı ve şiddet olarak kesmiştir — bu bir yorum değil, kayıttır.',
+        vector: { human_nature: -0.4, legitimacy: 'guc', ends_means: 'sonuccu', authority_locus: -1, change: -0.7, order_liberty: -1, instrument: 'propaganda', conflict: 'patoloji' },
+        hooks: {
+          change: 'Devrim de restorasyon da aynı hamlenin iki yüzüdür: bütünü yeniden ayağa kaldırmak.',
+          instrument: 'Hukuk ve kurum, ortak mitin taşıyıcısı olduğu sürece değerlidir; senin kurum vurgun mite hizmet eden bir iskelettir.'
+        },
+        neighbors: ['hobbesian']
+      },
+      {
+        id: 'lockean', label: 'Lockeçu Liberalizm', family: 'B',
+        core: 'Devlet doğal hakları korumak için vardır; rıza olmadan meşruiyet yoktur, iktidar sınırlıdır.',
+        blind: 'Herkesin sözleşmeye eşit güçle oturduğunu varsayar; kapıdaki eşitlik, masadaki eşitsizliği görmeyebilir.',
+        vector: { human_nature: 0.0, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 0.5, change: 0.0, order_liberty: 0.8, instrument: 'hukuk', conflict: 'uretken' },
+        hooks: {
+          order_liberty: 'Düzen arzun özgürlüğün rakibi değil, koşuludur: haklar ancak öngörülebilir bir hukuk düzeninde yaşar.',
+          authority_locus: 'Güçlü yürütmeye duyduğun ihtiyaç, hakları korumakla sınırlı kaldığı sürece sözleşmenin içindedir.',
+          ends_means: 'Sonuca verdiğin önem, hak ihlaline dönüşmediği sürece serbest alandır; sınır çizgisi haklardır, verim değil.'
+        },
+        neighbors: ['rawlsian', 'republican']
+      },
+      {
+        id: 'rawlsian', label: 'Rawlsçu Adalet-Liberalizmi', family: 'B',
+        core: 'Adil kurallar, kendi konumunu bilmeden herkesin kabul edebileceği kurallardır; en dezavantajlıyı gözet.',
+        blind: 'Adil kural tasarımı, kuralların gerçek insanlarca oynandığını unutabilir; usul kusursuzken sonuç yine tıkanabilir.',
+        vector: { human_nature: 0.3, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 0.5, change: 0.0, order_liberty: 0.6, instrument: 'hukuk', conflict: 'uretken' },
+        hooks: {
+          ends_means: 'Sonuç duyarlılığın çelişki değildir: kurallar zaten en kötü durumdakinin sonucunu iyileştirmek için seçilir.',
+          order_liberty: 'Eşitlik için düzene verdiğin pay, özgürlüğün herkes için gerçek olmasının bedelidir.',
+          legitimacy: 'Uzmanlığa duyduğun saygı, adil usulün içinde bir danışmanlıktır; son söz yine perde-arkası sözleşmenindir.'
+        },
+        neighbors: ['lockean', 'republican']
+      },
+      {
+        id: 'republican', label: 'Cumhuriyetçilik (Sivil Erdem)', family: 'C',
+        core: 'Özgürlük tahakküm altında olmamaktır; onu erdemli yurttaş ve karma kurumlar korur.',
+        blind: 'Erdemli yurttaş idealinin yükü ağırdır; katılmayanı ya da katılamayanı kolayca "kusurlu yurttaş" diye okur.',
+        vector: { human_nature: 0.2, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: 0.4, change: 0.0, order_liberty: 0.1, instrument: 'muzakere', conflict: 'uretken' },
+        hooks: {
+          order_liberty: 'Düzene verdiğin pay tahakküm arzusu değil, kimsenin kimsenin insafına kalmaması için kurulan freni işaret eder.',
+          authority_locus: 'Tek elde toplanan geçici yetki, cumhuriyet geleneğinde bilinen bir araçtır: diktatörlük değil, süreli emanet.',
+          instrument: 'Hukuka yaslanman müzakerenin alternatifi değil, müzakerenin yazıya geçmiş hâlidir.'
+        },
+        neighbors: ['aristotelian', 'lockean']
+      },
+      {
+        id: 'aristotelian', label: 'Aristotelesçi Politeia', family: 'C',
+        core: 'Aşırılıklar arası orta yol ve güçlü orta sınıf istikrar getirir; yönetim pratik bilgelik ister.',
+        blind: 'Orta yol her terazide bulunmaz; iki kötü seçenek arasında "denge" bazen sadece geç kalmaktır.',
+        vector: { human_nature: 0.1, legitimacy: 'hukuk', ends_means: 'erdemci', authority_locus: 0.0, change: 0.2, order_liberty: 0.0, instrument: 'hukuk', conflict: 'uretken' },
+        hooks: {
+          change: 'Hızlı değişim isteğin, dengesi bozulmuş bir bünyenin acil tedavisi olarak okunur; ölçü yine phronesis\'tir.',
+          legitimacy: 'Erdeme verdiğin ağırlık hukukla çelişmez: iyi yasa, erdemli alışkanlığın kurumsallaşmış hâlidir.',
+          authority_locus: 'Uzmana açtığın alan, karma anayasanın "bilen azınlık" kanadıdır; tek başına yönetmediği sürece dengededir.'
+        },
+        neighbors: ['republican', 'burkean']
+      },
+      {
+        id: 'platonic', label: 'Platoncu Filozof-Kral', family: 'C',
+        core: 'Yönetmek bir uzmanlıktır; İyi\'yi görebilenler yönetmelidir.',
+        blind: 'Bilenlerin yönetimi, bilenlerin kim olduğuna kimin karar vereceğini çözemez; hakikat tekeli hızla imtiyaza dönüşür.',
+        vector: { human_nature: -0.2, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: -0.4, change: 0.6, order_liberty: -0.3, instrument: 'ornek', conflict: 'patoloji' },
+        hooks: {
+          authority_locus: 'Halka açtığın alan eğitimin bir aşamasıdır: mağaradan çıkış herkes için mümkündür, ama rehberle.',
+          change: 'Reform isteğin ideale doğru bir düzeltmedir; hedef değişim değil, doğru biçime yaklaşmaktır.',
+          instrument: 'Yasaya ve cezaya başvurman, iknanın henüz olgunlaşmadığı ruhlar için geçici iskeledir.'
+        },
+        neighbors: ['confucian', 'technocrat']
+      },
+      {
+        id: 'confucian', label: 'Konfüçyüsçü Erdem Yönetimi', family: 'C',
+        core: 'Yönetici ahlaki örnektir; düzen zorla değil erdem ve ritüelle sağlanır.',
+        blind: 'Uyum vurgusu itirazı terbiyesizlik gibi kodlayabilir; erdemli hiyerarşi, hiyerarşinin erdemini sorgulamayı zorlaştırır.',
+        vector: { human_nature: 0.5, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: -0.6, change: 0.6, order_liberty: -0.4, instrument: 'ornek', conflict: 'patoloji' },
+        hooks: {
+          authority_locus: 'Katılım isteğin hiyerarşiyi bozmaz; iyi düzende her rol konuşur, ama yerinden konuşur.',
+          instrument: 'Kurala başvurman erdemin yenilgisi değil, erdemin henüz yetişmediği yerde tutulan geçici direktir.',
+          change: 'Yenilik arzun geleneğin ihaneti değil, ritüelin her kuşakta yeniden canlandırılmasıdır.'
+        },
+        neighbors: ['platonic', 'burkean']
+      },
+      {
+        id: 'burkean', label: 'Burke\'çü Muhafazakârlık', family: 'D',
+        core: 'Miras alınan kurumlar biriken bilgeliktir; değişim ani değil kademeli olmalıdır.',
+        blind: 'Birikmiş bilgelik ile birikmiş imtiyaz dışarıdan aynı görünür; ihtiyat, mağdurun sabrını sınırsız sanabilir.',
+        vector: { human_nature: -0.2, legitimacy: 'gelenek', ends_means: 'erdemci', authority_locus: 0.0, change: 0.9, order_liberty: -0.2, instrument: 'hukuk', conflict: 'uretken' },
+        hooks: {
+          change: 'Reform isteğin geleneğin düşmanı değil, geleneğin hayatta kalma biçimidir: değişmeyen kurum ölür.',
+          legitimacy: 'Rızaya verdiğin değer, kuşaklar arasındaki sessiz sözleşmenin bugünkü imzasıdır.',
+          order_liberty: 'Özgürlük vurgun köksüz değildir: miras alınan özgürlükler, soyut haklardan daha sağlam durur.'
+        },
+        neighbors: ['aristotelian', 'confucian']
+      },
+      {
+        id: 'marxist', label: 'Marksist Materyalizm', family: 'E',
+        core: 'Siyaset, maddi ve sınıfsal çıkarların üstyapısıdır; kurtuluş sınıf mücadelesinden geçer.',
+        blind: 'Yapıyı gören göz kişiyi gözden kaçırabilir; büyük kurtuluş anlatısı, bugünkü tekil acıları erteleyebilir.',
+        vector: { human_nature: 0.2, legitimacy: 'sinif', ends_means: 'sonuccu', authority_locus: 0.0, change: -1, order_liberty: -0.2, instrument: 'zor', conflict: 'kurucu' },
+        hooks: {
+          order_liberty: 'Geçiş döneminin düzeni, nihai özgürleşmenin iskelesidir; düzen arzun hedefe değil, güzergâha aittir.',
+          instrument: 'Müzakereye ve hukuka açtığın alan, güç dengesinin bugünkü hâlinde taktik bir mevzidir.',
+          ends_means: 'Kural hassasiyetin sınıfsız topluma taşınacak mirastır; bugünkü kuralların kimi koruduğunu sormak kaydıyla.'
+        },
+        neighbors: ['anarchist']
+      },
+      {
+        id: 'anarchist', label: 'Anarşizm / Mutualizm', family: 'E',
+        core: 'Zorlayıcı otorite gereksiz ve bozucudur; düzen gönüllü karşılıklılıktan doğar.',
+        blind: 'Gönüllü düzen küçük ölçekte parlar; ölçek büyüyünce koordinasyon geri döner ve kapıdan kovulan otorite bacadan girer.',
+        vector: { human_nature: 0.8, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 1, change: -0.8, order_liberty: 1, instrument: 'muzakere', conflict: 'uretken' },
+        hooks: {
+          authority_locus: 'Geçici koordinasyon rolleri tahakküm değildir; görev bitince dağılan yetki, gönüllülüğün organizasyonudur.',
+          order_liberty: 'Düzen ihtiyacın otorite ihtiyacı değildir: karşılıklılık da bir düzendir, üstelik bekçisizdir.',
+          change: 'Sabırlı ilerleme arzun devrimi reddetmez; kendiliğinden büyüyen ağlar da bir devrimdir, sadece takvimi yoktur.'
+        },
+        neighbors: ['marxist']
+      },
+      {
+        id: 'technocrat', label: 'Teknokratik Ütilitarizm', family: 'F',
+        core: 'En büyük faydayı kanıt ve uzmanlık üretir; politika ölçülüp optimize edilmelidir.',
+        blind: 'Ölçülebilen yönetilir, ama önemli olan her şey ölçülmez; optimizasyon, hedefin kendisini tartışmayı unutturur.',
+        vector: { human_nature: 0.0, legitimacy: 'uzmanlik', ends_means: 'sonuccu', authority_locus: -0.4, change: 0.0, order_liberty: -0.1, instrument: 'tesvik', conflict: 'patoloji' },
+        hooks: {
+          legitimacy: 'Rızaya verdiğin önem bir veridir: kabul görmeyen politika uygulanamaz, dolayısıyla optimal değildir.',
+          ends_means: 'Kural hassasiyetin, uzun vadeli faydanın kısa yoldan hesabıdır: istikrarlı kurallar belirsizlik maliyetini düşürür.',
+          instrument: 'Müzakere, tercihleri açığa çıkaran bir ölçüm aracıdır; masaya inanman veriye inanmandır.'
+        },
+        neighbors: ['platonic', 'rawlsian']
+      }
+    ];
+    const SCHOOL_BY_ID = Object.fromEntries(SCHOOLS.map(s => [s.id, s]));
+
+    /* ==================================================================
+       3) GÜNDELİK DİL SÖZLÜĞÜ — rapor teorik terim kullanmaz.
+       Eksen konumu -> ziyaretçinin tanıyacağı cümle.
+       ================================================================== */
+    const ORD_PHRASE = {
+      human_nature: [
+        [-0.33, 'İnsanların denetimsiz kalınca açık aradığını düşünüyorsun; iyi niyete değil, iyi kurulmuş denetime güveniyorsun.'],
+        [0.33, 'İnsanı sabit bir öz değil, içine doğduğu ortamın ürünü olarak görüyorsun.'],
+        [Infinity, 'İnsanların çoğuna baştan güveniyorsun; sorunu kötü niyette değil, güvensizlik kültüründe arıyorsun.']
+      ],
+      authority_locus: [
+        [-0.66, 'Sorun çıktığında net bir sorumlu olsun istiyorsun; herkesin fikrini toplamak sana zaman kaybı gibi geliyor.'],
+        [0, 'Yetkinin işi bilenlerde toplanmasını istiyorsun; kalabalık karar sana gürültü gibi geliyor.'],
+        [0.66, 'Kararın masada, herkesin gözü önünde alınmasını istiyorsun; denetlenmeyen yetkiye için rahat etmiyor.'],
+        [Infinity, 'Kimsenin kimseye dayatmadığı, gönüllü kurulan düzenler sana daha sahici geliyor.']
+      ],
+      change: [
+        [-0.33, 'Çürüyen şeyi yamamak yerine sökmekten yanasın; köklü değişim seni korkutmuyor.'],
+        [0.33, 'Değişimden yanasın ama işleyeni bozmadan; adım adım gitmek sana daha akıllıca geliyor.'],
+        [Infinity, 'Yıllara dayanmış şeylerde birikmiş bir akıl görüyorsun; hızlı değişim sana kazanç değil kayıp gibi geliyor.']
+      ],
+      order_liberty: [
+        [-0.33, 'Huzur ve öngörülebilirlik senin için özgürlükten önce geliyor; kaos, ödenebilecek en pahalı bedel.'],
+        [0.33, 'Ne düzene ne özgürlüğe tam yaslanıyorsun; ikisinin dengede tutulduğu yeri arıyorsun.'],
+        [Infinity, 'Karışılmamak senin için güvenlikten değerli; düzeni özgürlüğün önüne koyanlara mesafelisin.']
+      ]
+    };
+    const CAT_PHRASE = {
+      legitimacy: {
+        guc: 'Sana göre yönetmeyi hak ettiren şey sonuç almaktır; işi bitiren meşrudur.',
+        riza: 'Kimse rızası alınmadan yönetilmemeli; sana göre meşruiyet ancak oradan doğar.',
+        erdem: 'Yönetme hakkını bilgelikte ve karakterde arıyorsun; seni makam değil ehliyet ikna ediyor.',
+        gelenek: 'Denenmişlik senin için başlı başına bir referans; miras alınmış kurumlara kredi açıyorsun.',
+        hukuk: 'Kişiler değil kurallar yönetsin istiyorsun; usul senin için güvencenin ta kendisi.',
+        sinif: '"Kim yönetiyor"dan önce "kime yarıyor" diye soruyorsun; çıkar haritası senin pusulan.',
+        uzmanlik: 'Kanıt ve ehliyet senin gözünde el kaldırmaktan ağır basıyor; ölçülemeyene mesafelisin.'
+      },
+      ends_means: {
+        sonuccu: '"Yeter ki sorun çözülsün, gerisi teferruat" cümlesi sana yakın; ölçütün sonuç.',
+        kuralci: 'Bazı çizgiler sonuç ne olursa olsun aşılmaz diyorsun; yöntem senin için sonucun parçası.',
+        erdemci: 'Ne yapıldığından çok, kimin hangi karakterle yaptığına bakıyorsun.'
+      },
+      instrument: {
+        zor: 'Gerektiğinde gücün açıkça kullanılmasını kaçınılacak bir şey olarak görmüyorsun.',
+        hukuk: 'Sorunları kişilere değil kurallara havale etmeyi doğru buluyorsun.',
+        ornek: 'İnsanların cezayla değil örnekle ve iknayla değiştiğine inanıyorsun.',
+        tesvik: 'Doğru teşvik doğru davranışı üretir diyorsun; ahlaka değil mekanizmaya yatırım yapıyorsun.',
+        muzakere: 'Masada konuşulmadan verilmiş hiçbir karar sana meşru gelmiyor.',
+        propaganda: 'Ortak hikâyenin ve duygunun, toplumu kurallardan daha güçlü bağladığını düşünüyorsun.'
+      },
+      conflict: {
+        kurucu: 'Çatışmayı arıza değil, işlerin doğası sayıyorsun; iyi yönetilen gerilim sana enerji veriyor.',
+        patoloji: 'Çatışma sana bir arıza gibi görünüyor; sağlıklı düzenin uyum üretmesi gerektiğini düşünüyorsun.',
+        uretken: 'Fikir çatışmasını sistemin hem freni hem motoru olarak görüyorsun; tekseslilik seni ürkütüyor.'
+      }
+    };
+    const ordPhrase = (axis, v) => { for (const [edge, txt] of ORD_PHRASE[axis]) if (v < edge || edge === Infinity) return txt; };
+    const posPhrase = (axis, val) => AXES[axis].type === 'ord' ? ordPhrase(axis, val) : (CAT_PHRASE[axis][val] || '');
+
+    /* ==================================================================
+       4) SORULAR — yaşanmışlık senaryoları.
+       weights: eksen -> sayı (sıralı) | değer | [değer, ağırlık]
+       sun: Sun Tzu (dolaylılık) sinyali 0..1
+       ================================================================== */
+    const BROAD = [
+      {
+        id: 'q_apartman', prompt: 'Oturduğun apartmanda ortak bir sorun aylardır çözülemiyor. Toplantılar yapıldı, sonuç yok. Sence en doğru yol hangisi?',
+        options: [
+          { t: 'Kararlı, güçlü bir yönetici seçip yetkiyi ona verelim; gerekirse kuralları esnetsin, yeter ki çözsün.', w: { authority_locus: -0.8, instrument: 'zor', order_liberty: -0.6 } },
+          { t: 'Herkesin oyuyla net kurallar koyalım; kurallar istisnasız herkesi bağlasın, yöneticiyi de.', w: { authority_locus: 0.4, instrument: 'hukuk', legitimacy: 'riza', ends_means: ['kuralci', 0.5] } },
+          { t: 'Bu işleri en iyi bilen komşuya danışalım, onun dediğini yapalım.', w: { legitimacy: 'erdem', authority_locus: -0.4 } },
+          { t: 'Kimse kimseye dayatmasın; isteyen komşular kendi aralarında gönüllü anlaşsın.', w: { authority_locus: 1.0, instrument: 'muzakere', order_liberty: 0.9 } },
+          { t: 'Ne tek adam ne kalabalık: birkaç deneyimli komşudan küçük bir kurul kuralım; yetkiyi paylaşsınlar, kararlarını açık toplantıda savunsunlar.', w: { authority_locus: 0.0, legitimacy: ['hukuk', 0.5], instrument: ['muzakere', 0.5], order_liberty: [0.0, 0.5] } }
+        ]
+      },
+      {
+        id: 'q_kriz', prompt: 'Çalıştığın yer kötü bir krize girdi; birkaç ay içinde toparlanamazsa kapanacak. Yönetimin nasıl davranmasını istersin?',
+        options: [
+          { t: 'Ne gerekiyorsa yapılsın; kural sonra konuşulur, önce gemi kurtarılır.', w: { ends_means: 'sonuccu', order_liberty: -0.4, conflict: ['kurucu', 0.5] } },
+          { t: 'Kriz bile olsa bazı ilkeler çiğnenmez; yanlış yolla gelen kurtuluş kalıcı olmaz.', w: { ends_means: 'kuralci' } },
+          { t: 'Önce dümene doğru karakterde insanlar geçsin; ehil ellerdeki kriz zaten doğru yönetilir.', w: { ends_means: 'erdemci', legitimacy: ['erdem', 0.6] } },
+          { t: 'Veri konuşsun: neyin işe yaradığı ölçülsün, duyguyla değil kanıtla karar verilsin.', w: { ends_means: ['sonuccu', 0.6], legitimacy: 'uzmanlik', instrument: ['tesvik', 0.5] } }
+        ]
+      },
+      {
+        id: 'q_kamera', prompt: 'Sitede ortak alanlara kamera konulsun mu tartışması alevlendi. İçinden geçen ilk düşünce hangisine yakın?',
+        options: [
+          { t: 'Konulsun. İnsan denetimsiz kalınca açığını kullanır; görmemek saflık olur.', w: { human_nature: -0.9, order_liberty: -0.5 } },
+          { t: 'Mesele kamera değil ortam: iyi kurulmuş bir düzen zaten iyi davranış üretir.', w: { human_nature: 0.0, instrument: ['tesvik', 0.4] } },
+          { t: 'Gerek yok. İnsanların çoğu iyidir; sorun birbirimize güvenmeyi unutmamız.', w: { human_nature: 0.8, order_liberty: 0.5 } },
+          { t: 'Kamera değil kültür değiştirir: örnek olan, ayıbı hatırlatan bir mahalle terbiyesi daha güçlü.', w: { human_nature: 0.5, instrument: 'ornek' } }
+        ]
+      },
+      {
+        id: 'q_gelenek', prompt: 'Mahallede yıllardır süren köklü bir uygulama var ama artık işlemiyor; gençler anlamsız buluyor, yaşlılar sahip çıkıyor. Ne yapılmalı?',
+        options: [
+          { t: 'Tümden kaldırıp yerine bugüne uyan yenisini kurmalı; çürüyen şey yamayla düzelmez.', w: { change: -0.9 } },
+          { t: 'İşleyen kısmına dokunmadan adım adım güncellemeli.', w: { change: 0.0 } },
+          { t: 'Bu kadar yıl yaşadıysa bir hikmeti vardır; kolay kolay dokunmamalı.', w: { change: 0.9, legitimacy: 'gelenek' } },
+          { t: 'Önce kime yaradığına bakmalı; bu tür yapılar çoğu zaman birilerinin konforunu korur.', w: { legitimacy: 'sinif', change: -0.5, conflict: ['kurucu', 0.5] } }
+        ]
+      },
+      {
+        id: 'q_yonetim', prompt: 'Yeni taşındığın sitede yönetim şekli sıfırdan kurulacak. Hangisine oy verirdin?',
+        options: [
+          { t: 'İşini bilen tek bir isim; komiteyle, oylamayla iş yürümez.', w: { authority_locus: -0.9, legitimacy: ['guc', 0.5], order_liberty: -0.4 } },
+          { t: 'Profesyonel bir yönetim şirketi: ölçsün, raporlasın, hesabını versin.', w: { legitimacy: 'uzmanlik', authority_locus: -0.4, instrument: ['tesvik', 0.4] } },
+          { t: 'Seçimle gelen, yazılı kurallarla sınırlı bir yönetim; herkes denetleyebilsin.', w: { legitimacy: 'riza', authority_locus: 0.4, instrument: 'hukuk', conflict: ['uretken', 0.4] } },
+          { t: 'Ahlakına herkesin güvendiği bir büyük; onu makamı değil, hak edilmiş saygısı yönetsin.', w: { legitimacy: 'erdem', instrument: 'ornek', authority_locus: -0.5, change: [0.4, 0.5] } },
+          { t: 'Sırayla hepimiz görev alalım; yönetmek bir makam değil, yurttaşlık nöbetidir.', w: { legitimacy: ['erdem', 0.6], authority_locus: 0.5, instrument: ['muzakere', 0.5], conflict: ['uretken', 0.4] } }
+        ]
+      },
+      {
+        id: 'q_ihlal', prompt: 'Sitede kuralları sürekli ihlal eden bir komşu var: gürültü, ortak alan işgali, aidat. Sence ne yapılmalı?',
+        options: [
+          { t: 'Cezası neyse anında ve istisnasız uygulanmalı; kural kişiye göre değişmez.', w: { instrument: 'hukuk', ends_means: ['kuralci', 0.6], order_liberty: -0.3 } },
+          { t: 'Önce oturup konuşulmalı; iyi yönetilen bir gerginlik ilişkiyi bozmaz, güçlendirir.', w: { instrument: 'muzakere', conflict: 'uretken' } },
+          { t: 'Utandırmadan, örnekle kazanılmalı; mahalle terbiyesi cezadan daha kalıcı çalışır.', w: { instrument: 'ornek', conflict: ['patoloji', 0.6], sun: 0.4 } },
+          { t: 'Huzur bozan baskıyı hissetmeli; herkes rahatken onun rahat etmesi kabul edilemez.', w: { instrument: 'zor', order_liberty: -0.6, human_nature: -0.4 } }
+        ]
+      },
+      {
+        id: 'q_guclu_taraf', prompt: 'Haklı olduğun bir konuda karşındaki taraf senden güçlü ve inatçı. İstediğini nasıl alırsın?',
+        options: [
+          { t: 'Doğrudan karşısına çıkarım; geri adım atmadığımı görmeli.', w: { instrument: ['zor', 0.6], conflict: ['kurucu', 0.4] } },
+          { t: 'Zemini hazırlarım: doğru an, doğru kişiler, doğru ortam. Çoğu iş daha karşılaşmadan çözülür.', w: { instrument: ['muzakere', 0.3], sun: 1.0 } },
+          { t: 'Prosedürü işletirim; haklılığımı ben değil sistem kanıtlasın.', w: { instrument: ['hukuk', 0.6], ends_means: ['kuralci', 0.4] } },
+          { t: 'İkna ederim; insanlar iyi anlatılmış doğruya eninde sonunda gelir.', w: { instrument: ['ornek', 0.6], human_nature: 0.4 } }
+        ]
+      }
+    ];
+
+    // Diskriminatörler: aile içi adayları ayıran hedefli sorular.
+    // toward: küçük bir doğrudan sinyal (skor nüansı) + eksen ağırlıkları asıl işi yapar.
+    const DISCRIMINATORS = [
+      {
+        id: 'd_a_esneme', family: 'A', prompt: 'Güçlü bir yöneticinin işleri yürütmek için ara sıra kuralları esnetmesi sence normal mi?',
+        options: [
+          { t: 'Evet. Sonuç alınıyorsa kural detaydır; katılık işleri kilitler.', w: { ends_means: 'sonuccu' }, toward: 'machiavellian' },
+          { t: 'Hayır. Kural yöneticiye de istisnasız uygulanmalı; sistem kişiden büyüktür.', w: { ends_means: ['kuralci', 0.5], instrument: 'hukuk' }, toward: 'legalism' },
+          { t: 'Kural da yönetici de büyük bütüne hizmet eder; birlik bozulmasın da gerisi teferruat.', w: { instrument: 'propaganda', order_liberty: -0.5 }, toward: 'organic_authoritarian' }
+        ]
+      },
+      {
+        id: 'd_a_guvenlik', family: 'A', prompt: 'Güvenlik için özgürlükten ne kadar vazgeçilir?',
+        options: [
+          { t: 'Gerekirse çoğundan. Kaos, kaybedilecek en büyük şeydir; düzeni sağlayacak olana yetkiyi gönül rahatlığıyla devrederim.', w: { order_liberty: -1.0, human_nature: -0.5, legitimacy: ['riza', 0.6], change: [0.6, 0.5] }, toward: 'hobbesian' },
+          { t: 'Görünürde az, gerçekte gerektiği kadar; insanlar kısıtlandığını hissetmemeli.', w: { order_liberty: -0.3, sun: 0.7 }, toward: 'machiavellian' },
+          { t: 'Bu yanlış bir ikilem: ceza ve ödül düzeni doğru kurulursa ikisi çelişmez.', w: { instrument: ['hukuk', 0.6], order_liberty: -0.5 }, toward: 'legalism' }
+        ]
+      },
+      {
+        id: 'd_b_dagitim', family: 'B', prompt: 'Site bütçesinde fazla para birikti. Bir öneri: dar gelirli komşuların aidatını bu fazladan düşürelim. Ne dersin?',
+        options: [
+          { t: 'Hayır. Herkesin ödediği bellidir; kimsenin payı başkasına aktarılmaz, kurallar mülkiyeti korur.', w: { order_liberty: 0.7, legitimacy: ['riza', 0.5], ends_means: ['kuralci', 0.4] }, toward: 'lockean' },
+          { t: 'Evet. Kuralları hangi dairede oturacağını bilmeden yazsaydık, hepimiz bunu isterdik.', w: { human_nature: 0.4, order_liberty: 0.3 }, toward: 'rawlsian' },
+          { t: 'Paradan önce katılım: o komşular yönetimde yer alsın; mesele hayır değil, ortaklık.', w: { legitimacy: ['erdem', 0.6], instrument: ['muzakere', 0.6] }, toward: 'republican' }
+        ]
+      },
+      {
+        id: 'd_b_ozgurluk', family: 'B', prompt: 'Sence özgürlük en çok neye benzer?',
+        options: [
+          { t: 'Kimsenin işime karışmaması: kapımın içi benim krallığım.', w: { order_liberty: 0.9, authority_locus: 0.4 }, toward: 'lockean' },
+          { t: 'Kimsenin insafına kalmamak: iyi niyetli bile olsa birinin iki dudağına bakmamak.', w: { conflict: ['uretken', 0.5], authority_locus: 0.3, legitimacy: ['erdem', 0.4] }, toward: 'republican' },
+          { t: 'Herkes için gerçek olması: kağıt üstünde değil, en dardaki için de işlemesi.', w: { human_nature: 0.4, order_liberty: 0.4 }, toward: 'rawlsian' }
+        ]
+      },
+      {
+        id: 'd_c_yetisme', family: 'C', prompt: 'İyi bir yönetici sence nasıl yetişir?',
+        options: [
+          { t: 'Uzun bir eğitim ve elemeyle; yönetmek herkesin yapamayacağı bir uzmanlıktır.', w: { authority_locus: -0.5, legitimacy: ['erdem', 0.6] }, toward: 'platonic' },
+          { t: 'Önce kendini yönetmeyi öğrenerek; ahlakı ve görgüsüyle örnek olan yönetir.', w: { instrument: ['ornek', 0.7], change: [0.5, 0.5] }, toward: 'confucian' },
+          { t: 'Kamusal hayatın içinde, yurttaşlarla omuz omuza pişerek.', w: { authority_locus: 0.4, instrument: ['muzakere', 0.5] }, toward: 'republican' },
+          { t: 'Tecrübeyle ve ölçüyle; iki aşırılık arasında orta yolu bulan yönetir.', w: { change: [0.2, 0.5], ends_means: ['erdemci', 0.5] }, toward: 'aristotelian' }
+        ]
+      },
+      {
+        id: 'd_c_halk', family: 'C', prompt: 'Topluluk açıkça yanlış bir karar alıyorsa ne olmalı?',
+        options: [
+          { t: 'Bilenler devreye girmeli; her konu el kaldırmaya sunulmaz.', w: { authority_locus: -0.5, legitimacy: ['uzmanlik', 0.4] }, toward: 'platonic' },
+          { t: 'Karar yine halkın olmalı; yanlıştan öğrenmek de yönetmenin okulu.', w: { authority_locus: 0.5, human_nature: 0.4 }, toward: 'republican' },
+          { t: 'İyi kurulmuş fren ve denge yanlışı zaten yumuşatır; mesele kişiler değil mimari.', w: { instrument: ['hukuk', 0.6], conflict: ['uretken', 0.4] }, toward: 'aristotelian' }
+        ]
+      },
+      {
+        id: 'd_d_reform', family: 'D', prompt: 'Köklü bir kurumun artık değişmesi gerektiğine nasıl karar verilir?',
+        options: [
+          { t: 'Kendi içinden gelen sinyallerle: kurum yaşayan bir bünyedir, değişim mirası koruyarak yapılır.', w: { change: 0.9, legitimacy: ['gelenek', 0.6] }, toward: 'burkean' },
+          { t: 'Akılla ölçülür: işlevini yitirmişse duygusallık yapmadan güncellenir.', w: { change: 0.2, ends_means: ['erdemci', 0.4] }, toward: 'aristotelian' },
+          { t: 'Ruhu canlı tutulursa büyük reform gerekmez; sorun kurumda değil, ritüelin unutulmasında.', w: { change: 0.6, instrument: ['ornek', 0.6] }, toward: 'confucian' }
+        ]
+      },
+      {
+        id: 'd_e_kok', family: 'E', prompt: 'Sence büyük adaletsizliklerin kökünde ne var?',
+        options: [
+          { t: 'Mülkiyet ve sınıf düzeni; yapı değişmeden bireysel iyi niyet çare olmaz.', w: { legitimacy: ['sinif', 1], change: -0.8 }, toward: 'marxist' },
+          { t: 'Zorlayıcı otoritenin kendisi; devlet de patron da aynı refleksin iki üniforması.', w: { authority_locus: 0.9, order_liberty: 0.9 }, toward: 'anarchist' }
+        ]
+      },
+      {
+        id: 'd_e_orgut', family: 'E', prompt: 'Bir haksızlığa karşı örgütlenmek gerekse nasıl olmalı?',
+        options: [
+          { t: 'Disiplinli ve hedefe kilitli; dağınık öfke buhar olur, örgütlü güç tarih yazar.', w: { instrument: ['zor', 0.5], authority_locus: -0.2, conflict: ['kurucu', 0.5] }, toward: 'marxist' },
+          { t: 'Gönüllü ve yatay; kimse kimsenin komutanı olmadan, ihtiyaç kadar birleşerek.', w: { instrument: ['muzakere', 0.7], authority_locus: 0.9 }, toward: 'anarchist' }
+        ]
+      },
+      {
+        id: 'd_f_uzman', family: 'F', prompt: 'Uzmanların önerisi ile halkın isteği açıkça çatışırsa hangisi kazanmalı?',
+        options: [
+          { t: 'Veri kazanmalı; kamuoyu duygudur, sonuç matematiktir.', w: { legitimacy: ['uzmanlik', 1], ends_means: ['sonuccu', 0.5] }, toward: 'technocrat' },
+          { t: 'Gerçekten bilge olan kazanmalı; ölçüm de yanılır, hikmet başka bir şeydir.', w: { legitimacy: ['erdem', 0.8], instrument: ['ornek', 0.4] }, toward: 'platonic' },
+          { t: 'Usul kazanmalı: uzman önerir, meşru karar yine halkın onayından geçer.', w: { legitimacy: ['riza', 0.8], instrument: ['hukuk', 0.5] }, toward: 'rawlsian' }
+        ]
+      }
+    ];
+
+    /* ==================================================================
+       5) MOTOR — vektör biriktirme, benzerlik, sapma, yorum.
+       ================================================================== */
+    const TAU = 0.45;    // asimilasyon <-> komşuya çekme eşiği (1-benzerlik ölçeğinde)
+    const DELTA = 0.06;  // net <-> melez eşiği
+    const TOWARD_BONUS = 0.05;
+
+    function buildVisitor(answers) {
+      const ord = {}, cat = {}, toward = {};
+      let sun = 0, sunMax = 0;
+      for (const { q, oi } of answers) {
+        const opt = q.options[oi];
+        const qSunMax = Math.max(...q.options.map(o => (o.w && o.w.sun) || 0));
+        sunMax += qSunMax;
+        for (const [axis, raw] of Object.entries(opt.w || {})) {
+          if (axis === 'sun') { sun += raw; continue; }
+          const ax = AXES[axis];
+          if (!ax) continue;
+          if (ax.type === 'ord') {
+            const [val, wt] = Array.isArray(raw) ? raw : [raw, 1];
+            (ord[axis] ||= { sum: 0, w: 0 });
+            ord[axis].sum += val * wt; ord[axis].w += wt;
+          } else {
+            const [val, wt] = Array.isArray(raw) ? raw : [raw, 1];
+            (cat[axis] ||= {});
+            cat[axis][val] = (cat[axis][val] || 0) + wt;
+          }
+        }
+        if (opt.toward) toward[opt.toward] = (toward[opt.toward] || 0) + 1;
+      }
+      return { ord, cat, sun, sunMax, toward };
+    }
+
+    // Eksen konumu + sinyal gücü (0..1). Sinyalsiz eksen puanlamaya girmez.
+    function axisState(visitor, axis) {
+      const ax = AXES[axis];
+      if (ax.type === 'ord') {
+        const o = visitor.ord[axis];
+        if (!o || o.w <= 0) return null;
+        return { pos: o.sum / o.w, sig: Math.min(1, o.w / 2) };
+      }
+      const c = visitor.cat[axis];
+      if (!c) return null;
+      const total = Object.values(c).reduce((a, b) => a + b, 0);
+      if (total <= 0) return null;
+      const dist = Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v / total]));
+      return { dist, sig: Math.min(1, total / 2), top: Object.entries(dist).sort((a, b) => b[1] - a[1])[0][0] };
+    }
+
+    function axisSimilarity(axis, st, schoolVal) {
+      if (AXES[axis].type === 'ord') return 1 - Math.abs(st.pos - schoolVal) / 2;
+      return Object.entries(st.dist).reduce((acc, [v, p]) => acc + p * prox(axis, v, schoolVal), 0);
+    }
+
+    function scoreSchools(visitor) {
+      return SCHOOLS.map(s => {
+        let num = 0, den = 0;
+        const perAxis = {};
+        for (const axis of Object.keys(AXES)) {
+          const st = axisState(visitor, axis);
+          if (!st) continue;
+          const sim = axisSimilarity(axis, st, s.vector[axis]);
+          const w = AXES[axis].w * st.sig;
+          num += w * sim; den += w;
+          perAxis[axis] = { sim, w, st };
+        }
+        let score = den > 0 ? num / den : 0;
+        score += (visitor.toward[s.id] || 0) * TOWARD_BONUS;
+        return { school: s, score, perAxis };
+      }).sort((a, b) => b.score - a.score);
+    }
+
+    function interpret(visitor, ranked) {
+      const top = ranked[0], second = ranked[1];
+      const consistency = top.score - second.score;
+      // Kritik sapma: baskın ekolün beklediğinden en çok ayrışılan eksen
+      let critical = null;
+      for (const [axis, d] of Object.entries(top.perAxis)) {
+        const dev = AXES[axis].w * d.st.sig * (1 - d.sim);
+        if (!critical || dev > critical.dev) critical = { axis, dev, sim: d.sim, st: d.st };
+      }
+      let mode = null, pullTo = null;
+      if (critical) {
+        if ((1 - critical.sim) <= TAU) mode = 'asimilasyon';
+        else {
+          mode = 'komsu';
+          const nb = top.school.neighbors
+            .map(id => ranked.find(r => r.school.id === id))
+            .filter(Boolean)
+            .sort((a, b) => b.score - a.score)[0];
+          pullTo = nb ? nb.school : SCHOOL_BY_ID[top.school.neighbors[0]];
+        }
+      }
+      const sunOverlay = visitor.sunMax >= 1 && (visitor.sun / visitor.sunMax) >= 0.45;
+      return { top, second, consistency, critical, mode, pullTo, sunOverlay };
+    }
+
+    /* ==================================================================
+       6) AKIŞ — geniş tur + uyarlanır diskriminatörler
+       ================================================================== */
+    const state = { answers: [], queue: [...BROAD], phase: 'broad', planned: BROAD.length + 3 };
+
+    function planDiscriminators() {
+      const ranked = scoreSchools(buildVisitor(state.answers));
+      const fam1 = ranked[0].school.family;
+      const fam2 = ranked.find(r => r.school.family !== fam1)?.school.family;
+      const asked = new Set(state.answers.map(a => a.q.id));
+      const picks = [];
+      for (const d of DISCRIMINATORS) if (d.family === fam1 && !asked.has(d.id) && picks.length < 2) picks.push(d);
+      if (fam2) { const alt = DISCRIMINATORS.find(d => d.family === fam2 && !asked.has(d.id)); if (alt) picks.push(alt); }
+      state.queue = picks;
+      state.phase = 'disc';
+      state.planned = state.answers.length + picks.length;
+    }
+
+    /* ==================================================================
+       7) ARAYÜZ
+       ================================================================== */
+    const $ = (id) => document.getElementById(id);
+    const screens = { intro: $('screen-intro'), question: $('screen-question'), report: $('screen-report') };
+    const show = (name) => Object.entries(screens).forEach(([k, el]) => el.classList.toggle('hidden', k !== name));
+    const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    function renderQuestion() {
+      if (!state.queue.length) {
+        if (state.phase === 'broad') planDiscriminators();
+        if (!state.queue.length) return renderReport();
+      }
+      const q = state.queue[0];
+      $('q-counter').textContent = `soru ${state.answers.length + 1} / ~${state.planned}`;
+      $('q-stage').textContent = state.phase === 'broad' ? 'geniş tur · aileni arıyorum' : 'keskinleştirme · ekolünü ayırıyorum';
+      $('q-prompt').textContent = q.prompt;
+      const prog = $('q-progress'); prog.innerHTML = '';
+      for (let i = 0; i < state.planned; i++) {
+        const dot = document.createElement('i');
+        if (i < state.answers.length) dot.className = 'done';
+        else if (i === state.answers.length) dot.className = 'now';
+        prog.appendChild(dot);
+      }
+      const box = $('q-options'); box.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'opt'; b.dataset.key = String(i + 1);
+        b.textContent = opt.t;
+        b.addEventListener('click', () => answer(q, i));
+        box.appendChild(b);
+      });
+      $('btn-back').style.visibility = state.answers.length ? 'visible' : 'hidden';
+      show('question');
+      window.scrollTo({ top: 0 });
+    }
+
+    function answer(q, oi) {
+      state.answers.push({ q, oi });
+      state.queue.shift();
+      if (state.phase === 'broad' && !state.queue.length) planDiscriminators();
+      state.queue.length ? renderQuestion() : renderReport();
+    }
+
+    function undo() {
+      if (!state.answers.length) return;
+      const last = state.answers.pop();
+      if (BROAD.some(b => b.id === last.q.id)) {
+        // geniş tura dönüş: kuyruğu geniş turdan yeniden kur
+        const idx = BROAD.findIndex(b => b.id === last.q.id);
+        state.queue = BROAD.slice(idx);
+        state.phase = 'broad';
+        state.planned = BROAD.length + 3;
+      } else {
+        state.queue.unshift(last.q);
+      }
+      renderQuestion();
+    }
+
+    function renderReport() {
+      const visitor = buildVisitor(state.answers);
+      const ranked = scoreSchools(visitor);
+      const R = interpret(visitor, ranked);
+      const s = R.top.school;
+      const isHybrid = R.consistency < DELTA;
+
+      // "Seni bağlayan": en güçlü örtüşen 3 eksen, gündelik dille
+      const binding = Object.entries(R.top.perAxis)
+        .sort((a, b) => (b[1].w * b[1].sim) - (a[1].w * a[1].sim))
+        .slice(0, 3)
+        .map(([axis, d]) => {
+          const val = AXES[axis].type === 'ord' ? d.st.pos : d.st.top;
+          return { axis, txt: posPhrase(axis, val) };
+        })
+        .filter(x => x.txt);
+
+      let deviationHtml = '';
+      if (R.critical) {
+        const axis = R.critical.axis;
+        const visitorVal = AXES[axis].type === 'ord' ? R.critical.st.pos : R.critical.st.top;
+        const visitorTxt = posPhrase(axis, visitorVal);
+        if (R.mode === 'asimilasyon') {
+          const hook = s.hooks[axis] || `Bu ekolün doğrusalı bunu dışlamaz: senin bu eğilimin, aynı hedefe hizmet eden bir araç olarak okunur.`;
+          deviationHtml = `<div class="pullbox"><span class="mode">asimilasyon · ekol seni içeriyor</span>
+            <span class="axis-name">${AXES[axis].label}</span> ekseninde ekolün beklediğinden ayrışıyorsun: <em>${esc(visitorTxt)}</em><br><br>
+            Ama bu bir çelişki değil. ${esc(hook)}</div>`;
+        } else {
+          deviationHtml = `<div class="pullbox"><span class="mode">gerilim · komşuya çekiliyorsun</span>
+            <span class="axis-name">${AXES[axis].label}</span> ekseninde ekolün sınırını zorluyorsun: <em>${esc(visitorTxt)}</em><br><br>
+            Bu sapma asimile edilemeyecek kadar büyük: seni <b>${esc(s.label)}</b>'den <b>${esc(R.pullTo.label)}</b>'e doğru esneten gerçek bir tansiyon. ${esc(R.pullTo.label)} tam da bu noktada durur: <em>"${esc(R.pullTo.core)}"</em></div>`;
+        }
+      }
+
+      const sunHtml = R.sunOverlay ? `<div class="rsec"><h3>stratejik üslup · sun tzu örtüsü</h3>
+        <div class="suntzu">Yanıtlarında güçlü bir dolaylılık sinyali var: doğrudan güç yerine konum, zamanlama ve algı; savaşmadan kazanmak. Bu bir ekol değil, senin <em>nasıl</em> oynadığını niteleyen bir örtü — ${s.family === 'A' ? 'sonuç odaklısın ama cepheden değil, zeminden ilerliyorsun.' : 'müzakereci tarafın bile inisiyatifi ve zamanlamayı stratejik kullanıyor.'}</div></div>` : '';
+
+      const ethicsHtml = s.critical ? `<div class="ethics">Tanısal not: bu ekol matriste tanı bütünlüğü için yer alır, olumlanmaz. Tarihsel bedeli baskı ve şiddettir; bu sonuç bir yakınlık ölçümüdür, bir tavsiye değil. Kör nokta satırını iki kez oku.</div>` : '';
+
+      const top3 = ranked.slice(0, 3).map((r, i) => `${i ? ' · ' : ''}<b>${esc(r.school.label)}</b> %${Math.min(100, Math.round(r.score * 100))}`).join('');
+
+      $('r-body').innerHTML = `
+        <span class="family-tag">${FAMILIES[s.family]}</span>
+        <h2 class="school">${esc(s.label)}</h2>
+        <div class="verdict">tutarlılık: ${isHybrid
+          ? `<b>melez profil</b> — ${esc(s.label)} ile ${esc(R.second.school.label)} arasında bir yerdesin; bu bir kusur değil, bulgudur.`
+          : '<b>net eşleşme</b>'}</div>
+        <div class="coreline">"${esc(s.core)}"</div>
+        <div class="rsec"><h3>seni bu ekole bağlayan</h3>
+          <ul>${binding.map(b => `<li><span class="axis-name">${AXES[b.axis].label}</span><br>${esc(b.txt)}</li>`).join('')}</ul>
+        </div>
+        <div class="rsec"><h3>dikkat çeken sapma</h3>${deviationHtml || '<p class="blind">Kayda değer bir sapma yok: profil ekolle neredeyse bire bir örtüşüyor.</p>'}</div>
+        ${sunHtml}
+        <div class="rsec"><h3>kör nokta · dürüst ayna</h3><p class="blind">${esc(s.blind)}</p></div>
+        ${ethicsHtml}
+        <div class="rsec"><h3>yakınlık sıralaması</h3><p class="ranking">${top3}</p></div>
+      `;
+      show('report');
+      window.scrollTo({ top: 0 });
+
+      window.ConviviumActivity?.recordRecommendation({
+        recommendation_title: `Ekol Aynası: ${s.label}`,
+        recommendation_summary: s.core,
+        recommendation_meta: {
+          school: s.id, family: s.family,
+          consistency: isHybrid ? `melez:${R.second.school.id}` : 'net',
+          deviation_axis: R.critical?.axis || null, mode: R.mode,
+          sun_tzu: R.sunOverlay
+        }
+      });
+    }
+
+    function restart() {
+      state.answers = []; state.queue = [...BROAD]; state.phase = 'broad'; state.planned = BROAD.length + 3;
+      show('intro');
+    }
+
+    $('btn-start').addEventListener('click', renderQuestion);
+    $('btn-restart').addEventListener('click', restart);
+    $('btn-back').addEventListener('click', undo);
+    document.addEventListener('keydown', (e) => {
+      if (screens.question.classList.contains('hidden')) return;
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= 5) {
+        const btn = $('q-options').children[n - 1];
+        if (btn) btn.click();
+      }
+    });
+  })();
+  </script>
+  <script src="/assets/js/sfx.js?v=18" defer></script>
+<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌​‌‌​​​‌‌​‌‌‌​‌​​​​‌​​​‌‌​​‌‌​‌​​​​‌‌​​‌‌​‌​‌​​‌‌​​​​​‌​​​‌​​​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+<script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>

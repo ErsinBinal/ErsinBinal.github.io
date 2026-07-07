@@ -1635,6 +1635,7 @@
         ['/tools/barista.html', 'barista'],
         ['/oracle/', 'oracle room'],
         ['/tools/paradox-terminal.html', 'paradox terminal'],
+        ['/tools/ekol-aynasi.html', 'ekol aynasi'],
         [route('dart', '/tools/dart-skorbord.html'), 'dart skorbord']
       ];
 
@@ -4394,6 +4395,12 @@
           action: goTo(route('paradox', '/tools/paradox-terminal.html'))
         },
         {
+          command: 'ekol',
+          description: 'Ekol Aynasi - dusunce ekolu testi',
+          aliases: ['ayna', 'ekol aynasi', 'ekol aynası', 'mirror', 'schools'],
+          action: goTo(route('ekolAynasi', '/tools/ekol-aynasi.html'))
+        },
+        {
           command: 'about',
           description: 'site sahibinin ozgecmisi',
           aliases: [
@@ -4498,7 +4505,7 @@
         'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
         '',
         'lab:',
-        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, universe, pipe, outrun',
+        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, ekol, universe, pipe, outrun',
         '',
         'system:',
         'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver',

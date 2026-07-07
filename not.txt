@@ -15,6 +15,37 @@ CALISMA SEKLI (baska bilgisayardan acan icin)
 * Worker degisikligi: cd workers/oracle && npx wrangler deploy
 
 ==========================================================================
+TUR OZETI (2026-07-07) — EKOL AYNASI (stratejik dusunce ekolleri matrisi)
+==========================================================================
+  [x] tools/ekol-aynasi.html: docs/stratejik-ekol-matrisi.md +
+      docs/stratejik-uygulama-prompt.md dokumanlarinin uygulamasi.
+      8 eksen (2 kategorik yakinlik tablolu) x 14 ekol vektoru; 7 genis
+      soru + aile-tetiklemeli diskriminatorler (ilk aile 2 + ikinci aile 1,
+      uyarlanir). Puanlama: sinyal-agirlikli benzerlik; net/melez esigi
+      DELTA=0.06; sapma yorumu TAU=0.45 (asimilasyon hook'lari ekol basina
+      ~3 / komsuya cekme). Sun Tzu ortusu skoru degistirmeyen uslup notu.
+      Rapor: cekirdek dogrusal + gundelik dille "seni baglayan" 3 eksen +
+      sapma kutusu + kor nokta + yakinlik yuzdesi. Organik otoriter cikarsa
+      ek etik cerceve kutusu (olumlanmaz). Klavye 1-5, geri al, reduced
+      motion. auth-gate (ekol-aynasi), recordRecommendation ile sonuc izi.
+      Tasarim: bronz/serif "harp odasi aynasi" + mono terminal meta.
+      Canary CVM-67B3C50D (zero-width dogrulandi) + origin-beacon.
+  [x] KALIBRASYON (dok. §10): motor Python'a kopyalanip 13 prototip
+      yanit setiyle test edildi (node yerelde yok). Ilk kosuda 4 sorun:
+      hobbes->legalizm kaymasi, aristoteles/cumhuriyetci icin genis turda
+      denge/yurttaslik capasi eksikligi. Duzeltmeler: q_apartman +kurul
+      secenegi, q_yonetim +nobet secenegi, d_a_guvenlik(a) riza+koruyucu
+      agirligi, TOWARD_BONUS 0.035->0.05. Sonuc: 13/13 dogru ekol;
+      burkean genis turda B'ye dusuyor ama fam2=D mekanizmasi d_d_reform'u
+      sorup geri kazaniyor (bilinen/kabul edilen melez davranis).
+  [x] Kayitlar: routes.js ekolAynasi (v4), home-protocol 'ekol' komutu
+      (aliaslar: ayna/mirror/schools; random rotaya eklendi) (v55),
+      index.html Lab #12 + arsiv agaci, SW precache + CACHE v156 -> v157,
+      sitemap (2026-07-07).
+  GORSEL TEYIT: intro -> 7 genis soru -> diskriminatorler -> rapor akisi;
+  melez profil metni; geri al tusu; terminalde "ekol" komutu.
+
+==========================================================================
 TUR OZETI (2026-07-02) — P0 kapanislari + Kul Hatti II icerik
 ==========================================================================
   [x] flow-check.yml artik her main push'unda smoke kosuyor (e2e elle).
