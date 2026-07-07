@@ -310,10 +310,103 @@
     return 'grumpy';
   }
 
-  function renderBugy(pet) {
+  // --- Bugy Secimi ----------------------------------------------------------
+  // Kullanici companion'ini panelden secer; secim profile yazilir ve
+  // degistirilmedikce her cihazda ayni bugy gorunur. Surpriz pet secenegi
+  // yalnizca hak edenlerde (pet sahibi ya da gizli kilidi acmis) listelenir.
+  const COMPANION_OPTIONS = [
+    { key: 'v1', label: 'Bugy Classic', note: 'neon kuzu · taban katman' },
+    { key: 'v2', label: 'Bugy Arcade', note: 'retro paletli maskot' },
+    { key: 'v3', label: 'Bugy Native', note: 'canvas çekirdek, gelişmiş efektler' },
+    { key: 'v4', label: 'Bugy Yaratıklar', note: 'synthwave yaratıklar' }
+  ];
+  const ENGINE_LS_KEY = 'convivium.bugy.engine';
+  const UNLOCK_LS_KEY = 'convivium.bugy.unlocked';
+
+  function petUnlockedLocally() {
+    try {
+      if (localStorage.getItem(UNLOCK_LS_KEY) === '1') return true;
+      const node = JSON.parse(localStorage.getItem('convivium.offline.node') || '{}');
+      return Boolean(node && node.solved);
+    } catch { return false; }
+  }
+
+  function currentCompanionPref(profile, pet) {
+    const valid = ['off', 'v1', 'v2', 'v3', 'v4', 'pet'];
+    if (profile && valid.includes(profile.companion_pref)) return profile.companion_pref;
+    if (pet && pet.hatched) return 'pet';
+    try {
+      const ls = localStorage.getItem(ENGINE_LS_KEY);
+      if (valid.includes(ls)) return ls;
+    } catch { /* yok say */ }
+    return 'v1';
+  }
+
+  async function applyCompanionPref(pref) {
+    // Canli uygulama: bugy-pet yuklu ise orkestrasyonu ona birak.
+    if (window.BugyPet && window.BugyPet.setPref) {
+      await window.BugyPet.setPref(pref);
+      return;
+    }
+    // Yedek yol: profile yaz + LS aynasi (sonraki sayfa yuklemesinde uygulanir).
+    try { await backend.upsertProfile({ companion_pref: pref }); } catch { /* yok say */ }
+    try { localStorage.setItem(ENGINE_LS_KEY, pref === 'pet' ? 'v4' : (pref === 'off' ? 'v1' : pref)); } catch { /* yok say */ }
+  }
+
+  function renderCompanionPicker(profile, pet) {
+    const active = currentCompanionPref(profile, pet);
+    const petEligible = Boolean(pet && pet.hatched) || petUnlockedLocally();
+    const rows = COMPANION_OPTIONS.map((opt) => `
+      <label class="bugy-pick ${active === opt.key ? 'is-active' : ''}">
+        <input type="radio" name="companionPref" value="${opt.key}" ${active === opt.key ? 'checked' : ''}>
+        <strong>${opt.label}</strong><span>${opt.note}</span>
+      </label>`);
+    if (petEligible) {
+      rows.push(`
+      <label class="bugy-pick bugy-pick-pet ${active === 'pet' ? 'is-active' : ''}">
+        <input type="radio" name="companionPref" value="pet" ${active === 'pet' ? 'checked' : ''}>
+        <strong>🥚 Sürpriz Bugy</strong><span>${pet && pet.hatched ? 'bakım isteyen yaratığın' : 'yumurtan bir içerik sayfasında bekliyor'}</span>
+      </label>`);
+    } else {
+      rows.push(`
+      <div class="bugy-pick bugy-pick-locked" title="Gizli görev tamamlanınca açılır">
+        <strong>🔒 ???</strong><span>gizli bir ödül — şifreyi çözen görür</span>
+      </div>`);
+    }
+    return `
+      <fieldset class="bugy-picker">
+        <legend>Bugy Seçimi</legend>
+        ${rows.join('')}
+        <p class="bugy-picker-note" id="bugyPickerNote">Seçimin hesabına kaydedilir; değiştirmedikçe tüm sayfalarda aynı bugy sana eşlik eder.</p>
+      </fieldset>`;
+  }
+
+  function bindCompanionPicker(profile, pet) {
+    const note = document.getElementById('bugyPickerNote');
+    bugyEl.querySelectorAll('input[name="companionPref"]').forEach((input) => {
+      input.addEventListener('change', async () => {
+        const pref = input.value;
+        bugyEl.querySelectorAll('.bugy-pick').forEach((el) => {
+          el.classList.toggle('is-active', el.contains(input));
+        });
+        if (note) note.textContent = 'Kaydediliyor…';
+        try {
+          await applyCompanionPref(pref);
+          if (profile) profile.companion_pref = pref;
+          if (note) note.textContent = 'Kaydedildi. Seçimin tüm sayfalarda geçerli.';
+        } catch {
+          if (note) note.textContent = 'Kaydedilemedi; bağlantıyı kontrol edip tekrar dene.';
+        }
+      });
+    });
+  }
+
+  function renderBugy(pet, profile) {
     if (!bugyEl) return;
+    const picker = renderCompanionPicker(profile, pet);
     if (!pet) {
-      empty(bugyEl, 'Henuz bir Bugy yok. Yaratik buyutme hakki gizli bir oduldur — kazananlara bir icerik sayfasinda yumurta belirir. Ipucu: sinyali kaybedince acilan node.');
+      bugyEl.innerHTML = picker + '<p class="dashboard-empty">Henuz bir Bugy yaratigin yok. Yaratik buyutme hakki gizli bir oduldur — kazananlara bir icerik sayfasinda yumurta belirir. Ipucu: sinyali kaybedince acilan node.</p>';
+      bindCompanionPicker(profile, pet);
       return;
     }
     const needs = bugyCurrentNeeds(pet);
@@ -327,7 +420,7 @@
           <div class="bugy-meter-track"><i style="width:${v}%"></i></div>
         </div>`;
     }).join('');
-    bugyEl.innerHTML = `
+    bugyEl.innerHTML = picker + `
       <article class="bugy-dash bugy-mood-${mood}">
         <div class="bugy-dash-head">
           <strong>${escapeHtml(pet.name)}</strong>
@@ -341,6 +434,7 @@
         </div>
         ${mood === 'feral' ? '<p class="bugy-dash-warn">⚠ Canavarlaştı — bir içerik sayfasında bakım yaparak sakinleştir.</p>' : ''}
       </article>`;
+    bindCompanionPicker(profile, pet);
   }
 
   function renderGames(scores) {
@@ -737,7 +831,7 @@
       ]);
 
       renderProfile(session, profile);
-      renderBugy(bugy);
+      renderBugy(bugy, profile);
       renderGames(scores);
       renderRecommendations(recommendations);
       renderDartStats(dartStats);

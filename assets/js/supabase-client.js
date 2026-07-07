@@ -223,7 +223,7 @@
 
     const { data, error } = await client
       .from('profiles')
-      .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, created_at')
+      .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, companion_pref, created_at')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -260,6 +260,10 @@
     if (profileData.ai_consent !== undefined) {
       payload.ai_consent = profileData.ai_consent === true;
       payload.ai_consent_at = profileData.ai_consent === true ? new Date().toISOString() : null;
+    }
+    if (profileData.companion_pref !== undefined) {
+      const pref = String(profileData.companion_pref || '');
+      payload.companion_pref = ['off', 'v1', 'v2', 'v3', 'v4', 'pet'].includes(pref) ? pref : null;
     }
     payload.updated_at = new Date().toISOString();
 

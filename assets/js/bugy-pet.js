@@ -227,6 +227,42 @@
     };
   }
 
+  // --- Companion tercihi (kullanici paneli secimi) -------------------------
+  // Kaynak: profiles.companion_pref (kullaniciya bagli, cihazlar arasi).
+  // localStorage engine anahtari yalnizca ayna/uygulayicidir.
+  const PREF_VALUES = ['off', 'v1', 'v2', 'v3', 'v4', 'pet'];
+
+  async function saveCompanionPref(pref) {
+    if (userProfile) userProfile.companion_pref = pref;
+    const api = backend();
+    if (api && api.upsertProfile) {
+      try { await api.upsertProfile({ companion_pref: pref }); } catch { /* tablo eski olabilir */ }
+    }
+  }
+
+  // Secili klasik motoru aktive et, digerlerini kapat (cakisma onleme).
+  // Motor scripti sayfada yoksa yalnizca LS aynasi yazilir; motorun oldugu
+  // sayfada acilista dogru motor kendiliginden aktive olur.
+  function applyEnginePref(pref) {
+    const engines = { v2: window.BugyV2, v3: window.BugyV3, v4: window.BugyV4 };
+    Object.entries(engines).forEach(([key, engine]) => {
+      if (key === pref || !engine || !engine.deactivate) return;
+      try {
+        const st = engine.getState ? engine.getState() : null;
+        if (!st || st.active) engine.deactivate();
+      } catch { /* motor hazir olmayabilir */ }
+    });
+    const lsValue = (pref === 'off' || pref === 'v1') ? 'v1' : pref;
+    try { localStorage.setItem(ENGINE_KEY, lsValue); } catch { /* yok say */ }
+    const target = engines[pref];
+    if (target && target.activate) {
+      try {
+        const st = target.getState ? target.getState() : null;
+        if (!st || !st.active) target.activate();
+      } catch { /* yok say */ }
+    }
+  }
+
   // --- Companion surucusu (bugy-v4) ---------------------------------------
   // Aktif pet (bakim UI'i bunun uzerinde calisir).
   let currentPet = null;
@@ -255,6 +291,10 @@
     currentPet = pet;
     const v4 = window.BugyV4;
     if (!v4) return;
+    // Cakisma onleme: pet v4 uzerinde yasar; diger overlay motorlarini kapat.
+    [window.BugyV2, window.BugyV3].forEach((engine) => {
+      try { if (engine && engine.deactivate) engine.deactivate(); } catch { /* yok say */ }
+    });
     try { localStorage.setItem(ENGINE_KEY, 'v4'); } catch { /* yok say */ }
     if (v4.setSkin) v4.setSkin(resolveSpecies(pet.species));
     // Konusmayi pet surur (baglamsal + esprili); v4'un kendi idle quip'i sussun.
@@ -641,6 +681,9 @@
       const pet = newPet(chosen, input.value.trim());
       await savePet(pet);
       teardown();
+      // Ilk kazim: surpriz pet otomatik secili companion olur.
+      // Kullanici dilerse panelden eski surumlere donebilir.
+      await saveCompanionPref('pet');
       activateCompanion(pet);
       if (window.BugyV4 && window.BugyV4.summon) window.BugyV4.summon();
     });
@@ -666,11 +709,27 @@
     }
 
     const pet = await loadPet();
-    if (pet && pet.hatched) {
-      // Zaten peti olanlar (grandfather): kilitten etkilenmez.
-      activateCompanion(pet);
+    const hasPet = Boolean(pet && pet.hatched);
+    const pref = PREF_VALUES.includes(userProfile && userProfile.companion_pref)
+      ? userProfile.companion_pref
+      : null;
+
+    // Kullanici panelden klasik bir bugy sectiyse: pet devreye girmez,
+    // secili motor calisir (cakisma yok). Secim degismedikce ayni kalir.
+    if (pref && pref !== 'pet') {
+      hideCompanion();
+      applyEnginePref(pref);
       return;
     }
+
+    if (hasPet) {
+      // pref='pet' ya da henuz secim yok. Secim yoksa ilk kazanim kabul
+      // edilir ve surpriz pet otomatik secim olarak profile yazilir.
+      activateCompanion(pet);
+      if (!pref) saveCompanionPref('pet');
+      return;
+    }
+
     hideCompanion();
     // Peti yok: yumurta YALNIZCA kilit acilmissa belirir (Offline Node odulu).
     if (bugyUnlocked()) spawnEgg();
@@ -682,7 +741,18 @@
     species: () => ({ ...SPECIES }),
     get: loadPet,
     save: savePet,
-    reward
+    reward,
+    unlocked: bugyUnlocked,
+    setPref: async (pref) => {
+      if (!PREF_VALUES.includes(pref)) return;
+      await saveCompanionPref(pref);
+      if (pref === 'pet') {
+        const pet = await loadPet();
+        if (pet && pet.hatched) { activateCompanion(pet); return; }
+      }
+      hideCompanion();
+      applyEnginePref(pref);
+    }
   };
   window.BugyPet = api;
 
