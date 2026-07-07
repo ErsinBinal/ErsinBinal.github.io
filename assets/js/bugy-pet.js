@@ -231,6 +231,8 @@
   // Kaynak: profiles.companion_pref (kullaniciya bagli, cihazlar arasi).
   // localStorage engine anahtari yalnizca ayna/uygulayicidir.
   const PREF_VALUES = ['off', 'v1', 'v2', 'v3', 'v4', 'pet'];
+  // Bulmaca oduludur: yalnizca offline node'u cozene / pet sahibine acik.
+  const LOCKED_PREFS = ['v4', 'pet'];
 
   async function saveCompanionPref(pref) {
     if (userProfile) userProfile.companion_pref = pref;
@@ -710,21 +712,35 @@
 
     const pet = await loadPet();
     const hasPet = Boolean(pet && pet.hatched);
-    const pref = PREF_VALUES.includes(userProfile && userProfile.companion_pref)
+    // Canavarlara (v4 + surpriz pet) erisim hakki: offline node cozulmus
+    // ya da zaten bir pet var (eski hak sahibi).
+    const unlocked = bugyUnlocked() || hasPet;
+
+    let pref = PREF_VALUES.includes(userProfile && userProfile.companion_pref)
       ? userProfile.companion_pref
       : null;
 
-    // Kullanici panelden klasik bir bugy sectiyse: pet devreye girmez,
-    // secili motor calisir (cakisma yok). Secim degismedikce ayni kalir.
-    if (pref && pref !== 'pet') {
+    // KILIT: v4 ve pet yalnizca hak edende. Cozmemis biri (orn. eski/kacak
+    // bir profil tercihi) bunu tasisa bile yok sayilir; Classic'e duser.
+    if (LOCKED_PREFS.includes(pref) && !unlocked) pref = null;
+
+    // Kullanici panelden klasik bir bugy sectiyse (v1/v2/v3/off): pet
+    // devreye girmez, secili motor calisir (cakisma yok).
+    if (pref && pref !== 'pet' && pref !== 'v4') {
       hideCompanion();
       applyEnginePref(pref);
       return;
     }
 
-    if (hasPet) {
-      // pref='pet' ya da henuz secim yok. Secim yoksa ilk kazanim kabul
-      // edilir ve surpriz pet otomatik secim olarak profile yazilir.
+    // v4 (serbest yaratik) secili ve hak var: motoru ac, pet bakim UI'i yok.
+    if (pref === 'v4' && unlocked) {
+      hideCompanion();
+      applyEnginePref('v4');
+      return;
+    }
+
+    // Pet: acikca secili ya da secim yokken pet var (ilk kazanim -> otomatik).
+    if (unlocked && hasPet && (pref === 'pet' || !pref)) {
       activateCompanion(pet);
       if (!pref) saveCompanionPref('pet');
       return;
@@ -732,7 +748,7 @@
 
     hideCompanion();
     // Peti yok: yumurta YALNIZCA kilit acilmissa belirir (Offline Node odulu).
-    if (bugyUnlocked()) spawnEgg();
+    if (unlocked && !hasPet) spawnEgg();
     // else: kilitli — sessizce gizli kalir (gizli odul/hak).
   }
 
@@ -745,11 +761,17 @@
     unlocked: bugyUnlocked,
     setPref: async (pref) => {
       if (!PREF_VALUES.includes(pref)) return;
-      await saveCompanionPref(pref);
-      if (pref === 'pet') {
+      // Kilit: v4/pet secimi yalnizca hak edende gecerli; aksi halde reddet.
+      if (LOCKED_PREFS.includes(pref)) {
         const pet = await loadPet();
-        if (pet && pet.hatched) { activateCompanion(pet); return; }
+        if (!bugyUnlocked() && !(pet && pet.hatched)) return;
+        await saveCompanionPref(pref);
+        if (pref === 'pet' && pet && pet.hatched) { activateCompanion(pet); return; }
+        hideCompanion();
+        applyEnginePref(pref);
+        return;
       }
+      await saveCompanionPref(pref);
       hideCompanion();
       applyEnginePref(pref);
     }

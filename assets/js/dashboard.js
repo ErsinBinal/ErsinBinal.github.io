@@ -312,14 +312,18 @@
 
   // --- Bugy Secimi ----------------------------------------------------------
   // Kullanici companion'ini panelden secer; secim profile yazilir ve
-  // degistirilmedikce her cihazda ayni bugy gorunur. Surpriz pet secenegi
-  // yalnizca hak edenlerde (pet sahibi ya da gizli kilidi acmis) listelenir.
-  const COMPANION_OPTIONS = [
+  // degistirilmedikce her cihazda ayni bugy gorunur.
+  //
+  // KILIT KURGUSU: Bugy Yaratiklar (v4) ve Surpriz Pet AYNI canavarlari
+  // kullanir; ikisi de "offline node" bulmacasinin oduludur. Bulmacayi
+  // cozmeyen kullanici bu iki secenegi GOREMEZ ve secemez; yalnizca
+  // Classic / Arcade / Native herkese aciktir.
+  const FREE_OPTIONS = [
     { key: 'v1', label: 'Bugy Classic', note: 'neon kuzu · taban katman' },
     { key: 'v2', label: 'Bugy Arcade', note: 'retro paletli maskot' },
-    { key: 'v3', label: 'Bugy Native', note: 'canvas çekirdek, gelişmiş efektler' },
-    { key: 'v4', label: 'Bugy Yaratıklar', note: 'synthwave yaratıklar' }
+    { key: 'v3', label: 'Bugy Native', note: 'canvas çekirdek, gelişmiş efektler' }
   ];
+  const LOCKED_PREFS = ['v4', 'pet'];
   const ENGINE_LS_KEY = 'convivium.bugy.engine';
   const UNLOCK_LS_KEY = 'convivium.bugy.unlocked';
 
@@ -331,15 +335,26 @@
     } catch { return false; }
   }
 
+  // Canavarlara (v4 + pet) erisim hakki: bulmaca cozulmus ya da zaten bir
+  // pet var (eski hak sahibi; yumurta yalnizca kilit acilinca cikardi).
+  function creaturesUnlocked(pet) {
+    return Boolean(pet && pet.hatched) || petUnlockedLocally();
+  }
+
   function currentCompanionPref(profile, pet) {
     const valid = ['off', 'v1', 'v2', 'v3', 'v4', 'pet'];
-    if (profile && valid.includes(profile.companion_pref)) return profile.companion_pref;
-    if (pet && pet.hatched) return 'pet';
-    try {
-      const ls = localStorage.getItem(ENGINE_LS_KEY);
-      if (valid.includes(ls)) return ls;
-    } catch { /* yok say */ }
-    return 'v1';
+    let pref = 'v1';
+    if (profile && valid.includes(profile.companion_pref)) pref = profile.companion_pref;
+    else if (pet && pet.hatched) pref = 'pet';
+    else {
+      try {
+        const ls = localStorage.getItem(ENGINE_LS_KEY);
+        if (valid.includes(ls)) pref = ls;
+      } catch { /* yok say */ }
+    }
+    // Guvenlik: kilitli tercih (v4/pet) hak edilmemisse Classic'e dus.
+    if (LOCKED_PREFS.includes(pref) && !creaturesUnlocked(pet)) pref = 'v1';
+    return pref;
   }
 
   async function applyCompanionPref(pref) {
@@ -355,22 +370,29 @@
 
   function renderCompanionPicker(profile, pet) {
     const active = currentCompanionPref(profile, pet);
-    const petEligible = Boolean(pet && pet.hatched) || petUnlockedLocally();
-    const rows = COMPANION_OPTIONS.map((opt) => `
+    const unlocked = creaturesUnlocked(pet);
+    const rows = FREE_OPTIONS.map((opt) => `
       <label class="bugy-pick ${active === opt.key ? 'is-active' : ''}">
         <input type="radio" name="companionPref" value="${opt.key}" ${active === opt.key ? 'checked' : ''}>
         <strong>${opt.label}</strong><span>${opt.note}</span>
       </label>`);
-    if (petEligible) {
+    if (unlocked) {
+      // Canavarlar acildi: v4 (serbest yaratik) + Tamagotchi pet.
+      rows.push(`
+      <label class="bugy-pick bugy-pick-pet ${active === 'v4' ? 'is-active' : ''}">
+        <input type="radio" name="companionPref" value="v4" ${active === 'v4' ? 'checked' : ''}>
+        <strong>👾 Bugy Yaratıklar</strong><span>synthwave yaratıklar · serbest dolaşır</span>
+      </label>`);
       rows.push(`
       <label class="bugy-pick bugy-pick-pet ${active === 'pet' ? 'is-active' : ''}">
         <input type="radio" name="companionPref" value="pet" ${active === 'pet' ? 'checked' : ''}>
-        <strong>🥚 Sürpriz Bugy</strong><span>${pet && pet.hatched ? 'bakım isteyen yaratığın' : 'yumurtan bir içerik sayfasında bekliyor'}</span>
+        <strong>🥚 Sürpriz Bugy</strong><span>${pet && pet.hatched ? 'bakım isteyen yaratığın (Tamagotchi)' : 'yumurtan bir içerik sayfasında bekliyor'}</span>
       </label>`);
     } else {
+      // Kilitli: canavarlar tek bir gizemli satirla temsil edilir.
       rows.push(`
       <div class="bugy-pick bugy-pick-locked" title="Gizli görev tamamlanınca açılır">
-        <strong>🔒 ???</strong><span>gizli bir ödül — şifreyi çözen görür</span>
+        <strong>🔒 ???</strong><span>gizli bir ödül — sinyali kaybedince açılan node'u çöz</span>
       </div>`);
     }
     return `
