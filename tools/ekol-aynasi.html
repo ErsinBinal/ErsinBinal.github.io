@@ -169,6 +169,17 @@
     .ethics { border: 1px solid var(--danger); border-radius: 8px; padding: 12px 16px; margin-top: 10px; color: #f0c9c9; background: rgba(229,115,115,0.07); font-size: 0.92rem; }
     .ranking { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); letter-spacing: 0.5px; }
     .ranking b { color: var(--ink); font-weight: 400; }
+    details.rank { border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); margin-top: 8px; }
+    details.rank summary { list-style: none; cursor: pointer; padding: 10px 14px; display: flex; align-items: baseline; gap: 8px; }
+    details.rank summary::-webkit-details-marker { display: none; }
+    details.rank summary::after { content: '+'; margin-left: auto; color: var(--bronze-dim); font-size: 0.9rem; }
+    details.rank[open] summary::after { content: '−'; color: var(--bronze); }
+    details.rank summary:hover, details.rank summary:focus-visible { border-color: var(--bronze-dim); color: var(--ink); outline: none; }
+    details.rank[open] { border-color: var(--bronze-dim); }
+    .rank-no { color: var(--bronze-dim); flex: none; }
+    .rank-pct { color: var(--teal); white-space: nowrap; }
+    .rank-def { font-family: var(--serif); font-size: 0.9rem; color: var(--ink); margin: 0; padding: 0 14px 12px; line-height: 1.6; border-top: 1px dashed var(--line); padding-top: 10px; }
+    .rank-note { font-family: var(--mono); font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; margin-top: 10px; font-style: italic; }
 
     .hidden { display: none; }
     footer.pagefoot { text-align: center; margin-top: 40px; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); letter-spacing: 1.5px; }
@@ -315,6 +326,7 @@
     const SCHOOLS = [
       {
         id: 'machiavellian', label: 'Makyavelci Realizm', family: 'A',
+        desc: '16. yüzyıl Floransalı düşünür Machiavelli\'den. Siyaseti ahlak dersinden ayırır: yönetici, işleri yürütmek için gerektiğinde sevilmeyi değil etkili olmayı seçmelidir.',
         core: 'İktidarı elde etmek ve korumak nihai ölçüttür; erdem görünürde, etkililik gerçekte gereklidir.',
         blind: 'Herkesi oyuncu gibi okuyan göz, güvenin de bir sermaye olduğunu geç fark eder; sürekli manevra, etrafında manevra yapan insanlar üretir.',
         vector: { human_nature: -0.8, legitimacy: 'guc', ends_means: 'sonuccu', authority_locus: -0.8, change: 0.0, order_liberty: -0.5, instrument: 'zor', conflict: 'kurucu' },
@@ -327,6 +339,7 @@
       },
       {
         id: 'hobbesian', label: 'Hobbesçu Güvenlik-Mutlakiyeti', family: 'A',
+        desc: '17. yüzyıl İngiliz filozofu Hobbes\'tan. Devletsiz hayatı "herkesin herkesle savaşı" sayar; insanlar güvenlik için haklarını güçlü tek bir otoriteye devreder.',
         core: 'Düzensizlik en büyük kötülüktür; güvenlik uğruna mutlak egemene yetki devredilir.',
         blind: 'Kaos korkusu, itaatin bedelini görünmez kılar; güvenlik adına devredilen yetki nadiren geri gelir.',
         vector: { human_nature: -0.9, legitimacy: 'riza', ends_means: 'sonuccu', authority_locus: -1, change: 0.6, order_liberty: -0.9, instrument: 'hukuk', conflict: 'patoloji' },
@@ -339,6 +352,7 @@
       },
       {
         id: 'legalism', label: 'Legalizm (Han Feizi)', family: 'A',
+        desc: 'Antik Çin ekolü; en bilinen ismi Han Feizi. İyi niyete değil, herkese istisnasız işleyen katı yasalara ve net ödül-ceza düzenine güvenir.',
         core: 'İnsana değil sisteme güven; tek tip yasa ve katı ödül-ceza düzeni her şeyi yönetir.',
         blind: 'Sisteme duyulan güven, sistemin kimin elinde olduğunu sormayı unutturur; katı kural, kuralı yazanı denetleyemez.',
         vector: { human_nature: -0.9, legitimacy: 'hukuk', ends_means: 'sonuccu', authority_locus: -1, change: -0.3, order_liberty: -0.8, instrument: 'hukuk', conflict: 'patoloji' },
@@ -351,6 +365,7 @@
       },
       {
         id: 'organic_authoritarian', label: 'Organik Otoriter Korporatizm', family: 'A', critical: true,
+        desc: 'Toplumu tek bir canlı bünye gibi gören 20. yüzyıl akımı: birey bütüne tabidir, birlik lider ve ortak bir mit etrafında kurulur. Tarihte baskıcı rejimlerle anılır.',
         core: 'Bütün bireyden önce gelir; birlik lider ve ortak mit etrafında sağlanır.',
         blind: 'Birlik miti farklılığı hastalık gibi kodlar; tarih bu ekolün faturasını baskı ve şiddet olarak kesmiştir — bu bir yorum değil, kayıttır.',
         vector: { human_nature: -0.4, legitimacy: 'guc', ends_means: 'sonuccu', authority_locus: -1, change: -0.7, order_liberty: -1, instrument: 'propaganda', conflict: 'patoloji' },
@@ -362,6 +377,7 @@
       },
       {
         id: 'lockean', label: 'Lockeçu Liberalizm', family: 'B',
+        desc: '17. yüzyıl İngiliz filozofu Locke\'tan. Herkes doğuştan yaşam, özgürlük ve mülkiyet hakkına sahiptir; devletin tek görevi bunları korumaktır ve yetkisi halkın rızasıyla sınırlıdır.',
         core: 'Devlet doğal hakları korumak için vardır; rıza olmadan meşruiyet yoktur, iktidar sınırlıdır.',
         blind: 'Herkesin sözleşmeye eşit güçle oturduğunu varsayar; kapıdaki eşitlik, masadaki eşitsizliği görmeyebilir.',
         vector: { human_nature: 0.0, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 0.5, change: 0.0, order_liberty: 0.8, instrument: 'hukuk', conflict: 'uretken' },
@@ -374,6 +390,7 @@
       },
       {
         id: 'rawlsian', label: 'Rawlsçu Adalet-Liberalizmi', family: 'B',
+        desc: '20. yüzyıl Amerikalı filozof Rawls\'tan. Adil kurallar, zengin mi yoksul mu doğacağını bilmeden yazsaydık seçeceğimiz kurallardır; bu yüzden en dezavantajlı daima gözetilir.',
         core: 'Adil kurallar, kendi konumunu bilmeden herkesin kabul edebileceği kurallardır; en dezavantajlıyı gözet.',
         blind: 'Adil kural tasarımı, kuralların gerçek insanlarca oynandığını unutabilir; usul kusursuzken sonuç yine tıkanabilir.',
         vector: { human_nature: 0.3, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 0.5, change: 0.0, order_liberty: 0.6, instrument: 'hukuk', conflict: 'uretken' },
@@ -386,6 +403,7 @@
       },
       {
         id: 'republican', label: 'Cumhuriyetçilik (Sivil Erdem)', family: 'C',
+        desc: 'Antik Roma\'dan gelen gelenek. Özgürlüğü "kimsenin keyfine ve insafına kalmamak" diye tanımlar; bunu da aktif yurttaşlık ve birbirini dengeleyen kurumlar korur.',
         core: 'Özgürlük tahakküm altında olmamaktır; onu erdemli yurttaş ve karma kurumlar korur.',
         blind: 'Erdemli yurttaş idealinin yükü ağırdır; katılmayanı ya da katılamayanı kolayca "kusurlu yurttaş" diye okur.',
         vector: { human_nature: 0.2, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: 0.4, change: 0.0, order_liberty: 0.1, instrument: 'muzakere', conflict: 'uretken' },
@@ -398,6 +416,7 @@
       },
       {
         id: 'aristotelian', label: 'Aristotelesçi Politeia', family: 'C',
+        desc: 'Antik Yunan filozofu Aristoteles\'ten. İyi yönetim aşırılıklardan kaçınan orta yoldur; istikrarı güçlü bir orta sınıf ve tecrübeyle kazanılan pratik akıl sağlar.',
         core: 'Aşırılıklar arası orta yol ve güçlü orta sınıf istikrar getirir; yönetim pratik bilgelik ister.',
         blind: 'Orta yol her terazide bulunmaz; iki kötü seçenek arasında "denge" bazen sadece geç kalmaktır.',
         vector: { human_nature: 0.1, legitimacy: 'hukuk', ends_means: 'erdemci', authority_locus: 0.0, change: 0.2, order_liberty: 0.0, instrument: 'hukuk', conflict: 'uretken' },
@@ -410,6 +429,7 @@
       },
       {
         id: 'platonic', label: 'Platoncu Filozof-Kral', family: 'C',
+        desc: 'Antik Yunan filozofu Platon\'dan. Yönetmeyi gemi kaptanlığı gibi bir uzmanlık sayar: devleti, uzun bir eğitim ve elemeden geçmiş bilge bir azınlık yönetmelidir.',
         core: 'Yönetmek bir uzmanlıktır; İyi\'yi görebilenler yönetmelidir.',
         blind: 'Bilenlerin yönetimi, bilenlerin kim olduğuna kimin karar vereceğini çözemez; hakikat tekeli hızla imtiyaza dönüşür.',
         vector: { human_nature: -0.2, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: -0.4, change: 0.6, order_liberty: -0.3, instrument: 'ornek', conflict: 'patoloji' },
@@ -422,6 +442,7 @@
       },
       {
         id: 'confucian', label: 'Konfüçyüsçü Erdem Yönetimi', family: 'C',
+        desc: 'Antik Çin bilgesi Konfüçyüs\'ten. Düzeni yasa ve ceza değil, yöneticinin ahlaki örnekliği ile toplumsal görgü ve ritüeller sağlar; iyi yönetim yukarıdan aşağı erdemle yayılır.',
         core: 'Yönetici ahlaki örnektir; düzen zorla değil erdem ve ritüelle sağlanır.',
         blind: 'Uyum vurgusu itirazı terbiyesizlik gibi kodlayabilir; erdemli hiyerarşi, hiyerarşinin erdemini sorgulamayı zorlaştırır.',
         vector: { human_nature: 0.5, legitimacy: 'erdem', ends_means: 'erdemci', authority_locus: -0.6, change: 0.6, order_liberty: -0.4, instrument: 'ornek', conflict: 'patoloji' },
@@ -434,6 +455,7 @@
       },
       {
         id: 'burkean', label: 'Burke\'çü Muhafazakârlık', family: 'D',
+        desc: '18. yüzyıl İrlandalı-İngiliz düşünür Burke\'ten. Kurumları kuşakların biriktirdiği bilgelik sayar; değişimi reddetmez ama devrimle değil, dokuyu koruyan kademeli adımlarla ister.',
         core: 'Miras alınan kurumlar biriken bilgeliktir; değişim ani değil kademeli olmalıdır.',
         blind: 'Birikmiş bilgelik ile birikmiş imtiyaz dışarıdan aynı görünür; ihtiyat, mağdurun sabrını sınırsız sanabilir.',
         vector: { human_nature: -0.2, legitimacy: 'gelenek', ends_means: 'erdemci', authority_locus: 0.0, change: 0.9, order_liberty: -0.2, instrument: 'hukuk', conflict: 'uretken' },
@@ -446,6 +468,7 @@
       },
       {
         id: 'marxist', label: 'Marksist Materyalizm', family: 'E',
+        desc: '19. yüzyıl Alman düşünürü Marx\'tan. Siyaseti ekonomik ve sınıfsal çıkarların belirlediğini savunur; gerçek kurtuluş, mülkiyet düzeninin ve sınıfların ortadan kalkmasıyla gelir.',
         core: 'Siyaset, maddi ve sınıfsal çıkarların üstyapısıdır; kurtuluş sınıf mücadelesinden geçer.',
         blind: 'Yapıyı gören göz kişiyi gözden kaçırabilir; büyük kurtuluş anlatısı, bugünkü tekil acıları erteleyebilir.',
         vector: { human_nature: 0.2, legitimacy: 'sinif', ends_means: 'sonuccu', authority_locus: 0.0, change: -1, order_liberty: -0.2, instrument: 'zor', conflict: 'kurucu' },
@@ -458,6 +481,7 @@
       },
       {
         id: 'anarchist', label: 'Anarşizm / Mutualizm', family: 'E',
+        desc: '19. yüzyılda Proudhon ve Kropotkin gibi isimlerle gelişen akım. Devlet dahil zorlayıcı her otoriteyi gereksiz ve bozucu sayar; düzen, eşitler arasında gönüllü işbirliğinden doğar.',
         core: 'Zorlayıcı otorite gereksiz ve bozucudur; düzen gönüllü karşılıklılıktan doğar.',
         blind: 'Gönüllü düzen küçük ölçekte parlar; ölçek büyüyünce koordinasyon geri döner ve kapıdan kovulan otorite bacadan girer.',
         vector: { human_nature: 0.8, legitimacy: 'riza', ends_means: 'kuralci', authority_locus: 1, change: -0.8, order_liberty: 1, instrument: 'muzakere', conflict: 'uretken' },
@@ -470,6 +494,7 @@
       },
       {
         id: 'technocrat', label: 'Teknokratik Ütilitarizm', family: 'F',
+        desc: 'Bentham\'ın "en çok kişiye en çok fayda" ilkesini modern uzmanlık yönetimiyle birleştiren yaklaşım: politika ideolojiyle değil veri, ölçüm ve kanıtla belirlenmelidir.',
         core: 'En büyük faydayı kanıt ve uzmanlık üretir; politika ölçülüp optimize edilmelidir.',
         blind: 'Ölçülebilen yönetilir, ama önemli olan her şey ölçülmez; optimizasyon, hedefin kendisini tartışmayı unutturur.',
         vector: { human_nature: 0.0, legitimacy: 'uzmanlik', ends_means: 'sonuccu', authority_locus: -0.4, change: 0.0, order_liberty: -0.1, instrument: 'tesvik', conflict: 'patoloji' },
@@ -911,7 +936,8 @@
         } else {
           deviationHtml = `<div class="pullbox"><span class="mode">gerilim · komşuya çekiliyorsun</span>
             <span class="axis-name">${AXES[axis].label}</span> ekseninde ekolün sınırını zorluyorsun: <em>${esc(visitorTxt)}</em><br><br>
-            Bu sapma asimile edilemeyecek kadar büyük: seni <b>${esc(s.label)}</b>'den <b>${esc(R.pullTo.label)}</b>'e doğru esneten gerçek bir tansiyon. ${esc(R.pullTo.label)} tam da bu noktada durur: <em>"${esc(R.pullTo.core)}"</em></div>`;
+            Bu sapma asimile edilemeyecek kadar büyük: seni <b>${esc(s.label)}</b>'den <b>${esc(R.pullTo.label)}</b>'e doğru esneten gerçek bir tansiyon. ${esc(R.pullTo.label)} tam da bu noktada durur: <em>"${esc(R.pullTo.core)}"</em>
+            <details class="rank" style="margin-top:10px"><summary><b>${esc(R.pullTo.label)}</b> nedir?</summary><p class="rank-def">${esc(R.pullTo.desc)}</p></details></div>`;
         }
       }
 
@@ -920,7 +946,11 @@
 
       const ethicsHtml = s.critical ? `<div class="ethics">Tanısal not: bu ekol matriste tanı bütünlüğü için yer alır, olumlanmaz. Tarihsel bedeli baskı ve şiddettir; bu sonuç bir yakınlık ölçümüdür, bir tavsiye değil. Kör nokta satırını iki kez oku.</div>` : '';
 
-      const top3 = ranked.slice(0, 3).map((r, i) => `${i ? ' · ' : ''}${toRoman(i + 1)}. <b>${esc(r.school.label)}</b> %${Math.min(100, Math.round(r.score * 100))}`).join('');
+      const top3 = ranked.slice(0, 3).map((r, i) => `
+        <details class="rank">
+          <summary><span class="rank-no">${toRoman(i + 1)}.</span> <b>${esc(r.school.label)}</b> <span class="rank-pct">yakınlık %${Math.min(100, Math.round(r.score * 100))}</span></summary>
+          <p class="rank-def">${esc(r.school.desc)}</p>
+        </details>`).join('');
 
       $('r-body').innerHTML = `
         <span class="family-tag">${FAMILIES[s.family]}</span>
@@ -936,7 +966,10 @@
         ${sunHtml}
         <div class="rsec"><h3>kör nokta · dürüst ayna</h3><p class="blind">${esc(s.blind)}</p></div>
         ${ethicsHtml}
-        <div class="rsec"><h3>yakınlık sıralaması</h3><p class="ranking">${top3}</p></div>
+        <div class="rsec"><h3>yakınlık sıralaması</h3>
+          <div class="ranking">${top3}</div>
+          <p class="rank-note">Her değer o ekole ayrı ölçülen benzerlik oranıdır; pay dağılımı değildir, toplamın %100 etmesi gerekmez. Ekol adına tıklayınca kısa tanımı açılır.</p>
+        </div>
       `;
       show('report');
       window.scrollTo({ top: 0 });
