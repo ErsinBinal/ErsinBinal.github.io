@@ -59,8 +59,22 @@
     return client;
   }
 
+  // Supabase auth hatalarini ziyaretcinin anlayacagi Turkce mesaja cevir.
+  const AUTH_ERROR_TR = {
+    weak_password: 'Sifre yeterince guclu degil: en az 10 karakter olmali; kucuk harf, buyuk harf, rakam ve ozel karakter icermeli.',
+    user_already_exists: 'Bu e-posta ile zaten bir uyelik var. Giris yapmayi veya sifre sifirlamayi deneyin.',
+    email_exists: 'Bu e-posta ile zaten bir uyelik var. Giris yapmayi veya sifre sifirlamayi deneyin.',
+    invalid_credentials: 'E-posta veya sifre hatali.',
+    email_address_invalid: 'E-posta adresi gecersiz gorunuyor. Yazimi kontrol edin.',
+    email_not_confirmed: 'E-posta adresiniz henuz dogrulanmamis. Gelen kutunuzdaki dogrulama bagini tiklayin.',
+    over_email_send_rate_limit: 'Cok sik denediniz. Lutfen birkac dakika bekleyip tekrar deneyin.',
+    signup_disabled: 'Yeni uyelik kaydi su anda kapali.'
+  };
+
   function toMessage(error) {
     if (!error) return '';
+    const code = error.code || error.error_code;
+    if (code && AUTH_ERROR_TR[code]) return AUTH_ERROR_TR[code];
     return error.message || String(error);
   }
 

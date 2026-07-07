@@ -36,13 +36,25 @@
     });
   }
 
+  // Supabase sifre politikasi: en az 10 karakter + kucuk/buyuk harf + rakam + ozel karakter.
+  function passwordPolicyError(value) {
+    const missing = [];
+    if (value.length < 10) missing.push('en az 10 karakter');
+    if (!/[a-z]/.test(value)) missing.push('kucuk harf');
+    if (!/[A-Z]/.test(value)) missing.push('buyuk harf');
+    if (!/\d/.test(value)) missing.push('rakam');
+    if (!/[^A-Za-z0-9]/.test(value)) missing.push('ozel karakter (!, ?, - gibi)');
+    if (!missing.length) return '';
+    return `Sifre su kosullari da saglamali: ${missing.join(', ')}.`;
+  }
+
   function passwordStrength(value) {
     let score = 0;
-    if (value.length >= 6) score += 25;
-    if (value.length >= 10) score += 25;
+    if (value.length >= 10) score += 40;
+    else if (value.length >= 6) score += 15;
     if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 20;
-    if (/\d/.test(value)) score += 15;
-    if (/[^A-Za-z0-9]/.test(value)) score += 15;
+    if (/\d/.test(value)) score += 20;
+    if (/[^A-Za-z0-9]/.test(value)) score += 20;
     return Math.min(score, 100);
   }
 
@@ -101,6 +113,12 @@
 
     if (data.terms_accepted !== 'on') {
       setStatus('Devam etmek icin Kullanim Kosullari ve KVKK Aydinlatma Metni onayi gereklidir.', 'error');
+      return;
+    }
+
+    const policyError = passwordPolicyError(data.password || '');
+    if (policyError) {
+      setStatus(policyError, 'error');
       return;
     }
 

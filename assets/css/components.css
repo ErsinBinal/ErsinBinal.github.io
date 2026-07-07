@@ -1128,6 +1128,13 @@ img.responsive:hover {
   transition: width var(--transition-normal, 0.3s ease);
 }
 
+.auth-hint {
+  margin: 6px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-dim, #7a9a7a);
+  line-height: 1.5;
+}
+
 @keyframes auth-grid-pan {
   from { background-position: 0 0, 0 0; }
   to { background-position: 56px 56px, 56px 56px; }
