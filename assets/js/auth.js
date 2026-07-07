@@ -7,6 +7,8 @@
   const sessionInfo = document.getElementById('sessionInfo');
   const signInForm = document.getElementById('signInForm');
   const signUpForm = document.getElementById('signUpForm');
+  const recoveryForm = document.getElementById('recoveryForm');
+  const forgotButton = document.getElementById('forgotPassword');
   const signOutButton = document.getElementById('signOutButton');
   const signUpPassword = signUpForm.querySelector('input[name="password"]');
   const strengthMeter = signUpForm.querySelector('.auth-strength');
@@ -53,11 +55,15 @@
     return `Sifre su kosullari da saglamali: ${missing.join(', ')}.`;
   }
 
-  function updatePasswordRules(value) {
+  function updateRuleList(form, value) {
     Object.entries(PASSWORD_RULES).forEach(([key, rule]) => {
-      const item = signUpForm.querySelector(`.auth-rules [data-rule="${key}"]`);
+      const item = form.querySelector(`.auth-rules [data-rule="${key}"]`);
       if (item) item.classList.toggle('ok', rule.test(value));
     });
+  }
+
+  function updatePasswordRules(value) {
+    updateRuleList(signUpForm, value);
   }
 
   function passwordStrength(value) {
@@ -163,6 +169,72 @@
       setStatus(error.message, 'error');
     }
   });
+
+  /* --- Sifremi unuttum akisi --- */
+  forgotButton.addEventListener('click', async () => {
+    const email = (signInForm.elements.email.value || '').trim();
+    if (!email) {
+      setStatus('Sifre sifirlama icin once Giris bolumune e-posta adresinizi yazin.', 'error');
+      signInForm.elements.email.focus();
+      return;
+    }
+    setStatus('Sifirlama baglantisi gonderiliyor...', 'info');
+    try {
+      await backend.requestPasswordReset(email);
+      setStatus('Sifre sifirlama baglantisi gonderildi. Gelen kutunuzu ve istenmeyen (spam) klasorunu kontrol edin.', 'success');
+    } catch (error) {
+      setStatus(error.message, 'error');
+    }
+  });
+
+  function showRecoveryPanel() {
+    recoveryForm.hidden = false;
+    setStatus('Kimliginiz dogrulandi. Yeni sifrenizi belirleyin.', 'info');
+    recoveryForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    recoveryForm.elements.password.focus();
+  }
+
+  recoveryForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const password = recoveryForm.elements.password.value;
+    const policyError = passwordPolicyError(password);
+    if (policyError) {
+      setStatus(policyError, 'error');
+      return;
+    }
+    setStatus('Sifre guncelleniyor...', 'info');
+    setFormBusy(recoveryForm, true);
+    try {
+      await backend.updatePassword(password);
+      recoveryForm.reset();
+      recoveryForm.hidden = true;
+      await refreshSession();
+      setStatus('Sifreniz guncellendi; oturumunuz acik. Bir sonraki giriste yeni sifrenizi kullanin.', 'success');
+    } catch (error) {
+      setStatus(error.message, 'error');
+    } finally {
+      setFormBusy(recoveryForm, false);
+    }
+  });
+
+  recoveryForm.elements.password.addEventListener('input', () => {
+    updateRuleList(recoveryForm, recoveryForm.elements.password.value);
+  });
+
+  // Sifirlama baglantisiyla donuste Supabase PASSWORD_RECOVERY olayini yayar.
+  if (backend && backend.onAuthChange) {
+    backend.onAuthChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') showRecoveryPanel();
+    });
+  }
+
+  // Suresi dolmus / gecersiz baglantiyla donus: hash'teki hatayi Turkce goster.
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  if (hashParams.get('error_code') === 'otp_expired') {
+    setStatus('Baglantinin suresi dolmus. "Sifremi unuttum" ile yeni bir baglanti isteyin.', 'error');
+  } else if (hashParams.get('error_description')) {
+    setStatus(decodeURIComponent(hashParams.get('error_description').replace(/\+/g, ' ')), 'error');
+  }
 
   if (signUpPassword) {
     signUpPassword.addEventListener('input', updatePasswordStrength);

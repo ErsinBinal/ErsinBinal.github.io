@@ -24,7 +24,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=35">
+  <link rel="stylesheet" href="/assets/css/components.css?v=36">
 </head>
 <body class="auth-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
@@ -79,6 +79,26 @@
             <input name="password" type="password" autocomplete="current-password" required minlength="6">
           </label>
           <button class="btn btn-primary" type="submit">Giris Yap</button>
+          <button class="auth-linkish" id="forgotPassword" type="button">Sifremi unuttum</button>
+        </form>
+
+        <form id="recoveryForm" class="form-panel" hidden>
+          <span class="auth-panel-tag">03</span>
+          <h2>Yeni Sifre Belirle</h2>
+          <p class="auth-hint">Sifirlama baglantisiyla dogrulandiniz. Yeni sifrenizi girin.</p>
+          <label>
+            Yeni Sifre
+            <input name="password" type="password" autocomplete="new-password" required minlength="10"
+              aria-describedby="recoveryHint">
+          </label>
+          <ul class="auth-hint auth-rules" id="recoveryHint" aria-label="Sifre kurallari">
+            <li data-rule="length">En az 10 karakter</li>
+            <li data-rule="lower">En az bir kucuk harf (a-z)</li>
+            <li data-rule="upper">En az bir buyuk harf (A-Z)</li>
+            <li data-rule="digit">En az bir rakam (0-9)</li>
+            <li data-rule="symbol">En az bir ozel karakter (! ? - . gibi)</li>
+          </ul>
+          <button class="btn btn-primary" type="submit">Sifreyi Guncelle</button>
         </form>
 
         <form id="signUpForm" class="form-panel">
@@ -135,8 +155,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=31" defer></script>
-  <script src="/assets/js/auth.js?v=4" defer></script>
+  <script src="/assets/js/supabase-client.js?v=32" defer></script>
+  <script src="/assets/js/auth.js?v=5" defer></script>
   <script src="/assets/js/sfx.js?v=18" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌​‌​‌​​​​​‌​​‌‌​‌‌​​‌​​​‌‌​​​‌‌​​‌​​‌​​​‌​‌​‌​​​‌​‌​​‌‌​‌‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>

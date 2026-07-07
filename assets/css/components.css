@@ -1161,6 +1161,24 @@ img.responsive:hover {
   color: var(--color-primary, #00ff00);
 }
 
+.auth-linkish {
+  background: none;
+  border: none;
+  padding: 4px 0;
+  margin-top: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--color-text-dim, #7a9a7a);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-linkish:hover,
+.auth-linkish:focus-visible {
+  color: var(--color-primary, #00ff00);
+  outline: none;
+}
+
 @keyframes auth-grid-pan {
   from { background-position: 0 0, 0 0; }
   to { background-position: 56px 56px, 56px 56px; }

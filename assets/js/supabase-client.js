@@ -68,7 +68,9 @@
     email_address_invalid: 'E-posta adresi gecersiz gorunuyor. Yazimi kontrol edin.',
     email_not_confirmed: 'E-posta adresiniz henuz dogrulanmamis. Gelen kutunuzdaki dogrulama bagini tiklayin.',
     over_email_send_rate_limit: 'Cok sik denediniz. Lutfen birkac dakika bekleyip tekrar deneyin.',
-    signup_disabled: 'Yeni uyelik kaydi su anda kapali.'
+    signup_disabled: 'Yeni uyelik kaydi su anda kapali.',
+    same_password: 'Yeni sifre eski sifrenizle ayni olamaz.',
+    otp_expired: 'Baglantinin suresi dolmus. Lutfen yeni bir sifre sifirlama baglantisi isteyin.'
   };
 
   function toMessage(error) {
@@ -187,6 +189,31 @@
     const { error } = await client.auth.signOut();
     if (error) throw new Error(toMessage(error));
     clearLegacyAuthStorage();
+  }
+
+  // Sifremi unuttum: e-postaya sifirlama baglantisi gonderir.
+  async function requestPasswordReset(email) {
+    const client = await requireClient();
+    const { error } = await client.auth.resetPasswordForEmail(email, {
+      redirectTo: config.redirectTo || `${window.location.origin}/account/auth.html`
+    });
+    if (error) throw new Error(toMessage(error));
+  }
+
+  // Sifirlama baglantisiyla gelen oturumda yeni sifreyi kaydeder.
+  async function updatePassword(password) {
+    const client = await requireClient();
+    const { data, error } = await client.auth.updateUser({ password });
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  // Auth olaylarina abone ol (or. PASSWORD_RECOVERY).
+  function onAuthChange(callback) {
+    const client = getClient();
+    if (!client) return null;
+    const { data } = client.auth.onAuthStateChange((event, session) => callback(event, session));
+    return data ? data.subscription : null;
   }
 
   async function getProfile() {
@@ -942,6 +969,9 @@
     signUp,
     signIn,
     signOut,
+    requestPasswordReset,
+    updatePassword,
+    onAuthChange,
     clearLegacyAuthStorage,
     fetchPublishedArticles,
     fetchManagedArticles,
