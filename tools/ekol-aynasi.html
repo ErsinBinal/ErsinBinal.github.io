@@ -78,10 +78,28 @@
     }
     .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 90px; }
 
-    header.masthead { text-align: center; padding: 26px 0 10px; border-bottom: 1px solid var(--line); }
+    header.masthead { text-align: center; padding: 26px 0 0; }
     .masthead .sysline { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-    .masthead h1 { margin: 10px 0 4px; font-weight: 400; letter-spacing: 6px; font-size: 1.9rem; color: var(--bronze); text-shadow: 0 0 22px rgba(201,163,95,0.25); }
-    .masthead p.sub { margin: 0 0 16px; color: var(--muted); font-size: 0.95rem; font-style: italic; }
+    .masthead h1 { margin: 10px 0 4px; font-weight: 400; letter-spacing: 6px; font-size: 1.9rem; color: var(--bronze); text-shadow: 0 0 22px rgba(201,163,95,0.25); display: inline-flex; align-items: center; gap: 14px; }
+    .masthead p.sub { margin: 0 0 6px; color: var(--muted); font-size: 0.95rem; font-style: italic; }
+    .epigraph { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 4px; color: var(--bronze-dim); margin-bottom: 14px; }
+
+    /* --- ANTİK ROMA DOKUNUŞLARI --- */
+    /* Defne dalı: bir kez <defs> içinde tanımlı, <use> ile çoğaltılır */
+    svg.laurel { width: 40px; height: 40px; color: var(--bronze); opacity: 0.75; flex: none; }
+    svg.laurel.r { transform: scaleX(-1); }
+    .report svg.laurel { width: 30px; height: 30px; vertical-align: -6px; }
+    /* Meander (Roma anahtarı) bordürü */
+    .meander {
+      height: 12px; margin: 4px auto 0; max-width: 860px; opacity: 0.5;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M0 21h24M21 21V3H6v12h9V9h-3' fill='none' stroke='%23c9a35f' stroke-width='2'/%3E%3C/svg%3E") repeat-x center / 12px 12px;
+    }
+    /* İyon sütunu filigranı (panel köşesinde, çok soluk) */
+    .panel { position: relative; overflow: hidden; }
+    svg.column-mark { position: absolute; right: 16px; bottom: 10px; width: 64px; height: 128px; color: var(--bronze); opacity: 0.08; pointer-events: none; }
+    /* Ekran geçişi: panel yumuşakça yükselir */
+    @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .panel.pop { animation: rise 0.4s ease both; }
 
     .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 26px 26px 30px; margin-top: 26px; box-shadow: 0 14px 40px rgba(0,0,0,0.35); }
     .panel .kicker { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--bronze-dim); margin-bottom: 12px; }
@@ -137,7 +155,10 @@
     .verdict b { color: var(--ink); font-weight: 400; }
     .coreline { font-size: 1.08rem; font-style: italic; color: var(--ink); border-left: 3px solid var(--bronze); padding: 8px 16px; margin: 18px 0; background: rgba(201,163,95,0.05); border-radius: 0 8px 8px 0; }
     .rsec { margin-top: 26px; }
-    .rsec h3 { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--bronze-dim); font-weight: 400; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    .rsec h3 {
+      font-family: var(--mono); font-size: 0.75rem; letter-spacing: 2.5px; text-transform: uppercase; color: var(--bronze-dim); font-weight: 400; padding-bottom: 12px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M0 21h24M21 21V3H6v12h9V9h-3' fill='none' stroke='%238a6f3e' stroke-width='2'/%3E%3C/svg%3E") repeat-x left bottom / 8px 8px;
+    }
     .rsec ul { padding-left: 18px; margin: 10px 0; }
     .rsec li { margin: 8px 0; }
     .axis-name { font-family: var(--mono); font-size: 0.72rem; color: var(--teal); letter-spacing: 1px; }
@@ -169,24 +190,55 @@
   <a class="skip-link" href="#main-content" style="position:absolute;left:-999px;top:auto;overflow:hidden;">İçeriğe atla</a>
   <script type="application/ld+json">{ "@context":"https://schema.org","@type":"WebSite","name":"Convivium - Ersin Binal","url":"https://ersinbinal.github.io/" }</script>
 
+  <!-- Antik Roma süsleme tanımları: defne dalı + İyon sütunu -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <g id="laurel-branch" fill="currentColor" stroke="none">
+        <path d="M8 58 Q12 34 22 20 Q30 10 42 5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <ellipse cx="11" cy="47" rx="7" ry="2.4" transform="rotate(-72 11 47)" opacity=".85"/>
+        <ellipse cx="16" cy="46" rx="7" ry="2.4" transform="rotate(-40 16 46)" opacity=".6"/>
+        <ellipse cx="14" cy="37" rx="7" ry="2.4" transform="rotate(-68 14 37)" opacity=".85"/>
+        <ellipse cx="20" cy="36" rx="7" ry="2.4" transform="rotate(-34 20 36)" opacity=".6"/>
+        <ellipse cx="19" cy="28" rx="7" ry="2.4" transform="rotate(-60 19 28)" opacity=".85"/>
+        <ellipse cx="25" cy="27" rx="7" ry="2.4" transform="rotate(-26 25 27)" opacity=".6"/>
+        <ellipse cx="25" cy="20" rx="7" ry="2.4" transform="rotate(-52 25 20)" opacity=".85"/>
+        <ellipse cx="31" cy="19" rx="7" ry="2.4" transform="rotate(-18 31 19)" opacity=".6"/>
+        <ellipse cx="32" cy="13" rx="7" ry="2.4" transform="rotate(-44 32 13)" opacity=".85"/>
+        <ellipse cx="38" cy="12" rx="7" ry="2.4" transform="rotate(-12 38 12)" opacity=".6"/>
+        <ellipse cx="42" cy="7" rx="6" ry="2.2" transform="rotate(-30 42 7)" opacity=".9"/>
+      </g>
+      <g id="ionic-column" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M8 124h48M12 118h40M16 112h32"/>
+        <path d="M20 112V34M26 112V34M32 112V34M38 112V34M44 112V34"/>
+        <path d="M14 34h36M10 28h44"/>
+        <circle cx="14" cy="20" r="6"/><circle cx="14" cy="20" r="2.5"/>
+        <circle cx="50" cy="20" r="6"/><circle cx="50" cy="20" r="2.5"/>
+        <path d="M20 16q12-6 24 0M8 10h48M12 4h40"/>
+      </g>
+    </defs>
+  </svg>
+
   <div class="wrap" id="main-content">
     <header class="masthead">
       <div class="sysline">convivium // strategic-schools.mirror</div>
-      <h1>EKOL AYNASI</h1>
+      <h1><svg class="laurel" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg>EKOL AYNASI<svg class="laurel r" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg></h1>
       <p class="sub">Teori bilmene gerek yok. Sezgilerin zaten bir ekole ait.</p>
+      <div class="epigraph" title="ayna, yargı değil">SPECVLVM · NON · IVDICIVM</div>
     </header>
+    <div class="meander" aria-hidden="true"></div>
 
     <!-- ============ INTRO ============ -->
     <section class="panel" id="screen-intro">
       <div class="kicker">protokol / giriş</div>
       <p>Sana gündelik hayattan sahneler soracağım: apartman, iş yeri, mahalle. Yanıtların arka planda sekiz eksende bir iz bırakacak; o iz, yüzyıllardır tartışılan on dört yönetim ekolünden birine düşecek.</p>
       <div class="claims">
-        <div class="claim"><em>01</em> — İnsanlar teori bilmeden de tutarlı siyasi sezgilere sahiptir. Kimse "sonuççuyum" demez; ama "yeter ki sorun çözülsün, gerisi teferruat" der.<small>Bu ayna, o örtük cümleyi görünür kılar.</small></div>
-        <div class="claim"><em>02</em> — Her ekol, birkaç ayırt edici eksende bir konumdur. Senin yanıtların da aynı eksenlerde bir konum üretir.<small>Eşleşme, iki konumun yakınlığıdır; fal değil, hesaptır.</small></div>
-        <div class="claim"><em>03</em> — Tutarsızlık bir hata değil, bir bilgidir. Baskın ekolünden saptığın yer, senin hakkındaki en ilginç şeydir.<small>Sapman ya ekolün mantığına asimile edilir ya da seni komşu bir ekole çeken gerilim olarak okunur.</small></div>
+        <div class="claim"><em>I</em> — İnsanlar teori bilmeden de tutarlı siyasi sezgilere sahiptir. Kimse "sonuççuyum" demez; ama "yeter ki sorun çözülsün, gerisi teferruat" der.<small>Bu ayna, o örtük cümleyi görünür kılar.</small></div>
+        <div class="claim"><em>II</em> — Her ekol, birkaç ayırt edici eksende bir konumdur. Senin yanıtların da aynı eksenlerde bir konum üretir.<small>Eşleşme, iki konumun yakınlığıdır; fal değil, hesaptır.</small></div>
+        <div class="claim"><em>III</em> — Tutarsızlık bir hata değil, bir bilgidir. Baskın ekolünden saptığın yer, senin hakkındaki en ilginç şeydir.<small>Sapman ya ekolün mantığına asimile edilir ya da seni komşu bir ekole çeken gerilim olarak okunur.</small></div>
       </div>
       <div class="mirror-note"><strong>Bu bir teşhis değil, bir aynadır.</strong> "Doğru olan budur" demez; "senin sezgilerine en çok bu yakın duruyor" der. Hiçbir ekol olumlanmaz ya da kötülenmez; her sonucun gücü de kör noktası da birlikte gösterilir.</div>
       <button class="btn" id="btn-start">▸ aynaya bak</button>
+      <svg class="column-mark" viewBox="0 0 64 128" aria-hidden="true"><use href="#ionic-column"/></svg>
     </section>
 
     <!-- ============ SORU ============ -->
@@ -206,8 +258,10 @@
       <div class="kicker">değerlendirme raporu</div>
       <div id="r-body"></div>
       <button class="btn ghost" id="btn-restart">↺ baştan bak</button>
+      <svg class="column-mark" viewBox="0 0 64 128" aria-hidden="true"><use href="#ionic-column"/></svg>
     </section>
 
+    <div class="meander" aria-hidden="true" style="margin-top:36px"></div>
     <footer class="pagefoot">
       <a href="/">◂ convivium</a> · ayna yargılamaz, yansıtır
     </footer>
@@ -765,8 +819,16 @@
        ================================================================== */
     const $ = (id) => document.getElementById(id);
     const screens = { intro: $('screen-intro'), question: $('screen-question'), report: $('screen-report') };
-    const show = (name) => Object.entries(screens).forEach(([k, el]) => el.classList.toggle('hidden', k !== name));
+    const show = (name) => Object.entries(screens).forEach(([k, el]) => {
+      el.classList.toggle('hidden', k !== name);
+      if (k === name) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+    });
     const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Roma rakamı: sayaçlar ve sıralama için (antik dokunuş)
+    const ROMAN = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+    const toRoman = (n) => { let out = ''; for (const [v, r] of ROMAN) while (n >= v) { out += r; n -= v; } return out || 'I'; };
+    const LAUREL_L = '<svg class="laurel" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg>';
+    const LAUREL_R = '<svg class="laurel r" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg>';
 
     function renderQuestion() {
       if (!state.queue.length) {
@@ -774,7 +836,7 @@
         if (!state.queue.length) return renderReport();
       }
       const q = state.queue[0];
-      $('q-counter').textContent = `soru ${state.answers.length + 1} / ~${state.planned}`;
+      $('q-counter').textContent = `soru ${toRoman(state.answers.length + 1)} / ~${toRoman(state.planned)}`;
       $('q-stage').textContent = state.phase === 'broad' ? 'geniş tur · aileni arıyorum' : 'keskinleştirme · ekolünü ayırıyorum';
       $('q-prompt').textContent = q.prompt;
       const prog = $('q-progress'); prog.innerHTML = '';
@@ -858,11 +920,11 @@
 
       const ethicsHtml = s.critical ? `<div class="ethics">Tanısal not: bu ekol matriste tanı bütünlüğü için yer alır, olumlanmaz. Tarihsel bedeli baskı ve şiddettir; bu sonuç bir yakınlık ölçümüdür, bir tavsiye değil. Kör nokta satırını iki kez oku.</div>` : '';
 
-      const top3 = ranked.slice(0, 3).map((r, i) => `${i ? ' · ' : ''}<b>${esc(r.school.label)}</b> %${Math.min(100, Math.round(r.score * 100))}`).join('');
+      const top3 = ranked.slice(0, 3).map((r, i) => `${i ? ' · ' : ''}${toRoman(i + 1)}. <b>${esc(r.school.label)}</b> %${Math.min(100, Math.round(r.score * 100))}`).join('');
 
       $('r-body').innerHTML = `
         <span class="family-tag">${FAMILIES[s.family]}</span>
-        <h2 class="school">${esc(s.label)}</h2>
+        <h2 class="school">${LAUREL_L} ${esc(s.label)} ${LAUREL_R}</h2>
         <div class="verdict">tutarlılık: ${isHybrid
           ? `<b>melez profil</b> — ${esc(s.label)} ile ${esc(R.second.school.label)} arasında bir yerdesin; bu bir kusur değil, bulgudur.`
           : '<b>net eşleşme</b>'}</div>

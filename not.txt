@@ -42,8 +42,15 @@ TUR OZETI (2026-07-07) — EKOL AYNASI (stratejik dusunce ekolleri matrisi)
       (aliaslar: ayna/mirror/schools; random rotaya eklendi) (v55),
       index.html Lab #12 + arsiv agaci, SW precache + CACHE v156 -> v157,
       sitemap (2026-07-07).
+  [x] ANTIK ROMA DOKUNUSLARI (2. tur): defne dali SVG (<defs>+<use>,
+      viewBox'lu) baslikta + rapor ekol adinda; meander bordur (data-URI,
+      header/footer/rapor h3 altlari); Iyon sutunu filigrani (%8 opak,
+      intro+rapor koselerinde); Roma rakamlari (sayac, intro I-III,
+      siralama I./II./III.); Latince epigraf "SPECVLVM NON IVDICIVM";
+      panel gecis animasyonu (rise, reduced-motion uyumlu). CACHE v158.
   GORSEL TEYIT: intro -> 7 genis soru -> diskriminatorler -> rapor akisi;
-  melez profil metni; geri al tusu; terminalde "ekol" komutu.
+  melez profil metni; geri al tusu; terminalde "ekol" komutu; defne/
+  meander/sutun gorunumu (mobil dahil).
 
 ==========================================================================
 TUR OZETI (2026-07-02) — P0 kapanislari + Kul Hatti II icerik
