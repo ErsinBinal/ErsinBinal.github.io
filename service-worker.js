@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v165';
+const CACHE_NAME = 'convivium-v166';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -35,7 +35,7 @@ const PRECACHE_ASSETS = [
   '/offline.html',
   '/assets/css/common.css',
   '/assets/css/animations.css',
-  '/assets/css/components.css?v=36',
+  '/assets/css/components.css?v=37',
   '/assets/css/dart-dashboard.css?v=6',
   '/assets/css/articles.css?v=3',
   '/assets/css/dart-skorbord.css?v=3',
@@ -92,7 +92,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/dart-atc.js?v=4',
   '/assets/js/dart-cricket.js?v=3',
   '/assets/js/dart-skorbord.js?v=9',
-  '/assets/js/auth.js',
+  '/assets/js/auth.js?v=6',
   '/assets/js/admin.js?v=37',
   '/assets/js/dashboard.js?v=35',
   '/manifest.json'

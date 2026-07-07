@@ -1179,6 +1179,42 @@ img.responsive:hover {
   outline: none;
 }
 
+/* Sifre sifirlama modal'i (yalnizca recovery baglantisiyla acilir) */
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(2, 8, 4, 0.82);
+  backdrop-filter: blur(4px);
+}
+
+.auth-modal[hidden] { display: none; }
+
+.auth-modal-card {
+  width: min(420px, 100%);
+  padding: 26px 24px;
+  border: 1px solid color-mix(in srgb, var(--color-primary, #00ff00) 45%, transparent);
+  border-radius: 14px;
+  background: var(--color-surface, #0b140d);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 26px rgba(0, 255, 102, 0.14);
+  animation: auth-modal-rise 0.24s ease both;
+}
+
+.auth-modal-card h2 { margin: 0 0 6px; }
+
+@keyframes auth-modal-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-modal-card { animation: none; }
+}
+
 @keyframes auth-grid-pan {
   from { background-position: 0 0, 0 0; }
   to { background-position: 56px 56px, 56px 56px; }

@@ -8,6 +8,7 @@
   const signInForm = document.getElementById('signInForm');
   const signUpForm = document.getElementById('signUpForm');
   const recoveryForm = document.getElementById('recoveryForm');
+  const recoveryOverlay = document.getElementById('recoveryOverlay');
   const forgotButton = document.getElementById('forgotPassword');
   const signOutButton = document.getElementById('signOutButton');
   const signUpPassword = signUpForm.querySelector('input[name="password"]');
@@ -188,9 +189,9 @@
   });
 
   function showRecoveryPanel() {
-    recoveryForm.hidden = false;
-    setStatus('Kimliginiz dogrulandi. Yeni sifrenizi belirleyin.', 'info');
-    recoveryForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!recoveryOverlay || !recoveryForm) return;
+    recoveryOverlay.hidden = false;
+    setStatus('Kimliğin doğrulandı. Yeni şifreni belirle.', 'info');
     recoveryForm.elements.password.focus();
   }
 
@@ -207,9 +208,9 @@
     try {
       await backend.updatePassword(password);
       recoveryForm.reset();
-      recoveryForm.hidden = true;
+      if (recoveryOverlay) recoveryOverlay.hidden = true;
       await refreshSession();
-      setStatus('Sifreniz guncellendi; oturumunuz acik. Bir sonraki giriste yeni sifrenizi kullanin.', 'success');
+      setStatus('Şifren güncellendi; oturumun açık. Bir sonraki girişte yeni şifreni kullan.', 'success');
     } catch (error) {
       setStatus(error.message, 'error');
     } finally {
