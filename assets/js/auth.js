@@ -37,15 +37,27 @@
   }
 
   // Supabase sifre politikasi: en az 10 karakter + kucuk/buyuk harf + rakam + ozel karakter.
+  const PASSWORD_RULES = {
+    length: { test: (v) => v.length >= 10, label: 'en az 10 karakter' },
+    lower: { test: (v) => /[a-z]/.test(v), label: 'kucuk harf' },
+    upper: { test: (v) => /[A-Z]/.test(v), label: 'buyuk harf' },
+    digit: { test: (v) => /\d/.test(v), label: 'rakam' },
+    symbol: { test: (v) => /[^A-Za-z0-9]/.test(v), label: 'ozel karakter (!, ?, - gibi)' }
+  };
+
   function passwordPolicyError(value) {
-    const missing = [];
-    if (value.length < 10) missing.push('en az 10 karakter');
-    if (!/[a-z]/.test(value)) missing.push('kucuk harf');
-    if (!/[A-Z]/.test(value)) missing.push('buyuk harf');
-    if (!/\d/.test(value)) missing.push('rakam');
-    if (!/[^A-Za-z0-9]/.test(value)) missing.push('ozel karakter (!, ?, - gibi)');
+    const missing = Object.values(PASSWORD_RULES)
+      .filter((rule) => !rule.test(value))
+      .map((rule) => rule.label);
     if (!missing.length) return '';
     return `Sifre su kosullari da saglamali: ${missing.join(', ')}.`;
+  }
+
+  function updatePasswordRules(value) {
+    Object.entries(PASSWORD_RULES).forEach(([key, rule]) => {
+      const item = signUpForm.querySelector(`.auth-rules [data-rule="${key}"]`);
+      if (item) item.classList.toggle('ok', rule.test(value));
+    });
   }
 
   function passwordStrength(value) {
@@ -59,8 +71,9 @@
   }
 
   function updatePasswordStrength() {
-    if (!strengthMeter || !signUpPassword) return;
-    strengthMeter.style.setProperty('--strength', `${passwordStrength(signUpPassword.value)}%`);
+    if (!signUpPassword) return;
+    if (strengthMeter) strengthMeter.style.setProperty('--strength', `${passwordStrength(signUpPassword.value)}%`);
+    updatePasswordRules(signUpPassword.value);
   }
 
   async function refreshSession() {

@@ -24,7 +24,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=34">
+  <link rel="stylesheet" href="/assets/css/components.css?v=35">
 </head>
 <body class="auth-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
@@ -104,7 +104,13 @@
           <div class="auth-strength" aria-hidden="true">
             <span></span>
           </div>
-          <p class="auth-hint" id="passwordHint">En az 10 karakter; kucuk harf, buyuk harf, rakam ve ozel karakter (!, ?, - gibi) icermeli.</p>
+          <ul class="auth-hint auth-rules" id="passwordHint" aria-label="Sifre kurallari">
+            <li data-rule="length">En az 10 karakter</li>
+            <li data-rule="lower">En az bir kucuk harf (a-z)</li>
+            <li data-rule="upper">En az bir buyuk harf (A-Z)</li>
+            <li data-rule="digit">En az bir rakam (0-9)</li>
+            <li data-rule="symbol">En az bir ozel karakter (! ? - . gibi)</li>
+          </ul>
 
           <fieldset class="auth-consent">
             <legend>Onaylar</legend>
@@ -130,7 +136,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=31" defer></script>
-  <script src="/assets/js/auth.js?v=3" defer></script>
+  <script src="/assets/js/auth.js?v=4" defer></script>
   <script src="/assets/js/sfx.js?v=18" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌​‌​‌​​​​​‌​​‌‌​‌‌​​‌​​​‌‌​​​‌‌​​‌​​‌​​​‌​‌​‌​​​‌​‌​​‌‌​‌‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>

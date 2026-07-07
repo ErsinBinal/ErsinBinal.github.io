@@ -1135,6 +1135,32 @@ img.responsive:hover {
   line-height: 1.5;
 }
 
+.auth-rules {
+  list-style: none;
+  padding: 8px 10px;
+  border: 1px dashed rgba(0, 255, 0, 0.22);
+  border-radius: 6px;
+  display: grid;
+  gap: 2px;
+}
+
+.auth-rules li::before {
+  content: '\2715'; /* ✕ */
+  display: inline-block;
+  width: 1.2em;
+  color: var(--color-accent-red, #ff2828);
+  transition: color var(--transition-normal, 0.3s ease);
+}
+
+.auth-rules li.ok {
+  color: var(--color-primary, #00ff00);
+}
+
+.auth-rules li.ok::before {
+  content: '\2713'; /* ✓ */
+  color: var(--color-primary, #00ff00);
+}
+
 @keyframes auth-grid-pan {
   from { background-position: 0 0, 0 0; }
   to { background-position: 56px 56px, 56px 56px; }
