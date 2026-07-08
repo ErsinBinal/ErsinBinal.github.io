@@ -262,6 +262,57 @@
   50% { filter: hue-rotate(180deg) drop-shadow(0 6px 6px rgba(0,0,0,0.35)); }
 }
 
+/* ============================================================
+   Feral "yikim" modu: Bugy canavarlasinca siteye zarar veriyormus
+   gibi butonlari kirar, yazidan harf yer. Tamamen gorseldir ve
+   feral kapaninca (iyi bakildiginda) JS ile birebir geri alinir.
+   ============================================================ */
+/* Kirik buton/link: egik, soluk, kirmizi kesikli "hasar" cercevesi.
+   Egiklik JS'ten gelen --vr/--vy ile her element'te farklidir. */
+.bugy-vandalized {
+  transform: translateY(var(--vy, 4px)) rotate(var(--vr, -5deg));
+  filter: grayscale(0.5) brightness(0.82);
+  outline: 2px dashed #ff2e5e;
+  outline-offset: 2px;
+  opacity: 0.9;
+}
+
+/* Onarim aninda kisa yesil iyilesme flasi. */
+.bugy-repairing {
+  outline: 2px solid #00ff88;
+  outline-offset: 2px;
+  animation: bugyRepair 0.72s ease;
+}
+@keyframes bugyRepair {
+  0% { filter: brightness(2.2) saturate(0.4); }
+  100% { filter: none; }
+}
+
+/* Ekran geneli hafif "ariza sinyali": kirmizi tarama cizgileri.
+   Bugy layer'in (z-index:150) altinda kalir; tiklamayi engellemez. */
+.bugy-rampage::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 149;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(255, 46, 94, 0.05) 0 2px, transparent 2px 4px);
+  mix-blend-mode: screen;
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Kirik butonlar hafifce sarsilir (tikanmis/bozuk hissi). */
+  .bugy-vandalized { animation: bugyVandalShake 0.5s ease-in-out infinite; }
+  @keyframes bugyVandalShake {
+    0%, 100% { transform: translateY(var(--vy, 4px)) rotate(var(--vr, -5deg)); }
+    50% { transform: translateY(calc(var(--vy, 4px) + 2px)) rotate(calc(var(--vr, -5deg) * 1.4)); }
+  }
+  /* Tarama cizgileri hafifce nabiz atar. */
+  .bugy-rampage::after { animation: bugyScan 5.5s ease-in-out infinite; }
+  @keyframes bugyScan { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.62; } }
+}
+
 /* Hareket azaltma tercihinde sabit dur */
 @media (prefers-reduced-motion: reduce) {
   .bugy-v4-char { transition: none; }

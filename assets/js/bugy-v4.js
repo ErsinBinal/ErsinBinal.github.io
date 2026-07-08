@@ -414,6 +414,120 @@
       }
     };
 
+    // --- Feral "yikim" modu: geri alinabilir gorsel sabotaj ----------------
+    // Canavarlasinca Bugy siteye zarar veriyormus gibi yapar: butonlari kirar,
+    // yazidan harf "yer", ekrana ariza sinyali bindirir. Feral kapaninca (iyi
+    // bakildiginda) TUM degisiklikleri birebir geri alir; kalici hicbir sey yok.
+    // Bugy'nin kendi arayuzune (layer/bakim/balon/yumurta) asla dokunmaz.
+    const rampage = (() => {
+      const GLYPHS = ['█', '▓', '▚', '╳', '#', '·'];
+      const BTN_SEL = 'a.btn, a.button, button, .btn, .button, [role="button"], .chip, .tag';
+      const OURS = '#bugy-v4-layer, .bugy-care-btn, .bugy-care-panel, .bugy-onboard, .bugy-toast, .bugy-select-overlay';
+      const MAX_EATEN = 64;   // en fazla bu kadar metin dugumu bozulur
+      const MAX_BROKEN = 16;  // en fazla bu kadar buton kirilir
+
+      let on = false;
+      let timer = 0;
+      let tick = 0;
+      let textNodes = [];        // aday metin dugumleri (snapshot)
+      const eaten = new Map();   // textNode -> orijinal nodeValue (onarim icin)
+      const broken = new Set();  // kirilmis element'ler
+
+      const collectText = () => {
+        const out = [];
+        if (!document.body) return out;
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+          acceptNode(n) {
+            if (!n.nodeValue || n.nodeValue.trim().length < 4) return NodeFilter.FILTER_REJECT;
+            const p = n.parentElement;
+            if (!p) return NodeFilter.FILTER_REJECT;
+            const tag = p.tagName;
+            if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
+            if (p.isContentEditable) return NodeFilter.FILTER_REJECT;
+            if (p.closest(OURS)) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+        while (walker.nextNode()) out.push(walker.currentNode);
+        return out;
+      };
+
+      const eatSome = (count = 2) => {
+        for (let k = 0; k < count && textNodes.length && eaten.size < MAX_EATEN; k += 1) {
+          const node = textNodes[Math.floor(Math.random() * textNodes.length)];
+          if (!node || !node.parentNode) continue;
+          const idxs = [];
+          for (let i = 0; i < node.nodeValue.length; i += 1) if (/\S/.test(node.nodeValue[i])) idxs.push(i);
+          if (!idxs.length) continue;
+          if (!eaten.has(node)) eaten.set(node, node.nodeValue); // orijinali bir kez sakla
+          const arr = node.nodeValue.split('');
+          const bites = 1 + Math.floor(Math.random() * 2);
+          for (let b = 0; b < bites; b += 1) {
+            const i = idxs[Math.floor(Math.random() * idxs.length)];
+            arr[i] = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+          }
+          node.nodeValue = arr.join('');
+        }
+      };
+
+      const breakSome = (count = 2) => {
+        const cands = [];
+        document.querySelectorAll(BTN_SEL).forEach((el) => {
+          if (broken.has(el) || el.closest(OURS)) return;
+          const r = el.getBoundingClientRect();
+          if (r.width < 8 || r.height < 8) return; // gorunmez/kucuk
+          cands.push(el);
+        });
+        for (let k = 0; k < count && cands.length && broken.size < MAX_BROKEN; k += 1) {
+          const el = cands.splice(Math.floor(Math.random() * cands.length), 1)[0];
+          el.style.setProperty('--vr', `${(Math.random() * 16 - 8).toFixed(1)}deg`);
+          el.style.setProperty('--vy', `${(Math.random() * 7 + 2).toFixed(0)}px`);
+          el.classList.add('bugy-vandalized');
+          broken.add(el);
+        }
+      };
+
+      const start = () => {
+        if (on || !document.body) return;
+        on = true;
+        tick = 0;
+        document.body.classList.add('bugy-rampage');
+        textNodes = collectText();
+        breakSome(2);
+        eatSome(3);
+        window.clearInterval(timer);
+        timer = window.setInterval(() => {
+          if (!on) return;
+          tick += 1;
+          breakSome(1 + (tick % 2));
+          eatSome(2);
+        }, 2600);
+      };
+
+      const stop = () => {
+        if (!on) return;
+        on = false;
+        window.clearInterval(timer);
+        timer = 0;
+        if (document.body) document.body.classList.remove('bugy-rampage');
+        // Onar: yenmis harfleri orijinaline dondur.
+        eaten.forEach((orig, node) => { try { node.nodeValue = orig; } catch { /* dugum kopmus olabilir */ } });
+        eaten.clear();
+        // Onar: kirik butonlari kisa bir iyilesme flasiyla duzelt.
+        broken.forEach((el) => {
+          el.classList.remove('bugy-vandalized');
+          el.classList.add('bugy-repairing');
+          el.style.removeProperty('--vr');
+          el.style.removeProperty('--vy');
+          window.setTimeout(() => el.classList.remove('bugy-repairing'), 720);
+        });
+        broken.clear();
+        textNodes = [];
+      };
+
+      return { start, stop };
+    })();
+
     // --- Aksiyon calistirici ---
     const moodDuration = { tada: 1400, think: 1800, alert: 1200, wave: 1300, magic: 1700, search: 1600, morph: 1700 };
     let moodTimer = 0;
@@ -502,6 +616,7 @@
       },
       deactivate() {
         state.active = false;
+        rampage.stop(); // motor kapanirken siteyi temiz birak (onar)
         window.cancelAnimationFrame(state.raf);
         window.clearTimeout(moodTimer);
         char.classList.remove(...actions.map((a) => `is-${a}`));
@@ -573,12 +688,16 @@
         dispatch();
         return state.stage;
       },
-      // Canavarlasma surati (feral) ac/kapat.
+      // Canavarlasma surati (feral) ac/kapat. Feral acilinca "yikim" modu
+      // baslar (butonlari kirar, harf yer); kapaninca her sey onarilir.
       setFeral(on) {
-        state.feral = Boolean(on);
-        char.dataset.feral = state.feral ? '1' : '0';
-        char.classList.toggle('bugy-feral', state.feral);
+        const next = Boolean(on);
+        const changed = next !== state.feral;
+        state.feral = next;
+        char.dataset.feral = next ? '1' : '0';
+        char.classList.toggle('bugy-feral', next);
         measureHead();
+        if (changed) { if (next) rampage.start(); else rampage.stop(); }
         dispatch();
         return state.feral;
       },
