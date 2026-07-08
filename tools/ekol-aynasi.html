@@ -323,6 +323,17 @@
       D: 'Gelenek Kümesi', E: 'Radikal-Özgürleşimci Küme', F: 'Teknokratik Küme'
     };
 
+    // Sun Tzu örtüsü: kazanan ekol bir "ne", Sun Tzu ise "nasıl". Örtü ayrı bir
+    // satır değil; baskın ekolün ailesine göre onun ÜSLUBUNU niteler (doküman §7).
+    const SUN_BY_FAMILY = {
+      A: 'sonuç senin için tartışılmaz; ama cepheden değil zeminden ilerliyorsun — güç göstermeden gücü kullanıyorsun.',
+      B: 'hakları ve kuralları savunurken bile doğrudan çatışma yerine doğru anı ve usulü bir kaldıraç yapıyorsun.',
+      C: 'erdemi ve örnekliği bir kuvvet sayıyorsun; bastırmak yerine konumlanıp karşındakini ikna zeminine çekiyorsun.',
+      D: 'değişimi zorlayarak değil, zamanın ve dokunun kendi akışını kullanarak yürütüyorsun; sabır senin manevran.',
+      E: 'karşı gücü cepheden tokuşturmak yerine inisiyatifi ve momenti örgütlüyorsun; asıl darbe hazırlıkta atılır.',
+      F: 'veriyi ve zamanlamayı bir manevra alanı gibi kullanıyorsun; en iyi sonucu gürültüsüz, doğru anda konumlanarak alıyorsun.'
+    };
+
     const SCHOOLS = [
       {
         id: 'machiavellian', label: 'Makyavelci Realizm', family: 'A',
@@ -598,7 +609,7 @@
           { t: 'Konulsun. İnsan denetimsiz kalınca açığını kullanır; görmemek saflık olur.', w: { human_nature: -0.9, order_liberty: -0.5 } },
           { t: 'Mesele kamera değil ortam: iyi kurulmuş bir düzen zaten iyi davranış üretir.', w: { human_nature: 0.0, instrument: ['tesvik', 0.4] } },
           { t: 'Gerek yok. İnsanların çoğu iyidir; sorun birbirimize güvenmeyi unutmamız.', w: { human_nature: 0.8, order_liberty: 0.5 } },
-          { t: 'Kamera değil kültür değiştirir: örnek olan, ayıbı hatırlatan bir mahalle terbiyesi daha güçlü.', w: { human_nature: 0.5, instrument: 'ornek' } }
+          { t: 'Kamera değil kültür değiştirir: örnek olan, ayıbı hatırlatan bir mahalle terbiyesi daha güçlü.', w: { human_nature: 0.5, instrument: 'ornek', sun: 0.4 } }
         ]
       },
       {
@@ -942,7 +953,7 @@
       }
 
       const sunHtml = R.sunOverlay ? `<div class="rsec"><h3>stratejik üslup · sun tzu örtüsü</h3>
-        <div class="suntzu">Yanıtlarında güçlü bir dolaylılık sinyali var: doğrudan güç yerine konum, zamanlama ve algı; savaşmadan kazanmak. Bu bir ekol değil, senin <em>nasıl</em> oynadığını niteleyen bir örtü — ${s.family === 'A' ? 'sonuç odaklısın ama cepheden değil, zeminden ilerliyorsun.' : 'müzakereci tarafın bile inisiyatifi ve zamanlamayı stratejik kullanıyor.'}</div></div>` : '';
+        <div class="suntzu">Yanıtlarında güçlü bir dolaylılık sinyali var: doğrudan güç yerine konum, zamanlama ve algı; savaşmadan kazanmak. Bu bir ekol değil, senin <em>nasıl</em> oynadığını niteleyen bir örtü. <b>${esc(s.label)}</b> çizginle birleşince: ${esc(SUN_BY_FAMILY[s.family] || SUN_BY_FAMILY.A)}</div></div>` : '';
 
       const ethicsHtml = s.critical ? `<div class="ethics">Tanısal not: bu ekol matriste tanı bütünlüğü için yer alır, olumlanmaz. Tarihsel bedeli baskı ve şiddettir; bu sonuç bir yakınlık ölçümüdür, bir tavsiye değil. Kör nokta satırını iki kez oku.</div>` : '';
 
