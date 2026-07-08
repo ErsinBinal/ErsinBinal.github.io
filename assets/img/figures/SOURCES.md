@@ -1,8 +1,9 @@
 # Ekol Aynası — Figür Görselleri (Kaynak & Lisans)
 
 Bu klasördeki `.webp` dosyaları, kamu malı (public domain) sanat eserlerinden
-türetilmiştir. Her biri gri tonlama + bronz duotone + kenar vinyet uygulanarak
-sayfanın estetiğine uyarlanmıştır (bkz. Wikimedia Commons kaynakları).
+türetilmiştir. Her biri bronz kalem-eskiz (color-dodge) tekniğiyle işlenmiştir:
+düz alanlar (arka plan) şeffaf bırakılır, yalnızca çizgi detayları bronz eskiz
+olarak kalır; böylece sayfanın arka planına gömülü bir gravür gibi görünür.
 
 | Dosya | Eser | Kaynak (Wikimedia Commons) | Lisans |
 |---|---|---|---|

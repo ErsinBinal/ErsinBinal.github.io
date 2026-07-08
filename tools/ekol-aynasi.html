@@ -76,7 +76,7 @@
       min-height: 100vh;
       line-height: 1.6;
     }
-    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 90px; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 28px 18px 90px; position: relative; z-index: 1; }
 
     header.masthead { text-align: center; padding: 26px 0 0; }
     .masthead .sysline { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
@@ -95,22 +95,22 @@
       background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M0 21h24M21 21V3H6v12h9V9h-3' fill='none' stroke='%23c9a35f' stroke-width='2'/%3E%3C/svg%3E") repeat-x center / 12px 12px;
     }
     /* İyon sütunu filigranı (panel köşesinde, çok soluk) */
-    .panel { position: relative; overflow: hidden; isolation: isolate; }
+    .panel { position: relative; overflow: hidden; }
     svg.column-mark { position: absolute; right: 16px; bottom: 10px; width: 64px; height: 128px; color: var(--bronze); opacity: 0.08; pointer-events: none; }
-    /* Arka plan figür: gerçek kamu-malı eserin sayfa stiliyle yorumlanmış hali.
-       Görselin kendisi zaten bronz-duotone + kenar vinyet (webp/alpha); burada
-       yalnızca konum, boyut ve panele gömülme (blend + soft ışık) veriliyor. */
-    .figure-mark {
-      position: absolute; right: -18px; bottom: -10px; width: 300px; height: 380px;
-      background-repeat: no-repeat; background-position: center top; background-size: contain;
-      opacity: 0.5; pointer-events: none; z-index: 0;
-      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.4));
-      transition: opacity .5s ease;
+    /* Arka plan figür sahnesi: gerçek eserlerin bronz ESKİZ halleri (arka planı
+       şeffaf). Panelin DIŞINDA, sayfanın arka planında; yan boşluklarda belirir,
+       içeriğin (z-index:1) arkasında kalır. Sağ figür baskın, sol figür ayna. */
+    .figure-stage { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+    .fig {
+      position: absolute; top: 50%; height: 98vh; width: 52vh;
+      background-repeat: no-repeat; background-position: center; background-size: contain;
+      opacity: 0.5; transform: translateY(-50%);
+      transition: opacity .6s ease; will-change: opacity;
     }
-    /* İçerik daima filigranın üstünde kalsın (column-mark kendi absolute'unu korur). */
-    .panel > *:not(.figure-mark):not(.column-mark) { position: relative; z-index: 1; }
-    @media (max-width: 640px) { .figure-mark { width: 200px; height: 260px; opacity: 0.42; right: -14px; } }
-    @media (prefers-reduced-motion: reduce) { .figure-mark { transition: none; } }
+    .fig-r { right: -7vh; }
+    .fig-l { left: -9vh; transform: translateY(-50%) scaleX(-1); opacity: 0.32; }
+    @media (max-width: 900px) { .figure-stage { display: none; } }
+    @media (prefers-reduced-motion: reduce) { .fig { transition: none; } }
     /* Ekran geçişi: panel yumuşakça yükselir */
     @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .panel.pop { animation: rise 0.4s ease both; }
@@ -243,6 +243,12 @@
     </defs>
   </svg>
 
+  <!-- Arka plan eskiz figürleri: panel dışında, sayfanın arkasında (yan boşluklar). -->
+  <div class="figure-stage" aria-hidden="true">
+    <div class="fig fig-l" id="fig-l"></div>
+    <div class="fig fig-r" id="fig-r"></div>
+  </div>
+
   <div class="wrap" id="main-content">
     <header class="masthead">
       <div class="sysline">convivium // strategic-schools.mirror</div>
@@ -263,7 +269,6 @@
       </div>
       <div class="mirror-note"><strong>Bu bir teşhis değil, bir aynadır.</strong> "Doğru olan budur" demez; "senin sezgilerine en çok bu yakın duruyor" der. Hiçbir ekol olumlanmaz ya da kötülenmez; her sonucun gücü de kör noktası da birlikte gösterilir.</div>
       <button class="btn" id="btn-start">▸ aynaya bak</button>
-      <div class="figure-mark" aria-hidden="true" style="background-image:url('/assets/img/figures/aristotle.webp')"></div>
     </section>
 
     <!-- ============ SORU ============ -->
@@ -276,7 +281,6 @@
         <button class="linkish" id="btn-back" type="button">← geri</button>
         <span class="hint">1–5 tuşları da çalışır</span>
       </div>
-      <div class="figure-mark" id="q-fig" aria-hidden="true"></div>
     </section>
 
     <!-- ============ RAPOR ============ -->
@@ -284,7 +288,6 @@
       <div class="kicker">değerlendirme raporu</div>
       <div id="r-body"></div>
       <button class="btn ghost" id="btn-restart">↺ baştan bak</button>
-      <div class="figure-mark" id="report-fig" aria-hidden="true"></div>
     </section>
 
     <div class="meander" aria-hidden="true" style="margin-top:36px"></div>
@@ -356,8 +359,12 @@
       A: 'machiavelli', B: 'locke', C: 'aristotle',
       D: 'burke', E: 'marx', F: 'bentham'
     };
-    const setFig = (el, family) => {
-      if (el) el.style.backgroundImage = `url('/assets/img/figures/${FAMILY_FIG[family] || 'aristotle'}.webp')`;
+    // Arka plandaki iki sahne figürünü (sağ + sol ayna) o ailenin eserine çevir.
+    const stageFig = (family) => {
+      const url = `url('/assets/img/figures/${FAMILY_FIG[family] || 'aristotle'}.webp')`;
+      const r = document.getElementById('fig-r'), l = document.getElementById('fig-l');
+      if (r) r.style.backgroundImage = url;
+      if (l) l.style.backgroundImage = url;
     };
 
     const SCHOOLS = [
@@ -924,7 +931,7 @@
         const rk = scoreSchools(buildVisitor(state.answers));
         if (rk[0] && rk[0].score > 0) provFam = rk[0].school.family;
       }
-      setFig($('q-fig'), provFam);
+      stageFig(provFam);
       show('question');
       window.scrollTo({ top: 0 });
     }
@@ -1016,7 +1023,7 @@
           <p class="rank-note">Her değer o ekole ayrı ölçülen benzerlik oranıdır; pay dağılımı değildir, toplamın %100 etmesi gerekmez. Ekol adına tıklayınca kısa tanımı açılır.</p>
         </div>
       `;
-      setFig($('report-fig'), s.family); // kazanan ekolün ailesinin gerçek eseri
+      stageFig(s.family); // arka plan figürleri kazanan ekolün ailesine döner
       show('report');
       window.scrollTo({ top: 0 });
 
@@ -1034,9 +1041,11 @@
 
     function restart() {
       state.answers = []; state.queue = [...BROAD]; state.phase = 'broad'; state.planned = BROAD.length + 3;
+      stageFig('C');
       show('intro');
     }
 
+    stageFig('C'); // intro açılışında varsayılan figür (Aristoteles)
     $('btn-start').addEventListener('click', renderQuestion);
     $('btn-restart').addEventListener('click', restart);
     $('btn-back').addEventListener('click', undo);
