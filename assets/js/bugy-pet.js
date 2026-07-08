@@ -68,7 +68,18 @@
     hygiene: ['Üstüm kirlendi…', 'Bir duş iyi gelirdi.', 'Kendimi pasaklı hissediyorum.'],
     bond:    ['Biraz ilgi?', 'Yanımda kal, olur mu?', 'Seni özledim.']
   };
-  const FERAL_LINES = ['Grrr…', '*hırlıyor*', 'Yaklaşma… şimdilik.', '…', 'Sistem çöktü, sinirlerim de.'];
+  // Canavar (feral) replikleri: Bugy bakimsiz kaldiginda sertlesir, siteyi
+  // dagitirken kullaniciya laf sokar. Sakinlesince (iyi bakilinca) pisman olur.
+  const FERAL_LINES = [
+    'Grrr… bu siteyi dağıtıyorum, izle.',
+    'Beni aç bıraktın, şimdi harflerini yiyorum.',
+    'Butonların artık benim. Kırıyorum işte.',
+    '*hırlıyor* Yaklaşma… her şeyi bozarım.',
+    'Bakımsız kaldım, faturayı site ödüyor.',
+    'Sana güvenmiştim. Bak ne yaptırdın bana.',
+    'Sistem çöküyor, sinirlerim de. Suç sende.',
+    'Doyur beni, yoksa geriye tuş bırakmam.'
+  ];
   const HAPPY_LINES = ['İyi ki buradasın!', 'Bugün modum 5 yıldız.', 'Seninle olmak güzel.', 'Hadi biraz oynayalım!'];
 
   // Esprili gunluk + cyberpunk genel replikler (her yaratik kullanir).
@@ -304,7 +315,10 @@
     if (v4.activate) v4.activate();
     mountCareButton();
     const feral = applyVisualState(pet);
-    if (feral && v4.trigger) v4.trigger('morph');
+    if (feral) {
+      if (v4.trigger) v4.trigger('morph');
+      if (v4.say) window.setTimeout(() => v4.say(feralLine()), 900);
+    }
     startSpeech();
   }
   function hideCompanion() {
@@ -327,6 +341,16 @@
 
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
+  // Canavar repliki; kullanici adi biliniyorsa yariya yakin onunla hitap eder
+  // ("Ersin, ...") — laf daha kisisel/dokunakli olsun.
+  function feralLine() {
+    const line = pick(FERAL_LINES);
+    if (userProfile && userProfile.first_name && Math.random() < 0.5) {
+      return `${userProfile.first_name}, ${line}`;
+    }
+    return line;
+  }
+
   // Yaratik ara ara konusur. Oncelik: canavar > kritik ihtiyac. Aksi halde
   // baglamsal/esprili gunluk replikler ve yaratigin kendi kisilik repliki
   // karisik kullanilir; boylece site icindeki davranisa gondermeler yapar.
@@ -337,7 +361,7 @@
     if (st && (!st.active || st.state !== 'idle')) return; // jest sirasinda bekle
     const needs = currentNeeds(currentPet);
     const mood = moodFromNeeds(needs);
-    if (mood === 'feral') { v4.say(pick(FERAL_LINES)); return; }
+    if (mood === 'feral') { v4.say(feralLine()); return; }
     // En dusuk ihtiyaci bul; kritikse oncelikle onu dile getir.
     let lowKey = null; let lowVal = 101;
     NEEDS.forEach(({ key }) => { if (needs[key] < lowVal) { lowVal = needs[key]; lowKey = key; } });
@@ -456,8 +480,12 @@
     } else {
       const feralNow = applyVisualState(currentPet);
       if (prevFeral && !feralNow) {
-        toast(`${currentPet.name} sakinleşti.`);
-        if (v4 && v4.say) v4.say('Oh… kendime geldim.');
+        toast(`${currentPet.name} sakinleşti. Bozduğu yerleri onarıyor…`);
+        if (v4 && v4.say) v4.say('Oh… kendime geldim. Dağıttıklarımı topluyorum.');
+      } else if (!prevFeral && feralNow) {
+        toast(`${currentPet.name} canavarlaştı!`);
+        if (v4 && v4.trigger) v4.trigger('morph');
+        if (v4 && v4.say) v4.say(feralLine());
       } else if (v4 && v4.trigger) {
         v4.trigger(CARE[type].mood);
       }
