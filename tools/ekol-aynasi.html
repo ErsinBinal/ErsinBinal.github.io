@@ -97,11 +97,20 @@
     /* İyon sütunu filigranı (panel köşesinde, çok soluk) */
     .panel { position: relative; overflow: hidden; isolation: isolate; }
     svg.column-mark { position: absolute; right: 16px; bottom: 10px; width: 64px; height: 128px; color: var(--bronze); opacity: 0.08; pointer-events: none; }
-    /* Arka plan figür filigranı: sağ-alt köşede soluk bronz büst (kaideye oturur). */
-    svg.bust-mark { position: absolute; right: 6px; bottom: 0; width: 208px; height: 268px; color: var(--bronze); opacity: 0.07; pointer-events: none; z-index: 0; }
+    /* Arka plan figür: gerçek kamu-malı eserin sayfa stiliyle yorumlanmış hali.
+       Görselin kendisi zaten bronz-duotone + kenar vinyet (webp/alpha); burada
+       yalnızca konum, boyut ve panele gömülme (blend + soft ışık) veriliyor. */
+    .figure-mark {
+      position: absolute; right: -18px; bottom: -10px; width: 300px; height: 380px;
+      background-repeat: no-repeat; background-position: center top; background-size: contain;
+      opacity: 0.5; pointer-events: none; z-index: 0;
+      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.4));
+      transition: opacity .5s ease;
+    }
     /* İçerik daima filigranın üstünde kalsın (column-mark kendi absolute'unu korur). */
-    .panel > *:not(.bust-mark):not(.column-mark) { position: relative; z-index: 1; }
-    @media (max-width: 640px) { svg.bust-mark { width: 148px; height: 190px; opacity: 0.05; } }
+    .panel > *:not(.figure-mark):not(.column-mark) { position: relative; z-index: 1; }
+    @media (max-width: 640px) { .figure-mark { width: 200px; height: 260px; opacity: 0.42; right: -14px; } }
+    @media (prefers-reduced-motion: reduce) { .figure-mark { transition: none; } }
     /* Ekran geçişi: panel yumuşakça yükselir */
     @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
     .panel.pop { animation: rise 0.4s ease both; }
@@ -231,69 +240,6 @@
         <circle cx="50" cy="20" r="6"/><circle cx="50" cy="20" r="2.5"/>
         <path d="M20 16q12-6 24 0M8 10h48M12 4h40"/>
       </g>
-      <!-- Arketip büstler (cameo/kabartma üslubu): ortak kaide+omuz+baş taban,
-           üstüne figüre özgü saç/sakal/başlık. Aileye göre arka plan filigranı. -->
-      <g id="bust-base" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round">
-        <path d="M34 176 H106 L100 158 H40 Z"/>
-        <line x1="30" y1="176" x2="110" y2="176"/>
-        <path d="M26 158 C26 126 46 118 70 118 C94 118 114 126 114 158"/>
-        <path d="M60 118 V106 M80 118 V106"/>
-        <ellipse cx="70" cy="80" rx="24" ry="30"/>
-      </g>
-      <!-- Filozof (Aristoteles/Platon/Konfüçyüs) — alın bandı + kısa sakal -->
-      <g id="bust-philosopher" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M48 66 Q70 60 92 66"/>
-        <path d="M48 58 Q54 50 62 56 Q70 48 78 56 Q86 50 92 58"/>
-        <path d="M50 92 Q70 124 90 92"/>
-        <path d="M54 98 Q58 106 62 98 Q66 106 70 98 Q74 106 78 98 Q82 106 86 98"/>
-        <path d="M58 78 h6 M76 78 h6"/>
-      </g>
-      <!-- Fatih/general (Cengiz Han vb.) — miğfer + tepelik + bıyık -->
-      <g id="bust-conqueror" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M44 66 A26 30 0 0 1 96 66"/>
-        <path d="M70 36 Q60 24 70 14 Q80 24 70 36"/>
-        <path d="M46 66 H94"/>
-        <path d="M50 66 V86 M90 66 V86"/>
-        <path d="M58 92 Q70 100 82 92"/>
-        <path d="M56 80 h7 M77 80 h7"/>
-      </g>
-      <!-- Aydınlanma düşünürü (Locke/Rawls) — peruk + yan bukleler -->
-      <g id="bust-enlightenment" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M46 62 Q70 42 94 62"/>
-        <path d="M44 66 q-8 10 2 18 q-8 8 2 18 q-8 8 0 16"/>
-        <path d="M96 66 q8 10 -2 18 q8 8 -2 18 q8 8 0 16"/>
-        <path d="M58 80 h6 M76 80 h6"/>
-      </g>
-      <!-- Gelenek bilgesi (Burke) — takke + uzun sakal -->
-      <g id="bust-tradition" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M50 58 Q70 46 90 58"/>
-        <path d="M50 58 H90"/>
-        <path d="M50 88 Q52 150 70 150 Q88 150 90 88"/>
-        <path d="M62 96 V140 M70 96 V146 M78 96 V140"/>
-        <path d="M58 76 h6 M76 76 h6"/>
-      </g>
-      <!-- Devrimci (Marx/anarşist) — gür saç + bol sakal -->
-      <g id="bust-revolution" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M40 66 Q38 40 70 38 Q102 40 100 66"/>
-        <path d="M44 56 Q54 44 70 48 Q86 44 96 56"/>
-        <path d="M46 90 Q48 150 70 150 Q92 150 94 90"/>
-        <path d="M56 100 q6 8 0 16 M70 102 v20 M84 100 q-6 8 0 16"/>
-        <path d="M56 80 h7 M77 80 h7"/>
-      </g>
-      <!-- Teknokrat (Bentham/modern) — kısa saç + gözlük (akıl/optik) + yaka -->
-      <g id="bust-technocrat" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <use href="#bust-base"/>
-        <path d="M48 62 Q70 48 92 62"/>
-        <circle cx="60" cy="80" r="7"/><circle cx="80" cy="80" r="7"/>
-        <path d="M67 80 h6"/>
-        <path d="M62 118 L70 132 L78 118"/>
-        <path d="M70 132 V150"/>
-      </g>
     </defs>
   </svg>
 
@@ -317,7 +263,7 @@
       </div>
       <div class="mirror-note"><strong>Bu bir teşhis değil, bir aynadır.</strong> "Doğru olan budur" demez; "senin sezgilerine en çok bu yakın duruyor" der. Hiçbir ekol olumlanmaz ya da kötülenmez; her sonucun gücü de kör noktası da birlikte gösterilir.</div>
       <button class="btn" id="btn-start">▸ aynaya bak</button>
-      <svg class="bust-mark" viewBox="0 0 140 180" aria-hidden="true"><use href="#bust-philosopher"/></svg>
+      <div class="figure-mark" aria-hidden="true" style="background-image:url('/assets/img/figures/aristotle.webp')"></div>
     </section>
 
     <!-- ============ SORU ============ -->
@@ -330,7 +276,7 @@
         <button class="linkish" id="btn-back" type="button">← geri</button>
         <span class="hint">1–5 tuşları da çalışır</span>
       </div>
-      <svg class="bust-mark" id="q-bust" viewBox="0 0 140 180" aria-hidden="true"><use href="#bust-philosopher"/></svg>
+      <div class="figure-mark" id="q-fig" aria-hidden="true"></div>
     </section>
 
     <!-- ============ RAPOR ============ -->
@@ -338,7 +284,7 @@
       <div class="kicker">değerlendirme raporu</div>
       <div id="r-body"></div>
       <button class="btn ghost" id="btn-restart">↺ baştan bak</button>
-      <svg class="bust-mark" id="report-bust" viewBox="0 0 140 180" aria-hidden="true"><use href="#bust-philosopher"/></svg>
+      <div class="figure-mark" id="report-fig" aria-hidden="true"></div>
     </section>
 
     <div class="meander" aria-hidden="true" style="margin-top:36px"></div>
@@ -403,14 +349,15 @@
       F: 'veriyi ve zamanlamayı bir manevra alanı gibi kullanıyorsun; en iyi sonucu gürültüsüz, doğru anda konumlanarak alıyorsun.'
     };
 
-    // Aile -> arka plan büst filigranı (defs'teki arketip figürler).
-    const FAMILY_BUST = {
-      A: 'bust-conqueror', B: 'bust-enlightenment', C: 'bust-philosopher',
-      D: 'bust-tradition', E: 'bust-revolution', F: 'bust-technocrat'
+    // Aile -> gerçek kamu-malı eser (bronz-duotone webp). Her ailenin gerçek
+    // düşünürü/temsili: A Machiavelli, B Locke, C Aristoteles, D Burke,
+    // E Marx, F Bentham. Görseller sayfa stiliyle işlenmiş (bkz. assets/img/figures).
+    const FAMILY_FIG = {
+      A: 'machiavelli', B: 'locke', C: 'aristotle',
+      D: 'burke', E: 'marx', F: 'bentham'
     };
-    const setBust = (el, family) => {
-      const use = el && el.querySelector('use');
-      if (use) use.setAttribute('href', '#' + (FAMILY_BUST[family] || 'bust-philosopher'));
+    const setFig = (el, family) => {
+      if (el) el.style.backgroundImage = `url('/assets/img/figures/${FAMILY_FIG[family] || 'aristotle'}.webp')`;
     };
 
     const SCHOOLS = [
@@ -977,7 +924,7 @@
         const rk = scoreSchools(buildVisitor(state.answers));
         if (rk[0] && rk[0].score > 0) provFam = rk[0].school.family;
       }
-      setBust($('q-bust'), provFam);
+      setFig($('q-fig'), provFam);
       show('question');
       window.scrollTo({ top: 0 });
     }
@@ -1069,7 +1016,7 @@
           <p class="rank-note">Her değer o ekole ayrı ölçülen benzerlik oranıdır; pay dağılımı değildir, toplamın %100 etmesi gerekmez. Ekol adına tıklayınca kısa tanımı açılır.</p>
         </div>
       `;
-      setBust($('report-bust'), s.family); // kazanan ekolün ailesinin büstü
+      setFig($('report-fig'), s.family); // kazanan ekolün ailesinin gerçek eseri
       show('report');
       window.scrollTo({ top: 0 });
 
