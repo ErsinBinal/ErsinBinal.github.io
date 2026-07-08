@@ -4387,12 +4387,6 @@
           action: goTo(route('barista', '/tools/barista.html'))
         },
         {
-          command: 'barista v2',
-          description: 'ikinci kahve asistani',
-          aliases: ['barista 2', 'coffee v2', 'kahve v2'],
-          action: goTo(route('baristaV2', '/tools/barista-v2.html'))
-        },
-        {
           command: 'realists bar',
           description: 'The Realists Bar sayfasi',
           aliases: ['the realists bar', 'realists'],
@@ -4521,7 +4515,7 @@
         'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
         '',
         'lab:',
-        'dart, bartender, barista, barista v2, realists bar, open oracle, paradox, ekol, universe, pipe, outrun',
+        'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, pipe, outrun',
         '',
         'system:',
         'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver',

@@ -38,7 +38,7 @@ flowchart TD
   end
 
   subgraph ARAC[Araçlar — auth-gate'li]
-    barista[barista / barista-v2]
+    barista[barista]
     bartender[bartender]
     realist[the-realists-bar]
     paradox[paradox-terminal]
@@ -206,7 +206,7 @@ flowchart TD
 | pages/makaleler.html | articles.js, bugy-pet | articles, bugy_pets | — | 🟩 |
 | pages/ozgecmisim.html | sfx | — | — | 🟩 |
 | legal/*.html | — | — | — | 🟨 (taslak) |
-| tools/barista*, bartender, the-realists-bar | auth-gate | sessions / recos | ✅ | 🟨 |
+| tools/barista, bartender, the-realists-bar | auth-gate | sessions / recos | ✅ | 🟨 |
 | tools/paradox-terminal.html | auth-gate | — | ✅ | 🟨 |
 | tools/bugy-studio.html | bugy-studio + sürümler | — | — | 🟨 |
 | tools/dart-skorbord.html | dart-atc/cricket/online/skorbord | dart_matches, dart_throws | ✅ | 🟨 |

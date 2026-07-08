@@ -24,7 +24,7 @@ Ziyaretci icin site bir rota agi gibi akar:
 - `/pages/changelog.html`: "son sinyaller" — siteye eklenen ozelliklerin kronolojik listesi.
 - `/oracle/`: kapali isaretler, kisa okumalar ve oracle deneyimi.
 - `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/ash-runner-2.html`, `/games/neon-river.html`, `/games/neon-serpent.html`, `/games/universe-2.html`: oynanabilir deneyler (Kul Hatti II: Phaser tabanli hibrit uzay oyunu; Neon Serpent: skor tablolu neon yilan).
-- `/tools/bartender.html`, `/tools/barista.html`, `/tools/barista-v2.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
+- `/tools/bartender.html`, `/tools/barista.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
 - `/tools/dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
 - `/tools/paradox-terminal.html`: paradokslar ve kisa felsefi notlar icin retro terminal sayfasi.
 - `/tools/bugy-studio.html`: bugy motorlarini (v1/v2/v3/v4 yaratiklar) ve DEB yoldasini yoneten kontrol merkezi.

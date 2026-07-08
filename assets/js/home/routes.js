@@ -18,7 +18,6 @@
     dart: '/tools/dart-skorbord.html',
     bartender: '/tools/bartender.html',
     barista: '/tools/barista.html',
-    baristaV2: '/tools/barista-v2.html',
     realistsBar: '/tools/the-realists-bar.html',
     paradox: '/tools/paradox-terminal.html',
     bugyStudio: '/tools/bugy-studio.html',

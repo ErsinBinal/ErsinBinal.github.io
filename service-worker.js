@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v168';
+const CACHE_NAME = 'convivium-v169';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -25,7 +25,6 @@ const PRECACHE_ASSETS = [
   '/admin/',
   '/oracle/',
   '/tools/barista.html',
-  '/tools/barista-v2.html',
   '/tools/bartender.html',
   '/tools/bugy-studio.html',
   '/tools/dart-skorbord.html',
