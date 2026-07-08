@@ -3,11 +3,12 @@
 Ekol aynasındaki arka plan figürleri **kodla üretilen SVG piksel-mozaik
 öykünmeleri**dir (fotoğraf değil; vektörel → responsive). Ham görsel dosyası
 tutulmaz — mozaik verisi (`FIG_PIX`) doğrudan `tools/ekol-aynasi.html` içine
-gömülüdür ve çalışma anında `<rect>` mozaiği olarak çizilir (kafa çevirme +
-göz kırpma + dudak animasyonlu).
+gömülüdür ve çalışma anında `<rect>` mozaiği olarak çizilir. Önde detay yüz,
+arkada koyu siluet katmanları (CSS `preserve-3d`) ile **3B ekstrüzyon** verilir;
+figür yavaşça sağa-sola salınırken (rotateY) piksellerin voxel kalınlığı görünür.
 
 Bu mozaikler, aşağıdaki kamu malı (public domain) sanat eserlerinden build-time
-bir Pillow betiğiyle türetilmiştir (gri tonlama + otokontrast + 46 px genişlik
+bir Pillow betiğiyle türetilmiştir (gri tonlama + otokontrast + 66 px genişlik
 ızgara + 5 kademeli bronz palet + eliptik/kenar-farkındalı alfa cut-out).
 
 | Aile | Eser | Kaynak (Wikimedia Commons) | Lisans |
