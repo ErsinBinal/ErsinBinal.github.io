@@ -118,7 +118,7 @@ const mustPrecache = [
   '/assets/js/home/routes.js?v=5',
   '/assets/js/supabase-client.js?v=33',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=57',
+  '/assets/js/home-protocol.js?v=58',
   '/assets/js/dart-skorbord.js?v=9',
   '/assets/js/service-worker-register.js?v=3'
 ];

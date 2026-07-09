@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Convivium apps guide visual</title>
+  <desc id="desc">Cards representing Oracle, Barista, Bartender, Paradox and Ekol Aynasi apps.</desc>
+  <rect width="1200" height="630" fill="#070707"/>
+  <text x="78" y="92" fill="#f3ffe8" font-family="Courier New, monospace" font-size="40">APPS GUIDE / RITUAL TOOLS</text>
+  <g transform="translate(78 138)">
+    <rect width="310" height="330" rx="16" fill="#07140f" stroke="#00ff88" stroke-width="3"/>
+    <text x="28" y="48" fill="#00ff88" font-family="Courier New, monospace" font-size="26">ORACLE</text>
+    <path d="M155 96l62 62-62 62-62-62z" fill="none" stroke="#00e5ff" stroke-width="7"/>
+    <circle cx="155" cy="158" r="28" fill="#00e5ff" opacity="0.42"/>
+    <path d="M52 270H258" stroke="#00ff88" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(445 138)">
+    <rect width="310" height="330" rx="16" fill="#120d08" stroke="#ffd166" stroke-width="3"/>
+    <text x="28" y="48" fill="#ffd166" font-family="Courier New, monospace" font-size="26">BARISTA</text>
+    <path d="M96 134h118v70a58 58 0 0 1-58 58h-2a58 58 0 0 1-58-58z" fill="none" stroke="#f3ffe8" stroke-width="8"/>
+    <path d="M214 158h32c18 0 18 42 0 42h-32" fill="none" stroke="#f3ffe8" stroke-width="8"/>
+    <path d="M116 96c-18-28 22-34 6-60M158 96c-18-28 22-34 6-60M200 96c-18-28 22-34 6-60" stroke="#ffd166" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(812 138)">
+    <rect width="310" height="330" rx="16" fill="#100716" stroke="#ff4fd8" stroke-width="3"/>
+    <text x="28" y="48" fill="#ff8de8" font-family="Courier New, monospace" font-size="26">BARTENDER</text>
+    <path d="M96 98h118l-30 86v72h-58v-72z" fill="none" stroke="#f3ffe8" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M124 132h62" stroke="#00e5ff" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="204" cy="116" r="13" fill="#00ff88"/>
+  </g>
+  <g transform="translate(78 506)">
+    <rect width="1044" height="60" rx="12" fill="#06110e" stroke="#00e5ff"/>
+    <text x="28" y="39" fill="#dfffe8" font-family="Courier New, monospace" font-size="24">PARADOX TERMINAL - EKOL AYNASI - REALISTS BAR - BUGY STUDIO</text>
+  </g>
+</svg>

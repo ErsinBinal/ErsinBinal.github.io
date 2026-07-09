@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v170';
+const CACHE_NAME = 'convivium-v171';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -59,7 +59,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=5',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=57',
+  '/assets/js/home-protocol.js?v=58',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=3',
   '/assets/js/origin-beacon.js?v=1',
@@ -84,7 +84,12 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
   '/assets/js/supabase-client.js?v=33',
-  '/assets/js/articles.js?v=6',
+  '/assets/js/articles.js?v=7',
+  '/assets/img/guides/apps-guide.svg',
+  '/assets/img/guides/games-guide.svg',
+  '/assets/img/guides/score-guide.svg',
+  '/assets/img/guides/terminal-games-guide.svg',
+  '/assets/img/guides/terminal-guide.svg',
   '/assets/js/auth-gate.js?v=22',
   '/assets/js/dart-board-svg.js?v=3',
   '/assets/js/dart-online.js?v=1',

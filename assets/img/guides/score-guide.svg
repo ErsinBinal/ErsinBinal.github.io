@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Score and dashboard guide visual</title>
+  <desc id="desc">A scoreboard, dart board and dashboard session rows.</desc>
+  <rect width="1200" height="630" fill="#050707"/>
+  <text x="78" y="88" fill="#dfffe8" font-family="Courier New, monospace" font-size="38">SCORE / SESSION / DASHBOARD</text>
+  <g transform="translate(84 134)">
+    <rect width="450" height="360" rx="16" fill="#08120e" stroke="#00ff88" stroke-width="3"/>
+    <text x="28" y="52" fill="#00ff88" font-family="Courier New, monospace" font-size="28">DART SKORBORD</text>
+    <circle cx="146" cy="188" r="86" fill="none" stroke="#dfffe8" stroke-width="8"/>
+    <circle cx="146" cy="188" r="56" fill="none" stroke="#00e5ff" stroke-width="8"/>
+    <circle cx="146" cy="188" r="20" fill="#ff4fd8"/>
+    <path d="M146 102V274M60 188H232M86 128l120 120M206 128L86 248" stroke="#dfffe8" stroke-width="3"/>
+    <text x="282" y="158" fill="#ffd166" font-family="Courier New, monospace" font-size="54">501</text>
+    <text x="282" y="224" fill="#00e5ff" font-family="Courier New, monospace" font-size="54">327</text>
+  </g>
+  <g transform="translate(596 134)">
+    <rect width="520" height="360" rx="16" fill="#080912" stroke="#00e5ff" stroke-width="3"/>
+    <text x="28" y="52" fill="#00e5ff" font-family="Courier New, monospace" font-size="28">DASHBOARD</text>
+    <rect x="34" y="92" width="452" height="48" rx="8" fill="#00ff88" opacity="0.18"/>
+    <rect x="34" y="164" width="452" height="48" rx="8" fill="#00e5ff" opacity="0.18"/>
+    <rect x="34" y="236" width="452" height="48" rx="8" fill="#ff4fd8" opacity="0.18"/>
+    <text x="58" y="124" fill="#dfffe8" font-family="Courier New, monospace" font-size="22">logic score saved</text>
+    <text x="58" y="196" fill="#dfffe8" font-family="Courier New, monospace" font-size="22">oracle session trace</text>
+    <text x="58" y="268" fill="#dfffe8" font-family="Courier New, monospace" font-size="22">dart match history</text>
+  </g>
+  <rect x="84" y="540" width="1032" height="28" fill="#00ff88" opacity="0.22"/>
+</svg>

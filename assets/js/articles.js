@@ -10,12 +10,12 @@
       summary: 'Terminalden ulasilan oyunlar, uygulamalar ve rehber komutlari icin iki dilli baslangic haritasi.',
       content: `
         <figure class="article-image">
-          <img class="responsive" src="/assets/icons/og-image.png" alt="Convivium terminal rehberi" width="1200" height="630" loading="lazy" decoding="async">
+          <img class="responsive" src="/assets/img/guides/terminal-guide.svg" alt="Convivium terminal rehberi" width="1200" height="630" loading="lazy" decoding="async">
           <figcaption>Terminal, Convivium icinde menuden daha hizli bir rota katmani gibi calisir.</figcaption>
         </figure>
         <h2>Turkce: Terminali nasil okumali?</h2>
         <p>Convivium ana sayfasindaki komut satiri yalnizca arama kutusu degildir. Oyunlari acar, uygulamalara gecis verir, gizli terminal oyuncaklarini baslatir ve okuma odasindaki rehberleri dogrudan cagirir. Kisa komutlar, sayfanin genel haritasini ezberlemeden ilerlemek icindir.</p>
-        <p>Baslamak icin <code>help</code> tum komutlari listeler, <code>guide</code> bu rehberi acar, <code>how to play</code> oyun odasina giden kullanim rehberini secer. Daha dogrudan gitmek istersen <code>run logic</code>, <code>open oracle</code>, <code>dart</code>, <code>barista</code> gibi rota komutlari sayfayi degistirir.</p>
+        <p>Baslamak icin <code>help</code> tum komutlari listeler, <code>guide</code> terminal icinde kisa rehber verir, <code>how to play</code> oyunlar icin hizli oynanis ozetini acar. Uzun okuma icin <code>read guide</code> veya <code>read game guide</code> kullanilir. Daha dogrudan gitmek istersen <code>run logic</code>, <code>open oracle</code>, <code>dart</code>, <code>barista</code> gibi rota komutlari sayfayi degistirir.</p>
         <div class="guide-grid">
           <section class="guide-card">
             <h3>Okuma ve kesif</h3>
@@ -32,7 +32,7 @@
         </div>
         <h2>English: How to use the terminal</h2>
         <p>The Convivium command line is a navigation layer. It opens games, tools, guide articles, hidden mini-games and public reading rooms without exposing any local developer shell. Everything stays inside the public site surface.</p>
-        <p>Use <code>help</code> for the full command list, <code>guide</code> for this article, and <code>how to play</code> for the game guide. Route commands such as <code>run logic</code>, <code>open oracle</code>, <code>dart</code> and <code>barista</code> jump directly into the matching experience.</p>
+        <p>Use <code>help</code> for the full command list, <code>guide</code> for a short terminal note, and <code>how to play</code> for a quick game summary. Use <code>read guide</code> or <code>read game guide</code> when you want the full article view. Route commands such as <code>run logic</code>, <code>open oracle</code>, <code>dart</code> and <code>barista</code> jump directly into the matching experience.</p>
         <table class="command-table">
           <thead><tr><th>Command</th><th>Opens</th><th>Use when</th></tr></thead>
           <tbody>
@@ -42,7 +42,7 @@
             <tr><td><code>score guide</code></td><td>Score and session guide</td><td>You want to understand accounts, dashboard and scoreboards.</td></tr>
           </tbody>
         </table>
-        <blockquote>Short version: type <code>guide</code> to learn the map, then <code>how to play</code> to choose what to run.</blockquote>
+        <blockquote>Short version: type <code>guide</code> to stay in the terminal, then <code>read guide</code> when you want the full reading room.</blockquote>
       `
     },
     {
@@ -52,6 +52,10 @@
       date: '2026-07-09',
       summary: 'Convivium oyunlarinin amaci, kontrolleri, terminal komutlari ve ilk deneme taktigi.',
       content: `
+        <figure class="article-image">
+          <img class="responsive" src="/assets/img/guides/games-guide.svg" alt="Convivium oyun rehberi gorseli" width="1200" height="630" loading="lazy" decoding="async">
+          <figcaption>Oyun rehberi; mantik, aksiyon, yilan ritmi ve terminal operasyonlarini ayni haritada toplar.</figcaption>
+        </figure>
         <h2>Turkce: Oyun rotalari</h2>
         <p>Convivium oyunlari kisa oturumlar icin tasarlandi: once mekanigi anla, sonra ritmi hizlandir, sonra skorunu kaydet. Terminalden <code>how to play</code>, <code>game guide</code> veya dogrudan oyun adini yazarak baslayabilirsin.</p>
         <table class="command-table">
@@ -93,6 +97,10 @@
       date: '2026-07-09',
       summary: 'Oracle, Barista, Bartender, Realists Bar, Paradox Terminal ve Ekol Aynasi icin iki dilli kullanim notlari.',
       content: `
+        <figure class="article-image">
+          <img class="responsive" src="/assets/img/guides/apps-guide.svg" alt="Convivium uygulama rehberi gorseli" width="1200" height="630" loading="lazy" decoding="async">
+          <figcaption>Oracle, kahve, kokteyl ve dusunce aynasi ayni ritual arac ailesinde durur.</figcaption>
+        </figure>
         <h2>Turkce: Uygulamalar ne ise yarar?</h2>
         <p>Bu bolumdeki uygulamalar klasik fayda araci ile rituel arayuz arasinda durur. Kimi karar dilini sadeleştirir, kimi icecek secimini ruh haline baglar, kimi dusunce tarzini aynalar. Terminalden isimlerini yazarak acabilirsin.</p>
         <table class="command-table">
@@ -118,7 +126,7 @@
           <li><strong>Paradox Terminal:</strong> read one paradox at a time; it works best as a short thinking break.</li>
           <li><strong>Ekol Aynasi:</strong> answer scenario questions and compare the ranked schools as a map, not as a fixed label.</li>
         </ul>
-        <blockquote>Command shortcut: <code>app guide</code> returns here; <code>open oracle</code> is the best first app route.</blockquote>
+        <blockquote>Command shortcut: <code>app guide</code> gives the terminal summary; <code>read app guide</code> returns here; <code>open oracle</code> is the best first app route.</blockquote>
       `
     },
     {
@@ -128,6 +136,10 @@
       date: '2026-07-09',
       summary: 'Ana terminalin icinde calisan gizli mini oyunlar icin komut, amac ve hizli taktik rehberi.',
       content: `
+        <figure class="article-image">
+          <img class="responsive" src="/assets/img/guides/terminal-games-guide.svg" alt="Pipe ve Out Run terminal oyunlari gorseli" width="1200" height="630" loading="lazy" decoding="async">
+          <figcaption>Terminal oyunlari yeni sayfa acmadan komut ciktisini oyun alanina cevirir.</figcaption>
+        </figure>
         <h2>Turkce: Terminal icindeki oyunlar</h2>
         <p>Bazi oyunlar yeni sayfa acmaz; terminal cikti alanini oyun ekranina cevirir. Bu oyunlar public kabuk icinde kalir, yerel dosya sistemine veya gelistirici araclarina erisim vermez.</p>
         <div class="guide-grid">
@@ -150,7 +162,7 @@
           <li><strong>Pipe-90i:</strong> start with <code>pipe</code>. Rotate and place pipe pieces, then trigger flow when the route looks complete.</li>
           <li><strong>Out Run 86:</strong> start with <code>outrun</code>. Read the ASCII road, manage speed and react early.</li>
         </ul>
-        <blockquote>Best discovery commands: <code>terminal games</code>, <code>pipe help</code>, <code>outrun help</code>.</blockquote>
+        <blockquote>Best discovery commands: <code>terminal games</code>, <code>pipe help</code>, <code>outrun help</code>. Full read: <code>read terminal games</code>.</blockquote>
       `
     },
     {
@@ -160,6 +172,10 @@
       date: '2026-07-09',
       summary: 'Dart Skorbord, oyun skor kaydi, hesap girisi ve dashboard akisinin iki dilli ozeti.',
       content: `
+        <figure class="article-image">
+          <img class="responsive" src="/assets/img/guides/score-guide.svg" alt="Skor ve dashboard rehberi gorseli" width="1200" height="630" loading="lazy" decoding="async">
+          <figcaption>Skor katmani oyun, dart ve dashboard izlerini ayni oturum hafizasinda okur.</figcaption>
+        </figure>
         <h2>Turkce: Skorlar nerede yasar?</h2>
         <p>Convivium'da skor ve oturum katmani iki amaca hizmet eder: oyunlardan kalan ilerlemeyi gorunur yapmak ve Dart Skorbord gibi araclarda mac akisini duzenlemek. Giris yapmadan da gezebilirsin; ancak bazi kayit ve cihazlar arasi tasima davranislari hesap gerektirebilir.</p>
         <table class="command-table">
@@ -186,7 +202,7 @@
           <li><code>access</code> opens authentication when a feature needs an account.</li>
           <li><code>history</code> is only terminal command history; it is separate from your account data.</li>
         </ul>
-        <blockquote>Use <code>score guide</code> from the terminal when you need this map again.</blockquote>
+        <blockquote>Use <code>score guide</code> for the terminal summary and <code>read score guide</code> when you need this map again.</blockquote>
       `
     },
     {

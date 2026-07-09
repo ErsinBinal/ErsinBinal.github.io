@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Convivium games guide visual</title>
+  <desc id="desc">Arcade panels for logic, runner, serpent and signal games.</desc>
+  <rect width="1200" height="630" fill="#05060c"/>
+  <g opacity="0.14" stroke="#00e5ff">
+    <path d="M0 520C180 456 260 600 424 520S718 438 894 520 1082 590 1200 520" fill="none" stroke-width="3"/>
+    <path d="M0 120H1200M0 240H1200M0 360H1200M0 480H1200"/>
+  </g>
+  <text x="86" y="92" fill="#dfffe8" font-family="Courier New, monospace" font-size="40">HOW TO PLAY / GAMES</text>
+  <g transform="translate(86 132)">
+    <rect width="310" height="190" rx="14" fill="#081710" stroke="#00ff88" stroke-width="3"/>
+    <text x="24" y="42" fill="#00ff88" font-family="Courier New, monospace" font-size="24">LOGIC</text>
+    <rect x="28" y="72" width="78" height="44" rx="6" fill="#00ff88" opacity="0.24"/>
+    <rect x="116" y="72" width="78" height="44" rx="6" fill="#00e5ff" opacity="0.24"/>
+    <rect x="204" y="72" width="78" height="44" rx="6" fill="#ff4fd8" opacity="0.24"/>
+    <path d="M42 144H268" stroke="#dfffe8" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(445 132)">
+    <rect width="310" height="190" rx="14" fill="#111008" stroke="#ffd166" stroke-width="3"/>
+    <text x="24" y="42" fill="#ffd166" font-family="Courier New, monospace" font-size="24">ASH RUNNER</text>
+    <path d="M42 148H268" stroke="#ffd166" stroke-width="7" stroke-linecap="round"/>
+    <rect x="86" y="82" width="32" height="54" fill="#dfffe8"/>
+    <path d="M102 82l24 18M102 118l-28 18M118 118l36 22" stroke="#dfffe8" stroke-width="8" stroke-linecap="round"/>
+    <rect x="208" y="102" width="36" height="36" fill="#ff4f6f"/>
+  </g>
+  <g transform="translate(804 132)">
+    <rect width="310" height="190" rx="14" fill="#0e0715" stroke="#ff4fd8" stroke-width="3"/>
+    <text x="24" y="42" fill="#ff8de8" font-family="Courier New, monospace" font-size="24">SERPENT</text>
+    <path d="M52 132H108V88H170V132H248" fill="none" stroke="#00ff88" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="252" cy="132" r="10" fill="#ff4fd8"/>
+  </g>
+  <g transform="translate(86 368)">
+    <rect width="1028" height="148" rx="14" fill="#050f12" stroke="#00e5ff" stroke-width="3"/>
+    <text x="30" y="52" fill="#00e5ff" font-family="Courier New, monospace" font-size="26">SIGNAL - RIVER - UNIVERSE</text>
+    <path d="M40 104C170 52 278 126 386 86S592 52 710 98 884 126 988 70" fill="none" stroke="#00e5ff" stroke-width="6"/>
+    <circle cx="386" cy="86" r="13" fill="#ffd166"/>
+    <circle cx="710" cy="98" r="13" fill="#00ff88"/>
+    <circle cx="988" cy="70" r="13" fill="#ff4fd8"/>
+  </g>
+</svg>

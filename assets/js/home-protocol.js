@@ -3812,6 +3812,72 @@
         ].filter(Boolean).join('\n');
       };
 
+      const guideBriefCommand = (kind = 'terminal') => {
+        const guides = {
+          terminal: {
+            title: 'TERMINAL GUIDE',
+            read: 'read guide',
+            lines: [
+              'Terminal once kisa not verir; uzun okuma icin read komutunu kullan.',
+              'Baslangic: help, guide, how to play, app guide, score guide',
+              'Rota: open dossier, open oracle, run logic, dart, dashboard',
+              'Kesif: look, map, archive, notes, terminal games'
+            ]
+          },
+          games: {
+            title: 'HOW TO PLAY',
+            read: 'read game guide',
+            lines: [
+              'Dusunme: run logic / run signal',
+              'Refleks: run ash / run ash2 / run serpent / run flow',
+              'Kurgu: universe',
+              'Terminal ici: pipe / outrun',
+              'Ilk secim: hizli bulmaca icin run logic, hareket icin run ash.'
+            ]
+          },
+          apps: {
+            title: 'APP GUIDE',
+            read: 'read app guide',
+            lines: [
+              'Karar aynasi: open oracle',
+              'Rituel icecek: barista / bartender / realists bar',
+              'Dusunce egzersizi: paradox / ekol',
+              'Gorsel deney: bugy studio'
+            ]
+          },
+          shellGames: {
+            title: 'TERMINAL GAMES',
+            read: 'read terminal games',
+            lines: [
+              'pipe: boru parcasi dondur, yerlestir, akisi baslat.',
+              'outrun: ASCII yolu oku, hiz ve serit ritmini koru.',
+              'Yardim: pipe help / outrun help',
+              'Cikis: pipe quit / outrun quit'
+            ]
+          },
+          score: {
+            title: 'SCORE GUIDE',
+            read: 'read score guide',
+            lines: [
+              'dart: 501, Around the Clock ve Cricket skor akisi.',
+              'dashboard: kayitli skorlar, oturum izleri ve kullanici yuzeyi.',
+              'access: hesap gerektiren kayitlar icin giris.',
+              'history: sadece terminal komut gecmisi.'
+            ]
+          }
+        };
+        const item = guides[kind] || guides.terminal;
+        return [
+          `] ${item.title}`,
+          '',
+          ...item.lines.map(line => `  ${line}`),
+          '',
+          `  uzun okuma: ${item.read}`,
+          `  English read: ${item.read}`,
+          ']'
+        ].join('\n');
+      };
+
       const commandDefinitions = [
         {
           command: 'basla',
@@ -3827,32 +3893,68 @@
         },
         {
           command: 'guide',
-          description: 'oyun ve uygulamalar icin iki dilli terminal rehberini acar',
-          aliases: ['how to play', 'howto', 'site guide', 'terminal guide', 'rehberler', 'nasil oynanir', 'nasıl oynanır', 'kullanim rehberi', 'kullanım rehberi'],
+          description: 'terminal icinde kisa iki dilli rehber ozeti verir',
+          aliases: ['site guide', 'terminal guide', 'rehberler', 'kullanim rehberi', 'kullanım rehberi'],
+          action: () => guideBriefCommand('terminal')
+        },
+        {
+          command: 'read guide',
+          description: 'terminal rehberinin uzun makalesini acar',
+          aliases: ['open guide', 'guide article', 'rehberi oku', 'terminal rehberini oku'],
           action: goTo(route('guide', '/pages/makaleler.html#convivium-terminal-rehberi-terminal-guide'))
         },
         {
+          command: 'how to play',
+          description: 'oyunlar icin terminal icinde kisa oynanis ozeti verir',
+          aliases: ['howto', 'nasil oynanir', 'nasıl oynanır'],
+          action: () => guideBriefCommand('games')
+        },
+        {
           command: 'game guide',
-          description: 'Convivium oyunlari icin how-to-play makalesini acar',
+          description: 'oyunlar icin terminal icinde kisa rehber ozeti verir',
           aliases: ['games guide', 'oyun rehberi', 'oyun kilavuzu', 'oyun kılavuzu', 'how to play games', 'how to play ash', 'how to play serpent', 'how to play logic', 'how to play signal', 'ash guide', 'serpent guide', 'logic guide', 'signal guide', 'river guide'],
+          action: () => guideBriefCommand('games')
+        },
+        {
+          command: 'read game guide',
+          description: 'Convivium oyunlari icin how-to-play makalesini acar',
+          aliases: ['read games guide', 'open game guide', 'open games guide', 'oyun rehberini oku'],
           action: goTo(route('gamesGuide', '/pages/makaleler.html#oyunlar-how-to-play-games-guide'))
         },
         {
           command: 'app guide',
-          description: 'Oracle ve ritual araclari icin kullanim rehberini acar',
+          description: 'Oracle ve ritual araclari icin terminal icinde kisa ozet verir',
           aliases: ['apps guide', 'tools guide', 'uygulama rehberi', 'arac rehberi', 'araç rehberi', 'oracle guide', 'barista guide', 'bartender guide', 'ekol guide'],
+          action: () => guideBriefCommand('apps')
+        },
+        {
+          command: 'read app guide',
+          description: 'Oracle ve ritual araclari icin kullanim makalesini acar',
+          aliases: ['read apps guide', 'open app guide', 'open apps guide', 'uygulama rehberini oku'],
           action: goTo(route('appsGuide', '/pages/makaleler.html#uygulamalar-apps-guide'))
         },
         {
           command: 'terminal games',
-          description: 'terminal icindeki Pipe-90i ve Out Run 86 rehberini acar',
+          description: 'terminal icindeki Pipe-90i ve Out Run 86 icin kisa ozet verir',
           aliases: ['shell games', 'pipe guide', 'outrun guide', 'pipe how to play', 'outrun how to play', 'terminal oyunlari', 'terminal oyunları'],
+          action: () => guideBriefCommand('shellGames')
+        },
+        {
+          command: 'read terminal games',
+          description: 'terminal oyunlari makalesini acar',
+          aliases: ['open terminal games', 'read shell games', 'open shell games', 'terminal oyunlarini oku', 'terminal oyunlarını oku'],
           action: goTo(route('terminalGamesGuide', '/pages/makaleler.html#terminal-oyunlari-pipe-outrun-guide'))
         },
         {
           command: 'score guide',
-          description: 'skor, oturum, dashboard ve dart rehberini acar',
+          description: 'skor, oturum, dashboard ve dart icin kisa ozet verir',
           aliases: ['dashboard guide', 'dart guide', 'skor rehberi', 'oturum rehberi', 'scoreboard guide'],
+          action: () => guideBriefCommand('score')
+        },
+        {
+          command: 'read score guide',
+          description: 'skor, oturum, dashboard ve dart makalesini acar',
+          aliases: ['open score guide', 'read dashboard guide', 'open dashboard guide', 'skor rehberini oku'],
           action: goTo(route('scoreGuide', '/pages/makaleler.html#skor-oturum-dashboard-guide'))
         },
         {
@@ -4549,13 +4651,14 @@
 
       const commandHelpText = () => [
         '] basla -> adim adim rehber',
-        '] guide / how to play -> oyun ve uygulama makaleleri',
+        '] guide / how to play -> terminal icinde kisa rehber',
+        '] read guide / read game guide -> makaleler alaninda uzun okuma',
         '',
         'world (kesif):',
         'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
         '',
         'routes:',
-        'home, map, archive, notes, open dossier, guide, game guide, app guide, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
+        'home, map, archive, notes, open dossier, guide, read guide, game guide, read game guide, app guide, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
         '',
         'lab:',
         'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, bugy studio, pipe, outrun',
