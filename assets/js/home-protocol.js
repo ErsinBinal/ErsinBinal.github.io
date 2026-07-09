@@ -3826,6 +3826,36 @@
           action: () => commandHelpText()
         },
         {
+          command: 'guide',
+          description: 'oyun ve uygulamalar icin iki dilli terminal rehberini acar',
+          aliases: ['how to play', 'howto', 'site guide', 'terminal guide', 'rehberler', 'nasil oynanir', 'nasıl oynanır', 'kullanim rehberi', 'kullanım rehberi'],
+          action: goTo(route('guide', '/pages/makaleler.html#convivium-terminal-rehberi-terminal-guide'))
+        },
+        {
+          command: 'game guide',
+          description: 'Convivium oyunlari icin how-to-play makalesini acar',
+          aliases: ['games guide', 'oyun rehberi', 'oyun kilavuzu', 'oyun kılavuzu', 'how to play games', 'how to play ash', 'how to play serpent', 'how to play logic', 'how to play signal', 'ash guide', 'serpent guide', 'logic guide', 'signal guide', 'river guide'],
+          action: goTo(route('gamesGuide', '/pages/makaleler.html#oyunlar-how-to-play-games-guide'))
+        },
+        {
+          command: 'app guide',
+          description: 'Oracle ve ritual araclari icin kullanim rehberini acar',
+          aliases: ['apps guide', 'tools guide', 'uygulama rehberi', 'arac rehberi', 'araç rehberi', 'oracle guide', 'barista guide', 'bartender guide', 'ekol guide'],
+          action: goTo(route('appsGuide', '/pages/makaleler.html#uygulamalar-apps-guide'))
+        },
+        {
+          command: 'terminal games',
+          description: 'terminal icindeki Pipe-90i ve Out Run 86 rehberini acar',
+          aliases: ['shell games', 'pipe guide', 'outrun guide', 'pipe how to play', 'outrun how to play', 'terminal oyunlari', 'terminal oyunları'],
+          action: goTo(route('terminalGamesGuide', '/pages/makaleler.html#terminal-oyunlari-pipe-outrun-guide'))
+        },
+        {
+          command: 'score guide',
+          description: 'skor, oturum, dashboard ve dart rehberini acar',
+          aliases: ['dashboard guide', 'dart guide', 'skor rehberi', 'oturum rehberi', 'scoreboard guide'],
+          action: goTo(route('scoreGuide', '/pages/makaleler.html#skor-oturum-dashboard-guide'))
+        },
+        {
           command: 'keys',
           description: 'klavye kisayollarini gosterir',
           aliases: ['keyboard', 'hotkeys', 'kisayollar', 'kısayollar'],
@@ -4215,7 +4245,7 @@
         {
           command: 'tour',
           description: 'sayfa rotasini otomatik gezdirir',
-          aliases: ['guide', 'walkthrough'],
+          aliases: ['walkthrough', 'site tour', 'rota turu'],
           action: tourCommand
         },
         {
@@ -4357,6 +4387,12 @@
           action: goTo(route('ash', '/games/ash-runner.html'))
         },
         {
+          command: 'run ash2',
+          description: 'Kul Hatti II: Yorunge oyununu acar',
+          aliases: ['ash2', 'ash runner 2', 'kul hatti 2', 'kül hattı 2', 'yorunge', 'yörünge'],
+          action: goTo(route('ash2', '/games/ash-runner-2.html'))
+        },
+        {
           command: 'run flow',
           description: 'Neon River deneyimini acar',
           aliases: ['flow', 'neon river', 'river'],
@@ -4409,6 +4445,12 @@
           description: 'Ekol Aynasi - dusunce ekolu testi',
           aliases: ['ayna', 'ekol aynasi', 'ekol aynası', 'mirror', 'schools'],
           action: goTo(route('ekolAynasi', '/tools/ekol-aynasi.html'))
+        },
+        {
+          command: 'bugy studio',
+          description: 'Bugy Studio deney aracini acar',
+          aliases: ['bugy lab', 'studio bugy', 'pet studio'],
+          action: goTo(route('bugyStudio', '/tools/bugy-studio.html'))
         },
         {
           command: 'about',
@@ -4507,15 +4549,16 @@
 
       const commandHelpText = () => [
         '] basla -> adim adim rehber',
+        '] guide / how to play -> oyun ve uygulama makaleleri',
         '',
         'world (kesif):',
         'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
         '',
         'routes:',
-        'home, map, archive, notes, open dossier, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
+        'home, map, archive, notes, open dossier, guide, game guide, app guide, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
         '',
         'lab:',
-        'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, pipe, outrun',
+        'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, bugy studio, pipe, outrun',
         '',
         'system:',
         'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver',
@@ -4562,8 +4605,7 @@
         go: 'cd', goto: 'cd', enter: 'cd', move: 'cd',
         inspect: 'examine',
         grab: 'take', get: 'take', pickup: 'take',
-        items: 'inventory',
-        guide: 'basla'
+        items: 'inventory'
       };
       const applySynonyms = (cmd) => {
         const sp = cmd.indexOf(' ');

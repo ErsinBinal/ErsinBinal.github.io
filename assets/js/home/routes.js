@@ -2,6 +2,11 @@
   window.ConviviumRoutes = Object.freeze({
     home: '/',
     dossier: '/pages/makaleler.html',
+    guide: '/pages/makaleler.html#convivium-terminal-rehberi-terminal-guide',
+    gamesGuide: '/pages/makaleler.html#oyunlar-how-to-play-games-guide',
+    appsGuide: '/pages/makaleler.html#uygulamalar-apps-guide',
+    terminalGamesGuide: '/pages/makaleler.html#terminal-oyunlari-pipe-outrun-guide',
+    scoreGuide: '/pages/makaleler.html#skor-oturum-dashboard-guide',
     changelog: '/pages/changelog.html',
     profile: '/pages/ozgecmisim.html',
     auth: '/account/auth.html',

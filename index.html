@@ -65,7 +65,7 @@
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=31">
+  <link rel="stylesheet" href="/assets/css/components.css?v=37">
   <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
   <link rel="stylesheet" href="/assets/css/bugy-v4.css?v=6">
@@ -128,9 +128,12 @@
     <div class="command-output" id="command-output" aria-live="polite">type help for shortcuts</div>
     <div class="command-help" aria-label="Komut örnekleri">
       <span>help</span>
+      <span>guide</span>
+      <span>how to play</span>
       <span>open dossier</span>
       <span>bu sayfayı kim yaptı</span>
       <span>keys</span>
+      <span>game guide</span>
       <span>run logic</span>
       <span>run signal</span>
       <span>unlock hidden</span>
@@ -198,6 +201,10 @@
           <a class="terminal-command" href="/pages/makaleler.html" data-action="OPEN">
             <span>&gt; dossier</span>
             İş modeli, fiyat, platform, yapay zekâ.
+          </a>
+          <a class="terminal-command" href="/pages/makaleler.html#convivium-terminal-rehberi-terminal-guide" data-action="GUIDE">
+            <span>&gt; guide</span>
+            Oyunlar, uygulamalar ve terminal komutları.
           </a>
           <a class="terminal-command" href="/account/auth.html" data-action="LOGIN">
             <span>&gt; access</span>
@@ -470,14 +477,14 @@
   <script src="/assets/js/bugy-v4-cinema.js?v=3" defer></script>
   <script src="/assets/js/bugy-pet.js?v=12" defer></script>
   <script src="/assets/js/deb-companion.js?v=4" defer></script>
-  <script src="/assets/js/home/routes.js?v=4" defer></script>
+  <script src="/assets/js/home/routes.js?v=5" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/assets/js/supabase-config.js"></script>
   <script src="/assets/js/supabase-client.js?v=33"></script>
 
   <!-- Journey Interaction Layer -->
   <script src="/assets/js/sfx.js?v=19" defer></script>
-  <script src="/assets/js/home-protocol.js?v=56" defer></script>
+  <script src="/assets/js/home-protocol.js?v=57" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=3" defer></script>

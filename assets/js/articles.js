@@ -3,6 +3,193 @@
 
   const fallbackArticles = [
     {
+      id: 'guide-terminal',
+      slug: 'convivium-terminal-rehberi-terminal-guide',
+      title: 'Convivium Terminal Rehberi / Terminal Guide',
+      date: '2026-07-09',
+      summary: 'Terminalden ulasilan oyunlar, uygulamalar ve rehber komutlari icin iki dilli baslangic haritasi.',
+      content: `
+        <figure class="article-image">
+          <img class="responsive" src="/assets/icons/og-image.png" alt="Convivium terminal rehberi" width="1200" height="630" loading="lazy" decoding="async">
+          <figcaption>Terminal, Convivium icinde menuden daha hizli bir rota katmani gibi calisir.</figcaption>
+        </figure>
+        <h2>Turkce: Terminali nasil okumali?</h2>
+        <p>Convivium ana sayfasindaki komut satiri yalnizca arama kutusu degildir. Oyunlari acar, uygulamalara gecis verir, gizli terminal oyuncaklarini baslatir ve okuma odasindaki rehberleri dogrudan cagirir. Kisa komutlar, sayfanin genel haritasini ezberlemeden ilerlemek icindir.</p>
+        <p>Baslamak icin <code>help</code> tum komutlari listeler, <code>guide</code> bu rehberi acar, <code>how to play</code> oyun odasina giden kullanim rehberini secer. Daha dogrudan gitmek istersen <code>run logic</code>, <code>open oracle</code>, <code>dart</code>, <code>barista</code> gibi rota komutlari sayfayi degistirir.</p>
+        <div class="guide-grid">
+          <section class="guide-card">
+            <h3>Okuma ve kesif</h3>
+            <p><code>open dossier</code>, <code>notes</code>, <code>archive</code>, <code>map</code></p>
+          </section>
+          <section class="guide-card">
+            <h3>Oyunlar</h3>
+            <p><code>run logic</code>, <code>run signal</code>, <code>run ash</code>, <code>run serpent</code>, <code>pipe</code>, <code>outrun</code></p>
+          </section>
+          <section class="guide-card">
+            <h3>Uygulamalar</h3>
+            <p><code>open oracle</code>, <code>bartender</code>, <code>barista</code>, <code>realists bar</code>, <code>ekol</code>, <code>paradox</code></p>
+          </section>
+        </div>
+        <h2>English: How to use the terminal</h2>
+        <p>The Convivium command line is a navigation layer. It opens games, tools, guide articles, hidden mini-games and public reading rooms without exposing any local developer shell. Everything stays inside the public site surface.</p>
+        <p>Use <code>help</code> for the full command list, <code>guide</code> for this article, and <code>how to play</code> for the game guide. Route commands such as <code>run logic</code>, <code>open oracle</code>, <code>dart</code> and <code>barista</code> jump directly into the matching experience.</p>
+        <table class="command-table">
+          <thead><tr><th>Command</th><th>Opens</th><th>Use when</th></tr></thead>
+          <tbody>
+            <tr><td><code>game guide</code></td><td>Games guide</td><td>You want controls, goals and scoring tips.</td></tr>
+            <tr><td><code>app guide</code></td><td>Tools guide</td><td>You want Oracle, Barista, Bartender or Ekol Aynasi explained.</td></tr>
+            <tr><td><code>terminal games</code></td><td>Hidden terminal games</td><td>You want Pipe-90i or Out Run 86 inside the shell.</td></tr>
+            <tr><td><code>score guide</code></td><td>Score and session guide</td><td>You want to understand accounts, dashboard and scoreboards.</td></tr>
+          </tbody>
+        </table>
+        <blockquote>Short version: type <code>guide</code> to learn the map, then <code>how to play</code> to choose what to run.</blockquote>
+      `
+    },
+    {
+      id: 'guide-games',
+      slug: 'oyunlar-how-to-play-games-guide',
+      title: 'Oyunlar: How to Play / Games Guide',
+      date: '2026-07-09',
+      summary: 'Convivium oyunlarinin amaci, kontrolleri, terminal komutlari ve ilk deneme taktigi.',
+      content: `
+        <h2>Turkce: Oyun rotalari</h2>
+        <p>Convivium oyunlari kisa oturumlar icin tasarlandi: once mekanigi anla, sonra ritmi hizlandir, sonra skorunu kaydet. Terminalden <code>how to play</code>, <code>game guide</code> veya dogrudan oyun adini yazarak baslayabilirsin.</p>
+        <table class="command-table">
+          <thead><tr><th>Oyun</th><th>Komut</th><th>Amaç</th><th>Kontrol</th></tr></thead>
+          <tbody>
+            <tr><td>Cyberpunk Logic</td><td><code>run logic</code></td><td>Kisa mantik sorularinda dogru secimi bul.</td><td>Seceneklere tikla; hiz ve dogruluk puani belirler.</td></tr>
+            <tr><td>Uc Gunes Sinyali</td><td><code>run signal</code></td><td>Terminal temali sureli operasyonu yonet.</td><td>Ekrandaki komut ve secenekleri takip et.</td></tr>
+            <tr><td>Kul Hatti</td><td><code>run ash</code></td><td>Yandan akan aksiyonda hayatta kal, hurda topla, dusmanlari temizle.</td><td>WASD/Ok hareket, J saldiri, K/E kaldir-firlat, L sarj.</td></tr>
+            <tr><td>Kul Hatti II</td><td><code>ash2</code> veya <code>run ash</code> sonrasinda rota</td><td>Yaya aksiyon ve gemi duellosunu ayni kosuda yonet.</td><td>WASD/Ok hareket, J ates/yumruk, K bomba/etkilesim, Bosluk dash.</td></tr>
+            <tr><td>Neon River</td><td><code>run flow</code></td><td>Neon akintida yakit, ritim ve kacis hattini dengede tut.</td><td>Klavye veya dokunmatik kontrol; yakit ve engelleri izle.</td></tr>
+            <tr><td>Neon Serpent</td><td><code>run serpent</code></td><td>Yilan ritmini buyut, carpismadan skor al.</td><td>Ok/WASD yon degistirme; acele donuslerden kacin.</td></tr>
+            <tr><td>Universe-2</td><td><code>universe</code></td><td>Kurgu/deneyim hattinda sahne sahne ilerle.</td><td>Sayfa icindeki secimleri ve gecisleri takip et.</td></tr>
+          </tbody>
+        </table>
+        <h3>Ilk deneme plani</h3>
+        <ol>
+          <li><code>game guide</code> ile hangi oyunu sececegine karar ver.</li>
+          <li>Refleks oyunu istiyorsan <code>run ash</code> veya <code>run serpent</code> yaz.</li>
+          <li>Dusunme oyunu istiyorsan <code>run logic</code> veya <code>run signal</code> yaz.</li>
+          <li>Skor kaydi gerekiyorsa oyun sonunda dashboard veya skor paneli yonlendirmesini kullan.</li>
+        </ol>
+        <h2>English: Game routes</h2>
+        <p>Convivium games are built for short, readable sessions. Learn the core rule first, then chase a cleaner run. From the terminal, use <code>how to play</code>, <code>game guide</code>, or a direct route command.</p>
+        <ul>
+          <li><strong>Cyberpunk Logic:</strong> a compact logic quiz. Pick the best answer, protect your score, finish clean.</li>
+          <li><strong>Three Body Signal:</strong> a terminal-style timed operation. Read the prompts before acting.</li>
+          <li><strong>Ash Runner:</strong> retro brawler movement, throws and charged attacks. Keep space before chasing score.</li>
+          <li><strong>Neon River:</strong> arcade survival on a neon current. Fuel and positioning matter more than panic movement.</li>
+          <li><strong>Neon Serpent:</strong> snake-like rhythm play. Plan turns one beat early.</li>
+          <li><strong>Universe-2:</strong> an atmospheric fiction route; move through scenes rather than chasing a timer.</li>
+        </ul>
+        <blockquote>Best first command: <code>run logic</code> if you want a quick puzzle, <code>run ash</code> if you want movement, <code>run serpent</code> if you want pure arcade focus.</blockquote>
+      `
+    },
+    {
+      id: 'guide-apps',
+      slug: 'uygulamalar-apps-guide',
+      title: 'Uygulamalar: Apps Guide / Kullanım Rehberi',
+      date: '2026-07-09',
+      summary: 'Oracle, Barista, Bartender, Realists Bar, Paradox Terminal ve Ekol Aynasi icin iki dilli kullanim notlari.',
+      content: `
+        <h2>Turkce: Uygulamalar ne ise yarar?</h2>
+        <p>Bu bolumdeki uygulamalar klasik fayda araci ile rituel arayuz arasinda durur. Kimi karar dilini sadeleştirir, kimi icecek secimini ruh haline baglar, kimi dusunce tarzini aynalar. Terminalden isimlerini yazarak acabilirsin.</p>
+        <table class="command-table">
+          <thead><tr><th>Uygulama</th><th>Komut</th><th>Kullanim</th></tr></thead>
+          <tbody>
+            <tr><td>The Oracle</td><td><code>open oracle</code></td><td>Konu sec, kisa sorulara cevap ver, cikan yorumu karar notu gibi oku.</td></tr>
+            <tr><td>Cyber Barista</td><td><code>barista</code></td><td>Ruh hali ve ihtiyaca gore kahve onerisi al.</td></tr>
+            <tr><td>Bartender</td><td><code>bartender</code></td><td>Kokteyl veya rituel icecek fikri sec.</td></tr>
+            <tr><td>The Realists Bar</td><td><code>realists bar</code></td><td>Daha pragmatik, filtrelenebilir icecek onerileri gor.</td></tr>
+            <tr><td>Paradox Terminal</td><td><code>paradox</code></td><td>Kisa paradokslar arasinda gezin, dusunce egzersizi yap.</td></tr>
+            <tr><td>Ekol Aynasi</td><td><code>ekol</code></td><td>Senaryolara verdigin cevaplardan dusunce ekolu yakinligini oku.</td></tr>
+            <tr><td>Bugy Studio</td><td><code>bugy studio</code></td><td>Bugy katmani ve gorsel oyuncaklarla deney yap.</td></tr>
+          </tbody>
+        </table>
+        <h3>Daha iyi sonuc icin</h3>
+        <p>Oracle ve Ekol Aynasi gibi araclarda uzun cevap aramak yerine net bir karar baglami dusun. Barista ve Bartender tarafinda ise secimi bir tariften cok bir ruh hali protokolu gibi kullan.</p>
+        <h2>English: What the apps are for</h2>
+        <p>The apps are small ritual tools. Some help you frame a decision, some recommend a drink, and some turn reflection into a structured interaction. Use direct terminal commands when you already know where you want to go.</p>
+        <ul>
+          <li><strong>Oracle:</strong> choose a theme, answer the prompts, read the output as a decision mirror.</li>
+          <li><strong>Barista and Bartender:</strong> use them when you want a mood-based coffee or drink ritual.</li>
+          <li><strong>The Realists Bar:</strong> use filters when you want a sharper, more practical drink shortlist.</li>
+          <li><strong>Paradox Terminal:</strong> read one paradox at a time; it works best as a short thinking break.</li>
+          <li><strong>Ekol Aynasi:</strong> answer scenario questions and compare the ranked schools as a map, not as a fixed label.</li>
+        </ul>
+        <blockquote>Command shortcut: <code>app guide</code> returns here; <code>open oracle</code> is the best first app route.</blockquote>
+      `
+    },
+    {
+      id: 'guide-terminal-games',
+      slug: 'terminal-oyunlari-pipe-outrun-guide',
+      title: 'Terminal Oyunlari: Pipe-90i ve Out Run 86 / Shell Games',
+      date: '2026-07-09',
+      summary: 'Ana terminalin icinde calisan gizli mini oyunlar icin komut, amac ve hizli taktik rehberi.',
+      content: `
+        <h2>Turkce: Terminal icindeki oyunlar</h2>
+        <p>Bazi oyunlar yeni sayfa acmaz; terminal cikti alanini oyun ekranina cevirir. Bu oyunlar public kabuk icinde kalir, yerel dosya sistemine veya gelistirici araclarina erisim vermez.</p>
+        <div class="guide-grid">
+          <section class="guide-card">
+            <h3>Pipe-90i</h3>
+            <p><code>pipe</code> veya <code>pipe new</code> ile baslar. Amaç, sogutma hattini reaktor cekirdegine ulasacak sekilde boru parcasi yerlestirmektir.</p>
+            <p><code>pipe rotate</code>, <code>pipe place</code>, <code>pipe flow</code>, <code>pipe quit</code> komutlarini kullan.</p>
+          </section>
+          <section class="guide-card">
+            <h3>Out Run 86</h3>
+            <p><code>outrun</code> ile baslar. Terminalde sahte-3B yol ritmini takip eder, seridi korur ve hizini kontrol edersin.</p>
+            <p><code>outrun help</code> oyun aktifken kontrol ozetini verir; <code>outrun quit</code> cikar.</p>
+          </section>
+        </div>
+        <h3>Oynama taktigi</h3>
+        <p>Pipe-90i'de once cikis ve hedef yonunu oku; parcayi rastgele yerlestirme. Out Run 86'da metin ekranini skor tablosu gibi degil, ritim cizgisi gibi oku: hiz iyi ama gec tepki pahali.</p>
+        <h2>English: Games inside the shell</h2>
+        <p>Some games do not open a new page. They take over the command output area and run inside the public terminal UI. They are playful shell simulations, not access to a real developer environment.</p>
+        <ul>
+          <li><strong>Pipe-90i:</strong> start with <code>pipe</code>. Rotate and place pipe pieces, then trigger flow when the route looks complete.</li>
+          <li><strong>Out Run 86:</strong> start with <code>outrun</code>. Read the ASCII road, manage speed and react early.</li>
+        </ul>
+        <blockquote>Best discovery commands: <code>terminal games</code>, <code>pipe help</code>, <code>outrun help</code>.</blockquote>
+      `
+    },
+    {
+      id: 'guide-score',
+      slug: 'skor-oturum-dashboard-guide',
+      title: 'Skor, Oturum ve Dashboard / Score and Session Guide',
+      date: '2026-07-09',
+      summary: 'Dart Skorbord, oyun skor kaydi, hesap girisi ve dashboard akisinin iki dilli ozeti.',
+      content: `
+        <h2>Turkce: Skorlar nerede yasar?</h2>
+        <p>Convivium'da skor ve oturum katmani iki amaca hizmet eder: oyunlardan kalan ilerlemeyi gorunur yapmak ve Dart Skorbord gibi araclarda mac akisini duzenlemek. Giris yapmadan da gezebilirsin; ancak bazi kayit ve cihazlar arasi tasima davranislari hesap gerektirebilir.</p>
+        <table class="command-table">
+          <thead><tr><th>Bolum</th><th>Komut</th><th>Not</th></tr></thead>
+          <tbody>
+            <tr><td>Dart Skorbord</td><td><code>dart</code></td><td>501, ATC ve Cricket modlari; manuel giris, butonlar, CPU ve oda akisi.</td></tr>
+            <tr><td>Dashboard</td><td><code>dashboard</code></td><td>Kayitli skorlar, oturum izleri ve kullanici yuzeyi.</td></tr>
+            <tr><td>Giris</td><td><code>access</code></td><td>Hesap gerektiren kayitlar icin auth ekranini acar.</td></tr>
+            <tr><td>Komut gecmisi</td><td><code>history</code></td><td>Terminalde son komutlarini listeler; site hesabi degildir.</td></tr>
+          </tbody>
+        </table>
+        <h3>Dart Skorbord hizli kullanim</h3>
+        <ol>
+          <li>Modu sec: 501, Around the Clock veya Cricket.</li>
+          <li>Oyuncu/karsilasma ayarlarini yap; istersen CPU sec.</li>
+          <li>Ok skorunu sayisal alandan veya segment butonlarindan gir.</li>
+          <li>Yanlis giriste <strong>Geri Al</strong> ile son hamleyi duzelt.</li>
+        </ol>
+        <h2>English: Scores and sessions</h2>
+        <p>The score layer keeps runs, matches and session traces visible. You can browse without signing in, while some persistence and cross-device behavior may require an account.</p>
+        <ul>
+          <li><code>dart</code> opens the scoreboard with 501, Around the Clock and Cricket modes.</li>
+          <li><code>dashboard</code> opens the place where saved activity and scores can be reviewed.</li>
+          <li><code>access</code> opens authentication when a feature needs an account.</li>
+          <li><code>history</code> is only terminal command history; it is separate from your account data.</li>
+        </ul>
+        <blockquote>Use <code>score guide</code> from the terminal when you need this map again.</blockquote>
+      `
+    },
+    {
       id: 'stat-1',
       slug: 'abonelik-modelinin-yukselisi',
       title: 'Abonelik Modelinin Yukselisi',
@@ -96,6 +283,9 @@
   };
 
   const topicRules = [
+    { key: 'rehber', label: 'Rehber', pattern: /rehber|guide|how to play|kullanim|kilavuz|terminal|score|dashboard|oturum/i },
+    { key: 'oyun', label: 'Oyun', pattern: /oyun|game|play|arcade|runner|serpent|river|pipe|outrun|logic|signal/i },
+    { key: 'uygulama', label: 'Uygulama', pattern: /uygulama|app|oracle|barista|bartender|paradox|ekol|tool/i },
     { key: 'gelir', label: 'Gelir', pattern: /gelir|fiyat|abonelik|pricing|saas|model/i },
     { key: 'yapay-zeka', label: 'Yapay Zeka', pattern: /yapay zeka|ai|yz|otomasyon|veri analizi/i },
     { key: 'platform', label: 'Platform', pattern: /platform|pazaryeri|ekosistem|e-ticaret/i },
@@ -105,7 +295,7 @@
   const allowedTags = new Set([
     'A', 'ABBR', 'B', 'BLOCKQUOTE', 'BR', 'CODE', 'DIV', 'EM', 'FIGCAPTION',
     'FIGURE', 'H2', 'H3', 'H4', 'HR', 'I', 'IFRAME', 'IMG', 'LI', 'OL',
-    'P', 'PICTURE', 'PRE', 'SOURCE', 'SPAN', 'STRONG', 'TABLE', 'TBODY',
+    'P', 'PICTURE', 'PRE', 'SECTION', 'SOURCE', 'SPAN', 'STRONG', 'TABLE', 'TBODY',
     'TD', 'TH', 'THEAD', 'TR', 'UL', 'VIDEO'
   ]);
 
