@@ -20,6 +20,7 @@
     flow: '/games/neon-river.html',
     serpent: '/games/neon-serpent.html',
     universe: '/games/universe-2.html',
+    crude: '/games/crude-buster.html',
     dart: '/tools/dart-skorbord.html',
     bartender: '/tools/bartender.html',
     barista: '/tools/barista.html',

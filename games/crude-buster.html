@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-6841BBDC
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-6841BBDC">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Crude Buster | Convivium</title>
+  <meta name="description" content="Harabe Big Apple'da iki kaslı kahraman E.Binal ve De.Binal: her şeyi kaldır, fırlat, co-op temizle. İki giriş yapmış kullanıcıyla online co-op beat 'em up.">
+  <meta name="author" content="Ersin Binal">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://ersinbinal.github.io/games/crude-buster.html">
+
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';">
+
+  <!-- OpenGraph -->
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Crude Buster | Convivium">
+  <meta property="og:description" content="İki kaslı kahraman, harabe Big Apple'ı co-op temizler. Online 2 kişilik beat 'em up.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/games/crude-buster.html">
+  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+  <meta property="og:locale" content="tr_TR">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Crude Buster | Convivium">
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#ffce4a">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/supabase-client.js?v=33"></script>
+  <script src="/assets/js/auth-gate.js?v=22" data-item-key="crude-buster" data-item-type="game" data-item-title="Crude Buster"></script>
+  <link rel="stylesheet" href="/assets/css/crude-buster.css?v=1">
+</head>
+<body>
+  <div id="cb-shell">
+    <canvas id="cb-canvas" width="480" height="270" aria-label="Crude Buster oyun alanı" role="img"></canvas>
+
+    <!-- HUD -->
+    <div id="cb-hud">
+      <div class="cb-player-hud">
+        <div class="cb-name red">E.BINAL</div>
+        <div class="cb-hpbar"><div class="cb-hpfill red" id="cb-hp1"></div></div>
+        <div class="cb-lives" id="cb-lives1">♥×3</div>
+      </div>
+      <div class="cb-center-hud">
+        <div class="cb-score" id="cb-score">SKOR 0</div>
+        <div class="cb-stagelabel" id="cb-stagelabel"></div>
+      </div>
+      <div class="cb-player-hud right" id="cb-hud2" style="visibility:hidden">
+        <div class="cb-name blue">DE.BINAL</div>
+        <div class="cb-hpbar"><div class="cb-hpfill blue" id="cb-hp2"></div></div>
+        <div class="cb-lives" id="cb-lives2">♥×3</div>
+      </div>
+    </div>
+
+    <div id="cb-boss-hud" class="hidden">
+      <div class="cb-name" id="cb-boss-name">BOSS</div>
+      <div class="cb-hpbar"><div class="cb-hpfill" id="cb-boss-hp"></div></div>
+    </div>
+
+    <div id="cb-continue" style="position:absolute;left:0;right:0;bottom:16%;text-align:center;color:#ffce4a;font-size:0.8rem;text-shadow:1px 1px 0 #000;pointer-events:none;z-index:5"></div>
+
+    <div id="cb-topbtns">
+      <button class="cb-btn small" id="cb-pause-btn" type="button" aria-label="Duraklat">II</button>
+      <button class="cb-btn small" id="cb-mute-btn" type="button" aria-label="Ses">🔊</button>
+    </div>
+
+    <!-- Mobil dokunmatik -->
+    <div id="cb-touch" class="hidden">
+      <div class="cb-pad" id="cb-pad"><div class="cb-nub" id="cb-nub"></div></div>
+      <div class="cb-abtns">
+        <button class="cb-abtn" data-btn="attack" type="button">YUM</button>
+        <button class="cb-abtn" data-btn="jump" type="button">ZIP</button>
+        <button class="cb-abtn" data-btn="action" type="button">KAP/AT</button>
+        <button class="cb-abtn" data-btn="special" type="button">ÖZEL</button>
+        <button class="cb-abtn" data-btn="team" type="button">TAKIM</button>
+      </div>
+    </div>
+
+    <!-- LOBİ -->
+    <div id="cb-ov-lobby" class="cb-overlay">
+      <div class="cb-card">
+        <h1>Crude Buster<span class="sub">BIG APPLE 2010</span></h1>
+        <p>Nükleer sonrası harabe New York. <span class="cb-tag">E.Binal</span> ve
+        <span class="cb-tag blue">De.Binal</span>, <strong>Big Valley</strong> çetesini temizler.
+        Düşmanları, arabaları, direkleri — <strong>her şeyi kaldır ve fırlat</strong>. Hatta partnerini.</p>
+
+        <div class="cb-modes">
+          <button class="cb-mode" id="cb-mode-solo" type="button">
+            <span class="ico">👤</span><span><b>SOLO</b><span>Tek başına, E.Binal</span></span>
+          </button>
+          <button class="cb-mode" id="cb-mode-local" type="button">
+            <span class="ico">🎮</span><span><b>YEREL CO-OP</b><span>Aynı klavyede 2 oyuncu</span></span>
+          </button>
+          <button class="cb-mode" id="cb-mode-online" type="button">
+            <span class="ico">🌐</span><span><b>ONLINE CO-OP</b><span>İki giriş yapmış kullanıcı</span></span>
+          </button>
+        </div>
+
+        <div id="cb-online-box" class="cb-online-box hidden">
+          <div class="cb-btnrow">
+            <button class="cb-btn small" id="cb-host-btn" type="button">ODA KUR</button>
+            <span class="cb-code" id="cb-code-show">-----</span>
+            <button class="cb-btn small" id="cb-host-start" type="button" disabled>BAŞLAT</button>
+          </div>
+          <p class="cb-hint">Kodu partnerine ilet; o "KATIL"a girsin. Partner bağlanınca BAŞLAT açılır.</p>
+          <div class="cb-btnrow">
+            <input class="cb-code-input" id="cb-code-input" maxlength="5" placeholder="KOD" autocomplete="off" spellcheck="false">
+            <button class="cb-btn small" id="cb-join-btn" type="button">KATIL</button>
+          </div>
+          <p class="cb-status" id="cb-net-status"><span class="cb-dot" id="cb-net-dot"></span></p>
+        </div>
+
+        <p class="cb-hint">
+          <b>E.Binal (P1):</b> <span class="cb-keys">WASD</span> hareket ·
+          <span class="cb-keys">J</span> yumruk · <span class="cb-keys">K</span> zıpla ·
+          <span class="cb-keys">L</span> kap/at · <span class="cb-keys">U</span> özel ·
+          <span class="cb-keys">I</span> takım atışı<br>
+          <b>De.Binal (yerel P2):</b> <span class="cb-keys">Oklar</span> ·
+          <span class="cb-keys">Num1</span> yumruk · <span class="cb-keys">Num2</span> zıpla ·
+          <span class="cb-keys">Num3</span> kap/at · <span class="cb-keys">Num0</span> özel ·
+          <span class="cb-keys">Num.</span> takım<br>
+          Duraklat: <span class="cb-keys">P</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- DURAKLAT -->
+    <div id="cb-ov-pause" class="cb-overlay hidden">
+      <div class="cb-card">
+        <h2>Duraklatıldı</h2>
+        <p>Sokaklar bekliyor.</p>
+        <div class="cb-btnrow">
+          <button class="cb-btn" id="cb-resume" type="button">Devam</button>
+          <button class="cb-btn ghost" id="cb-pause-lobby" type="button">Lobi</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BÖLÜM TEMİZLENDİ -->
+    <div id="cb-ov-stage" class="cb-overlay hidden">
+      <div class="cb-card">
+        <h2>Bölüm Temizlendi</h2>
+        <p>Big Valley geriliyor. Sıradaki bölge seni bekliyor.</p>
+        <div class="cb-btnrow"><button class="cb-btn" id="cb-stage-next" type="button">Devam Et</button></div>
+      </div>
+    </div>
+
+    <!-- GAME OVER -->
+    <div id="cb-ov-over" class="cb-overlay hidden">
+      <div class="cb-card">
+        <h2 id="cb-over-title">OYUN BİTTİ</h2>
+        <p id="cb-over-copy"></p>
+        <div class="cb-lb" id="cb-lb"></div>
+        <div class="cb-btnrow">
+          <button class="cb-btn" id="cb-again" type="button">Tekrar</button>
+          <button class="cb-btn ghost" id="cb-over-lobby" type="button">Lobi</button>
+        </div>
+        <p class="cb-hint">Skor Convivium tablosuna kaydedildi (giriş yapan her oyuncu kendi kaydını tutar).</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/js/crude-buster-net.js?v=1"></script>
+  <script src="/assets/js/crude-buster.js?v=1"></script>
+  <script>
+    (function () {
+      'use strict';
+      function launch() {
+        var name = 'Oyuncu';
+        function go() {
+          window.CrudeBuster.boot({
+            selfName: name,
+            saveScore: function (p) {
+              return (window.ConviviumActivity && window.ConviviumActivity.recordGameScore)
+                ? window.ConviviumActivity.recordGameScore(p) : null;
+            },
+            fetchLeaderboard: function (n) {
+              return (window.ConviviumBackend && window.ConviviumBackend.fetchGameLeaderboard)
+                ? window.ConviviumBackend.fetchGameLeaderboard('crude-buster', n)
+                : Promise.resolve([]);
+            }
+          });
+        }
+        // Oyuncu adını (best-effort) al, sonra motoru başlat.
+        if (window.ConviviumBackend && window.ConviviumBackend.getUser) {
+          window.ConviviumBackend.getUser().then(function (u) {
+            if (u) name = (u.user_metadata && u.user_metadata.display_name) || (u.email ? u.email.split('@')[0] : 'Oyuncu');
+          }).catch(function () {}).then(go);
+        } else { go(); }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', launch);
+      else launch();
+    })();
+  </script>
+<i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌​‌‌​​​‌‌‌​​​​​‌‌​‌​​​​‌‌​​​‌​‌​​​​‌​​‌​​​​‌​​‌​​​‌​​​‌​​​​‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+<script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>

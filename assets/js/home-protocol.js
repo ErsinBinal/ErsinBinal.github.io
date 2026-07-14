@@ -4507,6 +4507,12 @@
           action: goTo(route('serpent', '/games/neon-serpent.html'))
         },
         {
+          command: 'run crude',
+          description: 'Crude Buster (online co-op beat em up) oyununu acar',
+          aliases: ['crude', 'crude buster', 'buster', 'coop', 'co-op', 'beat em up'],
+          action: goTo(route('crude', '/games/crude-buster.html'))
+        },
+        {
           command: 'dart',
           description: 'dart skorboard ekranini acar',
           aliases: ['skorbord', 'scoreboard', 'dart skorbord', 'dart skor', 'scores'],
