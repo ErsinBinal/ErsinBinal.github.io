@@ -91,7 +91,9 @@
     draw: 'oracle.draw',
     stir: 'oracle.stir',
     accept: 'oracle.accept',
-    refuse: 'oracle.refuse'
+    refuse: 'oracle.refuse',
+    shake: 'bar.shake',
+    pour: 'bar.pour'
   };
 
   const note = {
@@ -122,6 +124,18 @@
   });
 
   const cue = (bus, layers) => ({ bus, layers });
+
+  // Buz taneleri metal shaker'a carpiyor: her vurus icin kuru bir gurultu
+  // patlamasi + govdenin kisa metalik cinlamasi.
+  const iceRattle = (count, step, seed) => {
+    const layers = [];
+    for (let i = 0; i < count; i += 1) {
+      const at = i * step;
+      layers.push(noise(0.075, { at, volume: i % 2 ? 0.15 : 0.19, seed: seed + i, band: 2 + (i % 3), decay: 0.9 }));
+      layers.push(tone(i % 2 ? 190 : 150, 0.05, { at, type: 'triangle', volume: 0.07, slide: -30 }));
+    }
+    return layers;
+  };
 
   const recipes = {
     // --- Fosfor-terminal cekirdek sesler: rafine sine/triangle, hafif detune,
@@ -260,7 +274,22 @@
     'oracle.draw': cue('ui', [noise(0.32, { volume: 0.13, seed: 27, band: 2 }), tone(130, 0.120, { type: 'sine', volume: 0.15 }), tone(260, 0.120, { at: 0.105, type: 'triangle', volume: 0.16 }), tone(520, 0.160, { at: 0.210, type: 'sine', volume: 0.14 })]),
     'oracle.stir': cue('ui', [noise(0.090, { volume: 0.18, seed: 28, band: 3 }), tone(180, 0.090, { type: 'triangle', volume: 0.17, slide: 110 })]),
     'oracle.accept': cue('ui', [tone(330, 0.060, { type: 'sine', volume: 0.16 }), tone(660, 0.100, { at: 0.064, type: 'sine', volume: 0.15 })]),
-    'oracle.refuse': cue('ui', [tone(294, 0.060, { type: 'triangle', volume: 0.16 }), tone(196, 0.090, { at: 0.064, type: 'triangle', volume: 0.15 })])
+    'oracle.refuse': cue('ui', [tone(294, 0.060, { type: 'triangle', volume: 0.16 }), tone(196, 0.090, { at: 0.064, type: 'triangle', volume: 0.15 })]),
+    // Sure, bartender'daki 1.7sn'lik calkalama animasyonunu karsilar.
+    'bar.shake': cue('ui', [
+      ...iceRattle(11, 0.15, 30),
+      tone(90, 1.65, { type: 'triangle', volume: 0.05, attack: 0.06 }),
+      noise(1.65, { volume: 0.05, seed: 44, band: 6, decay: 0.15 })
+    ]),
+    // Bardak doldukca yukselen rezonans + araya giren "glug"lar.
+    'bar.pour': cue('ui', [
+      noise(0.05, { volume: 0.10, seed: 51, band: 3 }),
+      noise(1.10, { volume: 0.11, seed: 50, band: 5, decay: 0.35 }),
+      tone(240, 1.10, { type: 'sine', volume: 0.075, slide: 300, attack: 0.09 }),
+      tone(150, 0.070, { at: 0.10, type: 'triangle', volume: 0.10, slide: 70 }),
+      tone(165, 0.070, { at: 0.42, type: 'triangle', volume: 0.09, slide: 70 }),
+      tone(185, 0.070, { at: 0.76, type: 'triangle', volume: 0.08, slide: 70 })
+    ])
   };
 
   const waveValue = (type, phase) => {

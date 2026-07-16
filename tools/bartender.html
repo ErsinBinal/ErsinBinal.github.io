@@ -379,10 +379,14 @@
             }, 30);
         }
 
+        const sfx = (name) => { try { window.ConviviumAudio?.play(name); } catch {} };
+
+        let shakeTimer = null;
         function setScene(scene) {
+            clearTimeout(shakeTimer);
             bartenderLayer.style.opacity = 0; shakerLayer.style.opacity = 0; shakerLayer.style.transform = "translate(-50%, 20px)"; presentationLayer.style.opacity = 0; shaker.classList.remove('is-shaking');
             if(scene === 'bartender') { bartenderLayer.style.opacity = 1; }
-            else if(scene === 'shaker') { shakerLayer.style.opacity = 1; shakerLayer.style.transform = "translate(-50%, 0)"; setTimeout(() => shaker.classList.add('is-shaking'), 300); }
+            else if(scene === 'shaker') { shakerLayer.style.opacity = 1; shakerLayer.style.transform = "translate(-50%, 0)"; shakeTimer = setTimeout(() => { shaker.classList.add('is-shaking'); sfx('shake'); }, 300); }
             else if(scene === 'presentation') { presentationLayer.style.opacity = 1; }
         }
 
@@ -444,6 +448,7 @@
             root.style.setProperty('--primary', drink.color); stream.style.background = drink.color; stream.style.boxShadow = `0 0 10px ${drink.color}`; liquidPath.style.fill = drink.color;
             setTimeout(() => {
                 stream.style.height = "100px";
+                sfx('pour');
                 setTimeout(() => {
                     liquidPath.style.opacity = 0.8;
                     setTimeout(() => { stream.style.height = "0"; stream.style.top = "120px"; finish(drink); }, 800);
@@ -533,7 +538,7 @@
 
         window.onload = () => { renderStep(); }
     </script>
-  <script src="/assets/js/sfx.js?v=19" defer></script>
+  <script src="/assets/js/sfx.js?v=20" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌​‌​​​‌​​​‌​​​​‌‌‌​​​​​‌‌​‌‌‌​​‌‌​‌‌‌​​‌‌​​‌‌​​‌‌​‌​​​‌​​​​​‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
 <script src="/assets/js/origin-beacon.js?v=1"></script>
 </body>
