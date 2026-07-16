@@ -333,7 +333,10 @@
       ends_means: { 'kuralci|erdemci': 0.4, 'sonuccu|erdemci': 0.25 },
       instrument: {
         'hukuk|muzakere': 0.4, 'ornek|muzakere': 0.4, 'zor|propaganda': 0.5,
-        'hukuk|zor': 0.3, 'tesvik|hukuk': 0.3, 'ornek|tesvik': 0.2
+        'hukuk|zor': 0.3, 'tesvik|hukuk': 0.3, 'ornek|tesvik': 0.2,
+        // propaganda yalnizca 'zor'a bagliydi; ikna/kultur uzerinden isledigi
+        // icin 'ornek'e de yakin. Bagsizken kismi puan bile alamiyordu.
+        'ornek|propaganda': 0.3
       },
       conflict: { 'kurucu|uretken': 0.3, 'patoloji|uretken': 0.2 }
     };
@@ -678,7 +681,8 @@
           { t: 'Ne gerekiyorsa yapılsın; kural sonra konuşulur, önce gemi kurtarılır.', w: { ends_means: 'sonuccu', order_liberty: -0.4, conflict: ['kurucu', 0.5] } },
           { t: 'Kriz bile olsa bazı ilkeler çiğnenmez; yanlış yolla gelen kurtuluş kalıcı olmaz.', w: { ends_means: 'kuralci' } },
           { t: 'Önce dümene doğru karakterde insanlar geçsin; ehil ellerdeki kriz zaten doğru yönetilir.', w: { ends_means: 'erdemci', legitimacy: ['erdem', 0.6] } },
-          { t: 'Veri konuşsun: neyin işe yaradığı ölçülsün, duyguyla değil kanıtla karar verilsin.', w: { ends_means: ['sonuccu', 0.6], legitimacy: 'uzmanlik', instrument: ['tesvik', 0.5] } }
+          { t: 'Veri konuşsun: neyin işe yaradığı ölçülsün, duyguyla değil kanıtla karar verilsin.', w: { ends_means: ['sonuccu', 0.6], legitimacy: 'uzmanlik', instrument: ['tesvik', 0.5] } },
+          { t: 'Önce herkes aynı gemide olduğunu hissetmeli; ortak bir amaç etrafında kenetlenmeyen bir yer, en doğru kararı alsa da ayakta kalmaz.', w: { instrument: 'propaganda', ends_means: ['sonuccu', 0.5], order_liberty: -0.5, conflict: ['patoloji', 0.5] } }
         ]
       },
       {
@@ -687,7 +691,8 @@
           { t: 'Konulsun. İnsan denetimsiz kalınca açığını kullanır; görmemek saflık olur.', w: { human_nature: -0.9, order_liberty: -0.5 } },
           { t: 'Mesele kamera değil ortam: iyi kurulmuş bir düzen zaten iyi davranış üretir.', w: { human_nature: 0.0, instrument: ['tesvik', 0.4] } },
           { t: 'Gerek yok. İnsanların çoğu iyidir; sorun birbirimize güvenmeyi unutmamız.', w: { human_nature: 0.8, order_liberty: 0.5 } },
-          { t: 'Kamera değil kültür değiştirir: örnek olan, ayıbı hatırlatan bir mahalle terbiyesi daha güçlü.', w: { human_nature: 0.5, instrument: 'ornek', sun: 0.4 } }
+          { t: 'Kamera değil kültür değiştirir: örnek olan, ayıbı hatırlatan bir mahalle terbiyesi daha güçlü.', w: { human_nature: 0.5, instrument: 'ornek', sun: 0.4 } },
+          { t: 'Asıl mesele kamera da kural da değil: ortak bir "biz" duygusunun zayıflaması. İnsan ait olduğu bütünü hissetmezse dağılır; onu toplayan şey denetim değil, paylaşılan hikâyedir.', w: { human_nature: -0.4, instrument: 'propaganda', order_liberty: -0.5 } }
         ]
       },
       {
