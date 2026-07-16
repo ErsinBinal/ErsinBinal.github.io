@@ -91,9 +91,7 @@
     draw: 'oracle.draw',
     stir: 'oracle.stir',
     accept: 'oracle.accept',
-    refuse: 'oracle.refuse',
-    shake: 'bar.shake',
-    pour: 'bar.pour'
+    refuse: 'oracle.refuse'
   };
 
   const note = {
@@ -124,33 +122,6 @@
   });
 
   const cue = (bus, layers) => ({ bus, layers });
-
-  // Buz-metal carpmasi. Gercekcilik icin uc kural: (1) darbeler kusursuz bir
-  // izgaraya oturmaz, hafif zamanlama sapmasi olur - tam duzenli ritim makine
-  // gibi duyuluyor; (2) her carpma tek bir vurus degil, birkac buz tanesinin
-  // mikro-transient kumesidir; (3) ses parlak ve cok kisadir - kalin bas vurus
-  // buz degil, cekic sesidir. Salinimin her yonunde bir darbe olur (guclu/zayif).
-  const iceRattle = (impacts, step, seed) => {
-    const layers = [];
-    let s = seed >>> 0;
-    const rand = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967295; };
-    for (let i = 0; i < impacts; i += 1) {
-      const strong = i % 2 === 0;
-      const at = Math.max(0, (i * step) + (rand() - 0.5) * 0.018);
-      const grains = 2 + Math.floor(rand() * 2);
-      for (let g = 0; g < grains; g += 1) {
-        layers.push(noise(0.014 + rand() * 0.010, {
-          at: at + g * (0.003 + rand() * 0.005),
-          volume: (strong ? 0.045 : 0.028) + rand() * 0.018,
-          seed: seed + (i * 13) + g,
-          band: 1 + Math.floor(rand() * 3),
-          decay: 0.97
-        }));
-      }
-      layers.push(tone(430 + rand() * 160, 0.022, { at, type: 'triangle', volume: strong ? 0.022 : 0.014 }));
-    }
-    return layers;
-  };
 
   const recipes = {
     // --- Fosfor-terminal cekirdek sesler: rafine sine/triangle, hafif detune,
@@ -289,23 +260,7 @@
     'oracle.draw': cue('ui', [noise(0.32, { volume: 0.13, seed: 27, band: 2 }), tone(130, 0.120, { type: 'sine', volume: 0.15 }), tone(260, 0.120, { at: 0.105, type: 'triangle', volume: 0.16 }), tone(520, 0.160, { at: 0.210, type: 'sine', volume: 0.14 })]),
     'oracle.stir': cue('ui', [noise(0.090, { volume: 0.18, seed: 28, band: 3 }), tone(180, 0.090, { type: 'triangle', volume: 0.17, slide: 110 })]),
     'oracle.accept': cue('ui', [tone(330, 0.060, { type: 'sine', volume: 0.16 }), tone(660, 0.100, { at: 0.064, type: 'sine', volume: 0.15 })]),
-    'oracle.refuse': cue('ui', [tone(294, 0.060, { type: 'triangle', volume: 0.16 }), tone(196, 0.090, { at: 0.064, type: 'triangle', volume: 0.15 })]),
-    // Sure, bartender'daki 1.7sn'lik calkalama animasyonunu karsilar. Altta
-    // sadece cok kisik bir sivi calkantisi var; surekli gurultu yatagi ya da
-    // bas ugultu eklenmemeli - ikisi de sesi "makine dairesi"ne ceviriyor.
-    'bar.shake': cue('ui', [
-      ...iceRattle(22, 0.075, 30),
-      noise(1.65, { volume: 0.012, seed: 44, band: 9, decay: 0.1 })
-    ]),
-    // Bardak doldukca yukselen rezonans + araya giren "glug"lar.
-    'bar.pour': cue('ui', [
-      noise(0.05, { volume: 0.045, seed: 51, band: 3 }),
-      noise(1.10, { volume: 0.05, seed: 50, band: 5, decay: 0.35 }),
-      tone(240, 1.10, { type: 'sine', volume: 0.035, slide: 300, attack: 0.09 }),
-      tone(150, 0.070, { at: 0.10, type: 'triangle', volume: 0.045, slide: 70 }),
-      tone(165, 0.070, { at: 0.42, type: 'triangle', volume: 0.040, slide: 70 }),
-      tone(185, 0.070, { at: 0.76, type: 'triangle', volume: 0.035, slide: 70 })
-    ])
+    'oracle.refuse': cue('ui', [tone(294, 0.060, { type: 'triangle', volume: 0.16 }), tone(196, 0.090, { at: 0.064, type: 'triangle', volume: 0.15 })])
   };
 
   const waveValue = (type, phase) => {
