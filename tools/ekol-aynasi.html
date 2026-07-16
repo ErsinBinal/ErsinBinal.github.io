@@ -926,7 +926,13 @@
     /* ==================================================================
        6) AKIŞ — geniş tur + uyarlanır diskriminatörler
        ================================================================== */
-    const state = { answers: [], queue: [...BROAD], phase: 'broad', planned: BROAD.length + MIN_CROSS, curFig: 'C' };
+    // planned = barın segment sayısı. MIN değil MAX ile kurulur: test uyarlanır
+    // olduğu için gerçek toplam BROAD+MIN_CROSS ile BROAD+MAX_CROSS arasında
+    // değişir. MIN ile kurulunca tahmin aşılıyor, bar sonuna kadar dolu kalıp
+    // donmuş görünüyordu. MAX ile bar asla taşmaz; erken biterse birkaç segment
+    // yanmadan kalır ki bu "erken bitti" diye okunur, hata gibi değil.
+    const PLANNED_MAX = () => BROAD.length + MAX_CROSS;
+    const state = { answers: [], queue: [...BROAD], phase: 'broad', planned: PLANNED_MAX(), curFig: 'C' };
 
     // İki okul vektörünün bir eksende ne kadar ayrıştığı (0..1). ord: |fark|/2, cat: 1-yakınlık.
     function axisDisagreement(ax, va, vb) {
@@ -997,6 +1003,9 @@
         if (!nx) return renderReport();
         state.queue = [nx];
         if (state.phase === 'broad') state.phase = 'disc';
+        // Güvenlik ağı: planned artık MAX ile kurulduğu için buranın devreye
+        // girmemesi gerekir. Girerse (biri soru havuzunu MAX_CROSS'u aşacak
+        // şekilde büyütmüşse) bar en azından aktif segmentini korur.
         state.planned = Math.max(state.planned, state.answers.length + 1);
       }
       const q = state.queue[0];
@@ -1048,7 +1057,7 @@
         const idx = BROAD.findIndex(b => b.id === last.q.id);
         state.queue = BROAD.slice(idx);
         state.phase = 'broad';
-        state.planned = BROAD.length + MIN_CROSS;
+        state.planned = PLANNED_MAX();
       } else {
         state.queue.unshift(last.q);
       }
@@ -1138,7 +1147,7 @@
     }
 
     function restart() {
-      state.answers = []; state.queue = [...BROAD]; state.phase = 'broad'; state.planned = BROAD.length + 3; state.curFig = 'C';
+      state.answers = []; state.queue = [...BROAD]; state.phase = 'broad'; state.planned = PLANNED_MAX(); state.curFig = 'C';
       renderFig('C');
       show('intro');
     }
