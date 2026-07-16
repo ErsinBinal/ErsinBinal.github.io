@@ -89,7 +89,6 @@
     /* Defne dalı: bir kez <defs> içinde tanımlı, <use> ile çoğaltılır */
     svg.laurel { width: 40px; height: 40px; color: var(--primary); opacity: 0.75; flex: none; }
     svg.laurel.r { transform: scaleX(-1); }
-    .report svg.laurel { width: 30px; height: 30px; vertical-align: -6px; }
     /* Meander (Roma anahtarı) bordürü */
     .meander {
       height: 12px; margin: 4px auto 0; max-width: 860px; opacity: 0.5;
@@ -991,8 +990,6 @@
     // Roma rakamı: sayaçlar ve sıralama için (antik dokunuş)
     const ROMAN = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
     const toRoman = (n) => { let out = ''; for (const [v, r] of ROMAN) while (n >= v) { out += r; n -= v; } return out || 'I'; };
-    const LAUREL_L = '<svg class="laurel" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg>';
-    const LAUREL_R = '<svg class="laurel r" viewBox="0 0 64 64" aria-hidden="true"><use href="#laurel-branch"/></svg>';
 
     function renderQuestion() {
       if (!state.queue.length) {
@@ -1106,7 +1103,7 @@
 
       $('r-body').innerHTML = `
         <span class="family-tag">${FAMILIES[s.family]}</span>
-        <h2 class="school">${LAUREL_L} ${esc(s.label)} ${LAUREL_R}</h2>
+        <h2 class="school">${esc(s.label)}</h2>
         <div class="verdict">tutarlılık: ${isHybrid
           ? `<b>melez profil</b> — ${esc(s.label)} ile ${esc(R.second.school.label)} arasında bir yerdesin; bu bir kusur değil, bulgudur.`
           : '<b>net eşleşme</b>'}</div>
