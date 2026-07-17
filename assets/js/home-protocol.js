@@ -152,6 +152,7 @@
       let coopGateMod = null;
       let nightModeMod = null;
       let radioMod = null;
+      let chatMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -2037,7 +2038,8 @@
         `004  ${(window.DebCompanion || window.NovaCompanion)?.getState?.().active ? 'RUN' : 'IDLE'}     deb.companion`,
         `005  ${commandInFlight ? 'WAIT' : 'IDLE'}     oracle.channel`,
         `006  ${pipeMod?.isActive() ? 'RUN' : 'IDLE'}     pipe.game`,
-        `007  ${presenceMod?.isActive() ? 'RUN' : 'IDLE'}     presence.net`
+        `007  ${presenceMod?.isActive() ? 'RUN' : 'IDLE'}     presence.net`,
+        `008  ${chatMod?.isListening() ? 'RUN' : 'IDLE'}     chat.channel`
       ].join('\n');
 
       const themeCommand = (target = '') => {
@@ -2227,6 +2229,21 @@
       // Convivium Radio (assets/js/home/radio.js): prosedurel WebAudio ambient.
       radioMod = window.ConviviumHome?.createRadio?.({
         isAudioEnabled: () => audioEnabled
+      }) || null;
+
+      // Canli sohbet (assets/js/home/chat.js): presence rumuzlariyla ucucu
+      // terminal sohbeti. Gelen mesaj terminale duser; oyun ekrani aktifken
+      // (pipe/outrun) transcript'e karismaz, konsol satirina kisa iz duser.
+      chatMod = window.ConviviumHome?.createChat?.({
+        getClient: () => window.ConviviumBackend?.getClient?.() || null,
+        getTag: () => presenceMod?.tag?.() || 'wanderer-????',
+        getRoom: () => virtualCwd,
+        onMessage: (line) => {
+          if (consoleLine) consoleLine.textContent = line.slice(0, 48);
+          if (pipeMod?.isActive() || outrunMod?.isActive()) return;
+          printTerminal(line);
+          audioCue('terminal.suggest');
+        }
       }) || null;
 
       // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
@@ -3090,6 +3107,18 @@
           action: () => presenceMod ? presenceMod.whoCommand() : 'who: sinyal yok. (presence agi kapali)'
         },
         {
+          command: 'chat',
+          description: 'canli sohbeti acar/kapatir (yazmak icin: say <mesaj>)',
+          aliases: ['sohbet'],
+          action: () => chatMod ? chatMod.command('') : 'chat: modul hazir degil.'
+        },
+        {
+          command: 'say',
+          description: 'acik sohbet kanalina mesaj yazar (say <mesaj>)',
+          aliases: ['soyle', 'söyle'],
+          action: () => 'say: usage say <mesaj> (once chat ile kanali ac; say yazinca da acilir)'
+        },
+        {
           command: 'wall',
           description: 'bulundugun esikteki asenkron izleri okur',
           aliases: ['read wall', 'duvar', 'duvari oku'],
@@ -3400,6 +3429,7 @@
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
         'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
+        'chat / say <mesaj> -- gezginlerle canli sohbet (ucucu; kayit tutulmaz)',
         'shards -- signal shard bakiyen · shop -- kozmetik dukkan (tema, saver varyanti)',
         'card / collect / cards -- gunun sinyal karti: gor, topla, koleksiyonla',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
@@ -3796,6 +3826,7 @@
         ['sound ', value => volumeCommand(value)],
         ['shop ', value => shopCommand(value)],
         ['radio ', value => radioMod ? radioMod.command(value) : 'radio: modul hazir degil.'],
+        ['chat ', value => chatMod ? chatMod.command(value) : 'chat: modul hazir degil.'],
         ['resonate ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['rezonans ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['pipe ', value => pipeMod ? pipeMod.command(value) : 'pipe: unavailable'],
@@ -4034,6 +4065,16 @@
           // Ham metni kullan (normalize edilmemis) ki kullanici mesaji oldugu gibi kalsin.
           const rawBody = query.replace(/^\s*(leave mark|iz birak|duvara yaz|mark)\s+/i, '');
           const result = await leaveMarkCommand(rawBody);
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // Canli sohbet: mesaj govdesi ham metin kalsin diye normalize oncesi ele alinir.
+        if (/^\s*(say|soyle|söyle)\s+\S/i.test(query)) {
+          const rawBody = query.replace(/^\s*(say|soyle|söyle)\s+/i, '');
+          const result = chatMod ? chatMod.say(rawBody) : 'say: sohbet modulu hazir degil.';
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';

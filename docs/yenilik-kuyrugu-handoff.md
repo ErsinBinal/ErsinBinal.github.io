@@ -19,6 +19,7 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 | 6. Convivium Wrapped: wrapped + dashboard PNG kart | `de99024` | yeni tablo yok; SW v181 |
 | 7. Gece frekansi 00:00-05:59 | `113b46c` | home/night-mode.js; SW v182 |
 | 8. Convivium Radio: prosedurel ambient | `b56278c` | home/radio.js; SW v183 |
+| Ek: Canli sohbet chat/say (kullanici istegi) | bkz. git log | home/chat.js; ucucu broadcast; SW v184 |
 
 ## KULLANICI AKSIYONU BEKLEYENLER (Supabase SQL Editor)
 
