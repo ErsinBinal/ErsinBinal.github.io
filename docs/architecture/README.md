@@ -6,6 +6,13 @@ Bu klasör, sitenin **yaşayan** mimari/akış dokümantasyonudur. Diyagramlar
 
 Durum renkleri: 🟩 tamamlandı · 🟨 yarım/iyileştirilebilir · ⬜ planlanan.
 
+Nokta-zaman teknik incelemesi ve öncelikli geliştirme kuyruğu:
+[17 Temmuz 2026 Site Teknik Değerlendirmesi](../site-teknik-degerlendirme-2026-07-17.md).
+Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
+[Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
+Aktif P0/P1 güvenlik ve dağıtım hattı:
+[Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
+
 İçindekiler:
 1. [Sayfa haritası (gruplu)](#1-makro--sayfa-haritası)
 2. [Veri katmanı (Supabase)](#2-veri-katmanı--supabase-tabloları)
@@ -138,13 +145,16 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  dash[dashboard.js] -->|/enrich-profile| worker
+  dash[dashboard.js] -->|Bearer access token + /enrich-profile| worker
   oracle[oracle terminal] -->|/oracle| worker
 
   subgraph CF[Cloudflare]
     worker[oracle Worker]
+    limiter[(SQLite Durable Object\naktor bazli kota)]
     cfai[(Cloudflare AI\nözetleme / yanıt)]
   end
+  worker --> limiter
+  worker -->|/auth/v1/user| auth[(Supabase Auth)]
   worker --> cfai
 
   worker -->|1| tavily[(Tavily\narama)]
@@ -159,7 +169,10 @@ flowchart TD
 ```
 
 Sağlayıcı sırası: **Tavily → Google CSE → Gemini**. İlk başarılı olan kazanır;
-hiçbiri çalışmazsa uydurma üretilmez.
+hiçbiri çalışmazsa uydurma üretilmez. Profil provider'ları yalnız Supabase
+Bearer token doğrulandıktan sonra çalışır. Oracle, auth denemesi, enrich ve
+beacon ayrı Durable Object kota bucket'ları kullanır. `/health` no-store Worker
+version metadata döndürür; beacon AI/webhook çağırmaz.
 
 ---
 
@@ -252,8 +265,11 @@ flowchart TD
 
   consent -- hayır --> ask[KVKK rıza iste]
   ask --> grant[upsertProfile ai_consent=true]
-  grant --> run
-  consent -- evet --> run[/enrich-profile/]
+  grant --> auth[Supabase session access token]
+  consent -- evet --> auth
+  auth --> verify{Worker /auth/v1/user\ndogruladi mi?}
+  verify -- hayır --> deny[401; provider çağrılmaz]
+  verify -- evet --> run[/enrich-profile/]
 
   run --> prov[Tavily → CSE → Gemini]
   prov --> sum[CF AI özetler]
@@ -270,8 +286,8 @@ flowchart TD
 
   classDef done fill:#0a3a1a,stroke:#0f0,color:#dfffe0
   classDef partial fill:#3a360a,stroke:#cc0,color:#fff7cf
-  class start,hasName,consent,run,prov,sum,card,confirm,save,bugyUse done
-  class ask,grant partial
+  class start,hasName,consent,auth,verify,run,prov,sum,card,confirm,save,bugyUse done
+  class ask,grant,deny partial
 ```
 
 ---

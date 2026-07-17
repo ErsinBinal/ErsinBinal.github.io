@@ -1,6 +1,6 @@
 # Guvenlik Yuzeyi Envanteri (PO-3)
 
-Son guncelleme: 2026-07-02. Bu dosya, sitenin dis dunyaya acilan tum
+Son guncelleme: 2026-07-17. Bu dosya, sitenin dis dunyaya acilan tum
 noktalarini tek yerde tutar: hangi origin neden whitelist'te, hangi sayfada.
 Yeni bir dis servis eklerken BURAYI da guncelle.
 
@@ -41,10 +41,23 @@ Yeni bir dis servis eklerken BURAYI da guncelle.
 * `assets/js/supabase-client.js` -> `*.supabase.co` (tum backend islemleri)
 * `assets/js/home-protocol.js` -> worker (oracle sorgusu; endpoint meta tag
   `convivium-oracle-endpoint` uzerinden)
-* `assets/js/supabase-client.js enrichProfileFromName` -> worker /enrich-profile
+* `assets/js/supabase-client.js predictProfileFromName` -> worker
+  `/enrich-profile` (Supabase access token Bearer; Worker `/auth/v1/user` ile
+  dogrular, ham token loglanmaz)
 * `assets/js/origin-beacon.js` -> worker /beacon (img pikseli, oturumda 1 kez)
 * Service worker: yalnizca same-origin fetch'leri cache'ler; dis istekler
   pass-through.
+
+## Worker istek siniri (2026-07-17)
+
+* Oracle, enrich-auth, enrich ve beacon ayri SQLite-backed Durable Object kota
+  bucket'lari kullanir; aktor hash'i ayni Cloudflare lokasyonundan bagimsiz ayni
+  sayaca gider.
+* JSON endpoint'leri `application/json` ve 4096 byte govde sinirinda.
+* Beacon `GET/HEAD`, 2048 karakter, bilinen protokol ve gecerli host ile
+  sinirli. Triyaj AI/webhook cagirmaz; yalniz yerel ignore/watch logu uretir.
+* `/health` no-store servis ve Worker version metadata doner.
+* Yapilandirilmis loglar ham IP, Bearer token veya istek govdesi yazmaz.
 
 ## Sir yonetimi
 

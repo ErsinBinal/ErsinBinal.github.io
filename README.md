@@ -78,6 +78,13 @@ npm run check
 
 Worker deploy olmadan command shell lokal/canned Oracle cevaplariyla calisir.
 
+## Teknik Degerlendirme
+
+17 Temmuz 2026 tarihli kapsamli teknik inceleme, sayisal envanter ve oncelikli
+gelistirme kuyrugu icin
+[Site Teknik Degerlendirmesi](docs/site-teknik-degerlendirme-2026-07-17.md)
+belgesine bakin.
+
 ## Repo Haritasi
 
 ```text

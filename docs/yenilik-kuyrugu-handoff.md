@@ -20,7 +20,8 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 | 7. Gece frekansi 00:00-05:59 | `113b46c` | home/night-mode.js; SW v182 |
 | 8. Convivium Radio: prosedurel ambient | `b56278c` | home/radio.js; SW v183 |
 | Ek: Canli sohbet chat/say (kullanici istegi) | `c591d90` | home/chat.js; ucucu broadcast; SW v184 |
-| Ek: Ortak ekran koruyucu (gezgin uydulari + mesaj yildizlari) | bkz. git log | presence.list() + screenSaver.pushSignal; SW v185 |
+| Ek: Ortak ekran koruyucu (gezgin uydulari + mesaj yildizlari) | `d0ddb1e` | presence.list() + screenSaver.pushSignal; SW v185 |
+| Ek: Chat guvertesi + davetler + sinyal cipi + Bugy balon entegrasyonu | `eb97127`..`32aad94` | chat-deck.js, oyun davet URL'leri; SW v186-v194 |
 
 ## KULLANICI AKSIYONU BEKLEYENLER (Supabase SQL Editor)
 
@@ -41,7 +42,11 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
   `scripts/validate-site-integrity.js mustPrecache`, `scripts/sync-cache-versions.js managedAssets`,
   package.json `check:syntax`.
 - Her deploy'da: degisen versiyonlu asset'lerin `?v=` degeri + SW `CACHE_NAME` artirilir
-  (su an v183). index.html degistiyse zaten SW bump gerekir.
+  (guncel deger icin service-worker.js'e bak; bu belgede sabit sayi tutma).
+  index.html degistiyse zaten SW bump gerekir.
+- **Uyari (2026-07-17):** icerigi degisen HER versiyonlu asset'te `?v=` bump
+  ZORUNLU — SW bump tek basina yetmez (tarayici HTTP cache'i ayni `?v=` ile
+  bayat icerik verebilir; supabase-client v36 vakasi).
 - Ornekler: `assets/js/home/presence.js`, `coop-gate.js`, `night-mode.js`, `radio.js`.
 
 ## Diger kurallar
@@ -59,6 +64,12 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
   calistirilir; push sonrasi Actions "Flow Check" smoke yesil mi bakilir.
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
+
+> Aktif öncelik hattı: [Üretim Sertleştirme Handoff](production-hardening-handoff.md).
+> Terminal modülerleştirmesi Faz 1A sonunda beklemeye alındı.
+>
+> Ana terminal refaktörünün güncel durumu, test kapıları ve sıradaki kesin adım:
+> [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi; kullanici "sonra ele alalim" dedi)
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
