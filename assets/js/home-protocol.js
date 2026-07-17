@@ -150,6 +150,7 @@
       let screenSaverMod = null;
       let presenceMod = null;
       let coopGateMod = null;
+      let nightModeMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -1098,9 +1099,19 @@
         return line;
       };
 
+      // Gece frekansinda oracle daha alcak sesle konusur.
+      const nightOracleLines = [
+        'Bu saatte sorular cevaplardan agirdir.',
+        'Frekans dusuk; iyi duyulmak istiyorsan fisilda.',
+        'Gece acilan kapi, gunduz yerinde olmayabilir.',
+        'Uyku da bir protokoldur; atlama.',
+        'Simdi yazdigin sey, sabah baska anlama gelecek.'
+      ];
+
       const oracleCommand = () => {
         registerProtocolStep('oracle');
-        const line = sample(oracleLines);
+        const night = Boolean(nightModeMod?.isNight?.());
+        const line = sample(night ? nightOracleLines : oracleLines);
         if (microOracle) microOracle.textContent = line;
         return `oracle: ${line}`;
       };
@@ -2202,6 +2213,15 @@
         getRoom: () => virtualCwd
       }) || null;
       presenceMod?.start();
+
+      // Gece frekansi (assets/js/home/night-mode.js): 00:00-05:59 arasi
+      // alcak kontrast palet + HUD ibaresi + gece kapisi.
+      nightModeMod = window.ConviviumHome?.createNightMode?.({
+        onChange: (night) => {
+          if (night && consoleLine) consoleLine.textContent = 'low frequency band active';
+        }
+      }) || null;
+      nightModeMod?.start();
 
       // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
       // komutu. Iki gezgin 8 sn icinde ayni kelimeyi soylerse rezonans olusur;

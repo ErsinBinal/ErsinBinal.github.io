@@ -5,7 +5,7 @@
   "scripts": {
     "check": "npm run check:syntax && npm run check:site",
     "check:site": "node scripts/validate-site-integrity.js",
-    "check:syntax": "node --check service-worker.js && node --check workers/oracle/src/index.js && node --check assets/js/home-protocol.js && node --check assets/js/home/pipe-90.js && node --check assets/js/home/outrun-86.js && node --check assets/js/home/screen-saver.js && node --check assets/js/home/presence.js && node --check assets/js/home/coop-gate.js",
+    "check:syntax": "node --check service-worker.js && node --check workers/oracle/src/index.js && node --check assets/js/home-protocol.js && node --check assets/js/home/pipe-90.js && node --check assets/js/home/outrun-86.js && node --check assets/js/home/screen-saver.js && node --check assets/js/home/presence.js && node --check assets/js/home/coop-gate.js && node --check assets/js/home/night-mode.js",
     "convert-images": "node scripts/convert-images.js",
     "sync:cache": "node scripts/sync-cache-versions.js",
     "sync:cache:bump": "node scripts/sync-cache-versions.js --bump",

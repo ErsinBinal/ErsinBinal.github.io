@@ -1375,6 +1375,38 @@
       filter: none;
     }
 
+    /* Gece frekansi (00:00-05:59): soluk, alcak kontrast bant. */
+    body.is-night-frequency {
+      --journey-green: #4fae72;
+      --journey-cyan: #5aa3b4;
+    }
+
+    body.is-night-frequency .neon-frame {
+      opacity: 0.4;
+    }
+
+    body.is-night-frequency .signal-map {
+      opacity: 0.55;
+    }
+
+    body.is-night-frequency .hud-line {
+      border-color: rgba(110, 140, 200, 0.28);
+      box-shadow: 0 0 12px rgba(110, 140, 200, 0.08);
+    }
+
+    .hud-line.night-pulse .hud-value {
+      color: #8fa8d8;
+    }
+
+    /* Gece kapisi: yalnizca gece frekansinda gorunur. */
+    body:not(.is-night-frequency) .night-door {
+      display: none !important;
+    }
+
+    body.is-night-frequency .night-door {
+      color: #8fa8d8;
+    }
+
     /* Shop varyanti: ekran koruyucu mor drift (shards ile acilir). */
     .screen-saver-overlay.saver-variant-drift {
       filter: hue-rotate(285deg) saturate(1.18);
