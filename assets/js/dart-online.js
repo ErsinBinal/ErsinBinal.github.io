@@ -132,9 +132,11 @@
     }
 
     return {
-      host: function (name) {
+      // code verilirse o kodla oda kurulur (chat guvertesi davetleri icin).
+      host: function (name, code) {
         teardown();
-        var c = randomCode();
+        var preset = code ? String(code).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) : '';
+        var c = preset || randomCode();
         return attach(c, true, name) ? c : null;
       },
       join: function (roomCode, name) {

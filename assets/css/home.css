@@ -1375,6 +1375,207 @@
       filter: none;
     }
 
+    /* Chat guvertesi: tam ekran sohbet + gezginler + fisilti/davet paneli. */
+    .chat-deck {
+      position: fixed;
+      inset: 0;
+      z-index: 1400;
+      display: none;
+      background: rgba(2, 8, 3, 0.96);
+      color: var(--journey-green, #00ff66);
+      font-family: "Share Tech Mono", "IBM Plex Mono", monospace;
+    }
+
+    .chat-deck.is-active { display: flex; }
+
+    .deck-frame {
+      display: flex;
+      flex-direction: column;
+      width: min(1080px, 100vw - 24px);
+      margin: 12px auto;
+      border: 1px solid rgba(0, 255, 102, 0.5);
+      box-shadow: 0 0 42px rgba(0, 255, 102, 0.12), inset 0 0 60px rgba(0, 255, 102, 0.04);
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.025) 0 1px, transparent 1px 3px),
+        rgba(3, 12, 5, 0.92);
+    }
+
+    .deck-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(0, 255, 102, 0.35);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+    }
+
+    .deck-title { color: #d8ffe1; text-shadow: 0 0 10px rgba(0, 255, 102, 0.45); }
+
+    .deck-self-tag { color: rgba(0, 234, 255, 0.85); margin-right: auto; }
+
+    .deck-exit {
+      border: 1px solid rgba(255, 90, 90, 0.65);
+      background: rgba(40, 6, 6, 0.7);
+      color: #ff9a9a;
+      font: inherit;
+      padding: 6px 16px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+    }
+
+    .deck-exit:hover, .deck-exit:focus-visible { background: rgba(90, 12, 12, 0.85); color: #ffd2d2; }
+
+    .deck-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 0;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .deck-feed-wrap {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      padding: 10px 12px;
+    }
+
+    .deck-feed {
+      flex: 1;
+      min-height: 200px;
+      overflow-y: auto;
+      font-size: 0.86rem;
+      line-height: 1.55;
+      padding-right: 6px;
+    }
+
+    .deck-line { color: rgba(202, 255, 216, 0.88); overflow-wrap: anywhere; }
+    .deck-line.is-self .deck-tag { color: rgba(0, 234, 255, 0.9); }
+    .deck-line.is-dm { color: #ffd9f2; }
+    .deck-line.is-dm .deck-tag { color: #ff8ad0; }
+    .deck-line.is-invite { color: #fff2b0; }
+    .deck-time { color: rgba(202, 255, 216, 0.35); margin-right: 8px; font-size: 0.72rem; }
+    .deck-tag { color: rgba(0, 255, 102, 0.9); }
+    .deck-accept {
+      color: #00eaff;
+      margin-left: 8px;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(0, 234, 255, 0.6);
+    }
+    .deck-accept:hover { color: #baf6ff; }
+
+    .deck-input-row { display: flex; gap: 8px; margin-top: 10px; }
+
+    .deck-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(0, 20, 6, 0.8);
+      border: 1px solid rgba(0, 255, 102, 0.4);
+      color: #d8ffe1;
+      font: inherit;
+      font-size: 0.9rem;
+      padding: 8px 10px;
+    }
+
+    .deck-input:focus { outline: 1px solid rgba(0, 234, 255, 0.6); }
+
+    .deck-send, .deck-dm-btn {
+      border: 1px solid rgba(0, 255, 102, 0.5);
+      background: rgba(0, 34, 10, 0.8);
+      color: #9cffb8;
+      font: inherit;
+      font-size: 0.78rem;
+      padding: 8px 12px;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+
+    .deck-send:hover, .deck-dm-btn:hover,
+    .deck-send:focus-visible, .deck-dm-btn:focus-visible { background: rgba(0, 60, 18, 0.9); color: #d8ffe1; }
+
+    .deck-status { min-height: 18px; margin-top: 6px; font-size: 0.74rem; color: rgba(0, 234, 255, 0.8); }
+
+    .deck-side {
+      border-left: 1px solid rgba(0, 255, 102, 0.3);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .deck-side-title { font-size: 0.78rem; letter-spacing: 0.1em; color: #d8ffe1; margin: 0 0 2px; }
+    .deck-side-hint { font-size: 0.7rem; color: rgba(202, 255, 216, 0.5); margin: 0 0 10px; }
+
+    .deck-wanderers { display: grid; gap: 6px; }
+
+    .deck-wanderer {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid rgba(0, 255, 102, 0.3);
+      background: rgba(0, 22, 8, 0.6);
+      color: inherit;
+      font: inherit;
+      font-size: 0.78rem;
+      padding: 7px 9px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .deck-wanderer strong { color: #9cffb8; font-weight: 600; }
+    .deck-wanderer span { color: rgba(202, 255, 216, 0.55); }
+    .deck-wanderer:hover, .deck-wanderer:focus-visible {
+      border-color: rgba(0, 234, 255, 0.7);
+      background: rgba(0, 40, 30, 0.7);
+    }
+    .deck-wanderer.is-self { cursor: default; border-style: dashed; opacity: 0.85; }
+    .deck-empty { font-size: 0.74rem; color: rgba(202, 255, 216, 0.45); padding: 6px 2px; }
+
+    .deck-dm {
+      display: none;
+      margin-top: 12px;
+      border: 1px solid rgba(255, 138, 208, 0.5);
+      background: rgba(30, 4, 20, 0.55);
+      padding: 9px;
+    }
+
+    .deck-dm.is-open { display: block; }
+
+    .deck-dm-head { display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #ff8ad0; margin-bottom: 8px; }
+    .deck-dm-head strong { color: #ffd9f2; }
+    .deck-dm-close {
+      margin-left: auto;
+      border: 1px solid rgba(255, 138, 208, 0.5);
+      background: transparent;
+      color: #ff8ad0;
+      font: inherit;
+      padding: 1px 8px;
+      cursor: pointer;
+    }
+    .deck-dm .deck-input { border-color: rgba(255, 138, 208, 0.45); }
+    .deck-dm-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .deck-dm-actions .deck-dm-btn { font-size: 0.68rem; padding: 6px 8px; }
+
+    .deck-footer {
+      border-top: 1px solid rgba(0, 255, 102, 0.3);
+      padding: 7px 14px;
+      font-size: 0.68rem;
+      color: rgba(202, 255, 216, 0.45);
+      letter-spacing: 0.04em;
+    }
+
+    body.chat-deck-active { overflow: hidden; }
+
+    @media (max-width: 760px) {
+      .deck-main { grid-template-columns: 1fr; }
+      .deck-side { border-left: 0; border-top: 1px solid rgba(0, 255, 102, 0.3); max-height: 42vh; }
+      .deck-frame { margin: 0; width: 100vw; height: 100vh; }
+    }
+
     /* Gece frekansi (00:00-05:59): soluk, alcak kontrast bant. */
     body.is-night-frequency {
       --journey-green: #4fae72;

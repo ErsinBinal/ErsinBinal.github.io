@@ -4,7 +4,8 @@
  * Realtime broadcast kanali kullanir: tabloya YAZILMAZ, gecmis tutulmaz,
  * anon key yeterli. Kimlik yerine presence gezgin rumuzu (wanderer-xxxx)
  * konusur. Sohbet varsayilan KAPALI; "chat" ile acilir, "say <mesaj>" ile
- * yazilir. Supabase yoksa sessizce devre disi.
+ * yazilir. v2: dogrudan mesaj (DM/fisilti) + oyun davetleri (invite) ve
+ * chat guvertesi icin onEvent akisi. Supabase yoksa sessizce devre disi.
  * createChat(deps) fabrikasi ile kurulur.
  * (c) 2026 Ersin Binal - https://ersinbinal.github.io
  */
@@ -12,18 +13,19 @@
   window.ConviviumHome = window.ConviviumHome || {};
 
   window.ConviviumHome.createChat = (deps) => {
-    const { getClient, getTag, getRoom, onMessage } = deps;
+    const { getClient, getTag, getRoom, onMessage, onEvent } = deps;
 
     const MAX_BODY = 200;
     const MIN_SEND_GAP_MS = 1500;
-    const HISTORY_LIMIT = 20;
+    const HISTORY_LIMIT = 30;
+    const INVITE_GAMES = { crude: 'Crude Buster co-op', dart: 'Dart online' };
 
     let channel = null;
     let connected = false;
     let subscribing = false;
     let listening = false; // kullanici sohbeti acti mi (opt-in)
     let lastSentAt = 0;
-    const history = []; // { tag, room, body, ts }
+    const history = []; // { tag, room, body, ts, kind, to, game, code, self }
 
     const cleanBody = (value) => String(value || '')
       .replace(/[\x00-\x1f\x7f]/g, ' ')
@@ -31,26 +33,54 @@
       .trim()
       .slice(0, MAX_BODY);
 
+    const cleanTag = (value) => String(value || '').replace(/[^\w-]/g, '').slice(0, 24);
+
+    const randomRoomCode = () => {
+      const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let out = '';
+      for (let i = 0; i < 5; i += 1) out += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+      return out;
+    };
+
     const pushHistory = (entry) => {
       history.push(entry);
       if (history.length > HISTORY_LIMIT) history.shift();
     };
 
-    const formatLine = (entry) => `${entry.tag} ${entry.room || '/'} > ${entry.body}`;
+    const formatLine = (entry) => {
+      if (entry.kind === 'invite') {
+        return `${entry.tag} davet > ${INVITE_GAMES[entry.game] || entry.game} / oda ${entry.code}`;
+      }
+      if (entry.to) return `${entry.tag} (fisilti) > ${entry.body}`;
+      return `${entry.tag} ${entry.room || '/'} > ${entry.body}`;
+    };
+
+    const emitEvent = (entry) => {
+      try { onEvent?.(entry); } catch { /* guverte akisi deneyimi bozmasin */ }
+    };
 
     const handleIncoming = (payload) => {
       const tag = typeof getTag === 'function' ? getTag() : '';
-      if (!payload || !payload.body || payload.tag === tag) return;
+      if (!payload || payload.tag === tag) return;
+      const to = cleanTag(payload.to);
+      if (to && to !== tag) return; // baskasina fisilti; bize dusmez
       const entry = {
-        tag: String(payload.tag || 'wanderer-????').slice(0, 24),
+        tag: cleanTag(payload.tag) || 'wanderer-????',
         room: String(payload.room || '/').slice(0, 24),
         body: cleanBody(payload.body),
+        kind: payload.kind === 'invite' ? 'invite' : (to ? 'dm' : 'msg'),
+        to: to || '',
+        game: payload.kind === 'invite' && INVITE_GAMES[payload.game] ? payload.game : '',
+        code: payload.kind === 'invite' ? String(payload.code || '').replace(/[^A-Z0-9]/gi, '').slice(0, 8).toUpperCase() : '',
+        self: false,
         ts: Date.now()
       };
-      if (!entry.body) return;
+      if (entry.kind === 'invite' && (!entry.game || !entry.code)) return;
+      if (entry.kind !== 'invite' && !entry.body) return;
       pushHistory(entry);
-      if (!listening) return; // sohbet kapaliyken sessiz birikir
-      try { onMessage?.(formatLine(entry)); } catch { /* sohbet deneyimi bozmasin */ }
+      emitEvent(entry);
+      if (!listening) return; // sohbet kapaliyken terminale dusmez
+      try { onMessage?.(formatLine(entry), entry); } catch { /* sessiz */ }
     };
 
     const ensureChannel = () => {
@@ -69,6 +99,44 @@
           connected = false;
         }
       });
+    };
+
+    // Ortak gonderim cekirdegi: say / fisilti / davet ayni yoldan gecer.
+    const transmit = (fields) => {
+      ensureChannel();
+      if (!channel) return { error: 'sinyal agi cevrimdisi.' };
+      listening = true; // konusan duymaya da baslar
+      if (!connected) return { error: 'kanal isiniyor; bir saniye sonra tekrar dene.' };
+      const now = Date.now();
+      if (now - lastSentAt < MIN_SEND_GAP_MS) return { error: 'yavas. frekans flood sevmez.' };
+      lastSentAt = now;
+      const entry = {
+        tag: typeof getTag === 'function' ? getTag() : 'wanderer-????',
+        room: typeof getRoom === 'function' ? getRoom() : '/',
+        ts: now,
+        self: true,
+        kind: fields.kind || (fields.to ? 'dm' : 'msg'),
+        to: fields.to || '',
+        body: fields.body || '',
+        game: fields.game || '',
+        code: fields.code || ''
+      };
+      try {
+        channel.send({
+          type: 'broadcast',
+          event: 'msg',
+          payload: {
+            tag: entry.tag, room: entry.room, body: entry.body,
+            to: entry.to, kind: entry.kind === 'invite' ? 'invite' : undefined,
+            game: entry.game || undefined, code: entry.code || undefined, ts: now
+          }
+        });
+      } catch {
+        return { error: 'mesaj gonderilemedi.' };
+      }
+      pushHistory(entry);
+      emitEvent(entry);
+      return { entry };
     };
 
     const open = () => {
@@ -100,28 +168,32 @@
     const say = (rawBody) => {
       const body = cleanBody(rawBody);
       if (!body) return 'say: usage say <mesaj>';
-      ensureChannel();
-      if (!channel) return 'say: sinyal agi cevrimdisi.';
       const wasListening = listening;
-      listening = true; // konusan duymaya da baslar
-      if (!connected) return 'say: kanal isiniyor; bir saniye sonra tekrar dene.';
-      const now = Date.now();
-      if (now - lastSentAt < MIN_SEND_GAP_MS) return 'say: yavas. frekans flood sevmez.';
-      lastSentAt = now;
-      const entry = {
-        tag: typeof getTag === 'function' ? getTag() : 'wanderer-????',
-        room: typeof getRoom === 'function' ? getRoom() : '/',
-        body,
-        ts: now
-      };
-      try {
-        channel.send({ type: 'broadcast', event: 'msg', payload: entry });
-      } catch {
-        return 'say: mesaj gonderilemedi.';
-      }
-      pushHistory(entry);
+      const result = transmit({ body });
+      if (result.error) return `say: ${result.error}`;
       const prefix = wasListening ? '' : '(chat acildi) ';
-      return `${prefix}sen ${entry.room} > ${body}`;
+      return `${prefix}sen ${result.entry.room} > ${body}`;
+    };
+
+    const sendDirect = (toTag, rawBody) => {
+      const to = cleanTag(toTag);
+      const body = cleanBody(rawBody);
+      if (!to) return { error: 'hedef rumuz gecersiz.' };
+      if (!body) return { error: 'bos fisilti olmaz.' };
+      const result = transmit({ to, body, kind: 'dm' });
+      return result.error ? result : { entry: result.entry };
+    };
+
+    const sendInvite = (toTag, game) => {
+      const to = cleanTag(toTag);
+      if (!to) return { error: 'hedef rumuz gecersiz.' };
+      if (!INVITE_GAMES[game]) return { error: 'bilinmeyen oyun.' };
+      const code = randomRoomCode();
+      const result = transmit({
+        to, kind: 'invite', game, code,
+        body: `${INVITE_GAMES[game]} daveti / oda ${code}`
+      });
+      return result.error ? result : { entry: result.entry, code };
     };
 
     const command = (rawArg = '') => {
@@ -137,7 +209,7 @@
         return [
           '] CHAT LOG (ucucu, son ' + history.length + ')',
           '',
-          ...history.slice(-12).map((entry) => `  ${formatLine(entry)}`),
+          ...history.slice(-12).map((entry) => `  ${entry.self ? 'sen' : entry.tag} > ${entry.kind === 'invite' ? formatLine(entry) : entry.body}`),
           ']'
         ].join('\n');
       }
@@ -147,6 +219,10 @@
     return {
       command,
       say,
+      open,
+      sendDirect,
+      sendInvite,
+      historyList: () => history.map((entry) => ({ ...entry })),
       isListening: () => listening,
       isActive: () => connected
     };

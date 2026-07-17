@@ -1293,9 +1293,13 @@
     updateOnlineUi();
   }
 
+  let presetOnlineCode = null; // chat guvertesi davetinden gelen oda kodu
+
   if (els.onlineCreate) {
     els.onlineCreate.addEventListener('click', () => {
-      if (online) online.host(localDisplayName('Ev sahibi'));
+      if (!online) return;
+      online.host(localDisplayName('Ev sahibi'), presetOnlineCode);
+      presetOnlineCode = null;
     });
   }
   if (els.onlineJoin) {
@@ -1319,4 +1323,19 @@
   applyModeVisibility();
   render();
   initAuth();
+
+  // Chat guvertesi davetleri: ?online-host=KOD odayi otomatik kurar,
+  // ?online-join=KOD odaya otomatik katilir.
+  try {
+    const inviteParams = new URLSearchParams(location.search);
+    const inviteHost = (inviteParams.get('online-host') || '').trim().toUpperCase();
+    const inviteJoin = (inviteParams.get('online-join') || '').trim().toUpperCase();
+    if (online && inviteHost && els.onlineCreate) {
+      presetOnlineCode = inviteHost;
+      els.onlineCreate.click();
+    } else if (online && inviteJoin && els.onlineJoin) {
+      if (els.onlineCodeInput) els.onlineCodeInput.value = inviteJoin;
+      els.onlineJoin.click();
+    }
+  } catch (e) { /* davet parametresi bozuksa normal akista kal */ }
 })();

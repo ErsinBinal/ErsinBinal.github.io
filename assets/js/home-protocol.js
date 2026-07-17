@@ -153,6 +153,7 @@
       let nightModeMod = null;
       let radioMod = null;
       let chatMod = null;
+      let chatDeckMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -2244,9 +2245,21 @@
           if (consoleLine) consoleLine.textContent = line.slice(0, 48);
           screenSaverMod?.pushSignal?.(line); // koruyucuda kayan yildiz olur
           if (pipeMod?.isActive() || outrunMod?.isActive()) return;
+          if (chatDeckMod?.isActive()) return; // guverte acikken akis orada
           printTerminal(line);
           audioCue('terminal.suggest');
-        }
+        },
+        onEvent: (entry) => { chatDeckMod?.receive?.(entry); }
+      }) || null;
+
+      // Chat guvertesi (assets/js/home/chat-deck.js): tam ekran sohbet +
+      // aktif gezginler + fisilti + oyun davetleri. Yalniz EXIT ile kapanir.
+      chatDeckMod = window.ConviviumHome?.createChatDeck?.({
+        getChat: () => chatMod,
+        getWanderers: () => presenceMod?.list?.() || [],
+        getSelfTag: () => presenceMod?.tag?.() || 'wanderer-????',
+        getRoom: () => virtualCwd,
+        pulse
       }) || null;
 
       // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
@@ -3111,9 +3124,12 @@
         },
         {
           command: 'chat',
-          description: 'canli sohbeti acar/kapatir (yazmak icin: say <mesaj>)',
-          aliases: ['sohbet'],
-          action: () => chatMod ? chatMod.command('') : 'chat: modul hazir degil.'
+          description: 'chat guvertesini acar: canli akis, gezginler, fisilti, oyun davetleri',
+          aliases: ['sohbet', 'chat deck', 'guverte'],
+          action: () => {
+            if (chatDeckMod) { closeCommand(); return chatDeckMod.open(); }
+            return chatMod ? chatMod.command('') : 'chat: modul hazir degil.';
+          }
         },
         {
           command: 'say',
@@ -3432,7 +3448,7 @@
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
         'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
-        'chat / say <mesaj> -- gezginlerle canli sohbet (ucucu; kayit tutulmaz)',
+        'chat -- guverte: canli akis + gezginler + fisilti + oyun davetleri · say <mesaj> -- hizli mesaj',
         'shards -- signal shard bakiyen · shop -- kozmetik dukkan (tema, saver varyanti)',
         'card / collect / cards -- gunun sinyal karti: gor, topla, koleksiyonla',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',

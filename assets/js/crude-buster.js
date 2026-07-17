@@ -1634,7 +1634,8 @@ window.CrudeBuster = (function () {
     if (d.hostBtn) d.hostBtn.addEventListener('click', function () {
       if (!window.ConviviumBackend || !window.ConviviumBackend.isConfigured()) { setNetStatus('Supabase yapılandırılmadı.', 'err'); return; }
       G.net = makeNet(); if (!G.net) { setNetStatus('Realtime kullanılamıyor.', 'err'); return; }
-      var code = G.net.host(G.selfName);
+      var code = G.net.host(G.selfName, G.presetHostCode || null);
+      G.presetHostCode = null;
       if (code) { if (d.codeShow) d.codeShow.textContent = code; G.mode = 'host'; setNetStatus('Oda kuruldu. Kodu partnerine ilet.', ''); }
     });
     if (d.joinBtn) d.joinBtn.addEventListener('click', function () {
@@ -1656,6 +1657,23 @@ window.CrudeBuster = (function () {
     if (d.againBtn) d.againBtn.addEventListener('click', function () { if (G.mode === 'guest') return; hideOverlays(); beginGame(G.mode === 'host' ? 'host' : G.mode); });
     if (d.overLobbyBtn) d.overLobbyBtn.addEventListener('click', backToLobby);
     if (d.stageNextBtn) d.stageNextBtn.addEventListener('click', function () { if (G.mode === 'guest') return; nextStage(); if (G.mode === 'host' && G.net) G.net.sendSys('start', {}); });
+
+    // Chat guvertesi davetleri: ?coop-host=KOD odayi otomatik kurar,
+    // ?coop-join=KOD odaya otomatik katilir.
+    try {
+      var inviteParams = new URLSearchParams(location.search);
+      var inviteHost = (inviteParams.get('coop-host') || '').trim();
+      var inviteJoin = (inviteParams.get('coop-join') || '').trim();
+      if (inviteHost && d.hostBtn) {
+        if (d.onlineBox) d.onlineBox.classList.remove('hidden');
+        G.presetHostCode = inviteHost;
+        d.hostBtn.click();
+      } else if (inviteJoin && d.joinBtn) {
+        if (d.onlineBox) d.onlineBox.classList.remove('hidden');
+        if (d.codeInput) d.codeInput.value = inviteJoin;
+        d.joinBtn.click();
+      }
+    } catch (e) { /* davet parametresi bozuksa lobide kal */ }
 
     if (d.pauseBtn) d.pauseBtn.addEventListener('click', function () { togglePause(); });
     if (d.muteBtn) d.muteBtn.addEventListener('click', function () {
