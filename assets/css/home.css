@@ -1602,14 +1602,41 @@
     }
 
     @media (prefers-reduced-motion: no-preference) {
+      /* Elektrik-benzeri jitter: duz nabizdan daha keskin, "akim" hissi. */
       .chat-signal-chip.is-alert {
-        animation: chat-chip-pulse 1.1s ease-in-out 3;
+        animation: chat-chip-zap 0.9s steps(2, end) 4;
       }
 
-      @keyframes chat-chip-pulse {
-        0%, 100% { box-shadow: 0 0 10px rgba(0, 234, 255, 0.16); }
-        50% { box-shadow: 0 0 26px rgba(0, 234, 255, 0.5); }
+      @keyframes chat-chip-zap {
+        0%   { box-shadow: 0 0 10px rgba(0, 234, 255, 0.16); border-color: rgba(0, 234, 255, 0.55); }
+        20%  { box-shadow: 0 0 30px rgba(186, 246, 255, 0.85); border-color: #eaffff; transform: translateX(-1px); }
+        45%  { box-shadow: 0 0 12px rgba(0, 234, 255, 0.2); border-color: rgba(0, 234, 255, 0.55); transform: translateX(1px); }
+        70%  { box-shadow: 0 0 34px rgba(186, 246, 255, 0.9); border-color: #eaffff; transform: translateX(0); }
+        100% { box-shadow: 0 0 10px rgba(0, 234, 255, 0.16); border-color: rgba(0, 234, 255, 0.55); }
       }
+    }
+
+    /* Cipe Bugy'den firlayan kisa omurlu kivilcimlar (spawnChipSparks). */
+    .chat-chip-spark {
+      position: fixed;
+      z-index: 1201;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: #eaffff;
+      box-shadow: 0 0 6px 1px rgba(0, 234, 255, 0.9);
+      pointer-events: none;
+      transform: translate(0, 0);
+      animation: chat-chip-spark-fly 0.55s ease-out forwards;
+    }
+
+    @keyframes chat-chip-spark-fly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chat-chip-spark { display: none; }
     }
 
     @media (max-width: 700px) {

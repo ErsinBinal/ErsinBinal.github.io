@@ -2241,13 +2241,15 @@
       const speakChatEntry = (entry) => {
         const bugy = window.BugyV4;
         if (!bugy?.say || !bugy.getState?.().active) return;
+        const state = bugy.getState();
         let text = '';
-        if (entry?.kind === 'invite') {
-          text = `${entry.tag}: "${CHAT_INVITE_LABELS[entry.game] || entry.game}" oynayalim mi?`;
-        } else if (entry?.kind === 'dm') {
-          text = `${entry.tag} fisildiyor: ${entry.body}`;
+        if (state.feral) {
+          // Canavar modu icerikle ilgilenmez; yalniz kim yazdigini alaycı bildirir.
+          text = `Hey! ilgisiz ${entry?.tag || 'birisi'} sana bir mesaj attı.`;
+        } else if (entry?.kind === 'invite') {
+          text = `Sana ${entry.tag} "${CHAT_INVITE_LABELS[entry.game] || entry.game}" daveti gönderdi!`;
         } else if (entry?.body) {
-          text = `${entry.tag}: ${entry.body}`;
+          text = `Sana ${entry.tag} ${entry.body} yazdı.`;
         }
         if (!text) return;
         bugy.say(text.length > 90 ? `${text.slice(0, 89)}…` : text);

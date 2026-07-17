@@ -76,15 +76,38 @@
       chipEl?.classList.remove('is-visible', 'is-alert');
     };
 
+    // Cipe kisa omurlu kivilcimlar firlatir: Bugy'nin mesaji "akim gibi"
+    // butona gonderdigi hissini verir, dikkati koseye ceker.
+    const spawnChipSparks = () => {
+      if (!chipEl || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const rect = chipEl.getBoundingClientRect();
+      const originX = rect.left + Math.min(26, rect.width * 0.18);
+      const originY = rect.top + rect.height / 2;
+      const count = 6;
+      for (let i = 0; i < count; i += 1) {
+        const spark = el('span', 'chat-chip-spark');
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.4; // cogunlukla yukari-disari
+        const dist = 16 + Math.random() * 26;
+        spark.style.left = `${Math.round(originX)}px`;
+        spark.style.top = `${Math.round(originY)}px`;
+        spark.style.setProperty('--dx', `${Math.round(Math.cos(angle) * dist)}px`);
+        spark.style.setProperty('--dy', `${Math.round(Math.sin(angle) * dist)}px`);
+        spark.style.animationDelay = `${Math.random() * 90}ms`;
+        document.body.appendChild(spark);
+        spark.addEventListener('animationend', () => spark.remove(), { once: true });
+      }
+    };
+
     const notifyChip = (entry) => {
       const chip = ensureChip();
       unreadCount += 1;
       const kindMark = entry.kind === 'invite' ? 'davet' : entry.kind === 'dm' ? 'fisilti' : 'sinyal';
-      chip.textContent = `✉ ${unreadCount} · ${entry.tag} (${kindMark})`;
+      chip.textContent = `⚡ ${unreadCount} · ${entry.tag} (${kindMark})`;
       chip.classList.add('is-visible');
       chip.classList.remove('is-alert');
-      // Yeni mesajda kisa nabiz animasyonu (class yeniden tetiklenir).
+      // Yeni mesajda elektrik-benzeri nabiz + kivilcim (class yeniden tetiklenir).
       window.requestAnimationFrame(() => chip.classList.add('is-alert'));
+      spawnChipSparks();
       if (chipTimer) window.clearTimeout(chipTimer);
       chipTimer = window.setTimeout(() => chipEl?.classList.remove('is-alert'), 4000);
       pulse?.(500, 0.04);
