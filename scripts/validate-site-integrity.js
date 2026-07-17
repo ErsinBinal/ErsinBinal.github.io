@@ -120,9 +120,9 @@ const mustPrecache = [
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=1',
   '/assets/js/home/presence.js?v=1',
-  '/assets/js/supabase-client.js?v=33',
+  '/assets/js/supabase-client.js?v=34',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=60',
+  '/assets/js/home-protocol.js?v=61',
   '/assets/js/dart-skorbord.js?v=9',
   '/assets/js/service-worker-register.js?v=3'
 ];

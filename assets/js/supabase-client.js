@@ -925,6 +925,39 @@
     return data;
   }
 
+  // --- Sisedeki mesaj (bottle): RPC tabanli, gunluk limit sunucuda ----------
+  async function throwBottle(body, replyTo) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('throw_bottle', {
+      p_body: String(body || '').slice(0, 280),
+      p_reply_to: replyTo || null
+    });
+    if (error) throw new Error(toMessage(error));
+    return Array.isArray(data) ? data[0] : data;
+  }
+
+  async function catchBottle() {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('catch_bottle');
+    if (error) throw new Error(toMessage(error));
+    const row = Array.isArray(data) ? data[0] : data;
+    return row && row.id ? row : null;
+  }
+
+  async function listBottles(limit = 10) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Giris gerekli.');
+    const { data, error } = await client
+      .from('bottle_messages')
+      .select('id, sender_id, body, status, catcher_id, caught_at, reply_to, created_at')
+      .or(`sender_id.eq.${user.id},catcher_id.eq.${user.id}`)
+      .order('created_at', { ascending: false })
+      .limit(Math.max(1, Math.min(30, Number(limit) || 10)));
+    if (error) throw new Error(toMessage(error));
+    return { userId: user.id, rows: data || [] };
+  }
+
   // Gizlilik-dostu olcum (PO-6): cerezsiz, kimliksiz olay sayaci.
   // - Kimlik YOK: user_id/IP/fingerprint gonderilmez; yalnizca olay adi + sayfa.
   // - Oturum basina olay basi 1 kayit (sessionStorage tekillestirme).
@@ -1003,6 +1036,9 @@
     fetchDailySignal,
     fetchWallMarks,
     leaveWallMark,
+    throwBottle,
+    catchBottle,
+    listBottles,
     recordSiteEvent,
     slugify
   };

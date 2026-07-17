@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 17 Jul 2026 14:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 17 Jul 2026 15:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sisedeki mesaj: bottle komutu</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-17-bottle</guid>
+      <pubDate>Fri, 17 Jul 2026 15:00:00 +0300</pubDate>
+      <description>Terminale asenkron rastlantisal posta: "bottle throw" ile sise birak (gunde 3), "bottle catch" ile okyanustan rastgele bir sise yakala. Kimin eline gececegini okyanus secer.</description>
+    </item>
 
     <item>
       <title>Canli varlik katmani: who komutu</title>

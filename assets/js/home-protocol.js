@@ -1735,6 +1735,86 @@
         }
       };
 
+      // --- Sisedeki mesaj (bottle): asenkron rastlantisal mesajlasma.
+      // Yazma islemleri Supabase RPC ile (gunluk limit sunucuda); tablo yoksa
+      // ya da giris yoksa zarif metinlerle geri cekilir.
+      const bottleUsage = () => [
+        '] BOTTLE',
+        '',
+        '  bottle throw <mesaj>  bir sise birak (gunde 3; giris gerekir)',
+        '  bottle catch          okyanustan rastgele bir sise yakala',
+        '  bottle list           attigin ve yakaladigin siseler',
+        '',
+        '  kural: kimin eline gececegini secemezsin. okyanus karar verir.',
+        ']'
+      ].join('\n');
+
+      const bottleErrorText = (error) => {
+        const msg = String(error?.message || '');
+        if (/login_required|giris|jwt|auth/i.test(msg)) return 'bottle: sise birakmak icin once giris yap (/account/auth.html).';
+        if (/daily_limit/i.test(msg)) return 'bottle: gunluk sise hakkin doldu (24 saatte 3). okyanus sabir ister.';
+        if (/body_invalid/i.test(msg)) return 'bottle: mesaj 1-280 karakter olmali.';
+        if (/does not exist|could not find|schema cache|function/i.test(msg)) return 'bottle: sise agi henuz kurulmamis. deniz sakin.';
+        return 'bottle: dalga ters vurdu; islem tamamlanamadi.';
+      };
+
+      const bottleCommand = async (rawArg = '') => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.throwBottle || !backend.isConfigured?.()) {
+          return 'bottle: sise agi cevrimdisi.';
+        }
+        const arg = String(rawArg || '').trim();
+        const sub = (arg.split(/\s+/)[0] || '').toLowerCase();
+        if (!sub || sub === 'help') return bottleUsage();
+        if (sub === 'throw' || sub === 'at' || sub === 'birak') {
+          const body = arg.replace(/^\S+\s*/, '').trim();
+          if (!body) return 'bottle: usage bottle throw <mesaj>';
+          try {
+            await backend.throwBottle(body);
+            audioCue('system.unlock');
+            return 'sise suya birakildi. kim bulur, ne zaman bulur — bilinmez.';
+          } catch (error) {
+            return bottleErrorText(error);
+          }
+        }
+        if (sub === 'catch' || sub === 'yakala') {
+          try {
+            const row = await backend.catchBottle();
+            if (!row) return 'bottle: okyanus su an bos. sonra tekrar bak — ya da ilk siseyi sen birak.';
+            audioCue('system.unlock');
+            return [
+              '] SISE YAKALANDI',
+              '',
+              `  ${row.body}`,
+              '',
+              `  birakilma: ${relativeTime(row.created_at)}`,
+              '  (gonderen anonim. istersen sen de bir sise birak: bottle throw <mesaj>)',
+              ']'
+            ].join('\n');
+          } catch (error) {
+            return bottleErrorText(error);
+          }
+        }
+        if (sub === 'list' || sub === 'liste') {
+          try {
+            const { userId, rows } = await backend.listBottles(10);
+            if (!rows.length) return 'bottle: kaydin yok. ilk siseni birak: bottle throw <mesaj>';
+            const lines = rows.map((row) => {
+              const mine = row.sender_id === userId;
+              const dir = mine ? '>>' : '<<';
+              const stateTag = mine
+                ? (row.status === 'caught' ? 'yakalandi' : 'suda')
+                : 'yakaladin';
+              return `  ${dir} [${stateTag}] ${row.body.slice(0, 60)}${row.body.length > 60 ? '...' : ''}`;
+            });
+            return ['] SISELERIN', '', ...lines, ']'].join('\n');
+          } catch (error) {
+            return bottleErrorText(error);
+          }
+        }
+        return bottleUsage();
+      };
+
       const uptimeCommand = () => {
         const seconds = Math.floor(performance.now() / 1000);
         const minutes = Math.floor(seconds / 60);
@@ -2663,6 +2743,12 @@
           action: dailySignalCommand
         },
         {
+          command: 'bottle',
+          description: 'sisedeki mesaj: bottle throw <mesaj> / catch / list',
+          aliases: ['sise', 'şişe', 'message in a bottle'],
+          action: () => bottleCommand('')
+        },
+        {
           command: 'who',
           description: 'su an sitede gezen anonim sinyalleri listeler',
           aliases: ['kimler', 'nearby', 'presence'],
@@ -2978,6 +3064,7 @@
         'ask <konu> / sor <konu> -- oracle\'a dunya baglamiyla sor (deb aciksa onun sesiyle)',
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
+        'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
         'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
         '',
@@ -3602,6 +3689,16 @@
           // Ham metni kullan (normalize edilmemis) ki kullanici mesaji oldugu gibi kalsin.
           const rawBody = query.replace(/^\s*(leave mark|iz birak|duvara yaz|mark)\s+/i, '');
           const result = await leaveMarkCommand(rawBody);
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // Sisedeki mesaj: throw govdesi ham metin kalsin diye normalize oncesi ele alinir.
+        if (/^\s*(bottle|sise|şişe)(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*(bottle|sise|şişe)\s*/i, '');
+          const result = await bottleCommand(rawArg);
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';
