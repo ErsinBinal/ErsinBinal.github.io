@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 17 Jul 2026 16:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 17 Jul 2026 17:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Gunun sinyal karti</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-17-daily-card</guid>
+      <pubDate>Fri, 17 Jul 2026 17:00:00 +0300</pubDate>
+      <description>Her gun herkese ayni prosedurel kart dogar: glif kombinasyonu, ton kodu, kisa soz. "card" ile gor, "collect" ile topla (gunde 1), "cards" ile koleksiyonunu listele. Kacan gun kacar.</description>
+    </item>
 
     <item>
       <title>Signal Shards ekonomisi</title>

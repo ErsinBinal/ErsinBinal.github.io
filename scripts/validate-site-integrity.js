@@ -123,7 +123,7 @@ const mustPrecache = [
   '/assets/js/home/coop-gate.js?v=1',
   '/assets/js/supabase-client.js?v=35',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=63',
+  '/assets/js/home-protocol.js?v=64',
   '/assets/js/dart-skorbord.js?v=9',
   '/assets/js/service-worker-register.js?v=3'
 ];

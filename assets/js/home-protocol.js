@@ -1706,6 +1706,99 @@
         return dailySignalFallback();
       };
 
+      // --- Gunun sinyal karti: seed=YYYY-MM-DD ile deterministik prosedurel
+      // kart. Herkes ayni gun ayni karti gorur; "collect" gunde bir kez
+      // koleksiyona ekler (kacan gun kacar).
+      const mulberry32 = (seed) => {
+        let a = seed >>> 0;
+        return () => {
+          a |= 0;
+          a = (a + 0x6D2B79F5) | 0;
+          let t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      };
+
+      const CARD_GLYPHS = ['∴', '∑', 'λ', '◇', '∞', 'Ψ', 'Ω', '∆', '⌁', '✶', '☍', '⌘'];
+      const CARD_TONES = ['JADE', 'CYAN', 'AMBER', 'MAGENTA', 'ICE', 'VIOLET'];
+      const CARD_NOUNS = ['sabir', 'frekans', 'esik', 'yanki', 'kivilcim', 'harita', 'golge', 'isik', 'dalga', 'muhur', 'pusula', 'tohum'];
+      const CARD_VERBS = ['cagirir', 'buyutur', 'sakinlestirir', 'keskinlestirir', 'acar', 'tasir', 'yankilar', 'toplar'];
+
+      const cardDateKey = () => new Date().toISOString().slice(0, 10);
+
+      const buildDailyCard = (dateKey) => {
+        const seed = [...dateKey].reduce((hash, ch) => (Math.imul(hash, 31) + ch.charCodeAt(0)) | 0, 7);
+        const rng = mulberry32(seed);
+        const pick = (list) => list[Math.floor(rng() * list.length)];
+        const glyphs = [pick(CARD_GLYPHS), pick(CARD_GLYPHS), pick(CARD_GLYPHS)];
+        const tone = pick(CARD_TONES);
+        const grade = 1 + Math.floor(rng() * 9);
+        const nounA = pick(CARD_NOUNS);
+        let nounB = pick(CARD_NOUNS);
+        if (nounB === nounA) nounB = CARD_NOUNS[(CARD_NOUNS.indexOf(nounA) + 3) % CARD_NOUNS.length];
+        const verb = pick(CARD_VERBS);
+        return {
+          glyphs,
+          code: `${tone}-${grade}`,
+          text: `${nounA}, ${nounB}${/[aiou]$/.test(nounB) ? 'yu' : 'u'} ${verb}`
+        };
+      };
+
+      const cardCommand = () => {
+        const dateKey = cardDateKey();
+        const card = buildDailyCard(dateKey);
+        const owned = (state.inventory || []).includes(`card:${dateKey}`);
+        const inner = 22;
+        const line = (text = '') => `  | ${text.padEnd(inner)} |`;
+        return [
+          `] SINYAL KARTI ${dateKey}`,
+          `  +${'-'.repeat(inner + 2)}+`,
+          line(`${card.glyphs.join('   ')}`),
+          line(),
+          line(card.code),
+          line(`"${card.text}"`),
+          `  +${'-'.repeat(inner + 2)}+`,
+          owned ? '  koleksiyonda [x] (cards ile bak)' : '  topla: collect (gunde 1; kacan gun kacar)',
+          ']'
+        ].join('\n');
+      };
+
+      const collectCommand = () => {
+        const dateKey = cardDateKey();
+        const key = `card:${dateKey}`;
+        if ((state.inventory || []).includes(key)) {
+          return 'collect: bugunun karti zaten koleksiyonda. yarin yeni kart dogar.';
+        }
+        state.inventory = [...new Set([...(state.inventory || []), key])];
+        persist();
+        scheduleWorldSave();
+        awardShards(1, 'sinyal karti');
+        audioCue('game.pickup');
+        const card = buildDailyCard(dateKey);
+        return `collect: ${card.code} karti koleksiyona eklendi (+1 shard). cards ile bak.`;
+      };
+
+      const cardsCommand = () => {
+        const collected = (state.inventory || [])
+          .filter((item) => item.startsWith('card:'))
+          .map((item) => item.slice(5))
+          .sort()
+          .reverse();
+        if (!collected.length) return 'cards: koleksiyon bos. bugunun kartini "card" ile gor, "collect" ile topla.';
+        const rows = collected.slice(0, 14).map((dateKey) => {
+          const card = buildDailyCard(dateKey);
+          return `  ${dateKey}  ${card.glyphs.join(' ')}  ${card.code.padEnd(10)} "${card.text}"`;
+        });
+        return [
+          `] KART KOLEKSIYONU (${collected.length})`,
+          '',
+          ...rows,
+          collected.length > 14 ? `  ... ve ${collected.length - 14} kart daha` : '',
+          ']'
+        ].filter(Boolean).join('\n');
+      };
+
       // --- Faz 4: asenkron duvar (graffiti). Okuma public; yazma sadece giris yapmis
       // kullaniciya acik. Gosterim textContent ile yapilir => XSS yapisal olarak imkansiz.
       const formatWallStamp = (iso) => {
@@ -2875,6 +2968,24 @@
           action: dailySignalCommand
         },
         {
+          command: 'card',
+          description: 'gunun sinyal kartini gosterir (herkese ayni kart dogar)',
+          aliases: ['kart', 'signal card', 'gunun karti', 'daily card'],
+          action: cardCommand
+        },
+        {
+          command: 'collect',
+          description: 'gunun kartini koleksiyona ekler (gunde 1)',
+          aliases: ['topla', 'collect card', 'karti topla'],
+          action: collectCommand
+        },
+        {
+          command: 'cards',
+          description: 'toplanan sinyal karti koleksiyonunu listeler',
+          aliases: ['kartlar', 'koleksiyon', 'collection'],
+          action: cardsCommand
+        },
+        {
           command: 'shards',
           description: 'signal shard bakiyesi ve kazanim yollari',
           aliases: ['shard', 'bakiye', 'balance'],
@@ -3210,6 +3321,7 @@
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
         'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
         'shards -- signal shard bakiyen · shop -- kozmetik dukkan (tema, saver varyanti)',
+        'card / collect / cards -- gunun sinyal karti: gor, topla, koleksiyonla',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
         'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
         '',
