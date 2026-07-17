@@ -839,15 +839,26 @@
     return data || [];
   }
 
+  // shards kolonu migration'i henuz calistirilmamis olabilir; kolon hatasinda
+  // eski secime dusulur ki world senkronu asla kirilmasin.
+  const isShardsColumnError = (error) => /shards/i.test(String(error?.message || ''));
+
   async function fetchWorldState() {
     const client = await requireClient();
     const user = await getUser();
     if (!user) return null;
-    const { data, error } = await client
+    let { data, error } = await client
       .from('world_state')
-      .select('unlocked, inventory, discovered, level, updated_at')
+      .select('unlocked, inventory, discovered, level, shards, updated_at')
       .eq('user_id', user.id)
       .maybeSingle();
+    if (error && isShardsColumnError(error)) {
+      ({ data, error } = await client
+        .from('world_state')
+        .select('unlocked, inventory, discovered, level, updated_at')
+        .eq('user_id', user.id)
+        .maybeSingle());
+    }
     if (error) throw new Error(toMessage(error));
     return data;
   }
@@ -865,13 +876,22 @@
       inventory: toArray(worldState.inventory),
       discovered: toArray(worldState.discovered),
       level: Math.max(0, Math.min(99, Number(worldState.level) || 0)),
+      shards: Math.max(0, Math.min(999999, Number(worldState.shards) || 0)),
       updated_at: new Date().toISOString()
     };
-    const { data, error } = await client
+    let { data, error } = await client
       .from('world_state')
       .upsert(payload, { onConflict: 'user_id' })
-      .select('unlocked, inventory, discovered, level, updated_at')
+      .select('unlocked, inventory, discovered, level, shards, updated_at')
       .single();
+    if (error && isShardsColumnError(error)) {
+      const { shards, ...legacyPayload } = payload;
+      ({ data, error } = await client
+        .from('world_state')
+        .upsert(legacyPayload, { onConflict: 'user_id' })
+        .select('unlocked, inventory, discovered, level, updated_at')
+        .single());
+    }
     if (error) throw new Error(toMessage(error));
     return data;
   }

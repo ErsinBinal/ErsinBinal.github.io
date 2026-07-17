@@ -683,6 +683,10 @@
 
     const screenSaverCommand = () => {
       const overlay = ensureScreenSaverOverlay();
+      // Shop'tan alinan varyant (shards ekonomisi): mor drift renk kaymasi.
+      try {
+        overlay.classList.toggle('saver-variant-drift', localStorage.getItem('convivium.saver.variant') === 'drift');
+      } catch { /* kozmetik; sessiz gec */ }
       setLastFocused(document.activeElement);
       closeCommand();
       overlay.classList.add('is-active');

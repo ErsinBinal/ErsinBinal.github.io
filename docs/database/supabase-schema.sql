@@ -718,3 +718,10 @@ revoke execute on function public.throw_bottle(text, uuid) from public, anon;
 revoke execute on function public.catch_bottle() from public, anon;
 grant execute on function public.throw_bottle(text, uuid) to authenticated;
 grant execute on function public.catch_bottle() to authenticated;
+
+-- =============================================================
+-- Signal Shards ekonomisi — bkz. 2026-07-17-shards.sql
+-- =============================================================
+
+alter table public.world_state
+  add column if not exists shards integer not null default 0;

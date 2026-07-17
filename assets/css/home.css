@@ -1375,6 +1375,11 @@
       filter: none;
     }
 
+    /* Shop varyanti: ekran koruyucu mor drift (shards ile acilir). */
+    .screen-saver-overlay.saver-variant-drift {
+      filter: hue-rotate(285deg) saturate(1.18);
+    }
+
     /* Canli varlik: o an icinde insan olan odalarin dugumleri parlar. */
     .atlas-node.has-signal {
       border-color: rgba(0, 255, 102, 0.72);

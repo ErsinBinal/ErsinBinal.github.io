@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v178';
+const CACHE_NAME = 'convivium-v179';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -45,7 +45,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/bugy-cinema.css?v=2',
   '/assets/css/bugy-pet.css?v=7',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=22',
+  '/assets/css/home.css?v=23',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
@@ -61,11 +61,11 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/routes.js?v=5',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
-  '/assets/js/home/screen-saver.js?v=1',
+  '/assets/js/home/screen-saver.js?v=2',
   '/assets/js/home/presence.js?v=1',
   '/assets/js/home/coop-gate.js?v=1',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=62',
+  '/assets/js/home-protocol.js?v=63',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=3',
   '/assets/js/origin-beacon.js?v=1',
@@ -89,7 +89,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=34',
+  '/assets/js/supabase-client.js?v=35',
   '/assets/js/articles.js?v=7',
   '/assets/img/guides/apps-guide.svg',
   '/assets/img/guides/games-guide.svg',

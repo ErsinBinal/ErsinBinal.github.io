@@ -73,7 +73,9 @@
         inventory: [],
         discovered: [],
         aliases: {},
-        debBond: 0
+        debBond: 0,
+        shards: 0,
+        lastShardDay: ''
       });
       const readState = () => {
         try {
@@ -120,6 +122,8 @@
       state.discovered = Array.isArray(state.discovered) ? [...new Set(state.discovered)] : [];
       state.aliases = (state.aliases && typeof state.aliases === 'object' && !Array.isArray(state.aliases)) ? state.aliases : {};
       state.debBond = Number.isFinite(state.debBond) ? state.debBond : 0;
+      state.shards = Number.isFinite(state.shards) ? Math.max(0, state.shards) : 0;
+      state.lastShardDay = typeof state.lastShardDay === 'string' ? state.lastShardDay : '';
       state.visits += 1;
       if (state.visits > 1) document.body.classList.add('returning-visitor');
       // Gizlilik-dostu sayac: kimliksiz sayfa gorunumu (oturumda 1; tablo yoksa no-op).
@@ -434,6 +438,27 @@
         if (state.level > previousLevel) audioCue('system.unlock');
       };
 
+      // Signal Shards ekonomisi: tek para birimi. Kazanim kucuk ve seyrek;
+      // bakiye localStorage'da yasar, girisliyse world_state ile buluta tasinir.
+      const awardShards = (amount = 1, reason = '') => {
+        const gain = Math.max(0, Math.round(Number(amount) || 0));
+        if (!gain) return;
+        state.shards = Math.max(0, (Number(state.shards) || 0) + gain);
+        persist();
+        scheduleWorldSave();
+        audioCue('game.coin');
+        if (consoleLine && reason) consoleLine.textContent = `+${gain} shard / ${reason}`;
+      };
+
+      const spendShards = (amount) => {
+        const cost = Math.max(0, Math.round(Number(amount) || 0));
+        if ((Number(state.shards) || 0) < cost) return false;
+        state.shards -= cost;
+        persist();
+        scheduleWorldSave();
+        return true;
+      };
+
       // --- Faz 3: kalici world state senkronu (Supabase). Tamamen defansif:
       // backend yoksa / oturum yoksa / hata olursa localStorage davranisi aynen korunur.
       let worldSyncReady = false;
@@ -449,7 +474,8 @@
             unlocked: state.unlocked,
             inventory: state.inventory,
             discovered: state.discovered,
-            level: state.level
+            level: state.level,
+            shards: state.shards
           }).catch(() => { /* sessiz: bulut yazimi basarisizsa local state gecerli kalir */ });
         };
         if (immediate) run();
@@ -467,6 +493,7 @@
             state.inventory = [...new Set([...(state.inventory || []), ...(remote.inventory || [])])];
             state.discovered = [...new Set([...(state.discovered || []), ...(remote.discovered || [])])];
             state.level = Math.max(Number(state.level) || 0, Number(remote.level) || 0);
+            state.shards = Math.max(Number(state.shards) || 0, Number(remote.shards) || 0);
             persist();
             updateAccess();
             renderProtocolSurfaces();
@@ -1119,6 +1146,7 @@
           `  unvan   : ${rankTitle()}   (access: ${level})`,
           `  izler   : ${threads}/2 tamam`,
           `  canta   : ${inv.length ? inv.join(', ') : 'bos'}`,
+          `  shards  : ${state.shards}`,
           `  ziyaret : ${state.visits}   komut: ${state.commands}   node: ${(state.opened || []).length}`,
           ']'
         ].join('\n');
@@ -1139,7 +1167,8 @@
         state.rituals += 1;
         if (state.rituals >= 2) award(Math.max(state.level, 2));
         persist();
-        return sample(ritualLines);
+        awardShards(1, 'ritual');
+        return `${sample(ritualLines)}\n(+1 shard)`;
       };
 
       const noteCommand = () => {
@@ -1298,6 +1327,7 @@
           if (!state.discovered.includes(path)) {
             state.discovered = [...new Set([...state.discovered, path])];
             persist();
+            awardShards(2, `kesif ${path}`);
           }
           return roomPanel(path);
         }
@@ -1538,7 +1568,8 @@
           persist();
           scheduleWorldSave();
           audioCue('system.unlock');
-          return `aldin: ${grant.item}. (inventory ile bak, sonra muhuru ac)`;
+          awardShards(3, `take ${grant.item}`);
+          return `aldin: ${grant.item}. (+3 shard — inventory ile bak, sonra muhuru ac)`;
         }
         return `take: "${target}" burada alinabilir degil.`;
       };
@@ -1577,6 +1608,7 @@
         award(3);
         updateAccess();
         audioCue('system.unlock');
+        awardShards(5, `unlock ${path}`);
         return unlockCeremony(path, roomName);
       };
 
@@ -1866,9 +1898,22 @@
         const colors = {
           green: ['#00ff66', '#caffd8'],
           cyan: ['#00eaff', '#d8fbff'],
-          amber: ['#f5ff6b', '#fff7b0']
+          amber: ['#f5ff6b', '#fff7b0'],
+          // Shop'tan acilan temalar (shop:theme-*):
+          magenta: ['#ff2ea6', '#ffd8ef'],
+          ice: ['#8ef4ff', '#eaffff']
         };
-        if (!colors[theme]) return 'theme: usage theme green|cyan|amber';
+        const premium = { magenta: 'theme-magenta', ice: 'theme-ice' };
+        const themeList = () => {
+          const owned = new Set(state.inventory || []);
+          const open = ['green', 'cyan', 'amber']
+            .concat(Object.keys(premium).filter((key) => owned.has(`shop:${premium[key]}`)));
+          return open.join('|');
+        };
+        if (!colors[theme]) return `theme: usage theme ${themeList()} (yenileri shop'ta)`;
+        if (premium[theme] && !(state.inventory || []).includes(`shop:${premium[theme]}`)) {
+          return `theme: ${theme} kilitli. shop'tan ac: shop buy ${premium[theme]}`;
+        }
         document.documentElement.style.setProperty('--journey-green', colors[theme][0]);
         document.documentElement.style.setProperty('--journey-cyan', colors[theme][1]);
         selectedTheme = theme;
@@ -1897,6 +1942,70 @@
           return 'audio on';
         }
         return `audio: ${audioEnabled ? 'on' : 'off'} / usage volume on|mute`;
+      };
+
+      // --- Signal Shards: bakiye + dukkan (kozmetik) ---
+      const SHOP_ITEMS = [
+        { key: 'theme-magenta', cost: 12, desc: 'terminal temasi: magenta  (sonra: theme magenta)' },
+        { key: 'theme-ice', cost: 12, desc: 'terminal temasi: ice      (sonra: theme ice)' },
+        { key: 'saver-drift', cost: 20, desc: 'ekran koruyucu varyanti: mor drift (screen saver)' },
+        { key: 'bugy-flag', cost: 8, desc: 'bugy aksesuari: mini bayrak' }
+      ];
+
+      const shardOwned = (key) => (state.inventory || []).includes(`shop:${key}`);
+
+      const shardsCommand = () => [
+        '] SIGNAL SHARDS',
+        '',
+        `  bakiye: ${state.shards} shard`,
+        '',
+        '  kazanim: gunluk ilk ziyaret +2, yeni esik kesfi +2, take +3,',
+        '           unlock +5, ritual +1, rezonans +3',
+        '  harcama: shop (kozmetik dukkan)',
+        ']'
+      ].join('\n');
+
+      const applyShopPurchase = (key) => {
+        try {
+          if (key === 'saver-drift') localStorage.setItem('convivium.saver.variant', 'drift');
+          if (key === 'bugy-flag') localStorage.setItem('convivium.bugy.flag', '1');
+        } catch { /* kozmetik bayrak best-effort */ }
+      };
+
+      const shopCommand = (arg = '') => {
+        const norm = normalizeCommand(arg);
+        if (!norm || norm === 'list') {
+          const rows = SHOP_ITEMS.map((item) => {
+            const mark = shardOwned(item.key) ? '[x]' : `[${String(item.cost).padStart(2)}]`;
+            return `  ${mark} ${item.key.padEnd(14)} ${item.desc}`;
+          });
+          return [
+            '] SHOP',
+            '',
+            `  bakiye: ${state.shards} shard`,
+            '',
+            ...rows,
+            '',
+            '  satin al: shop buy <urun>   ([x] = sende var)',
+            ']'
+          ].join('\n');
+        }
+        const parts = norm.split(/\s+/);
+        if (parts[0] !== 'buy' && parts[0] !== 'al') return 'shop: usage shop | shop buy <urun>';
+        const key = parts.slice(1).join('-');
+        const item = SHOP_ITEMS.find((entry) => entry.key === key);
+        if (!item) return `shop: "${key || '?'}" diye bir urun yok. shop ile listele.`;
+        if (shardOwned(item.key)) return `shop: ${item.key} zaten sende.`;
+        if (!spendShards(item.cost)) return `shop: yetersiz bakiye (${state.shards}/${item.cost} shard).`;
+        state.inventory = [...new Set([...(state.inventory || []), `shop:${item.key}`])];
+        persist();
+        scheduleWorldSave();
+        applyShopPurchase(item.key);
+        audioCue('game.pickup');
+        const hint = item.key.startsWith('theme-') ? ` dene: theme ${item.key.replace('theme-', '')}`
+          : item.key === 'saver-drift' ? ' dene: screen saver'
+          : '';
+        return `shop: ${item.key} alindi (-${item.cost} shard, kalan ${state.shards}).${hint}`;
       };
 
       const scanCommand = () => {
@@ -1968,6 +2077,7 @@
         onSync: (code) => {
           state.easterTrail = [...(state.easterTrail || []), `resonate:${code}`].slice(-4);
           persist();
+          awardShards(3, 'rezonans');
           audioCue('system.unlock');
           pulse(640, 0.09);
           printTerminal([
@@ -2765,6 +2875,18 @@
           action: dailySignalCommand
         },
         {
+          command: 'shards',
+          description: 'signal shard bakiyesi ve kazanim yollari',
+          aliases: ['shard', 'bakiye', 'balance'],
+          action: shardsCommand
+        },
+        {
+          command: 'shop',
+          description: 'shard dukkani: kozmetik temalar ve varyantlar',
+          aliases: ['magaza', 'mağaza', 'store', 'dukkan'],
+          action: () => shopCommand('')
+        },
+        {
           command: 'bottle',
           description: 'sisedeki mesaj: bottle throw <mesaj> / catch / list',
           aliases: ['sise', 'şişe', 'message in a bottle'],
@@ -3087,6 +3209,7 @@
         'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
         'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
         'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
+        'shards -- signal shard bakiyen · shop -- kozmetik dukkan (tema, saver varyanti)',
         'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
         'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
         '',
@@ -3479,6 +3602,7 @@
         ['volume ', value => volumeCommand(value)],
         ['audio ', value => volumeCommand(value)],
         ['sound ', value => volumeCommand(value)],
+        ['shop ', value => shopCommand(value)],
         ['resonate ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['rezonans ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['pipe ', value => pipeMod ? pipeMod.command(value) : 'pipe: unavailable'],
@@ -4102,6 +4226,12 @@
           updateOsSnapshot(state.level, 'blackout.seed');
           writeOfflineNode({ welcomed: true, welcomedAt: new Date().toISOString() });
         }
+      }
+      // Gunluk ilk ziyaret shard'i (lokal gun; sessiz ve kucuk).
+      const shardDay = new Date().toISOString().slice(0, 10);
+      if (state.lastShardDay !== shardDay) {
+        state.lastShardDay = shardDay;
+        awardShards(2, 'gunluk ilk ziyaret');
       }
       renderProtocolSurfaces();
       persist();

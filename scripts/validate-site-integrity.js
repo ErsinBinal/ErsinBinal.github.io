@@ -118,12 +118,12 @@ const mustPrecache = [
   '/assets/js/home/routes.js?v=5',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
-  '/assets/js/home/screen-saver.js?v=1',
+  '/assets/js/home/screen-saver.js?v=2',
   '/assets/js/home/presence.js?v=1',
   '/assets/js/home/coop-gate.js?v=1',
-  '/assets/js/supabase-client.js?v=34',
+  '/assets/js/supabase-client.js?v=35',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=62',
+  '/assets/js/home-protocol.js?v=63',
   '/assets/js/dart-skorbord.js?v=9',
   '/assets/js/service-worker-register.js?v=3'
 ];

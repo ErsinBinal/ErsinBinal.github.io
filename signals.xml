@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 17 Jul 2026 15:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 17 Jul 2026 16:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Signal Shards ekonomisi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-17-shards</guid>
+      <pubDate>Fri, 17 Jul 2026 16:00:00 +0300</pubDate>
+      <description>Kesiflerin karsiligi: gunluk ziyaret, esik kesfi, take/unlock ve ritueller signal shard kazandiriyor. "shards" bakiye, "shop" kozmetik dukkan: yeni terminal temalari, ekran koruyucu varyanti, bugy bayragi.</description>
+    </item>
 
     <item>
       <title>Sisedeki mesaj: bottle komutu</title>
