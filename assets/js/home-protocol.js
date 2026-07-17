@@ -1799,6 +1799,48 @@
         ].filter(Boolean).join('\n');
       };
 
+      // --- Convivium Wrapped: mevcut izlerden kisisel ozet (giris gerekir).
+      // Yeni tablo yok; her kaynak ayri ayri, hatada sessizce atlanir.
+      const wrappedCommand = async () => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.isConfigured?.()) return 'wrapped: bulut cevrimdisi.';
+        if (!authState.granted) return 'wrapped: iz raporu icin once giris yap (/account/auth.html).';
+        const safe = (promise) => (promise || Promise.resolve(null)).catch(() => null);
+        const [scores, sessions, oracleProfile, dartStats] = await Promise.all([
+          safe(backend.fetchUserGameScores?.(30)),
+          safe(backend.fetchUserAppSessions?.(40)),
+          safe(backend.fetchOracleProfile?.()),
+          safe(backend.fetchUserDartStats?.(12))
+        ]);
+        const gameRows = scores || [];
+        const sessionRows = sessions || [];
+        const totalMinutes = Math.round(sessionRows.reduce((sum, row) => sum + (Number(row.duration_seconds) || 0), 0) / 60);
+        const best = gameRows.reduce((top, row) => (Number(row.score) || 0) > (Number(top?.score) || -1) ? row : top, null);
+        const appCounts = {};
+        sessionRows.forEach((row) => { appCounts[row.item_title] = (appCounts[row.item_title] || 0) + 1; });
+        const topApp = Object.entries(appCounts).sort((a, b) => b[1] - a[1])[0];
+        const dartWins = dartStats
+          ? ['x01', 'atc', 'cricket'].reduce((sum, mode) => sum + (dartStats.byMode?.[mode]?.wins || 0), 0)
+          : 0;
+        if (!gameRows.length && !sessionRows.length && !dartStats?.totalMatches && !oracleProfile) {
+          return 'wrapped: henuz yeterli iz yok. oyun oyna, oracle\'a sor, dart at — rapor kendini yazar.';
+        }
+        const lines = [
+          '] IZ RAPORU (WRAPPED)',
+          '',
+          `  oyun skoru      : ${gameRows.length} kayit`
+        ];
+        if (best) lines.push(`  en iyi skor     : ${Number(best.score || 0).toLocaleString('tr-TR')} (${best.game_key})`);
+        lines.push(`  protokol suresi : ${totalMinutes} dk`);
+        if (topApp) lines.push(`  favori protokol : ${topApp[0]} (${topApp[1]}x)`);
+        if (dartStats?.totalMatches) lines.push(`  dart            : ${dartStats.totalMatches} mac / ${dartWins} galibiyet`);
+        if (oracleProfile?.reading_count) {
+          lines.push(`  oracle          : ${oracleProfile.reading_count} okuma${oracleProfile.dominant_axis ? ` (baskin eksen: ${oracleProfile.dominant_axis})` : ''}`);
+        }
+        lines.push('', '  gorsel kart: dashboard -> Iz Raporu (PNG indirilebilir)', ']');
+        return lines.join('\n');
+      };
+
       // --- Faz 4: asenkron duvar (graffiti). Okuma public; yazma sadece giris yapmis
       // kullaniciya acik. Gosterim textContent ile yapilir => XSS yapisal olarak imkansiz.
       const formatWallStamp = (iso) => {
@@ -2966,6 +3008,12 @@
           description: 'gunun sinyalini gosterir (bulut; yoksa lokal)',
           aliases: ['gunluk', 'gunluk sinyal', 'today', 'gunun sinyali'],
           action: dailySignalCommand
+        },
+        {
+          command: 'wrapped',
+          description: 'kisisel iz raporu: skorlar, sureler, oracle, dart (giris gerekir)',
+          aliases: ['iz raporu', 'rapor', 'yearbook'],
+          action: wrappedCommand
         },
         {
           command: 'card',

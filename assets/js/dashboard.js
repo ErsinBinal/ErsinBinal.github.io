@@ -825,6 +825,128 @@
     }
   }
 
+  // --- Iz Raporu (Wrapped): mevcut verilerden prosedurel ozet karti --------
+  function wrappedStats(scores, sessions, dartStats, oracleProfile) {
+    const bestScore = scores.reduce((best, row) => (Number(row.score) || 0) > (Number(best?.score) || -1) ? row : best, null);
+    const totalMinutes = Math.round(sessions.reduce((sum, row) => sum + (Number(row.duration_seconds) || 0), 0) / 60);
+    const appCounts = {};
+    sessions.forEach((row) => {
+      appCounts[row.item_title] = (appCounts[row.item_title] || 0) + 1;
+    });
+    const topApp = Object.entries(appCounts).sort((a, b) => b[1] - a[1])[0] || null;
+    const dart = dartStats && !dartStats.error ? dartStats : null;
+    const dartWins = dart ? ['x01', 'atc', 'cricket'].reduce((sum, mode) => sum + (dart.byMode?.[mode]?.wins || 0), 0) : 0;
+    return {
+      totalGames: scores.length,
+      bestScore,
+      totalMinutes,
+      topApp,
+      dartMatches: dart?.totalMatches || 0,
+      dartWins,
+      oracleReadings: Number(oracleProfile?.reading_count) || 0,
+      oracleAxis: oracleProfile?.dominant_axis || null,
+      hasData: Boolean(scores.length || sessions.length || (dart && dart.totalMatches) || oracleProfile)
+    };
+  }
+
+  function renderWrapped(session, profile, scores, sessions, dartStats, oracleProfile) {
+    const canvas = document.getElementById('wrappedCanvas');
+    const emptyEl = document.getElementById('wrappedEmpty');
+    const downloadBtn = document.getElementById('wrappedDownload');
+    if (!canvas || !emptyEl || !downloadBtn) return;
+
+    const stats = wrappedStats(scores, sessions, dartStats, oracleProfile);
+    if (!stats.hasData) {
+      emptyEl.style.display = '';
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const green = '#00ff66';
+    const pale = '#caffd8';
+    const cyan = '#00eaff';
+
+    ctx.fillStyle = '#050d05';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.65)';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(12, 12, W - 24, H - 24);
+    ctx.strokeStyle = 'rgba(0, 234, 255, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(22, 22, W - 44, H - 44);
+
+    // Arka plan yildiz izi (deterministik).
+    for (let i = 0; i < 90; i += 1) {
+      const x = (i * 137) % (W - 60) + 30;
+      const y = (i * 211) % (H - 60) + 30;
+      ctx.fillStyle = i % 4 ? 'rgba(202, 255, 216, 0.16)' : 'rgba(0, 234, 255, 0.2)';
+      ctx.fillRect(x, y, 2, 2);
+    }
+
+    const mono = (size, weight = '') => `${weight ? `${weight} ` : ''}${size}px "IBM Plex Mono", "Share Tech Mono", monospace`;
+    let y = 82;
+    ctx.fillStyle = pale;
+    ctx.font = mono(16);
+    ctx.fillText('> CONVIVIUM PROTOCOL', 44, y);
+    y += 42;
+    ctx.fillStyle = green;
+    ctx.font = mono(38, 'bold');
+    ctx.fillText('IZ RAPORU', 44, y);
+    y += 30;
+    ctx.fillStyle = cyan;
+    ctx.font = mono(15);
+    const name = profile?.display_name || session.user.email || 'gezgin';
+    ctx.fillText(`${name} / ${new Date().getFullYear()}`, 44, y);
+    y += 18;
+    ctx.strokeStyle = 'rgba(0, 255, 102, 0.4)';
+    ctx.beginPath();
+    ctx.moveTo(44, y);
+    ctx.lineTo(W - 44, y);
+    ctx.stroke();
+    y += 44;
+
+    const statLine = (label, value) => {
+      ctx.fillStyle = 'rgba(202, 255, 216, 0.75)';
+      ctx.font = mono(14);
+      ctx.fillText(label.toUpperCase(), 44, y);
+      ctx.fillStyle = green;
+      ctx.font = mono(26, 'bold');
+      ctx.fillText(String(value), 44, y + 30);
+      y += 66;
+    };
+
+    statLine('kaydedilen oyun skoru', stats.totalGames);
+    if (stats.bestScore) {
+      statLine('en iyi skor', `${Number(stats.bestScore.score || 0).toLocaleString('tr-TR')} (${gameNames[stats.bestScore.game_key] || stats.bestScore.game_key})`);
+    }
+    statLine('protokollerde gecen sure', `${stats.totalMinutes} dk`);
+    if (stats.topApp) statLine('en cok donulen protokol', `${stats.topApp[0]} (${stats.topApp[1]}x)`);
+    if (stats.dartMatches) statLine('dart maci / galibiyet', `${stats.dartMatches} / ${stats.dartWins}`);
+    if (stats.oracleReadings) statLine('oracle okumasi', `${stats.oracleReadings}${stats.oracleAxis ? ` (baskin eksen: ${stats.oracleAxis})` : ''}`);
+
+    ctx.fillStyle = 'rgba(0, 234, 255, 0.7)';
+    ctx.font = mono(13);
+    ctx.fillText('selective / online / not optimized for everyone', 44, H - 52);
+    ctx.fillStyle = 'rgba(202, 255, 216, 0.5)';
+    ctx.fillText('ersinbinal.github.io', 44, H - 32);
+
+    canvas.style.display = '';
+    downloadBtn.style.display = '';
+    downloadBtn.onclick = () => {
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `convivium-wrapped-${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+      });
+    };
+  }
+
   async function init() {
     if (!backend || !backend.isConfigured()) {
       setStatus('Supabase baglantisi yapilandirilmadi.', 'error');
@@ -839,7 +961,7 @@
         return;
       }
 
-      const [profile, scores, recommendations, sessions, dartStats, bugy] = await Promise.all([
+      const [profile, scores, recommendations, sessions, dartStats, bugy, oracleProfile] = await Promise.all([
         backend.getProfile(),
         backend.fetchUserGameScores(40),
         backend.fetchUserAppRecommendations(30),
@@ -849,6 +971,9 @@
           : Promise.resolve(null),
         backend.fetchBugyPet
           ? backend.fetchBugyPet().catch(() => null)
+          : Promise.resolve(null),
+        backend.fetchOracleProfile
+          ? backend.fetchOracleProfile().catch(() => null)
           : Promise.resolve(null)
       ]);
 
@@ -858,6 +983,7 @@
       renderRecommendations(recommendations);
       renderDartStats(dartStats);
       renderSessions(sessions);
+      renderWrapped(session, profile, scores, sessions, dartStats, oracleProfile);
       setStatus('Hazir.', 'success');
 
       dartLb.userId = session.user.id;

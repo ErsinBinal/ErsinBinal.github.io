@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 17 Jul 2026 17:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 17 Jul 2026 18:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Convivium Wrapped: iz raporu</title>
+      <link>https://ersinbinal.github.io/account/dashboard.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-17-wrapped</guid>
+      <pubDate>Fri, 17 Jul 2026 18:00:00 +0300</pubDate>
+      <description>Kisisel iz raporu: oyun skorlari, protokol sureleri, favori uygulama, dart ve oracle izleri tek kartta. Terminalde "wrapped", dashboard'da indirilebilir retro PNG kart.</description>
+    </item>
 
     <item>
       <title>Gunun sinyal karti</title>

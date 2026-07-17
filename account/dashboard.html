@@ -89,6 +89,15 @@
           <h2>Son Oturumlar</h2>
           <div id="dashboardSessions" class="dashboard-list"></div>
         </article>
+
+        <article class="dashboard-panel dashboard-panel-wide">
+          <h2>Iz Raporu (Wrapped)</h2>
+          <div id="dashboardWrapped" class="dashboard-list dashboard-wrapped">
+            <canvas id="wrappedCanvas" width="640" height="800" style="display:none; max-width: 100%; height: auto; border: 1px solid rgba(0, 255, 102, 0.35);" aria-label="Convivium iz raporu karti"></canvas>
+            <p id="wrappedEmpty" style="display:none;">Henuz yeterli iz yok. Oyun oyna, oracle'a sor, dart at — rapor kendini yazar.</p>
+            <button id="wrappedDownload" class="btn" type="button" style="display:none;">Karti indir (PNG)</button>
+          </div>
+        </article>
       </section>
     </main>
   </div>
@@ -99,7 +108,7 @@
   <script src="/assets/js/dart-board-svg.js?v=3" defer></script>
   <script src="/assets/js/bugy-v4.js?v=11" defer></script>
   <script src="/assets/js/bugy-pet.js?v=12" defer></script>
-  <script src="/assets/js/dashboard.js?v=35" defer></script>
+  <script src="/assets/js/dashboard.js?v=36" defer></script>
   <script src="/assets/js/sfx.js?v=19" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌‌​​​‌‌​‌​​​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌​‌​​​​‌‌​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>
