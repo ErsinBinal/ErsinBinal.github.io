@@ -160,7 +160,7 @@
 
     // --- Ortak ekran koruyucu: presence gezginleri uydu olarak dolasir,
     // canli sohbet mesajlari kayan yildiz olarak gecer. ---
-    const SIGNAL_STREAM_MS = 7000;
+    const SIGNAL_STREAM_MS = 9000;
     let signalStreams = []; // { text, start }
 
     const hashTag = (value) => Math.abs(
@@ -189,22 +189,34 @@
       drawPixelText(ctx, `WANDERERS IN ORBIT: ${list.length}`, 14, height - 16, 'rgba(0, 234, 255, 0.6)', 10);
     };
 
-    const drawSignalStreams = (ctx, width, height, reduced) => {
+    // Mesaj merkezden dogar, izleyiciye dogru buyuyerek gelir (galaksi
+    // ucus hissiyle ayni dil): kucuk ve soluk baslar, buyur, netlesir,
+    // kenara varmadan kaybolur. Boylece okumasi kolaydir.
+    const drawSignalStreams = (ctx, cx, cy, width, height, reduced) => {
       const now = performance.now();
       signalStreams = signalStreams.filter((s) => now - s.start < SIGNAL_STREAM_MS);
-      signalStreams.forEach((stream, index) => {
-        const t = (now - stream.start) / SIGNAL_STREAM_MS;
-        const y = height * (0.14 + index * 0.075);
-        const x = reduced ? width * 0.08 : width * (1.05 - t * 1.35);
+      signalStreams.forEach((stream) => {
+        const t = reduced ? 0.55 : Math.min(1, (now - stream.start) / SIGNAL_STREAM_MS);
+        const ease = Math.pow(t, 1.7); // merkezde yavas, kenara dogru hizlanir
+        const x = cx + stream.dx * ease * width * 0.34;
+        const y = cy + stream.dy * ease * height * 0.3;
+        const size = 9 + ease * 26; // 9px -> ~35px buyur
+        const alpha = t < 0.12 ? t / 0.12 : t > 0.82 ? Math.max(0, (1 - t) / 0.18) : 1;
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 234, 255, 0.45)';
-        ctx.beginPath();
-        ctx.moveTo(x - 6, y + 2);
-        ctx.lineTo(x - 52, y + 9);
-        ctx.stroke();
+        ctx.globalAlpha = alpha;
+        ctx.font = `${Math.round(size)}px "Share Tech Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0, 234, 255, 0.5)';
+        ctx.shadowBlur = 4 + ease * 14;
         ctx.fillStyle = '#d8ffe1';
-        ctx.fillRect(Math.round(x) - 4, Math.round(y), 4, 3);
-        drawPixelText(ctx, stream.text, x + 8, y + 5, 'rgba(216, 255, 225, 0.88)', 11);
+        ctx.fillText(stream.text, Math.round(x), Math.round(y));
+        // kucuk isaret: metnin geldigi yonu gosteren kuyruk cizgisi
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(0, 234, 255, ${0.35 * alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(cx + stream.dx * ease * width * 0.1, cy + stream.dy * ease * height * 0.09);
+        ctx.lineTo(x, y + size * 0.35);
+        ctx.stroke();
         ctx.restore();
       });
     };
@@ -213,9 +225,12 @@
       const body = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 72);
       if (!body) return;
       const now = performance.now();
+      // Yon: ust yarim kureden rastgele; ayni anda gelenler carpismasin diye
+      // mevcut akislarin yonlerinden uzak dur.
+      const angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
       signalStreams = [
         ...signalStreams.filter((s) => now - s.start < SIGNAL_STREAM_MS),
-        { text: body, start: now }
+        { text: body, start: now, dx: Math.cos(angle), dy: Math.sin(angle) }
       ].slice(-3);
       // Reduced-motion'da animasyon dongusu durur; tek kare tazele ki mesaj gorunsun.
       if (screenSaverOverlay?.classList.contains('is-active') &&
@@ -556,7 +571,7 @@
       });
 
       drawWanderers(ctx, cx, cy, width, height, elapsed, reduced);
-      drawSignalStreams(ctx, width, height, reduced);
+      drawSignalStreams(ctx, cx, cy, width, height, reduced);
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, width, height);
