@@ -2597,6 +2597,21 @@
         ].join('\n');
       };
 
+      const routeCommandDefinitions = (() => {
+        const createRouteCommands = window.ConviviumHome?.createRouteCommands;
+        if (typeof createRouteCommands !== 'function') {
+          console.error('[home-protocol] route command module unavailable');
+          return [];
+        }
+
+        try {
+          return createRouteCommands({ route, goTo, scrollToOrigin });
+        } catch (error) {
+          console.error('[home-protocol] route command module failed', error);
+          return [];
+        }
+      })();
+
       const commandDefinitions = [
         {
           command: 'basla',
@@ -3246,162 +3261,7 @@
           aliases: ['field note', 'micro note'],
           action: noteCommand
         },
-        {
-          command: 'home',
-          description: 'anasayfa baslangicina doner',
-          aliases: ['origin', 'start', 'baslangic', 'başlangıç'],
-          action: scrollToOrigin
-        },
-        {
-          command: 'open dossier',
-          description: 'makaleler ve notlar',
-          aliases: ['dossier', 'makaleler', 'makale', 'articles'],
-          action: goTo(route('dossier', '/pages/makaleler.html'))
-        },
-        {
-          command: 'run logic',
-          description: 'Cyberpunk Logic oyununu acar',
-          aliases: ['logic', 'cyberpunk logic', 'logic game', 'mantik', 'mantık'],
-          action: goTo(route('logic', '/games/cyberpunk-logic-game.html'))
-        },
-        {
-          command: 'run signal',
-          description: 'Uc Gunes Sinyali oyununu acar',
-          aliases: ['signal game', 'three body', 'three body signal', 'uc gunes', 'üç güneş', 'uc cisim', 'üç cisim', 'relay'],
-          action: goTo(route('signal', '/games/three-body-signal.html'))
-        },
-        {
-          command: 'run ash',
-          description: 'Ash Runner oyununu acar',
-          aliases: ['ash', 'ash runner', 'scrap', 'brawler'],
-          action: goTo(route('ash', '/games/ash-runner.html'))
-        },
-        {
-          command: 'run ash2',
-          description: 'Kul Hatti II: Yorunge oyununu acar',
-          aliases: ['ash2', 'ash runner 2', 'kul hatti 2', 'kül hattı 2', 'yorunge', 'yörünge'],
-          action: goTo(route('ash2', '/games/ash-runner-2.html'))
-        },
-        {
-          command: 'run flow',
-          description: 'Neon River deneyimini acar',
-          aliases: ['flow', 'neon river', 'river'],
-          action: goTo(route('flow', '/games/neon-river.html'))
-        },
-        {
-          command: 'run serpent',
-          description: 'Neon Serpent (yilan) oyununu acar',
-          aliases: ['serpent', 'snake', 'yilan', 'yılan', 'neon serpent'],
-          action: goTo(route('serpent', '/games/neon-serpent.html'))
-        },
-        {
-          command: 'run crude',
-          description: 'Crude Buster (online co-op beat em up) oyununu acar',
-          aliases: ['crude', 'crude buster', 'buster', 'coop', 'co-op', 'beat em up'],
-          action: goTo(route('crude', '/games/crude-buster.html'))
-        },
-        {
-          command: 'dart',
-          description: 'dart skorboard ekranini acar',
-          aliases: ['skorbord', 'scoreboard', 'dart skorbord', 'dart skor', 'scores'],
-          action: goTo(route('dart', '/tools/dart-skorbord.html'))
-        },
-        {
-          command: 'bartender',
-          description: 'kokteyl asistani',
-          aliases: ['bar', 'cocktail', 'kokteyl'],
-          action: goTo(route('bartender', '/tools/bartender.html'))
-        },
-        {
-          command: 'barista',
-          description: 'kahve asistani',
-          aliases: ['coffee', 'kahve'],
-          action: goTo(route('barista', '/tools/barista.html'))
-        },
-        {
-          command: 'realists bar',
-          description: 'The Realists Bar sayfasi',
-          aliases: ['the realists bar', 'realists'],
-          action: goTo(route('realistsBar', '/tools/the-realists-bar.html'))
-        },
-        {
-          command: 'open oracle',
-          description: 'The Oracle deneyimini acar',
-          aliases: ['the oracle', 'oracle page'],
-          action: goTo(route('oracle', '/oracle/'))
-        },
-        {
-          command: 'paradox',
-          description: 'Paradox Terminal sayfasi',
-          aliases: ['paradox terminal', 'terminal'],
-          action: goTo(route('paradox', '/tools/paradox-terminal.html'))
-        },
-        {
-          command: 'ekol',
-          description: 'Ekol Aynasi - dusunce ekolu testi',
-          aliases: ['ayna', 'ekol aynasi', 'ekol aynası', 'mirror', 'schools'],
-          action: goTo(route('ekolAynasi', '/tools/ekol-aynasi.html'))
-        },
-        {
-          command: 'bugy studio',
-          description: 'Bugy Studio deney aracini acar',
-          aliases: ['bugy lab', 'studio bugy', 'pet studio'],
-          action: goTo(route('bugyStudio', '/tools/bugy-studio.html'))
-        },
-        {
-          command: 'about',
-          description: 'site sahibinin ozgecmisi',
-          aliases: [
-            'ozgecmis',
-            'özgeçmiş',
-            'cv',
-            'profile',
-            'bu siteyi kim yaptı',
-            'bu siteyi kim yapti',
-            'bu sayfayı kim yaptı',
-            'bu sayfayi kim yapti',
-            'seni kim yaptı',
-            'seni kim yapti',
-            'siteyi kim yaptı',
-            'siteyi kim yapti',
-            'sayfayı kim yaptı',
-            'sayfayi kim yapti',
-            'site sahibi kim',
-            'kim yaptı',
-            'kim yapti'
-          ],
-          action: goTo(route('profile', '/pages/ozgecmisim.html'))
-        },
-        {
-          command: 'access',
-          description: 'giris ekranini acar',
-          aliases: ['login', 'auth', 'giris', 'giriş'],
-          action: goTo(route('auth', '/account/auth.html'))
-        },
-        {
-          command: 'dashboard',
-          description: 'dashboard ekranini acar',
-          aliases: ['dash', 'panel'],
-          action: goTo(route('dashboard', '/account/dashboard.html'))
-        },
-        {
-          command: 'admin',
-          description: 'admin ekranini acar',
-          aliases: ['manage', 'yonetim', 'yönetim'],
-          action: goTo(route('admin', '/admin/'))
-        },
-        {
-          command: 'universe',
-          description: 'Universe-2 deneyimini acar',
-          aliases: ['universe 2', 'u2', 'evren'],
-          action: goTo(route('universe', '/games/universe-2.html'))
-        },
-        {
-          command: 'open manifest',
-          description: 'site manifest dosyasini acar',
-          aliases: ['manifest file'],
-          action: goTo('manifest.json')
-        },
+        ...routeCommandDefinitions,
         {
           command: 'unlock hidden',
           description: 'gizli katmani acar',

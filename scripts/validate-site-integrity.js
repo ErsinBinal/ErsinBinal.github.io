@@ -116,6 +116,7 @@ const mustPrecache = [
   '/assets/css/components.css?v=37',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=5',
+  '/assets/js/home/route-commands.js?v=1',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
@@ -125,9 +126,9 @@ const mustPrecache = [
   '/assets/js/home/night-mode.js?v=1',
   '/assets/js/home/radio.js?v=1',
   '/assets/js/home/chat.js?v=3',
-  '/assets/js/supabase-client.js?v=35',
+  '/assets/js/supabase-client.js?v=36',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=74',
+  '/assets/js/home-protocol.js?v=75',
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/service-worker-register.js?v=3'
 ];
@@ -136,6 +137,27 @@ for (const asset of mustPrecache) {
   if (!precacheAssets.has(asset)) {
     addError(`service-worker.js precache eksik: ${asset}`);
   }
+}
+
+const indexPath = path.join(root, 'index.html');
+const indexHtml = fs.readFileSync(indexPath, 'utf8');
+const routeCommandsRef = '/assets/js/home/route-commands.js?v=1';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=75';
+const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
+const homeProtocolIndex = indexHtml.indexOf(homeProtocolRef);
+
+if (routeCommandsIndex === -1) {
+  addError(`index.html script eksik: ${routeCommandsRef}`);
+} else if (homeProtocolIndex === -1) {
+  addError(`index.html script eksik: ${homeProtocolRef}`);
+} else if (routeCommandsIndex > homeProtocolIndex) {
+  addError('index.html script sirasi hatali: route-commands home-protocol oncesinde olmali');
+}
+
+const homeProtocolPath = path.join(root, 'assets', 'js', 'home-protocol.js');
+const homeProtocol = fs.readFileSync(homeProtocolPath, 'utf8');
+if (!homeProtocol.includes('createRouteCommands')) {
+  addError('home-protocol.js route command factory baglantisi eksik');
 }
 
 if (!/const\s+CACHE_NAME\s*=\s*'convivium-v\d+'/.test(sw)) {
