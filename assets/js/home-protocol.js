@@ -2261,6 +2261,9 @@
         getRoom: () => virtualCwd,
         pulse
       }) || null;
+      // Daha once kanala katilmis kullanici sayfa acilisinda sessizce
+      // dinlemeye doner; sinyal cipi boylece yeni ziyarette de calisir.
+      chatMod?.resume?.();
 
       // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
       // komutu. Iki gezgin 8 sn icinde ayni kelimeyi soylerse rezonans olusur;

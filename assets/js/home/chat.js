@@ -18,6 +18,7 @@
     const MAX_BODY = 200;
     const MIN_SEND_GAP_MS = 1500;
     const HISTORY_LIMIT = 30;
+    const OPTIN_KEY = 'convivium.chat.optin'; // bir kez katilan, sonraki ziyarette sessizce dinler
     const INVITE_GAMES = { crude: 'Crude Buster co-op', dart: 'Dart online' };
 
     let channel = null;
@@ -101,11 +102,32 @@
       });
     };
 
+    const rememberOptin = () => {
+      try { localStorage.setItem(OPTIN_KEY, '1'); } catch { /* sessiz */ }
+    };
+
+    const forgetOptin = () => {
+      try { localStorage.removeItem(OPTIN_KEY); } catch { /* sessiz */ }
+    };
+
+    // Onceki ziyaretinde kanala katilmis kullanici: sayfa acilisinda
+    // sessizce dinlemeye baslar (cip/terminal bildirimleri calisir).
+    const resume = () => {
+      try {
+        if (localStorage.getItem(OPTIN_KEY) !== '1') return false;
+      } catch { return false; }
+      ensureChannel();
+      if (!channel) return false;
+      listening = true;
+      return true;
+    };
+
     // Ortak gonderim cekirdegi: say / fisilti / davet ayni yoldan gecer.
     const transmit = (fields) => {
       ensureChannel();
       if (!channel) return { error: 'sinyal agi cevrimdisi.' };
       listening = true; // konusan duymaya da baslar
+      rememberOptin();
       if (!connected) return { error: 'kanal isiniyor; bir saniye sonra tekrar dene.' };
       const now = Date.now();
       if (now - lastSentAt < MIN_SEND_GAP_MS) return { error: 'yavas. frekans flood sevmez.' };
@@ -143,6 +165,7 @@
       ensureChannel();
       if (!channel) return 'chat: sinyal agi cevrimdisi. sohbet acilamadi.';
       listening = true;
+      rememberOptin();
       const recent = history.slice(-6);
       const lines = [
         '] CHAT ACIK',
@@ -162,6 +185,7 @@
     const close = () => {
       if (!listening) return 'chat: zaten kapali.';
       listening = false;
+      forgetOptin(); // "chat off" diyen sonraki ziyaretlerde de rahatsiz edilmez
       return 'chat: kapandi. (say yazarsan tekrar acilir)';
     };
 
@@ -220,6 +244,7 @@
       command,
       say,
       open,
+      resume,
       sendDirect,
       sendInvite,
       historyList: () => history.map((entry) => ({ ...entry })),
