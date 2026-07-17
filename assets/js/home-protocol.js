@@ -144,6 +144,7 @@
       let pipeMod = null;
       let outrunMod = null;
       let screenSaverMod = null;
+      let presenceMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -1291,6 +1292,7 @@
         }
         virtualCwd = path;
         persistUserPreferences({ virtualCwd });
+        presenceMod?.sync();
         if (worldRooms[path]) {
           if (!state.discovered.includes(path)) {
             state.discovered = [...new Set([...state.discovered, path])];
@@ -1774,7 +1776,8 @@
         `003  ${powerOverlay?.classList.contains('is-active') || powerOverlay?.classList.contains('is-off') ? 'RUN' : 'IDLE'}     power.overlay`,
         `004  ${(window.DebCompanion || window.NovaCompanion)?.getState?.().active ? 'RUN' : 'IDLE'}     deb.companion`,
         `005  ${commandInFlight ? 'WAIT' : 'IDLE'}     oracle.channel`,
-        `006  ${pipeMod?.isActive() ? 'RUN' : 'IDLE'}     pipe.game`
+        `006  ${pipeMod?.isActive() ? 'RUN' : 'IDLE'}     pipe.game`,
+        `007  ${presenceMod?.isActive() ? 'RUN' : 'IDLE'}     presence.net`
       ].join('\n');
 
       const themeCommand = (target = '') => {
@@ -1866,6 +1869,14 @@
         normalizeCommand,
         resetPipe: () => pipeMod?.reset()
       }) || null;
+
+      // Canli varlik katmani (assets/js/home/presence.js): anonim es-zamanli
+      // ziyaretci izi. Supabase yoksa modul sessizce devre disi kalir.
+      presenceMod = window.ConviviumHome?.createPresence?.({
+        getClient: () => window.ConviviumBackend?.getClient?.() || null,
+        getRoom: () => virtualCwd
+      }) || null;
+      presenceMod?.start();
 
       // deb diyalogu (Dalga 6): konustukca bond artar, satirlar derinlesir.
       const debTalk = () => {
@@ -2650,6 +2661,12 @@
           description: 'gunun sinyalini gosterir (bulut; yoksa lokal)',
           aliases: ['gunluk', 'gunluk sinyal', 'today', 'gunun sinyali'],
           action: dailySignalCommand
+        },
+        {
+          command: 'who',
+          description: 'su an sitede gezen anonim sinyalleri listeler',
+          aliases: ['kimler', 'nearby', 'presence'],
+          action: () => presenceMod ? presenceMod.whoCommand() : 'who: sinyal yok. (presence agi kapali)'
         },
         {
           command: 'wall',

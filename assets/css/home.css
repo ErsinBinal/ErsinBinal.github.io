@@ -1375,6 +1375,27 @@
       filter: none;
     }
 
+    /* Canli varlik: o an icinde insan olan odalarin dugumleri parlar. */
+    .atlas-node.has-signal {
+      border-color: rgba(0, 255, 102, 0.72);
+      box-shadow: 0 0 22px rgba(0, 255, 102, 0.22), inset 0 0 26px rgba(0, 255, 102, 0.1);
+    }
+
+    .atlas-node.has-signal strong {
+      text-shadow: 0 0 12px rgba(0, 255, 102, 0.6);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .atlas-node.has-signal {
+        animation: presence-glow 2.6s ease-in-out infinite;
+      }
+
+      @keyframes presence-glow {
+        0%, 100% { box-shadow: 0 0 14px rgba(0, 255, 102, 0.16), inset 0 0 20px rgba(0, 255, 102, 0.08); }
+        50% { box-shadow: 0 0 28px rgba(0, 255, 102, 0.3), inset 0 0 30px rgba(0, 255, 102, 0.14); }
+      }
+    }
+
     .archive-tree {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));

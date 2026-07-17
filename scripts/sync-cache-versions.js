@@ -11,6 +11,7 @@ const managedAssets = [
   '/assets/js/home/pipe-90.js',
   '/assets/js/home/outrun-86.js',
   '/assets/js/home/screen-saver.js',
+  '/assets/js/home/presence.js',
   '/assets/js/home-protocol.js',
   '/assets/js/sfx.js',
   '/assets/js/supabase-client.js',
