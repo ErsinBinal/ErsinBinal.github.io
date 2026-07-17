@@ -4343,6 +4343,9 @@
 
       document.addEventListener('keydown', event => {
         if (screenSaverMod?.isActive()) {
+          // Koruyucuyu baslatan Enter komut girisinden kabarciklanip buraya
+          // ayni anda ulasir; acan tusun koruyucuyu kapatmasina izin verme.
+          if (event.target === commandInput) return;
           event.preventDefault();
           screenSaverMod.close();
           return;
