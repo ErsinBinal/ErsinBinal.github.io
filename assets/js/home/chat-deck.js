@@ -30,6 +30,9 @@
     };
 
     let overlay = null;
+    let chipEl = null;
+    let chipTimer = null;
+    let unreadCount = 0;
     let feedEl = null;
     let inputEl = null;
     let wandererListEl = null;
@@ -54,6 +57,38 @@
     };
 
     const stamp = (ts) => new Date(ts || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+
+    // Sinyal cipi (sol-alt): guverte kapaliyken gelen mesaji haber verir.
+    // Diger sabit butonlarla cakismaz (sag-alt ses/CMD, sol-ust access,
+    // sag-ust HUD). Tiklaninca guverte acilir; acilinca sayac sifirlanir.
+    const ensureChip = () => {
+      if (chipEl) return chipEl;
+      chipEl = el('button', 'chat-signal-chip');
+      chipEl.type = 'button';
+      chipEl.setAttribute('aria-label', 'Yeni sohbet mesaji: chat guvertesini ac');
+      chipEl.addEventListener('click', () => open());
+      document.body.appendChild(chipEl);
+      return chipEl;
+    };
+
+    const hideChip = () => {
+      unreadCount = 0;
+      chipEl?.classList.remove('is-visible', 'is-alert');
+    };
+
+    const notifyChip = (entry) => {
+      const chip = ensureChip();
+      unreadCount += 1;
+      const kindMark = entry.kind === 'invite' ? 'davet' : entry.kind === 'dm' ? 'fisilti' : 'sinyal';
+      chip.textContent = `✉ ${unreadCount} · ${entry.tag} (${kindMark})`;
+      chip.classList.add('is-visible');
+      chip.classList.remove('is-alert');
+      // Yeni mesajda kisa nabiz animasyonu (class yeniden tetiklenir).
+      window.requestAnimationFrame(() => chip.classList.add('is-alert'));
+      if (chipTimer) window.clearTimeout(chipTimer);
+      chipTimer = window.setTimeout(() => chipEl?.classList.remove('is-alert'), 4000);
+      pulse?.(500, 0.04);
+    };
 
     // Akis satiri: mesaj/fisilti metin, davetler kabul linkli kart olur.
     const appendEntry = (entry) => {
@@ -260,6 +295,7 @@
 
     const open = () => {
       const node = ensureOverlay();
+      hideChip(); // okunmamis sayaci sifirla
       const api = chat();
       api?.command?.('on'); // guverte acikken kanal da dinlemede
       node.classList.add('is-active');
@@ -290,10 +326,15 @@
       // Kanal dinlemede kalir: terminal say/chat akisi devam eder.
     }
 
+    const receive = (entry) => {
+      appendEntry(entry);
+      if (!entry?.self && !overlay?.classList.contains('is-active')) notifyChip(entry);
+    };
+
     return {
       open,
       close,
-      receive: appendEntry,
+      receive,
       isActive: () => Boolean(overlay?.classList.contains('is-active'))
     };
   };
