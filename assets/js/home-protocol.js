@@ -136,158 +136,18 @@
       let lastFocusedElement = null;
       let powerOverlay = null;
       let powerSequenceTimers = [];
-      let screenSaverOverlay = null;
-      let screenSaverCanvas = null;
-      let screenSaverContext = null;
-      let screenSaverGalaxyCanvas = null;
-      let screenSaverGalaxyContext = null;
-      let screenSaverFrame = null;
-      let screenSaverStart = 0;
-      let screenSaverPlanetOrder = [];
       let virtualCwd = '/';
       let transcript = '';
-      let pipeGame = null;
-      let pipeAnimationTimers = [];
-      let pipeIntroActive = false;
-      let outrun = null;
-      let outrunRaf = null;
-      let outrunLastTs = 0;
-      let outrunIntroTimers = [];
-      let outrunIntroActive = false;
+      // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
+      // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
+      // asagida bagimliliklariyla kurulup bu tutuculara atanir.
+      let pipeMod = null;
+      let outrunMod = null;
+      let screenSaverMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
       let nodes = [];
-      const screenSaverPlanets = [
-        {
-          name: 'MERCURY',
-          short: 'MERC',
-          orbit: 0.2,
-          speed: 1.6,
-          phase: 0.5,
-          radius: 17,
-          moons: 0,
-          color: '#caffd8',
-          texture: 'crater',
-          diameter: '4,879 km',
-          density: '5.43 g/cm3',
-          age: '~4.50B yr',
-          mass: '3.30e23 kg',
-          elements: 'Fe core / silicate mantle'
-        },
-        {
-          name: 'VENUS',
-          short: 'VEN',
-          orbit: 0.31,
-          speed: 1.05,
-          phase: 2.2,
-          radius: 25,
-          moons: 0,
-          color: '#9cffb8',
-          texture: 'cloud',
-          diameter: '12,104 km',
-          density: '5.24 g/cm3',
-          age: '~4.50B yr',
-          mass: '4.87e24 kg',
-          elements: 'CO2 veil / basalt / Fe'
-        },
-        {
-          name: 'EARTH',
-          short: 'EARTH',
-          orbit: 0.43,
-          speed: 0.78,
-          phase: 3.1,
-          radius: 26,
-          moons: 1,
-          color: '#d8ffe1',
-          texture: 'continents',
-          diameter: '12,742 km',
-          density: '5.51 g/cm3',
-          age: '~4.54B yr',
-          mass: '5.97e24 kg',
-          elements: 'Fe / O / Si / Mg'
-        },
-        {
-          name: 'MARS',
-          short: 'MARS',
-          orbit: 0.55,
-          speed: 0.58,
-          phase: 1.4,
-          radius: 20,
-          moons: 2,
-          color: '#7fdc92',
-          texture: 'bands',
-          diameter: '6,779 km',
-          density: '3.93 g/cm3',
-          age: '~4.50B yr',
-          mass: '6.42e23 kg',
-          elements: 'Fe oxide / silicate'
-        },
-        {
-          name: 'JUPITER',
-          short: 'JOV',
-          orbit: 0.7,
-          speed: 0.34,
-          phase: 4.5,
-          radius: 42,
-          moons: 4,
-          color: '#caffd8',
-          texture: 'gas',
-          diameter: '139,820 km',
-          density: '1.33 g/cm3',
-          age: '~4.50B yr',
-          mass: '1.90e27 kg',
-          elements: 'H / He / trace CH4'
-        },
-        {
-          name: 'SATURN',
-          short: 'SAT',
-          orbit: 0.84,
-          speed: 0.24,
-          phase: 5.4,
-          radius: 38,
-          moons: 5,
-          color: '#9cffb8',
-          texture: 'rings',
-          diameter: '116,460 km',
-          density: '0.69 g/cm3',
-          age: '~4.50B yr',
-          mass: '5.68e26 kg',
-          elements: 'H / He / ice traces'
-        },
-        {
-          name: 'URANUS',
-          short: 'URA',
-          orbit: 0.96,
-          speed: 0.17,
-          phase: 0.9,
-          radius: 30,
-          moons: 4,
-          color: '#8effc1',
-          texture: 'tilt',
-          diameter: '50,724 km',
-          density: '1.27 g/cm3',
-          age: '~4.50B yr',
-          mass: '8.68e25 kg',
-          elements: 'H / He / methane ice'
-        },
-        {
-          name: 'NEPTUNE',
-          short: 'NEP',
-          orbit: 1.08,
-          speed: 0.13,
-          phase: 2.8,
-          radius: 30,
-          moons: 3,
-          color: '#a8ffd0',
-          texture: 'storm',
-          diameter: '49,244 km',
-          density: '1.64 g/cm3',
-          age: '~4.50B yr',
-          mass: '1.02e26 kg',
-          elements: 'H / He / methane'
-        }
-      ];
       const authState = {
         checked: false,
         granted: false,
@@ -342,7 +202,7 @@
           audioEnabled,
           theme: selectedTheme,
           virtualCwd,
-          screenSaverActive: Boolean(screenSaverOverlay?.classList.contains('is-active')),
+          screenSaverActive: Boolean(screenSaverMod?.isActive()),
           powerState: powerOverlay?.classList.contains('is-off') ? 'off' : 'ready',
           bugyEngine: bugyV4?.active ? 'v4' : bugyV3?.active ? 'v3' : bugyV2?.active ? 'v2' : localStorage.getItem('convivium.bugy.engine') || 'v1',
           bugyV4Skin: bugyV4?.skin || localStorage.getItem('convivium.bugy.v4.skin') || 'clippy',
@@ -445,7 +305,7 @@
           if (prefs.powerState === 'off') {
             restorePowerOffPreference();
           } else if (prefs.screenSaverActive) {
-            window.setTimeout(() => screenSaverCommand(), 120);
+            window.setTimeout(() => screenSaverMod?.command(), 120);
           }
         } finally {
           restoringUserPreferences = false;
@@ -801,7 +661,7 @@
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
-        if (outrun) { clearOutrun(); outrun = null; setOutrunMode(false); }
+        outrunMod?.shutdown();
         commandShell.classList.remove('is-booting');
         commandShell.classList.add('is-closing');
         clearCommandSuggestions();
@@ -836,25 +696,19 @@
         commandShell.setAttribute('aria-hidden', 'false');
         renderCommandSuggestions(commandInput.value);
         commandInput.focus();
-        if (outrun?.active) {
+        if (outrunMod?.isActive()) {
           // Surus oyununa geri don: modu ac, donguyu yeniden baslat (kapaliyken durmustu).
-          setOutrunMode(true);
-          outrun.input = {};
-          outrunBuildScreen();
-          outrunPaint(outrunBuffer());
-          startOutrunLoop();
+          outrunMod.resume();
           pulse(260);
           return;
         }
-        if (outrun?.over) {
-          setOutrunMode(true);
-          if (commandOutput) commandOutput.textContent = outrunFinale(Boolean(outrun.finished));
+        if (outrunMod?.isOver()) {
+          outrunMod.showFinale();
           pulse(260);
           return;
         }
-        if (pipeGame?.active) {
-          setPipeGameMode(true);
-          setPipeOutput();
+        if (pipeMod?.isActive()) {
+          pipeMod.restore();
           pulse(260);
           return;
         }
@@ -868,7 +722,7 @@
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
         window.clearInterval(commandBootTimer);
         window.clearTimeout(commandCloseTimer);
-        clearOutrun(); // surus dongusunu durdur (durum korunur, acilinca devam eder)
+        outrunMod?.stopLoop(); // surus dongusunu durdur (durum korunur, acilinca devam eder)
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
         commandShell.setAttribute('aria-hidden', 'true');
         clearCommandSuggestions();
@@ -1040,542 +894,15 @@
         return 'restart sequence accepted';
       };
 
-      const stopScreenSaverSystem = () => {
-        if (screenSaverFrame) window.cancelAnimationFrame(screenSaverFrame);
-        screenSaverFrame = null;
-      };
-
-      const resizeScreenSaverSystem = () => {
-        if (screenSaverGalaxyCanvas && screenSaverGalaxyContext) {
-          const ratio = Math.min(window.devicePixelRatio || 1, 2);
-          screenSaverGalaxyCanvas.width = Math.max(1, Math.floor(window.innerWidth * ratio));
-          screenSaverGalaxyCanvas.height = Math.max(1, Math.floor(window.innerHeight * ratio));
-          screenSaverGalaxyCanvas.style.width = `${window.innerWidth}px`;
-          screenSaverGalaxyCanvas.style.height = `${window.innerHeight}px`;
-          screenSaverGalaxyContext.setTransform(ratio, 0, 0, ratio, 0, 0);
-          screenSaverGalaxyContext.imageSmoothingEnabled = false;
-        }
-        if (!screenSaverCanvas || !screenSaverContext) return;
-        const box = screenSaverCanvas.getBoundingClientRect();
-        const ratio = Math.min(window.devicePixelRatio || 1, 2);
-        screenSaverCanvas.width = Math.max(1, Math.floor(box.width * ratio));
-        screenSaverCanvas.height = Math.max(1, Math.floor(box.height * ratio));
-        screenSaverContext.setTransform(ratio, 0, 0, ratio, 0, 0);
-        screenSaverContext.imageSmoothingEnabled = false;
-      };
-
-      const drawPixelText = (ctx, text, x, y, color = '#caffd8', size = 11) => {
-        ctx.save();
-        ctx.font = `${size}px "Share Tech Mono", monospace`;
-        ctx.fillStyle = color;
-        ctx.shadowColor = 'rgba(156, 255, 184, 0.36)';
-        ctx.shadowBlur = 6;
-        ctx.fillText(text, Math.round(x), Math.round(y));
-        ctx.restore();
-      };
-
-      const shuffleScreenSaverPlanets = () => {
-        screenSaverPlanetOrder = screenSaverPlanets.map((_, index) => index);
-        for (let index = screenSaverPlanetOrder.length - 1; index > 0; index -= 1) {
-          const swapIndex = Math.floor(Math.random() * (index + 1));
-          [screenSaverPlanetOrder[index], screenSaverPlanetOrder[swapIndex]] = [screenSaverPlanetOrder[swapIndex], screenSaverPlanetOrder[index]];
-        }
-      };
-
-      const drawPlanetTexture = (ctx, planet, x, y, radius, elapsed) => {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.fillStyle = planet.color;
-        ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-
-        ctx.fillStyle = 'rgba(7, 20, 7, 0.34)';
-        for (let row = -radius; row <= radius; row += 7) {
-          const wave = Math.sin(row * 0.25 + elapsed * 1.4) * 4;
-          if (planet.texture === 'gas' || planet.texture === 'cloud' || planet.texture === 'bands') {
-            ctx.fillRect(Math.round(x - radius), Math.round(y + row + wave), Math.round(radius * 2), 3);
-          }
-        }
-
-        if (planet.texture === 'continents') {
-          [[-12, -6, 18, 9], [6, 4, 20, 7], [-4, 15, 14, 5]].forEach(([dx, dy, w, h]) => {
-            ctx.fillRect(Math.round(x + dx), Math.round(y + dy), w, h);
-          });
-        } else if (planet.texture === 'crater') {
-          [[-12, -9, 5], [9, -4, 4], [-3, 10, 6], [12, 12, 3]].forEach(([dx, dy, size]) => {
-            ctx.strokeStyle = 'rgba(7, 20, 7, 0.56)';
-            ctx.strokeRect(Math.round(x + dx), Math.round(y + dy), size, size);
-          });
-        } else if (planet.texture === 'storm') {
-          ctx.strokeStyle = 'rgba(7, 20, 7, 0.5)';
-          ctx.strokeRect(Math.round(x + radius * 0.12), Math.round(y - radius * 0.18), Math.round(radius * 0.46), Math.round(radius * 0.18));
-        } else if (planet.texture === 'tilt') {
-          ctx.fillStyle = 'rgba(7, 20, 7, 0.28)';
-          for (let offset = -radius; offset < radius; offset += 9) {
-            ctx.fillRect(Math.round(x + offset), Math.round(y - radius), 3, radius * 2);
-          }
-        }
-
-        ctx.restore();
-        ctx.strokeStyle = 'rgba(202, 255, 216, 0.84)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(Math.round(x - radius), Math.round(y - radius), Math.round(radius * 2), Math.round(radius * 2));
-        ctx.strokeStyle = 'rgba(7, 20, 7, 0.48)';
-        ctx.beginPath();
-        ctx.arc(x - radius * 0.22, y - radius * 0.28, radius * 0.9, Math.PI * 1.15, Math.PI * 1.72);
-        ctx.stroke();
-
-        if (planet.texture === 'rings') {
-          ctx.strokeStyle = 'rgba(202, 255, 216, 0.86)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.ellipse(x, y, radius * 1.7, radius * 0.42, -0.12, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.strokeStyle = 'rgba(7, 20, 7, 0.72)';
-          ctx.beginPath();
-          ctx.ellipse(x, y, radius * 1.28, radius * 0.28, -0.12, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-      };
-
-      const drawFeaturedPlanet = (ctx, planet, width, height, elapsed, reduced) => {
-        const x = width * 0.34;
-        const y = height * 0.42;
-        const radius = Math.max(24, Math.min(width, height) * (planet.radius / 360));
-        const orbitRadius = radius * 2.1;
-
-        ctx.save();
-        ctx.strokeStyle = 'rgba(156, 255, 184, 0.24)';
-        ctx.setLineDash([5, 5]);
-        ctx.beginPath();
-        ctx.ellipse(x, y, orbitRadius * 1.4, orbitRadius * 0.54, -0.18, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        for (let index = 0; index < planet.moons; index += 1) {
-          const angle = (reduced ? index : elapsed * (0.9 + index * 0.13)) + index * 1.72;
-          const mx = x + Math.cos(angle) * orbitRadius * (0.86 + index * 0.11);
-          const my = y + Math.sin(angle) * orbitRadius * 0.38;
-          ctx.fillStyle = index % 2 ? 'rgba(0, 234, 255, 0.78)' : 'rgba(202, 255, 216, 0.86)';
-          ctx.fillRect(Math.round(mx), Math.round(my), index > 2 ? 3 : 4, index > 2 ? 3 : 4);
-          ctx.strokeStyle = 'rgba(202, 255, 216, 0.18)';
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(mx, my);
-          ctx.stroke();
-        }
-
-        drawPlanetTexture(ctx, planet, x, y, radius, elapsed);
-        drawPixelText(ctx, `FOCUS: ${planet.name}`, x - radius * 1.35, y - radius - 20, '#d8ffe1');
-        drawPixelText(ctx, `MOONS: ${planet.moons}`, x - radius * 1.35, y + radius + 20, 'rgba(202, 255, 216, 0.72)');
-        ctx.restore();
-      };
-
-      const drawDataTicker = (ctx, planet, width, height, elapsed, reduced) => {
-        const panelX = 12;
-        const panelY = Math.max(88, height - 112);
-        const panelW = width - 24;
-        const panelH = 94;
-        const trim = (value, max = 23) => value.length > max ? `${value.slice(0, max - 1)}.` : value;
-        const rows = [
-          ['PLANET', trim(planet.name, 18)],
-          ['DIAM', planet.diameter],
-          ['DENS', planet.density],
-          ['ELEM', trim(planet.elements, 24)],
-          ['AGE', planet.age],
-          ['MASS', planet.mass]
-        ];
-        const activeRow = reduced ? -1 : Math.floor(elapsed * 0.45) % rows.length;
-        const secondary = screenSaverPlanetOrder.map(index => screenSaverPlanets[index].short).join(' > ');
-        ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.58)';
-        ctx.fillRect(panelX, panelY, panelW, panelH);
-        ctx.strokeStyle = 'rgba(156, 255, 184, 0.26)';
-        ctx.strokeRect(panelX, panelY, panelW, panelH);
-        drawPixelText(ctx, 'PLANET DATA STREAM', panelX + 8, panelY + 15, '#d8ffe1', 10);
-        rows.forEach(([label, value], index) => {
-          const y = panelY + 30 + index * 10;
-          if (index === activeRow) {
-            ctx.fillStyle = 'rgba(156, 255, 184, 0.12)';
-            ctx.fillRect(panelX + 6, y - 8, panelW - 12, 10);
-          }
-          drawPixelText(ctx, `${label.padEnd(6, ' ')} ${value}`, panelX + 8, y, index === activeRow ? '#d8ffe1' : 'rgba(202, 255, 216, 0.78)', 9);
-        });
-        const marker = reduced ? 0 : Math.floor((elapsed * 7) % Math.max(1, panelW - 18));
-        ctx.fillStyle = 'rgba(0, 234, 255, 0.58)';
-        ctx.fillRect(panelX + 8, panelY + panelH - 13, marker, 2);
-        drawPixelText(ctx, `QUEUE ${trim(secondary, 28)}`, panelX + 8, panelY + panelH - 3, 'rgba(0, 234, 255, 0.72)', 9);
-        ctx.restore();
-      };
-
-      const drawScreenSaverGalaxy = (time = performance.now()) => {
-        if (!screenSaverGalaxyCanvas || !screenSaverGalaxyContext || !screenSaverOverlay?.classList.contains('is-active')) return;
-        const ctx = screenSaverGalaxyContext;
-        const width = window.innerWidth;
-        const height = window.innerHeight;
-        const elapsed = (time - screenSaverStart) / 1000;
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        ctx.clearRect(0, 0, width, height);
-
-        const hash = (value) => {
-          const raw = Math.sin(value * 12.9898) * 43758.5453;
-          return raw - Math.floor(raw);
-        };
-
-        const cx = width * (0.5 + (reduced ? 0 : Math.sin(elapsed * 0.06) * 0.025));
-        const cy = height * (0.48 + (reduced ? 0 : Math.cos(elapsed * 0.045) * 0.02));
-        const scale = Math.max(width, height);
-        const travel = reduced ? 0.18 : elapsed * 0.075;
-
-        ctx.fillStyle = '#000';
-        ctx.fillRect(0, 0, width, height);
-
-        for (let i = 0; i < 520; i += 1) {
-          const seed = i + 300;
-          const lane = hash(seed) * Math.PI * 2;
-          const spiral = hash(seed + 1) * 3.4;
-          const loop = (hash(seed + 2) + travel * (0.55 + hash(seed + 4) * 0.7)) % 1;
-          const depth = Math.pow(loop, 2.55);
-          const radius = depth * scale * (0.08 + hash(seed + 3) * 0.92);
-          const angle = lane + depth * 4.8 + spiral + Math.sin(elapsed * 0.08 + seed) * 0.08;
-          const x = cx + Math.cos(angle) * radius;
-          const y = cy + Math.sin(angle) * radius * 0.56;
-          if (x < -60 || x > width + 60 || y < -60 || y > height + 60) continue;
-          const tail = reduced ? 0 : 4 + depth * 42;
-          const px = cx + Math.cos(angle - 0.024) * Math.max(0, radius - tail);
-          const py = cy + Math.sin(angle - 0.024) * Math.max(0, radius - tail) * 0.56;
-          const alpha = 0.08 + depth * 0.44;
-          ctx.strokeStyle = hash(seed + 7) > 0.68
-            ? `rgba(0, 234, 255, ${alpha * 0.7})`
-            : `rgba(202, 255, 216, ${alpha})`;
-          ctx.lineWidth = hash(seed + 8) > 0.92 ? 2 : 1;
-          ctx.beginPath();
-          ctx.moveTo(Math.round(px), Math.round(py));
-          ctx.lineTo(Math.round(x), Math.round(y));
-          ctx.stroke();
-        }
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(-0.34 + (reduced ? 0 : Math.sin(elapsed * 0.025) * 0.06));
-        const galaxyScale = scale * 0.72;
-        const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, galaxyScale * 0.18);
-        coreGradient.addColorStop(0, 'rgba(230, 255, 234, 0.84)');
-        coreGradient.addColorStop(0.2, 'rgba(156, 255, 184, 0.46)');
-        coreGradient.addColorStop(0.58, 'rgba(0, 234, 255, 0.18)');
-        coreGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = coreGradient;
-        ctx.fillRect(-galaxyScale * 0.24, -galaxyScale * 0.24, galaxyScale * 0.48, galaxyScale * 0.48);
-
-        ctx.globalCompositeOperation = 'lighter';
-        for (let arm = 0; arm < 5; arm += 1) {
-          const phase = arm * (Math.PI * 2 / 5) + (reduced ? 0 : elapsed * 0.07);
-          for (let i = 0; i < 360; i += 1) {
-            const t = i / 359;
-            const seed = arm * 1000 + i;
-            const radius = galaxyScale * (0.03 + Math.pow(t, 0.9) * 0.92);
-            const angle = phase + t * 7.6 + Math.sin(t * 10 + arm + elapsed * 0.05) * 0.28;
-            const jitter = (hash(seed) - 0.5) * galaxyScale * 0.05 * t;
-            const x = Math.cos(angle) * radius + Math.sin(seed * 0.73 + elapsed * 0.22) * jitter;
-            const y = Math.sin(angle) * radius * 0.36 + Math.cos(seed * 0.51 + elapsed * 0.2) * jitter * 0.5;
-            const density = Math.max(0, 1 - t) * 0.055 + hash(seed + 77) * 0.13;
-            const size = hash(seed + 9) > 0.965 ? 3 : hash(seed + 13) > 0.86 ? 2 : 1;
-            ctx.fillStyle = hash(seed + 41) > 0.72
-              ? `rgba(0, 234, 255, ${density * 0.8})`
-              : `rgba(202, 255, 216, ${density})`;
-            ctx.fillRect(Math.round(x), Math.round(y), size, size);
-            if (Math.sin(t * 19 + arm + elapsed * 0.08) > 0.64 && i % 3 === 0) {
-              ctx.fillStyle = `rgba(0, 0, 0, ${0.1 + hash(seed + 12) * 0.12})`;
-              ctx.fillRect(Math.round(x - size), Math.round(y - 1), size + 3, 2);
-            }
-          }
-        }
-
-        ctx.globalCompositeOperation = 'source-over';
-        for (let ring = 0; ring < 8; ring += 1) {
-          ctx.strokeStyle = `rgba(156, 255, 184, ${0.06 - ring * 0.004})`;
-          ctx.beginPath();
-          ctx.ellipse(0, 0, galaxyScale * (0.14 + ring * 0.1), galaxyScale * (0.04 + ring * 0.028), 0, 0, Math.PI * 2);
-          ctx.stroke();
-        }
-        ctx.restore();
-
-        const flyObjects = [
-          { type: 'planet', seed: 12, offset: 0.04, lane: -0.62, color: '#caffd8', label: 'ROGUE PLANET' },
-          { type: 'station', seed: 44, offset: 0.25, lane: 0.42, color: '#9cffb8', label: 'ORBITAL STATION' },
-          { type: 'blackhole', seed: 71, offset: 0.47, lane: -0.16, color: '#d8ffe1', label: 'MICRO BLACK HOLE' },
-          { type: 'asteroid', seed: 93, offset: 0.68, lane: 0.66, color: '#7fdc92', label: 'ASTEROID FIELD' },
-          { type: 'satellite', seed: 124, offset: 0.84, lane: -0.74, color: '#a8ffd0', label: 'SIGNAL RELAY' }
-        ];
-
-        flyObjects.forEach(item => {
-          const progress = reduced ? item.offset : (elapsed * 0.055 + item.offset) % 1;
-          const ease = Math.pow(progress, 2.35);
-          const x = cx + item.lane * width * 0.6 * ease + Math.sin(elapsed * 0.8 + item.seed) * width * 0.05 * ease;
-          const y = cy + (hash(item.seed) - 0.5) * height * 0.38 * ease;
-          const size = 8 + ease * Math.min(width, height) * 0.2;
-          const alpha = Math.min(0.9, 0.12 + ease * 0.88);
-          ctx.save();
-          ctx.globalAlpha = alpha;
-          ctx.strokeStyle = item.color;
-          ctx.fillStyle = item.color;
-          ctx.lineWidth = Math.max(1, ease * 3);
-
-          if (item.type === 'planet') {
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.36, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
-            for (let band = -2; band <= 2; band += 1) ctx.fillRect(x - size * 0.32, y + band * size * 0.11, size * 0.64, Math.max(1, size * 0.025));
-          } else if (item.type === 'station') {
-            ctx.strokeRect(x - size * 0.24, y - size * 0.12, size * 0.48, size * 0.24);
-            ctx.beginPath();
-            ctx.moveTo(x - size * 0.72, y);
-            ctx.lineTo(x + size * 0.72, y);
-            ctx.moveTo(x, y - size * 0.42);
-            ctx.lineTo(x, y + size * 0.42);
-            ctx.stroke();
-            ctx.strokeRect(x - size * 0.88, y - size * 0.1, size * 0.28, size * 0.2);
-            ctx.strokeRect(x + size * 0.6, y - size * 0.1, size * 0.28, size * 0.2);
-          } else if (item.type === 'blackhole') {
-            ctx.strokeStyle = 'rgba(202, 255, 216, 0.85)';
-            ctx.beginPath();
-            ctx.ellipse(x, y, size * 0.58, size * 0.24, elapsed * 0.22, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.22, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(0, 234, 255, 0.48)';
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.42, 0, Math.PI * 2);
-            ctx.stroke();
-          } else if (item.type === 'asteroid') {
-            for (let rock = 0; rock < 20; rock += 1) {
-              const angle = hash(item.seed + rock) * Math.PI * 2;
-              const dist = hash(item.seed + rock + 10) * size * 0.86;
-              ctx.fillRect(x + Math.cos(angle) * dist, y + Math.sin(angle) * dist * 0.5, Math.max(2, size * 0.035), Math.max(2, size * 0.025));
-            }
-          } else {
-            ctx.strokeRect(x - size * 0.16, y - size * 0.16, size * 0.32, size * 0.32);
-            ctx.beginPath();
-            ctx.arc(x, y, size * 0.44, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.moveTo(x - size * 0.6, y - size * 0.6);
-            ctx.lineTo(x + size * 0.6, y + size * 0.6);
-            ctx.stroke();
-          }
-
-          if (ease > 0.38) drawPixelText(ctx, item.label, x + size * 0.36, y - size * 0.22, item.color, 10);
-          ctx.restore();
-        });
-
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
-        ctx.fillRect(0, 0, width, height);
-      };
-
-      const drawScreenSaverSystem = (time = performance.now()) => {
-        if (!screenSaverCanvas || !screenSaverContext || !screenSaverOverlay?.classList.contains('is-active')) return;
-        drawScreenSaverGalaxy(time);
-        const ctx = screenSaverContext;
-        const width = screenSaverCanvas.clientWidth || 1;
-        const height = screenSaverCanvas.clientHeight || 1;
-        const elapsed = (time - screenSaverStart) / 1000;
-        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        ctx.clearRect(0, 0, width, height);
-
-        ctx.fillStyle = '#071407';
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.strokeStyle = 'rgba(156, 255, 184, 0.08)';
-        ctx.lineWidth = 1;
-        for (let x = 0; x < width; x += 12) {
-          ctx.beginPath();
-          ctx.moveTo(x + 0.5, 0);
-          ctx.lineTo(x + 0.5, height);
-          ctx.stroke();
-        }
-        for (let y = 0; y < height; y += 12) {
-          ctx.beginPath();
-          ctx.moveTo(0, y + 0.5);
-          ctx.lineTo(width, y + 0.5);
-          ctx.stroke();
-        }
-
-        for (let index = 0; index < 74; index += 1) {
-          const drift = reduced ? 0 : elapsed * (index % 5 + 1) * 2.2;
-          const x = (index * 53 + drift) % width;
-          const y = (index * 97 + Math.sin(elapsed * 0.8 + index) * 4 + height) % height;
-          const alpha = 0.24 + ((index * 17) % 37) / 110;
-          ctx.fillStyle = `rgba(202, 255, 216, ${alpha})`;
-          ctx.fillRect(Math.round(x), Math.round(y), index % 11 === 0 ? 2 : 1, 1);
-        }
-
-        const cx = width * 0.5;
-        const cy = height * 0.54;
-        const maxOrbit = Math.min(width, height) * 0.36;
-        const order = screenSaverPlanetOrder.length ? screenSaverPlanetOrder : screenSaverPlanets.map((_, index) => index);
-        const featuredIndex = order[Math.floor((reduced ? 0 : elapsed / 20) % order.length)] || 0;
-        const featuredPlanet = screenSaverPlanets[featuredIndex];
-        const planets = screenSaverPlanets;
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        planets.forEach(planet => {
-          const rx = maxOrbit * planet.orbit;
-          const ry = rx * 0.47;
-          ctx.strokeStyle = 'rgba(156, 255, 184, 0.22)';
-          ctx.setLineDash([4, 7]);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, rx, ry, -0.18, 0, Math.PI * 2);
-          ctx.stroke();
-        });
-        ctx.setLineDash([]);
-
-        ctx.strokeStyle = 'rgba(202, 255, 216, 0.22)';
-        for (let i = 0; i < 34; i += 1) {
-          const angle = i * 0.46 + (reduced ? 0 : elapsed * 0.12);
-          const radius = maxOrbit * (0.61 + ((i * 13) % 9) / 95);
-          const x = Math.cos(angle) * radius;
-          const y = Math.sin(angle) * radius * 0.47;
-          ctx.fillStyle = i % 3 === 0 ? 'rgba(0, 234, 255, 0.54)' : 'rgba(156, 255, 184, 0.42)';
-          ctx.fillRect(Math.round(x), Math.round(y), 2, 1);
-        }
-
-        const sunPulse = reduced ? 0 : Math.sin(elapsed * 3.4) * 2;
-        ctx.fillStyle = '#d8ffe1';
-        ctx.shadowColor = 'rgba(156, 255, 184, 0.7)';
-        ctx.shadowBlur = 18;
-        ctx.fillRect(Math.round(-11 - sunPulse / 2), Math.round(-11 - sunPulse / 2), Math.round(22 + sunPulse), Math.round(22 + sunPulse));
-        ctx.fillStyle = '#071407';
-        ctx.fillRect(-3, -15, 6, 30);
-        ctx.fillRect(-15, -3, 30, 6);
-        ctx.shadowBlur = 0;
-
-        const drawn = planets.map(planet => {
-          const angle = (reduced ? 0.7 : elapsed * planet.speed) + planet.phase;
-          const rx = maxOrbit * planet.orbit;
-          const ry = rx * 0.47;
-          return {
-            ...planet,
-            x: Math.cos(angle) * rx,
-            y: Math.sin(angle) * ry,
-            depth: Math.sin(angle)
-          };
-        }).sort((a, b) => a.depth - b.depth);
-
-        drawn.forEach(planet => {
-          const dim = planet.depth < 0 ? 0.58 : 1;
-          const size = Math.max(3, Math.round(planet.radius / 6));
-          ctx.fillStyle = planet.color;
-          ctx.globalAlpha = dim;
-          ctx.fillRect(Math.round(planet.x - size / 2), Math.round(planet.y - size / 2), size, size);
-          if (planet.name === 'SATURN') {
-            ctx.strokeStyle = 'rgba(202, 255, 216, 0.8)';
-            ctx.strokeRect(Math.round(planet.x - 11), Math.round(planet.y - 3), 22, 6);
-          }
-          if (planet === featuredPlanet) {
-            ctx.strokeStyle = 'rgba(0, 234, 255, 0.9)';
-            ctx.strokeRect(Math.round(planet.x - size - 3), Math.round(planet.y - size - 3), size * 2 + 6, size * 2 + 6);
-          }
-          ctx.globalAlpha = 1;
-          if (planet.depth > -0.2) drawPixelText(ctx, planet.short, planet.x + 8, planet.y - 7, 'rgba(202, 255, 216, 0.72)');
-        });
-
-        const cometAngle = reduced ? 2.6 : (elapsed * 0.52) % (Math.PI * 2);
-        const cometX = Math.cos(cometAngle) * maxOrbit * 0.96;
-        const cometY = Math.sin(cometAngle) * maxOrbit * 0.26 - maxOrbit * 0.52;
-        ctx.strokeStyle = 'rgba(0, 234, 255, 0.7)';
-        ctx.beginPath();
-        ctx.moveTo(cometX, cometY);
-        ctx.lineTo(cometX - 28, cometY + 8);
-        ctx.stroke();
-        ctx.fillStyle = '#caffd8';
-        ctx.fillRect(Math.round(cometX), Math.round(cometY), 4, 2);
-        ctx.restore();
-
-        drawFeaturedPlanet(ctx, featuredPlanet, width, height, elapsed, reduced);
-        drawDataTicker(ctx, featuredPlanet, width, height, elapsed, reduced);
-        drawPixelText(ctx, 'GB-CVM ORBITAL VIEW', 14, 28, 'rgba(156, 255, 184, 0.72)');
-        drawPixelText(ctx, `T+${String(Math.floor(elapsed)).padStart(4, '0')}`, width - 78, 28, 'rgba(156, 255, 184, 0.72)');
-
-        if (!reduced) screenSaverFrame = window.requestAnimationFrame(drawScreenSaverSystem);
-      };
-
-      const startScreenSaverSystem = () => {
-        stopScreenSaverSystem();
-        screenSaverCanvas = screenSaverOverlay?.querySelector('.screen-saver-system-canvas');
-        screenSaverContext = screenSaverCanvas?.getContext('2d') || null;
-        if (!screenSaverCanvas || !screenSaverContext) return;
-        screenSaverGalaxyCanvas = screenSaverOverlay?.querySelector('.screen-saver-galaxy-canvas');
-        screenSaverGalaxyContext = screenSaverGalaxyCanvas?.getContext('2d') || null;
-        screenSaverStart = performance.now();
-        shuffleScreenSaverPlanets();
-        resizeScreenSaverSystem();
-        drawScreenSaverSystem(screenSaverStart);
-      };
-
-      const closeScreenSaver = () => {
-        if (!screenSaverOverlay) return;
-        stopScreenSaverSystem();
-        screenSaverOverlay.classList.remove('is-active');
-        screenSaverOverlay.setAttribute('aria-hidden', 'true');
-        document.body.classList.remove('screen-saver-active');
-        persistUserPreferences({ screenSaverActive: false });
-        if (lastFocusedElement && document.contains(lastFocusedElement) && typeof lastFocusedElement.focus === 'function') {
-          lastFocusedElement.focus();
-        } else {
-          mobileCommandButton?.focus();
-        }
-      };
-
-      const ensureScreenSaverOverlay = () => {
-        if (screenSaverOverlay) return screenSaverOverlay;
-        screenSaverOverlay = document.createElement('button');
-        screenSaverOverlay.type = 'button';
-        screenSaverOverlay.className = 'screen-saver-overlay';
-        screenSaverOverlay.setAttribute('aria-hidden', 'true');
-        screenSaverOverlay.setAttribute('aria-label', 'Ekran koruyucuyu kapat');
-        screenSaverOverlay.innerHTML = [
-          '<canvas class="screen-saver-galaxy-canvas" aria-hidden="true"></canvas>',
-          '<span class="screen-saver-noise" aria-hidden="true"></span>',
-          '<span class="screen-saver-logo" aria-hidden="true">Convivium</span>',
-          '<span class="screen-saver-system" aria-hidden="true">',
-          '  <span class="system-label">LOCAL SOLAR MAP</span>',
-          '  <canvas class="screen-saver-system-canvas"></canvas>',
-          '  <span class="system-sun"></span>',
-          '  <span class="system-orbit orbit-1"><span class="system-planet planet-1"></span></span>',
-          '  <span class="system-orbit orbit-2"><span class="system-planet planet-2"></span></span>',
-          '  <span class="system-orbit orbit-3"><span class="system-planet planet-3"></span></span>',
-          '  <span class="system-orbit orbit-4"><span class="system-planet planet-4"></span></span>',
-          '  <span class="system-orbit orbit-5"><span class="system-planet planet-5"></span></span>',
-          '</span>',
-          '<span class="screen-saver-status" aria-hidden="true">',
-          '  <span>SCREEN SAVER</span>',
-          '  <span>PUBLIC DISPLAY IDLE</span>',
-          '  <span>CLICK / KEY TO RETURN</span>',
-          '</span>',
-          '<span class="screen-saver-trace" aria-hidden="true">C:\\CONVIVIUM\\IDLE&gt; phosphor drift active</span>'
-        ].join('');
-        screenSaverOverlay.addEventListener('click', closeScreenSaver);
-        document.body.appendChild(screenSaverOverlay);
-        return screenSaverOverlay;
-      };
-
-      const screenSaverCommand = () => {
-        const overlay = ensureScreenSaverOverlay();
-        lastFocusedElement = document.activeElement;
-        closeCommand();
-        overlay.classList.add('is-active');
-        overlay.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('screen-saver-active');
-        overlay.focus();
-        startScreenSaverSystem();
-        persistUserPreferences({ screenSaverActive: true });
-        pulse(310, 0.08);
-        return 'screen saver active';
-      };
+      // Ekran koruyucu modulu (assets/js/home/screen-saver.js)
+      screenSaverMod = window.ConviviumHome?.createScreenSaver?.({
+        pulse,
+        persistUserPreferences,
+        closeCommand,
+        mobileCommandButton,
+        getLastFocused: () => lastFocusedElement,
+        setLastFocused: (el) => { lastFocusedElement = el; }
+      }) || null;
 
       const normalizeCommand = (value) => value
         .toLocaleLowerCase('tr-TR')
@@ -2443,11 +1770,11 @@
       const psCommand = () => [
         'PID  STATUS   PROCESS',
         `001  ${commandShell?.classList.contains('is-open') ? 'RUN' : 'IDLE'}     command.shell`,
-        `002  ${screenSaverOverlay?.classList.contains('is-active') ? 'RUN' : 'IDLE'}     screen.saver`,
+        `002  ${screenSaverMod?.isActive() ? 'RUN' : 'IDLE'}     screen.saver`,
         `003  ${powerOverlay?.classList.contains('is-active') || powerOverlay?.classList.contains('is-off') ? 'RUN' : 'IDLE'}     power.overlay`,
         `004  ${(window.DebCompanion || window.NovaCompanion)?.getState?.().active ? 'RUN' : 'IDLE'}     deb.companion`,
         `005  ${commandInFlight ? 'WAIT' : 'IDLE'}     oracle.channel`,
-        `006  ${pipeGame?.active ? 'RUN' : 'IDLE'}     pipe.game`
+        `006  ${pipeMod?.isActive() ? 'RUN' : 'IDLE'}     pipe.game`
       ].join('\n');
 
       const themeCommand = (target = '') => {
@@ -2516,1079 +1843,29 @@
         return `badge: ${badge}\ncommands: ${state.commands}\nlevel: ${levels[Math.min(state.level, levels.length - 1)]}`;
       };
 
-      const pipePieces = [
-        { id: 'straight', glyphs: ['│', '─'], masks: [5, 10], weight: 4 },
-        { id: 'bend', glyphs: ['└', '┌', '┐', '┘'], masks: [3, 6, 12, 9], weight: 5 },
-        { id: 'junction', glyphs: ['┴', '├', '┬', '┤'], masks: [11, 7, 14, 13], weight: 1 },
-        { id: 'cross', glyphs: ['┼'], masks: [15], weight: 1 }
-      ];
-      const pipeDirs = [
-        { bit: 1, dr: -1, dc: 0, opposite: 4, name: 'north' },
-        { bit: 2, dr: 0, dc: 1, opposite: 8, name: 'east' },
-        { bit: 4, dr: 1, dc: 0, opposite: 1, name: 'south' },
-        { bit: 8, dr: 0, dc: -1, opposite: 2, name: 'west' }
-      ];
-      const pipeBag = pipePieces.flatMap(piece => Array.from({ length: piece.weight }, () => piece));
-
-      const createPipePiece = () => {
-        const template = pipeBag[Math.floor(Math.random() * pipeBag.length)];
-        return { id: template.id, rotation: Math.floor(Math.random() * template.glyphs.length) };
-      };
-
-      const pipeMask = (piece) => {
-        const template = pipePieces.find(item => item.id === piece.id);
-        return template?.masks[piece.rotation % template.masks.length] || 0;
-      };
-
-      const pipeGlyph = (piece) => {
-        if (piece.kind === 'source') return 'P';
-        if (piece.kind === 'drain') return 'C';
-        if (piece.kind === 'block') return '█';
-        const template = pipePieces.find(item => item.id === piece.id);
-        return template?.glyphs[piece.rotation % template.glyphs.length] || '?';
-      };
-
-      const clearPipeAnimation = () => {
-        pipeAnimationTimers.forEach(timer => window.clearTimeout(timer));
-        pipeAnimationTimers = [];
-      };
-
-      const setPipeGameMode = (active) => {
-        commandShell?.classList.toggle('is-game-mode', Boolean(active));
-      };
-
-      // Pipe giris sinematigi (konuya uygun): reaktor coolant alarm + priming sekansi.
-      // schedulePipeFinale ile ayni dil; tahta acilmadan once kisa bir sahne oynar.
-      const pipeIntroFrames = () => ([
-        [
-          '╔══════════════════════════════════════╗',
-          '║  PIPE-90  ·  TOKAMAK COOLANT CONTROL   ║',
-          '╚══════════════════════════════════════╝',
-          '',
-          '  ⚠  ALARM — COOLANT LOOP OFFLINE',
-          '     CORE TEMP 9200K ▲ RISING'
-        ].join('\n'),
-        [
-          '  ▸ priming pump ........... [████░░░░░░]',
-          '  ▸ pressurizing line ...... [██░░░░░░░░]',
-          '',
-          '     CORE TEMP 9200K ▲'
-        ].join('\n'),
-        [
-          '  ▸ priming pump ........... [██████████] OK',
-          '  ▸ charging plasma ring ... [███████░░░]',
-          '',
-          '     containment field forming...'
-        ].join('\n'),
-        [
-          '  ▸ all systems primed ..... [██████████]',
-          '',
-          '     >>> OPERATOR REQUIRED <<<',
-          '     route coolant: PUMP → CORE before meltdown'
-        ].join('\n')
-      ]);
-
-      const startPipeGame = () => {
-        clearPipeAnimation();
-        // Intro sirasinda buyuk oyun-modu kutusuna GECME; aksi halde cikti kutusu
-        // birden buyuyup intro metni giris alaninin altina kayiyor. Tahta hazir
-        // olunca buildPipeGame() oyun modunu acar.
-        pipeGame = null;
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion || !commandOutput) {
-          pipeIntroActive = false;
-          return buildPipeGame();
-        }
-        pipeIntroActive = true;
-        const frames = pipeIntroFrames();
-        const step = 560;
-        frames.forEach((frame, index) => {
-          const timer = window.setTimeout(() => {
-            if (pipeGame || !commandShell?.classList.contains('is-open')) return;
-            commandOutput.textContent = frame;
-            pulse(110);
-            audioCue('terminal.suggest');
-          }, index * step);
-          pipeAnimationTimers.push(timer);
-        });
-        const finishTimer = window.setTimeout(() => {
-          pipeIntroActive = false;
-          if (!commandShell?.classList.contains('is-open')) { setPipeGameMode(false); return; }
-          commandOutput.textContent = buildPipeGame();
-          pulse(260);
-        }, frames.length * step + 220);
-        pipeAnimationTimers.push(finishTimer);
-        return frames[0];
-      };
-
-      const buildPipeGame = () => {
-        setPipeGameMode(true);
-        const rows = 7;
-        const cols = 8;
-        const drainRow = 1 + Math.floor(Math.random() * 5);
-        pipeGame = {
-          active: true,
-          rows,
-          cols,
-          cursor: { r: 3, c: 1 },
-          source: { r: 3, c: 0, mask: 2 },
-          drain: { r: drainRow, c: cols - 1, mask: 8 },
-          grid: Array.from({ length: rows }, () => Array.from({ length: cols }, () => null)),
-          queue: Array.from({ length: 6 }, createPipePiece),
-          placed: 0,
-          skipped: 0,
-          flowIn: 36,
-          score: 0,
-          flowPath: new Set(),
-          flowWave: new Set(),
-          leakAt: null,
-          temp: 9200,
-          status: 'REACTOR COOLANT ready. containment opens after 36 actions.',
-          resolving: false,
-          won: false,
-          lost: false
-        };
-        pipeGame.grid[pipeGame.source.r][pipeGame.source.c] = { kind: 'source', mask: pipeGame.source.mask };
-        pipeGame.grid[pipeGame.drain.r][pipeGame.drain.c] = { kind: 'drain', mask: pipeGame.drain.mask };
-        [
-          { r: 1, c: 3 },
-          { r: 5, c: 4 }
-        ].forEach(block => {
-          if (block.r !== pipeGame.drain.r || block.c !== pipeGame.drain.c) {
-            pipeGame.grid[block.r][block.c] = { kind: 'block', mask: 0 };
-          }
-        });
-        return renderPipeGame();
-      };
-
-      const pipeCellMask = (cell) => {
-        if (!cell) return 0;
-        if (cell.kind) return cell.mask || 0;
-        return pipeMask(cell);
-      };
-
-      const pipeScore = (win) => {
-        if (!pipeGame) return 0;
-        const base = win ? 1000 : 0;
-        return Math.max(0, base + (pipeGame.flowIn * 35) - (pipeGame.placed * 25) - (pipeGame.skipped * 60));
-      };
-
-      const pipeMeter = (value, max, width = 12) => {
-        const clamped = Math.max(0, Math.min(max, value));
-        const filled = Math.round((clamped / max) * width);
-        return `${'█'.repeat(filled)}${'░'.repeat(width - filled)}`;
-      };
-
-      const pipeTileLines = (cell, r, c) => {
-        const key = `${r},${c}`;
-        const cursor = pipeGame.cursor.r === r && pipeGame.cursor.c === c;
-        const leak = pipeGame.leakAt === key;
-        const wet = pipeGame.flowPath?.has(key);
-        const wave = pipeGame.flowWave?.has(key);
-        let lines = ['       ', '   .   ', '       '];
-
-        if (cell?.kind === 'block') {
-          lines = ['███████', '██ROD██', '███████'];
-        } else if (cell?.kind === 'source') {
-          lines = wet || wave
-            ? ['╔════╗ ', '║PUMP╠≈', '╚════╝ ']
-            : ['╔════╗ ', '║PUMP╠═', '╚════╝ '];
-        } else if (cell?.kind === 'drain') {
-          const label = pipeGame.won ? 'COLD' : pipeGame.lost ? 'HOT!' : 'CORE';
-          lines = wet || wave
-            ? [' ╔════╗', `≈╣${label}║`, ' ╚════╝']
-            : [' ╔════╗', `═╣${label}║`, ' ╚════╝'];
-        } else if (cell) {
-          const mask = pipeCellMask(cell);
-          const tile = Array.from({ length: 3 }, () => Array.from({ length: 7 }, () => ' '));
-          const horizontal = wave ? '≋' : wet ? '≈' : '═';
-          const vertical = wave ? '≋' : wet ? '≈' : '║';
-          const core = wave ? '▓' : wet ? '≈' : pipeGlyph(cell);
-          if (mask & 1) tile[0][3] = vertical;
-          if (mask & 4) tile[2][3] = vertical;
-          if (mask & 8) {
-            tile[1][1] = horizontal;
-            tile[1][2] = horizontal;
-          }
-          if (mask & 2) {
-            tile[1][4] = horizontal;
-            tile[1][5] = horizontal;
-          }
-          tile[1][3] = core;
-          lines = tile.map(row => row.join(''));
-        }
-
-        if (leak) lines = ['!!XX!!!', '!KACAK!', '!!XX!!!'];
-        if (cursor && !leak) {
-          lines = lines.map((line, index) => {
-            const chars = line.split('');
-            chars[0] = index === 0 ? '┌' : index === 1 ? '│' : '└';
-            chars[6] = index === 0 ? '┐' : index === 1 ? '│' : '┘';
-            return chars.join('');
-          });
-        }
-        return lines;
-      };
-
-      const pipeQueuePreview = () => pipeGame.queue
-        .map((piece, index) => `${index === 0 ? 'NEXT' : `Q${index}`}[${pipeGlyph(piece)}:${piece.id.slice(0, 4)}]`)
-        .join(' ');
-
-      const pipeFinaleFrame = (title, art, lines = []) => [
-        renderPipeGame(),
-        '',
-        title,
-        art.join('\n'),
-        ...lines
-      ].join('\n');
-
-      const schedulePipeFinale = (success) => {
-        if (!pipeGame || !commandOutput) return;
-        clearPipeAnimation();
-        const gameRef = pipeGame;
-        const score = pipeGame.score;
-        const frames = success
-          ? [
-            pipeFinaleFrame('COOLANT FLOW CONFIRMED / CORE TEMP 9200K', ['        (###)', '       (#####)', '        (###)'], ['coolant valves opening...']),
-            pipeFinaleFrame('CORE TEMP 5100K', ['        {***}', '       {*****}', '        {***}'], ['plasma ring stabilizing...']),
-            pipeFinaleFrame('CORE TEMP 1800K', ['        [~~~]', '       [~~~~~]', '        [~~~]'], ['containment pressure dropping...']),
-            pipeFinaleFrame('CORE STABLE / COOLANT LOOP LOCKED', ['        [   ]', '       [  C  ]', '        [___]'], [`score: ${score}`, 'reactor: cold enough to breathe'])
-          ]
-          : [
-            pipeFinaleFrame('COOLANT FLOW FAILED / CORE TEMP RISING', ['        (###)', '       (#####)', '        (###)'], ['alarm: return line not sealed']),
-            pipeFinaleFrame('CONTAINMENT BREACH', ['      \\  |  /', '    --- ### ---', '      /  |  \\'], ['pressure spike detected']),
-            pipeFinaleFrame('*** REACTOR FLASH ***', ['    .  *  .  *  .', '  *   #######   *', '    *  *****  *'], ['coolant lost / chamber flooded with light']),
-            pipeFinaleFrame('SYSTEM SCRAM / SESSION LOST', ['        .....', '      ..     ..', '        .....'], ['reactor: emergency shutdown'])
-          ];
-
-        frames.forEach((frame, index) => {
-          const timer = window.setTimeout(() => {
-            if (pipeGame !== gameRef || !commandOutput) return;
-            commandOutput.textContent = frame;
-          }, 420 + (index * 620));
-          pipeAnimationTimers.push(timer);
-        });
-      };
-
-      const renderPipeGame = () => {
-        if (!pipeGame) return 'pipe: inactive';
-        const rows = [];
-        const heat = Math.min(10000, Math.max(0, pipeGame.temp));
-        const pressure = Math.max(pipeGame.flowIn, 0);
-        rows.push('╔══════════════════════════════════════════════════════════════════════════════╗');
-        rows.push('║ PIPE-90 // TOKAMAK COOLANT EMERGENCY                                       ║');
-        rows.push('╠══════════════════════════════════════════════════════════════════════════════╣');
-        rows.push(`║ TEMP ${String(pipeGame.temp).padStart(4, ' ')}K [${pipeMeter(heat, 10000)}]  PRESS ${String(pressure).padStart(2, '0')} [${pipeMeter(pressure, 36, 8)}] ║`);
-        rows.push(`║ SCORE ${String(pipeGame.score).padStart(4, '0')}   PLACED ${String(pipeGame.placed).padStart(2, '0')}   DUMP ${String(pipeGame.skipped).padStart(2, '0')}   LOOP: PUMP >>> CORE             ║`);
-        rows.push('╚══════════════════════════════════════════════════════════════════════════════╝');
-        rows.push('');
-        for (let r = 0; r < pipeGame.rows; r += 1) {
-          const tileRows = ['', '', ''];
-          for (let c = 0; c < pipeGame.cols; c += 1) {
-            const cell = pipeGame.grid[r][c];
-            const tile = pipeTileLines(cell, r, c);
-            tileRows[0] += tile[0];
-            tileRows[1] += tile[1];
-            tileRows[2] += tile[2];
-          }
-          rows.push(...tileRows);
-        }
-        const next = pipeGame.queue[0];
-        rows.push('');
-        rows.push(`QUEUE: ${pipeQueuePreview()}`);
-        rows.push(`ACTIVE: ${pipeGlyph(next)} ${next.id.toUpperCase()}   STATUS: ${pipeGame.status}`);
-        rows.push('');
-        rows.push('KEYS: arrows move | SPACE/R rotate | ENTER weld | F flow | X dump | Q quit');
-        rows.push('(oklar her zaman; harf kisayollari giris bos iken — "pipe flow" de yazabilirsin)');
-        return rows.join('\n');
-      };
-
-      const setPipeOutput = () => {
-        if (commandOutput) commandOutput.textContent = renderPipeGame();
-      };
-
-      const movePipeCursor = (dr, dc) => {
-        if (!pipeGame?.active) return;
-        pipeGame.cursor.r = Math.max(0, Math.min(pipeGame.rows - 1, pipeGame.cursor.r + dr));
-        pipeGame.cursor.c = Math.max(0, Math.min(pipeGame.cols - 1, pipeGame.cursor.c + dc));
-        pipeGame.status = `cursor: ${pipeGame.cursor.r},${pipeGame.cursor.c}`;
-        setPipeOutput();
-      };
-
-      const tickPipePressure = () => {
-        if (!pipeGame?.active || pipeGame.won || pipeGame.lost) return null;
-        pipeGame.flowIn -= 1;
-        pipeGame.temp = Math.min(9999, pipeGame.temp + 180);
-        if (pipeGame.flowIn <= 0) {
-          pipeGame.status = 'CONTAINMENT OPEN / coolant forced into line';
-          return flowPipe(true);
-        }
-        return null;
-      };
-
-      const rotatePipe = () => {
-        if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
-        const { r, c } = pipeGame.cursor;
-        const cell = pipeGame.grid[r][c];
-        if (cell && !cell.kind) {
-          const template = pipePieces.find(item => item.id === cell.id);
-          cell.rotation = (cell.rotation + 1) % template.glyphs.length;
-          pipeGame.status = `rotated placed ${cell.id}`;
-        } else if (!cell) {
-          const template = pipePieces.find(item => item.id === pipeGame.queue[0].id);
-          pipeGame.queue[0].rotation = (pipeGame.queue[0].rotation + 1) % template.glyphs.length;
-          pipeGame.status = `rotated next ${pipeGame.queue[0].id}`;
-        } else {
-          pipeGame.status = 'source/drain cannot rotate';
-        }
-        return tickPipePressure() || renderPipeGame();
-      };
-
-      const placePipe = () => {
-        if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
-        const { r, c } = pipeGame.cursor;
-        if (pipeGame.grid[r][c]) {
-          pipeGame.status = 'cell occupied';
-          return renderPipeGame();
-        }
-        pipeGame.grid[r][c] = pipeGame.queue.shift();
-        pipeGame.queue.push(createPipePiece());
-        pipeGame.placed += 1;
-        pipeGame.status = 'piece placed';
-        pulse(360, 0.04);
-        return tickPipePressure() || renderPipeGame();
-      };
-
-      const dumpPipe = () => {
-        if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
-        const skipped = pipeGame.queue.shift();
-        pipeGame.queue.push(createPipePiece());
-        pipeGame.skipped += 1;
-        pipeGame.status = `dumped ${skipped.id} / penalty armed`;
-        pulse(180, 0.04);
-        return tickPipePressure() || renderPipeGame();
-      };
-
-      const tracePipeFlow = () => {
-        const visited = new Set();
-        const order = [];
-        const leaks = [];
-        let reachedDrain = false;
-        const queue = [{ r: pipeGame.source.r, c: pipeGame.source.c }];
-        while (queue.length) {
-          const current = queue.shift();
-          const key = `${current.r},${current.c}`;
-          if (visited.has(key)) continue;
-          visited.add(key);
-          order.push(key);
-          const cell = pipeGame.grid[current.r]?.[current.c];
-          const mask = pipeCellMask(cell);
-          if (current.r === pipeGame.drain.r && current.c === pipeGame.drain.c) {
-            reachedDrain = true;
-            continue;
-          }
-          pipeDirs.forEach(dir => {
-            if (!(mask & dir.bit)) return;
-            const nr = current.r + dir.dr;
-            const nc = current.c + dir.dc;
-            const next = pipeGame.grid[nr]?.[nc];
-            if (!next) {
-              leaks.push({ r: nr, c: nc, from: key, dir: dir.name });
-              return;
-            }
-            const nextMask = pipeCellMask(next);
-            if (!(nextMask & dir.opposite)) {
-              leaks.push({ r: nr, c: nc, from: key, dir: dir.name });
-              return;
-            }
-            if (nextMask & dir.opposite) queue.push({ r: nr, c: nc });
-          });
-        }
-        return { ok: reachedDrain && leaks.length === 0, reachedDrain, leaks, visited, order };
-      };
-
-      const finishPipeFlow = (result, auto) => {
-        if (!pipeGame) return;
-        pipeGame.flowWave = new Set();
-        pipeGame.flowPath = new Set(result.order);
-        pipeGame.leakAt = result.leaks[0]?.from || null;
-        pipeGame.won = result.ok;
-        pipeGame.lost = !result.ok;
-        pipeGame.resolving = false;
-        pipeGame.score = pipeScore(result.ok);
-        pipeGame.temp = result.ok ? 640 : 9999;
-        pipeGame.status = result.ok
-          ? `CORE COOLING / ${pipeGame.score} pts / ${pipeGame.placed} pipes`
-          : result.reachedDrain
-            ? `COOLANT LEAK / open outlet ${result.leaks[0]?.dir || 'unknown'}`
-            : `CORE STARVED / coolant never reached chamber / wet cells ${result.visited.size}`;
-        if (result.ok) {
-          award(Math.max(state.level, 2));
-          pulse(720, 0.09);
-          // Pipe'i cozmek dunyaya baglanir: coolant kazandirir ve /core muhrunu acar (Faz 5).
-          if (!(state.unlocked || []).includes('/core')) {
-            state.inventory = [...new Set([...(state.inventory || []), 'coolant'])];
-            state.unlocked = [...new Set([...(state.unlocked || []), '/core'])];
-            state.easterTrail = [...(state.easterTrail || []), 'unlock:/core'].slice(-4);
-            persist();
-            scheduleWorldSave();
-            updateAccess();
-            pipeGame.status = `CORE COOLING / muhur cozuldu: /core acildi (cd core) / ${pipeGame.score} pts`;
-          }
-        } else {
-          pulse(130, 0.08);
-        }
-        if (auto && !result.ok) pipeGame.status = `AUTO SCRAM / ${pipeGame.status}`;
-        setPipeOutput();
-        schedulePipeFinale(result.ok);
-      };
-
-      const schedulePipeFlow = (result, auto) => {
-        if (!pipeGame || !commandOutput) return;
-        const gameRef = pipeGame;
-        const order = result.order.length ? result.order : Array.from(result.visited);
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion) {
-          finishPipeFlow(result, auto);
-          return;
-        }
-        order.forEach((key, index) => {
-          const timer = window.setTimeout(() => {
-            if (pipeGame !== gameRef || !commandOutput) return;
-            pipeGame.flowWave = new Set([key]);
-            pipeGame.flowPath.add(key);
-            pipeGame.status = `COOLANT MOVING / wet cell ${index + 1}/${order.length}`;
-            commandOutput.textContent = renderPipeGame();
-          }, index * 145);
-          pipeAnimationTimers.push(timer);
-        });
-        const finishTimer = window.setTimeout(() => {
-          if (pipeGame !== gameRef) return;
-          finishPipeFlow(result, auto);
-        }, (order.length * 145) + 220);
-        pipeAnimationTimers.push(finishTimer);
-      };
-
-      const flowPipe = (auto = false) => {
-        if (!pipeGame?.active) return 'pipe: inactive';
-        if (pipeGame.won || pipeGame.lost || pipeGame.resolving) return renderPipeGame();
-        clearPipeAnimation();
-        const result = tracePipeFlow();
-        pipeGame.flowPath = new Set();
-        pipeGame.flowWave = new Set();
-        pipeGame.leakAt = null;
-        pipeGame.resolving = true;
-        pipeGame.status = auto ? 'AUTO RELEASE / coolant charge entering loop' : 'MANUAL RELEASE / coolant charge entering loop';
-        schedulePipeFlow(result, auto);
-        return renderPipeGame();
-      };
-
-      const pipeCommand = (action = '') => {
-        const command = normalizeCommand(action || 'new');
-        if (pipeIntroActive) return 'pipe: reaktör hazırlanıyor...';
-        if (!pipeGame?.active || ['new', 'start', 'play'].includes(command)) return startPipeGame();
-        if (['rotate', 'r'].includes(command)) return rotatePipe();
-        if (['place', 'put', 'enter'].includes(command)) return placePipe();
-        if (['dump', 'skip', 'x', 'discard'].includes(command)) return dumpPipe();
-        if (['flow', 'run', 'f'].includes(command)) return flowPipe();
-        if (['quit', 'exit', 'q'].includes(command)) {
-          clearPipeAnimation();
-          setPipeGameMode(false);
-          pipeGame.active = false;
-          pipeGame = null;
-          return 'pipe: session closed';
-        }
-        if (['help', '?'].includes(command)) return renderPipeGame();
-        return 'pipe: usage pipe new|rotate|place|flow|dump|quit';
-      };
-
-      // ============================================================
-      // OUT RUN '86 // CONVIVIUM COAST
-      // Sozde-3B ASCII yol surusu. Gercek-zamanli dongu; is-game-mode'u
-      // pipe ile paylasir. Donem dokunuslari: radyo istasyonu secimi,
-      // checkpoint catallanmasi, palmiyeler, 293 km/s tavan hiz.
-      // ============================================================
-      const OUTRUN_W = 61;
-      const OUTRUN_H = 20;
-      const OUTRUN_HORIZON = 6;
-      const OUTRUN_TICK = 45; // ms (~22 fps)
-      const OUTRUN_DEPTH = 6;  // her satir = 6 yol birimi
-      const OUTRUN_VMAX = 305; // km/s tavan (donem havasi)
-
-      // Zorluk rampasi: ileri etaplar daha keskin viraj, daha yogun trafik, daha kit zaman.
-      // time = o etabin checkpoint'inde EKLENEN saniye (etap 0 = baslangic suresi).
-      const outrunStages = [
-        { name: 'CONVIVIUM COAST', curve: 1.00, traffic: 0.75, len: 1500, time: 23, sky: 'dawn',   scen: 'palm'  },
-        { name: 'NEON DELTA',      curve: 1.70, traffic: 1.10, len: 1650, time: 19, sky: 'dusk',   scen: 'neon'  },
-        { name: 'CORE TUNNELS',    curve: 2.40, traffic: 1.40, len: 1700, time: 18, sky: 'tunnel', scen: 'pylon' },
-        { name: 'VAULT RIDGE',     curve: 2.10, traffic: 1.30, len: 1750, time: 18, sky: 'storm',  scen: 'rock'  },
-        { name: 'ATLAS SUMMIT',    curve: 2.80, traffic: 1.60, len: 1850, time: 18, sky: 'aurora', scen: 'palm'  }
-      ];
-
-      const outrunBestKey = 'convivium.outrun.best';
-      const readOutrunBest = () => { try { return parseInt(window.localStorage.getItem(outrunBestKey) || '0', 10) || 0; } catch { return 0; } };
-      const writeOutrunBest = (v) => { try { window.localStorage.setItem(outrunBestKey, String(v)); } catch {} };
-
-      const outrunRadio = [
-        { id: 'magical', label: 'MAGICAL SOUND SHOWER', tone: 392 },
-        { id: 'breeze',  label: 'PASSING BREEZE',       tone: 440 },
-        { id: 'splash',  label: 'SPLASH WAVE',          tone: 523 }
-      ];
-
-      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-      const clearOutrun = () => {
-        if (outrunRaf !== null) { window.cancelAnimationFrame(outrunRaf); outrunRaf = null; }
-        outrunLastTs = 0;
-        outrunIntroTimers.forEach(t => window.clearTimeout(t));
-        outrunIntroTimers = [];
-      };
-
-      const setOutrunMode = (active) => {
-        commandShell?.classList.toggle('is-game-mode', Boolean(active));
-        // Gercek-zamanli oyun saniyede ~18 kez ciktiyi tazeler; ekran okuyucuyu bogmamak icin sus.
-        if (commandOutput) commandOutput.setAttribute('aria-live', active ? 'off' : 'polite');
-      };
-
-      const outrunCurveAt = (d, mult) => (
-        Math.sin(d * 0.0180) * 0.9 +
-        Math.sin(d * 0.0067 + 1.3) * 0.55 +
-        Math.sin(d * 0.0310 + 0.7) * 0.22
-      ) * mult;
-
-      const outrunCarColors = ['#3b6bd8', '#e0c93b', '#d8d8e0', '#37b0c0', '#e07b3b', '#9a55d0'];
-      const outrunSpawnCar = () => {
-        const depthSpan = (OUTRUN_H - 1) - OUTRUN_HORIZON;
-        const truck = Math.random() < 0.22;
-        // Daha UZAKTAN spawn -> tepki suresi. Yakindaki araclarla daima gecilebilir
-        // bir bosluk birak (tum yolu kapatma): bos serit bul.
-        const dist = outrun.pos + (depthSpan + 6) * OUTRUN_DEPTH + Math.random() * 90;
-        const nearbyLanes = outrun.cars
-          .filter(c => Math.abs(c.dist - dist) < OUTRUN_DEPTH * 4)
-          .map(c => c.lane);
-        let lane = (Math.random() * 2 - 1) * 0.85;
-        for (let tries = 0; tries < 8; tries++) {
-          if (nearbyLanes.every(l => Math.abs(l - lane) > 0.62)) break;
-          lane = (Math.random() * 2 - 1) * 0.85;
-        }
-        outrun.cars.push({
-          dist,
-          lane: clamp(lane, -0.9, 0.9),
-          speed: truck ? 2.0 + Math.random() * 1.2 : 4.0 + Math.random() * 4.0,
-          truck,
-          color: truck ? '#5e5e68' : outrunCarColors[Math.floor(Math.random() * outrunCarColors.length)],
-          scored: false
-        });
-      };
-
-      // --- Renk paleti / yardimcilar (donem arcade hissi) ---
-      const OR_PAL = {
-        road1: '#36363f', road2: '#3b3b45',
-        rumA: '#d23a3a', rumB: '#eef0f4',
-        grass1: '#1e7a35', grass2: '#1a6e2f',
-        grassFast: '#9fe6b4', lane: '#f2f3f7',
-        carB: '#e6362f', carDk: '#7c1410', carTail: '#ff8a3c', carWin: '#1a1a26', carLight: '#fff1b0',
-        frame: '#00ff66', hud: '#c4f8cf', hudDim: '#5fae74', hudBg: '#04140a', warn: '#ff5a4d', amber: '#ffd166'
-      };
-      const OR_SKY = {
-        dawn:   { top: '#241e4d', bot: '#ff9d63', sun: '#ffd07a', mtn: '#3a2b58', star: true },
-        dusk:   { top: '#190f3a', bot: '#d44e6b', sun: '#ff885a', mtn: '#281640', star: true },
-        tunnel: { top: '#04050a', bot: '#181b29', sun: '#3b4258', mtn: '#0a0c14', star: false },
-        storm:  { top: '#23252e', bot: '#565b6a', sun: '#8a8f9e', mtn: '#181a22', star: false },
-        aurora: { top: '#06112a', bot: '#0c5a4a', sun: '#7affd0', mtn: '#04203a', star: true }
-      };
-      const OR_SCEN = {
-        palm:  { a: 'Y', b: '♣', f: '#2fbf57' },
-        neon:  { a: '╪', b: '◊', f: '#ff5ad0' },
-        pylon: { a: 'I', b: 'I', f: '#d8d8e0' },
-        rock:  { a: '▲', b: 'Δ', f: '#9a8a6a' }
-      };
-      const _hx = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-      const orMix = (a, b, t) => {
-        const A = _hx(a), B = _hx(b);
-        const m = (i) => Math.round(A[i] + (B[i] - A[i]) * clamp(t, 0, 1)).toString(16).padStart(2, '0');
-        return '#' + m(0) + m(1) + m(2);
-      };
-      const orMtnH = (x, pos) => {
-        const s = Math.sin(x * 0.42 + pos * 0.006) * 1.1 + Math.sin(x * 0.17 + pos * 0.0021) * 1.7 + 1.7;
-        return clamp(Math.round(s), 0, 3);
-      };
-
-      const OUTRUN_W2 = OUTRUN_W + 2;
-      const OUTRUN_LINES = 6 + OUTRUN_H + 3; // head(6) + body(H) + foot(3)
-      const K = (c, f, b) => ({ c, f, b });
-
-      // SAF tampon: OUTRUN_LINES x OUTRUN_W2 hucre dizisi dondurur (DOM'a dokunmaz; test edilebilir).
-      const outrunBuffer = () => {
-        const W = OUTRUN_W, H = OUTRUN_H, horizon = OUTRUN_HORIZON;
-        const stage = outrunStages[Math.min(outrun.stageIndex, outrunStages.length - 1)];
-        const spd = outrun.speed;
-        const pos = outrun.pos;
-        const depthSpan = (H - 1) - horizon;
-        const sky = OR_SKY[stage.sky] || OR_SKY.dawn;
-        const scen = OR_SCEN[stage.scen] || OR_SCEN.palm;
-        const shakeAmt = outrun.shake > 0 ? (Math.floor(pos) % 2 === 0 ? 1 : -1) * Math.min(2, outrun.shake) : 0;
-        const scroll = Math.floor(pos / OUTRUN_DEPTH); // satir-tutarli kayma fazi
-        const grid = Array.from({ length: H }, () => Array.from({ length: W }, () => K(' ', '#000', '#000')));
-        const put = (x, y, c, f, b) => { if (x >= 0 && x < W && y >= 0 && y < H) { const cell = grid[y][x]; cell.c = c; cell.f = f; cell.b = b; } };
-
-        // GOKYUZU: dikey gradyan
-        for (let y = 0; y < horizon; y++) {
-          const t = horizon <= 1 ? 0 : y / (horizon - 1);
-          const bg = orMix(sky.top, sky.bot, t * t);
-          for (let x = 0; x < W; x++) { grid[y][x].f = bg; grid[y][x].b = bg; }
-        }
-        if (sky.star) {
-          for (let y = 0; y < Math.max(1, horizon - 2); y++) for (let x = 0; x < W; x++) {
-            if ((x * 7 + y * 29 + Math.floor(pos * 0.015)) % 47 === 0) { grid[y][x].c = '·'; grid[y][x].f = OR_PAL.lane; }
-          }
-        }
-        // GUNES (kavise gore yatay parallax + hafif dikey salinim)
-        const sunBob = Math.round(Math.sin(pos * 0.004) * 1.2);
-        const sunCx = clamp(Math.round(W * 0.30 - outrunCurveAt(pos + depthSpan * OUTRUN_DEPTH, stage.curve) * 3), 6, W - 6);
-        const sunCy = clamp(horizon - 4 + sunBob, 1, horizon - 1);
-        for (let dy = -3; dy <= 3; dy++) for (let dx = -5; dx <= 5; dx++) {
-          const d = (dx * dx) / 25 + (dy * dy) / 9;
-          const yy = sunCy + dy, xx = sunCx + dx;
-          if (d <= 1 && yy >= 0 && yy < horizon && xx >= 0 && xx < W) {
-            const col = d < 0.45 ? sky.sun : orMix(sky.sun, sky.bot, 0.55);
-            grid[yy][xx].c = ' '; grid[yy][xx].f = col; grid[yy][xx].b = col;
-          }
-        }
-        // DAGLAR (parallax silüet)
-        for (let x = 0; x < W; x++) {
-          const mh = orMtnH(x, pos);
-          for (let k = 0; k < mh; k++) { const yy = horizon - 1 - k; if (yy >= 0) { grid[yy][x].c = ' '; grid[yy][x].f = sky.mtn; grid[yy][x].b = sky.mtn; } }
-        }
-
-        // YOL
-        const rows = [];
-        let curve = 0;
-        let center = (W / 2) + shakeAmt;
-        for (let y = H - 1; y >= horizon; y--) {
-          const depth = (H - 1) - y;
-          const t = depthSpan > 0 ? depth / depthSpan : 0;
-          const segDist = pos + depth * OUTRUN_DEPTH;
-          curve += outrunCurveAt(segDist, stage.curve) * 0.085;
-          center += curve;
-          const halfW = Math.max(2, Math.round((W * 0.46) * (1 - t * 0.85)));
-          const cInt = Math.round(center);
-          const left = cInt - halfW;
-          const right = cInt + halfW;
-          // Satir-tutarli kayan serit: komsu satirlar degisir, butun olarak akar (strobe yok).
-          const stripe = (depth + scroll) % 2;
-          const grassCol = stripe ? OR_PAL.grass1 : OR_PAL.grass2;
-          const roadCol = stripe ? OR_PAL.road1 : OR_PAL.road2;
-          const rumCol = stripe ? OR_PAL.rumA : OR_PAL.rumB;
-          for (let x = 0; x < W; x++) { grid[y][x].c = ' '; grid[y][x].f = grassCol; grid[y][x].b = grassCol; }
-          if (spd > 0.5 && depth < depthSpan * 0.7) {
-            for (let x = 0; x < W; x++) {
-              if ((x < left - 1 || x > right + 1) && ((x + depth + scroll * 2) % 5 === 0)) { grid[y][x].c = '⋅'; grid[y][x].f = OR_PAL.grassFast; }
-            }
-          }
-          for (let x = Math.max(0, left + 1); x <= Math.min(W - 1, right - 1); x++) { grid[y][x].c = ' '; grid[y][x].f = roadCol; grid[y][x].b = roadCol; }
-          put(left, y, ' ', rumCol, rumCol);
-          put(right, y, ' ', rumCol, rumCol);
-          if (halfW > 6) { put(left - 1, y, ' ', rumCol, rumCol); put(right + 1, y, ' ', rumCol, rumCol); }
-          const dash = (depth + scroll) % 2;
-          if (dash && halfW > 3) put(cInt, y, ' ', OR_PAL.lane, OR_PAL.lane);
-          if (depth > 1 && (depth + scroll) % 4 === 0) {
-            const g = (depth % 2) ? scen.a : scen.b;
-            put(left - 2, y, g, scen.f, grassCol);
-            put(right + 2, y, g, scen.f, grassCol);
-          }
-          rows.push({ y, depth, center: cInt, halfW });
-        }
-
-        // TRAFIK (renkli, yakinda buyur)
-        outrun.cars.forEach(car => {
-          const rel = (car.dist - pos) / OUTRUN_DEPTH;
-          if (rel < 0 || rel > depthSpan) return;
-          const y = (H - 1) - Math.round(rel);
-          const row = rows.find(r => r.y === y);
-          if (!row) return;
-          const x = Math.round(row.center + car.lane * (row.halfW - 1));
-          const near = rel < depthSpan * 0.6;
-          const mid = rel < depthSpan * 0.85;
-          const sprite = car.truck
-            ? (near ? '▐███▌' : (mid ? '▟█▙' : '▄▄'))
-            : (near ? '╓███╖' : (mid ? '╓█╖' : '▴'));
-          const body = car.color || (car.truck ? '#5e5e68' : '#3b6bd8');
-          const start = x - Math.floor(sprite.length / 2);
-          for (let i = 0; i < sprite.length; i++) put(start + i, y, sprite[i], '#0e0f16', body);
-          // stop lambalari (yakinken)
-          if (near) { put(start, y, '▐', OR_PAL.carTail, body); put(start + sprite.length - 1, y, '▌', OR_PAL.carTail, body); }
-        });
-
-        // OYUNCU ARABASI (renkli, fren/spin'de degisir)
-        const near0 = rows[0];
-        const px = Math.round(near0.center + outrun.playerX * near0.halfW) + shakeAmt;
-        const braking = Boolean(outrun.input?.brake);
-        const spinning = outrun.spin > 0;
-        const lean = !spinning ? ((outrun.input?.right ? 1 : 0) - (outrun.input?.left ? 1 : 0)) : 0;
-        const carArt = spinning
-          ? ((Math.floor(pos) % 2 === 0) ? [' ╲╳╱ ', '◂ ✸ ▸', ' ╱╳╲ '] : [' ╱╳╲ ', '▸ ✸ ◂', ' ╲╳╱ '])
-          : [lean < 0 ? '▟█▙  ' : lean > 0 ? '  ▟█▙' : ' ▟█▙ ', '▐███▌', braking ? '▝◉─◉▘' : '▘╨─╨▝'];
-        for (let gx = -2; gx <= 2; gx++) put(px + gx, H - 1, ' ', '#0a0a0a', '#0a0a0a'); // golge
-        carArt.forEach((str, i) => {
-          const row = H - carArt.length + i;
-          const s = px - Math.floor(str.length / 2);
-          for (let kx = 0; kx < str.length; kx++) {
-            const ch = str[kx];
-            if (ch === ' ') continue;
-            let f = OR_PAL.carDk, b = OR_PAL.carB;
-            if (spinning) { f = OR_PAL.amber; b = '#2a2a30'; }
-            else if (ch === '◉') { f = braking ? '#fff04a' : OR_PAL.carTail; b = OR_PAL.carB; }
-            else if (i === 0) { f = OR_PAL.carLight; b = OR_PAL.carB; }
-            put(s + kx, row, ch, f, b);
-          }
-        });
-
-        // --- HUD hucreleri ---
-        const frame = OR_PAL.frame, hb = OR_PAL.hudBg, hud = OR_PAL.hud;
-        const kmh = Math.round(spd * OUTRUN_VMAX);
-        const lowTime = outrun.time <= 5;
-        const timeStr = Math.max(0, outrun.time).toFixed(1).padStart(5, ' ');
-        const stageNo = outrun.stageIndex + 1;
-        const toGo = Math.max(0, Math.round(stage.len - outrun.stageDist));
-        const meter = (val, max, w, full = '█', empty = '·') => {
-          const n = Math.round(clamp(val / max, 0, 1) * w);
-          return full.repeat(n) + empty.repeat(Math.max(0, w - n));
-        };
-        const aheadCurve = outrunCurveAt(pos + depthSpan * OUTRUN_DEPTH * 0.6, stage.curve);
-        const cm = Math.min(3, Math.round(Math.abs(aheadCurve) * 1.3));
-        const curveSig = cm === 0 ? '  STRAIGHT  ' : (aheadCurve < 0 ? ('«'.repeat(cm) + ' LEFT ').padStart(12, ' ') : (' RIGHT ' + '»'.repeat(cm)).padEnd(12, ' '));
-        const combo = outrun.combo > 1 ? `  x${outrun.combo}` : '';
-        const strCells = (str, f, b) => { const s = str.length >= W + 2 ? str.slice(0, W + 2) : str.padEnd(W + 2, ' '); const a = []; for (let i = 0; i < W + 2; i++) a.push(K(s[i], f, b)); return a; };
-        const hudRow = (interior, f = hud) => { const s = interior.slice(0, W).padEnd(W, ' '); const a = [K('║', frame, hb)]; for (let i = 0; i < W; i++) a.push(K(s[i], f, hb)); a.push(K('║', frame, hb)); return a; };
-        const borderRow = (l, m, r) => { const a = [K(l, frame, hb)]; for (let i = 0; i < W; i++) a.push(K(m, frame, hb)); a.push(K(r, frame, hb)); return a; };
-        const playRow = (pc) => { const a = [K('║', frame, hb)]; for (let i = 0; i < W; i++) a.push(pc[i]); a.push(K('║', frame, hb)); return a; };
-
-        return [
-          borderRow('╔', '═', '╗'),
-          hudRow(` OUTRUN'86  S${stageNo}/5 ${stage.name.padEnd(15, ' ')} ♪${outrun.radio.slice(0, 14)}`),
-          hudRow(` TIME ${timeStr}s${lowTime ? ' ⚠' : '  '} TACHO[${meter(spd, 1, 16, '▮')}] ${String(kmh).padStart(3, ' ')}km/h`, lowTime ? OR_PAL.warn : hud),
-          hudRow(` SCORE ${String(outrun.score).padStart(7, '0')}${combo}   BEST ${String(outrun.best || 0).padStart(7, '0')}   NEXT ${String(toGo).padStart(4, ' ')}m`),
-          hudRow(` CURVE ${curveSig}`),
-          borderRow('╠', '═', '╣'),
-          ...grid.map(playRow),
-          borderRow('╚', '═', '╝'),
-          strCells((outrun.msg || '').slice(0, W + 2), combo ? OR_PAL.amber : hud, '#000'),
-          strCells('DRIVE  ← → steer · ↑/SPACE gas · ↓ brake · outrun quit', OR_PAL.hudDim, '#000')
-        ];
-      };
-
-      // DOM izgarayi BIR KEZ kur (kalici span'ler). Sonra sadece degisen hucre guncellenir.
-      const outrunBuildScreen = () => {
-        if (!commandOutput || typeof document === 'undefined' || !outrun) return;
-        commandOutput.innerHTML = '';
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'font:13px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;white-space:nowrap;text-shadow:none;display:inline-block;';
-        const cells = [];
-        for (let r = 0; r < OUTRUN_LINES; r++) {
-          const rowEl = document.createElement('div');
-          rowEl.style.cssText = 'height:13px;white-space:nowrap;';
-          const rowCells = [];
-          for (let c = 0; c < OUTRUN_W2; c++) {
-            const sp = document.createElement('span');
-            sp.style.cssText = 'display:inline-block;width:1ch;height:13px;line-height:13px;text-align:center;';
-            sp.textContent = ' ';
-            rowEl.appendChild(sp);
-            rowCells.push({ el: sp, c: '', f: '', b: '' });
-          }
-          wrap.appendChild(rowEl);
-          cells.push(rowCells);
-        }
-        commandOutput.appendChild(wrap);
-        outrun.screen = cells;
-      };
-
-      // Tamponu kalici izgaraya uygula (yalniz degisen hucreyi guncelle -> flicker yok).
-      const outrunPaint = (buf) => {
-        if (!outrun?.screen) return;
-        const cells = outrun.screen;
-        for (let r = 0; r < OUTRUN_LINES; r++) {
-          const row = cells[r], brow = buf[r];
-          if (!row || !brow) continue;
-          for (let c = 0; c < OUTRUN_W2; c++) {
-            const cell = row[c], bc = brow[c];
-            if (!bc) continue;
-            if (cell.c !== bc.c) { cell.el.textContent = bc.c; cell.c = bc.c; }
-            if (cell.f !== bc.f) { cell.el.style.color = bc.f; cell.f = bc.f; }
-            if (cell.b !== bc.b) { cell.el.style.backgroundColor = bc.b; cell.b = bc.b; }
-          }
-        }
-      };
-
-      const outrunFinale = (success) => {
-        const stage = outrunStages[Math.min(outrun.stageIndex, outrunStages.length - 1)];
-        const flag = success
-          ? ['   ▟▙▟▙▟▙▟▙▟▙', '   ▜▛▜▛▜▛▜▛▜▛', '    ★  G O A L  ★']
-          : ['     .  ✸  .', '    OUT OF TIME', '     `  .  `'];
-        const record = outrun.newRecord ? '   ✦✦✦ NEW RECORD ✦✦✦' : '';
-        return [
-          `OUT RUN '86 — ${success ? 'ALL STAGES CLEARED!' : 'GAME OVER'}`,
-          ...flag,
-          record,
-          `STAGE    : ${stage.name} (${outrun.checkpoints}/5 checkpoint)`,
-          `DISTANCE : ${Math.round(outrun.dist)} m`,
-          success ? `TIME BONUS: +${outrun.timeBonus}` : `TIME OUT at ${Math.round(outrun.dist)} m`,
-          `SCORE    : ${String(outrun.score).padStart(7, '0')}`,
-          `BEST     : ${String(outrun.best || 0).padStart(7, '0')}`,
-          '',
-          'tekrar: outrun new   ·   cikis: outrun quit'
-        ].filter(l => l !== '').join('\n');
-      };
-
-      const endOutrun = (success) => {
-        clearOutrun();
-        if (!outrun) return;
-        outrun.timeBonus = 0;
-        if (success) {
-          outrun.timeBonus = Math.round(Math.max(0, outrun.time) * 60);
-          outrun.score += outrun.timeBonus;
-        }
-        const prevBest = readOutrunBest();
-        outrun.newRecord = outrun.score > prevBest;
-        outrun.best = Math.max(prevBest, outrun.score);
-        if (outrun.newRecord) writeOutrunBest(outrun.best);
-        outrun.active = false;
-        outrun.over = true;
-        outrun.input = {};
-        outrun.screen = null;
-        audioCue(success ? 'terminal.complete' : 'terminal.error');
-        pulse(success ? 320 : 90, 0.12);
-        if (commandOutput && commandShell?.classList.contains('is-open')) {
-          commandOutput.textContent = outrunFinale(success);
-        }
-      };
-
-      // Framerate-bagimsiz adim: tum artislar k = dt/baz ile olceklenir; boylece
-      // 30fps veya 60fps fark etmez, denge ayni kalir (baz = 45ms = eski tick).
-      const outrunStep = (dt) => {
-        if (!outrun?.active) return;
-        const k = dt / (OUTRUN_TICK / 1000);
-        const stage = outrunStages[outrun.stageIndex];
-        const inp = outrun.input || {};
-        const spinning = outrun.spin > 0;
-        if (outrun.shake > 0) outrun.shake -= 1;
-
-        // --- Hiz: ease-out hizlanma (dusuk devirde tork, tavanda yumusama) ---
-        if (spinning) {
-          outrun.spin -= dt;
-          outrun.speed -= 0.034 * k;
-        } else {
-          if (inp.accel) outrun.speed += (0.030 * (1 - outrun.speed) + 0.006) * k; // egri: hizli kalkis, yumusak tavan
-          else outrun.speed -= 0.012 * k;                                          // motor freni
-          if (inp.brake) outrun.speed -= 0.072 * k;                                // fren guclu
-        }
-
-        // --- Direksiyon (cevik) + merkezkaç (hiz² ile, biraz daha hafif) ---
-        const nearCurve = outrunCurveAt(outrun.pos, stage.curve);
-        const steer = (inp.right ? 1 : 0) - (inp.left ? 1 : 0);
-        if (!spinning) outrun.playerX += steer * 0.062 * (0.55 + outrun.speed * 0.7) * k;
-        outrun.playerX -= nearCurve * 0.034 * (outrun.speed * outrun.speed) * k;
-
-        // --- Yol disi (cim/cakil): agir ceza ---
-        const offRoad = Math.abs(outrun.playerX) > 1.0;
-        if (offRoad) {
-          outrun.speed = Math.min(outrun.speed, 0.36);
-          outrun.speed -= 0.022 * k;
-          outrun.playerX += Math.sign(outrun.playerX) * 0.018 * k;
-          outrun.shake = 2;
-          outrun.combo = 0;
-          if (!outrun.offMsgAt || outrun.dist - outrun.offMsgAt > 40) { outrun.msg = '⚠ CIMDE — yola don!'; outrun.offMsgAt = outrun.dist; }
-        }
-        outrun.playerX = clamp(outrun.playerX, -2.3, 2.3);
-        outrun.speed = clamp(outrun.speed, 0, 1);
-
-        // --- Ilerle (v = bu karedeki mesafe) ---
-        const v = outrun.speed * 18 * k;
-        outrun.pos += v;
-        outrun.dist += v;
-        outrun.stageDist += v;
-        if (!offRoad && !spinning) outrun.score += Math.round(v * (1 + outrun.stageIndex * 0.3));
-
-        // --- Trafik: ilerlet, temizle, spawn ---
-        outrun.cars.forEach(c => { c.dist += c.speed * k; });
-        outrun.cars = outrun.cars.filter(c => c.dist > outrun.pos - 24);
-        const wantCars = Math.round(2 + stage.traffic * 1.7);
-        if (outrun.cars.length < wantCars && Math.random() < (0.040 + stage.traffic * 0.032) * k) {
-          outrunSpawnCar();
-        }
-
-        // --- Carpisma + near-miss (kalkista kisa dokunulmazlik) ---
-        if (!spinning && outrun.dist > 120) {
-          for (const c of outrun.cars) {
-            const rel = (c.dist - outrun.pos) / OUTRUN_DEPTH;
-            const dx = Math.abs(outrun.playerX - c.lane);
-            const hitW = c.truck ? 0.58 : 0.42;
-            if (rel >= -0.4 && rel <= 1.5 && dx < hitW) {
-              outrun.spin = 1.2;
-              outrun.speed *= 0.16;
-              outrun.time -= 2.0;
-              outrun.combo = 0;
-              outrun.shake = 3;
-              outrun.msg = c.truck ? '✸ KAMYON! spin-out -2s' : '✸ CARPISMA! spin-out -2s';
-              audioCue('terminal.error');
-              pulse(70, 0.12);
-              c.dist = outrun.pos - 26;
-              c.scored = true;
-              break;
-            }
-            if (!c.scored && rel < 0 && rel > -1.1 && dx < hitW + 0.45 && outrun.speed > 0.62) {
-              c.scored = true;
-              outrun.combo = Math.min((outrun.combo || 0) + 1, 9);
-              const bonus = 120 * outrun.combo;
-              outrun.score += bonus;
-              outrun.msg = `≈ NEAR MISS x${outrun.combo}  +${bonus}`;
-              audioCue('terminal.suggest');
-              pulse(700 + outrun.combo * 30, 0.05);
-            }
-          }
-        }
-
-        // --- Checkpoint / etap gecisi ---
-        if (outrun.stageDist >= stage.len) {
-          outrun.stageIndex += 1;
-          outrun.checkpoints += 1;
-          if (outrun.stageIndex >= outrunStages.length) { outrun.finished = true; return endOutrun(true); }
-          const next = outrunStages[outrun.stageIndex];
-          outrun.time += next.time;
-          outrun.stageDist = 0;
-          outrun.cars = [];
-          outrun.score += 1500;
-          const fork = outrun.playerX <= 0 ? '◀ COAST' : 'INLAND ▶';
-          outrun.msg = `✔ CHECKPOINT ${outrun.checkpoints} +${next.time}s · ${fork} → ${next.name}`;
-          audioCue('terminal.complete');
-          pulse(523, 0.1);
-        }
-
-        // --- Zaman ---
-        outrun.time -= dt;
-        if (outrun.time <= 0) { outrun.time = 0; return endOutrun(false); }
-      };
-
-      // rAF tabanli ~30fps dongu (akici, gercek dt ile).
-      const outrunLoop = (ts) => {
-        if (!outrun?.active) { outrunRaf = null; return; }
-        if (!outrunLastTs) outrunLastTs = ts;
-        const dt = (ts - outrunLastTs) / 1000;
-        if (dt >= 0.028) {
-          outrunLastTs = ts;
-          outrunStep(Math.min(dt, 0.06));
-          if (outrun?.active && commandOutput && commandShell?.classList.contains('is-open')) {
-            outrunPaint(outrunBuffer());
-          }
-        }
-        outrunRaf = window.requestAnimationFrame(outrunLoop);
-      };
-
-      const startOutrunLoop = () => {
-        if (outrunRaf !== null) return;
-        outrunLastTs = 0;
-        outrunRaf = window.requestAnimationFrame(outrunLoop);
-      };
-
-      const launchOutrun = (radioLabel) => {
-        clearOutrun();
-        clearPipeAnimation();
-        pipeGame = null;
-        outrunIntroActive = false;
-        setOutrunMode(true);
-        outrun = {
-          active: true, over: false, finished: false,
-          pos: 0, dist: 0, stageDist: 0, speed: 0, playerX: 0,
-          time: outrunStages[0].time, score: 0, spin: 0, shake: 0, combo: 0,
-          stageIndex: 0, checkpoints: 0,
-          cars: [], input: {},
-          best: readOutrunBest(),
-          radio: radioLabel || outrunRadio[0].label,
-          msg: 'GREEN LIGHT — GO!'
-        };
-        for (let i = 0; i < 2; i++) outrunSpawnCar();
-        outrunBuildScreen();
-        outrunPaint(outrunBuffer());
-        startOutrunLoop();
-        pulse(523, 0.12);
-      };
-
-      const startOutrun = () => {
-        clearOutrun();
-        clearPipeAnimation();
-        pipeGame = null;
-        outrun = null;
-        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (reduceMotion || !commandOutput) {
-          outrunIntroActive = false;
-          launchOutrun(outrunRadio[0].label);
-          return outrun ? 'OUT RUN: kontak aci4ldi (oklarla sur, outrun quit ile cik)' : '';
-        }
-        // Donem dokunusu: motor kontagi + radyo istasyonu secim sekansi (normal kutuda, kompakt).
-        outrunIntroActive = true;
-        const car = ['        ___', '   __/  |_ \\__', '  |_o____o___|'];
-        const baseLines = (radioIndex, sub) => [
-          "OUT RUN '86  //  CONVIVIUM COAST",
-          ...car,
-          '',
-          'IGNITION... ' + sub,
-          'SELECT RADIO:',
-          ...outrunRadio.map((r, i) => `  ${i === radioIndex ? '▶' : ' '} ♪ ${r.label}`)
-        ].join('\n');
-        const frames = [
-          baseLines(0, 'priming engine'),
-          baseLines(1, 'engine warm'),
-          baseLines(2, 'tires gripping'),
-          baseLines(0, 'READY')
-        ];
-        const step = 560;
-        frames.forEach((frame, index) => {
-          const timer = window.setTimeout(() => {
-            if (outrun || !commandShell?.classList.contains('is-open')) return;
-            commandOutput.textContent = frame;
-            pulse(outrunRadio[index % outrunRadio.length].tone, 0.06);
-          }, index * step);
-          outrunIntroTimers.push(timer);
-        });
-        const finishTimer = window.setTimeout(() => {
-          outrunIntroActive = false;
-          if (!commandShell?.classList.contains('is-open')) { setOutrunMode(false); return; }
-          launchOutrun(outrunRadio[0].label);
-        }, frames.length * step + 220);
-        outrunIntroTimers.push(finishTimer);
-        return frames[0];
-      };
-
-      const outrunHelpText = () => [
-        "OUT RUN '86 — kontroller:",
-        '  ← →  : direksiyon   ↑/SPACE : gaz   ↓ : fren',
-        '  (oklar her zaman; giris alanina yazi da yazabilirsin)',
-        '',
-        'puf noktasi:',
-        '  • Viraja YUKSEK hizda girersen merkezkac seni cime atar.',
-        '    CURVE gostergesine bak, gerekirse FRENLE + viraja kir.',
-        '  • Cim = agir yavaslama. Trafige carpma = spin-out + -2s.',
-        '  • Trafigi yuksek hizda siyirip gec -> NEAR MISS combo skoru.',
-        '  • Her checkpoint sure ekler; ileri etaplar daha sert.',
-        'komutlar: outrun new | outrun quit | outrun help'
-      ].join('\n');
-
-      const outrunCommand = (action = '') => {
-        const command = normalizeCommand(action || 'new');
-        if (outrunIntroActive) return 'outrun: motor isiniyor...';
-        if (['quit', 'exit', 'q', 'stop', 'kapat'].includes(command)) {
-          clearOutrun();
-          setOutrunMode(false);
-          outrun = null;
-          return 'OUT RUN: kontak kapatildi';
-        }
-        if (['help', '?', 'yardim', 'yardım'].includes(command)) return outrunHelpText();
-        if (!outrun?.active || ['new', 'start', 'play', 'restart', 'yeni'].includes(command)) return startOutrun();
-        return 'OUT RUN: surus devam ediyor (oklarla sur, outrun quit ile cik)';
-      };
+      // Terminal oyun modulleri (assets/js/home/pipe-90.js, outrun-86.js).
+      // Karsilikli dislama: outrun baslarken pipe'i sifirlar (ayni is-game-mode
+      // sinifini paylasirlar).
+      pipeMod = window.ConviviumHome?.createPipe90?.({
+        commandShell,
+        commandOutput,
+        pulse,
+        audioCue,
+        normalizeCommand,
+        award,
+        state,
+        persist,
+        scheduleWorldSave,
+        updateAccess
+      }) || null;
+      outrunMod = window.ConviviumHome?.createOutrun86?.({
+        commandShell,
+        commandOutput,
+        pulse,
+        audioCue,
+        normalizeCommand,
+        resetPipe: () => pipeMod?.reset()
+      }) || null;
 
       // deb diyalogu (Dalga 6): konustukca bond artar, satirlar derinlesir.
       const debTalk = () => {
@@ -4216,19 +2493,19 @@
           command: 'screen saver',
           description: 'retro Convivium ekran koruyucuyu acar',
           aliases: ['screensaver', 'screen server', 'screen save', 'ekran koruyucu', 'koruyucu', 'idle screen'],
-          action: screenSaverCommand
+          action: () => screenSaverMod ? screenSaverMod.command() : 'screen saver: unavailable'
         },
         {
           command: 'pipe',
           description: 'fuzyon reaktoru sogutma oyunu Pipe-90i acar',
           aliases: ['pipes', 'pipe game', 'pipe86', 'pipe90', 'boru oyunu', 'reactor', 'reaktor', 'coolant'],
-          action: () => pipeCommand('new')
+          action: () => pipeMod ? pipeMod.command('new') : 'pipe: unavailable'
         },
         {
           command: 'outrun',
           description: "sozde-3B arcade surus oyunu Out Run '86i acar",
           aliases: ['out run', 'outrun86', 'ferrari', 'drive', 'surus', 'sürüş', 'sur', 'sür', 'race', 'yaris', 'yarış', 'arcade'],
-          action: () => outrunCommand('new')
+          action: () => outrunMod ? outrunMod.command('new') : 'outrun: unavailable'
         },
         {
           command: 'random',
@@ -4766,7 +3043,7 @@
       // yazip eklenen eki SECILI birakir (tarayici autocomplete tarzi). Overlay/CSS yok.
       // -> ya da End/Enter ile kabul; yazmaya devam edince secili ek degisir; backspace siler.
       const completeInput = (event) => {
-        if (!commandInput || pipeGame?.active) return;
+        if (!commandInput || pipeMod?.isActive()) return;
         if (event && event.inputType && event.inputType !== 'insertText') return; // silerken tamamlama yok
         const val = commandInput.value;
         if (!val || /\s/.test(val)) return; // sadece ilk kelime (bosluk yoksa)
@@ -4981,7 +3258,7 @@
       // Oyun aktifse dogrudan yaz, degilse transcript'e ekle.
       const emitResult = (result, query) => {
         const text = result !== undefined ? result : `executing: ${query}`;
-        if (pipeGame?.active) {
+        if (pipeMod?.isActive()) {
           if (commandOutput) commandOutput.textContent = text;
         } else {
           printTerminal(text);
@@ -5072,8 +3349,8 @@
         ['volume ', value => volumeCommand(value)],
         ['audio ', value => volumeCommand(value)],
         ['sound ', value => volumeCommand(value)],
-        ['pipe ', value => pipeCommand(value)],
-        ['outrun ', value => outrunCommand(value)],
+        ['pipe ', value => pipeMod ? pipeMod.command(value) : 'pipe: unavailable'],
+        ['outrun ', value => outrunMod ? outrunMod.command(value) : 'outrun: unavailable'],
         ['grep ', value => `grep: tek basina degil, boru hattinda kullanilir. ornek: help | grep ${value || 'oyun'}`]
       ];
 
@@ -5281,7 +3558,7 @@
         audioCue('terminal.run');
         pulse(390, 0.055);
         // Komut ekosu transcript'e (pipe/outrun oyunu ekrani sahiplenirken atla).
-        if (!pipeGame?.active && !outrun?.active) transcriptEcho(query);
+        if (!pipeMod?.isActive() && !outrunMod?.isActive()) transcriptEcho(query);
         if (['oracle yes', 'ask oracle', 'confirm oracle'].includes(command)) {
           if (!pendingOracleQuery) {
             printTerminal('oracle: bekleyen sorgu yok. Once serbest bir soru yaz.');
@@ -5415,13 +3692,13 @@
         // boylece giris alaninda stray karakter olsa bile direksiyon kilitlenmez.
         // Space (gaz) ve form-gonderme yalniz giris bos iken yakalanir; "outrun quit"
         // 'o' ile basladigi icin yazimla cakismaz.
-        if (outrun?.active) {
-          if (event.key === 'ArrowLeft') { event.preventDefault(); outrun.input.left = true; return; }
-          if (event.key === 'ArrowRight') { event.preventDefault(); outrun.input.right = true; return; }
-          if (event.key === 'ArrowUp') { event.preventDefault(); outrun.input.accel = true; return; }
-          if (event.key === 'ArrowDown') { event.preventDefault(); outrun.input.brake = true; return; }
+        if (outrunMod?.isActive()) {
+          if (event.key === 'ArrowLeft') { event.preventDefault(); outrunMod.setKey('left', true); return; }
+          if (event.key === 'ArrowRight') { event.preventDefault(); outrunMod.setKey('right', true); return; }
+          if (event.key === 'ArrowUp') { event.preventDefault(); outrunMod.setKey('accel', true); return; }
+          if (event.key === 'ArrowDown') { event.preventDefault(); outrunMod.setKey('brake', true); return; }
           if (!commandInput.value.trim()) {
-            if (event.key === ' ') { event.preventDefault(); outrun.input.accel = true; return; }
+            if (event.key === ' ') { event.preventDefault(); outrunMod.setKey('accel', true); return; }
             if (event.key === 'Enter') { event.preventDefault(); return; } // form gondermeyi engelle
           }
         }
@@ -5429,18 +3706,18 @@
         // kontroller kilitlenmesin). Eylem kisayollari (R/SPACE cevir, F akit, X dump,
         // Q cik, ENTER kaynak) yalniz giris bos iken calisir. "pipe ..." komutlari 'p'
         // ile basladigi icin bu harf kisayollariyla cakismaz; yazi yazmak serbest kalir.
-        if (pipeGame?.active) {
-          if (event.key === 'ArrowUp') { event.preventDefault(); movePipeCursor(-1, 0); return; }
-          if (event.key === 'ArrowDown') { event.preventDefault(); movePipeCursor(1, 0); return; }
-          if (event.key === 'ArrowLeft') { event.preventDefault(); movePipeCursor(0, -1); return; }
-          if (event.key === 'ArrowRight') { event.preventDefault(); movePipeCursor(0, 1); return; }
+        if (pipeMod?.isActive()) {
+          if (event.key === 'ArrowUp') { event.preventDefault(); pipeMod.moveCursor(-1, 0); return; }
+          if (event.key === 'ArrowDown') { event.preventDefault(); pipeMod.moveCursor(1, 0); return; }
+          if (event.key === 'ArrowLeft') { event.preventDefault(); pipeMod.moveCursor(0, -1); return; }
+          if (event.key === 'ArrowRight') { event.preventDefault(); pipeMod.moveCursor(0, 1); return; }
           if (!commandInput.value.trim()) {
             const key = event.key.toLowerCase();
-            if (key === ' ' || key === 'r') { event.preventDefault(); if (commandOutput) commandOutput.textContent = rotatePipe(); return; }
-            if (key === 'f') { event.preventDefault(); if (commandOutput) commandOutput.textContent = flowPipe(); return; }
-            if (key === 'x') { event.preventDefault(); if (commandOutput) commandOutput.textContent = dumpPipe(); return; }
-            if (key === 'q') { event.preventDefault(); printTerminal(pipeCommand('quit')); return; }
-            if (event.key === 'Enter') { event.preventDefault(); if (commandOutput) commandOutput.textContent = placePipe(); return; }
+            if (key === ' ' || key === 'r') { event.preventDefault(); if (commandOutput) commandOutput.textContent = pipeMod.rotate(); return; }
+            if (key === 'f') { event.preventDefault(); if (commandOutput) commandOutput.textContent = pipeMod.flow(); return; }
+            if (key === 'x') { event.preventDefault(); if (commandOutput) commandOutput.textContent = pipeMod.dump(); return; }
+            if (key === 'q') { event.preventDefault(); printTerminal(pipeMod.command('quit')); return; }
+            if (event.key === 'Enter') { event.preventDefault(); if (commandOutput) commandOutput.textContent = pipeMod.place(); return; }
           }
         }
         if (event.key === 'Enter') {
@@ -5470,14 +3747,14 @@
 
       // OUT RUN: tus birakildiginda kontrol bayragini sifirla.
       commandInput?.addEventListener('keyup', event => {
-        if (!outrun?.active) return;
-        if (event.key === 'ArrowLeft') outrun.input.left = false;
-        else if (event.key === 'ArrowRight') outrun.input.right = false;
-        else if (event.key === 'ArrowUp' || event.key === ' ') outrun.input.accel = false;
-        else if (event.key === 'ArrowDown') outrun.input.brake = false;
+        if (!outrunMod?.isActive()) return;
+        if (event.key === 'ArrowLeft') outrunMod.setKey('left', false);
+        else if (event.key === 'ArrowRight') outrunMod.setKey('right', false);
+        else if (event.key === 'ArrowUp' || event.key === ' ') outrunMod.setKey('accel', false);
+        else if (event.key === 'ArrowDown') outrunMod.setKey('brake', false);
       });
       // Odak/sekme kaybinda yapisik tus kalmasin.
-      commandInput?.addEventListener('blur', () => { if (outrun) outrun.input = {}; });
+      commandInput?.addEventListener('blur', () => { outrunMod?.clearInput(); });
 
       commandInput?.addEventListener('input', (event) => {
         commandHistoryIndex = -1;
@@ -5559,9 +3836,9 @@
       }, { passive: true });
 
       document.addEventListener('keydown', event => {
-        if (screenSaverOverlay?.classList.contains('is-active')) {
+        if (screenSaverMod?.isActive()) {
           event.preventDefault();
-          closeScreenSaver();
+          screenSaverMod.close();
           return;
         }
         if (event.target.matches('input, textarea')) return;
@@ -5690,9 +3967,8 @@
       drawMap();
       window.addEventListener('resize', resizeCanvas);
       window.addEventListener('resize', () => {
-        if (!screenSaverOverlay?.classList.contains('is-active')) return;
-        resizeScreenSaverSystem();
-        drawScreenSaverSystem(performance.now());
+        if (!screenSaverMod?.isActive()) return;
+        screenSaverMod.handleResize();
       });
       refreshAuthState();
 })();

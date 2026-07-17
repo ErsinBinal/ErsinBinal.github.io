@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v174';
+const CACHE_NAME = 'convivium-v175';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -59,8 +59,11 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-pet.js?v=12',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=5',
+  '/assets/js/home/pipe-90.js?v=1',
+  '/assets/js/home/outrun-86.js?v=1',
+  '/assets/js/home/screen-saver.js?v=1',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=58',
+  '/assets/js/home-protocol.js?v=59',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=3',
   '/assets/js/origin-beacon.js?v=1',
