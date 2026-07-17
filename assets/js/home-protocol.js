@@ -151,6 +151,7 @@
       let presenceMod = null;
       let coopGateMod = null;
       let nightModeMod = null;
+      let radioMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -2223,6 +2224,11 @@
       }) || null;
       nightModeMod?.start();
 
+      // Convivium Radio (assets/js/home/radio.js): prosedurel WebAudio ambient.
+      radioMod = window.ConviviumHome?.createRadio?.({
+        isAudioEnabled: () => audioEnabled
+      }) || null;
+
       // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
       // komutu. Iki gezgin 8 sn icinde ayni kelimeyi soylerse rezonans olusur;
       // simdilik yalnizca iz birakir (kapinin kendisi sonraki fazda).
@@ -3030,6 +3036,12 @@
           action: dailySignalCommand
         },
         {
+          command: 'radio',
+          description: 'prosedurel ambient radyoyu acar/kapatir (radio next: istasyon)',
+          aliases: ['radyo', 'fm'],
+          action: () => radioMod ? radioMod.command('') : 'radio: modul hazir degil.'
+        },
+        {
           command: 'wrapped',
           description: 'kisisel iz raporu: skorlar, sureler, oracle, dart (giris gerekir)',
           aliases: ['iz raporu', 'rapor', 'yearbook'],
@@ -3373,7 +3385,7 @@
         'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, bugy studio, pipe, outrun',
         '',
         'system:',
-        'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver',
+        'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver, radio',
         '',
         'terminal:',
         'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',
@@ -3783,6 +3795,7 @@
         ['audio ', value => volumeCommand(value)],
         ['sound ', value => volumeCommand(value)],
         ['shop ', value => shopCommand(value)],
+        ['radio ', value => radioMod ? radioMod.command(value) : 'radio: modul hazir degil.'],
         ['resonate ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['rezonans ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['pipe ', value => pipeMod ? pipeMod.command(value) : 'pipe: unavailable'],
@@ -4230,6 +4243,7 @@
       window.addEventListener('convivium:audio-state', event => {
         if (typeof event.detail?.enabled !== 'boolean') return;
         audioEnabled = event.detail.enabled;
+        if (!audioEnabled) radioMod?.stop();
         if (soundToggle) {
           soundToggle.textContent = audioEnabled ? 'audio on' : 'audio off';
           soundToggle.setAttribute('aria-pressed', String(audioEnabled));

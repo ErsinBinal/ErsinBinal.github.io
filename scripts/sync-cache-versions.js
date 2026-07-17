@@ -14,6 +14,7 @@ const managedAssets = [
   '/assets/js/home/presence.js',
   '/assets/js/home/coop-gate.js',
   '/assets/js/home/night-mode.js',
+  '/assets/js/home/radio.js',
   '/assets/js/home-protocol.js',
   '/assets/js/sfx.js',
   '/assets/js/supabase-client.js',
