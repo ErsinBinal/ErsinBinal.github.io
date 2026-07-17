@@ -62,7 +62,6 @@
 
   let canvas, ctx, dpr = 1;
   let screen, flashEl, scanEl;          // ekran-uzayi efekt katmanlari
-  let castBtn;
 
   // --- Canvas kurulum ------------------------------------------------------
   function ensure() {
@@ -88,8 +87,6 @@
     scanEl.className = 'cine-scan';
     screen.append(flashEl, scanEl);
     document.body.appendChild(screen);
-
-    buildCastButton();
   }
 
   function resize() {
@@ -571,10 +568,7 @@
     if (state.casting) return false;
     const st = bv4State();
     if (!st || !st.active) return false;
-    if (!state.ready) {
-      if (!opts.auto) buzzButton();
-      return false;
-    }
+    if (!state.ready) return false;
 
     // Combo: kisa pencere icinde ardisik cast -> yogunluk artar (>=2 critical).
     const now = performance.now();
@@ -589,13 +583,12 @@
     if (!c) return false;
     state.casting = true;
     setCharge(0);
-    updateButton();
     startLoop();
     if (rare) rareFlourish(c);
 
     Promise.resolve(moveFor(st.skin)(c))
       .catch(() => { /* yok say */ })
-      .finally(() => { state.casting = false; state.lastCastEnd = performance.now(); updateButton(); });
+      .finally(() => { state.casting = false; state.lastCastEnd = performance.now(); });
     return true;
   }
 
@@ -640,47 +633,12 @@
     }
   }
 
-  // --- Sarj + buton --------------------------------------------------------
+  // --- Sarj -----------------------------------------------------------------
   function setCharge(v) {
     state.charge = clamp(v, 0, 1);
     state.ready = state.charge >= 1;
-    updateButton();
   }
   function addCharge(frac) { if (!state.casting) setCharge(state.charge + frac); }
-
-  function buildCastButton() {
-    castBtn = document.createElement('button');
-    castBtn.type = 'button';
-    castBtn.id = 'bugy-cinema-cast';
-    castBtn.className = 'bugy-cinema-cast';
-    castBtn.setAttribute('aria-label', 'Bugy imza yeteneği');
-    castBtn.innerHTML = '<span class="cine-cast-glyph" aria-hidden="true">◈</span>';
-    castBtn.addEventListener('click', () => cast({ via: 'button' }));
-    document.body.appendChild(castBtn);
-    updateButton();
-    syncButtonVisible();
-  }
-  function buzzButton() {
-    if (!castBtn || reduceMotion()) return;
-    castBtn.animate(
-      [{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }],
-      { duration: 260 }
-    );
-  }
-  function updateButton() {
-    if (!castBtn) return;
-    castBtn.style.setProperty('--charge', state.charge.toFixed(3));
-    castBtn.classList.toggle('is-ready', state.ready && !state.casting);
-    castBtn.classList.toggle('is-casting', state.casting);
-    castBtn.dataset.combo = state.combo >= 2 ? ('COMBO x' + state.combo) : '';
-    castBtn.title = state.casting ? 'Yetenek oynatılıyor…'
-      : state.ready ? 'İmza yeteneği hazır — tıkla (yaratığa çift-tık / basılı-tut da olur)'
-        : `Şarj oluyor… %${Math.round(state.charge * 100)}`;
-  }
-  function syncButtonVisible() {
-    if (!castBtn) return;
-    castBtn.classList.toggle('is-shown', state.active);
-  }
 
   // --- Yaratiga dogrudan tetikleyiciler (cift-tik / basili-tut) -------------
   let charBound = false;
@@ -706,7 +664,7 @@
     bindChar();
     if (!state.casting && state.charge < 1) setCharge(state.charge + 1 / CHARGE_SECONDS);
     // Combo rozeti suresi dolunca temizle.
-    if (state.combo && performance.now() - state.lastCastEnd > 7000) { state.combo = 0; updateButton(); }
+    if (state.combo && performance.now() - state.lastCastEnd > 7000) state.combo = 0;
     if (state.casting || document.hidden) return;
     const st = bv4State();
     if (!st || !st.active || st.state !== 'idle') return;
@@ -719,16 +677,14 @@
   // --- BugyV4 durum koprusu ------------------------------------------------
   window.addEventListener('bugy-v4:state', (e) => {
     const d = e && e.detail;
-    const wasActive = state.active;
     state.active = Boolean(d && d.active);
     if (state.active && !state.booted) ensure();
-    if (state.active !== wasActive) syncButtonVisible();
   });
 
   // Sayfa gec yuklenirse mevcut durumu yakala.
   window.setTimeout(() => {
     const st = bv4State();
-    if (st && st.active) { state.active = true; ensure(); syncButtonVisible(); }
+    if (st && st.active) { state.active = true; ensure(); }
   }, 800);
 
   window.BugyCinema = {
