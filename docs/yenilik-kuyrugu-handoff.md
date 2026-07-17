@@ -57,19 +57,41 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
   `node scripts/validate-site-integrity.js` + `node scripts/sync-cache-versions.js --bump`
   calistirilir; push sonrasi Actions "Flow Check" smoke yesil mi bakilir.
 
-## Olasi sonraki fazlar (kullanici karariyla)
+## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-- **Co-op kapi fazi 2**: rezonans yakalaninca acilacak gercek kapi/oda
-  (coop-gate.js `onSync` su an yalniz iz + mesaj birakir; easterTrail'de
-  `resonate:<kelime>` kaydi var).
-- **Kart paylasim sayfasi**: gunun sinyal kartinin SVG gorselini paylasma
-  (buildDailyCard home-protocol.js icinde; ayni seed mantigiyla SVG uretilebilir).
-- **Shards genisletmesi**: oyun sayfalarindan (game_scores kaydinda) shard
-  kazanimi + shop'a yeni kozmetikler. Bugy bayragi bayragi (`convivium.bugy.flag`)
-  su an yalniz localStorage'da; bugy modulleri henuz okumuyor.
-- **Gelistirici notu 2/2 (acik)**: RSS feed'i makaleler Supabase'den dinamik
-  geldigi icin simdilik changelog sinyallerini tasiyor. Istenirse Worker
-  uzerinden articles tablosunu okuyup feed'i zenginlestiren endpoint yazilabilir.
+### 1. Rezonans kapisi — FAZ 2 (en somut aday)
+Altyapi hazir: gizli `resonate <kelime>` komutu var; 8 sn icinde iki gezgin
+ayni kelimeyi yazarsa `coop-gate.js onSync` tetikleniyor (su an yalniz iz +
+mesaj + 3 shard; easterTrail'e `resonate:<kelime>` yaziliyor). Kapinin
+kendisi YOK. Secenekler (kombinasyon da olur, orn. c+a):
+- (a) **Gizli oda**: rezonans olusunca iki gezgine ozel sanal oda acilir
+  (`worldRooms`a `/resonance` eklenir, `cd resonance`); icinde ortak iz/odul.
+- (b) **Ozel fisilti kanali**: rezonans yakalayan iki kisi chat altyapisiyla
+  (home/chat.js deseni) otomatik ozel bir kanala duser (`chat:res-<kelime>`).
+- (c) **Tek dogru sifre kelimesi**: rastgele degil; sitede ipuclariyla sakli
+  tek bir kelime (duvar yazilari, gece frekansi, kart sozleri icine gomulur).
+  Onu bulan iki kisi kapiyi acar.
+
+### 2. Chat genisletmeleri
+- Oda-bazli `whisper`: yalniz ayni terminal odasindakilere (`virtualCwd`)
+  giden mesaj; chat.js'te payload'da `room` zaten var, filtre yeterli.
+- Kanal ayrimi istenirse `chat:site` yerine oda basina kanal.
+
+### 3. Kart paylasim sayfasi
+Gunun sinyal kartinin SVG/PNG gorselini uretip paylasma sayfasi.
+`buildDailyCard` home-protocol.js icinde; ayni seed mantigiyla (mulberry32 +
+tarih) SVG uretilebilir. Wrapped'daki canvas->PNG indirme deseni ornek.
+
+### 4. Shards genisletmesi
+- Oyun sayfalarindan shard kazanimi (game_scores kaydina eklemlenir).
+- Shop'a yeni kozmetikler (dilim c'nin devami).
+- Bugy bayragi (`convivium.bugy.flag`) su an yalniz localStorage'da bir
+  bayrak; bugy modulleri henuz okumuyor — gorsel aksesuara baglanmali.
+
+### 5. Gelistirici notu 2/2 (acik)
+RSS feed'i makaleler Supabase'den dinamik geldigi icin simdilik changelog
+sinyallerini tasiyor. Istenirse Worker uzerinden articles tablosunu okuyup
+feed'i zenginlestiren bir endpoint yazilabilir.
 
 ## Dogrulama ritueli (her parca icin)
 
