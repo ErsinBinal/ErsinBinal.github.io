@@ -385,10 +385,14 @@
         i += 1;
         if (i >= text.length) {
           window.clearInterval(typeTimer);
+          // Okuma suresi metin uzunluguna gore olcekler (kisa repliklerde
+          // taban sure, uzun cumlelerde -orn. sohbet mesajlarinda- daha uzun
+          // kalir ki okunmadan kaybolmasin).
+          const holdMs = Math.max(4000, Math.min(8000, text.length * 65));
           hideTimer = window.setTimeout(() => {
             balloon.classList.remove('is-on');
             window.setTimeout(() => { balloon.hidden = true; }, 260);
-          }, 2800);
+          }, holdMs);
         }
       }, 32);
     };
