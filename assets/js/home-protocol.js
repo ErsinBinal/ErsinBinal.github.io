@@ -145,6 +145,7 @@
       let outrunMod = null;
       let screenSaverMod = null;
       let presenceMod = null;
+      let coopGateMod = null;
       let selectedTheme = 'green';
       let restoringUserPreferences = false;
       let pointer = { x: window.innerWidth * 0.72, y: window.innerHeight * 0.22 };
@@ -1958,6 +1959,27 @@
       }) || null;
       presenceMod?.start();
 
+      // Co-op kapi altyapisi (assets/js/home/coop-gate.js): gizli "resonate"
+      // komutu. Iki gezgin 8 sn icinde ayni kelimeyi soylerse rezonans olusur;
+      // simdilik yalnizca iz birakir (kapinin kendisi sonraki fazda).
+      coopGateMod = window.ConviviumHome?.createCoopGate?.({
+        getClient: () => window.ConviviumBackend?.getClient?.() || null,
+        getTag: () => presenceMod?.tag?.() || 'wanderer-????',
+        onSync: (code) => {
+          state.easterTrail = [...(state.easterTrail || []), `resonate:${code}`].slice(-4);
+          persist();
+          audioCue('system.unlock');
+          pulse(640, 0.09);
+          printTerminal([
+            '',
+            `>> REZONANS: "${code}" — iki sinyal ayni anda titredi.`,
+            '>> rezonans kaydedildi. bir yerlerde bir kapi bunu duydu.',
+            ''
+          ].join('\n'));
+          if (consoleLine) consoleLine.textContent = `resonance captured: ${code}`;
+        }
+      }) || null;
+
       // deb diyalogu (Dalga 6): konustukca bond artar, satirlar derinlesir.
       const debTalk = () => {
         const deb = window.DebCompanion || window.NovaCompanion;
@@ -3086,6 +3108,10 @@
         return map;
       }, Object.create(null));
 
+      // Gizli komut: resonate oneri/yardim listelerine girmez; yalin yazana ipucu verir.
+      commandMap['resonate'] = () => 'resonate: usage resonate <kelime>. (yankinin karsilik bulmasi icin iki gezgin gerekir)';
+      commandMap['rezonans'] = commandMap['resonate'];
+
       const commandChoices = commandDefinitions.flatMap(item => [item.command, ...(item.aliases || [])]);
 
       // --- Akilli parser (Dalga 2): esanlamli verb haritasi + yazim toleransi ---
@@ -3453,6 +3479,8 @@
         ['volume ', value => volumeCommand(value)],
         ['audio ', value => volumeCommand(value)],
         ['sound ', value => volumeCommand(value)],
+        ['resonate ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
+        ['rezonans ', value => coopGateMod ? coopGateMod.attempt(value) : 'resonate: kanal kapali.'],
         ['pipe ', value => pipeMod ? pipeMod.command(value) : 'pipe: unavailable'],
         ['outrun ', value => outrunMod ? outrunMod.command(value) : 'outrun: unavailable'],
         ['grep ', value => `grep: tek basina degil, boru hattinda kullanilir. ornek: help | grep ${value || 'oyun'}`]
