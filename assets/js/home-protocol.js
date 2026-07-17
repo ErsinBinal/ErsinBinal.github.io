@@ -2234,6 +2234,25 @@
         isAudioEnabled: () => audioEnabled
       }) || null;
 
+      // Gelen sohbet mesajini Bugy V4 balonunda soyler (o an aktifse).
+      // Diger companion motorlarinin (V2/V3/klasik/Deb) konusma balonu yok;
+      // bu yuzden yalniz BugyV4.say varsa calisir, aksi halde sessizce gecer.
+      const CHAT_INVITE_LABELS = { crude: 'Crude Buster', dart: 'Dart' };
+      const speakChatEntry = (entry) => {
+        const bugy = window.BugyV4;
+        if (!bugy?.say || !bugy.getState?.().active) return;
+        let text = '';
+        if (entry?.kind === 'invite') {
+          text = `${entry.tag}: "${CHAT_INVITE_LABELS[entry.game] || entry.game}" oynayalim mi?`;
+        } else if (entry?.kind === 'dm') {
+          text = `${entry.tag} fisildiyor: ${entry.body}`;
+        } else if (entry?.body) {
+          text = `${entry.tag}: ${entry.body}`;
+        }
+        if (!text) return;
+        bugy.say(text.length > 90 ? `${text.slice(0, 89)}…` : text);
+      };
+
       // Canli sohbet (assets/js/home/chat.js): presence rumuzlariyla ucucu
       // terminal sohbeti. Gelen mesaj terminale duser; oyun ekrani aktifken
       // (pipe/outrun) transcript'e karismaz, konsol satirina kisa iz duser.
@@ -2241,9 +2260,10 @@
         getClient: () => window.ConviviumBackend?.getClient?.() || null,
         getTag: () => presenceMod?.tag?.() || 'wanderer-????',
         getRoom: () => virtualCwd,
-        onMessage: (line) => {
+        onMessage: (line, entry) => {
           if (consoleLine) consoleLine.textContent = line.slice(0, 48);
           screenSaverMod?.pushSignal?.(line); // koruyucuda kayan yildiz olur
+          speakChatEntry(entry); // Bugy V4 aktifse mesaji balonunda soyler
           if (pipeMod?.isActive() || outrunMod?.isActive()) return;
           if (chatDeckMod?.isActive()) return; // guverte acikken akis orada
           printTerminal(line);
