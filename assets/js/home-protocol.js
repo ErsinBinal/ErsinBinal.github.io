@@ -933,7 +933,9 @@
         closeCommand,
         mobileCommandButton,
         getLastFocused: () => lastFocusedElement,
-        setLastFocused: (el) => { lastFocusedElement = el; }
+        setLastFocused: (el) => { lastFocusedElement = el; },
+        // Ortak ekran koruyucu: presence gezginleri galakside uydu olur.
+        getWanderers: () => presenceMod?.list?.() || []
       }) || null;
 
       const normalizeCommand = (value) => value
@@ -2240,6 +2242,7 @@
         getRoom: () => virtualCwd,
         onMessage: (line) => {
           if (consoleLine) consoleLine.textContent = line.slice(0, 48);
+          screenSaverMod?.pushSignal?.(line); // koruyucuda kayan yildiz olur
           if (pipeMod?.isActive() || outrunMod?.isActive()) return;
           printTerminal(line);
           audioCue('terminal.suggest');
@@ -4075,6 +4078,8 @@
         if (/^\s*(say|soyle|söyle)\s+\S/i.test(query)) {
           const rawBody = query.replace(/^\s*(say|soyle|söyle)\s+/i, '');
           const result = chatMod ? chatMod.say(rawBody) : 'say: sohbet modulu hazir degil.';
+          // Basarili gonderim koruyucuda da kayar (hata metinleri "say:" ile baslar).
+          if (!result.startsWith('say:')) screenSaverMod?.pushSignal?.(result);
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';

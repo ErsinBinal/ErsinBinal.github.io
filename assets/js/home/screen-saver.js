@@ -14,7 +14,8 @@
       closeCommand,
       mobileCommandButton,
       getLastFocused,
-      setLastFocused
+      setLastFocused,
+      getWanderers
     } = deps;
 
     let screenSaverOverlay = null;
@@ -156,6 +157,72 @@
         elements: 'H / He / methane'
       }
     ];
+
+    // --- Ortak ekran koruyucu: presence gezginleri uydu olarak dolasir,
+    // canli sohbet mesajlari kayan yildiz olarak gecer. ---
+    const SIGNAL_STREAM_MS = 7000;
+    let signalStreams = []; // { text, start }
+
+    const hashTag = (value) => Math.abs(
+      [...String(value || '')].reduce((hash, ch) => (Math.imul(hash, 33) + ch.charCodeAt(0)) | 0, 9)
+    );
+
+    const drawWanderers = (ctx, cx, cy, width, height, elapsed, reduced) => {
+      const list = (typeof getWanderers === 'function' ? getWanderers() : []) || [];
+      if (!list.length) return;
+      list.slice(0, 8).forEach((wanderer) => {
+        const seed = hashTag(wanderer.tag);
+        const orbit = Math.min(width, height) * (0.2 + (seed % 5) * 0.055);
+        const speed = 0.045 + (seed % 7) * 0.011;
+        const angle = (seed % 628) / 100 + (reduced ? 0 : elapsed * speed);
+        const x = cx + Math.cos(angle) * orbit * 1.4;
+        const y = cy + Math.sin(angle) * orbit * 0.56;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 234, 255, 0.88)';
+        ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4);
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.32)';
+        ctx.strokeRect(Math.round(x) - 6, Math.round(y) - 6, 12, 12);
+        drawPixelText(ctx, wanderer.tag, x + 10, y - 4, 'rgba(0, 234, 255, 0.78)', 10);
+        if (wanderer.room) drawPixelText(ctx, wanderer.room, x + 10, y + 8, 'rgba(202, 255, 216, 0.5)', 9);
+        ctx.restore();
+      });
+      drawPixelText(ctx, `WANDERERS IN ORBIT: ${list.length}`, 14, height - 16, 'rgba(0, 234, 255, 0.6)', 10);
+    };
+
+    const drawSignalStreams = (ctx, width, height, reduced) => {
+      const now = performance.now();
+      signalStreams = signalStreams.filter((s) => now - s.start < SIGNAL_STREAM_MS);
+      signalStreams.forEach((stream, index) => {
+        const t = (now - stream.start) / SIGNAL_STREAM_MS;
+        const y = height * (0.14 + index * 0.075);
+        const x = reduced ? width * 0.08 : width * (1.05 - t * 1.35);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 234, 255, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(x - 6, y + 2);
+        ctx.lineTo(x - 52, y + 9);
+        ctx.stroke();
+        ctx.fillStyle = '#d8ffe1';
+        ctx.fillRect(Math.round(x) - 4, Math.round(y), 4, 3);
+        drawPixelText(ctx, stream.text, x + 8, y + 5, 'rgba(216, 255, 225, 0.88)', 11);
+        ctx.restore();
+      });
+    };
+
+    const pushSignal = (text) => {
+      const body = String(text || '').replace(/\s+/g, ' ').trim().slice(0, 72);
+      if (!body) return;
+      const now = performance.now();
+      signalStreams = [
+        ...signalStreams.filter((s) => now - s.start < SIGNAL_STREAM_MS),
+        { text: body, start: now }
+      ].slice(-3);
+      // Reduced-motion'da animasyon dongusu durur; tek kare tazele ki mesaj gorunsun.
+      if (screenSaverOverlay?.classList.contains('is-active') &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        drawScreenSaverSystem(performance.now());
+      }
+    };
 
     const stopScreenSaverSystem = () => {
       if (screenSaverFrame) window.cancelAnimationFrame(screenSaverFrame);
@@ -488,6 +555,9 @@
         ctx.restore();
       });
 
+      drawWanderers(ctx, cx, cy, width, height, elapsed, reduced);
+      drawSignalStreams(ctx, width, height, reduced);
+
       ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
       ctx.fillRect(0, 0, width, height);
     };
@@ -702,6 +772,7 @@
     return {
       command: screenSaverCommand,
       close: closeScreenSaver,
+      pushSignal,
       isActive: () => Boolean(screenSaverOverlay?.classList.contains('is-active')),
       handleResize: () => {
         resizeScreenSaverSystem();

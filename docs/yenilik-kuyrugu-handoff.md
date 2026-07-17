@@ -19,7 +19,8 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 | 6. Convivium Wrapped: wrapped + dashboard PNG kart | `de99024` | yeni tablo yok; SW v181 |
 | 7. Gece frekansi 00:00-05:59 | `113b46c` | home/night-mode.js; SW v182 |
 | 8. Convivium Radio: prosedurel ambient | `b56278c` | home/radio.js; SW v183 |
-| Ek: Canli sohbet chat/say (kullanici istegi) | bkz. git log | home/chat.js; ucucu broadcast; SW v184 |
+| Ek: Canli sohbet chat/say (kullanici istegi) | `c591d90` | home/chat.js; ucucu broadcast; SW v184 |
+| Ek: Ortak ekran koruyucu (gezgin uydulari + mesaj yildizlari) | bkz. git log | presence.list() + screenSaver.pushSignal; SW v185 |
 
 ## KULLANICI AKSIYONU BEKLEYENLER (Supabase SQL Editor)
 
@@ -59,7 +60,25 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-### 1. Rezonans kapisi — FAZ 2 (en somut aday)
+### 0. Fikir havuzu (2026-07-17 beyin firtinasi; kullanici "sonra ele alalim" dedi)
+- **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
+  (bozuk 1997 BBS sayfasi, yarim TODO.txt, kurtarilmis oyun ekrani). `cd /ruins`
+  ile girilen, zamanla kazilan statik katman. Sifir maliyet, yuksek kesif hissi.
+- **Gezgin Mirasi**: bilincli `depart` komutuyla tek cumlelik veda izi birakma;
+  sonraki ziyaretci rastgele bir vedayla karsilanir (wall_marks benzeri tablo).
+- **Kolektif Rituel**: gunluk kart toplamada site geneli esik (orn. 10 collect)
+  asilirsa herkese ortak bonus — "frekans esigi asildi". site_events + count.
+- **Sinyal Firtinasi (shard loteri)**: gunun seed'iyle belirli dakikalarda 30
+  sn'lik firtina; o an sitede olup `catch signal` yazan shard kazanir.
+- **Kart Takasi**: gunluk kartlar bottle uzerinden takas edilir
+  (`bottle throw card:2026-07-12`); kacan gunlerin kartlari dolasima girer.
+- **Oracle Ruya Gunlugu**: Worker cron her gece site_events toplamlarindan tek
+  paragraflik anonim "ruya" yazar; `dream` komutuyla okunur.
+- **Webring/Antenna**: baska kisisel sitelerin RSS'lerini Worker'da toplayan
+  kucuk bir antenna sayfasi (signals.xml'in tersi; eski internet ruhu).
+- (Ortak ekran koruyucu fikri SECILDI ve uygulandi — asagidaki tabloya bakin.)
+
+### 1. Rezonans kapisi — FAZ 2 (kullanici karari: SIMDILIK BEKLIYOR)
 Altyapi hazir: gizli `resonate <kelime>` komutu var; 8 sn icinde iki gezgin
 ayni kelimeyi yazarsa `coop-gate.js onSync` tetikleniyor (su an yalniz iz +
 mesaj + 3 shard; easterTrail'e `resonate:<kelime>` yaziliyor). Kapinin

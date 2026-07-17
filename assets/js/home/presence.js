@@ -147,6 +147,7 @@
       sync: trackSelf,
       whoCommand,
       count: () => entries.length,
+      list: () => entries.map((entry) => ({ ...entry })),
       isActive: () => connected,
       tag: () => tag
     };
