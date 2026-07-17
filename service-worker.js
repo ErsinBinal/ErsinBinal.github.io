@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v194';
+const CACHE_NAME = 'convivium-v196';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -59,6 +59,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/bugy-pet.js?v=12',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=5',
+  '/assets/js/home/route-commands.js?v=1',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
@@ -69,7 +70,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/chat.js?v=3',
   '/assets/js/home/chat-deck.js?v=3',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=74',
+  '/assets/js/home-protocol.js?v=75',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=3',
   '/assets/js/origin-beacon.js?v=1',
@@ -93,7 +94,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=35',
+  '/assets/js/supabase-client.js?v=36',
   '/assets/js/articles.js?v=7',
   '/assets/img/guides/apps-guide.svg',
   '/assets/img/guides/games-guide.svg',
@@ -115,16 +116,36 @@ const PRECACHE_ASSETS = [
   '/manifest.json'
 ];
 
+// GitHub Pages edge'leri yeni deploy'u ayni anda gormeyebilir. Bu nedenle
+// yalniz surumsuz ve offline deneyimi tek basina ayakta tutan kucuk shell seti
+// install icin zorunludur; diger deneyimler best-effort cache'lenir.
+const CRITICAL_PRECACHE_ASSETS = [
+  '/',
+  '/offline.html',
+  '/assets/css/common.css'
+];
+const OPTIONAL_PRECACHE_ASSETS = PRECACHE_ASSETS.filter(
+  (asset) => !CRITICAL_PRECACHE_ASSETS.includes(asset)
+);
+
 // Install event - precache assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Precaching assets');
-        return cache.addAll(PRECACHE_ASSETS);
+      .then(async (cache) => {
+        console.log('[SW] Precaching critical shell');
+        await cache.addAll(CRITICAL_PRECACHE_ASSETS);
+        const optionalResults = await Promise.allSettled(
+          OPTIONAL_PRECACHE_ASSETS.map((asset) => cache.add(asset))
+        );
+        const failedOptional = optionalResults.filter((result) => result.status === 'rejected').length;
+        if (failedOptional) {
+          console.warn(`[SW] Optional precache skipped: ${failedOptional}/${OPTIONAL_PRECACHE_ASSETS.length}`);
+        }
       })
       .catch((err) => {
         console.error('[SW] Precache failed:', err);
+        throw err;
       })
   );
 });
@@ -133,7 +154,7 @@ self.addEventListener('install', (event) => {
 // SKIP_WAITING mesajiyla aktive olur (bayat sekme + karisik asset riskine son).
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+    event.waitUntil(self.skipWaiting());
   }
 });
 
@@ -158,6 +179,42 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+const isSameOriginRequest = (request) => request.url.startsWith(self.location.origin);
+
+const cacheResponse = async (request, response) => {
+  if (!response || response.status !== 200 || !isSameOriginRequest(request)) return;
+  const responseClone = response.clone();
+  const cache = await caches.open(CACHE_NAME);
+  await cache.put(request, responseClone);
+};
+
+const offlineDocument = async () => {
+  const offlineResponse = await caches.match(OFFLINE_URL);
+  return offlineResponse || new Response(
+    '<h1>Offline</h1><p>Internet baglantisi yok.</p>',
+    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+  );
+};
+
+const networkFirstDocument = (event) => {
+  const networkPromise = fetch(event.request);
+  const cacheUpdate = networkPromise.then((response) => cacheResponse(event.request, response));
+  event.waitUntil(cacheUpdate.catch((error) => {
+    console.warn('[SW] Document cache update failed:', error);
+  }));
+
+  return networkPromise.catch(async () => {
+    const cachedResponse = await caches.match(event.request);
+    return cachedResponse || offlineDocument();
+  });
+};
+
+const fetchAndCache = async (request) => {
+  const networkResponse = await fetch(request);
+  await cacheResponse(request, networkResponse);
+  return networkResponse;
+};
+
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
   // Sadece GET isteklerini isle
@@ -178,92 +235,29 @@ self.addEventListener('fetch', (event) => {
 
   // Sayfa gezinmelerinde once network'e git; oyun HTML'leri eski cache'de kalmasin.
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {
-    event.respondWith(
-      fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith(self.location.origin)) {
-            const responseClone = networkResponse.clone();
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseClone);
-              });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          return caches.match(event.request)
-            .then((cachedResponse) => {
-              if (cachedResponse) return cachedResponse;
-              return caches.match(OFFLINE_URL)
-                .then((offlineResponse) => {
-                  return offlineResponse || new Response(
-                    '<h1>Offline</h1><p>Internet baglantisi yok.</p>',
-                    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-                  );
-                });
-            });
-        })
-    );
+    event.respondWith(networkFirstDocument(event));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          // Cache'de varsa, arka planda guncelle (stale-while-revalidate)
-          const fetchPromise = fetch(event.request)
-            .then((networkResponse) => {
-              // Basarili response'u cache'e ekle
-              if (networkResponse && networkResponse.status === 200) {
-                const responseClone = networkResponse.clone();
-                caches.open(CACHE_NAME)
-                  .then((cache) => {
-                    cache.put(event.request, responseClone);
-                  });
-              }
-              return networkResponse;
-            })
-            .catch(() => {
-              // Network hatasi, cache'den dön
-              return cachedResponse;
-            });
+  const cachedPromise = caches.match(event.request).catch(() => null);
+  const revalidatePromise = cachedPromise.then(async (cachedResponse) => {
+    if (!cachedResponse) return;
+    try {
+      await fetchAndCache(event.request);
+    } catch {
+      // Stale cevap zaten hazir; arka plan ag hatasi kullanici akisini bozmaz.
+    }
+  });
+  event.waitUntil(revalidatePromise);
 
-          return cachedResponse;
-        }
-
-        // Cache'de yoksa network'ten al
-        return fetch(event.request)
-          .then((networkResponse) => {
-            // Basarili response'u cache'e ekle
-            if (networkResponse && networkResponse.status === 200) {
-              const responseClone = networkResponse.clone();
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  // Sadece ayni origin'den gelen dosyalari cache'le
-                  if (event.request.url.startsWith(self.location.origin)) {
-                    cache.put(event.request, responseClone);
-                  }
-                });
-            }
-            return networkResponse;
-          })
-          .catch(() => {
-            // Offline ve cache'de yok - offline sayfasi goster
-            if (event.request.mode === 'navigate') {
-              return caches.match(OFFLINE_URL)
-                .then((offlineResponse) => {
-                  return offlineResponse || new Response(
-                    '<h1>Offline</h1><p>Internet baglantisi yok.</p>',
-                    { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-                  );
-                });
-            }
-            // Diger istekler icin bos response
-            return new Response('', { status: 503, statusText: 'Service Unavailable' });
-          });
-      })
-  );
+  event.respondWith(cachedPromise.then(async (cachedResponse) => {
+    if (cachedResponse) return cachedResponse;
+    try {
+      return await fetchAndCache(event.request);
+    } catch {
+      return new Response('', { status: 503, statusText: 'Service Unavailable' });
+    }
+  }));
 });
 
 // Push notification (opsiyonel, gelecek icin)
