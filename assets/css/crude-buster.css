@@ -1,0 +1,266 @@
+/*
+ * Crude Buster — sayfa, HUD, lobi ve mobil kontrol stilleri.
+ * (c) 2026 Ersin Binal — Convivium. Harici görsel yok; her şey canvas + CSS.
+ */
+:root {
+  --cb-bg: #17110c;
+  --cb-ink: #f3e7d3;
+  --cb-muted: #b79b76;
+  --cb-red: #ff5a3c;
+  --cb-blue: #35b7ff;
+  --cb-gold: #ffce4a;
+  --cb-panel: rgba(20, 14, 9, 0.92);
+  --cb-line: rgba(255, 206, 74, 0.4);
+  --vh: 1vh;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: #0b0805;
+  color: var(--cb-ink);
+  font-family: 'Courier New', monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(var(--vh) * 100);
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#cb-shell {
+  position: relative;
+  width: min(100vw, calc(var(--vh) * 100 * 1.777));
+  height: min(calc(var(--vh) * 100), 56.25vw);
+  max-width: 960px;
+  background: #000;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+#cb-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+  background: #1a1208;
+}
+
+/* --- Üst HUD --- */
+#cb-hud {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  pointer-events: none;
+  z-index: 5;
+  font-size: clamp(8px, 1.6vw, 13px);
+}
+.cb-player-hud { flex: 0 0 auto; min-width: 38%; }
+.cb-player-hud.right { text-align: right; }
+.cb-name { font-weight: 700; letter-spacing: 1px; text-shadow: 1px 1px 0 #000; }
+.cb-name.red { color: var(--cb-red); }
+.cb-name.blue { color: var(--cb-blue); }
+.cb-hpbar {
+  height: 9px;
+  border: 1px solid rgba(0,0,0,0.6);
+  background: #2a1c10;
+  margin-top: 2px;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.cb-hpfill { height: 100%; width: 100%; transition: width 120ms linear; }
+.cb-hpfill.red { background: linear-gradient(#ff8a5a, var(--cb-red)); }
+.cb-hpfill.blue { background: linear-gradient(#7fd6ff, var(--cb-blue)); }
+.cb-lives { font-size: 0.9em; color: var(--cb-gold); text-shadow: 1px 1px 0 #000; }
+.cb-center-hud {
+  flex: 1 1 auto;
+  text-align: center;
+  color: var(--cb-gold);
+  text-shadow: 1px 1px 0 #000;
+}
+.cb-score { font-weight: 700; letter-spacing: 1px; }
+.cb-stagelabel { font-size: 0.85em; color: var(--cb-muted); }
+#cb-boss-hud {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  top: 40px;
+  width: 66%;
+  z-index: 5;
+  text-align: center;
+  pointer-events: none;
+}
+#cb-boss-hud.hidden { display: none; }
+#cb-boss-hud .cb-name { color: #ff4d6d; }
+#cb-boss-hud .cb-hpbar { height: 11px; }
+#cb-boss-hud .cb-hpfill { background: linear-gradient(#ff6d8a, #b3122f); }
+
+/* --- Overlay kartlar (lobi / duraklat / game over) --- */
+.cb-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(6, 4, 2, 0.86);
+  backdrop-filter: blur(2px);
+}
+.cb-overlay.hidden { display: none; }
+.cb-card {
+  width: min(94%, 460px);
+  max-height: 92%;
+  overflow: auto;
+  background: var(--cb-panel);
+  border: 1px solid var(--cb-line);
+  box-shadow: 0 0 24px rgba(255, 206, 74, 0.12), inset 0 0 60px rgba(0,0,0,0.5);
+  padding: 18px 18px 20px;
+  text-align: center;
+}
+.cb-card h1 {
+  font-size: clamp(1.2rem, 4vw, 1.9rem);
+  letter-spacing: 3px;
+  color: var(--cb-gold);
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #7a2b12;
+}
+.cb-card h1 .sub { display: block; font-size: 0.5em; letter-spacing: 2px; color: var(--cb-red); margin-top: 4px; }
+.cb-card h2 { color: var(--cb-gold); letter-spacing: 2px; text-transform: uppercase; font-size: 1.05rem; margin-bottom: 6px; }
+.cb-card p { color: var(--cb-muted); font-size: 0.8rem; line-height: 1.55; margin: 8px auto; max-width: 42ch; }
+.cb-card p strong { color: var(--cb-ink); }
+.cb-tag { color: var(--cb-red); }
+.cb-tag.blue { color: var(--cb-blue); }
+
+.cb-btn {
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #1a0e06;
+  background: var(--cb-gold);
+  border: 1px solid #ffe08a;
+  border-radius: 4px;
+  padding: 11px 18px;
+  margin: 5px;
+  cursor: pointer;
+  min-height: 44px;
+  min-width: 120px;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 #a9741c;
+}
+.cb-btn:hover, .cb-btn:focus-visible { background: #ffd968; transform: translateY(-1px); }
+.cb-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #a9741c; }
+.cb-btn.ghost { color: var(--cb-gold); background: transparent; border-color: var(--cb-line); box-shadow: none; }
+.cb-btn.ghost:hover { background: rgba(255,206,74,0.1); }
+.cb-btn.small { min-width: auto; padding: 7px 12px; min-height: 34px; font-size: 0.72rem; }
+.cb-btnrow { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; margin-top: 10px; }
+
+.cb-modes { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.cb-mode {
+  display: flex; align-items: center; gap: 12px;
+  text-align: left;
+  padding: 12px 14px;
+  border: 1px solid var(--cb-line);
+  background: rgba(255, 206, 74, 0.04);
+  cursor: pointer;
+  color: var(--cb-ink);
+  font: inherit;
+}
+.cb-mode:hover, .cb-mode:focus-visible { background: rgba(255, 206, 74, 0.12); }
+.cb-mode .ico { font-size: 1.6rem; }
+.cb-mode b { display: block; letter-spacing: 1px; color: var(--cb-gold); }
+.cb-mode span { font-size: 0.72rem; color: var(--cb-muted); }
+
+.cb-online-box { margin-top: 8px; }
+.cb-code {
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  letter-spacing: 8px;
+  color: var(--cb-gold);
+  font-weight: 700;
+  padding: 6px 0;
+  text-shadow: 2px 2px 0 #000;
+}
+.cb-code-input {
+  font: inherit;
+  font-size: 1.4rem;
+  letter-spacing: 6px;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+  max-width: 220px;
+  padding: 10px;
+  background: #0d0906;
+  color: var(--cb-gold);
+  border: 1px solid var(--cb-line);
+  border-radius: 4px;
+}
+.cb-status { font-size: 0.78rem; color: var(--cb-muted); min-height: 1.2em; margin-top: 8px; }
+.cb-status.ok { color: #7dff9a; }
+.cb-status.err { color: #ff6d6d; }
+.cb-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555; margin-right: 5px; vertical-align: middle; }
+.cb-dot.on { background: #7dff9a; box-shadow: 0 0 8px #7dff9a; }
+
+.cb-lb { margin: 10px auto 4px; font-size: 0.74rem; text-align: left; max-width: 280px; }
+.cb-lb div { display: flex; justify-content: space-between; gap: 12px; padding: 1px 0; color: var(--cb-muted); }
+.cb-lb div strong { color: var(--cb-gold); }
+.cb-lb .me { color: var(--cb-red); }
+
+.cb-hint { font-size: 0.66rem; color: var(--cb-muted); margin-top: 10px; line-height: 1.5; }
+.cb-keys { display: inline-block; border: 1px solid var(--cb-line); border-radius: 3px; padding: 0 5px; color: var(--cb-ink); }
+
+/* --- Sağ üst küçük butonlar --- */
+#cb-topbtns { position: absolute; top: 6px; right: 8px; z-index: 6; display: flex; gap: 4px; }
+#cb-topbtns .cb-btn.small { box-shadow: 0 2px 0 #a9741c; }
+
+/* --- Mobil dokunmatik kontroller --- */
+#cb-touch { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+#cb-touch.hidden { display: none; }
+.cb-pad {
+  position: absolute;
+  bottom: 4%; left: 3%;
+  width: min(34vw, 150px); height: min(34vw, 150px);
+  border-radius: 50%;
+  background: rgba(255, 206, 74, 0.08);
+  border: 2px solid rgba(255, 206, 74, 0.28);
+  pointer-events: auto;
+  touch-action: none;
+}
+.cb-nub {
+  position: absolute; top: 50%; left: 50%;
+  width: 42%; height: 42%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: rgba(255, 206, 74, 0.5);
+  pointer-events: none;
+}
+.cb-abtns {
+  position: absolute;
+  bottom: 4%; right: 3%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  pointer-events: auto;
+}
+.cb-abtn {
+  width: min(16vw, 66px); height: min(16vw, 66px);
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
+  background: rgba(255, 90, 60, 0.28);
+  color: #fff;
+  font: 700 0.72rem/1 'Courier New', monospace;
+  display: grid; place-items: center;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cb-abtn:active { background: rgba(255, 90, 60, 0.55); }
+.cb-abtn[data-btn="jump"] { background: rgba(53, 183, 255, 0.28); }
+.cb-abtn[data-btn="action"] { background: rgba(255, 206, 74, 0.3); color: #1a0e06; }
+.cb-abtn[data-btn="special"] { background: rgba(180, 90, 255, 0.3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cb-btn, .cb-btn:hover, .cb-btn:active { transform: none; }
+}

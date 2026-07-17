@@ -23,7 +23,7 @@ Ziyaretci icin site bir rota agi gibi akar:
 - `/pages/ozgecmisim.html`: terminal komutlariyla gezilen interaktif ozgecmis (whoami / experience / skills / contact).
 - `/pages/changelog.html`: "son sinyaller" — siteye eklenen ozelliklerin kronolojik listesi.
 - `/oracle/`: kapali isaretler, kisa okumalar ve oracle deneyimi.
-- `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/ash-runner-2.html`, `/games/neon-river.html`, `/games/neon-serpent.html`, `/games/universe-2.html`: oynanabilir deneyler (Kul Hatti II: Phaser tabanli hibrit uzay oyunu; Neon Serpent: skor tablolu neon yilan).
+- `/games/cyberpunk-logic-game.html`, `/games/three-body-signal.html`, `/games/ash-runner.html`, `/games/ash-runner-2.html`, `/games/neon-river.html`, `/games/neon-serpent.html`, `/games/universe-2.html`, `/games/crude-buster.html`: oynanabilir deneyler (Kul Hatti II: Phaser tabanli hibrit uzay oyunu; Neon Serpent: skor tablolu neon yilan; Crude Buster: online co-op beat 'em up, Supabase Realtime host-otoriter netcode).
 - `/tools/bartender.html`, `/tools/barista.html`, `/tools/the-realists-bar.html`: ruh hali, karar ve ritim uzerinden kurgulanmis araclar.
 - `/tools/dart-skorbord.html`: Supabase destekli 501 dart skorbordu.
 - `/tools/paradox-terminal.html`: paradokslar ve kisa felsefi notlar icin retro terminal sayfasi.
