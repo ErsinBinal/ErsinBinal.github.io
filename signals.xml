@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu icerik teliflidir; LICENSE ve NOTICE.md uyarinca yazili izin olmadan
+  kopyalanamaz veya yeniden yayimlanamaz.
+-->
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Convivium — Son Sinyaller</title>
+    <link>https://ersinbinal.github.io/</link>
+    <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
+    <language>tr</language>
+    <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
+    <lastBuildDate>Fri, 17 Jul 2026 12:00:00 +0300</lastBuildDate>
+    <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sinyal aboneligi: RSS feed</title>
+      <link>https://ersinbinal.github.io/pages/changelog.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-17-rss</guid>
+      <pubDate>Fri, 17 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Convivium artik disariya tek abonelik kanali sunuyor: /signals.xml. Yeni oyunlar, araclar ve deneyler dustukce bu frekansa duser.</description>
+    </item>
+
+    <item>
+      <title>Crude Buster — online co-op beat 'em up</title>
+      <link>https://ersinbinal.github.io/games/crude-buster.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-14-crude-buster</guid>
+      <pubDate>Tue, 14 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Data East'in 1990 klasiginin sifirdan remake'i: harabe Big Apple'da E.Binal ve De.Binal her seyi kaldirip firlatir. Solo, yerel co-op ve iki giris yapmis kullaniciyla online co-op (Supabase Realtime, host-otoriter). Klavye + mobil dokunmatik.</description>
+    </item>
+
+    <item>
+      <title>Neon Serpent</title>
+      <link>https://ersinbinal.github.io/games/neon-serpent.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-02-neon-serpent</guid>
+      <pubDate>Thu, 02 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Neon izgarada klasik yilan: nabiz atan sinyaller, sureli glitch bonusu, artan hiz, combo puani ve Supabase skor tablosu.</description>
+    </item>
+
+    <item>
+      <title>Kabuk cekirdegi: gercek terminal hissi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-02-shell-core</guid>
+      <pubDate>Thu, 02 Jul 2026 11:00:00 +0300</pubDate>
+      <description>Ana terminale boru hatti (help | grep oyun), kalici /home dosyalari, degiskenler, komut zinciri, gecmis genisletme ve fortune / cowsay / sudo geldi.</description>
+    </item>
+
+    <item>
+      <title>Yeni surum bildirimi + changelog</title>
+      <link>https://ersinbinal.github.io/pages/changelog.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-02-changelog</guid>
+      <pubDate>Thu, 02 Jul 2026 10:00:00 +0300</pubDate>
+      <description>Site guncellenince acik sekmelerde "yeni surum hazir" cipi beliriyor; ayrica changelog sayfasi ve terminale changelog komutu eklendi.</description>
+    </item>
+
+    <item>
+      <title>Kul Hatti II — Yorunge</title>
+      <link>https://ersinbinal.github.io/games/ash-runner-2.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-06-29-ash-runner-2</guid>
+      <pubDate>Mon, 29 Jun 2026 12:00:00 +0300</pubDate>
+      <description>Kul Hatti'nin uzayda gecen devami: istasyonda yaya beat'em-up + gemiyle yatay shmup hibrit dongusu, 12 modullu yetenek agaci, boss savaslari.</description>
+    </item>
+
+    <item>
+      <title>Interaktif ozgecmis terminali</title>
+      <link>https://ersinbinal.github.io/pages/ozgecmisim.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-06-29-cv-terminal</guid>
+      <pubDate>Mon, 29 Jun 2026 11:00:00 +0300</pubDate>
+      <description>Ozgecmis sayfasi gercek bir komut kabuguna donustu: whoami / experience / skills / contact komutlariyla gezilir, Tab tamamlama ve komut gecmisi destekli.</description>
+    </item>
+
+    <item>
+      <title>"Bugy seni arastirsin" — profil zenginlestirme</title>
+      <link>https://ersinbinal.github.io/account/dashboard.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-06-26-bugy-research</guid>
+      <pubDate>Fri, 26 Jun 2026 12:00:00 +0300</pubDate>
+      <description>Kayitli kullanicilar icin Bugy, adiyla gercek bir arama yapip meslek/egitim tahmini sunar; sonuc yalnizca kullanici onaylarsa profile yazilir.</description>
+    </item>
+
+    <item>
+      <title>Bugy: sinematik imza yetenekleri + cyberpunk evrim</title>
+      <link>https://ersinbinal.github.io/tools/bugy-studio.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-06-25-bugy-evolution</guid>
+      <pubDate>Thu, 25 Jun 2026 12:00:00 +0300</pubDate>
+      <description>Her Bugy yaratigi imza yetenegini kazandi (Yildirim, Dalga, Yangin, Asiri Yuk, Cicek, Tipi, Ay Tozu); 7 retro yaratik cyberpunk formuna evrildi.</description>
+    </item>
+
+    <item>
+      <title>Tema tutarliligi + dashboard trendleri</title>
+      <link>https://ersinbinal.github.io/account/dashboard.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-06-24-theme-dashboard</guid>
+      <pubDate>Wed, 24 Jun 2026 12:00:00 +0300</pubDate>
+      <description>Kayitli tema tercihi tum hesap/arac sayfalarinda uygulanir; dashboard'a oyun skoru ve oturum suresi sparkline grafikleri eklendi.</description>
+    </item>
+  </channel>
+</rss>
