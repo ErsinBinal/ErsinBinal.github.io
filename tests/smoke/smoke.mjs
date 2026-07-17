@@ -39,6 +39,10 @@ async function checkPage(path) {
 }
 
 async function checkWorkerEnrich() {
+  // Yeni sozlesme (A2 sertlestirme): kimliksiz enrich istegi provider'a
+  // ulasmadan 401 almali. Bu test bilerek Authorization GONDERMEZ; 401
+  // gormek basaridir (guvenlik siniri calisiyor). Gecis penceresi icin
+  // eski worker'in 200 sozlesmesi de kabul edilir (deploy yayilirken).
   try {
     const res = await withTimeout(s => fetch(`${WORKER}/enrich-profile`, {
       method: 'POST', signal: s,
@@ -46,11 +50,33 @@ async function checkWorkerEnrich() {
       body: JSON.stringify({ first_name: 'Cem', last_name: 'Yilmaz' })
     }), 35000);
     const data = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      record('POST /enrich-profile (kimliksiz -> 401)', true, 'auth siniri aktif');
+      return;
+    }
     const validProviders = ['tavily', 'google-cse', 'gemini-grounded', 'unavailable'];
-    const ok = res.ok && typeof data.provider === 'string' && validProviders.includes(data.provider);
-    record('POST /enrich-profile', ok, `HTTP ${res.status} provider=${data.provider} grounded=${data.grounded}`);
+    const legacyOk = res.ok && typeof data.provider === 'string' && validProviders.includes(data.provider);
+    record('POST /enrich-profile (kimliksiz -> 401)', legacyOk,
+      `HTTP ${res.status} (eski sozlesme; yeni worker yayilinca 401 beklenir)`);
   } catch (e) {
-    record('POST /enrich-profile', false, e.message || String(e));
+    record('POST /enrich-profile (kimliksiz -> 401)', false, e.message || String(e));
+  }
+}
+
+async function checkWorkerHealth() {
+  // /health yeni worker'da var; eski worker yayindayken 404/405 gecis kabulu.
+  try {
+    const res = await withTimeout(s => fetch(`${WORKER}/health`, { signal: s }), 15000);
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      record('GET /health', data.status === 'ok',
+        `version=${data?.version?.id || '?'} tag=${data?.version?.tag || '-'}`);
+      return;
+    }
+    record('GET /health', [403, 404, 405].includes(res.status),
+      `HTTP ${res.status} (eski worker; yeni deploy yayilinca 200 beklenir)`);
+  } catch (e) {
+    record('GET /health', false, e.message || String(e));
   }
 }
 
@@ -87,6 +113,7 @@ async function main() {
   for (const p of pages) await checkPage(p);
   await checkSupabase();
   if (!SKIP_WORKER) {
+    await checkWorkerHealth();
     await checkWorkerOracle();
     await checkWorkerEnrich();
   }

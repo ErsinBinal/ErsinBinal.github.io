@@ -19,6 +19,11 @@ Cloudflare Workers AI currently includes a free daily allocation on Workers Free
 `POST /enrich-profile` `{ "first_name": "...", "last_name": "..." }` alir ve
 kisinin olasi meslek/egitim/departman bilgisini doner.
 
+Bu rota public anonim kullanima acik degildir. Tarayici mevcut Supabase
+oturumunun access token'ini `Authorization: Bearer ...` ile gonderir; Worker
+token'i Supabase `/auth/v1/user` uzerinden dogrulamadan arama saglayicilarina
+gitmez. Kota IP yerine dogrulanmis `user.id` uzerinden uygulanir.
+
 Yalnizca GERCEK arama kullanilir; arama tutmazsa **uydurma uretilmez**,
 `provider: "unavailable"` doner. Uc ucretsiz saglayici desteklenir (en az
 birini yapilandir). Sira: **Tavily -> Google CSE -> Gemini**.
@@ -67,8 +72,29 @@ kaydedilmez.
 - Public HTML/JS never stores provider secrets.
 - The Worker does not expose files, shell commands, repository writes, admin actions, or local developer tools.
 - Responses are short text answers only.
-- Basic per-IP rate limiting is enabled with `ORACLE_RATE_LIMIT`.
+- Oracle, profil auth, profil arastirma ve beacon icin ayri kotalar vardir.
+  Sayaclar aktor hash'ine ayrilmis SQLite-backed Durable Object'larda tutulur;
+  isolate veya Cloudflare lokasyonu degisse de ayni aktor ayni sayaca gider.
+- JSON rotalari yalnizca `application/json` kabul eder ve govdeyi hem bildirilen
+  `Content-Length` hem de stream sirasinda 4 KiB ile sinirlar.
+- Beacon yalnizca `GET/HEAD`, sinirli URL, gecerli host ve bilinen protokol kabul
+  eder. Klon triyaji sadece yerel siniflandirma ve log uretir; AI saglayicisi ya
+  da webhook cagirmaz.
+- Loglar endpoint/karar bazli JSON kayitlaridir; bearer token ve ham IP yazilmaz.
 - Repeated questions are cached briefly with `ORACLE_CACHE_TTL`.
+
+Varsayilan kota degiskenleri:
+
+| Akis | Limit | Pencere | Aktor |
+|---|---:|---:|---|
+| Oracle | 12 | 60 sn | IP hash |
+| Profil auth denemesi | 20 | 60 sn | IP hash |
+| Profil arastirma | 4 | 3600 sn | Supabase user ID hash |
+| Beacon | 4 | 3600 sn | IP hash |
+
+`GET /health`, `Cache-Control: no-store` ile servis durumunu ve
+`CF_VERSION_METADATA` binding'inden production version ID/tag/timestamp bilgisini
+doner.
 
 ## Deploy
 
@@ -98,6 +124,17 @@ npm run set:oracle-endpoint -- https://your-worker.workers.dev
 Then push the site to GitHub Pages.
 
 ## Local test
+
+Gercek saglayiciya ulasmayan Workers-runtime testleri ve production config
+paketleme kontrolu:
+
+```bash
+npm run test:worker
+npx wrangler deploy --dry-run --config workers/oracle/wrangler.toml
+```
+
+Vitest ayarinda remote binding'ler kapali tutulur. Testler yetkisiz profil
+istegini provider'dan once durdurur ve AI cagrisi yapmaz.
 
 After deploy:
 

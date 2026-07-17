@@ -1,7 +1,7 @@
 name: Deploy Oracle Worker
 
-# Worker'i Cloudflare'e deploy eder. Yerelde Node gerekmez.
-# Gereken tek sey: repo Settings > Secrets > Actions altinda
+# Tum yerel/Workers-runtime kontrolleri ve Wrangler dry-run basarili olmadan
+# production deploy adimina gecmez. Gereken repository secret'lari:
 #   CLOUDFLARE_API_TOKEN  (zorunlu, "Edit Cloudflare Workers" yetkili token)
 #   CLOUDFLARE_ACCOUNT_ID (token tek hesaba bagliysa opsiyonel)
 
@@ -12,6 +12,18 @@ on:
       - main
     paths:
       - 'workers/oracle/**'
+      - 'assets/js/supabase-client.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vitest.config.mjs'
+      - '.github/workflows/deploy-worker.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oracle-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -19,10 +31,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Deploy with Wrangler
-        uses: cloudflare/wrangler-action@v3
+      - uses: actions/setup-node@v5
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: workers/oracle
-          command: deploy
+          node-version: 22
+
+      - name: Bagimliliklari kilitli kur
+        run: npm ci
+
+      - name: Statik, unit, Workers-runtime ve site kontrolleri
+        run: npm run check
+
+      - name: Wrangler production dry-run
+        run: npx wrangler deploy --dry-run --config workers/oracle/wrangler.toml --outdir "${RUNNER_TEMP}/oracle-dry-run"
+
+      - name: Production deploy
+        run: npx wrangler deploy --config workers/oracle/wrangler.toml --tag "$GITHUB_SHA" --message "GitHub Actions $GITHUB_SHA"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Health ve version metadata smoke
+        env:
+          WORKER_HEALTH_URL: https://convivium-oracle.convivium.workers.dev/health
+        run: |
+          health_json="$(curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 3 "$WORKER_HEALTH_URL")"
+          HEALTH_JSON="$health_json" node -e 'const body = JSON.parse(process.env.HEALTH_JSON); if (body.status !== "ok" || !body.version?.id || body.version.tag !== process.env.GITHUB_SHA) process.exit(1); console.log(JSON.stringify({ service: body.service, status: body.status, commit: process.env.GITHUB_SHA, version: body.version }))'

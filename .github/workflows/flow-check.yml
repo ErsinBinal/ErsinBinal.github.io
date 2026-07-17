@@ -27,7 +27,10 @@ jobs:
           node-version: 22
 
       - name: Bagimliliklari kur
-        run: npm install
+        run: npm ci
+
+      - name: Statik, unit ve site butunluk kontrolleri
+        run: npm run check
 
       - name: Smoke testleri
         env:

@@ -1,3 +1,61 @@
+import { DurableObject } from 'cloudflare:workers';
+
+export class RequestRateLimiter extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    ctx.blockConcurrencyWhile(async () => {
+      this.ctx.storage.sql.exec(`
+        CREATE TABLE IF NOT EXISTS rate_windows (
+          bucket TEXT PRIMARY KEY,
+          started_at INTEGER NOT NULL,
+          count INTEGER NOT NULL
+        )
+      `);
+    });
+  }
+
+  async check(bucket, limit, windowMs) {
+    const safeBucket = String(bucket || '').trim().slice(0, 64);
+    const safeLimit = Math.min(10_000, Math.max(1, Math.floor(Number(limit) || 1)));
+    const safeWindowMs = Math.min(86_400_000, Math.max(1_000, Math.floor(Number(windowMs) || 60_000)));
+    if (!safeBucket) throw new TypeError('rate-limit bucket required');
+
+    const now = Date.now();
+    const row = this.ctx.storage.sql
+      .exec('SELECT started_at, count FROM rate_windows WHERE bucket = ?', safeBucket)
+      .toArray()[0];
+
+    if (!row || now - Number(row.started_at) >= safeWindowMs) {
+      this.ctx.storage.sql.exec(
+        `INSERT INTO rate_windows (bucket, started_at, count) VALUES (?, ?, 1)
+         ON CONFLICT(bucket) DO UPDATE SET started_at = excluded.started_at, count = 1`,
+        safeBucket,
+        now
+      );
+      return {
+        allowed: true,
+        remaining: safeLimit - 1,
+        retryAfter: Math.ceil(safeWindowMs / 1000)
+      };
+    }
+
+    const retryAfter = Math.max(1, Math.ceil((safeWindowMs - (now - Number(row.started_at))) / 1000));
+    if (Number(row.count) >= safeLimit) {
+      return { allowed: false, remaining: 0, retryAfter };
+    }
+
+    this.ctx.storage.sql.exec(
+      'UPDATE rate_windows SET count = count + 1 WHERE bucket = ?',
+      safeBucket
+    );
+    return {
+      allowed: true,
+      remaining: Math.max(0, safeLimit - Number(row.count) - 1),
+      retryAfter
+    };
+  }
+}
+
 const ORACLE_SYSTEM_PROMPT = [
   'Kisa, net, Turkce cevap ver.',
   'Convivium terminali tonunda ol.',
@@ -51,15 +109,40 @@ const PROFILE_FROM_SNIPPETS_PROMPT = [
   'JSON disinda hicbir metin yazma. Turkce kullan.'
 ].join(' ');
 
-const RATE_LIMITS = new Map();
-const RATE_WINDOW_MS = 60_000;
 const DEFAULT_RATE_LIMIT = 12;
+const DEFAULT_ENRICH_RATE_LIMIT = 4;
+const DEFAULT_BEACON_RATE_LIMIT = 4;
+const DEFAULT_ENRICH_AUTH_RATE_LIMIT = 20;
+const MAX_JSON_BODY_BYTES = 4096;
+const MAX_BEACON_URL_LENGTH = 2048;
+
+const logEvent = (level, event, fields = {}) => {
+  const payload = JSON.stringify({
+    level,
+    event,
+    at: new Date().toISOString(),
+    ...fields
+  });
+  if (level === 'error') console.error(payload);
+  else if (level === 'warn') console.warn(payload);
+  else console.log(payload);
+};
 
 const normalizeAnswer = (answer) => String(answer || '')
   .replace(/\r/g, '')
   .replace(/\n{3,}/g, '\n\n')
   .trim()
   .slice(0, 900);
+
+const extractJson = (text) => {
+  const match = String(text || '').match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try {
+    return JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+};
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), {
   status,
@@ -90,33 +173,23 @@ const corsHeaders = (request, env) => {
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    Vary: 'Origin'
   };
 };
 
-const rateLimit = (request, env) => {
-  const limit = Number(env.ORACLE_RATE_LIMIT || DEFAULT_RATE_LIMIT);
-  const max = Number.isFinite(limit) && limit > 0 ? Math.floor(limit) : DEFAULT_RATE_LIMIT;
-  const key = request.headers.get('CF-Connecting-IP') || request.headers.get('x-forwarded-for') || 'unknown';
-  const now = Date.now();
-  const entry = RATE_LIMITS.get(key);
-
-  if (!entry || now - entry.startedAt > RATE_WINDOW_MS) {
-    RATE_LIMITS.set(key, { count: 1, startedAt: now });
-    return { allowed: true };
-  }
-
-  entry.count += 1;
-  if (entry.count > max) {
-    return {
-      allowed: false,
-      retryAfter: Math.max(1, Math.ceil((RATE_WINDOW_MS - (now - entry.startedAt)) / 1000))
-    };
-  }
-
-  return { allowed: true };
+const positiveInteger = (value, fallback, max = 86_400) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(max, Math.floor(parsed));
 };
+
+const clientIp = (request) => String(
+  request.headers.get('CF-Connecting-IP') ||
+  request.headers.get('x-forwarded-for') ||
+  'unknown'
+).split(',')[0].trim().slice(0, 64);
 
 const hashText = async (text) => {
   const data = new TextEncoder().encode(text);
@@ -124,12 +197,99 @@ const hashText = async (text) => {
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
-const readJson = async (request) => {
-  try {
-    return await request.json();
-  } catch {
-    return {};
+const enforceRateLimit = async (env, actor, bucket, limit, windowSeconds) => {
+  if (!env.REQUEST_RATE_LIMITER || typeof env.REQUEST_RATE_LIMITER.getByName !== 'function') {
+    throw new Error('request rate limiter binding missing');
   }
+  const actorHash = await hashText(`${bucket}|${String(actor || 'unknown')}`);
+  const limiter = env.REQUEST_RATE_LIMITER.getByName(actorHash);
+  const result = await limiter.check(bucket, limit, windowSeconds * 1000);
+  return { ...result, actorHash: actorHash.slice(0, 12) };
+};
+
+const readBoundedJson = async (request, maxBytes = MAX_JSON_BODY_BYTES) => {
+  const contentType = String(request.headers.get('Content-Type') || '')
+    .split(';')[0]
+    .trim()
+    .toLowerCase();
+  if (contentType !== 'application/json') {
+    return { ok: false, status: 415, error: 'content-type must be application/json' };
+  }
+
+  const declaredLength = Number(request.headers.get('Content-Length') || 0);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    return { ok: false, status: 413, error: 'request body too large' };
+  }
+
+  if (!request.body) return { ok: true, body: {} };
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel('request body too large');
+        return { ok: false, status: 413, error: 'request body too large' };
+      }
+      chunks.push(value);
+    }
+
+    if (!total) return { ok: true, body: {} };
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) {
+      bytes.set(chunk, offset);
+      offset += chunk.byteLength;
+    }
+    const parsed = JSON.parse(new TextDecoder().decode(bytes));
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return { ok: false, status: 400, error: 'json object required' };
+    }
+    return { ok: true, body: parsed };
+  } catch (error) {
+    return {
+      ok: false,
+      status: 400,
+      error: error?.message === 'request body too large' ? 'request body too large' : 'invalid json'
+    };
+  }
+};
+
+const verifySupabaseUser = async (request, env) => {
+  const authorization = String(request.headers.get('Authorization') || '').trim();
+  const match = authorization.match(/^Bearer\s+([^\s]+)$/i);
+  if (!match || match[1].length > 4096) return null;
+
+  let authUrl;
+  try {
+    const base = new URL(String(env.SUPABASE_URL || ''));
+    if (base.protocol !== 'https:' || !base.hostname.endsWith('.supabase.co')) {
+      throw new Error('invalid supabase url');
+    }
+    authUrl = new URL('/auth/v1/user', base);
+  } catch {
+    throw new Error('supabase auth configuration invalid');
+  }
+
+  if (!env.SUPABASE_ANON_KEY) throw new Error('supabase auth configuration missing');
+  const response = await withTimeout(signal => fetch(authUrl, {
+    method: 'GET',
+    signal,
+    headers: {
+      apikey: env.SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${match[1]}`
+    }
+  }), 7000);
+
+  if (response.status === 401 || response.status === 403) return null;
+  if (!response.ok) throw new Error(`supabase auth http ${response.status}`);
+  const user = await response.json();
+  const id = String(user?.id || '').trim().slice(0, 128);
+  return id ? { id } : null;
 };
 
 const cacheTtl = (env) => {
@@ -361,7 +521,7 @@ const answerOracle = async (question, env) => {
         status: error?.status || 0
       };
       errors.push(entry);
-      console.error('provider failed', JSON.stringify(entry));
+      logEvent('error', 'oracle_provider_failed', entry);
     }
   }
 
@@ -415,7 +575,10 @@ const enrichProfile = async (firstName, lastName, env, skipCache = false) => {
       }
       emptyResult = result; // bos sonuc; belki sonraki saglayici bulur.
     } catch (error) {
-      console.warn('enrich-profile failed', JSON.stringify({ provider: provider.name, error: error?.message || String(error) }));
+      logEvent('warn', 'profile_provider_failed', {
+        provider: provider.name,
+        message: error?.message || String(error)
+      });
     }
   }
 
@@ -451,12 +614,15 @@ const BEACON_PIXEL = Uint8Array.from(
   char => char.charCodeAt(0)
 );
 
-const beaconPixel = () => new Response(BEACON_PIXEL, {
-  status: 200,
+const beaconPixel = (method = 'GET', status = 200, headers = {}) => new Response(
+  method === 'HEAD' ? null : BEACON_PIXEL,
+  {
+  status,
   headers: {
     'Content-Type': 'image/gif',
     'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-    'Access-Control-Allow-Origin': '*'
+    'Access-Control-Allow-Origin': '*',
+    ...headers
   }
 });
 
@@ -477,18 +643,9 @@ const isOwnedContext = (host, proto, env) => {
 };
 
 // ---------------------------------------------------------------------------
-// Klon triyaji: foreign beacon -> lokal kalip -> (gerekirse) LLM -> aksiyon.
-//
-// 5 katman:
-//   1) Kalip katalogu (classifyForeignHost) - arsiv/cache/ceviri gibi bilinen
-//      zararsiz host'lar bedava ve aninda elenir; LLM cagrilmaz.
-//   2) Anomali kapisi - kalibla eslesmeyen host "sira disi" sayilir, eskale edilir.
-//   3) Prompt sablonu (askTriageAI) - olay, ciktisi kisitli (JSON enum) bir
-//      promta cevrilir; model serbest yorum yapamaz.
-//   4) Aksiyon eslemesi (TRIAGE_ACTIONS) - donen action bir allowlist'e karsi
-//      dogrulanir; sadece tanidik refleksler calisir, yikici islem yoktur.
-//   5) Dedup (wasRecentlyTriaged) - ayni host bir pencere boyunca tek kez
-//      degerlendirilir, boylece LLM bosa yorulmaz.
+// Klon triyaji yalnizca yerel siniflandirma ve yapilandirilmis log uretir.
+// Beacon girdisi AI saglayicisi veya webhook tetiklemez; rastgele hostlarla maliyet
+// olusturulamaz. Ayni host cache uzerinden alti saat boyunca tekillestirilir.
 // ---------------------------------------------------------------------------
 
 // Bilinen zararsiz host kaliplari: arsiv, cache, ceviri, AMP, proxy.
@@ -521,133 +678,9 @@ const classifyForeignHost = (host, env) => {
     return { action: 'ignore', severity: 'low', reason: 'arsiv/cache/ceviri/proxy kalibi' };
   }
 
-  return null; // bilinmiyor -> LLM'e eskale
+  return null;
 };
 
-const TRIAGE_SYSTEM_PROMPT = [
-  'Sen bir icerik-hirsizligi triyaj siniflandiricisisin.',
-  'Sana baska bir host\'ta bizim imzamizi tasiyan bir sayfa sinyali verilecek.',
-  'SADECE su JSON\'u dondur: {"action":"ignore|watch|alert","severity":"low|medium|high","reason":"kisa gerekce"}.',
-  'ignore = arsiv/cache/ceviri/proxy gibi zararsiz erisim.',
-  'watch = supheli ama belirsiz; insan incelemesi gerekir.',
-  'alert = olasi tam kopya / icerik hirsizligi.',
-  'JSON disinda hicbir metin yazma.'
-].join(' ');
-
-const triageUserPayload = (event) => JSON.stringify({
-  host: event.host,
-  proto: event.proto,
-  page: event.page,
-  ref: event.ref,
-  id: event.id,
-  country: event.country,
-  ua: event.ua
-});
-
-const VALID_TRIAGE_ACTIONS = ['ignore', 'watch', 'alert'];
-const VALID_TRIAGE_SEVERITY = ['low', 'medium', 'high'];
-
-// Modelden donen ham metinden ilk JSON nesnesini cek.
-const extractJson = (text) => {
-  const match = String(text || '').match(/\{[\s\S]*\}/);
-  if (!match) return null;
-  try {
-    return JSON.parse(match[0]);
-  } catch {
-    return null;
-  }
-};
-
-// LLM ciktisini guvenli sinirlara cek; bilinmeyen deger -> 'watch' (insana birak).
-const normalizeDecision = (raw) => {
-  const action = VALID_TRIAGE_ACTIONS.includes(raw?.action) ? raw.action : 'watch';
-  const severity = VALID_TRIAGE_SEVERITY.includes(raw?.severity)
-    ? raw.severity
-    : (action === 'alert' ? 'high' : 'medium');
-  const reason = normalizeAnswer(raw?.reason || '').slice(0, 240) || 'gerekce yok';
-  return { action, severity, reason };
-};
-
-const askTriageCloudflare = async (event, env) => {
-  if (!env.AI) throw new Error('cloudflare ai binding missing');
-  const response = await env.AI.run(env.CLOUDFLARE_AI_MODEL || '@cf/meta/llama-3.1-8b-instruct', {
-    messages: [
-      { role: 'system', content: TRIAGE_SYSTEM_PROMPT },
-      { role: 'user', content: triageUserPayload(event) }
-    ],
-    max_tokens: 160,
-    temperature: 0.1
-  });
-  const decision = extractJson(response?.response || response?.result?.response);
-  if (!decision) throw new Error('triage cloudflare parse failed');
-  return decision;
-};
-
-const askTriagePollinations = async (event, signal) => {
-  const prompt = `${TRIAGE_SYSTEM_PROMPT}\n${triageUserPayload(event)}`;
-  const response = await fetch(`https://text.pollinations.ai/${encodeURIComponent(prompt)}`, { signal });
-  if (!response.ok) throw new Error(`pollinations status ${response.status}`);
-  const decision = extractJson(await response.text());
-  if (!decision) throw new Error('triage pollinations parse failed');
-  return decision;
-};
-
-// 3) Eskalasyon: saglayicilari sirayla dene, hepsi duserse guvenli orta yola dus.
-const askTriageAI = async (event, env) => {
-  const providers = [
-    () => askTriageCloudflare(event, env),
-    signal => askTriagePollinations(event, signal)
-  ];
-
-  for (const ask of providers) {
-    try {
-      const raw = await withTimeout(ask, 12000);
-      return normalizeDecision(raw);
-    } catch (error) {
-      console.warn('triage-provider-failed', JSON.stringify({ message: error?.message || String(error) }));
-    }
-  }
-
-  return { action: 'watch', severity: 'medium', reason: 'saglayici yok; manuel inceleme' };
-};
-
-// Opsiyonel: ALERT_WEBHOOK tanimliysa yuksek onemli olaylari disari yolla.
-const notifyWebhook = async (event, decision, env) => {
-  if (!env.ALERT_WEBHOOK) return;
-  try {
-    await fetch(env.ALERT_WEBHOOK, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'clone-alert', decision, event })
-    });
-  } catch (error) {
-    console.warn('triage-webhook-failed', JSON.stringify({ message: error?.message || String(error) }));
-  }
-};
-
-// 4) Aksiyon allowlist'i. LLM yalnizca bu anahtarlardan birini secebilir.
-const TRIAGE_ACTIONS = {
-  ignore: async (event, decision) => {
-    console.log('triage-ignore', JSON.stringify({
-      host: event.host, reason: decision.reason, source: decision.source
-    }));
-  },
-  watch: async (event, decision) => {
-    console.warn('triage-watch', JSON.stringify({
-      host: event.host, page: event.page, severity: decision.severity,
-      reason: decision.reason, source: decision.source
-    }));
-  },
-  alert: async (event, decision, env) => {
-    console.error('triage-alert', JSON.stringify({
-      host: event.host, page: event.page, ref: event.ref, country: event.country,
-      severity: decision.severity, reason: decision.reason, source: decision.source
-    }));
-    await notifyWebhook(event, decision, env);
-  }
-};
-
-// 5) Dedup: ayni host'u kisa surede tekrar tekrar degerlendirme.
 const TRIAGE_DEDUP_TTL = 21600; // 6 saat
 const triageDedupKey = (host) => new Request(`https://oracle.triage/${encodeURIComponent(String(host).toLowerCase())}`);
 const wasRecentlyTriaged = async (host) => Boolean(await readCache(triageDedupKey(host)));
@@ -668,117 +701,285 @@ const triageClone = async (event, env) => {
     if (await wasRecentlyTriaged(event.host)) return;
     await markTriaged(event.host);
 
-    const local = classifyForeignHost(event.host, env);
-    const decision = local
-      ? { ...local, source: 'local' }
-      : { ...(await askTriageAI(event, env)), source: 'ai' };
-
-    const action = TRIAGE_ACTIONS[decision.action] ? decision.action : 'watch';
-    await TRIAGE_ACTIONS[action](event, decision, env);
+    const decision = classifyForeignHost(event.host, env) || {
+      action: 'watch',
+      severity: 'medium',
+      reason: 'bilinmeyen foreign host'
+    };
+    logEvent(decision.action === 'watch' ? 'warn' : 'info', `triage_${decision.action}`, {
+      host: event.host,
+      page: event.page,
+      severity: decision.severity,
+      reason: decision.reason,
+      source: 'local'
+    });
   } catch (error) {
     // Triyaj asla beacon'i veya worker'i dusurmesin.
-    console.warn('triage-fallback', JSON.stringify({
-      host: event?.host || '', error: error?.message || String(error)
-    }));
+    logEvent('warn', 'triage_failed', {
+      host: event?.host || '',
+      message: error?.message || String(error)
+    });
   }
 };
 
+const BEACON_PROTOCOLS = new Set(['http:', 'https:', 'capacitor:', 'ionic:', 'app:', 'tauri:', 'file:']);
+const isValidBeaconHost = (host) => {
+  const normalized = String(host || '').trim().toLowerCase();
+  if (!normalized || normalized.length > 253 || /[\s/:?#]/.test(normalized)) return false;
+  if (normalized === 'localhost') return true;
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(normalized)) {
+    return normalized.split('.').every(part => Number(part) <= 255);
+  }
+  return /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)*[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i.test(normalized);
+};
+
+const validateBeaconContext = (host, proto) => {
+  const normalizedHost = String(host || '').trim().toLowerCase();
+  const normalizedProto = String(proto || '').trim().toLowerCase();
+  if (!BEACON_PROTOCOLS.has(normalizedProto)) return null;
+  if (normalizedProto === 'http:' || normalizedProto === 'https:') {
+    if (!isValidBeaconHost(normalizedHost)) return null;
+  } else if (normalizedHost && !isValidBeaconHost(normalizedHost)) {
+    return null;
+  }
+  return { host: normalizedHost, proto: normalizedProto };
+};
+
+const sanitizeBeaconUrl = (value) => String(value || '')
+  .replace(/[\r\n]/g, '')
+  .split(/[?#]/)[0]
+  .slice(0, 300);
+
 const handleBeacon = (request, env, ctx) => {
   try {
+    if (request.url.length > MAX_BEACON_URL_LENGTH) return beaconPixel(request.method);
     const url = new URL(request.url);
-    const host = url.searchParams.get('h') || '';
-    const proto = url.searchParams.get('p') || '';
+    const context = validateBeaconContext(url.searchParams.get('h'), url.searchParams.get('p'));
+    if (!context) return beaconPixel(request.method);
+    const { host, proto } = context;
     if (!isOwnedContext(host, proto, env)) {
-      // Foreign host = possible clone. Surfaces in `wrangler tail` and dashboard logs.
       const event = {
         host,
         proto,
-        page: (url.searchParams.get('u') || '').slice(0, 300),
-        id: url.searchParams.get('id') || '',
-        ref: (url.searchParams.get('r') || '').slice(0, 300),
-        ip: request.headers.get('CF-Connecting-IP') || '',
+        page: sanitizeBeaconUrl(url.searchParams.get('u')),
+        id: String(url.searchParams.get('id') || '').slice(0, 64),
+        ref: sanitizeBeaconUrl(url.searchParams.get('r')),
         country: request.cf?.country || '',
-        ua: (request.headers.get('User-Agent') || '').slice(0, 200),
-        at: new Date().toISOString()
+        ua: String(request.headers.get('User-Agent') || '').slice(0, 160)
       };
-      console.warn('beacon-foreign', JSON.stringify(event));
+      logEvent('warn', 'beacon_foreign', event);
 
-      // Triyaj arka planda; pixel cevabini asla bekletme.
       if (ctx && typeof ctx.waitUntil === 'function') {
         ctx.waitUntil(triageClone(event, env));
       }
     }
   } catch (error) {
-    console.error('beacon error', error?.message || String(error));
+    logEvent('error', 'beacon_failed', { message: error?.message || String(error) });
   }
-  return beaconPixel();
+  return beaconPixel(request.method);
+};
+
+const rateLimitedResponse = (cors, rate) => json({ error: 'rate limited' }, 429, {
+  ...cors,
+  'Retry-After': String(rate.retryAfter)
+});
+
+const applyRateLimit = async (request, env, actor, bucket, limit, windowSeconds, cors) => {
+  const rate = await enforceRateLimit(env, actor, bucket, limit, windowSeconds);
+  if (!rate.allowed) {
+    logEvent('warn', 'rate_limit_rejected', { bucket, actor: rate.actorHash });
+    return rateLimitedResponse(cors, rate);
+  }
+  return null;
+};
+
+const healthResponse = (request, env) => {
+  const version = env.CF_VERSION_METADATA || {};
+  const body = {
+    status: 'ok',
+    service: 'convivium-oracle',
+    version: {
+      id: String(version.id || 'local'),
+      tag: String(version.tag || ''),
+      timestamp: String(version.timestamp || '')
+    }
+  };
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'Access-Control-Allow-Origin': '*'
+  };
+  return request.method === 'HEAD'
+    ? new Response(null, { status: 200, headers })
+    : new Response(JSON.stringify(body), { status: 200, headers });
+};
+
+const handleRequest = async (request, env, ctx) => {
+  const url = new URL(request.url);
+  const pathname = url.pathname.replace(/\/+$/, '') || '/';
+
+  if (pathname === '/health') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return json({ error: 'method not allowed' }, 405, { Allow: 'GET, HEAD' });
+    }
+    return healthResponse(request, env);
+  }
+
+  if (pathname === '/beacon') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return json({ error: 'method not allowed' }, 405, {
+        Allow: 'GET, HEAD',
+        'Access-Control-Allow-Origin': '*'
+      });
+    }
+    const limitResponse = await applyRateLimit(
+      request,
+      env,
+      clientIp(request),
+      'beacon',
+      positiveInteger(env.BEACON_RATE_LIMIT, DEFAULT_BEACON_RATE_LIMIT, 1000),
+      positiveInteger(env.BEACON_RATE_WINDOW_SECONDS, 3600),
+      { 'Access-Control-Allow-Origin': '*' }
+    );
+    return limitResponse || handleBeacon(request, env, ctx);
+  }
+
+  if (pathname !== '/' && pathname !== '/enrich-profile') {
+    return json({ error: 'not found' }, 404);
+  }
+
+  const cors = corsHeaders(request, env);
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: isAllowedOrigin(request, env) ? 204 : 403,
+      headers: cors
+    });
+  }
+  if (!isAllowedOrigin(request, env)) {
+    logEvent('warn', 'origin_rejected', { pathname });
+    return json({ error: 'origin not allowed' }, 403, cors);
+  }
+  if (request.method !== 'POST') {
+    return json({ error: 'method not allowed' }, 405, { ...cors, Allow: 'POST, OPTIONS' });
+  }
+
+  if (pathname === '/enrich-profile') {
+    const authLimitResponse = await applyRateLimit(
+      request,
+      env,
+      clientIp(request),
+      'enrich-auth',
+      positiveInteger(env.ENRICH_AUTH_RATE_LIMIT, DEFAULT_ENRICH_AUTH_RATE_LIMIT, 1000),
+      positiveInteger(env.ENRICH_AUTH_RATE_WINDOW_SECONDS, 60),
+      cors
+    );
+    if (authLimitResponse) return authLimitResponse;
+
+    let user;
+    try {
+      user = await verifySupabaseUser(request, env);
+    } catch (error) {
+      logEvent('error', 'profile_auth_unavailable', { message: error?.message || String(error) });
+      return json({ error: 'authentication service unavailable' }, 503, cors);
+    }
+    if (!user) {
+      logEvent('warn', 'profile_auth_rejected');
+      return json({ error: 'authentication required' }, 401, {
+        ...cors,
+        'WWW-Authenticate': 'Bearer'
+      });
+    }
+
+    const userLimitResponse = await applyRateLimit(
+      request,
+      env,
+      user.id,
+      'enrich',
+      positiveInteger(env.ENRICH_RATE_LIMIT, DEFAULT_ENRICH_RATE_LIMIT, 1000),
+      positiveInteger(env.ENRICH_RATE_WINDOW_SECONDS, 3600),
+      cors
+    );
+    if (userLimitResponse) return userLimitResponse;
+
+    const parsed = await readBoundedJson(request);
+    if (!parsed.ok) {
+      logEvent('warn', 'body_rejected', { pathname, status: parsed.status });
+      return json({ error: parsed.error }, parsed.status, cors);
+    }
+    const firstName = String(parsed.body.first_name || '').trim().slice(0, 64);
+    const lastName = String(parsed.body.last_name || '').trim().slice(0, 64);
+    if (!firstName && !lastName) {
+      return json({ error: 'first_name or last_name required' }, 400, cors);
+    }
+    const skipCache = parsed.body.refresh === true || url.searchParams.get('refresh') === '1';
+    return json(await enrichProfile(firstName, lastName, env, skipCache), 200, cors);
+  }
+
+  const limitResponse = await applyRateLimit(
+    request,
+    env,
+    clientIp(request),
+    'oracle',
+    positiveInteger(env.ORACLE_RATE_LIMIT, DEFAULT_RATE_LIMIT, 1000),
+    positiveInteger(env.ORACLE_RATE_WINDOW_SECONDS, 60),
+    cors
+  );
+  if (limitResponse) return limitResponse;
+
+  const parsed = await readBoundedJson(request);
+  if (!parsed.ok) {
+    logEvent('warn', 'body_rejected', { pathname, status: parsed.status });
+    return json({ error: parsed.error }, parsed.status, cors);
+  }
+  const question = normalizeAnswer(parsed.body.question || parsed.body.query || '').slice(0, 520);
+  if (!question) return json({ error: 'empty question' }, 400, cors);
+
+  const cacheKey = new Request(`https://oracle.cache/${await hashText(question.toLowerCase())}`);
+  const cachedBody = await readCachedBody(cacheKey);
+  if (cachedBody) return json({ ...cachedBody, cached: true }, 200, cors);
+
+  const result = await answerOracle(question, env);
+  const responseBody = {
+    answer: result.answer,
+    provider: result.provider,
+    degraded: Boolean(result.degraded)
+  };
+  await writeCache(cacheKey, responseBody, env);
+  return json(responseBody, 200, cors);
 };
 
 export default {
   async fetch(request, env, ctx) {
-    if (new URL(request.url).pathname.endsWith('/beacon')) {
-      return handleBeacon(request, env, ctx);
-    }
-
-    const cors = corsHeaders(request, env);
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, {
-        status: isAllowedOrigin(request, env) ? 204 : 403,
-        headers: cors
+    const startedAt = Date.now();
+    const requestId = crypto.randomUUID();
+    let response;
+    try {
+      response = await handleRequest(request, env, ctx);
+    } catch (error) {
+      logEvent('error', 'request_failed', {
+        requestId,
+        message: error?.message || String(error)
       });
+      const pathname = new URL(request.url).pathname.replace(/\/+$/, '') || '/';
+      const errorHeaders = pathname === '/' || pathname === '/enrich-profile'
+        ? corsHeaders(request, env)
+        : (pathname === '/beacon' ? { 'Access-Control-Allow-Origin': '*' } : {});
+      response = json({ error: 'service unavailable' }, 503, errorHeaders);
     }
 
-    if (!isAllowedOrigin(request, env)) {
-      return json({ error: 'origin not allowed' }, 403, cors);
-    }
-
-    if (request.method !== 'POST') {
-      return json({ error: 'method not allowed' }, 405, cors);
-    }
-
-    const rate = rateLimit(request, env);
-    if (!rate.allowed) {
-      return json({ error: 'rate limited' }, 429, {
-        ...cors,
-        'Retry-After': String(rate.retryAfter)
-      });
-    }
-
-    const body = await readJson(request);
-    const pathname = new URL(request.url).pathname;
-
-    if (pathname.endsWith('/enrich-profile')) {
-      const firstName = String(body.first_name || '').trim().slice(0, 64);
-      const lastName = String(body.last_name || '').trim().slice(0, 64);
-      if (!firstName && !lastName) {
-        return json({ error: 'first_name or last_name required' }, 400, cors);
-      }
-      const skipCache = body.refresh === true || new URL(request.url).searchParams.get('refresh') === '1';
-      const result = await enrichProfile(firstName, lastName, env, skipCache);
-      return json(result, 200, cors);
-    }
-
-    const question = normalizeAnswer(body.question || body.query || '').slice(0, 520);
-    if (!question) {
-      return json({ error: 'empty question' }, 400, cors);
-    }
-
-    const cacheKey = new Request(`https://oracle.cache/${await hashText(question.toLowerCase())}`);
-    const cachedBody = await readCachedBody(cacheKey);
-    if (cachedBody) {
-      return json({ ...cachedBody, cached: true }, 200, cors);
-    }
-
-    const result = await answerOracle(question, env);
-    const responseBody = {
-      answer: result.answer,
-      provider: result.provider,
-      degraded: Boolean(result.degraded)
-    };
-
-    await writeCache(cacheKey, responseBody, env);
-
-    return json(responseBody, 200, cors);
+    const headers = new Headers(response.headers);
+    headers.set('X-Request-ID', requestId);
+    logEvent('info', 'request_completed', {
+      requestId,
+      method: request.method,
+      pathname: new URL(request.url).pathname,
+      status: response.status,
+      durationMs: Date.now() - startedAt
+    });
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
   }
 };

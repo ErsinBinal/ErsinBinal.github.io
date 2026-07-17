@@ -1,6 +1,8 @@
 name = "convivium-oracle"
 main = "src/index.js"
-compatibility_date = "2026-06-05"
+compatibility_date = "2026-07-17"
+compatibility_flags = ["nodejs_compat"]
+preview_urls = true
 
 [vars]
 ALLOWED_ORIGINS = "https://ersinbinal.github.io,http://localhost:8000,http://127.0.0.1:8000"
@@ -10,6 +12,15 @@ BEACON_ALLOWED_HOSTS = "ersinbinal.github.io,localhost,127.0.0.1"
 CLOUDFLARE_AI_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8"
 ORACLE_CACHE_TTL = "900"
 ORACLE_RATE_LIMIT = "12"
+ORACLE_RATE_WINDOW_SECONDS = "60"
+ENRICH_RATE_LIMIT = "4"
+ENRICH_RATE_WINDOW_SECONDS = "3600"
+ENRICH_AUTH_RATE_LIMIT = "20"
+ENRICH_AUTH_RATE_WINDOW_SECONDS = "60"
+BEACON_RATE_LIMIT = "4"
+BEACON_RATE_WINDOW_SECONDS = "3600"
+SUPABASE_URL = "https://airmhxfgtslsgrdhvfin.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_S7saLZ-v0bXJTwd7kdE5Aw_IJyU3y4Q"
 # /enrich-profile gercek web aramasi yapar. Uc ucretsiz saglayici desteklenir;
 # en az birini yapilandir. Sira: once Tavily, sonra Google CSE, sonra Gemini.
 #
@@ -26,12 +37,33 @@ ORACLE_RATE_LIMIT = "12"
 # Hicbiri yoksa endpoint "arama servisi yapilandirilmamis" doner (uydurma YOK).
 GEMINI_MODEL = "gemini-2.5-flash"
 # GOOGLE_CSE_CX = ""
-# Klon triyaji: arsiv/cache disinda kendi bildigin zararsiz host'lari ekle
-# (ornek "cache.example.com,proxy.example.net"). LLM'e eskale edilmeden ignore'lanir.
+# Klon triyaji: arsiv/cache disinda kendi bildigin zararsiz host'lari ekle.
+# Beacon triyaji yalnizca yerel siniflandirma/log yapar; AI veya webhook cagirmaz.
 TRIAGE_BENIGN_HOSTS = ""
-# Opsiyonel: yuksek onemli "alert" olaylarinda POST atilacak webhook (Slack/Discord/kendi
-# endpoint'in). Gizli tutmak istersen vars yerine `wrangler secret put ALERT_WEBHOOK` kullan.
-# ALERT_WEBHOOK = ""
 
 [ai]
 binding = "AI"
+
+[durable_objects]
+bindings = [
+  { name = "REQUEST_RATE_LIMITER", class_name = "RequestRateLimiter" }
+]
+
+[exports.RequestRateLimiter]
+type = "durable-object"
+storage = "sqlite"
+
+[version_metadata]
+binding = "CF_VERSION_METADATA"
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.05

@@ -277,10 +277,16 @@
     return data;
   }
 
-  // Profil arastirma: worker once Gemini + Google Search ile kisiyi GERCEKTEN
-  // arar (grounded:true). Bulamazsa eglence amacli tahmine duser (grounded:false).
-  // Her durumda kullanici onaylamadan profile yazilmaz.
+  // Profil arastirma yalnizca giris yapmis kullanicinin Supabase access token'i
+  // ile cagrilir. Worker token'i dogrulamadan arama saglayicilarina ulasmaz.
+  // Sonuc, kullanici onaylamadan profile yazilmaz.
   async function predictProfileFromName(firstName, lastName) {
+    const session = await getSession();
+    const accessToken = String(session?.access_token || '');
+    if (!accessToken) {
+      throw new Error('Profil arastirmasi icin once giris yapmalisiniz.');
+    }
+
     const endpoint = (
       window.CONVIVIUM_ORACLE_ENDPOINT ||
       document.querySelector('meta[name="convivium-oracle-endpoint"]')?.content ||
@@ -293,7 +299,10 @@
     const url = `${endpoint.replace(/\/+$|$/, '')}/enrich-profile`;
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
       body: JSON.stringify({
         first_name: String(firstName || '').trim().slice(0, 64),
         last_name: String(lastName || '').trim().slice(0, 64)
