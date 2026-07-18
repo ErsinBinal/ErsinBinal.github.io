@@ -199,7 +199,7 @@ test('World factory rejects every incomplete orchestration dependency', () => {
   );
 });
 
-test('Home protocol delegates world ownership while keeping mutation commands local', () => {
+test('Home protocol delegates world read ownership while retaining mutation wrappers', () => {
   assert.doesNotMatch(protocolSource, /const\s+worldRooms\s*=/);
   assert.doesNotMatch(protocolSource, /Convivium ana hattindasin/);
   assert.match(protocolSource, /createWorld/);

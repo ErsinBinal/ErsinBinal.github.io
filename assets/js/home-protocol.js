@@ -142,6 +142,7 @@
       let powerSequenceTimers = [];
       let vfsMod = null;
       let worldMod = null;
+      let worldActionsMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -1356,115 +1357,59 @@
         }
       })();
 
-      const takeCommand = (target = '') => {
-        const room = currentRoom();
-        if (!target.trim()) return 'take: usage take <nesne>';
-        const grant = room?.grants;
-        const want = normalizeCommand(target);
-        if (grant && normalizeCommand(grant.item) === want) {
-          if ((state.inventory || []).includes(grant.item)) return `take: ${grant.item} zaten cantanda.`;
-          state.inventory = [...new Set([...(state.inventory || []), grant.item])];
-          state.easterTrail = [...(state.easterTrail || []), `take:${grant.item}`].slice(-4);
-          persist();
-          scheduleWorldSave();
-          audioCue('system.unlock');
-          awardShards(3, `take ${grant.item}`);
-          return `aldin: ${grant.item}. (+3 shard — inventory ile bak, sonra muhuru ac)`;
+      worldActionsMod = (() => {
+        if (!worldMod || !vfsMod) {
+          console.error('[home-protocol] World actions disabled: world/VFS unavailable');
+          return null;
         }
-        return `take: "${target}" burada alinabilir degil.`;
-      };
+        const createWorldActions = window.ConviviumHome?.createWorldActions;
+        if (typeof createWorldActions !== 'function') {
+          console.error('[home-protocol] World actions module unavailable');
+          return null;
+        }
+        try {
+          return createWorldActions({
+            normalizeCommand,
+            resolvePath: resolveVirtualPath,
+            getCurrentRoom: currentRoom,
+            getRoom: getWorldRoom,
+            getInventory: () => state.inventory || [],
+            getUnlocked: () => state.unlocked || [],
+            setInventory: (items) => { state.inventory = [...items]; },
+            setUnlocked: (paths) => { state.unlocked = [...paths]; },
+            appendTrail: (entry) => {
+              state.easterTrail = [...(state.easterTrail || []), entry].slice(-4);
+            },
+            persist,
+            scheduleWorldSave,
+            awardAccess: award,
+            refreshAccess: updateAccess,
+            playUnlockAudio: () => audioCue('system.unlock'),
+            awardShards,
+            prodosPath,
+            rankTitle,
+            currentObjective
+          });
+        } catch (error) {
+          console.error('[home-protocol] World actions module failed', error);
+          return null;
+        }
+      })();
+
+      const takeCommand = (target = '') => (
+        worldActionsMod?.take?.(target) || 'take: world actions unavailable'
+      );
+      const unlockRoomCommand = (arg = '') => (
+        worldActionsMod?.unlock?.(arg) || 'unlock: world actions unavailable'
+      );
+      const useCommand = (arg = '') => (
+        worldActionsMod?.use?.(arg) || 'use: world actions unavailable'
+      );
 
       const inventoryCommand = () => {
         const items = state.inventory || [];
         if (!items.length) return 'inventory: canta bos. Esikleri look + examine ile tara.';
         return ['inventory:', ...items.map(item => `  ${item}`)].join('\n');
-      };
-
-      const unlockRoomCommand = (arg = '') => {
-        const parts = normalizeCommand(arg)
-          .replace(/\b(with|ile|kullan|kullanarak)\b/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .split(' ')
-          .filter(Boolean);
-        const roomName = parts[0];
-        if (!roomName) return 'unlock: usage unlock <oda> [with <anahtar>]';
-        const path = resolveVirtualPath(roomName);
-        const room = getWorldRoom(path);
-        if (!room) return `unlock: ${roomName}: boyle bir esik yok.`;
-        if (!room.locked) return `unlock: ${path} zaten acik.`;
-        if ((state.unlocked || []).includes(path)) return `unlock: ${path} zaten cozuldu.`;
-        const needed = room.key;
-        const hasKey = (state.inventory || []).includes(needed);
-        if (!hasKey) return `unlock: ${path} icin "${needed}" gerekiyor. Once onu bul ve take et.`;
-        const providedKey = parts[1];
-        if (providedKey && normalizeCommand(providedKey) !== normalizeCommand(needed)) {
-          return `unlock: "${providedKey}" bu muhru acmiyor.`;
-        }
-        state.unlocked = [...new Set([...(state.unlocked || []), path])];
-        state.easterTrail = [...(state.easterTrail || []), `unlock:${path}`].slice(-4);
-        persist();
-        scheduleWorldSave();
-        award(3);
-        updateAccess();
-        audioCue('system.unlock');
-        awardShards(5, `unlock ${path}`);
-        return unlockCeremony(path, roomName);
-      };
-
-      // Muhur cozulunce gosterilen torensel mesaj + kazanilan unvan (ProDOS prompt tarzi).
-      const unlockCeremony = (path, roomName) => {
-        const unlocked = new Set(state.unlocked || []);
-        const both = unlocked.has('/vault') && unlocked.has('/core');
-        const lines = [
-          '] MUHUR COZULDU',
-          '',
-          `  ${prodosPath(path)} acildi.`,
-          `  unvan: ${rankTitle()}`,
-          ''
-        ];
-        if (path === '/atlas') {
-          lines.push('  Tum izler tamam. Artik bir ARCHITECT\'sin.');
-          lines.push('  cd atlas ile son odayi gor.');
-        } else if (both) {
-          lines.push('  Iki iz de tamamlandi (KEEPER).');
-          lines.push(`  son iz: ${currentObjective()}`);
-        } else {
-          lines.push(`  simdi: cd ${roomName}`);
-          lines.push(`  sonraki: ${currentObjective()}`);
-        }
-        lines.push(']');
-        return lines.join('\n');
-      };
-
-      // use <nesne> on <hedef>: cantadaki nesneyi dunyada kullan (genisletilebilir).
-      const useCommand = (arg = '') => {
-        const norm = normalizeCommand(arg);
-        if (!norm) return 'use: usage use <nesne> on <hedef>';
-        const parts = norm.split(/\s+(?:on|uzerine|ustune|ile|to)\s+/);
-        const item = (parts[0] || '').trim();
-        const target = (parts[1] || '').trim();
-        if (!item) return 'use: usage use <nesne> on <hedef>';
-        if (!(state.inventory || []).includes(item)) return `use: "${item}" cantanda yok. inventory ile bak.`;
-        if (!target) return `use: ${item} neyin uzerinde? (use ${item} on <hedef>)`;
-        if (item === 'shard' && /vault|kasa/.test(target)) {
-          return unlockRoomCommand(`vault with ${item}`);
-        }
-        // Final kombinasyon: shard + coolant -> prism (iki iz de tamamsa).
-        if ((item === 'shard' && /coolant/.test(target)) || (item === 'coolant' && /shard/.test(target))) {
-          const inv = state.inventory || [];
-          if (!inv.includes('shard') || !inv.includes('coolant')) {
-            return 'use: prizma icin hem shard hem coolant gerekiyor (iki izi de bitir).';
-          }
-          if (inv.includes('prism')) return 'use: prizmayi zaten doktun. (unlock atlas)';
-          state.inventory = [...new Set([...inv, 'prism'])];
-          state.easterTrail = [...(state.easterTrail || []), 'forge:prism'].slice(-4);
-          persist();
-          scheduleWorldSave();
-          audioCue('system.unlock');
-          return 'shard ve coolant birlesti -> prism doktun. simdi: unlock atlas';
-        }
-        return `use: ${item}, ${target} uzerinde bir ise yaramiyor.`;
       };
 
       // Oracle'a sorulan soruya dunya durumunu (konum + canta + seviye) baglam olarak ekler.
