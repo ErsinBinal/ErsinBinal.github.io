@@ -93,7 +93,8 @@
     getInventory,
     getUnlocked,
     getDiscovered,
-    onDiscoverRoom
+    onDiscoverRoom,
+    roomExtensions = []
   } = {}) {
     const functions = {
       normalizeCommand,
@@ -110,6 +111,26 @@
       throw new TypeError(`createWorld: zorunlu fonksiyonlar eksik: ${missing.join(', ')}`);
     }
 
+    const rooms = { ...ROOMS };
+    const roomTitles = { ...ROOM_TITLES };
+    const roomOrder = [...ROOM_ORDER];
+    if (Array.isArray(roomExtensions)) {
+      roomExtensions.forEach((extension) => {
+        const path = typeof extension?.path === 'string' ? extension.path : '';
+        const title = typeof extension?.title === 'string' ? extension.title.trim() : '';
+        const room = extension?.room;
+        if (!/^\/[a-z0-9-]+$/.test(path) || rooms[path] || !title || !room || typeof room !== 'object') {
+          return;
+        }
+        rooms[path] = room;
+        roomTitles[path] = title;
+        roomOrder.push(path);
+      });
+    }
+    deepFreeze(rooms);
+    Object.freeze(roomTitles);
+    Object.freeze(roomOrder);
+
     const inventory = () => {
       const value = getInventory();
       return Array.isArray(value) ? value : [];
@@ -123,20 +144,20 @@
       return Array.isArray(value) ? value : [];
     };
 
-    const listRooms = () => [...ROOM_ORDER];
-    const getRoom = (path) => ROOMS[path] || null;
+    const listRooms = () => [...roomOrder];
+    const getRoom = (path) => rooms[path] || null;
     const getCurrentRoom = () => getRoom(getCwd());
 
     const roomExits = (path) => {
       const unlocked = new Set(unlockedRooms());
       const bothThreads = unlocked.has('/vault') && unlocked.has('/core');
       const parts = [];
-      ROOM_ORDER.forEach((roomPath) => {
+      roomOrder.forEach((roomPath) => {
         if (roomPath === path) return;
         if (roomPath === '/core' && !unlocked.has('/core')) return;
         if (roomPath === '/atlas' && !bothThreads && !unlocked.has('/atlas')) return;
         const name = (roomPath === '/' ? '/' : roomPath.replace(/^\//, '')).toUpperCase();
-        const locked = ROOMS[roomPath]?.locked && !unlocked.has(roomPath);
+        const locked = rooms[roomPath]?.locked && !unlocked.has(roomPath);
         parts.push(locked ? `${name}*` : name);
       });
       return parts.join('  ');
@@ -170,7 +191,7 @@
     const roomPanel = (path) => {
       const room = getRoom(path);
       if (!room) return `?NO SUCH VOLUME: ${path}`;
-      const title = (ROOM_TITLES[path] || path).toUpperCase();
+      const title = (roomTitles[path] || path).toUpperCase();
       const objects = Object.keys(room.objects || {});
       const inv = inventory();
       const exits = roomExits(path);

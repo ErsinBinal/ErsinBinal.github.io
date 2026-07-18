@@ -145,6 +145,7 @@
       let worldActionsMod = null;
       let economyMod = null;
       let shopMod = null;
+      let ruinsMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -1304,6 +1305,22 @@
       };
 
       // --- World read model: oda registry, gorunum ve inceleme ---
+      ruinsMod = (() => {
+        const createRuins = window.ConviviumHome?.createRuins;
+        if (typeof createRuins !== 'function') {
+          console.error('[home-protocol] Ruins module unavailable');
+          return null;
+        }
+        try {
+          return createRuins({
+            getDayKey: () => new Date().toISOString().slice(0, 10)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Ruins module failed', error);
+          return null;
+        }
+      })();
+
       worldMod = (() => {
         const createWorld = window.ConviviumHome?.createWorld;
         if (typeof createWorld !== 'function') {
@@ -1321,7 +1338,8 @@
               if (state.discovered.includes(path)) return;
               state.discovered = [...new Set([...state.discovered, path])];
               persist();
-            }
+            },
+            roomExtensions: ruinsMod ? [ruinsMod.roomExtension] : []
           });
         } catch (error) {
           console.error('[home-protocol] World module failed', error);
@@ -1359,7 +1377,8 @@
               persist();
               awardShards(2, `kesif ${path}`);
             },
-            renderRoom: roomPanel
+            renderRoom: roomPanel,
+            mounts: ruinsMod ? [ruinsMod.vfsMount] : []
           });
         } catch (error) {
           console.error('[home-protocol] VFS module failed', error);

@@ -28,7 +28,8 @@
     isRoomUnlocked,
     onCwdChange,
     onDiscoverRoom,
-    renderRoom
+    renderRoom,
+    mounts = []
   } = {}) {
     const missing = [];
     if (!storage || typeof storage.getItem !== 'function' || typeof storage.setItem !== 'function') {
@@ -50,8 +51,34 @@
       throw new TypeError(`createVfs: zorunlu fonksiyonlar eksik: ${missing.join(', ')}`);
     }
 
+    const virtualFsEntries = { ...VIRTUAL_FS };
+    const rootItems = [...VIRTUAL_FS['/']];
+    const mountedDocuments = {};
+    if (Array.isArray(mounts)) {
+      mounts.forEach((mount) => {
+        const path = typeof mount?.path === 'string' ? mount.path : '';
+        if (!/^\/[a-z0-9-]+$/.test(path) || virtualFsEntries[path] || !Array.isArray(mount?.files)) {
+          return;
+        }
+        const files = mount.files.filter((file) => typeof file === 'string' && file.trim());
+        virtualFsEntries[path] = Object.freeze([...files]);
+        rootItems.push(path.replace(/^\//, ''));
+        if (mount.documents && typeof mount.documents === 'object' && !Array.isArray(mount.documents)) {
+          Object.entries(mount.documents).forEach(([name, content]) => {
+            const key = normalizeCommand(name);
+            if (key && !Object.prototype.hasOwnProperty.call(mountedDocuments, key)) {
+              mountedDocuments[key] = String(content ?? '');
+            }
+          });
+        }
+      });
+    }
+    virtualFsEntries['/'] = Object.freeze(rootItems);
+    const virtualFs = Object.freeze(virtualFsEntries);
+
     let cwd = '/';
     const virtualDocs = Object.freeze({
+      ...mountedDocuments,
       about: 'Convivium: public deneysel terminal alanı. Route, oyun, oracle ve not katmanları browser içinde çalışır.',
       system: 'system: static GitHub Pages shell / Worker üzerinden public oracle / local secrets unavailable.',
       routes: 'routes: home, map, archive, notes, open dossier, lab komutları.',
@@ -60,7 +87,7 @@
     });
 
     const getCwd = () => cwd;
-    const hasDirectory = (path) => Object.prototype.hasOwnProperty.call(VIRTUAL_FS, path);
+    const hasDirectory = (path) => Object.prototype.hasOwnProperty.call(virtualFs, path);
 
     const loadFiles = () => {
       try {
@@ -148,7 +175,7 @@
 
     const ls = (target = '') => {
       const path = resolvePath(target);
-      const items = VIRTUAL_FS[path];
+      const items = virtualFs[path];
       if (!items) return `ls: ${path}: not found`;
       if (path === '/home') {
         const files = loadFiles();

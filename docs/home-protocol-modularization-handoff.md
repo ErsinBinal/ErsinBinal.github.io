@@ -1,10 +1,9 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz 3B yerel doğrulama)
-Durum: **Faz 0/1A/1B/2A/2B/2C/2D/3A canlıda; Faz 3A `convivium-v203`
-kabulü tamamlandı. Faz 3B shop satın alma sınırı kod, karakterizasyon, normal
-tarayıcı, fail-closed fallback ve çevrimdışı test tarafında tamam; kullanıcı
-incelemesi/commit/push/yayın bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (Faz 3B canlı kabulü / park)
+Durum: **Faz 0/1A/1B/2A/2B/2C/2D/3A/3B canlıda. Faz 3B
+`convivium-v204` kabulü tamamlandı; terminal modülerleştirme hattı kullanıcı
+kararıyla yeni ürün geliştirmeleri süresince park edildi.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
 > Öncelik kilidi 18 Temmuz 2026'da kapandı: A1, A2, A3, B1 ve B2 canlı
@@ -29,8 +28,8 @@ Bununla birlikte teknik değerlendirmedeki P0 maddeleri daha yüksek operasyonel
 3. Terminalde yüksek bağlılıklı VFS, ekonomi ve Oracle ayrıştırmalarına ancak bu
    güvenlik/dağıtım işleri ve ilgili karakterizasyon testleri hazırken geçilmelidir.
 
-Bu P0/P1 işleri ile Faz 1B/2A/2B/2C/2D/3A canlı kabulleri tamamlandı. Faz 3B
-shop satın alma sınırı bir sonraki küçük ve geri alınabilir yayın dilimidir.
+Bu P0/P1 işleri ile Faz 1B/2A/2B/2C/2D/3A/3B canlı kabulleri tamamlandı.
+Modülerleştirme hattı Faz 3B sınırında güvenle park edildi.
 
 ## Değişmez kurallar
 
@@ -46,7 +45,7 @@ shop satın alma sınırı bir sonraki küçük ve geri alınabilir yayın dilim
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B canlı | Faz 2C canlı | Faz 2D canlı | Faz 3A canlı | Faz 3B yerel |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B canlı | Faz 2C canlı | Faz 2D canlı | Faz 3A canlı | Faz 3B canlı |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır | 4.113 satır | 4.058 satır | 4.060 satır | 4.047 satır |
 | Terminal komutu | 132 | 132 | 132 | 132 | 132 | 132 | 132 | 132 | 132 |
@@ -60,7 +59,7 @@ shop satın alma sınırı bir sonraki küçük ve geri alınabilir yayın dilim
 | `shop.js` | yok | yok | yok | yok | yok | yok | yok | yok | 95 satır |
 | Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 |
 | Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 | 34 | 35 | 36 | 37 |
-| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 | v201 | v202 | v203 | v204 (yerel) |
+| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 | v201 | v202 | v203 | v204 |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -540,7 +539,7 @@ Değişen/yeni dosyalar:
 | `scripts/sync-cache-versions.js` | Economy asset'ini managed listeye alma |
 | `package.json` | Economy modülünü syntax kapısına alma |
 
-### Faz 3B — Shop satın alma sınırı — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz 3B — Shop satın alma sınırı — TAMAMLANDI; CANLI
 
 Önce katalog sırası/metni, ürün sahipliği, yetersiz bakiye, satın alma yan etki
 sırası, kozmetik localStorage bayrakları ve theme/screen-saver tüketicilerini
@@ -587,6 +586,12 @@ Karakterizasyon ve doğrulama:
 - `npm run check`: unit 53/53, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
   harici script ile geçti. Yerel smoke 8/8; Playwright E2E 7/7 geçti, gerçek
   kullanıcı oluşturan kayıt testi bilinçli olarak skip edildi.
+- Kullanıcı yayını sonrası canlı ana sayfada `shop.js?v=1`, `economy.js?v=1`,
+  `home-protocol.js?v=82` ve `convivium-v204` doğrulandı. Shop SHA-256
+  `47a592dc7ab1153f25884e5a3120641d5154c87b15d4369cc897a21d1b8094d5`,
+  protocol SHA-256
+  `c0faf50b5606acc01e09fa06c60177f932a9223e828092c7d09d89ac59f0e153`
+  olarak main `a6a1bb8` ile birebir eşleşti.
 
 Değişen/yeni dosyalar:
 
@@ -761,15 +766,8 @@ Sorun görülürse canlı Faz 3A sınırını koruyarak yalnız Faz 3B geri alı
 
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Faz 3B için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
-aittir. Yayın sonrası canlıda `shop.js?v=1`, `economy.js?v=1`,
-`home-protocol.js?v=82` ve `convivium-v204` doğrulanır; shop/protocol canlı
-hash'leri main ile karşılaştırılır. Bu çalışma ağacındaki beklenen SHA-256:
-shop `47a592dc7ab1153f25884e5a3120641d5154c87b15d4369cc897a21d1b8094d5`,
-protocol `c0faf50b5606acc01e09fa06c60177f932a9223e828092c7d09d89ac59f0e153`.
-Önce düşük bakiyeli ayrı oturumda `shop buy saver-drift` yetersiz bakiye
-guard'ı; ardından en az 32 shard ile `shop`, `shop buy theme-magenta`,
-`theme magenta`, `shop buy saver-drift` ve reload kalıcılığı doğrulanır. Canlı
-kabul temizse kart/collect ekonomi sahipliği için
-önce ayrı envanter ve veri akışı envanteri çıkarılır; parser, fiyatlar ve
-Supabase şeması aynı değişiklik setine alınmaz.
+Hat park edildi. Kullanıcı yeniden modülerleştirme istediğinde önce canlı asset
+sürümleri ile bu belgedeki Faz 3B sınırını karşılaştır; yayımlanmış cache
+sürümünü geriye düşürme. Sıradaki mimari aday kart/collect ekonomi sahipliğidir,
+ancak yeni ürün hattıyla aynı değişiklik setine alınmamalıdır. Aktif ürün işi:
+[Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).

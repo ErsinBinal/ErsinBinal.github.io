@@ -66,16 +66,25 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
 > Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A/2B/2C/2D/3A canlıya alındı.
-> Faz 3B shop satın alma sınırı yerelde doğrulandı; kullanıcı
-> incelemesi/commit/push/yayını bekliyor. Kart/collect ayrı sonraki dilimdir.
+> Faz 3B shop satın alma sınırı da canlı kabul edildi; terminal
+> modülerleştirmesi burada park edildi. Kart/collect mimari işi ayrı bekliyor.
 >
-> Güncel durum, test kapıları, rollback ve sıradaki kesin adım:
-> [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
+> Aktif ürün geliştirmesi: [Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
+> Park edilen mimari hat: [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 
-### 0. Fikir havuzu (2026-07-17 beyin firtinasi; kullanici "sonra ele alalim" dedi)
+### Aktif ürün — Sinyal Arkeolojisi
+
+İlk ürün dilimi kod/test tarafında tamamlandı ve yayın bekliyor. `/ruins`
+altında üç kurtarılmış kayıt, mevcut
+`ls/cd/look/examine/cat` komutlarıyla keşif ve tarih tabanlı ortak günlük buluntu
+sunuluyor. Yeni backend, SQL, framework veya yeni terminal komutu eklenmedi;
+normal, Ruins-yokluğu ve çevrimdışı Chromium akışları geçti. Atomik yayın
+paketi: ruins v1, world v2, VFS v3, protocol v83 ve SW v205.
+
+### 0. Fikir havuzu (2026-07-17 beyin firtinasi)
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
   (bozuk 1997 BBS sayfasi, yarim TODO.txt, kurtarilmis oyun ekrani). `cd /ruins`
-  ile girilen, zamanla kazilan statik katman. Sifir maliyet, yuksek kesif hissi.
+  ile girilen, zamanla kazilan statik katman. **SECILDI; aktif handoff'a tasindi.**
 - **Gezgin Mirasi**: bilincli `depart` komutuyla tek cumlelik veda izi birakma;
   sonraki ziyaretci rastgele bir vedayla karsilanir (wall_marks benzeri tablo).
 - **Kolektif Rituel**: gunluk kart toplamada site geneli esik (orn. 10 collect)

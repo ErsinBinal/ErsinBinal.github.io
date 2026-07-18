@@ -10,6 +10,8 @@ Nokta-zaman teknik incelemesi ve öncelikli geliştirme kuyruğu:
 [17 Temmuz 2026 Site Teknik Değerlendirmesi](../site-teknik-degerlendirme-2026-07-17.md).
 Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
 [Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
+Aktif terminal ürünü ve `/ruins` extension sınırı:
+[Sinyal Arkeolojisi Handoff](../sinyal-arkeolojisi-handoff.md).
 P0/P1 güvenlik ve dağıtım kapanış kaydı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
 Gerçek HTTP güvenlik header'ları ve hosting sınırı:
@@ -71,12 +73,13 @@ flowchart TD
 
   subgraph OZEL[Özel]
     oracle[oracle/index.html\nOracle terminal]
+    ruins[terminal /ruins\nSinyal Arkeolojisi]
     offline[offline.html]
     nf[404.html]
     sw[service-worker.js\nPWA / cache]
   end
 
-  index --> auth & oracle & makale & ozgecmis
+  index --> auth & oracle & ruins & makale & ozgecmis
   index --> barista & bartender & realist & paradox & studio & dartboard
   index --> ashr & neon & uni & cyber & tbody
   auth --> legal

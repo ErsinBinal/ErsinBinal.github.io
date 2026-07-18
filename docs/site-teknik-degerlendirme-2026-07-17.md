@@ -24,7 +24,8 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 | Terminal monolit Faz 2C | Tamamlandı; canlı | Sekiz odalık immutable world registry + görünüm/inceleme modeli ayrıldı; SW v201 |
 | Terminal monolit Faz 2D | Tamamlandı; canlı | `take/unlock/use` kararları callback tabanlı world-actions factory'sine ayrıldı; yan etki sahipliği protocol'de; SW v202 |
 | Terminal monolit Faz 3A | Tamamlandı; canlı | Shard award/spend/merge kararları economy factory'sine ayrıldı; legacy Supabase fallback test altında; SW v203 |
-| Terminal monolit Faz 3B | Kod/test tamam; yayın bekliyor | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 yerel |
+| Terminal monolit Faz 3B | Tamamlandı; canlı; hat parkta | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 |
+| Yeni ürün: Sinyal Arkeolojisi | Kod/test tamam; yayın bekliyor | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 yerel |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -379,6 +380,11 @@ sahiplik, bakiye ve satın alma kararları 95 satırlık `shop.js` factory'sine
 ayrıldı. Protocol 4.047 satıra indi; state/persist/cloud save, kozmetik storage
 ve audio uygulaması callback olarak kaldı. `bugy-flag` yazımı korundu, fakat bu
 bayrağı okuyan bir çalışma zamanı tüketicisi bulunmadığı kaydedildi.
+Modülerleştirme burada park edildi. Yerel Sinyal Arkeolojisi ürün diliminde
+104 satırlık saf `ruins.js`, core snapshot'ları bozmayan opsiyonel world/VFS
+extension'larıyla `/ruins` hacmini ekledi; protocol yalnız 19 satırlık kurulum
+orkestrasyonu alarak 4.066 satıra çıktı. Üç artifact, günlük seed, normal,
+modül-yokluğu ve çevrimdışı akışlar test altında; yeni komut veya backend yok.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -481,6 +487,9 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Faz 3B shop unit | 6/6 geçti; katalog/format, guard'lar, mutasyon sırası, dependency ve sahiplik sınırı |
 | Faz 3B shop Chromium | Tema/saver/Bugy alımı, kozmetik etkiler, reload kalıcılığı ve shop-yokluğu fallback'i geçti; page error yok |
 | Faz 3B çevrimdışı Chromium | SW v204'te shop v1/protocol v82 cache hazır; satın alma, sahiplik ve bakiye offline korundu |
+| Faz 3B canlı kabul | Geçti; shop v1/protocol v82 hash'leri main ile aynı, SW v204; mimari hat park edildi |
+| Sinyal Arkeolojisi unit | 7/7 geçti; registry/seed, world/VFS extension, fail-closed sahiplik ve core doküman koruması |
+| Sinyal Arkeolojisi Chromium | Normal keşif/reload, Ruins-yokluğu ve SW kontrollü çevrimdışı akış 3/3; erişilebilir terminal sözleşmesi ve yatay taşma temiz |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |
@@ -522,8 +531,8 @@ akışlar çalıştırılmadı:
 - [x] Terminal route ve rehber registry'lerini ayır (Faz 1A/1B canlı).
 - [x] VFS/world domainlerini ayır (Faz 2A/2B VFS, Faz 2C world read-model ve
   Faz 2D mutasyon karar sınırı canlı).
-- [ ] Ekonomi sahipliğini ayır (Faz 3A shard çekirdeği canlı; Faz 3B shop satın
-  alma sınırı yerel doğrulandı ve yayın bekliyor; kart/collect ayrı dilim).
+- [ ] Ekonomi sahipliğini ayır (Faz 3A shard ve Faz 3B shop canlı; hat parkta,
+  kart/collect kullanıcı yeniden başlattığında ayrı dilim).
 - [ ] Büyük inline oyun kodlarını dış dosyalara çıkar.
 - [ ] Bugy motorları için ortak adapter tanımla.
 - [ ] Ana sayfa motorlarını dinamik yükle.

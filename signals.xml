@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 17 Jul 2026 23:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Sat, 18 Jul 2026 20:30:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sinyal Arkeolojisi: /ruins kazisi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-18-ruins</guid>
+      <pubDate>Sat, 18 Jul 2026 20:30:00 +0300</pubDate>
+      <description>Terminalin altinda unutulmus /ruins hacmi bulundu: kurmaca 1997 BBS kaydi, yarim TODO parcasi ve kayip arcade ekrani ls/cd/look/examine/cat ile kesfediliyor. Her gun herkese ayni kalinti yuzeye cikiyor; deneyim statik ve cevrimdisi calisiyor.</description>
+    </item>
 
     <item>
       <title>Bugy sohbeti balonunda soyluyor</title>
