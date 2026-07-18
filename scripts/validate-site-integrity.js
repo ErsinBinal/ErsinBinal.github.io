@@ -3,7 +3,13 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 
-const ignoredDirs = new Set(['.git', 'node_modules', '.wrangler']);
+const ignoredDirs = new Set([
+  '.git',
+  'node_modules',
+  '.wrangler',
+  'playwright-report',
+  'test-results'
+]);
 
 function listFiles(dir, predicate) {
   if (!fs.existsSync(dir)) return [];
@@ -20,6 +26,10 @@ const htmlFiles = listFiles(root, (file) => file.endsWith('.html'));
 
 const errors = [];
 const versionedAssets = new Map();
+const pinnedSupabaseVersion = '2.110.7';
+const exactSemverPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+let cspCount = 0;
+let externalScriptCount = 0;
 const browserFiles = [
   ...htmlFiles,
   ...fs.readdirSync(path.join(root, 'assets', 'js'))
@@ -49,8 +59,22 @@ for (const file of htmlFiles) {
   const html = fs.readFileSync(file, 'utf8');
   const csp = html.match(/<meta\s+http-equiv=["']Content-Security-Policy["'][^>]*content="([^"]+)"/i);
 
-  if (csp) {
+  if (!csp) {
+    addError(`${relative(file)} CSP meta etiketi icermiyor`);
+  } else {
+    cspCount += 1;
     const policy = csp[1];
+    const firstScriptIndex = html.search(/<script\b/i);
+    const headEndIndex = html.search(/<\/head>/i);
+    if (
+      (firstScriptIndex !== -1 && csp.index > firstScriptIndex) ||
+      (headEndIndex !== -1 && csp.index > headEndIndex)
+    ) {
+      addError(`${relative(file)} CSP meta etiketi ilk script ve </head> oncesinde olmali`);
+    }
+    if (!policy.includes("default-src 'self'")) {
+      addError(`${relative(file)} CSP eksik: default-src 'self'`);
+    }
     if (!policy.includes("object-src 'none'")) {
       addError(`${relative(file)} CSP eksik: object-src 'none'`);
     }
@@ -63,6 +87,39 @@ for (const file of htmlFiles) {
     if (html.includes('/assets/js/sfx.js') && !policy.includes("media-src 'self' data: blob:")) {
       addError(`${relative(file)} CSP eksik: media-src 'self' data: blob:`);
     }
+  }
+
+  for (const match of html.matchAll(/<script\b[^>]*\bsrc=["'](https?:\/\/[^"']+)["'][^>]*>/gi)) {
+    externalScriptCount += 1;
+    const scriptUrl = match[1];
+    const jsDelivrNpm = scriptUrl.match(
+      /^https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/@]+\/)?[^/@]+)@([^/?#]+)(?:[/?#]|$)/
+    );
+
+    if (scriptUrl.startsWith('https://cdn.jsdelivr.net/npm/')) {
+      if (!jsDelivrNpm) {
+        addError(`${relative(file)} jsDelivr script tam paket surumu icermiyor: ${scriptUrl}`);
+        continue;
+      }
+
+      const [, packageName, version] = jsDelivrNpm;
+      if (!exactSemverPattern.test(version)) {
+        addError(`${relative(file)} CDN script tam semver kullanmiyor: ${scriptUrl}`);
+      }
+      if (packageName === '@supabase/supabase-js' && version !== pinnedSupabaseVersion) {
+        addError(
+          `${relative(file)} Supabase CDN surumu ${pinnedSupabaseVersion} olmali: ${scriptUrl}`
+        );
+      }
+      continue;
+    }
+
+    const cdnJs = scriptUrl.match(
+      /^https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/[^/]+\/([^/?#]+)\//
+    );
+    if (cdnJs && exactSemverPattern.test(cdnJs[1])) continue;
+
+    addError(`${relative(file)} surumu dogrulanamayan harici script kullaniyor: ${scriptUrl}`);
   }
 
   for (const match of html.matchAll(/\b(?:href|src)=["'](\/assets\/[^"']+)["']/g)) {
@@ -82,13 +139,6 @@ for (const file of browserFiles) {
   const source = fs.readFileSync(file, 'utf8');
   if (/pollinations\.ai/i.test(source)) {
     addError(`${relative(file)} browser tarafindan Pollinations'a dogrudan baglaniyor`);
-  }
-}
-
-for (const file of htmlFiles) {
-  const html = fs.readFileSync(file, 'utf8');
-  if (/<script\s+src=["']https:\/\/[^"']*latest/i.test(html)) {
-    addError(`${relative(file)} CDN script latest etiketi kullaniyor`);
   }
 }
 
@@ -170,4 +220,7 @@ if (errors.length) {
   process.exit(1);
 }
 
-console.log(`Site integrity check passed (${htmlFiles.length} HTML files).`);
+console.log(
+  `Site integrity check passed (${htmlFiles.length} HTML; ${cspCount} CSP; ` +
+  `${externalScriptCount} exact-version external scripts).`
+);
