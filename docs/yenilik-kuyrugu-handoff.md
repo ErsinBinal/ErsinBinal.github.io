@@ -65,10 +65,10 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-> Aktif öncelik hattı: [Üretim Sertleştirme Handoff](production-hardening-handoff.md).
-> Terminal modülerleştirmesi Faz 1A sonunda beklemeye alındı.
+> Üretim sertleştirme hattı kapandı; Faz 1A/1B canlıya alındı. Aktif öncelik
+> hattı ana terminal Faz 2 VFS ayrıştırmasıdır.
 >
-> Ana terminal refaktörünün güncel durumu, test kapıları ve sıradaki kesin adım:
+> Güncel durum, test kapıları, rollback ve sıradaki kesin adım:
 > [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi; kullanici "sonra ele alalim" dedi)

@@ -13,12 +13,13 @@ mimari için [architecture/README.md](architecture/README.md), uygulanan veri
 ## 0. Uygulama İlerlemesi
 
 Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
-[Üretim Sertleştirme Handoff](production-hardening-handoff.md).
+[Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 
 | Hat | Güncel durum | Sonuç |
 |---|---|---|
 | Terminal monolit Faz 1A | Tamamlandı; main'de | 23 route komutu ve 99 alias registry'ye taşındı; 132 komut korundu |
-| Terminal monolit Faz 1B | Kod/test tamam; yayın bekliyor | 14 rehber komutu ve 75 alias ikinci registry'ye taşındı; 132 komut ve global dispatch korundu |
+| Terminal monolit Faz 1B | Tamamlandı; canlı | 14 rehber komutu ve 75 alias ikinci registry'ye taşındı; 132 komut korundu; SW v198 |
+| Terminal monolit Faz 2A | Kod/test tamam; yayın bekliyor | CWD + `resolve/ls/cd/cat` VFS factory'sine taşındı; Presence/Chat aynı oda kaynağında; SW v199 yerel |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -341,15 +342,18 @@ Kabul ölçütü:
 - Yeni komut eklemek ana protokol dosyasında geniş değişiklik gerektirmemeli.
 - Ana sayfa kullanılmayan Bugy/oyun motorlarını ilk yükte indirmemeli.
 
-**Çözüm durumu — 18 Temmuz 2026:** Faz 1A'da 23 route komutu/99 alias, Faz
-1B'nin yayımlanmayı bekleyen yerel diliminde 14 rehber komutu/75 alias ayrı
-registry/factory sınırına taşındı. Toplam 132 komut korunurken monolitteki inline
-tanım 132'den 95'e, dosya 4.530'dan 4.329 satıra indi. Global karakterizasyon
+**Çözüm durumu — 18 Temmuz 2026:** Faz 1A'da 23 route komutu/99 alias, canlı
+Faz 1B'de 14 rehber komutu/75 alias ayrı registry/factory sınırına taşındı.
+Toplam 132 komut korunurken monolitteki inline tanım 132'den 95'e indi. Faz
+2A'nın yayımlanmayı bekleyen yerel diliminde CWD, statik dizinler ve temel
+`resolve/ls/cd/cat` navigation çekirdeği `vfs.js` factory'sine ayrıldı;
+`home-protocol.js` 4.530'dan 4.298 satıra indi. Global karakterizasyon
 132 komut, 589 etiket, 545 normalize anahtar, iki bilinen son-yazan çakışması,
 36 parameter öneki, gizli/ham yollar ve dispatch sırasını kilitliyor. Normal,
-yönlendirme ve modül-yokluğu tarayıcı akışları hatasız geçti. Framework
-değiştirilmedi; sonraki güvenli adım VFS taşımasından önce `pwd/ls/cd/cat`,
-presence ve chat room karakterizasyonudur.
+yönlendirme, modül-yokluğu ve çevrimdışı tarayıcı akışları hatasız geçti.
+Presence, Chat ve Chat Deck aynı canlı VFS oda getter'ına bağlandı. Framework
+değiştirilmedi; sonraki güvenli adım kalıcı `/home` dosya motorunun test-first
+ayrıştırılmasıdır.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -421,10 +425,10 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 
 | Kontrol | Sonuç |
 |---|---|
-| `npm run check` | Geçti; unit 18/18, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
+| `npm run check` | Geçti; unit 23/23, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
 | Service Worker event entegrasyonu | 5/5 geçti; kritik/opsiyonel install + update/offline |
 | Wrangler production dry-run | Geçti; 34,99 KiB / gzip 9,99 KiB |
-| Tüm JS/MJS syntax kontrolü | 51/51 geçti |
+| Zorunlu JS/MJS syntax kapısı | Geçti; yeni VFS modülü dahil |
 | Yerel HTML dosya referansları | 351 referans, eksik dosya yok |
 | Worker hariç yerel smoke | 8/8 geçti |
 | Yerel Chromium E2E | 7/7 geçti; gerçek signup testi bilinçli skip |
@@ -432,6 +436,9 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | B2 canlı kabul | Geçti; iki oyun CSP, Supabase 2.110.7 ve SW v197 |
 | Faz 1B terminal Chromium | Normal/route/modül-yokluğu akışları geçti; page/protocol hatası yok |
 | Faz 1B çevrimdışı Chromium | SW v198'de guide/protocol cache hazır; 14 komutluk registry ve `guide` offline çalıştı |
+| Faz 1B canlı kabul | Geçti; guide v1/protocol v76 hash'leri main ile aynı, SW v198 |
+| Faz 2A VFS Chromium | 13 normal komut + modül-yokluğu fallback'i geçti; page/protocol hatası yok |
+| Faz 2A çevrimdışı Chromium | SW v199'da VFS/protocol cache hazır; `pwd → cd notes → pwd` offline çalıştı |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |
@@ -470,8 +477,9 @@ akışlar çalıştırılmadı:
 
 ### Aşama C — Modülerlik ve performans
 
-- [x] Terminal route ve rehber registry'lerini ayır (Faz 1A canlı; Faz 1B yerel
-  doğrulandı, kullanıcı yayını bekliyor).
+- [x] Terminal route ve rehber registry'lerini ayır (Faz 1A/1B canlı).
+- [ ] VFS'yi domain modülüne ayır (Faz 2A navigation çekirdeği yerel doğrulandı;
+  kalıcı `/home` ve world katmanları sırada).
 - [ ] Büyük inline oyun kodlarını dış dosyalara çıkar.
 - [ ] Bugy motorları için ortak adapter tanımla.
 - [ ] Ana sayfa motorlarını dinamik yükle.

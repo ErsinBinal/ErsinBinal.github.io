@@ -24,8 +24,8 @@ Monolit refaktörünün Faz 1B ve sonrası için konan aşağıdaki öncelik kil
 5. Eksik CSP'ler, CDN sürüm sabitleme ve gerçek HTTP header hosting kararı.
 6. Ardından terminal Faz 1B ve daha bağlı VFS/ekonomi/Oracle modülleri.
 
-Faz 1B bu canlı kabulün ardından başlatıldı. Yerel `convivium-v198`, B2'nin
-canlı `convivium-v197` sürümünü değil, henüz yayımlanmamış terminal dilimini
+Faz 1B bu canlı kabulün ardından tamamlanıp `convivium-v198` ile canlıya alındı.
+Çalışma ağacındaki `convivium-v199`, henüz yayımlanmamış Faz 2A VFS dilimini
 temsil eder.
 
 ## Değişmez kurallar
@@ -330,13 +330,12 @@ kapısı yapılmadı, production dry-run paketlemesi başarılı.
 
 Üretim sertleştirme hattı kapalıdır. Yeni aktif iş
 [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md)
-içindeki Faz 1B'dir. Global command/alias/önek karakterizasyonu ve ilk rehber
-registry dilimi yerelde hazırlanmıştır; inceleme, yayın ve devam sırası o belgede
-tutulur.
+içindeki Faz 2A'dır. Faz 1B canlı kabulü tamamlandı; VFS navigation çekirdeğinin
+inceleme, yayın ve devam sırası o belgede tutulur.
 
-Canlıda B2 tabanı `convivium-v197` olarak kabul edilmiştir. Çalışma ağacındaki
-`convivium-v198` yalnız Faz 1B asset'leriyle birlikte ele alınmalı; herhangi bir
-rollback'te cache sürümü geriye düşürülmemelidir.
+Canlıda B2 tabanı v197, Faz 1B tabanı v198 olarak kabul edilmiştir. Çalışma
+ağacındaki v199 yalnız Faz 2A VFS asset'leriyle birlikte ele alınmalı; herhangi
+bir rollback'te cache sürümü geriye düşürülmemelidir.
 
 > **Eş güdüm kuralı (2026-07-17):** Ayni çalışma ağacında AYNI ANDA iki oturum
 > yazmamalı. Rol ayrımı: geliştirici oturum kodu hazırlar ve commit ATMAZ;

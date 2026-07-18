@@ -1,9 +1,9 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz 1B yerel doğrulama)
-Durum: **Faz 0 ve Faz 1A main'de; B2 canlı kabulü tamamlandı. Faz 1B kod,
-karakterizasyon, tarayıcı ve bütünlük testleri tarafında tamam; kullanıcı
-incelemesi/commit/push bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (Faz 2A yerel doğrulama)
+Durum: **Faz 0/1A/1B canlıda; Faz 1B `convivium-v198` kabulü tamamlandı. Faz
+2A VFS navigation çekirdeği kod, karakterizasyon, tarayıcı ve çevrimdışı test
+tarafında tamam; kullanıcı incelemesi/commit/push bekliyor.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
 > Öncelik kilidi 18 Temmuz 2026'da kapandı: A1, A2, A3, B1 ve B2 canlı
@@ -28,8 +28,8 @@ Bununla birlikte teknik değerlendirmedeki P0 maddeleri daha yüksek operasyonel
 3. Terminalde yüksek bağlılıklı VFS, ekonomi ve Oracle ayrıştırmalarına ancak bu
    güvenlik/dağıtım işleri ve ilgili karakterizasyon testleri hazırken geçilmelidir.
 
-Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B başlatıldı; daha bağlı Faz
-2 VFS çalışması için karakterizasyon kapısı korunuyor.
+Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B canlıya alındı; Faz 2 VFS
+çalışması küçük ve geri alınabilir dilimlerle ilerliyor.
 
 ## Değişmez kurallar
 
@@ -45,16 +45,17 @@ Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B başlatıldı; daha ba
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B yerel |
-|---|---:|---:|---:|
-| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır |
-| Terminal komutu | 132 | 132 | 132 |
-| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 |
-| `route-commands.js` içindeki komut | yok | 23 | 23 |
-| `guide-commands.js` içindeki komut | yok | yok | 14 |
-| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 |
-| Ana sayfa `<script>` etiketi | 30 | 31 | 32 |
-| Service Worker cache sürümü | v194 | v195 | v198 (yerel) |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A yerel |
+|---|---:|---:|---:|---:|
+| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır |
+| Terminal komutu | 132 | 132 | 132 | 132 |
+| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 |
+| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 |
+| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 |
+| `vfs.js` | yok | yok | yok | 132 satır |
+| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 |
+| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 |
+| Service Worker cache sürümü | v194 | v195 | v198 | v199 (yerel) |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -122,7 +123,7 @@ Faz 1A için aşağıdaki yerel tarayıcı kontrolleri tamamlandı:
 
 ## Sonraki fazlar
 
-### Faz 1B — Kalan saf komut tanımları — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz 1B — Kalan saf komut tanımları — TAMAMLANDI VE CANLI DOĞRULANDI
 
 Önce tüm command/alias alanında çakışma testi ekle. Ardından yalnız yan etkisiz
 yardım metni ve saf navigasyon komutlarını ikinci registry'ye taşı. Parser,
@@ -160,7 +161,7 @@ Uygulanan sonuç:
   yazıyor.
 - `index.html` yükleme sırası, syntax/site-integrity kapıları, cache sync ve
   Service Worker precache sözleşmesi güncellendi. `home-protocol.js?v=76`,
-  `guide-commands.js?v=1` ve yerel `convivium-v198` aynı yayın dilimidir.
+  `guide-commands.js?v=1` ve `convivium-v198` aynı yayın dilimiydi.
 
 Değişen/yeni dosyalar:
 
@@ -193,8 +194,11 @@ Değişen/yeni dosyalar:
   komutla kuruldu ve `guide` çevrimdışı çalıştı. Page error yok.
 - Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
   testi bilinçli olarak skip edildi.
+- Kullanıcı yayını sonrası canlı ana sayfada `guide-commands.js?v=1`,
+  `home-protocol.js?v=76` ve Service Worker `convivium-v198` doğrulandı. Guide
+  ve protocol dosyalarının canlı SHA-256 değerleri main ile birebir eşleşti.
 
-### Faz 2 — VFS ve dünya durumu
+### Faz 2A — VFS navigation çekirdeği — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
 `virtualCwd`, sanal dosya sistemi, oda/çevre komutları ve bunların storage
 erişimini tek factory sınırında topla. Önce `pwd`, `ls`, `cd`, `cat` ve room
@@ -206,6 +210,76 @@ geçişlerinin karakterizasyon testlerini yaz.
 > gösterimleri). VFS taşınırken bu ikisinin aynı kaynaktan okumaya devam ettiği
 > karakterizasyon testine dahil edilmeli; ayrıca `cd` başarısında presence
 > sync çağrısının kaybolmadığı doğrulanmalı.
+
+Uygulanan güvenli dilim:
+
+- `assets/js/home/vfs.js`, CWD sahipliğini, statik sanal dizin haritasını,
+  public dokümanları ve `resolve/ls/cd/cat` davranışını `createVfs(deps)`
+  factory'sinde topluyor.
+- `home-protocol.js` artık ayrı bir `virtualCwd` değişkeni tutmuyor. Tercih
+  snapshot/restore, `$CWD`, world/look, Oracle bağlamı, wall, Presence, Chat ve
+  Chat Deck aynı `getVirtualCwd()` → `vfsMod.getCwd()` kaynağını kullanıyor.
+- Başarılı `cd`, CWD'yi değiştirdikten sonra kullanıcı tercihini yazar,
+  `presenceMod.sync()` çağırır ve oda keşif/ödül callback'ini çalıştırır. Kilitli
+  veya bulunamayan odada bu yan etkilerin hiçbiri oluşmaz.
+- Modül/factory yokluğunda terminal boot'u sürer; `pwd/ls/cd/cat` kontrollü
+  unavailable mesajı verirken `level`, `help` ve diğer alanlar çalışır.
+- Bu dilimde `/home` localStorage yazma/silme motoru (`vfsLoad/save/name/write/
+  remove`), world room içeriği ve `look/examine/take/unlock/use` mantığı
+  taşınmadı. Davranış değişikliği veya storage şeması değişikliği yok.
+
+Karakterizasyon ve doğrulama:
+
+- `tests/unit/home-vfs.test.mjs` 5/5: path/lock/restore; dizin, kişisel dosya ve
+  public belge çıktısı; Presence sync; Chat payload room; protocol wiring ve
+  eksik dependency sınırı.
+- Unit toplamı 23/23; komut uzayı snapshot'ı hâlâ 132 komut, 589 etiket ve 545
+  normalize anahtarı kilitliyor.
+- `npm run check`: unit 23/23, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script ile geçti.
+- Normal Chromium akışı 13 komutla geçti: `pwd`, kilitli `cd vault`, `cd notes`,
+  `ls notes`, top-level geçiş, `/home` yaz/list/read, `$CWD` ve `look`.
+  Page/protocol hatası yok.
+- VFS asset'i bilinçli engellendiğinde beklenen
+  `[home-protocol] VFS module unavailable` görüldü; `pwd` kontrollü kapandı,
+  `level` ve `help` çalıştı; page error yok.
+- Service Worker kontrollü çevrimdışı reload'da `convivium-v199` içinden
+  `vfs.js?v=1` ve `home-protocol.js?v=77` bulundu; `pwd → cd notes → pwd`
+  çevrimdışı çalıştı.
+- Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
+  testi bilinçli olarak skip edildi.
+- `index.html`, syntax/site-integrity, cache sync ve precache bağlantıları aynı
+  dilimde güncellendi. 21 managed asset senkron.
+
+Değişen/yeni dosyalar:
+
+| Dosya | Amaç |
+|---|---|
+| `assets/js/home/vfs.js` | CWD + temel VFS navigation factory'si |
+| `assets/js/home-protocol.js` | VFS kurulumu ve tek CWD getter orkestrasyonu |
+| `tests/unit/home-vfs.test.mjs` | VFS + Presence/Chat tüketici karakterizasyonu |
+| `index.html` | VFS yükleme sırası ve protocol v77 |
+| `service-worker.js` | VFS precache ve cache v199 |
+| `scripts/validate-site-integrity.js` | Asset, sıra, factory ve v77 doğrulaması |
+| `scripts/sync-cache-versions.js` | VFS'yi managed asset listesine alma |
+| `package.json` | VFS syntax kapısı |
+| `tests/README.md` | VFS karakterizasyon katmanı notu |
+
+Bilinen, bu dilimde değiştirilmemiş kabuk davranışları:
+
+- `runCommand` tüm girdiyi parameter dispatch'ten önce normalize ettiği için
+  `cd ..` ve `cd /`, nokta/slash kaybından sonra parametresiz `cd` kullanım
+  mesajına düşüyor.
+- Aynı nedenle `cat not.txt`, VFS'ye `not txt` olarak ulaşıyor; noktasız adlar
+  çalışıyor. Bu iki konu Faz 2A regresyonu değildir. Parser davranışını dosya
+  taşıma ile karıştırmamak için ayrı düzeltme dilimine bırakıldı.
+
+### Faz 2B — Kalıcı `/home` dosya motoru — SIRADAKİ
+
+Önce `echo >`, `touch`, `rm`, boş/dolu/depolama-kapalı ve boyut/adet sınırı
+karakterizasyonunu ekle. Ardından `vfsLoad/save/name/list/read/write/remove`
+sahipliğini `vfs.js` içine al; shell yönlendirme semantiğini ve localStorage
+anahtarını değiştirme. Parser normalizasyon sorununu bu taşıma ile birleştirme.
 
 ### Faz 3 — Ekonomi
 
@@ -282,14 +356,32 @@ Sorun görülürse Faz 1A registry'sini koruyarak yalnız Faz 1B geri alınır:
 5. Global command-space testi inline + route yapısını okuyacak biçimde korunmalı;
    bilinen çakışma ve dispatch snapshot'ları silinmemeli.
 
+## Faz 2A rollback
+
+Sorun görülürse yalnız Faz 2A geri alınır:
+
+1. `virtualCwd`, statik `virtualFs`/`virtualDocs` ve
+   `resolveVirtualPath/lsCommand/cdCommand/catCommand` uygulamalarını protocol
+   içinde aynı konumlarına geri koy.
+2. Preference, world, wall, Oracle, Presence, Chat ve Chat Deck tüketicilerini
+   yeniden aynı `virtualCwd` değişkenine bağla; hiçbir tüketiciyi yarı factory,
+   yarı yerel durumda bırakma.
+3. `vfs.js` script'ini ve syntax/precache/validator/cache-sync bağlantılarını
+   kaldır; protocol asset ve Service Worker cache sürümünü yeniden ileri bump et.
+4. `home-vfs.test.mjs` dosyasını ancak inline VFS için eşdeğer CWD,
+   Presence/Chat ve lock karakterizasyonu korunuyorsa uyarlayarak tut.
+5. Yayınlanmış `convivium-v199` hiçbir koşulda v198'e düşürülmez; ileri cache
+   sürümüyle rollback yapılır.
+
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Faz 1B için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
-aittir. Yayın sonrası canlıda `guide-commands.js?v=1`, `home-protocol.js?v=76`
-ve `convivium-v198` doğrulanır; terminalde en az `help`, `guide`, `read guide`,
-`terminal games`, `keys` ve taşınmayan `level` çalıştırılır.
+Faz 2A için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
+aittir. Yayın sonrası canlıda `vfs.js?v=1`, `home-protocol.js?v=77` ve
+`convivium-v199` doğrulanır. Terminalde en az `pwd`, `cd vault`, `cd notes`,
+`ls notes`, `cd home`, `echo merhaba > faz2`, `cat faz2`, `echo $CWD` ve `look`
+çalıştırılır.
 
-Canlı kabul temizse Faz 2'ye doğrudan taşıma ile değil VFS karakterizasyonuyla
-başla: `pwd`, `ls`, `cd`, `cat`, oda geçişi, `presenceMod.sync()` ve chat room
-payload'ının aynı `virtualCwd` kaynağını koruduğunu testle. Bu dilimde kullanıcı
-metni, rota, storage şeması veya davranış değiştirme.
+Canlı kabul temizse Faz 2B'ye test-first geç: önce kalıcı `/home` dosya
+motorunun storage ve limit semantiğini karakterize et, sonra sahipliği VFS
+factory'sine taşı. `cd ..`/`cd /` ve noktalı `cat` parser sorunlarını bu taşıma
+ile aynı değişiklik setinde düzeltme.
