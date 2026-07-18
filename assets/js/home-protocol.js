@@ -140,7 +140,7 @@
       let lastFocusedElement = null;
       let powerOverlay = null;
       let powerSequenceTimers = [];
-      let virtualCwd = '/';
+      let vfsMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -211,7 +211,7 @@
         return {
           audioEnabled,
           theme: selectedTheme,
-          virtualCwd,
+          virtualCwd: vfsMod?.getCwd?.() || '/',
           screenSaverActive: Boolean(screenSaverMod?.isActive()),
           powerState: powerOverlay?.classList.contains('is-off') ? 'off' : 'ready',
           bugyEngine: bugyV4?.active ? 'v4' : bugyV3?.active ? 'v3' : bugyV2?.active ? 'v2' : localStorage.getItem('convivium.bugy.engine') || 'v1',
@@ -269,7 +269,7 @@
           }
           if (prefs.theme) themeCommand(prefs.theme);
           if (prefs.crt) setCrt(true);
-          if (prefs.virtualCwd && virtualFs[prefs.virtualCwd]) virtualCwd = prefs.virtualCwd;
+          if (prefs.virtualCwd) vfsMod?.restoreCwd?.(prefs.virtualCwd);
 
           if (prefs.bugyV4Skin) {
             localStorage.setItem('convivium.bugy.v4.skin', prefs.bugyV4Skin);
@@ -1277,7 +1277,7 @@
       };
       // Tek gecisli genisletme (ic ice/tekrarli cozum yok -> dongu kurulamaz).
       const envExpand = (text) => String(text).replace(/\$\{?([A-Za-z_]\w{0,15})\}?/g, (m, name) => {
-        if (name === 'CWD') return virtualCwd;
+        if (name === 'CWD') return vfsMod?.getCwd?.() || '/';
         if (name === 'USER') return 'ziyaretci';
         if (name === 'RANDOM') return String(Math.floor(Math.random() * 32768));
         if (name === 'DATE') return new Date().toLocaleDateString('tr-TR');
@@ -1286,77 +1286,12 @@
         return Object.prototype.hasOwnProperty.call(vars, name) ? vars[name] : m;
       });
 
-      const virtualFs = {
-        '/': ['routes', 'lab', 'notes', 'system', 'vault', 'home'],
-        '/routes': ['home', 'map', 'archive', 'notes', 'open dossier'],
-        '/lab': ['run logic', 'run signal', 'run ash', 'run flow', 'pipe', 'outrun'],
-        '/notes': ['quote', 'note', 'ritual', 'manifest', 'clues'],
-        '/system': ['whoami', 'uptime', 'version', 'memory', 'ps', 'shutdown', 'restart', 'screen saver'],
-        '/vault': ['satir'],
-        '/core': ['cekirdek', 'gunluk'],
-        '/atlas': ['harita', 'imza'],
-        '/home': []
-      };
-
-      const virtualDocs = {
-        about: 'Convivium: public deneysel terminal alanı. Route, oyun, oracle ve not katmanları browser içinde çalışır.',
-        system: 'system: static GitHub Pages shell / Worker üzerinden public oracle / local secrets unavailable.',
-        routes: 'routes: home, map, archive, notes, open dossier, lab komutları.',
-        lab: 'lab: logic, signal, ash, flow, pipe ve companion deneyleri.',
-        audio: `audio: ${audioEnabled ? 'on' : 'off'} / preference persisted locally.`
-      };
-
-      const resolveVirtualPath = (target = '') => {
-        const normalized = normalizeCommand(target).replace(/\s+/g, '-');
-        if (!normalized || normalized === '/') return '/';
-        if (normalized === '..') return virtualCwd.split('/').slice(0, -1).join('/') || '/';
-        const path = (normalized.startsWith('/') ? normalized : `${virtualCwd === '/' ? '' : virtualCwd}/${normalized}`).replace(/\/+/g, '/');
-        // Goreli yol yoksa ama ust seviye bir esikse oraya cevir (cd vault her yerden calissin).
-        if (!virtualFs[path] && virtualFs[`/${normalized}`]) return `/${normalized}`;
-        return path;
-      };
-
-      const lsCommand = (target = '') => {
-        const path = resolveVirtualPath(target);
-        const items = virtualFs[path];
-        if (!items) return `ls: ${path}: not found`;
-        if (path === '/home') {
-          const files = vfsLoad();
-          const names = Object.keys(files).sort();
-          if (!names.length) return '/home: (bos) — "echo merhaba > not.txt" ile ilk dosyani yaz.';
-          return [`/home: ${names.length}/${VFS_MAX_FILES} dosya`, ...names.map(n => `  ${n}  (${files[n].length}b)`)].join('\n');
-        }
-        return [`${path}:`, ...items.map(item => `  ${item}`)].join('\n');
-      };
-
-      const cdCommand = (target = '/') => {
-        const path = resolveVirtualPath(target);
-        if (!virtualFs[path]) return `cd: ${path}: no such virtual directory`;
-        const room = worldRooms[path];
-        if (room?.locked && !(state.unlocked || []).includes(path)) {
-          return `cd: ${path}: muhurlu. "unlock ${path.replace(/^\//, '')}" ile ya da dogru anahtarla ac.`;
-        }
-        virtualCwd = path;
-        persistUserPreferences({ virtualCwd });
-        presenceMod?.sync();
-        if (worldRooms[path]) {
-          if (!state.discovered.includes(path)) {
-            state.discovered = [...new Set([...state.discovered, path])];
-            persist();
-            awardShards(2, `kesif ${path}`);
-          }
-          return roomPanel(path);
-        }
-        return virtualCwd;
-      };
-
-      const catCommand = (target = '') => {
-        // Once kullanicinin /home dosyalari (echo > ile yazilanlar), sonra public dokumanlar.
-        const file = vfsRead(target);
-        if (file !== null) return file === '' ? '(bos dosya)' : file;
-        const key = normalizeCommand(target || 'about');
-        return virtualDocs[key] || `cat: ${target || 'empty'}: public document not found`;
-      };
+      const getVirtualCwd = () => vfsMod?.getCwd?.() || '/';
+      const resolveVirtualPath = (target = '') => vfsMod?.resolvePath?.(target) || '/';
+      const lsCommand = (target = '') => vfsMod?.ls?.(target) || 'ls: virtual filesystem unavailable';
+      const cdCommand = (target = '/') => vfsMod?.cd?.(target) || 'cd: virtual filesystem unavailable';
+      const catCommand = (target = '') => vfsMod?.cat?.(target) || 'cat: virtual filesystem unavailable';
+      const pwdCommand = () => vfsMod?.getCwd?.() || 'pwd: virtual filesystem unavailable';
 
       const treeCommand = () => [
         '/',
@@ -1541,7 +1476,40 @@
         return lines.join('\n');
       };
 
-      const currentRoom = () => worldRooms[virtualCwd] || null;
+      vfsMod = (() => {
+        const createVfs = window.ConviviumHome?.createVfs;
+        if (typeof createVfs !== 'function') {
+          console.error('[home-protocol] VFS module unavailable');
+          return null;
+        }
+        try {
+          return createVfs({
+            normalizeCommand,
+            loadHomeFiles: vfsLoad,
+            readHomeFile: vfsRead,
+            maxHomeFiles: VFS_MAX_FILES,
+            getAudioEnabled: () => audioEnabled,
+            getRoom: (path) => worldRooms[path] || null,
+            isRoomUnlocked: (path) => (state.unlocked || []).includes(path),
+            onCwdChange: (path) => {
+              persistUserPreferences({ virtualCwd: path });
+              presenceMod?.sync();
+            },
+            onDiscoverRoom: (path) => {
+              if (state.discovered.includes(path)) return;
+              state.discovered = [...new Set([...state.discovered, path])];
+              persist();
+              awardShards(2, `kesif ${path}`);
+            },
+            renderRoom: roomPanel
+          });
+        } catch (error) {
+          console.error('[home-protocol] VFS module failed', error);
+          return null;
+        }
+      })();
+
+      const currentRoom = () => worldRooms[getVirtualCwd()] || null;
 
       const roomObjectKey = (room, target) => {
         const query = normalizeCommand(target);
@@ -1554,13 +1522,14 @@
 
       const lookCommand = (target = '') => {
         const room = currentRoom();
-        if (!room) return `look: ${virtualCwd}: bu esikte gorulecek bir sey yok.`;
+        const cwd = getVirtualCwd();
+        if (!room) return `look: ${cwd}: bu esikte gorulecek bir sey yok.`;
         if (target.trim()) return examineCommand(target);
-        if (!state.discovered.includes(virtualCwd)) {
-          state.discovered = [...new Set([...state.discovered, virtualCwd])];
+        if (!state.discovered.includes(cwd)) {
+          state.discovered = [...new Set([...state.discovered, cwd])];
           persist();
         }
-        return roomPanel(virtualCwd);
+        return roomPanel(cwd);
       };
 
       const examineCommand = (target = '') => {
@@ -1687,7 +1656,7 @@
       const buildWorldContext = () => {
         const items = (state.inventory || []).join(', ') || 'bos';
         const levelName = levels[Math.min(state.level, levels.length - 1)];
-        return `[Convivium terminali. Konum: ${virtualCwd}. Canta: ${items}. Seviye: ${levelName}.]`;
+        return `[Convivium terminali. Konum: ${getVirtualCwd()}. Canta: ${items}. Seviye: ${levelName}.]`;
       };
 
       // ask/sor girdisinden saf konuyu cikarir (oracle about / hakkinda gibi sarmalari atar).
@@ -1884,13 +1853,13 @@
           return 'wall: duvar cevrimdisi.';
         }
         try {
-          const marks = await backend.fetchWallMarks(virtualCwd, 50); // presence icin genis cek
-          if (!marks.length) return `wall ${virtualCwd}: henuz iz yok. ilk izi sen birak: "mark <mesaj>"`;
+          const marks = await backend.fetchWallMarks(getVirtualCwd(), 50); // presence icin genis cek
+          if (!marks.length) return `wall ${getVirtualCwd()}: henuz iz yok. ilk izi sen birak: "mark <mesaj>"`;
           const newest = relativeTime(marks[0].created_at);
           const shown = marks.slice(0, 8);
           const lines = shown.map((m) => `  ${formatWallStamp(m.created_at)} | ${m.body}`);
           return [
-            `] DUVAR ${prodosPath(virtualCwd)}`,
+            `] DUVAR ${prodosPath(getVirtualCwd())}`,
             `  ${marks.length} iz · en yeni: ${newest}`,
             '',
             ...lines,
@@ -1909,9 +1878,9 @@
           return 'mark: duvar cevrimdisi.';
         }
         try {
-          await backend.leaveWallMark({ room: virtualCwd, body });
+          await backend.leaveWallMark({ room: getVirtualCwd(), body });
           audioCue('system.unlock');
-          return `iz birakildi: ${virtualCwd}. (wall ile oku)`;
+          return `iz birakildi: ${getVirtualCwd()}. (wall ile oku)`;
         } catch (error) {
           const msg = String(error?.message || '');
           if (/giris/i.test(msg)) return 'mark: iz birakmak icin once giris yap (/account/auth.html).';
@@ -2216,7 +2185,7 @@
       // ziyaretci izi. Supabase yoksa modul sessizce devre disi kalir.
       presenceMod = window.ConviviumHome?.createPresence?.({
         getClient: () => window.ConviviumBackend?.getClient?.() || null,
-        getRoom: () => virtualCwd
+        getRoom: getVirtualCwd
       }) || null;
       presenceMod?.start();
 
@@ -2261,7 +2230,7 @@
       chatMod = window.ConviviumHome?.createChat?.({
         getClient: () => window.ConviviumBackend?.getClient?.() || null,
         getTag: () => presenceMod?.tag?.() || 'wanderer-????',
-        getRoom: () => virtualCwd,
+        getRoom: getVirtualCwd,
         onMessage: (line, entry) => {
           if (consoleLine) consoleLine.textContent = line.slice(0, 48);
           screenSaverMod?.pushSignal?.(line); // koruyucuda kayan yildiz olur
@@ -2280,7 +2249,7 @@
         getChat: () => chatMod,
         getWanderers: () => presenceMod?.list?.() || [],
         getSelfTag: () => presenceMod?.tag?.() || 'wanderer-????',
-        getRoom: () => virtualCwd,
+        getRoom: getVirtualCwd,
         pulse
       }) || null;
       // Daha once kanala katilmis kullanici sayfa acilisinda sessizce
@@ -2766,7 +2735,7 @@
           command: 'pwd',
           description: 'sanal terminal konumunu gosterir',
           aliases: ['where'],
-          action: () => virtualCwd
+          action: pwdCommand
         },
         {
           command: 'cd',

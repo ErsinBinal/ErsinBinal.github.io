@@ -6,8 +6,9 @@ katman ve bir CI kapısı vardır:
 ## 1. Unit / karakterizasyon (hızlı, bağımlılıksız)
 
 Ana terminalin route/rehber registry'lerini, global komut-alias-önek dispatch
-uzayını, frontend Supabase Bearer taşımasını ve Service Worker
-install/update/offline yaşam döngüsünü kilitler. Dış ağa çıkmaz.
+uzayını, VFS path/lock/storage çıktılarını, Presence/Chat oda tüketimini,
+frontend Supabase Bearer taşımasını ve Service Worker install/update/offline
+yaşam döngüsünü kilitler. Dış ağa çıkmaz.
 
 ```bash
 npm run test:unit
