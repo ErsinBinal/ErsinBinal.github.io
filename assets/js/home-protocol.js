@@ -134,6 +134,8 @@
       let commandInFlight = false;
       let commandHistoryIndex = -1;
       let activeSuggestionIndex = 0;
+      let currentSuggestions = [];
+      let suggestionSelectionExplicit = false;
       let commandBootTimer = null;
       let commandCloseTimer = null;
       let pendingOracleQuery = '';
@@ -146,6 +148,7 @@
       let economyMod = null;
       let shopMod = null;
       let ruinsMod = null;
+      let navigatorMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -2979,7 +2982,7 @@
         ']'
       ].join('\n');
 
-      const commandHelpText = () => [
+      const legacyCommandHelpText = () => [
         '] basla -> adim adim rehber',
         '] guide / how to play -> terminal icinde kisa rehber',
         '] read guide / read game guide -> makaleler alaninda uzun okuma',
@@ -3026,6 +3029,12 @@
         '(soylenti: sinyal TAMAMEN koptugunda terminal baska bir yuz gosterirmis. kablonu cek, gor.)'
       ].join('\n');
 
+      const commandHelpText = (topic = '') => {
+        const key = normalizeCommand(topic);
+        if (key === 'all' || !navigatorMod) return legacyCommandHelpText();
+        return navigatorMod.help(topic);
+      };
+
       const commandMap = commandDefinitions.reduce((map, item) => {
         [item.command, ...(item.aliases || [])].forEach(alias => {
           map[normalizeCommand(alias)] = item.action;
@@ -3038,6 +3047,27 @@
       commandMap['rezonans'] = commandMap['resonate'];
 
       const commandChoices = commandDefinitions.flatMap(item => [item.command, ...(item.aliases || [])]);
+
+      navigatorMod = (() => {
+        const createNavigator = window.ConviviumHome?.createNavigator;
+        if (typeof createNavigator !== 'function') {
+          console.error('[home-protocol] Navigator module unavailable');
+          return null;
+        }
+        try {
+          return createNavigator({
+            normalizeCommand,
+            getCwd: getVirtualCwd,
+            listRooms: () => worldMod?.listRooms?.() || [],
+            getRoom: getWorldRoom,
+            getObjective: currentObjective,
+            getCommandDefinitions: () => commandDefinitions
+          });
+        } catch (error) {
+          console.error('[home-protocol] Navigator module failed', error);
+          return null;
+        }
+      })();
 
       // --- Akilli parser (Dalga 2): esanlamli verb haritasi + yazim toleransi ---
       // Niyet-esanlamlilari (cogu zaten alias; burasi alias olmayan dogal fiiller icin).
@@ -3094,49 +3124,90 @@
         return rest ? `${best} ${rest}` : best;
       };
 
-      // Inline tab-completion (Dalga 3): yazarken benzersiz komut tamamlamasini input'a
-      // yazip eklenen eki SECILI birakir (tarayici autocomplete tarzi). Overlay/CSS yok.
-      // -> ya da End/Enter ile kabul; yazmaya devam edince secili ek degisir; backspace siler.
-      const completeInput = (event) => {
-        if (!commandInput || pipeMod?.isActive()) return;
-        if (event && event.inputType && event.inputType !== 'insertText') return; // silerken tamamlama yok
-        const val = commandInput.value;
-        if (!val || /\s/.test(val)) return; // sadece ilk kelime (bosluk yoksa)
-        const typed = normalizeCommand(val);
-        if (typed.length < 2) return;
-        const uniq = [...new Set(commandVocab.filter(word => word.startsWith(typed)))];
-        if (uniq.length !== 1 || uniq[0] === typed) return;
-        const full = uniq[0];
-        commandInput.value = full;
-        try { commandInput.setSelectionRange(typed.length, full.length); } catch { /* ignore */ }
-      };
-
       const matchingCommands = (raw) => {
         const query = normalizeCommand(raw);
-        if (!query) return commandChoices.slice(0, 6);
-        return commandChoices
-          .filter(choice => normalizeCommand(choice).includes(query))
-          .slice(0, 6);
+        if (!query) return [];
+        if (navigatorMod) return navigatorMod.suggest(raw, { limit: 3 });
+        return commandDefinitions
+          .filter(entry => normalizeCommand(entry.command).startsWith(query))
+          .slice(0, 3)
+          .map(entry => ({
+            value: entry.command,
+            description: entry.description || 'terminal komutu',
+            reason: 'tamamla'
+          }));
       };
 
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
-        if (commandSuggestions) commandSuggestions.textContent = '';
+        currentSuggestions = [];
+        activeSuggestionIndex = 0;
+        suggestionSelectionExplicit = false;
+        if (commandSuggestions) commandSuggestions.replaceChildren();
+        commandInput?.setAttribute('aria-expanded', 'false');
+        commandInput?.removeAttribute('aria-activedescendant');
+      };
+
+      const syncActiveSuggestion = () => {
+        if (!commandSuggestions || !currentSuggestions.length) return;
+        const buttons = [...commandSuggestions.querySelectorAll('.command-suggestion')];
+        buttons.forEach((button, index) => {
+          const active = index === activeSuggestionIndex;
+          button.classList.toggle('is-active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        const active = buttons[activeSuggestionIndex];
+        if (active?.id) commandInput?.setAttribute('aria-activedescendant', active.id);
       };
 
       const applySuggestion = (value, run = false) => {
-        if (!commandInput || !value) return;
+        const command = typeof value === 'string' ? value : value?.value;
+        if (!commandInput || !command) return;
         audioCue(run ? 'terminal.run' : 'terminal.suggest');
-        commandInput.value = value;
+        commandInput.value = command;
+        try { commandInput.setSelectionRange(command.length, command.length); } catch { /* ignore */ }
         commandInput.focus();
-        renderCommandSuggestions(value);
-        if (run) runCommand(value);
+        if (run) {
+          clearCommandSuggestions();
+          runCommand(command);
+        } else {
+          suggestionSelectionExplicit = false;
+          renderCommandSuggestions(command);
+        }
       };
 
-      // Oneri cipleri kaldirildi (kullanici istegi): kabuk daha sade dursun.
-      // Tab ile tamamlama gorunmez sekilde calismaya devam eder (matchingCommands).
-      const renderCommandSuggestions = () => {
+      const renderCommandSuggestions = (raw = '') => {
         clearCommandSuggestions();
+        if (!commandSuggestions || !commandInput || !String(raw).trim()) return;
+        if (pipeMod?.isActive() || outrunMod?.isActive()) return;
+        currentSuggestions = [...matchingCommands(raw)];
+        if (!currentSuggestions.length) return;
+
+        const fragment = document.createDocumentFragment();
+        currentSuggestions.forEach((suggestion, index) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.id = `command-suggestion-${index}`;
+          button.className = 'command-suggestion';
+          button.setAttribute('role', 'option');
+          button.setAttribute('aria-selected', String(index === 0));
+
+          const value = document.createElement('span');
+          value.className = 'command-suggestion-value';
+          value.textContent = suggestion.value;
+          const detail = document.createElement('small');
+          detail.className = 'command-suggestion-detail';
+          detail.textContent = `${suggestion.reason} · ${suggestion.description}`;
+          button.append(value, detail);
+          button.addEventListener('pointerdown', event => event.preventDefault());
+          button.addEventListener('click', () => applySuggestion(suggestion.value));
+          fragment.append(button);
+        });
+
+        commandSuggestions.append(fragment);
+        commandShell?.classList.add('has-suggestions');
+        commandInput.setAttribute('aria-expanded', 'true');
+        syncActiveSuggestion();
       };
 
       const isCreatorQuery = (command) => {
@@ -3390,6 +3461,7 @@
         ['incele ', value => examineCommand(value)],
         ['take ', value => takeCommand(value)],
         ['al ', value => takeCommand(value)],
+        ['help ', value => commandHelpText(value)],
         ['unlock ', value => unlockRoomCommand(value)],
         ['ac ', value => unlockRoomCommand(value)],
         ['use ', value => useCommand(value)],
@@ -3749,6 +3821,7 @@
             if (commandInput.value) transcriptEcho(`${commandInput.value}^C`);
             commandInput.value = '';
             reverseSearch = null;
+            clearCommandSuggestions();
             return;
           }
           if (ck === 'r') {
@@ -3760,6 +3833,7 @@
               if (!reverseSearch.needle || log[i].includes(reverseSearch.needle)) {
                 reverseSearch.index = i;
                 commandInput.value = log[i];
+                renderCommandSuggestions(commandInput.value);
                 return;
               }
             }
@@ -3804,12 +3878,25 @@
         }
         if (event.key === 'Enter') {
           event.preventDefault();
-          runCommand(commandInput.value);
-        } else if (event.key === 'Tab') {
+          const selected = currentSuggestions[activeSuggestionIndex];
+          if (suggestionSelectionExplicit && selected) {
+            applySuggestion(selected, true);
+          } else if (selected && normalizeCommand(commandInput.value) !== normalizeCommand(selected.value)) {
+            applySuggestion(selected);
+          } else {
+            runCommand(commandInput.value);
+          }
+        } else if (event.key === 'Tab' && !event.shiftKey) {
           event.preventDefault();
           applySuggestion(matches[activeSuggestionIndex] || matches[0] || commandInput.value);
         } else if (event.key === 'ArrowUp') {
           event.preventDefault();
+          if (currentSuggestions.length && commandInput.value.trim()) {
+            activeSuggestionIndex = (activeSuggestionIndex - 1 + currentSuggestions.length) % currentSuggestions.length;
+            suggestionSelectionExplicit = true;
+            syncActiveSuggestion();
+            return;
+          }
           const history = state.commandLog || [];
           if (!history.length) return;
           commandHistoryIndex = commandHistoryIndex < 0 ? history.length - 1 : Math.max(0, commandHistoryIndex - 1);
@@ -3817,6 +3904,12 @@
           renderCommandSuggestions(commandInput.value);
         } else if (event.key === 'ArrowDown') {
           event.preventDefault();
+          if (currentSuggestions.length && commandInput.value.trim()) {
+            activeSuggestionIndex = (activeSuggestionIndex + 1) % currentSuggestions.length;
+            suggestionSelectionExplicit = true;
+            syncActiveSuggestion();
+            return;
+          }
           const history = state.commandLog || [];
           if (!history.length) return;
           commandHistoryIndex = commandHistoryIndex >= history.length - 1 ? -1 : commandHistoryIndex + 1;
@@ -3841,8 +3934,9 @@
       commandInput?.addEventListener('input', (event) => {
         commandHistoryIndex = -1;
         activeSuggestionIndex = 0;
+        suggestionSelectionExplicit = false;
         reverseSearch = null;
-        completeInput(event);
+        renderCommandSuggestions(event.currentTarget.value);
       });
 
       document.querySelectorAll('.command-trigger').forEach(trigger => {

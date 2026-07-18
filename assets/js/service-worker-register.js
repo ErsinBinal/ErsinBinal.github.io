@@ -4,7 +4,15 @@
   // "Yeni surum hazir" cipi: SW artik kosulsuz skipWaiting yapmiyor;
   // kullanici cipe tiklayinca SKIP_WAITING gonderilir ve sayfa yenilenir.
   let refreshing = false;
+  let hadController = Boolean(navigator.serviceWorker.controller);
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Ilk kurulumda clients.claim() da controllerchange uretir. Yeni ziyaretcinin
+    // acik terminalini kapatacak gereksiz reload yapma; reload yalniz gercek
+    // surum gecisinde, sayfa zaten bir controller ile acildiysa gerekir.
+    if (!hadController) {
+      hadController = true;
+      return;
+    }
     if (refreshing) return;
     refreshing = true;
     window.location.reload();

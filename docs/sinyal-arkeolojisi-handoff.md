@@ -114,7 +114,7 @@ gerektirmez.
 | Terminal komutu | 132 |
 | Service Worker | v205 (canlı) |
 
-Beklenen SHA-256:
+İlk ürün yayını SHA-256 (`convivium-v205`, ruins v1):
 
 - ruins: `56f0d1115b8d2ff7d1b1ad413db536baedea452a7cf89532542602d00add823d`
 - world: `518c970073520adb39007a964e2d466865f38bc63650bc91fcaef2379f9596e5`
@@ -134,6 +134,16 @@ Beklenen SHA-256:
 - Service Worker kontrolü ve v205 cache'i doğrulandıktan sonra ağ tamamen
   kapatıldı. Offline reload sonrası `/ruins` ve artifact gövdesi tekrar
   çalıştı; page error oluşmadı.
+
+## Sonraki entegrasyon kaydı — Terminal Navigasyonu N1
+
+18 Temmuz 2026 tarihli Sinyal Pusulası N1 dilimi, artifact registry/gövde,
+günlük seçim, world görünümü ve VFS dosyalarını değiştirmeden yalnız ürünün
+bağlamsal öneri metadata'sını ekledi: `examine buluntu`, günün `cat` komutu ve
+`cd /`. Bu nedenle Ruins asset'i v2'ye çıkıyor; N1 yayını beklenen yeni Ruins
+SHA-256 değeri
+`69c8d2c04f6ed4c05c9061f61bbfbfe5290087959f9c344daf4c5e539098ea8b`.
+İlk v205 kabul hash'i yukarıda tarihsel yayın kaydı olarak korunur.
 
 ## Değişen/yeni dosyalar
 

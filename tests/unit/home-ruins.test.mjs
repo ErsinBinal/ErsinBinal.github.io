@@ -128,7 +128,8 @@ test('Ruins creates the exact world room and VFS mount without side effects', ()
       todo: '2004 tarihli bir gelistirme listesi. Bazi maddeler yirmi iki yil sonra kendiliginden tamamlanmis. Oku: cat todo-fragment.txt',
       ekran: 'Tarihsiz bir arcade ekran dokumu. Oyun baslamadan once oyuncunun adini unutmus. Oku: cat arcade-recovery.scr',
       buluntu: 'Bugunun ortak buluntusu: arcade-recovery.scr / Kayip Baslangic Ekrani. Her gezgin bugun ayni parcayi gorur. Oku: cat arcade-recovery.scr'
-    }
+    },
+    navigation: ['examine buluntu', 'cat arcade-recovery.scr', 'cd /']
   });
   assert.deepEqual(Array.from(ruins.vfsMount.files), [
     'bbs-1997.log',

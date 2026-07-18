@@ -12,6 +12,8 @@ Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
 [Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
 Canlı terminal ürünü ve `/ruins` extension sınırı:
 [Sinyal Arkeolojisi Handoff](../sinyal-arkeolojisi-handoff.md).
+Terminal yön bulma, tamamlama ve Yaşayan Atlas fazları:
+[Terminal Navigasyonu — Sinyal Pusulası Handoff](../terminal-navigation-handoff.md).
 P0/P1 güvenlik ve dağıtım kapanış kaydı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
 Gerçek HTTP güvenlik header'ları ve hosting sınırı:

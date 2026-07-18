@@ -71,6 +71,17 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 >
 > Son tamamlanan ürün: [Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
 > Park edilen mimari hat: [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
+> Aktif deneyim omurgası: [Terminal Navigasyonu — Sinyal Pusulası](terminal-navigation-handoff.md).
+
+### Aktif deneyim omurgası — Sinyal Pusulası N1
+
+Yeni ürün eklemeden önce terminal yön bulma katmanı düzenleniyor. N1 kod ve
+yerel kabul tarafında tamamlandı; yayın bekliyor. Kısa niyet tabanlı `help`,
+`help all` uyumluluğu, en fazla üç bağlamsal canonical öneri, alias/fuzzy
+düzeltme, `cd/examine/help/man` parametre tamamlama, combobox/listbox
+erişilebilirliği ve ilk SW kurulumunda terminali kapatan reload koruması aynı
+atomik v206 paketinde. N2 bağlamsal `look`, N3 Yaşayan Atlas olarak ayrı
+dilimlerde ilerleyecek.
 
 ### Tamamlanan yeni ürün — Sinyal Arkeolojisi
 
@@ -88,6 +99,7 @@ asset hash'i main ile birebir eşleşti; offline canlı reload page error olmada
 Mevcut günlük kart seed'ini yeniden kullanarak SVG/PNG paylaşım çıktısı üreten
 bağımsız sayfa. Uygulamadan önce ayrı ürün handoff'u açılacak; mevcut
 `card/collect/cards` davranışı ve ekonomi sahipliği bu dilime taşınmayacak.
+Terminal navigasyonu N1 canlı kabulünden sonra ürün kuyruğuna dönülecek.
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi)
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar

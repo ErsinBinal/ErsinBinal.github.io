@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Sat, 18 Jul 2026 20:30:00 +0300</lastBuildDate>
+    <lastBuildDate>Sat, 18 Jul 2026 22:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sinyal Pusulasi: terminal yolunu isaretliyor</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-18-navigator</guid>
+      <pubDate>Sat, 18 Jul 2026 22:00:00 +0300</pubDate>
+      <description>Terminal help komutu alti niyetli kisa bir Pusulaya donustu. Yazarken en fazla uc baglamsal canonical onerisi; Turkce alias, guvenli typo, oda ve nesne tamamlama destegiyle gorunuyor. Tab, ok tuslari, dokunma, ekran okuyucu ve offline reload akislari korunuyor.</description>
+    </item>
 
     <item>
       <title>Sinyal Arkeolojisi: /ruins kazisi</title>

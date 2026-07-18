@@ -168,12 +168,13 @@ const mustPrecache = [
   '/assets/js/home/routes.js?v=5',
   '/assets/js/home/route-commands.js?v=1',
   '/assets/js/home/guide-commands.js?v=1',
-  '/assets/js/home/ruins.js?v=1',
+  '/assets/js/home/ruins.js?v=2',
   '/assets/js/home/world.js?v=2',
   '/assets/js/home/economy.js?v=1',
   '/assets/js/home/shop.js?v=1',
   '/assets/js/home/world-actions.js?v=1',
   '/assets/js/home/vfs.js?v=3',
+  '/assets/js/home/navigator.js?v=1',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
@@ -185,9 +186,9 @@ const mustPrecache = [
   '/assets/js/home/chat.js?v=3',
   '/assets/js/supabase-client.js?v=36',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=83',
+  '/assets/js/home-protocol.js?v=84',
   '/assets/js/dart-skorbord.js?v=10',
-  '/assets/js/service-worker-register.js?v=3'
+  '/assets/js/service-worker-register.js?v=4'
 ];
 
 for (const asset of mustPrecache) {
@@ -200,13 +201,14 @@ const indexPath = path.join(root, 'index.html');
 const indexHtml = fs.readFileSync(indexPath, 'utf8');
 const routeCommandsRef = '/assets/js/home/route-commands.js?v=1';
 const guideCommandsRef = '/assets/js/home/guide-commands.js?v=1';
-const ruinsRef = '/assets/js/home/ruins.js?v=1';
+const ruinsRef = '/assets/js/home/ruins.js?v=2';
 const worldRef = '/assets/js/home/world.js?v=2';
 const economyRef = '/assets/js/home/economy.js?v=1';
 const shopRef = '/assets/js/home/shop.js?v=1';
 const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
 const vfsRef = '/assets/js/home/vfs.js?v=3';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=83';
+const navigatorRef = '/assets/js/home/navigator.js?v=1';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=84';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
 const ruinsIndex = indexHtml.indexOf(ruinsRef);
@@ -215,6 +217,7 @@ const economyIndex = indexHtml.indexOf(economyRef);
 const shopIndex = indexHtml.indexOf(shopRef);
 const worldActionsIndex = indexHtml.indexOf(worldActionsRef);
 const vfsIndex = indexHtml.indexOf(vfsRef);
+const navigatorIndex = indexHtml.indexOf(navigatorRef);
 const homeProtocolIndex = indexHtml.indexOf(homeProtocolRef);
 
 if (routeCommandsIndex === -1) {
@@ -233,10 +236,19 @@ if (routeCommandsIndex === -1) {
   addError(`index.html script eksik: ${worldActionsRef}`);
 } else if (vfsIndex === -1) {
   addError(`index.html script eksik: ${vfsRef}`);
+} else if (navigatorIndex === -1) {
+  addError(`index.html script eksik: ${navigatorRef}`);
 } else if (homeProtocolIndex === -1) {
   addError(`index.html script eksik: ${homeProtocolRef}`);
-} else if ([routeCommandsIndex, guideCommandsIndex, ruinsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex].some((index) => index > homeProtocolIndex)) {
+} else if ([routeCommandsIndex, guideCommandsIndex, ruinsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex, navigatorIndex].some((index) => index > homeProtocolIndex)) {
   addError('index.html script sirasi hatali: home modulleri home-protocol oncesinde olmali');
+}
+
+if (!indexHtml.includes('role="combobox"') || !indexHtml.includes('aria-controls="command-suggestions"')) {
+  addError('index.html terminal tamamlama combobox sozlesmesi eksik');
+}
+if (!indexHtml.includes('id="command-suggestions" role="listbox"')) {
+  addError('index.html terminal tamamlama listbox sozlesmesi eksik');
 }
 
 const homeProtocolPath = path.join(root, 'assets', 'js', 'home-protocol.js');
@@ -264,6 +276,9 @@ if (!homeProtocol.includes('createWorldActions')) {
 }
 if (!homeProtocol.includes('createVfs')) {
   addError('home-protocol.js VFS factory baglantisi eksik');
+}
+if (!homeProtocol.includes('createNavigator')) {
+  addError('home-protocol.js Navigator factory baglantisi eksik');
 }
 
 if (!/const\s+CACHE_NAME\s*=\s*'convivium-v\d+'/.test(sw)) {

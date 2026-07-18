@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=27" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=28" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=27">
+  <link rel="stylesheet" href="/assets/css/home.css?v=28">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -123,24 +123,17 @@
   <section class="command-shell" id="command-shell" role="dialog" aria-modal="false" aria-label="Komut satırı" aria-hidden="true">
     <div class="command-row">
       <span class="command-prompt">&gt;</span>
-      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" aria-describedby="command-suggestions" placeholder="type: open dossier / bu sayfayı kim yaptı / ask anything">
+      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-suggestions" placeholder="type: help / look / open dossier">
       <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
-    <div class="command-suggestions" id="command-suggestions" aria-live="polite"></div>
+    <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri" aria-live="polite"></div>
     <div class="command-output" id="command-output" aria-live="polite">type help for shortcuts</div>
     <div class="command-help" aria-label="Komut örnekleri">
       <span>help</span>
-      <span>guide</span>
-      <span>how to play</span>
-      <span>open dossier</span>
-      <span>bu sayfayı kim yaptı</span>
-      <span>keys</span>
-      <span>game guide</span>
-      <span>run logic</span>
-      <span>run signal</span>
-      <span>unlock hidden</span>
-      <span>level</span>
-      <span>ask anything</span>
+      <span>look</span>
+      <span>map</span>
+      <span>Tab tamamla</span>
+      <span>↑↓ seç</span>
     </div>
   </section>
 
@@ -485,12 +478,13 @@
   <script src="/assets/js/home/routes.js?v=5" defer></script>
   <script src="/assets/js/home/route-commands.js?v=1" defer></script>
   <script src="/assets/js/home/guide-commands.js?v=1" defer></script>
-  <script src="/assets/js/home/ruins.js?v=1" defer></script>
+  <script src="/assets/js/home/ruins.js?v=2" defer></script>
   <script src="/assets/js/home/world.js?v=2" defer></script>
   <script src="/assets/js/home/economy.js?v=1" defer></script>
   <script src="/assets/js/home/shop.js?v=1" defer></script>
   <script src="/assets/js/home/world-actions.js?v=1" defer></script>
   <script src="/assets/js/home/vfs.js?v=3" defer></script>
+  <script src="/assets/js/home/navigator.js?v=1" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7"></script>
   <script src="/assets/js/supabase-config.js"></script>
   <script src="/assets/js/supabase-client.js?v=36"></script>
@@ -507,10 +501,10 @@
   <script src="/assets/js/home/radio.js?v=1" defer></script>
   <script src="/assets/js/home/chat.js?v=3" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=3" defer></script>
-  <script src="/assets/js/home-protocol.js?v=83" defer></script>
+  <script src="/assets/js/home-protocol.js?v=84" defer></script>
 
   <!-- Service Worker Registration -->
-  <script src="/assets/js/service-worker-register.js?v=3" defer></script>
+  <script src="/assets/js/service-worker-register.js?v=4" defer></script>
 
   <!-- Structured Data -->
   <script type="application/ld+json">

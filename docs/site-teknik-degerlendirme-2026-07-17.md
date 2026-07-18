@@ -26,6 +26,7 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 | Terminal monolit Faz 3A | Tamamlandı; canlı | Shard award/spend/merge kararları economy factory'sine ayrıldı; legacy Supabase fallback test altında; SW v203 |
 | Terminal monolit Faz 3B | Tamamlandı; canlı; hat parkta | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 |
 | Yeni ürün: Sinyal Arkeolojisi | Tamamlandı; canlı | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 |
+| Terminal navigasyonu N1 | Kod/test tamam; yayın bekliyor | 6 niyetli kısa Pusula, canonical/alias/fuzzy/parametre tamamlama, erişilebilir üçlü öneri ve ilk SW claim reload koruması; v206 yerel |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -388,6 +389,15 @@ modül-yokluğu ve çevrimdışı akışlar test altında; yeni komut veya backe
 `1dba6df` yayını sonrası dört canlı asset hash'i main ile eşleşti, SW v205 ve
 gerçek çevrimdışı canlı reload kabul edildi.
 
+Terminal yön bulma N1 diliminde 353 satırlık saf `navigator.js`, mevcut 132
+komutu değiştirmeden görünür dili altı niyet grubuna ayırdı. `help all` eski
+dökümü korurken ana `help` 12 satırlık bağlamsal Pusula oldu. Üç önerili
+ranking canonical komutları gösteriyor; alias, typo, CWD, oda nesnesi ve
+parametre bağlamını tek read-model'de birleştiriyor. Protocol DOM/klavye ve
+çalıştırma sahipliğini koruyor. İlk Service Worker claim'inin açık terminali
+reload etmesi de ayrı register guard'ıyla kapatıldı; gerçek update reload'u
+korundu. Framework, backend, SQL veya yeni terminal komutu eklenmedi.
+
 ### P1 — Performans ve cache kapsamı
 
 Öneri:
@@ -493,6 +503,8 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Sinyal Arkeolojisi unit | 7/7 geçti; registry/seed, world/VFS extension, fail-closed sahiplik ve core doküman koruması |
 | Sinyal Arkeolojisi Chromium | Normal keşif/reload, Ruins-yokluğu ve SW kontrollü çevrimdışı akış 3/3; erişilebilir terminal sözleşmesi ve yatay taşma temiz |
 | Sinyal Arkeolojisi canlı kabul | Geçti; ruins v1/world v2/VFS v3/protocol v83 hash'leri main ile aynı, SW v205; offline reload ve artifact okuması page error olmadan çalıştı |
+| Terminal navigasyonu N1 unit | 9/9 yeni test; Pusula/ranking/parametre/saflık ve ilk-claim/update SW register davranışı geçti; global 69/69 |
+| Terminal navigasyonu N1 Chromium | Canonical/alias/fuzzy, `cd/examine/help/man`, Tab, ok+Enter, touch, modül-yokluğu, mobil geometri ve SW kontrollü offline reload 3/3; page error yok |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |

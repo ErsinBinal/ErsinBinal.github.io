@@ -213,8 +213,8 @@ test('hidden commands and parameter prefixes preserve known precedence overlaps'
     .update(JSON.stringify(parameterPrefixes))
     .digest('hex');
 
-  assert.equal(parameterPrefixes.length, 36);
-  assert.equal(prefixDigest, 'a7f5e8a4ee432640b61533d1db8e2edb570e70b995b0c421d4f158cb83168951');
+  assert.equal(parameterPrefixes.length, 37);
+  assert.equal(prefixDigest, '526242f4a0d4580e9d3b674d998aea24ddef357b2caa68f1c5c192447d8876bf');
   assert.deepEqual(prefixOverlaps(parameterPrefixes, claims), [
     'chat>chat deck>chat',
     'incele>incele etraf>look',

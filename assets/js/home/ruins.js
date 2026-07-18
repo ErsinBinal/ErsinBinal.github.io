@@ -85,7 +85,12 @@
           'Sinyal Arkeolojisi. Kurmaca arsivin tozu altinda uc dijital kalinti var: terminal, todo, ekran.',
           `Bugunun yuzey sinyali: ${dailyArtifact.id}.`
         ].join(' '),
-        objects
+        objects,
+        navigation: [
+          'examine buluntu',
+          `cat ${dailyArtifact.id}`,
+          'cd /'
+        ]
       }
     });
     const vfsMount = deepFreeze({
