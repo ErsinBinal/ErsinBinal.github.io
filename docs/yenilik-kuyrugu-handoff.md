@@ -65,9 +65,9 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-> Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A/2B/2C/2D canlıya alındı.
-> Faz 3A shard ekonomi çekirdeği yerelde doğrulandı ve kullanıcı
-> incelemesi/commit/push/yayını bekliyor.
+> Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A/2B/2C/2D/3A canlıya alındı.
+> Faz 3B shop satın alma sınırı yerelde doğrulandı; kullanıcı
+> incelemesi/commit/push/yayını bekliyor. Kart/collect ayrı sonraki dilimdir.
 >
 > Güncel durum, test kapıları, rollback ve sıradaki kesin adım:
 > [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).

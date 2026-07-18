@@ -23,7 +23,8 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 | Terminal monolit Faz 2B | Tamamlandı; canlı | Kalıcı `/home` storage ve dosya işlemleri VFS'ye taşındı; shell davranışı/limitler korundu; SW v200 |
 | Terminal monolit Faz 2C | Tamamlandı; canlı | Sekiz odalık immutable world registry + görünüm/inceleme modeli ayrıldı; SW v201 |
 | Terminal monolit Faz 2D | Tamamlandı; canlı | `take/unlock/use` kararları callback tabanlı world-actions factory'sine ayrıldı; yan etki sahipliği protocol'de; SW v202 |
-| Terminal monolit Faz 3A | Kod/test tamam; yayın bekliyor | Shard award/spend/merge kararları economy factory'sine ayrıldı; legacy Supabase fallback test altında; SW v203 yerel |
+| Terminal monolit Faz 3A | Tamamlandı; canlı | Shard award/spend/merge kararları economy factory'sine ayrıldı; legacy Supabase fallback test altında; SW v203 |
+| Terminal monolit Faz 3B | Kod/test tamam; yayın bekliyor | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 yerel |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -358,11 +359,11 @@ görünümü ve `look/examine` davranışı 234 satırlık `world.js` factory'si
 ayrıldı. Canlı Faz 2D'de `take/unlock/use` doğrulama ve karar ağacı 169 satırlık
 `world-actions.js` factory'sine taşındı. State yazımı, persist/cloud save,
 access/audio, ödül/ekonomi ve Supabase yan etkileri callback olarak protokolde
-kaldı. Yerel Faz 3A'da award/spend/yüksek-bakiye merge kararı ve `shards` özeti
+kaldı. Canlı Faz 3A'da award/spend/yüksek-bakiye merge kararı ve `shards` özeti
 74 satırlık `economy.js` factory'sine ayrıldı. Local state yazımı, persist,
 debounce cloud save, ses ve durum satırı protocol callback'lerinde; shards
 kolonu-yok legacy select/upsert fallback'i değişmeden Supabase istemcisinde
-kaldı ve doğrudan test altına alındı. `home-protocol.js` 4.060, `vfs.js` 205
+kaldı ve doğrudan test altına alındı. `home-protocol.js` 4.047, `vfs.js` 205
 satır. Global karakterizasyon
 132 komut, 589 etiket, 545 normalize anahtar, iki bilinen son-yazan çakışması,
 36 parameter öneki, gizli/ham yollar ve dispatch sırasını kilitliyor. Normal,
@@ -371,9 +372,13 @@ Presence, Chat ve Chat Deck aynı canlı VFS oda getter'ına bağlandı. Framewo
 değiştirilmedi. World modülü yokluğunda VFS fail-closed kapanarak kilit atlamayı
 önlüyor; action modülü yokluğunda yalnız üç mutasyon komutu kapanıyor ve state
 değişmiyor. Economy modülü yokluğunda ekonomi komut/ödül yolları fail-closed
-kapanırken salt okunur world/VFS kabuğu çalışıyor. Faz 3A canlı kabulünden
-sonraki güvenli aday shop katalog/sahiplik/satın alma kararlarını, kozmetik
-storage/DOM uygulamasını değiştirmeden ayrı sınıra almaktır.
+kapanırken salt okunur world/VFS kabuğu çalışıyor. Faz 3A `convivium-v203`
+canlı kabulünde economy/protocol dosyalarının SHA-256 değerleri main `7a24c3c`
+ile eşleşti. Yerel Faz 3B'de dört ürünlü immutable katalog ile listeleme,
+sahiplik, bakiye ve satın alma kararları 95 satırlık `shop.js` factory'sine
+ayrıldı. Protocol 4.047 satıra indi; state/persist/cloud save, kozmetik storage
+ve audio uygulaması callback olarak kaldı. `bugy-flag` yazımı korundu, fakat bu
+bayrağı okuyan bir çalışma zamanı tüketicisi bulunmadığı kaydedildi.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -472,6 +477,10 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Faz 3A economy Chromium | Günlük/ritual/keşif/take/unlock kazanımı, shop harcaması, reload kalıcılığı ve economy-yokluğu fallback'i geçti; page error yok |
 | Faz 3A Supabase fallback | 4/4 geçti; shards kolonu-yok fetch/save retry, sanitize/limit, ilgisiz hata ve oturumsuz guard |
 | Faz 3A çevrimdışı Chromium | SW v203'te economy v1/actions v1/VFS v2/protocol v81 cache hazır; kazanım → vault → shop offline çalıştı |
+| Faz 3A canlı kabul | Geçti; economy v1/protocol v81 hash'leri main ile aynı, SW v203 |
+| Faz 3B shop unit | 6/6 geçti; katalog/format, guard'lar, mutasyon sırası, dependency ve sahiplik sınırı |
+| Faz 3B shop Chromium | Tema/saver/Bugy alımı, kozmetik etkiler, reload kalıcılığı ve shop-yokluğu fallback'i geçti; page error yok |
+| Faz 3B çevrimdışı Chromium | SW v204'te shop v1/protocol v82 cache hazır; satın alma, sahiplik ve bakiye offline korundu |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |
@@ -513,8 +522,8 @@ akışlar çalıştırılmadı:
 - [x] Terminal route ve rehber registry'lerini ayır (Faz 1A/1B canlı).
 - [x] VFS/world domainlerini ayır (Faz 2A/2B VFS, Faz 2C world read-model ve
   Faz 2D mutasyon karar sınırı canlı).
-- [ ] Ekonomi sahipliğini ayır (Faz 3A shard çekirdeği yerel doğrulandı ve
-  yayın bekliyor; shop satın alma ve kart/collect sınırları sırada).
+- [ ] Ekonomi sahipliğini ayır (Faz 3A shard çekirdeği canlı; Faz 3B shop satın
+  alma sınırı yerel doğrulandı ve yayın bekliyor; kart/collect ayrı dilim).
 - [ ] Büyük inline oyun kodlarını dış dosyalara çıkar.
 - [ ] Bugy motorları için ortak adapter tanımla.
 - [ ] Ana sayfa motorlarını dinamik yükle.
