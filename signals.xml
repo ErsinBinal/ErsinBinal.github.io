@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Sat, 18 Jul 2026 22:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Sat, 18 Jul 2026 22:15:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Pusulanin eski govdesi sokuldu</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-18-navigator-consolidation</guid>
+      <pubDate>Sat, 18 Jul 2026 22:15:00 +0300</pubDate>
+      <description>Help all artik elle yazilmis eski bir liste yerine 132 kanonik komutun canli indeksinden uretiliyor. Yazim duzeltmesi tek Pusula motorunda toplandi; mevcut alias'lar, gizli ilerleme ve kisisel kisayollar korundu.</description>
+    </item>
 
     <item>
       <title>Sinyal Pusulasi: terminal yolunu isaretliyor</title>

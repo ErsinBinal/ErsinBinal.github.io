@@ -1,7 +1,7 @@
 # Terminal Navigasyonu — Sinyal Pusulası Handoff
 
-Son güncelleme: 18 Temmuz 2026 (N1 canlı kabul)
-Durum: **N1 TAMAMLANDI VE CANLIDA; N2 HENÜZ BAŞLAMADI.**
+Son güncelleme: 18 Temmuz 2026 (N1.1 yerel kabul)
+Durum: **N1 CANLIDA; N1.1 KOD/TEST TAMAM, YAYIN BEKLİYOR; N2 BAŞLAMADI.**
 Başlangıç main: `c672f35`
 N1 ürün/yayın commit'i: `4bf06c2`
 
@@ -38,7 +38,8 @@ katmanıdır.
 ### N0 — Güvenlik ağı
 
 - 132 komut, 589 etiket, 545 normalize anahtar ve dispatch sırası korunacak.
-- Eski `help` çıktısı `help all` altında erişilebilir kalacak.
+- N1 geçişinde eski `help` çıktısı `help all` altında erişilebilir kalacak;
+  N1.1'de aynı komut adı veri tabanlı tam indekse geçirilecek.
 - Yeni saf navigator factory için ranking, typo, parametre ve yardım snapshot
   testleri yazılacak.
 
@@ -58,7 +59,27 @@ katmanıdır.
   çalıştırılabilecek; varsayılan/fuzzy öneri kendiliğinden yürütülmeyecek.
 - Mouse/touch seçimi yalnız input'u dolduracak; çalıştırmak için ayrıca Enter
   gerekecek.
-- Öneri motoru yoksa terminal, komut dispatch'i ve eski `help` çalışacak.
+- Öneri motoru yoksa terminal, komut dispatch'i ve acil kısa yardım çalışacak.
+
+### N1.1 — Eski katman konsolidasyonu
+
+- Hardcoded eski yardım gövdesi kaldırılacak; `help all` komut adı korunacak,
+  fakat tam indeks canlı `commandDefinitions` verisinden navigator tarafından
+  üretilecek.
+- Protocol içindeki ikinci Levenshtein/typo motoru kaldırılacak. Tamamlama,
+  `man` düzeltmesi ve çalıştırma sonrası kontrollü öneri aynı navigator kararını
+  kullanacak.
+- 132 komut, bütün mevcut alias'lar, kişisel alias davranışı ve gizli rotalara
+  erişim korunacak. Gizli `resonate` öneri/indeks kaynağına alınmayacak.
+- Navigator yokluğunda normal komut dispatch'i ve küçük bir acil yardım
+  çalışacak; eski uzun gövde geri dönmeyecek.
+- Yeni framework, backend, SQL veya terminal komutu eklenmeyecek.
+
+N1.1 kabulü: `help all` veriyle aynı ve deterministik olmalı; `hepl`, `man hepl`,
+`which`, `find`, kişisel alias ve bilinmeyen komut akışları korunmalı; eski yardım
+metni ile protocol içi `editDistance/suggestNearestCommand` kaynakta kalmamalı.
+Normal, navigator-yokluğu ve çevrimdışı Chromium akışları atomik sürüm paketiyle
+geçmeden N1.1 yayımlanmayacak.
 
 ### N2 — Bağlamsal `look` ve yerel rota
 
@@ -101,7 +122,8 @@ katmanıdır.
 
 - `navigationIntentRegistry`, keşfet/oku/oyna/ritüel/bağlan/sistem gruplarını
   immutable veri olarak tutuyor. Ana `help` 12 satırlık bağlamsal Pusula;
-  `help <niyet>` kısa detay, `help all` eski tam döküm oldu.
+  `help <niyet>` kısa detaydır. N1'de korunan eski `help all` gövdesi N1.1'de
+  canlı komut indeksine dönüştürüldü.
 - Saf `createNavigator(deps)`, kanonik komutları gösteriyor; alias'ları yalnız
   eşleştirme için kullanıyor. Prefix, alias, bağlam ve en fazla iki harflik
   fuzzy düzeltme tek puanlama katmanında birleşiyor.
@@ -115,8 +137,8 @@ katmanıdır.
   öneride ilk Enter yalnız düzeltme, ikinci Enter yürütme yapıyor.
 - Input/list ARIA combobox/listbox ilişkisi, aktif option id/selected durumu ve
   `aria-expanded` ile bağlı. İçerik yalnız DOM node + `textContent` ile yazılıyor.
-- Navigator yoksa eski `help`, normal komut dispatch'i ve basit prefix fallback
-  çalışıyor; konsola açık tek hata yazılıyor.
+- Navigator yoksa küçük acil yardım, normal komut dispatch'i ve basit prefix
+  fallback çalışıyor; konsola açık tek hata yazılıyor.
 - İlk Service Worker kurulumundaki `clients.claim()` artık açık terminali
   gereksiz reload etmiyor. Zaten controller'ı olan gerçek güncelleme kabulünde
   tek reload davranışı korunuyor ve iki unit testle kilitleniyor.
@@ -168,6 +190,41 @@ katmanıdır.
   Ana sayfa offline reload edildi; öneriler ve mobil geometri page error veya
   yatay taşma olmadan çalıştı.
 
+## N1.1 uygulanan sonuç ve yerel kabul — 18 Temmuz 2026
+
+- 46 satırlık hardcoded eski yardım gövdesi kaldırıldı. `help all`, 132 kanonik
+  komut ve 589 etiketi doğrudan canlı `commandDefinitions` verisinden satırları
+  sarmalanmış deterministik indeks olarak üretiyor; ayrıntı `man <komut>`ta.
+- Protocol içindeki ikinci `editDistance`, `commandVocab` ve
+  `suggestNearestCommand` uygulaması kaldırıldı. Görsel öneri, `man` düzeltmesi
+  ve çalıştırma sonrası kontrollü öneri navigator'ın tek `correct()` kararını
+  kullanıyor; alias typo'su kanonik sahibine dönüyor.
+- `manifest`, `clues`, `unlock hidden` gibi mevcut gizli ilerleme komutları tam
+  indekste ve dispatch'te korunuyor. Registry dışında kalan gizli
+  `resonate/rezonans` indeks ve önerilerde görünmüyor.
+- Tam eşleşen kişisel alias, uzak bir registry alias önerisiyle çakışsa bile
+  Enter'da önce çalışıyor. `alias ll look → ll` Chromium kabulüyle kilitlendi.
+- Navigator yokluğunda eski gövde geri gelmiyor; küçük `SINIRLI MOD` yardımı ve
+  core `look` dispatch'i çalışıyor.
+- Atomik yerel paket: navigator v2, protocol v85 ve `convivium-v207`. CSS,
+  komut/alias snapshot'ı, backend, SQL ve diğer domain asset'leri değişmedi.
+- Unit 71/71, Worker 12/12, site integrity 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script; smoke 11/11 ve standart Chromium 7/7 geçti. N1.1 özel Chromium
+  tam indeks/typo/`man`/`which`/`find`/alias, modül-yokluğu ve offline v207
+  akışlarında 3/3 geçti; page error yok.
+
+| N1.1 ölçümü | Sonuç |
+|---|---:|
+| `navigator.js` | 402 satır |
+| `home-protocol.js` | 4.102 satır (N1'e göre -58) |
+| Terminal komutu / etiket / normalize anahtar | 132 / 589 / 545 |
+| Ana sayfa script / managed asset | 39 / 27 |
+| Service Worker | v207 (yerel) |
+
+- navigator: `46f0d78c368f1594a164687ad3a5216b4959c3101a252f2b6a6dc99d69c59b6b`
+- protocol: `c04b892410813b43b2923085c4ccf8feaf92909de4858e362b2d062ad3efeec2`
+- Service Worker: `bec4e63ffe106cc2b354da6c0005d36d9ebbcdf477c4b76afd24ce9457345e2b`
+
 ## Değişmezler
 
 - Öneri sayısı en fazla 3.
@@ -180,16 +237,17 @@ katmanıdır.
 
 ## Rollback
 
-1. Protocol'den navigator kurulumu ve öneri DOM/klavye bağlantısını kaldır.
-2. `commandHelpText` için eski tam çıktıyı yeniden varsayılan yap; `help all`
-   uyumluluğunu koru.
-3. `navigator.js` script/syntax/precache/validator/cache-sync bağlantılarını
-   kaldır.
-4. CSS ve protocol asset query'lerini yeni ileri sürüme bump et; yayımlanmış
-   Service Worker cache sürümünü geriye düşürme.
+1. N1.1 sorununda yalnız N1.1 değişiklik setini geri al; canlı N1 Pusula/öneri
+   katmanını veya 132 komut snapshot'ını sökme.
+2. Navigator v2 `helpAll/correct` ve protocol v85 bağlantısını birlikte geri
+   al; iki farklı typo sahibini kısmi biçimde bırakma.
+3. Navigator/protocol asset query'lerini ve Service Worker cache adını yeni bir
+   ileri sürüme bump et; yayımlanmış cache sürümünü geriye düşürme.
 
 ## Yarım kalırsa kesin başlangıç noktası
 
-N1 kapandı ve canlı kabul edildi. Devam ederken önce git durumunu ve bu belgeyi
-kontrol et; N1 koduna yeni kapsam karıştırma. N2 `look`/yerel rota işini ayrı
-atomik yayın dilimi olarak aç, N2 kabul edilmeden N3 Atlas'a başlama.
+Aktif iş N1.1 yayın ve canlı kabulüdür. Devam ederken önce git durumunu,
+navigator v2/protocol v85/SW v207 referanslarını ve yukarıdaki üç yerel hash'i
+kontrol et. Canlı hash, `help all`, kişisel alias, navigator-yokluğu ve offline
+reload kabul edilmeden N2'ye başlama. N2 `look`/yerel rota ve N3 Atlas ayrı
+atomik yayın dilimleri olarak kalacak.

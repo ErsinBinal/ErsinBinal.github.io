@@ -29,6 +29,7 @@ tamamlanan N1 kabulü ve sıradaki navigasyon fazları ise
 | Terminal monolit Faz 3B | Tamamlandı; canlı; hat parkta | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 |
 | Yeni ürün: Sinyal Arkeolojisi | Tamamlandı; canlı | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 |
 | Terminal navigasyonu N1 | Tamamlandı; canlı | 6 niyetli kısa Pusula, canonical/alias/fuzzy/parametre tamamlama, erişilebilir üçlü öneri ve ilk SW claim reload koruması; SW v206 |
+| Terminal navigasyonu N1.1 | Kod/test tamam; yayın bekliyor | Hardcoded eski yardım ve mükerrer protocol typo motoru kaldırıldı; `help all` canlı registry indeksi, tek navigator düzeltmesi ve kişisel alias önceliği; v207 yerel |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -404,6 +405,15 @@ Chromium'da ilk SW claim açık terminali ve `h` girdisini korudu; canonical,
 fuzzy, niyet, oda ve nesne önerileri çalıştı. Ağ kapatıldıktan sonra ana sayfa
 offline reload edildi; Pusula yatay taşma veya page error olmadan çalıştı.
 
+N1.1 konsolidasyonunda hardcoded eski yardım gövdesi ile protocol içindeki
+ikinci Levenshtein/typo motoru kaldırıldı. `help all`, mevcut 132 kanonik komut
+ve 589 etiketten navigator içinde deterministik tam indeks üretiyor; gizli
+ilerleme komutları korunurken registry dışı `resonate` sızmıyor. Görsel öneri,
+`man` ve çalıştırma sonrası düzeltme aynı `correct()` kararına bağlandı. Kişisel
+alias tam eşleşmesine Enter önceliği verildi. Protocol 4.160'tan 4.102 satıra
+indi; navigator 402 satır. Yerel atomik paket navigator v2, protocol v85 ve
+SW v207; backend, SQL, framework ve komut uzayı değişmedi.
+
 ### P1 — Performans ve cache kapsamı
 
 Öneri:
@@ -474,7 +484,7 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 
 | Kontrol | Sonuç |
 |---|---|
-| `npm run check` | Geçti; unit 69/69, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
+| `npm run check` | Geçti; unit 71/71, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
 | Service Worker event entegrasyonu | 5/5 geçti; kritik/opsiyonel install + update/offline |
 | Wrangler production dry-run | Geçti; 34,99 KiB / gzip 9,99 KiB |
 | Zorunlu JS/MJS syntax kapısı | Geçti; yeni economy modülü dahil |
@@ -512,6 +522,8 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Terminal navigasyonu N1 unit | 9/9 yeni test; Pusula/ranking/parametre/saflık ve ilk-claim/update SW register davranışı geçti; global 69/69 |
 | Terminal navigasyonu N1 Chromium | Canonical/alias/fuzzy, `cd/examine/help/man`, Tab, ok+Enter, touch, modül-yokluğu, mobil geometri ve SW kontrollü offline reload 3/3; page error yok |
 | Terminal navigasyonu N1 canlı kabul | Geçti; navigator v1/Ruins v2/protocol v84/home CSS v28/SW register v4 hash'leri main ile aynı, SW v206; ilk claim ve gerçek offline reload hatasız |
+| Terminal navigasyonu N1.1 unit | 9/9 navigator testi; veri tabanlı tam indeks, canonical/alias typo ve protocol'de eski yardım/typo kaynağının yokluğu; global 71/71 |
+| Terminal navigasyonu N1.1 Chromium | Tam indeks, `man/which/find`, kişisel alias önceliği, navigator-yokluğu acil yardımı ve SW v207 offline reload 3/3; page error yok |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |

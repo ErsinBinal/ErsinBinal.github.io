@@ -2185,7 +2185,7 @@
         if (!key) return 'which: usage which <komut>';
         if ((state.aliases || {})[key]) return `${key}: alias -> ${state.aliases[key]}`;
         if (COMMAND_SYNONYMS[key]) return `${key}: yerlesik esanlamli -> ${COMMAND_SYNONYMS[key]}`;
-        if (commandVocab.includes(key)) return `${key}: yerlesik terminal komutu`;
+        if (commandFirstWords.has(key)) return `${key}: yerlesik terminal komutu`;
         return `which: ${key}: bulunamadi (oracle'a duser)`;
       };
 
@@ -2258,7 +2258,7 @@
           (item.aliases || []).some((alias) => normalizeCommand(alias) === key)
         );
         if (!entry) {
-          const near = suggestNearestCommand(key);
+          const near = navigatorMod?.correct?.(key) || null;
           return near ? `man: "${target}" yok. bunu mu? -> ${near}` : `man: "${target}" diye bir komut yok.`;
         }
         const aliases = (entry.aliases || []).slice(0, 6).join(', ');
@@ -2982,56 +2982,22 @@
         ']'
       ].join('\n');
 
-      const legacyCommandHelpText = () => [
-        '] basla -> adim adim rehber',
-        '] guide / how to play -> terminal icinde kisa rehber',
-        '] read guide / read game guide -> makaleler alaninda uzun okuma',
+      const emergencyCommandHelpText = () => [
+        '] SINYAL PUSULASI / SINIRLI MOD',
         '',
-        'world (kesif):',
-        'look, examine <nesne>, take <nesne>, inventory, cd <oda>, unlock <oda>, use <x> on <y>',
+        '  look             bulundugun yeri oku',
+        '  cd <oda>         terminal odasini degistir',
+        '  open dossier     makaleleri ac',
+        '  man <komut>      komut ayrintisini oku',
         '',
-        'routes:',
-        'home, map, archive, notes, open dossier, guide, read guide, game guide, read game guide, app guide, open oracle, dashboard, run logic, run signal, run ash, run flow, run serpent',
-        '',
-        'lab:',
-        'dart, bartender, barista, realists bar, open oracle, paradox, ekol, universe, bugy studio, pipe, outrun',
-        '',
-        'system:',
-        'whoami, uptime, date, version, memory, ps, log, changelog, clear, random, shutdown, restart, screen saver, radio',
-        '',
-        'terminal:',
-        'ls, pwd, cd lab, cat about, tree, find oracle, theme green, volume on, scan, next, tour, badge, blackout',
-        '',
-        'kabuk (ayrinti: shell):',
-        'echo, export, env, touch, rm, which, history, fortune, cowsay, sudo',
-        'boru hatti: help | grep oyun · yonlendirme: fortune > soz.txt · zincir: cd lab && look · gecmis: !!, !3, Ctrl+R',
-        '',
-        'world:',
-        'look, examine <nesne>, take <nesne>, inventory, use <x> on <y>, unlock <oda> -- esikleri kesfet, shard\'i bul, /vault muhrunu coz',
-        'ask <konu> / sor <konu> -- oracle\'a dunya baglamiyla sor (deb aciksa onun sesiyle)',
-        'daily -- gunun sinyali (giris yaptiysan ilerlemen cihazlar arasi tasinir)',
-        'wall / mark <mesaj> -- bulundugun esikteki asenkron izleri oku / iz birak (yazmak icin giris)',
-        'who -- su an sitede gezen anonim sinyaller · bottle throw/catch/list -- sisedeki mesaj',
-        'chat -- guverte: canli akis + gezginler + fisilti + oyun davetleri · say <mesaj> -- hizli mesaj',
-        'shards -- signal shard bakiyen · shop -- kozmetik dukkan (tema, saver varyanti)',
-        'card / collect / cards -- gunun sinyal karti: gor, topla, koleksiyonla',
-        'journal -- gorev kutugu (ilerleme + siradaki hedef) · man <komut> -- komut kilavuzu',
-        'alias <ad> <komut> -- kisisel kisayol · crt -- tarama-cizgisi gorunumu ac/kapat',
-        '',
-        'deb ops:',
-        'deb talk (konus), deb whisper, deb scan, deb meteor, deb blackhole, deb deathstar, deb off',
-                '',
-        'hidden:',
-        'signal -> oracle -> manifest -> unlock hidden, clues, offline node',
-        'thread 1: notes -> examine clues -> take shard -> unlock vault -> cd vault',
-        'thread 2: lab -> pipe (coolant\'i cekirdege ulastir) -> cd core',
-        'thread 3: use shard on coolant -> prism -> unlock atlas -> cd atlas (ARCHITECT)',
-        '(soylenti: sinyal TAMAMEN koptugunda terminal baska bir yuz gosterirmis. kablonu cek, gor.)'
+        '  tamamlama katmani su an kullanilamiyor; normal komutlar calismaya devam eder.',
+        ']'
       ].join('\n');
 
       const commandHelpText = (topic = '') => {
         const key = normalizeCommand(topic);
-        if (key === 'all' || !navigatorMod) return legacyCommandHelpText();
+        if (!navigatorMod) return emergencyCommandHelpText();
+        if (key === 'all') return navigatorMod.helpAll();
         return navigatorMod.help(topic);
       };
 
@@ -3047,6 +3013,9 @@
       commandMap['rezonans'] = commandMap['resonate'];
 
       const commandChoices = commandDefinitions.flatMap(item => [item.command, ...(item.aliases || [])]);
+      const commandFirstWords = new Set(
+        commandChoices.map(choice => normalizeCommand(choice).split(' ')[0]).filter(word => word.length >= 2)
+      );
 
       navigatorMod = (() => {
         const createNavigator = window.ConviviumHome?.createNavigator;
@@ -3091,39 +3060,10 @@
         const exp = (state.aliases || {})[first];
         return exp ? exp + (sp === -1 ? '' : cmd.slice(sp)) : cmd;
       };
-      // Komut sozlugu: tum komut/alias'larin ilk kelimesi (tekil).
-      const commandVocab = [...new Set(
-        commandChoices.map(choice => normalizeCommand(choice).split(' ')[0]).filter(word => word.length >= 2)
-      )];
-      // Kucuk Levenshtein (uzunluk farki 2'den fazlaysa erken cik).
-      const editDistance = (a, b) => {
-        if (Math.abs(a.length - b.length) > 2) return 99;
-        const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
-        for (let i = 0; i <= a.length; i += 1) dp[i][0] = i;
-        for (let j = 0; j <= b.length; j += 1) dp[0][j] = j;
-        for (let i = 1; i <= a.length; i += 1) {
-          for (let j = 1; j <= b.length; j += 1) {
-            dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-          }
-        }
-        return dp[a.length][b.length];
+      const isPersonalAliasCommand = (cmd) => {
+        const first = normalizeCommand(cmd).split(' ')[0];
+        return Boolean(first) && Object.prototype.hasOwnProperty.call(state.aliases || {}, first);
       };
-      // Komut-benzeri ama eslesmeyen girdiye en yakin komutu onerir (yoksa null).
-      const suggestNearestCommand = (cmd) => {
-        const words = cmd.split(' ').filter(Boolean);
-        const first = words[0] || '';
-        if (first.length < 3 || words.length > 3) return null;
-        let best = null;
-        let bestD = 3;
-        commandVocab.forEach((word) => {
-          const d = editDistance(first, word);
-          if (d < bestD) { bestD = d; best = word; }
-        });
-        if (!best || bestD === 0 || bestD > 2) return null;
-        const rest = words.slice(1).join(' ');
-        return rest ? `${best} ${rest}` : best;
-      };
-
       const matchingCommands = (raw) => {
         const query = normalizeCommand(raw);
         if (!query) return [];
@@ -3781,7 +3721,7 @@
         }
 
         // Oracle'a dusmeden once: komut-benzeri bir yazim hatasi mi? "bunu mu demek istedin?"
-        const suggestion = suggestNearestCommand(command);
+        const suggestion = navigatorMod?.correct?.(command) || null;
         if (suggestion) {
           printTerminal(`bilinmeyen komut: ${command}\nbunu mu demek istedin? -> ${suggestion}`);
           commandInput.value = '';
@@ -3879,7 +3819,9 @@
         if (event.key === 'Enter') {
           event.preventDefault();
           const selected = currentSuggestions[activeSuggestionIndex];
-          if (suggestionSelectionExplicit && selected) {
+          if (isPersonalAliasCommand(commandInput.value)) {
+            runCommand(commandInput.value);
+          } else if (suggestionSelectionExplicit && selected) {
             applySuggestion(selected, true);
           } else if (selected && normalizeCommand(commandInput.value) !== normalizeCommand(selected.value)) {
             applySuggestion(selected);

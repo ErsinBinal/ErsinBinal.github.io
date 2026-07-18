@@ -196,6 +196,40 @@
       ].join('\n');
     };
 
+    const helpAll = () => {
+      const definitions = commandDefinitions();
+      const commands = [...new Map(definitions.map((entry) => [
+        normalized(entry.command),
+        String(entry.command || '').trim()
+      ])).values()].filter(Boolean);
+      const labelCount = definitions.reduce(
+        (total, entry) => total + 1 + (Array.isArray(entry.aliases) ? entry.aliases.length : 0),
+        0
+      );
+      const rows = [];
+      let row = '  ';
+      commands.forEach((command) => {
+        const separator = row.trim() ? ' · ' : '';
+        if (row.trim() && row.length + separator.length + command.length > 76) {
+          rows.push(row);
+          row = `  ${command}`;
+        } else {
+          row += `${separator}${command}`;
+        }
+      });
+      if (row.trim()) rows.push(row);
+
+      return [
+        '] TAM KOMUT INDEKSI',
+        `  ${commands.length} KANONIK · ${labelCount} ETIKET`,
+        '',
+        ...rows,
+        '',
+        '  AYRINTI man <komut> · PUSULA help',
+        ']'
+      ].join('\n');
+    };
+
     const liveContextCommands = () => {
       const path = currentPath();
       const room = getRoom(path);
@@ -294,7 +328,10 @@
         score = 560;
         reason = 'esanlamli';
       } else if (query.length >= 3 && !query.includes(' ')) {
-        const distance = editDistance(command, query);
+        const correctionTerms = [command, ...aliases]
+          .map((label) => label.split(' ')[0])
+          .filter(Boolean);
+        const distance = Math.min(...correctionTerms.map((term) => editDistance(term, query)));
         if (distance <= 2) {
           score = 430 - (distance * 10);
           reason = 'duzelt';
@@ -345,7 +382,19 @@
       return Object.freeze(result);
     };
 
-    return Object.freeze({ help, suggest });
+    const correct = (raw) => {
+      const words = normalized(raw).split(' ').filter(Boolean);
+      const first = words[0] || '';
+      if (first.length < 3 || words.length > 3) return null;
+      const correction = suggest(first, { limit: 3 })
+        .find((item) => item.reason === 'duzelt');
+      if (!correction) return null;
+      if (words.length === 1) return correction.value;
+      const canonicalFirst = normalized(correction.value).split(' ')[0];
+      return [canonicalFirst, ...words.slice(1)].join(' ');
+    };
+
+    return Object.freeze({ help, helpAll, suggest, correct });
   }
 
   root.navigationIntentRegistry = navigationIntentRegistry;

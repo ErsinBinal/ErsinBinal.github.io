@@ -72,7 +72,7 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 > Son tamamlanan ürün: [Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
 > Park edilen mimari hat: [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 > Terminal navigasyon programı: [Sinyal Pusulası Handoff](terminal-navigation-handoff.md)
-> (N1 canlı; N2 sıradaki ayrı dilim).
+> (N1 canlı; N1.1 kod/yerel kabul tamam, yayın bekliyor; N2 bekliyor).
 
 ### Tamamlanan deneyim omurgası — Sinyal Pusulası N1
 
@@ -85,6 +85,13 @@ atomik canlı v206 paketinde. Beş canlı asset hash'i main ile eşleşti; temiz
 mobil Chromium'da ilk claim, gerçek offline reload ve öneri etkileşimleri
 hatasız geçti. N2 bağlamsal `look`/yerel rota, N3 Yaşayan Atlas olarak ayrı
 dilimlerde ilerleyecek; ikisi de henüz başlamadı.
+
+N1.1'de eski hardcoded `help` gövdesi ve protocol içindeki ikinci typo motoru
+kaldırıldı. `help all` artık 132 kanonik komut/589 etiketi canlı registry'den
+üretiyor; kişisel alias'lar ve gizli rotalara erişim korundu, tam indeks ve typo
+kararı navigator'da tekleşti. Navigator v2, protocol v85 ve yerel SW v207;
+unit 71/71, özel Chromium 3/3, standart E2E 7/7 ve smoke 11/11 geçti. Yayın ve
+canlı kabul tamamlanmadan N2 açılmayacak.
 
 ### Tamamlanan yeni ürün — Sinyal Arkeolojisi
 

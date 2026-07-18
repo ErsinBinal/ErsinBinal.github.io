@@ -116,6 +116,17 @@ test('Pusula intent help stays short and rejects unknown frequencies clearly', (
   );
 });
 
+test('Full command index is generated from canonical live definitions', () => {
+  const { navigator } = createFixture();
+  const index = navigator.helpAll();
+
+  assert.match(index, /^] TAM KOMUT INDEKSI\n/);
+  assert.match(index, /13 KANONIK · 27 ETIKET/);
+  definitions.forEach(({ command }) => assert.match(index, new RegExp(`(^| · |  )${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($| · |\n)`)));
+  assert.doesNotMatch(index, /yardim|origin|rezonans/);
+  assert.match(index, /AYRINTI man <komut> · PUSULA help/);
+});
+
 test('Canonical completion ranks help first and collapses aliases into their owner', () => {
   const { navigator } = createFixture();
 
@@ -125,6 +136,17 @@ test('Canonical completion ranks help first and collapses aliases into their own
   assert.deepEqual(values(navigator.suggest('hepl')), ['help']);
   assert.equal(navigator.suggest('hepl')[0].reason, 'duzelt');
   assert.deepEqual(values(navigator.suggest('run s')), ['run signal']);
+});
+
+test('Navigator is the single canonical typo resolver for direct and parameter flows', () => {
+  const { navigator } = createFixture();
+
+  assert.equal(navigator.correct('hepl'), 'help');
+  assert.equal(navigator.correct('yrdim'), 'help');
+  assert.equal(navigator.correct('opne dossier'), 'open dossier');
+  assert.equal(navigator.correct('hepl oyna'), 'help oyna');
+  assert.equal(navigator.correct('help'), null);
+  assert.equal(navigator.correct('serbest bir soru'), null);
 });
 
 test('Parameter completion uses live rooms, current objects, intents and commands', () => {
@@ -152,6 +174,8 @@ test('Navigator remains a pure read model and protocol owns execution/UI', () =>
   assert.doesNotMatch(navigatorSource, /document\.|localStorage|sessionStorage|fetch\(|innerHTML|runCommand/);
   assert.match(protocolSource, /createNavigator/);
   assert.match(protocolSource, /renderCommandSuggestions/);
+  assert.match(protocolSource, /if \(isPersonalAliasCommand\(commandInput\.value\)\) \{\s+runCommand\(commandInput\.value\)/);
+  assert.doesNotMatch(protocolSource, /legacyCommandHelpText|const editDistance|suggestNearestCommand|commandVocab/);
 });
 
 test('Navigator factory rejects every missing read dependency', () => {
