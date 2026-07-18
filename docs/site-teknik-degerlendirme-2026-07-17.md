@@ -29,7 +29,7 @@ tamamlanan N1 kabulü ve sıradaki navigasyon fazları ise
 | Terminal monolit Faz 3B | Tamamlandı; canlı; hat parkta | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 |
 | Yeni ürün: Sinyal Arkeolojisi | Tamamlandı; canlı | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 |
 | Terminal navigasyonu N1 | Tamamlandı; canlı | 6 niyetli kısa Pusula, canonical/alias/fuzzy/parametre tamamlama, erişilebilir üçlü öneri ve ilk SW claim reload koruması; SW v206 |
-| Terminal navigasyonu N1.1 | Kod/test tamam; yayın bekliyor | Hardcoded eski yardım ve mükerrer protocol typo motoru kaldırıldı; `help all` canlı registry indeksi, tek navigator düzeltmesi ve kişisel alias önceliği; v207 yerel |
+| Terminal navigasyonu N1.1 | Tamamlandı; canlı | Hardcoded eski yardım ve mükerrer protocol typo motoru kaldırıldı; `help all` canlı registry indeksi, tek navigator düzeltmesi ve kişisel alias önceliği; SW v207 |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -411,8 +411,10 @@ ve 589 etiketten navigator içinde deterministik tam indeks üretiyor; gizli
 ilerleme komutları korunurken registry dışı `resonate` sızmıyor. Görsel öneri,
 `man` ve çalıştırma sonrası düzeltme aynı `correct()` kararına bağlandı. Kişisel
 alias tam eşleşmesine Enter önceliği verildi. Protocol 4.160'tan 4.102 satıra
-indi; navigator 402 satır. Yerel atomik paket navigator v2, protocol v85 ve
-SW v207; backend, SQL, framework ve komut uzayı değişmedi.
+indi; navigator 402 satır. Canlı atomik paket navigator v2, protocol v85 ve
+SW v207; backend, SQL, framework ve komut uzayı değişmedi. `df7a609` yayını
+sonrası navigator/protocol/SW canlı hash'leri main ile eşleşti; tam indeks,
+kişisel alias, navigator-yokluğu ve offline reload canlı Chromium'da 3/3 geçti.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -524,6 +526,7 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Terminal navigasyonu N1 canlı kabul | Geçti; navigator v1/Ruins v2/protocol v84/home CSS v28/SW register v4 hash'leri main ile aynı, SW v206; ilk claim ve gerçek offline reload hatasız |
 | Terminal navigasyonu N1.1 unit | 9/9 navigator testi; veri tabanlı tam indeks, canonical/alias typo ve protocol'de eski yardım/typo kaynağının yokluğu; global 71/71 |
 | Terminal navigasyonu N1.1 Chromium | Tam indeks, `man/which/find`, kişisel alias önceliği, navigator-yokluğu acil yardımı ve SW v207 offline reload 3/3; page error yok |
+| Terminal navigasyonu N1.1 canlı kabul | Geçti; navigator v2/protocol v85/SW v207 hash'leri main ile aynı; veri indeksi, alias, modül-yokluğu ve gerçek offline reload 3/3 |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |

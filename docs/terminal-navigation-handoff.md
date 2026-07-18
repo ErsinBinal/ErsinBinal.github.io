@@ -1,9 +1,10 @@
 # Terminal Navigasyonu — Sinyal Pusulası Handoff
 
-Son güncelleme: 18 Temmuz 2026 (N1.1 yerel kabul)
-Durum: **N1 CANLIDA; N1.1 KOD/TEST TAMAM, YAYIN BEKLİYOR; N2 BAŞLAMADI.**
+Son güncelleme: 18 Temmuz 2026 (N1.1 canlı kabul)
+Durum: **N1 VE N1.1 TAMAMLANDI/CANLIDA; N2 BAŞLAMADI.**
 Başlangıç main: `c672f35`
 N1 ürün/yayın commit'i: `4bf06c2`
+N1.1 ürün/yayın commit'i: `df7a609`
 
 Bu belge terminal yön bulma düzeninin tek takip noktasıdır. Ürün havuzu ve
 park edilen domain modülerleştirmesi bu değişiklik setine karıştırılmayacaktır.
@@ -206,7 +207,7 @@ geçmeden N1.1 yayımlanmayacak.
   Enter'da önce çalışıyor. `alias ll look → ll` Chromium kabulüyle kilitlendi.
 - Navigator yokluğunda eski gövde geri gelmiyor; küçük `SINIRLI MOD` yardımı ve
   core `look` dispatch'i çalışıyor.
-- Atomik yerel paket: navigator v2, protocol v85 ve `convivium-v207`. CSS,
+- Atomik canlı paket: navigator v2, protocol v85 ve `convivium-v207`. CSS,
   komut/alias snapshot'ı, backend, SQL ve diğer domain asset'leri değişmedi.
 - Unit 71/71, Worker 12/12, site integrity 27 HTML / 27 CSP / 22 tam sürümlü
   harici script; smoke 11/11 ve standart Chromium 7/7 geçti. N1.1 özel Chromium
@@ -219,11 +220,27 @@ geçmeden N1.1 yayımlanmayacak.
 | `home-protocol.js` | 4.102 satır (N1'e göre -58) |
 | Terminal komutu / etiket / normalize anahtar | 132 / 589 / 545 |
 | Ana sayfa script / managed asset | 39 / 27 |
-| Service Worker | v207 (yerel) |
+| Service Worker | v207 (canlı) |
 
 - navigator: `46f0d78c368f1594a164687ad3a5216b4959c3101a252f2b6a6dc99d69c59b6b`
 - protocol: `c04b892410813b43b2923085c4ccf8feaf92909de4858e362b2d062ad3efeec2`
 - Service Worker: `bec4e63ffe106cc2b354da6c0005d36d9ebbcdf477c4b76afd24ce9457345e2b`
+
+## N1.1 canlı kabul — 18 Temmuz 2026
+
+- `df7a609` main'e gönderildi; GitHub Pages ana sayfası navigator v2 ve protocol
+  v85'i, canlı Service Worker ise aynı referanslarla `convivium-v207` paketini
+  yüklüyor.
+- Navigator, protocol ve Service Worker canlı SHA-256 değerleri yukarıdaki yerel
+  kabul hash'leriyle birebir eşleşti. Yeni changelog ve RSS girdisi canlı uçtan
+  okundu.
+- Canlı Chromium'da veri tabanlı 132 komut/589 etiket indeksi, `man hepl`,
+  `manifest/unlock hidden` görünürlüğü ve `alias ll look → ll` çalıştı; eski
+  `thread 1:` yardım gövdesi görünmedi.
+- Navigator v2 isteği engellendiğinde küçük `SINIRLI MOD` yardımı ve core `look`
+  dispatch'i çalıştı; eski gövde geri dönmedi.
+- Temiz mobil oturumda v207 kontrol/cache kabulünden sonra ağ kapatıldı. Offline
+  reload sonrası yeni indeks ve alias typo önerisi page error olmadan çalıştı.
 
 ## Değişmezler
 
@@ -246,8 +263,7 @@ geçmeden N1.1 yayımlanmayacak.
 
 ## Yarım kalırsa kesin başlangıç noktası
 
-Aktif iş N1.1 yayın ve canlı kabulüdür. Devam ederken önce git durumunu,
-navigator v2/protocol v85/SW v207 referanslarını ve yukarıdaki üç yerel hash'i
-kontrol et. Canlı hash, `help all`, kişisel alias, navigator-yokluğu ve offline
-reload kabul edilmeden N2'ye başlama. N2 `look`/yerel rota ve N3 Atlas ayrı
-atomik yayın dilimleri olarak kalacak.
+N1.1 kapandı ve canlı kabul edildi. Devam ederken önce git durumunu ve bu belgeyi
+kontrol et; eski yardım/typo uygulamasını geri getirme. Sıradaki navigasyon işi
+N2 `look`/yerel rotadır ve ayrı atomik yayın dilimi olarak açılmalıdır. N2 canlı
+kabul edilmeden N3 Atlas'a başlama.
