@@ -9,9 +9,10 @@ Ana terminalin route/rehber registry'lerini, global komut-alias-önek dispatch
 uzayını, VFS path/lock/storage çıktılarını, kalıcı `/home` yazma-ekleme-silme
 semantiği ile dosya/ad/içerik limitlerini, immutable world registry'si ile oda
 paneli/inceleme/görev/unvan geçişlerini, `take/unlock/use` world mutasyon
-kararlarını ve yan etkilerin çağrı sırasını, Presence/Chat oda tüketimini,
-frontend Supabase Bearer taşımasını ve Service Worker install/update/offline
-yaşam döngüsünü kilitler. Dış ağa çıkmaz.
+kararlarını, shard award/spend/cloud-merge kararları ile yan etki sırasını,
+Supabase `world_state.shards` eski-şema fallback'ini, Presence/Chat oda
+tüketimini, frontend Supabase Bearer taşımasını ve Service Worker
+install/update/offline yaşam döngüsünü kilitler. Dış ağa çıkmaz.
 
 ```bash
 npm run test:unit

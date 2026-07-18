@@ -143,6 +143,7 @@
       let vfsMod = null;
       let worldMod = null;
       let worldActionsMod = null;
+      let economyMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -446,24 +447,8 @@
 
       // Signal Shards ekonomisi: tek para birimi. Kazanim kucuk ve seyrek;
       // bakiye localStorage'da yasar, girisliyse world_state ile buluta tasinir.
-      const awardShards = (amount = 1, reason = '') => {
-        const gain = Math.max(0, Math.round(Number(amount) || 0));
-        if (!gain) return;
-        state.shards = Math.max(0, (Number(state.shards) || 0) + gain);
-        persist();
-        scheduleWorldSave();
-        audioCue('game.coin');
-        if (consoleLine && reason) consoleLine.textContent = `+${gain} shard / ${reason}`;
-      };
-
-      const spendShards = (amount) => {
-        const cost = Math.max(0, Math.round(Number(amount) || 0));
-        if ((Number(state.shards) || 0) < cost) return false;
-        state.shards -= cost;
-        persist();
-        scheduleWorldSave();
-        return true;
-      };
+      const awardShards = (amount = 1, reason = '') => economyMod?.award?.(amount, reason);
+      const spendShards = (amount) => economyMod?.spend?.(amount) ?? false;
 
       // --- Faz 3: kalici world state senkronu (Supabase). Tamamen defansif:
       // backend yoksa / oturum yoksa / hata olursa localStorage davranisi aynen korunur.
@@ -499,7 +484,7 @@
             state.inventory = [...new Set([...(state.inventory || []), ...(remote.inventory || [])])];
             state.discovered = [...new Set([...(state.discovered || []), ...(remote.discovered || [])])];
             state.level = Math.max(Number(state.level) || 0, Number(remote.level) || 0);
-            state.shards = Math.max(Number(state.shards) || 0, Number(remote.shards) || 0);
+            economyMod?.mergeRemoteBalance?.(remote.shards);
             persist();
             updateAccess();
             renderProtocolSurfaces();
@@ -510,6 +495,29 @@
           worldSyncReady = false; // sessiz fallback.
         }
       };
+
+      economyMod = (() => {
+        const createEconomy = window.ConviviumHome?.createEconomy;
+        if (typeof createEconomy !== 'function') {
+          console.error('[home-protocol] Economy module unavailable');
+          return null;
+        }
+        try {
+          return createEconomy({
+            getBalance: () => state.shards,
+            setBalance: (balance) => { state.shards = balance; },
+            persist,
+            scheduleWorldSave,
+            playCoinAudio: () => audioCue('game.coin'),
+            setStatus: (message) => {
+              if (consoleLine) consoleLine.textContent = message;
+            }
+          });
+        } catch (error) {
+          console.error('[home-protocol] Economy module failed', error);
+          return null;
+        }
+      })();
 
       const routeSuggestions = {
         0: 'Trace -> Oracle -> Dossier',
@@ -1185,6 +1193,7 @@
         state.rituals += 1;
         if (state.rituals >= 2) award(Math.max(state.level, 2));
         persist();
+        if (!economyMod) return `${sample(ritualLines)}\n(shard ekonomisi unavailable)`;
         awardShards(1, 'ritual');
         return `${sample(ritualLines)}\n(+1 shard)`;
       };
@@ -1358,8 +1367,8 @@
       })();
 
       worldActionsMod = (() => {
-        if (!worldMod || !vfsMod) {
-          console.error('[home-protocol] World actions disabled: world/VFS unavailable');
+        if (!worldMod || !vfsMod || !economyMod) {
+          console.error('[home-protocol] World actions disabled: world/VFS/economy unavailable');
           return null;
         }
         const createWorldActions = window.ConviviumHome?.createWorldActions;
@@ -1510,6 +1519,7 @@
       };
 
       const collectCommand = () => {
+        if (!economyMod) return 'collect: economy unavailable';
         const dateKey = cardDateKey();
         const key = `card:${dateKey}`;
         if ((state.inventory || []).includes(key)) {
@@ -1835,16 +1845,7 @@
 
       const shardOwned = (key) => (state.inventory || []).includes(`shop:${key}`);
 
-      const shardsCommand = () => [
-        '] SIGNAL SHARDS',
-        '',
-        `  bakiye: ${state.shards} shard`,
-        '',
-        '  kazanim: gunluk ilk ziyaret +2, yeni esik kesfi +2, take +3,',
-        '           unlock +5, ritual +1, rezonans +3',
-        '  harcama: shop (kozmetik dukkan)',
-        ']'
-      ].join('\n');
+      const shardsCommand = () => economyMod?.summary?.() || 'shards: economy unavailable';
 
       const applyShopPurchase = (key) => {
         try {
@@ -1854,6 +1855,7 @@
       };
 
       const shopCommand = (arg = '') => {
+        if (!economyMod) return 'shop: economy unavailable';
         const norm = normalizeCommand(arg);
         if (!norm || norm === 'list') {
           const rows = SHOP_ITEMS.map((item) => {
