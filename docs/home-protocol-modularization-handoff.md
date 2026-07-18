@@ -1,9 +1,10 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz 2A yerel doğrulama)
-Durum: **Faz 0/1A/1B canlıda; Faz 1B `convivium-v198` kabulü tamamlandı. Faz
-2A VFS navigation çekirdeği kod, karakterizasyon, tarayıcı ve çevrimdışı test
-tarafında tamam; kullanıcı incelemesi/commit/push bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (Faz 2B yerel doğrulama)
+Durum: **Faz 0/1A/1B/2A canlıda; Faz 2A `convivium-v199` kabulü tamamlandı.
+Faz 2B kalıcı `/home` motoru kod, karakterizasyon, tarayıcı, fallback ve
+çevrimdışı test tarafında tamam; kullanıcı incelemesi/commit/push/yayın
+bekliyor.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
 > Öncelik kilidi 18 Temmuz 2026'da kapandı: A1, A2, A3, B1 ve B2 canlı
@@ -45,17 +46,17 @@ Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B canlıya alındı; Faz
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A yerel |
-|---|---:|---:|---:|---:|
-| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır |
-| Terminal komutu | 132 | 132 | 132 | 132 |
-| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 |
-| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 |
-| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 |
-| `vfs.js` | yok | yok | yok | 132 satır |
-| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 |
-| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 |
-| Service Worker cache sürümü | v194 | v195 | v198 | v199 (yerel) |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B yerel |
+|---|---:|---:|---:|---:|---:|
+| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır |
+| Terminal komutu | 132 | 132 | 132 | 132 | 132 |
+| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 | 95 |
+| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 | 23 |
+| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 | 14 |
+| `vfs.js` | yok | yok | yok | 132 satır | 205 satır |
+| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 |
+| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 |
+| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 (yerel) |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -198,7 +199,7 @@ Değişen/yeni dosyalar:
   `home-protocol.js?v=76` ve Service Worker `convivium-v198` doğrulandı. Guide
   ve protocol dosyalarının canlı SHA-256 değerleri main ile birebir eşleşti.
 
-### Faz 2A — VFS navigation çekirdeği — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz 2A — VFS navigation çekirdeği — TAMAMLANDI VE CANLI DOĞRULANDI
 
 `virtualCwd`, sanal dosya sistemi, oda/çevre komutları ve bunların storage
 erişimini tek factory sınırında topla. Önce `pwd`, `ls`, `cd`, `cat` ve room
@@ -250,6 +251,12 @@ Karakterizasyon ve doğrulama:
   testi bilinçli olarak skip edildi.
 - `index.html`, syntax/site-integrity, cache sync ve precache bağlantıları aynı
   dilimde güncellendi. 21 managed asset senkron.
+- Kullanıcı yayını sonrası canlı ana sayfada `vfs.js?v=1`,
+  `home-protocol.js?v=77` ve Service Worker `convivium-v199` doğrulandı. VFS
+  SHA-256 `2cc765c30455b14f9b0bfa6ec02ade40c4c3b0c98b9c6375feac6e7afc440e7c`,
+  protocol SHA-256
+  `bb56650c835e1d7c8796078cb40bd0f85af4de9e43c06a24b7ce1b2c9644612a`;
+  iki canlı dosya da main ile birebir eşleşti.
 
 Değişen/yeni dosyalar:
 
@@ -274,12 +281,64 @@ Bilinen, bu dilimde değiştirilmemiş kabuk davranışları:
   çalışıyor. Bu iki konu Faz 2A regresyonu değildir. Parser davranışını dosya
   taşıma ile karıştırmamak için ayrı düzeltme dilimine bırakıldı.
 
-### Faz 2B — Kalıcı `/home` dosya motoru — SIRADAKİ
+### Faz 2B — Kalıcı `/home` dosya motoru — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
-Önce `echo >`, `touch`, `rm`, boş/dolu/depolama-kapalı ve boyut/adet sınırı
-karakterizasyonunu ekle. Ardından `vfsLoad/save/name/list/read/write/remove`
-sahipliğini `vfs.js` içine al; shell yönlendirme semantiğini ve localStorage
-anahtarını değiştirme. Parser normalizasyon sorununu bu taşıma ile birleştirme.
+Uygulanan güvenli dilim:
+
+- `convivium.shell.files` storage anahtarı ile 24 dosya, 32 karakter dosya adı
+  ve 4.000 karakter içerik sınırlarının sahipliği `vfs.js` içine taşındı.
+- `normalizeFileName/listFiles/readFile/writeFile/removeFile` artık VFS
+  factory'sinin açık sözleşmesidir. Bozuk JSON, dizi biçiminde veri ve
+  `localStorage` erişim/yazma hatalarındaki eski best-effort davranış korundu.
+- `home-protocol.js` storage şeması veya motoru tutmuyor; yalnız VFS çağrılarını
+  shell `touch`, `rm/del`, `tee`, `>` ve `>>` yollarına bağlıyor.
+- Shell yönlendirme çıktıları, dosya sıralaması, tekrar `touch`, korumalı
+  `rm -rf home`, yazma/ekleme semantiği ve hata metinleri değiştirilmedi.
+- `index.html` için `vfs.js?v=2` ve `home-protocol.js?v=78`; Service Worker için
+  `convivium-v200` atomik olarak hazırlandı. Precache ve site-integrity
+  sözleşmeleri aynı sürümlere bağlandı; managed asset sayısı 21'de kaldı.
+- Faz 2A'da kaydedilen `cd ..`/`cd /` ve noktalı `cat` normalizasyon sorunları
+  bu dilimde bilinçli olarak düzeltilmedi.
+
+Karakterizasyon ve doğrulama:
+
+- `tests/unit/home-vfs.test.mjs` 8/8: navigation/oda tüketicilerine ek olarak
+  ad normalizasyonu, yazma, ekleme, listeleme, silme, üç limit ve bozuk/kapalı
+  storage davranışları kilitlendi. Protocol'ün storage motorunu yeniden
+  sahiplenmediği ve tüm yazma yollarını VFS'ye verdiği kaynak testiyle korunuyor.
+- `npm run check`: unit 26/26, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script ile geçti. `npm run sync:cache` 21 asset'i senkron buldu.
+- Normal Chromium akışında `>`, `>>`, `cat`, iki kez `touch`, `ls home`, `tee`,
+  `rm`, `del` ve korumalı `rm -rf home` geçti. Son storage içeriği yalnız
+  beklenen `{ "kopya": "filtre" }` oldu; page error yok.
+- VFS asset'i bilinçli engellendiğinde
+  `[home-protocol] VFS module unavailable` görüldü; yönlendirme kontrollü
+  `yaz: virtual filesystem unavailable` döndürdü, `level` çalışmayı sürdürdü
+  ve page error oluşmadı.
+- Service Worker kontrollü çevrimdışı reload'da `convivium-v200` içindeki
+  `vfs.js?v=2` ve `home-protocol.js?v=78` doğrulandı; yazma → ekleme → `cat` →
+  silme zinciri çevrimdışı geçti ve storage boş kaldı.
+- Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
+  testi bilinçli olarak skip edildi.
+
+Değişen dosyalar:
+
+| Dosya | Amaç |
+|---|---|
+| `assets/js/home/vfs.js` | Kalıcı `/home` storage ve dosya işlemleri sahipliği |
+| `assets/js/home-protocol.js` | İnce shell/VFS orkestrasyon çağrıları |
+| `tests/unit/home-vfs.test.mjs` | Storage, limit, sahiplik ve hata karakterizasyonu |
+| `index.html` | VFS v2 ve protocol v78 referansları |
+| `service-worker.js` | Aynı asset sürümleri ve cache v200 |
+| `scripts/validate-site-integrity.js` | Precache/script sürüm sözleşmeleri |
+
+### Faz 2C — Salt okunur world/room modeli — 2B CANLI KABULÜ SONRASI ADAY
+
+Önce `currentRoom`, oda görünümü, `look` ve `examine` çıktıları ile kilitli oda
+fallback'lerini karakterize et. İlk dilimde yalnız salt okunur oda verisi ve
+görüntüleme sahipliğini VFS/world modül sınırına al; `take`, `unlock`, `use`,
+ödül/economy ve Supabase yan etkilerini aynı taşımaya katma. Envanter yüksek
+bağlılık gösterirse bu aday yeniden dilimlenmeden kod taşınmamalıdır.
 
 ### Faz 3 — Ekonomi
 
@@ -373,15 +432,29 @@ Sorun görülürse yalnız Faz 2A geri alınır:
 5. Yayınlanmış `convivium-v199` hiçbir koşulda v198'e düşürülmez; ileri cache
    sürümüyle rollback yapılır.
 
+## Faz 2B rollback
+
+Sorun görülürse canlı Faz 2A sınırını koruyarak yalnız Faz 2B geri alınır:
+
+1. `convivium.shell.files` anahtarı, üç limit ve
+   `vfsLoad/save/name/list/read/write/remove` uygulamalarını aynı davranışla
+   protocol içine geri koy.
+2. VFS'nin navigation/CWD sahipliğini ve Presence/Chat tüketicilerini olduğu
+   yerde bırak; Faz 2A'yı geri alma.
+3. `home-vfs.test.mjs` içindeki storage, limit, bozuk veri ve kapalı storage
+   karakterizasyonunu inline motoru doğrulayacak biçimde koru; testleri silme.
+4. `vfs.js`, protocol ve Service Worker referanslarını yeni ileri `?v=` ve
+   cache sürümüyle yayınla. `convivium-v200` canlıya çıktıysa v199'a düşürme.
+
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Faz 2A için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
-aittir. Yayın sonrası canlıda `vfs.js?v=1`, `home-protocol.js?v=77` ve
-`convivium-v199` doğrulanır. Terminalde en az `pwd`, `cd vault`, `cd notes`,
-`ls notes`, `cd home`, `echo merhaba > faz2`, `cat faz2`, `echo $CWD` ve `look`
-çalıştırılır.
+Faz 2B için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
+aittir. Yayın sonrası canlıda `vfs.js?v=2`, `home-protocol.js?v=78` ve
+`convivium-v200` doğrulanır; canlı dosya hash'leri main ile karşılaştırılır.
+Terminalde en az `echo ilk > dosya`, `echo ikinci >> dosya`, `cat dosya`,
+`touch bos`, tekrar `touch bos`, `ls home`, `echo filtre | tee kopya`,
+`rm dosya`, `del bos` ve `rm -rf home` çalıştırılır.
 
-Canlı kabul temizse Faz 2B'ye test-first geç: önce kalıcı `/home` dosya
-motorunun storage ve limit semantiğini karakterize et, sonra sahipliği VFS
-factory'sine taşı. `cd ..`/`cd /` ve noktalı `cat` parser sorunlarını bu taşıma
-ile aynı değişiklik setinde düzeltme.
+Canlı kabul temizse Faz 2C için önce salt okunur world/room bağımlılık envanteri
+ve karakterizasyon testi hazırlanır. Parser sorunları ile `take/unlock/use`,
+ekonomi ve Supabase yan etkileri bu okuma-modeli dilimine katılmaz.

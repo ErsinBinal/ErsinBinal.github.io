@@ -65,8 +65,9 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-> Üretim sertleştirme hattı kapandı; Faz 1A/1B canlıya alındı. Aktif öncelik
-> hattı ana terminal Faz 2 VFS ayrıştırmasıdır.
+> Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A canlıya alındı. Faz 2B
+> kalıcı `/home` motoru yerelde doğrulandı ve kullanıcı yayını bekliyor. Aktif
+> öncelik hattı ana terminal Faz 2 VFS ayrıştırmasıdır.
 >
 > Güncel durum, test kapıları, rollback ve sıradaki kesin adım:
 > [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
