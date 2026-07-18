@@ -141,6 +141,7 @@
       let powerOverlay = null;
       let powerSequenceTimers = [];
       let vfsMod = null;
+      let worldMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -1238,6 +1239,14 @@
       const cdCommand = (target = '/') => vfsMod?.cd?.(target) || 'cd: virtual filesystem unavailable';
       const catCommand = (target = '') => vfsMod?.cat?.(target) || 'cat: virtual filesystem unavailable';
       const pwdCommand = () => vfsMod?.getCwd?.() || 'pwd: virtual filesystem unavailable';
+      const getWorldRoom = (path) => worldMod?.getRoom?.(path) || null;
+      const currentRoom = () => worldMod?.getCurrentRoom?.() || null;
+      const roomPanel = (path) => worldMod?.roomPanel?.(path) || 'world: room model unavailable';
+      const lookCommand = (target = '') => worldMod?.look?.(target) || 'look: world model unavailable';
+      const examineCommand = (target = '') => worldMod?.examine?.(target) || 'examine: world model unavailable';
+      const currentObjective = () => worldMod?.currentObjective?.() || 'world model unavailable';
+      const rankTitle = () => worldMod?.rankTitle?.() || 'GEZGIN';
+      const prodosPath = (path) => worldMod?.prodosPath?.(path) || '/CONVIVIUM';
       const vfsName = (input = '') => vfsMod?.normalizeFileName?.(input) ?? null;
       const vfsRead = (name) => vfsMod?.readFile?.(name) ?? null;
       const vfsWrite = (name, content, append = false) => (
@@ -1283,154 +1292,37 @@
         return matches.length ? `find ${target}:\n${matches.map(item => `  ${item}`).join('\n')}` : `find: no command matching "${target}"`;
       };
 
-      // --- World layer (Faz 1): odalar, inceleme, envanter, muhur ---
-      const worldRooms = {
-        '/': {
-          look: 'Convivium ana hattindasin. Dort esik soluk soluk yaniyor: routes, lab, notes, system. Zeminde tek bir cizik isaret var.',
-          objects: {
-            'isaret': 'Zemindeki cizik bir glyph. Dikkatle bakinca dort esigin ortak bir merkeze baktigini gosteriyor. Merkez muhurlu: /vault.',
-            'glyph': 'Ayni cizik. /vault adli muhurlu bir duguma isaret ediyor. Onu acan sey notlarin arasinda saklı.'
-          }
-        },
-        '/routes': {
-          look: 'Rotalar esigi. Public sayfalara acilan kapilar burada dizili: home, map, archive, dossier.',
-          objects: {
-            'dossier': 'Yarisi acik bir dosya. Erisim seviyen yukseldikce daha fazla satir okunuyor.'
-          }
-        },
-        '/lab': {
-          look: 'Lab esigi. Oynanabilir deneyler ve companion ritleri burada calisir. Bir kosede pipe reaktoru, yaninda tozlu bir arcade kabini bekliyor.',
-          objects: {
-            'reactor': 'Pipe reaktoru bekleme modunda. "pipe" yazip coolant hattini cekirdege ulastiran birine /core mühru acilir.',
-            'pipe': 'Reaktorun kontrol paneli. pipe komutu ile coolant bulmacasini baslat; cozersen cekirdek (/core) erisilir olur.',
-            'cabinet': "1986 yapimi bir OUT RUN kabini. Anahtar uzerinde. \"outrun\" yaz, kontagi cevir, sahili tuttur.",
-            'arcade': "Tozlu arcade kabini: OUT RUN '86. \"outrun\" komutu motoru calistirir."
-          }
-        },
-        '/notes': {
-          look: 'Saha notlari esigi. Alintilar, ritueller ve yarim birakilmis izler. Bir kosede sicacik parlayan bir clue var.',
-          objects: {
-            'clues': 'Notlarin arasinda kucuk, sicak bir parca: bir shard. Almak icin: take shard.',
-            'ritual': 'Tekrarlanan kucuk bir jest. Her tekrar bir ritmi pekistirir.'
-          },
-          grants: { item: 'shard' }
-        },
-        '/system': {
-          look: 'Sistem esigi. whoami, uptime, memory, power. Soguk ve duzenli.',
-          objects: {
-            'memory': 'Bellek haritasi. 0400: companion bus satiri yeni acilmis gibi titreseyor.'
-          }
-        },
-        '/vault': {
-          look: 'Kasa. Muhur cozuldu. Iceride tek satir var: "Arayuz, dusunme bicimini degistiren kucuk bir sistemdir." Convivium burada baslar.',
-          locked: true,
-          key: 'shard',
-          objects: {
-            'satir': 'Kurucu cumle. Ilk iz tamamlandi; terminal bunu hatirlayacak.'
-          }
-        },
-        '/core': {
-          look: 'Cekirdek. Coolant hatti kilitlendi, sicaklik dustu. Burasi sitenin nabzi: her deney, her route buradan beslenir. Duvarda bir gunluk asili.',
-          locked: true,
-          key: 'coolant',
-          objects: {
-            'cekirdek': 'Soguyan cekirdek. Reaktoru sen soguttun; ikinci iz tamamlandi.',
-            'gunluk': 'Gunluk: "Bir sistemi anlamak, onu soguk tutabilmektir." Notun altinda: "shard ile coolant bir araya gelince yol acilir."'
-          }
-        },
-        '/atlas': {
-          look: 'Atlas. Convivium\'un gizli haritasi: tum esikler, tum izler tek bir desende. Burayi yalnizca iki izi de tamamlayip prizmayi doku biri gorur.',
-          locked: true,
-          key: 'prism',
-          objects: {
-            'harita': 'Butun rotalarin ortak deseni. Artik kabugu sen de okuyabiliyorsun.',
-            'imza': 'Kosede tek satir: "Burayi gormus biri artik bir ARCHITECT\'tir. Convivium senin de evindir."'
-          }
+      // --- World read model: oda registry, gorunum ve inceleme ---
+      worldMod = (() => {
+        const createWorld = window.ConviviumHome?.createWorld;
+        if (typeof createWorld !== 'function') {
+          console.error('[home-protocol] World module unavailable');
+          return null;
         }
-      };
-
-      const roomTitles = {
-        '/': 'Ana Hat',
-        '/routes': 'Rotalar',
-        '/lab': 'Laboratuvar',
-        '/notes': 'Saha Notlari',
-        '/system': 'Sistem',
-        '/vault': 'Kasa',
-        '/core': 'Cekirdek',
-        '/atlas': 'Atlas'
-      };
-
-      // Bulundugun odadan gidebilecegin esikler (ProDOS CATALOG tarzi, BUYUK harf).
-      // Kilitliler '*' ile isaretlenir (ProDOS kilit konvansiyonu); gizli /core acilinca gorunur.
-      const roomExits = (path) => {
-        const unlocked = new Set(state.unlocked || []);
-        const bothThreads = unlocked.has('/vault') && unlocked.has('/core');
-        const order = ['/', '/routes', '/lab', '/notes', '/system', '/vault', '/core', '/atlas'];
-        const parts = [];
-        order.forEach((p) => {
-          if (p === path) return;
-          if (p === '/core' && !unlocked.has('/core')) return; // gizli kalir
-          if (p === '/atlas' && !bothThreads && !unlocked.has('/atlas')) return; // iki iz bitmeden gizli
-          const name = (p === '/' ? '/' : p.replace(/^\//, '')).toUpperCase();
-          const locked = worldRooms[p]?.locked && !unlocked.has(p);
-          parts.push(locked ? `${name}*` : name);
-        });
-        return parts.join('  ');
-      };
-
-      // "Simdi ne yapmaliyim" satiri: ilerlemeye gore guncellenir.
-      const currentObjective = () => {
-        const inv = new Set(state.inventory || []);
-        const unlocked = new Set(state.unlocked || []);
-        if (!unlocked.has('/vault')) {
-          if (!inv.has('shard')) return "notes esigine git, 'clue' incele, shard'i al";
-          return 'unlock vault ile kasayi ac, sonra cd vault';
+        try {
+          return createWorld({
+            normalizeCommand,
+            getCwd: getVirtualCwd,
+            getInventory: () => state.inventory || [],
+            getUnlocked: () => state.unlocked || [],
+            getDiscovered: () => state.discovered || [],
+            onDiscoverRoom: (path) => {
+              if (state.discovered.includes(path)) return;
+              state.discovered = [...new Set([...state.discovered, path])];
+              persist();
+            }
+          });
+        } catch (error) {
+          console.error('[home-protocol] World module failed', error);
+          return null;
         }
-        if (!unlocked.has('/core')) return "lab esigine git, pipe bulmacasini coz (-> /core acilir)";
-        if (!unlocked.has('/atlas')) {
-          if (!inv.has('prism')) return "shard'i coolant ile birlestir: use shard on coolant";
-          return 'unlock atlas ile son odayi ac, sonra cd atlas';
-        }
-        return 'her sey tamam, ARCHITECT · wall ile iz birak, daily ile gunun sinyali';
-      };
-
-      // Ilerlemeye gore kazanilan unvan (gorunur odul).
-      const rankTitle = () => {
-        const unlocked = new Set(state.unlocked || []);
-        if (unlocked.has('/atlas')) return 'ARCHITECT';
-        const done = (unlocked.has('/vault') ? 1 : 0) + (unlocked.has('/core') ? 1 : 0);
-        return done >= 2 ? 'KEEPER' : done === 1 ? 'INITIATE' : 'GEZGIN';
-      };
-
-      // ProDOS volumu tarzi yol: '/' -> /CONVIVIUM, '/notes' -> /CONVIVIUM/NOTES
-      const prodosPath = (path) => path === '/' ? '/CONVIVIUM' : `/CONVIVIUM${path.toUpperCase()}`;
-      const padField = (label) => (`${label}        `).slice(0, 8);
-
-      // Oda "kokpiti" - Apple ProDOS CATALOG estetigi, modern bosluklu. Cerceve/ok yok;
-      // sade durum gosterimi. Komutlari 'basla' ogretir.
-      const roomPanel = (path) => {
-        const room = worldRooms[path];
-        if (!room) return `?NO SUCH VOLUME: ${path}`;
-        const title = (roomTitles[path] || path).toUpperCase();
-        const objs = Object.keys(room.objects || {});
-        const inv = state.inventory || [];
-        const exits = roomExits(path);
-        const lockHint = exits.includes('*') ? '    (* kilitli)' : '';
-        const lines = [];
-        lines.push(`] ${prodosPath(path)}`);
-        lines.push('');
-        lines.push(`  ${title}  ::  ${rankTitle()}`);
-        lines.push(`  ${room.look}`);
-        lines.push('');
-        if (objs.length) lines.push(`  ${padField('INCELE')}${objs.join('  ')}`);
-        lines.push(`  ${padField('GIT')}${exits}${lockHint}`);
-        lines.push(`  ${padField('CANTA')}${inv.length ? inv.join('  ') : '(bos)'}`);
-        lines.push(`  ${padField('GOREV')}${currentObjective()}`);
-        lines.push(']');
-        return lines.join('\n');
-      };
+      })();
 
       vfsMod = (() => {
+        if (!worldMod) {
+          console.error('[home-protocol] VFS module disabled: world module unavailable');
+          return null;
+        }
         const createVfs = window.ConviviumHome?.createVfs;
         if (typeof createVfs !== 'function') {
           console.error('[home-protocol] VFS module unavailable');
@@ -1444,7 +1336,7 @@
               setItem: (key, value) => localStorage.setItem(key, value)
             },
             getAudioEnabled: () => audioEnabled,
-            getRoom: (path) => worldRooms[path] || null,
+            getRoom: getWorldRoom,
             isRoomUnlocked: (path) => (state.unlocked || []).includes(path),
             onCwdChange: (path) => {
               persistUserPreferences({ virtualCwd: path });
@@ -1463,38 +1355,6 @@
           return null;
         }
       })();
-
-      const currentRoom = () => worldRooms[getVirtualCwd()] || null;
-
-      const roomObjectKey = (room, target) => {
-        const query = normalizeCommand(target);
-        if (!room || !room.objects || !query) return null;
-        return Object.keys(room.objects).find(key => {
-          const norm = normalizeCommand(key);
-          return norm === query || norm.includes(query) || query.includes(norm);
-        }) || null;
-      };
-
-      const lookCommand = (target = '') => {
-        const room = currentRoom();
-        const cwd = getVirtualCwd();
-        if (!room) return `look: ${cwd}: bu esikte gorulecek bir sey yok.`;
-        if (target.trim()) return examineCommand(target);
-        if (!state.discovered.includes(cwd)) {
-          state.discovered = [...new Set([...state.discovered, cwd])];
-          persist();
-        }
-        return roomPanel(cwd);
-      };
-
-      const examineCommand = (target = '') => {
-        const room = currentRoom();
-        if (!room) return 'examine: burada inceleyecek bir sey yok.';
-        if (!target.trim()) return 'examine: usage examine <nesne> (once look yaz).';
-        const key = roomObjectKey(room, target);
-        if (!key) return `examine: "${target}" burada yok. look ile etrafa bak.`;
-        return room.objects[key];
-      };
 
       const takeCommand = (target = '') => {
         const room = currentRoom();
@@ -1530,7 +1390,7 @@
         const roomName = parts[0];
         if (!roomName) return 'unlock: usage unlock <oda> [with <anahtar>]';
         const path = resolveVirtualPath(roomName);
-        const room = worldRooms[path];
+        const room = getWorldRoom(path);
         if (!room) return `unlock: ${roomName}: boyle bir esik yok.`;
         if (!room.locked) return `unlock: ${path} zaten acik.`;
         if ((state.unlocked || []).includes(path)) return `unlock: ${path} zaten cozuldu.`;

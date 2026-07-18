@@ -7,7 +7,8 @@ katman ve bir CI kapısı vardır:
 
 Ana terminalin route/rehber registry'lerini, global komut-alias-önek dispatch
 uzayını, VFS path/lock/storage çıktılarını, kalıcı `/home` yazma-ekleme-silme
-semantiği ile dosya/ad/içerik limitlerini, Presence/Chat oda tüketimini,
+semantiği ile dosya/ad/içerik limitlerini, immutable world registry'si ile oda
+paneli/inceleme/görev/unvan geçişlerini, Presence/Chat oda tüketimini,
 frontend Supabase Bearer taşımasını ve Service Worker install/update/offline
 yaşam döngüsünü kilitler. Dış ağa çıkmaz.
 
