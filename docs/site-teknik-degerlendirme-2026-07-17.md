@@ -17,12 +17,13 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 
 | Hat | Güncel durum | Sonuç |
 |---|---|---|
-| Terminal monolit Faz 1A | Tamamlandı; main'de | 23 route komutu ve 99 alias registry'ye taşındı; 132 komut korundu; headless smoke geçti |
+| Terminal monolit Faz 1A | Tamamlandı; main'de | 23 route komutu ve 99 alias registry'ye taşındı; 132 komut korundu |
+| Terminal monolit Faz 1B | Kod/test tamam; yayın bekliyor | 14 rehber komutu ve 75 alias ikinci registry'ye taşındı; 132 komut ve global dispatch korundu |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
 | P1 Service Worker yaşam döngüsü | Tamamlandı; canlı | waitUntil/cache.put + kritik/best-effort precache; event testleri 5/5; canlı v196 |
-| P1 CSP/CDN/header | Kod/test tamam; yayın bekliyor | 27/27 CSP; 22/22 harici script tam sürüm; Supabase 2.110.7; ADR-001 |
+| P1 CSP/CDN/header | Tamamlandı; canlı | 27/27 CSP; 22/22 harici script tam sürüm; Supabase 2.110.7; SW v197; ADR-001 |
 
 Bu tablo inceleme anındaki bulguyu değiştirmez; yapılan işlerin güncel sonucunu
 gösterir. Ayrıntılı doğrulama komutları yaşayan handoff'ta tutulur.
@@ -229,8 +230,8 @@ Kabul ölçütü:
 **Çözüm durumu — 17 Temmuz 2026:** Deploy workflow `npm ci`, bütün `npm run
 check` katmanları ve Wrangler dry-run geçmeden production adımına ulaşmıyor.
 Deploy version tag'ini `GITHUB_SHA` yapıyor; sonrasında `/health` tag eşitliğini
-zorunlu tutup metadata'yı logluyor. Repo kapısı hazır; ilk yeni main
-workflow/version smoke'u operasyonel kapanış olarak bekleniyor.
+zorunlu tutup metadata'yı logluyor. İlk yeni main workflow'u production deploy
+ve version smoke'u geçti; canlı `/health` etiketi ilgili main SHA ile eşleşti.
 
 ### P1 — Service Worker Promise yaşam döngüsü
 
@@ -305,7 +306,8 @@ Service Worker `convivium-v197` olarak ileri alındı. İki oyun yerel Chromium'
 gerçek CDN ile açıldı; CSP ihlali, page error veya CDN yükleme hatası yok.
 Hosting değiştirilmedi; GitHub Pages sınırı ve onaylı Cloudflare Pages geçiş
 kapıları [ADR-001](architecture/adr-001-http-security-headers.md) içinde
-kaydedildi. Değişiklikler kullanıcı incelemesi/commit/push bekliyor.
+kaydedildi. Kullanıcı yayını sonrasında canlı iki oyun HTML'inde CSP ve Supabase
+`2.110.7`, Service Worker'da `convivium-v197` doğrulandı; bu hat kapandı.
 
 ### P1 — Monolitler ve global script bağımlılıkları
 
@@ -338,6 +340,16 @@ Kabul ölçütü:
 - `home-protocol.js` yalnız orchestration/boot görevi taşımalı.
 - Yeni komut eklemek ana protokol dosyasında geniş değişiklik gerektirmemeli.
 - Ana sayfa kullanılmayan Bugy/oyun motorlarını ilk yükte indirmemeli.
+
+**Çözüm durumu — 18 Temmuz 2026:** Faz 1A'da 23 route komutu/99 alias, Faz
+1B'nin yayımlanmayı bekleyen yerel diliminde 14 rehber komutu/75 alias ayrı
+registry/factory sınırına taşındı. Toplam 132 komut korunurken monolitteki inline
+tanım 132'den 95'e, dosya 4.530'dan 4.329 satıra indi. Global karakterizasyon
+132 komut, 589 etiket, 545 normalize anahtar, iki bilinen son-yazan çakışması,
+36 parameter öneki, gizli/ham yollar ve dispatch sırasını kilitliyor. Normal,
+yönlendirme ve modül-yokluğu tarayıcı akışları hatasız geçti. Framework
+değiştirilmedi; sonraki güvenli adım VFS taşımasından önce `pwd/ls/cd/cat`,
+presence ve chat room karakterizasyonudur.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -409,7 +421,7 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 
 | Kontrol | Sonuç |
 |---|---|
-| `npm run check` | Geçti; unit 12/12, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
+| `npm run check` | Geçti; unit 18/18, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
 | Service Worker event entegrasyonu | 5/5 geçti; kritik/opsiyonel install + update/offline |
 | Wrangler production dry-run | Geçti; 34,99 KiB / gzip 9,99 KiB |
 | Tüm JS/MJS syntax kontrolü | 51/51 geçti |
@@ -417,6 +429,9 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Worker hariç yerel smoke | 8/8 geçti |
 | Yerel Chromium E2E | 7/7 geçti; gerçek signup testi bilinçli skip |
 | B2 oyun CSP/CDN Chromium | 2/2 geçti; canvas/CDN hazır, CSP ihlali ve page error yok |
+| B2 canlı kabul | Geçti; iki oyun CSP, Supabase 2.110.7 ve SW v197 |
+| Faz 1B terminal Chromium | Normal/route/modül-yokluğu akışları geçti; page/protocol hatası yok |
+| Faz 1B çevrimdışı Chromium | SW v198'de guide/protocol cache hazır; 14 komutluk registry ve `guide` offline çalıştı |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |
@@ -455,7 +470,8 @@ akışlar çalıştırılmadı:
 
 ### Aşama C — Modülerlik ve performans
 
-- [x] Terminal komut registry'sini ayır (Faz 1A; sonrası beklemede).
+- [x] Terminal route ve rehber registry'lerini ayır (Faz 1A canlı; Faz 1B yerel
+  doğrulandı, kullanıcı yayını bekliyor).
 - [ ] Büyük inline oyun kodlarını dış dosyalara çıkar.
 - [ ] Bugy motorları için ortak adapter tanımla.
 - [ ] Ana sayfa motorlarını dinamik yükle.

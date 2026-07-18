@@ -10,7 +10,7 @@ Nokta-zaman teknik incelemesi ve öncelikli geliştirme kuyruğu:
 [17 Temmuz 2026 Site Teknik Değerlendirmesi](../site-teknik-degerlendirme-2026-07-17.md).
 Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
 [Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
-Aktif P0/P1 güvenlik ve dağıtım hattı:
+P0/P1 güvenlik ve dağıtım kapanış kaydı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
 Gerçek HTTP güvenlik header'ları ve hosting sınırı:
 [ADR-001 — HTTP Güvenlik Header'ları ve Hosting](adr-001-http-security-headers.md).
@@ -213,7 +213,7 @@ flowchart TD
 
 | Sayfa | Ana modül(ler) | Veri | Giriş | Durum |
 |-------|----------------|------|:----:|:----:|
-| index.html | home-protocol, bugy-v2/v3/v4, arcade-kit | — / world_state | — | 🟨 |
+| index.html | home-protocol + route/guide registry, bugy-v2/v3/v4, arcade-kit | — / world_state | — | 🟨 |
 | account/auth.html | auth.js | profiles (trigger) | — | 🟩 |
 | account/dashboard.html | dashboard.js | profiles, game_scores, dart_*, sessions, recos, bugy_pets | ✅ | 🟩 |
 | admin/index.html | admin.js, articles.js | articles | ✅ admin | 🟨 |

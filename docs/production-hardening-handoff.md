@@ -1,10 +1,9 @@
 # Üretim Sertleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz B2 yerel doğrulama)
-Durum: **AKTİF — A0/A1/A2/A3/B1 tamamlandı ve canlı doğrulandı; Faz B2 kod,
-belge ve test tarafında tamam, kullanıcı incelemesi/commit/push bekliyor.**
-Önceki aktif hat: [Home Protocol Modülerleştirme](home-protocol-modularization-handoff.md)
-Faz 1A sonunda güvenli biçimde donduruldu.
+Son güncelleme: 18 Temmuz 2026 (Faz B2 canlı kabulü)
+Durum: **KAPANDI — A0/A1/A2/A3/B1/B2 tamamlandı ve canlı doğrulandı. Aktif
+geliştirme hattı yeniden Home Protocol modülerleştirmesidir.**
+Aktif hat: [Home Protocol Modülerleştirme](home-protocol-modularization-handoff.md).
 
 Bu belge P0/P1 üretim güvenliği çalışmalarının tek yaşayan takip noktasıdır.
 Oturum yarıda kalırsa önce buradaki “Güncel durum” ve “Sonraki kesin adım”
@@ -13,8 +12,8 @@ bölümleri okunmalıdır. Teknik bulguların başlangıç kanıtı
 
 ## Öncelik kilidi
 
-Monolit refaktörünün Faz 1B ve sonrası, aşağıdaki sıra tamamlanana veya açık bir
-risk kabulüyle ertelenene kadar başlamamalıdır:
+Monolit refaktörünün Faz 1B ve sonrası için konan aşağıdaki öncelik kilidi
+18 Temmuz 2026'da tamamen kapandı:
 
 1. Tekrarlanabilir Node kurulumu: senkron lock, `npm ci`, temiz audit.
 2. Worker kötüye kullanım sınırı: kalıcı/ortak kota, `/enrich-profile` kimliği,
@@ -23,7 +22,11 @@ risk kabulüyle ertelenene kadar başlamamalıdır:
    preflight, production deploy ve sürüm görünürlüğü.
 4. Service Worker Promise yaşam döngüsü ve offline/update testi.
 5. Eksik CSP'ler, CDN sürüm sabitleme ve gerçek HTTP header hosting kararı.
-6. Ancak sonra terminal Faz 1B ve daha bağlı VFS/ekonomi/Oracle modülleri.
+6. Ardından terminal Faz 1B ve daha bağlı VFS/ekonomi/Oracle modülleri.
+
+Faz 1B bu canlı kabulün ardından başlatıldı. Yerel `convivium-v198`, B2'nin
+canlı `convivium-v197` sürümünü değil, henüz yayımlanmamış terminal dilimini
+temsil eder.
 
 ## Değişmez kurallar
 
@@ -234,7 +237,7 @@ Sonuç (17 Temmuz 2026):
 - `supabase-client.js` v36, Service Worker `convivium-v196`; 19 yönetilen asset
   sürümü senkron.
 
-### Faz B2 — CSP, CDN ve response header kararı — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz B2 — CSP, CDN ve response header kararı — TAMAMLANDI VE CANLI DOĞRULANDI
 
 - CSP'siz HTML sayfalarını tamamla ve validator'da CSP varlığını zorunlu yap.
 - Supabase CDN major etiketini doğrulanmış tam sürüme sabitle; HTML ve cache
@@ -261,7 +264,7 @@ Sonuç (18 Temmuz 2026):
   sapmasını hata sayıyor. `playwright-report` ve `test-results` yayın sayfası
   olmadığı için envanterden açıkça dışlanıyor.
 - HTML precache dilimi için Service Worker ileri yönde `convivium-v197` oldu.
-  Canlı site kullanıcı push'una kadar `convivium-v196` kullanmaya devam eder.
+  Canlı site 18 Temmuz kabulünde bu sürümü sunuyordu.
 - Hosting değiştirilmedi ve root'a işlevsiz `_headers` eklenmedi. Karar,
   [ADR-001 — HTTP Güvenlik Header'ları ve Hosting](architecture/adr-001-http-security-headers.md)
   içinde: GitHub Pages şimdilik korunur; gerçek header önceliklenirse ayrı onaylı
@@ -271,8 +274,10 @@ Sonuç (18 Temmuz 2026):
 - Yerel Chromium karakterizasyonu 2/2: iki oyun HTTP 200, Supabase globali ve
   canvas hazır, Neon River'da Phaser hazır; CSP ihlali, page error veya CDN
   request failure yok.
-- Bu oturum kullanıcı talimatı gereği commit, push, deploy veya hosting değişikliği
-  yapmadı.
+- Canlı kabulte iki oyun HTML'inde CSP ve `@supabase/supabase-js@2.110.7`,
+  `service-worker.js` içinde `convivium-v197` doğrudan doğrulandı.
+- Kod hazırlama oturumu kullanıcı talimatı gereği commit, push, deploy veya
+  hosting değişikliği yapmadı; yayın kullanıcı tarafından gerçekleştirildi.
 
 ## Güncel durum
 
@@ -284,7 +289,7 @@ Sonuç (18 Temmuz 2026):
 | A2 Worker sınırı | Tamamlandı; canlı | Kimliksiz enrich `401`; Worker 12/12 |
 | A3 deploy kapısı | Tamamlandı; canlı | `/health` tag `dc951919…`; CI version smoke eşleşti |
 | B1 Service Worker | Tamamlandı; canlı | `convivium-v196`; yaşam döngüsü/offline event testleri 5/5 |
-| B2 CSP/CDN/header | Kod/test tamam; yayın bekliyor | 27/27 CSP; 22/22 exact script; Chromium 2/2; ADR-001 |
+| B2 CSP/CDN/header | Tamamlandı; canlı | 27/27 CSP; 22/22 exact script; Supabase 2.110.7; SW v197; ADR-001 |
 
 ## Rollback sınırları
 
@@ -312,6 +317,7 @@ npm run check                    unit 12/12; Worker 12/12; 27/27 CSP; 22/22 exac
 yerel smoke                      8/8
 yerel Chromium E2E               7/7; gerçek signup 1 test bilinçli skip
 B2 yerel Chromium                2/2; CSP/CDN/canvas, ihlal ve page error yok
+B2 canlı kabul                   iki oyun CSP + Supabase 2.110.7 + SW v197
 Wrangler production dry-run      geçti; 34,99 KiB / gzip 9,99 KiB
 ```
 
@@ -322,15 +328,15 @@ kapısı yapılmadı, production dry-run paketlemesi başarılı.
 
 ## Sonraki kesin adım
 
-Kullanıcı/reviewer mevcut B2 diff'ini inceler; commit ve push kullanıcıya aittir.
-Push sonrası Flow Check'te yeni site-integrity özetinin `27 HTML; 27 CSP; 22
-exact-version external scripts` verdiğini doğrula. Canlıda iki oyun HTML'inde CSP
-ve Supabase `2.110.7`, `service-worker.js` içinde `convivium-v197` ve tarayıcıda
-CSP/CDN hatası olmadığını kaydet.
+Üretim sertleştirme hattı kapalıdır. Yeni aktif iş
+[Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md)
+içindeki Faz 1B'dir. Global command/alias/önek karakterizasyonu ve ilk rehber
+registry dilimi yerelde hazırlanmıştır; inceleme, yayın ve devam sırası o belgede
+tutulur.
 
-Bu canlı kontrol tamamlanınca üretim sertleştirme hattı kapanır. Sonraki
-geliştirici işi Home Protocol Faz 1B'dir; ilk adım global command/alias çakışma
-karakterizasyon testidir. B2 yayınlanmadan Faz 1B değişikliği başlatma.
+Canlıda B2 tabanı `convivium-v197` olarak kabul edilmiştir. Çalışma ağacındaki
+`convivium-v198` yalnız Faz 1B asset'leriyle birlikte ele alınmalı; herhangi bir
+rollback'te cache sürümü geriye düşürülmemelidir.
 
 > **Eş güdüm kuralı (2026-07-17):** Ayni çalışma ağacında AYNI ANDA iki oturum
 > yazmamalı. Rol ayrımı: geliştirici oturum kodu hazırlar ve commit ATMAZ;

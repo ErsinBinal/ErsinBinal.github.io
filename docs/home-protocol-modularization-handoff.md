@@ -1,15 +1,14 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (üretim sertleştirme eş güdümü)
-Durum: **Faz 0 ve Faz 1A tamamlandı ve main'de (`cf63bd6`); Faz 1B, B2
-CSP/CDN dilimi kullanıcı tarafından commit/push edilip canlı doğrulanana dek
-beklemede.**
+Son güncelleme: 18 Temmuz 2026 (Faz 1B yerel doğrulama)
+Durum: **Faz 0 ve Faz 1A main'de; B2 canlı kabulü tamamlandı. Faz 1B kod,
+karakterizasyon, tarayıcı ve bütünlük testleri tarafında tamam; kullanıcı
+incelemesi/commit/push bekliyor.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
-> Öncelik kilidi: Bu hat Faz 1A sonunda donduruldu. Aktif çalışma ve geri dönüş
-> koşulları [Üretim Sertleştirme Handoff](production-hardening-handoff.md)
-> belgesindedir. A1, A2, A3 ve B1 kapandı; B2 kod/test tarafında hazırdır.
-> B2 canlı doğrulaması sonuçlanmadan Faz 1B'ye geçme.
+> Öncelik kilidi 18 Temmuz 2026'da kapandı: A1, A2, A3, B1 ve B2 canlı
+> doğrulandı. [Üretim Sertleştirme Handoff](production-hardening-handoff.md)
+> artık kapanış kaydıdır; aktif ilerleyiş bu belgeden sürdürülür.
 
 Bu belge, refaktör yarım kaldığında sonraki oturumun güvenli biçimde devam
 edebilmesi için tek takip noktasıdır. Davranış değişiklikleri ve yeni özellikler
@@ -29,8 +28,8 @@ Bununla birlikte teknik değerlendirmedeki P0 maddeleri daha yüksek operasyonel
 3. Terminalde yüksek bağlılıklı VFS, ekonomi ve Oracle ayrıştırmalarına ancak bu
    güvenlik/dağıtım işleri ve ilgili karakterizasyon testleri hazırken geçilmelidir.
 
-P0 işleri Faz 1A'nın yapılmasına engel değildir; fakat Faz 2 ve sonrasını onların
-önüne geçirmek doğru değildir.
+Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B başlatıldı; daha bağlı Faz
+2 VFS çalışması için karakterizasyon kapısı korunuyor.
 
 ## Değişmez kurallar
 
@@ -46,15 +45,16 @@ P0 işleri Faz 1A'nın yapılmasına engel değildir; fakat Faz 2 ve sonrasını
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası |
-|---|---:|---:|
-| `home-protocol.js` | 4.530 satır | 4.390 satır |
-| Terminal komutu | 132 | 132 |
-| `home-protocol.js` içindeki komut tanımı | 132 | 109 |
-| `route-commands.js` içindeki komut | yok | 23 |
-| Taşınan alias | yok | 99 |
-| Ana sayfa `<script>` etiketi | 30 | 31 |
-| Service Worker cache sürümü | v194 | v195 |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B yerel |
+|---|---:|---:|---:|
+| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır |
+| Terminal komutu | 132 | 132 | 132 |
+| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 |
+| `route-commands.js` içindeki komut | yok | 23 | 23 |
+| `guide-commands.js` içindeki komut | yok | yok | 14 |
+| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 |
+| Ana sayfa `<script>` etiketi | 30 | 31 | 32 |
+| Service Worker cache sürümü | v194 | v195 | v198 (yerel) |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -122,7 +122,7 @@ Faz 1A için aşağıdaki yerel tarayıcı kontrolleri tamamlandı:
 
 ## Sonraki fazlar
 
-### Faz 1B — Kalan saf komut tanımları
+### Faz 1B — Kalan saf komut tanımları — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
 Önce tüm command/alias alanında çakışma testi ekle. Ardından yalnız yan etkisiz
 yardım metni ve saf navigasyon komutlarını ikinci registry'ye taşı. Parser,
@@ -140,6 +140,59 @@ history ve autocomplete davranışına dokunma.
 > bir alias'ın ham-önek yolunu gölgelemesi). Ayrıca karşılaştırma
 > `normalizeCommand` TR katlaması SONRASI anahtar uzayında yapılmalı
 > (`mantık` ve `mantik` aynı anahtara düşer).
+
+Uygulanan sonuç:
+
+- `tests/unit/home-command-space.test.mjs`, gerçek monolit ile iki registry'yi
+  birlikte okuyarak 132 komut, 589 komut/alias etiketi ve normalize edilmiş 545
+  anahtarı snapshot ile kilitliyor.
+- Bilinen ve bilinçli son-yazan kazanır çakışmaları değişmedi: `pipes`
+  (`shell` → `pipe`) ve `unlock` (`unlock` → `unlock hidden`). Aynı komut
+  sahibindeki 42 Türkçe normalizasyon katlanması ayrıca korunuyor.
+- 36 `parameterActions` öneki, iki gizli komut (`resonate`, `rezonans`), ham
+  önek yolları, ham shell kümesi ve dispatch sırası karakterize edildi. Dokuz
+  bilinen parameter/commandMap örtüşmesi snapshot altında.
+- İlk bitişik ve yan etkisiz 14 rehber/yönlendirme komutu ile 75 alias,
+  `assets/js/home/guide-commands.js` içindeki immutable registry/factory'ye
+  taşındı. Komut sırası, metin, rota ve callback davranışı değiştirilmedi.
+- Modül veya factory yüklenemezse yalnız bu 14 komut devre dışı kalıyor;
+  terminal boot'u ve diğer komutlar çalışmaya devam edip konsola açık hata
+  yazıyor.
+- `index.html` yükleme sırası, syntax/site-integrity kapıları, cache sync ve
+  Service Worker precache sözleşmesi güncellendi. `home-protocol.js?v=76`,
+  `guide-commands.js?v=1` ve yerel `convivium-v198` aynı yayın dilimidir.
+
+Değişen/yeni dosyalar:
+
+| Dosya | Amaç |
+|---|---|
+| `assets/js/home/guide-commands.js` | 14 komutluk rehber registry/factory |
+| `assets/js/home-protocol.js` | Inline tanımlar yerine güvenli factory çıktısı |
+| `tests/unit/home-command-space.test.mjs` | Global komut/alias/önek/dispatch karakterizasyonu |
+| `tests/unit/home-guide-commands.test.mjs` | Registry snapshot ve factory davranışı |
+| `index.html` | Rehber modülü yükleme sırası ve protocol v76 |
+| `service-worker.js` | Yeni asset, v76 referansı ve cache v198 |
+| `scripts/validate-site-integrity.js` | Precache, asset ve script sırası doğrulaması |
+| `scripts/sync-cache-versions.js` | Rehber modülünü managed asset listesine alma |
+| `package.json` | Rehber modülünü syntax kapısına alma |
+| `tests/README.md` | Genişleyen karakterizasyon katmanı notu |
+
+18 Temmuz 2026 yerel doğrulaması:
+
+- `npm run check`: unit 18/18, Worker 12/12, 27 HTML / 27 CSP / 22 tam
+  sürümlü harici script ile geçti.
+- `npm run sync:cache`: 20 managed asset sürümü senkron.
+- Normal tarayıcı akışında `basla`, `yardim`, `guide`, `how to play`, `app
+  guide`, `terminal games`, `score guide` ve `keys` çalıştı; page/protocol
+  hatası yok.
+- `read guide`, doğru makale anchor'ına yönlendi.
+- Rehber modülü bilinçli engellendiğinde beklenen konsol hatası görüldü ve
+  taşınmayan `level` komutu çalışmaya devam etti.
+- Service Worker kontrolündeki çevrimdışı reload'da `convivium-v198` içinden
+  `guide-commands.js?v=1` ve `home-protocol.js?v=76` bulundu; registry 14
+  komutla kuruldu ve `guide` çevrimdışı çalıştı. Page error yok.
+- Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
+  testi bilinçli olarak skip edildi.
 
 ### Faz 2 — VFS ve dünya durumu
 
@@ -216,9 +269,27 @@ Sorun görülürse yalnız Faz 1A geri alınır:
 5. Unit test dosyasını ancak inline tanımları test edecek eşdeğer koruma
    sağlanıyorsa kaldır.
 
+## Faz 1B rollback
+
+Sorun görülürse Faz 1A registry'sini koruyarak yalnız Faz 1B geri alınır:
+
+1. 14 rehber tanımını `home-protocol.js` içindeki
+   `...guideCommandDefinitions` konumuna aynı sıra ve içerikle geri koy.
+2. Guide factory bloğunu ve `guide-commands.js` script etiketini kaldır.
+3. Yeni asset'i precache/validator/cache-sync/syntax listelerinden çıkar.
+4. `home-protocol.js` asset sürümünü ve `CACHE_NAME` değerini yeniden ileri
+   artır; canlıya çıkmış hiçbir cache sürümünü geriye düşürme.
+5. Global command-space testi inline + route yapısını okuyacak biçimde korunmalı;
+   bilinen çakışma ve dispatch snapshot'ları silinmemeli.
+
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Önce [Üretim Sertleştirme Handoff](production-hardening-handoff.md) içindeki B2
-yayın sonrası CSP/CDN/SW v197 kontrolünün kapandığını doğrula. Ardından Faz
-1B'nin ilk işi olarak global command/alias çakışma karakterizasyon testini ekle;
-aynı dilimde kullanıcı metni, rota veya davranış değiştirme.
+Faz 1B için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
+aittir. Yayın sonrası canlıda `guide-commands.js?v=1`, `home-protocol.js?v=76`
+ve `convivium-v198` doğrulanır; terminalde en az `help`, `guide`, `read guide`,
+`terminal games`, `keys` ve taşınmayan `level` çalıştırılır.
+
+Canlı kabul temizse Faz 2'ye doğrudan taşıma ile değil VFS karakterizasyonuyla
+başla: `pwd`, `ls`, `cd`, `cat`, oda geçişi, `presenceMod.sync()` ve chat room
+payload'ının aynı `virtualCwd` kaynağını koruduğunu testle. Bu dilimde kullanıcı
+metni, rota, storage şeması veya davranış değiştirme.
