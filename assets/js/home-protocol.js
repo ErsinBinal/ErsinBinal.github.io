@@ -2612,91 +2612,30 @@
         }
       })();
 
+      const guideCommandDefinitions = (() => {
+        const createGuideCommands = window.ConviviumHome?.createGuideCommands;
+        if (typeof createGuideCommands !== 'function') {
+          console.error('[home-protocol] guide command module unavailable');
+          return [];
+        }
+
+        try {
+          return createGuideCommands({
+            route,
+            goTo,
+            baslaCommand: (...args) => baslaCommand(...args),
+            commandHelpText: (...args) => commandHelpText(...args),
+            guideBriefCommand,
+            keyboardHelpText: (...args) => keyboardHelpText(...args)
+          });
+        } catch (error) {
+          console.error('[home-protocol] guide command module failed', error);
+          return [];
+        }
+      })();
+
       const commandDefinitions = [
-        {
-          command: 'basla',
-          description: 'yeni gelenler icin adim adim baslangic rehberi',
-          aliases: ['başla', 'rehber'],
-          action: () => baslaCommand()
-        },
-        {
-          command: 'help',
-          description: 'tum kisayol komutlarini listeler',
-          aliases: ['?', 'yardim', 'komutlar', 'commands', 'shortcuts'],
-          action: () => commandHelpText()
-        },
-        {
-          command: 'guide',
-          description: 'terminal icinde kisa iki dilli rehber ozeti verir',
-          aliases: ['site guide', 'terminal guide', 'rehberler', 'kullanim rehberi', 'kullanım rehberi'],
-          action: () => guideBriefCommand('terminal')
-        },
-        {
-          command: 'read guide',
-          description: 'terminal rehberinin uzun makalesini acar',
-          aliases: ['open guide', 'guide article', 'rehberi oku', 'terminal rehberini oku'],
-          action: goTo(route('guide', '/pages/makaleler.html#convivium-terminal-rehberi-terminal-guide'))
-        },
-        {
-          command: 'how to play',
-          description: 'oyunlar icin terminal icinde kisa oynanis ozeti verir',
-          aliases: ['howto', 'nasil oynanir', 'nasıl oynanır'],
-          action: () => guideBriefCommand('games')
-        },
-        {
-          command: 'game guide',
-          description: 'oyunlar icin terminal icinde kisa rehber ozeti verir',
-          aliases: ['games guide', 'oyun rehberi', 'oyun kilavuzu', 'oyun kılavuzu', 'how to play games', 'how to play ash', 'how to play serpent', 'how to play logic', 'how to play signal', 'ash guide', 'serpent guide', 'logic guide', 'signal guide', 'river guide'],
-          action: () => guideBriefCommand('games')
-        },
-        {
-          command: 'read game guide',
-          description: 'Convivium oyunlari icin how-to-play makalesini acar',
-          aliases: ['read games guide', 'open game guide', 'open games guide', 'oyun rehberini oku'],
-          action: goTo(route('gamesGuide', '/pages/makaleler.html#oyunlar-how-to-play-games-guide'))
-        },
-        {
-          command: 'app guide',
-          description: 'Oracle ve ritual araclari icin terminal icinde kisa ozet verir',
-          aliases: ['apps guide', 'tools guide', 'uygulama rehberi', 'arac rehberi', 'araç rehberi', 'oracle guide', 'barista guide', 'bartender guide', 'ekol guide'],
-          action: () => guideBriefCommand('apps')
-        },
-        {
-          command: 'read app guide',
-          description: 'Oracle ve ritual araclari icin kullanim makalesini acar',
-          aliases: ['read apps guide', 'open app guide', 'open apps guide', 'uygulama rehberini oku'],
-          action: goTo(route('appsGuide', '/pages/makaleler.html#uygulamalar-apps-guide'))
-        },
-        {
-          command: 'terminal games',
-          description: 'terminal icindeki Pipe-90i ve Out Run 86 icin kisa ozet verir',
-          aliases: ['shell games', 'pipe guide', 'outrun guide', 'pipe how to play', 'outrun how to play', 'terminal oyunlari', 'terminal oyunları'],
-          action: () => guideBriefCommand('shellGames')
-        },
-        {
-          command: 'read terminal games',
-          description: 'terminal oyunlari makalesini acar',
-          aliases: ['open terminal games', 'read shell games', 'open shell games', 'terminal oyunlarini oku', 'terminal oyunlarını oku'],
-          action: goTo(route('terminalGamesGuide', '/pages/makaleler.html#terminal-oyunlari-pipe-outrun-guide'))
-        },
-        {
-          command: 'score guide',
-          description: 'skor, oturum, dashboard ve dart icin kisa ozet verir',
-          aliases: ['dashboard guide', 'dart guide', 'skor rehberi', 'oturum rehberi', 'scoreboard guide'],
-          action: () => guideBriefCommand('score')
-        },
-        {
-          command: 'read score guide',
-          description: 'skor, oturum, dashboard ve dart makalesini acar',
-          aliases: ['open score guide', 'read dashboard guide', 'open dashboard guide', 'skor rehberini oku'],
-          action: goTo(route('scoreGuide', '/pages/makaleler.html#skor-oturum-dashboard-guide'))
-        },
-        {
-          command: 'keys',
-          description: 'klavye kisayollarini gosterir',
-          aliases: ['keyboard', 'hotkeys', 'kisayollar', 'kısayollar'],
-          action: () => keyboardHelpText()
-        },
+        ...guideCommandDefinitions,
         {
           command: 'whoami',
           description: 'ziyaretci, access ve node durumunu gosterir',

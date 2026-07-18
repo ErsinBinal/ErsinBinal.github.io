@@ -9,6 +9,7 @@ const managedAssets = [
   '/assets/js/deb-companion.js',
   '/assets/js/home/routes.js',
   '/assets/js/home/route-commands.js',
+  '/assets/js/home/guide-commands.js',
   '/assets/js/home/pipe-90.js',
   '/assets/js/home/outrun-86.js',
   '/assets/js/home/screen-saver.js',
