@@ -1,8 +1,8 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz 2D yerel doğrulama)
-Durum: **Faz 0/1A/1B/2A/2B/2C canlıda; Faz 2C `convivium-v201` kabulü
-tamamlandı. Faz 2D world mutasyon karar sınırı kod, karakterizasyon, normal
+Son güncelleme: 18 Temmuz 2026 (Faz 3A yerel doğrulama)
+Durum: **Faz 0/1A/1B/2A/2B/2C/2D canlıda; Faz 2D `convivium-v202` kabulü
+tamamlandı. Faz 3A shard ekonomi çekirdeği kod, karakterizasyon, normal
 tarayıcı, fail-closed fallback ve çevrimdışı test tarafında tamam; kullanıcı
 incelemesi/commit/push/yayın bekliyor.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
@@ -29,8 +29,8 @@ Bununla birlikte teknik değerlendirmedeki P0 maddeleri daha yüksek operasyonel
 3. Terminalde yüksek bağlılıklı VFS, ekonomi ve Oracle ayrıştırmalarına ancak bu
    güvenlik/dağıtım işleri ve ilgili karakterizasyon testleri hazırken geçilmelidir.
 
-Bu P0/P1 işleri ile Faz 1B/2A/2B/2C canlı kabulleri tamamlandı. Faz 2D world
-mutasyon karar sınırı küçük ve geri alınabilir yerel yayın dilimi olarak hazır.
+Bu P0/P1 işleri ile Faz 1B/2A/2B/2C/2D canlı kabulleri tamamlandı. Faz 3A shard
+ekonomi çekirdeği küçük ve geri alınabilir yerel yayın dilimi olarak hazır.
 
 ## Değişmez kurallar
 
@@ -46,19 +46,20 @@ mutasyon karar sınırı küçük ve geri alınabilir yerel yayın dilimi olarak
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B canlı | Faz 2C canlı | Faz 2D yerel |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır | 4.113 satır | 4.058 satır |
-| Terminal komutu | 132 | 132 | 132 | 132 | 132 | 132 | 132 |
-| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 | 95 | 95 | 95 |
-| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 | 23 | 23 | 23 |
-| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 | 14 | 14 | 14 |
-| `vfs.js` | yok | yok | yok | 132 satır | 205 satır | 205 satır | 205 satır |
-| `world.js` | yok | yok | yok | yok | yok | 234 satır | 234 satır |
-| `world-actions.js` | yok | yok | yok | yok | yok | yok | 169 satır |
-| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 |
-| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 | 34 | 35 |
-| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 | v201 | v202 (yerel) |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B canlı | Faz 2C canlı | Faz 2D canlı | Faz 3A yerel |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır | 4.113 satır | 4.058 satır | 4.060 satır |
+| Terminal komutu | 132 | 132 | 132 | 132 | 132 | 132 | 132 | 132 |
+| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 | 95 | 95 | 95 | 95 |
+| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 | 23 | 23 | 23 | 23 |
+| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 | 14 | 14 | 14 | 14 |
+| `vfs.js` | yok | yok | yok | 132 satır | 205 satır | 205 satır | 205 satır | 205 satır |
+| `world.js` | yok | yok | yok | yok | yok | 234 satır | 234 satır | 234 satır |
+| `world-actions.js` | yok | yok | yok | yok | yok | yok | 169 satır | 169 satır |
+| `economy.js` | yok | yok | yok | yok | yok | yok | yok | 74 satır |
+| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 |
+| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 | 34 | 35 | 36 |
+| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 | v201 | v202 | v203 (yerel) |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -405,7 +406,7 @@ Değişen/yeni dosyalar:
 | `scripts/sync-cache-versions.js` | World asset'ini managed listeye alma |
 | `package.json` | World modülünü syntax kapısına alma |
 
-### Faz 2D — World mutasyon komutları — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz 2D — World mutasyon komutları — TAMAMLANDI VE CANLI DOĞRULANDI
 
 Uygulanan güvenli dilim:
 
@@ -446,6 +447,13 @@ Karakterizasyon ve doğrulama:
   kayıtları doğru, page error yok.
 - Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
   testi bilinçli olarak skip edildi.
+- Kullanıcı yayını sonrası canlı ana sayfada `world.js?v=1`,
+  `world-actions.js?v=1`, `vfs.js?v=2`, `home-protocol.js?v=80` ve Service
+  Worker `convivium-v202` doğrulandı. World-actions SHA-256
+  `b5b3d3598676a31b1209b1f8581f02a44c6c420db292ba8c9d2723de1423dbb5`,
+  protocol SHA-256
+  `e74785a23e5d1694cf3395658fa75cdf796356dd043d713f148ddbd125e81334`;
+  iki canlı dosya da main `c09898f` ile birebir eşleşti.
 
 Değişen/yeni dosyalar:
 
@@ -461,11 +469,76 @@ Değişen/yeni dosyalar:
 | `scripts/sync-cache-versions.js` | Action asset'ini managed listeye alma |
 | `package.json` | Action modülünü syntax kapısına alma |
 
-### Faz 3 — Ekonomi
+### Faz 3A — Shard ekonomi çekirdeği — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
-Shard, shop, kart ve ödül akışlarını ayır. LocalStorage/Supabase fallback
-semantiğini test etmeden taşıma yapma; mevcut SQL kurulmamışken zarif fallback
-korunmalı.
+Uygulanan güvenli dilim:
+
+- Shard kazanım, harcama, yüksek local/remote bakiye birleştirme kararı ve
+  `shards` terminal özeti yeni `assets/js/home/economy.js` içindeki
+  `createEconomy(deps)` factory sınırına taşındı.
+- Factory localStorage, Supabase veya DOM'a doğrudan erişmiyor. Bakiye state
+  yazımı, `persist`, debounce `scheduleWorldSave`, coin sesi ve durum satırı
+  protocol callback'lerinde kaldı.
+- Kazanımın negatif/geçersiz değeri yok sayması, sayısal değeri yuvarlaması,
+  harcamada yetersiz bakiye ve mevcut sıfır-maliyet davranışı değiştirilmedi.
+- Bulut birleşiminde local/remote bakiyenin yükseği korunuyor. Tam world payload
+  ve senkron hazır/debounce sahipliği protocol'de; `shards` kolonu yokken eski
+  select/upsert payload'ına dönüş `supabase-client.js` içinde kaldı.
+- Supabase istemci içeriği ve v36 asset sürümü değişmedi; fallback ilk kez
+  doğrudan unit test altına alındı. SQL şeması veya ödül/shop değerleri değişmedi.
+- Economy asset'i yoksa `shards`, `shop` ve `collect` açık unavailable mesajı
+  veriyor; ritual shard vermeden çalışıyor, world mutasyonları fail-closed
+  kapanıyor. `look`, VFS keşfi ve `level` çalışmayı sürdürüyor.
+- `economy.js?v=1`, `home-protocol.js?v=81` ve `convivium-v203` atomik yayın
+  dilimi olarak bağlandı. Syntax/precache/validator/cache-sync sözleşmeleri
+  güncellendi; managed asset sayısı 24 oldu.
+- Faz 2A'dan kalan parser sorunları ile shop katalog/satın alma ve kart sahipliği
+  bu dilime karıştırılmadı.
+
+Karakterizasyon ve doğrulama:
+
+- Yeni `tests/unit/home-economy.test.mjs` 6/6: award/spend normalizasyonu,
+  mutasyon sırası, yetersiz/sıfır-maliyet harcama, yüksek bakiye merge'i,
+  terminal özeti, eksik dependency ve protocol sahiplik sınırı.
+- Yeni `tests/unit/supabase-world-state.test.mjs` 4/4: fetch/save için
+  `shards` kolonu-yok fallback'i, sanitize/limitler, ilgisiz hatada retry
+  yapılmaması ve oturumsuz guard.
+- `npm run check`: unit 47/47, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script ile geçti. Komut uzayı hâlâ 132 komutu koruyor.
+- Normal Chromium akışında günlük +2, ritual +1, keşif +2, take +3 ve unlock +5
+  ile 13 bakiye oluştu; 12 shard'lık tema alımından sonra bakiye 1 oldu ve
+  reload'da envanter/bakiye korundu. Page/protocol hatası yok.
+- Economy asset'i bilinçli engellendiğinde beklenen iki protocol konsol kaydı
+  görüldü. `shards/shop/ritual/collect/take` kontrollü fallback verdi; bakiye
+  ve envanter değişmedi, `cd notes/look/level` çalıştı, page error oluşmadı.
+- Service Worker kontrollü çevrimdışı reload'da `convivium-v203` içindeki
+  `world.js?v=1`, `economy.js?v=1`, `world-actions.js?v=1`, `vfs.js?v=2` ve
+  `home-protocol.js?v=81` doğrulandı. Kazanım → vault → 8 shard'lık shop alımı
+  sonrası beklenen 5 bakiye ve envanter çevrimdışı korundu; page error yok.
+- Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
+  testi bilinçli olarak skip edildi.
+
+Değişen/yeni dosyalar:
+
+| Dosya | Amaç |
+|---|---|
+| `assets/js/home/economy.js` | Shard award/spend/merge/summary karar factory'si |
+| `assets/js/home-protocol.js` | Economy kurulumu, state/effect callback'leri ve ince delegasyon |
+| `tests/unit/home-economy.test.mjs` | Shard karar/sıra/fallback/sahiplik karakterizasyonu |
+| `tests/unit/supabase-world-state.test.mjs` | World state legacy shards-column fallback karakterizasyonu |
+| `index.html` | Economy v1 yükleme sırası ve protocol v81 |
+| `service-worker.js` | Economy precache ve cache v203 |
+| `scripts/validate-site-integrity.js` | Economy asset/factory/sıra/sürüm sözleşmesi |
+| `scripts/sync-cache-versions.js` | Economy asset'ini managed listeye alma |
+| `package.json` | Economy modülünü syntax kapısına alma |
+
+### Faz 3B — Shop satın alma sınırı — 3A CANLI KABULÜ SONRASI ADAY
+
+Önce katalog sırası/metni, ürün sahipliği, yetersiz bakiye, satın alma yan etki
+sırası, kozmetik localStorage bayrakları ve theme/screen-saver tüketicilerini
+karakterize et. Ardından yalnız shop kararlarını economy factory'sine veya ayrı
+bir shop adapter'ına taşı; kozmetik DOM/storage uygulamasını callback olarak
+protocol'de bırak. Kart/collect akışını aynı dilime karıştırma.
 
 ### Faz 4 — Oracle
 
@@ -597,21 +670,35 @@ Sorun görülürse canlı Faz 2C sınırını koruyarak yalnız Faz 2D geri alı
    ileri değerlere bump et; yayımlanmış `convivium-v202` hiçbir koşulda v201'e
    düşürülmez.
 
+## Faz 3A rollback
+
+Sorun görülürse canlı Faz 2D sınırını koruyarak yalnız Faz 3A geri alınır:
+
+1. `awardShards`, `spendShards`, yüksek-bakiye merge'i ve `shards` özetini aynı
+   normalizasyon/çağrı sırasıyla protocol içindeki eski konumlarına geri koy.
+2. World/VFS/world-actions sahipliğini yerinde bırak; Faz 2D veya daha önceki
+   domain sınırlarını geri alma.
+3. `home-economy.test.mjs` davranış testlerini inline uygulamayı doğrulayacak
+   biçimde koru. `supabase-world-state.test.mjs` fallback testlerini silme.
+4. `economy.js` script ve syntax/precache/validator/cache-sync bağlantılarını
+   kaldır. Protocol asset ve Service Worker cache sürümünü yeni ileri değerlere
+   bump et; yayımlanmış `convivium-v203` hiçbir koşulda v202'ye düşürülmez.
+
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Faz 2D için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
-aittir. Yayın sonrası canlıda `world.js?v=1`, `world-actions.js?v=1`,
-`vfs.js?v=2`, `home-protocol.js?v=80` ve `convivium-v202` doğrulanır;
-action/protocol canlı hash'leri main ile karşılaştırılır. Bu çalışma ağacındaki
-beklenen SHA-256: world-actions
-`b5b3d3598676a31b1209b1f8581f02a44c6c420db292ba8c9d2723de1423dbb5`,
-protocol `e74785a23e5d1694cf3395658fa75cdf796356dd043d713f148ddbd125e81334`.
-Terminalde en az `look`, `cd notes`, `take shard`, `inventory`, `use shard on
-vault`, `cd vault`, `look` çalıştırılır; ardından shard+coolant hazır state ile
-`use shard on coolant`, `unlock atlas`, `cd atlas`, `look` doğrulanır.
+Faz 3A için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
+aittir. Yayın sonrası canlıda `economy.js?v=1`, `world-actions.js?v=1`,
+`vfs.js?v=2`, `home-protocol.js?v=81` ve `convivium-v203` doğrulanır;
+economy/protocol canlı hash'leri main ile karşılaştırılır. Bu çalışma ağacındaki
+beklenen SHA-256: economy
+`15aaaa7a2cdcd730503f4b79b9c0d0a463fcd790c5d1ccd0846d458503d4a89c`,
+protocol `526e6bbc1698c0bfac299bfd7d3365572673f85e0931dc0dd9e80318f70ae52c`.
+Temiz state ile başlangıç `shards` bakiyesi 2 olmalı; ardından `ritual`,
+`cd notes`, `take shard`, `use shard on vault`, `shop buy theme-magenta` ve
+`shards` çalıştırılarak son bakiyenin 1, envanterin shard + tema ve vault'un
+açık olduğu doğrulanır. Reload sonrası aynı bakiye korunmalıdır.
 
-Canlı kabul temizse Faz 3A için önce shard ekonomisinin `awardShards`,
-`spendShards`, localStorage, `world_state` bulut senkronu ve SQL-kolonu-yok
-fallback davranışları karakterize edilir. İlk ekonomi dilimi yalnız sahiplik
-sınırı kurmalı; bakiye/ödül değerleri, shop/kart davranışı, parser sorunları ve
-Supabase şeması aynı değişiklik setinde değiştirilmemelidir.
+Canlı kabul temizse Faz 3B için önce shop katalog/sahiplik/satın alma yan etki
+sırası ve kozmetik tüketicileri karakterize edilir. Kart/collect, parser,
+Supabase şeması ve ürün fiyatları bu taşıma ile aynı değişiklik setinde
+değiştirilmez.

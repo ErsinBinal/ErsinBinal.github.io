@@ -1,6 +1,6 @@
 # Üretim Sertleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Home Protocol Faz 2D eş güdümü)
+Son güncelleme: 18 Temmuz 2026 (Home Protocol Faz 3A eş güdümü)
 Durum: **KAPANDI — A0/A1/A2/A3/B1/B2 tamamlandı ve canlı doğrulandı. Aktif
 geliştirme hattı yeniden Home Protocol modülerleştirmesidir.**
 Aktif hat: [Home Protocol Modülerleştirme](home-protocol-modularization-handoff.md).
@@ -25,9 +25,9 @@ Monolit refaktörünün Faz 1B ve sonrası için konan aşağıdaki öncelik kil
 6. Ardından terminal Faz 1B ve daha bağlı VFS/ekonomi/Oracle modülleri.
 
 Faz 1B `convivium-v198`, Faz 2A VFS navigation çekirdeği `convivium-v199`, Faz
-2B kalıcı `/home` motoru `convivium-v200` ve Faz 2C world/room read-modeli
-`convivium-v201` ile canlıya alındı. Çalışma ağacındaki `convivium-v202`, henüz
-yayımlanmamış Faz 2D world mutasyon karar dilimini temsil eder.
+2B kalıcı `/home` motoru `convivium-v200`, Faz 2C world/room read-modeli
+`convivium-v201` ve Faz 2D world mutasyon karar sınırı `convivium-v202` ile
+canlıya alındı.
 
 ## Değişmez kurallar
 
@@ -289,7 +289,8 @@ Sonuç (18 Temmuz 2026):
 | Home Protocol 2A | Tamamlandı; canlı | VFS v1/protocol v77 hash eşleşmesi; SW v199 |
 | Home Protocol 2B | Tamamlandı; canlı | VFS v2/protocol v78 hash eşleşmesi; SW v200 |
 | Home Protocol 2C | Tamamlandı; canlı | World v1/protocol v79 hash eşleşmesi; SW v201 |
-| Home Protocol 2D | Kod/test tamam; yayın bekliyor | Unit 37/37; normal/fail-closed/offline Chromium; SW v202 yerel |
+| Home Protocol 2D | Tamamlandı; canlı | World-actions v1/protocol v80 hash eşleşmesi; SW v202 |
+| Home Protocol 3A | Kod/test tamam; yayın bekliyor | Unit 47/47; normal/fail-closed/offline Chromium; SW v203 yerel |
 | A0 takip/dondurma | Tamamlandı | Aktif/bekleyen hatlar tüm handoff'larda bağlandı |
 | A1 lock/audit | Tamamlandı | `npm ci`, audit 0, lock hash değişmedi |
 | A2 Worker sınırı | Tamamlandı; canlı | Kimliksiz enrich `401`; Worker 12/12 |
@@ -319,7 +320,7 @@ Sonuç (18 Temmuz 2026):
 ```text
 npm ci                           geçti; 162 paket, lock hash değişmedi
 npm audit --audit-level=moderate 0 bulgu
-npm run check                    unit 37/37; Worker 12/12; 27/27 CSP; 22/22 exact script
+npm run check                    unit 47/47; Worker 12/12; 27/27 CSP; 22/22 exact script
 yerel smoke                      8/8
 yerel Chromium E2E               7/7; gerçek signup 1 test bilinçli skip
 B2 yerel Chromium                2/2; CSP/CDN/canvas, ihlal ve page error yok
@@ -336,11 +337,11 @@ kapısı yapılmadı, production dry-run paketlemesi başarılı.
 
 Üretim sertleştirme hattı kapalıdır. Yeni aktif iş
 [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md)
-içindeki Faz 2D'dir. Faz 2C canlı kabulü tamamlandı; world mutasyon karar
-sınırının inceleme, yayın ve devam sırası o belgede tutulur.
+içindeki Faz 3A'dır. Faz 2D canlı kabulü tamamlandı; shard ekonomi çekirdeği
+yerelde hazırlandı ve inceleme/yayın sırası o belgede tutulur.
 
-Canlı Home Protocol tabanı v201 olarak kabul edilmiştir. Çalışma ağacındaki
-v202 yalnız Faz 2D world-actions/protocol asset'leriyle birlikte ele alınmalı;
+Canlı Home Protocol tabanı v202 olarak kabul edilmiştir. Çalışma ağacındaki
+v203 yalnız Faz 3A economy/protocol asset'leriyle birlikte ele alınmalı;
 herhangi bir rollback'te cache sürümü geriye düşürülmemelidir.
 
 > **Eş güdüm kuralı (2026-07-17):** Ayni çalışma ağacında AYNI ANDA iki oturum
