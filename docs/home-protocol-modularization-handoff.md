@@ -1,10 +1,10 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Faz 2B yerel doğrulama)
-Durum: **Faz 0/1A/1B/2A canlıda; Faz 2A `convivium-v199` kabulü tamamlandı.
-Faz 2B kalıcı `/home` motoru kod, karakterizasyon, tarayıcı, fallback ve
-çevrimdışı test tarafında tamam; kullanıcı incelemesi/commit/push/yayın
-bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (Faz 2C yerel doğrulama)
+Durum: **Faz 0/1A/1B/2A/2B canlıda; Faz 2B `convivium-v200` kabulü tamamlandı.
+Faz 2C salt okunur world/room modeli kod, karakterizasyon, tarayıcı, fail-closed
+fallback ve çevrimdışı test tarafında tamam; kullanıcı
+incelemesi/commit/push/yayın bekliyor.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
 > Öncelik kilidi 18 Temmuz 2026'da kapandı: A1, A2, A3, B1 ve B2 canlı
@@ -46,17 +46,18 @@ Bu P0/P1 işleri ve B2 canlı kabulü tamamlandı. Faz 1B canlıya alındı; Faz
 
 ## Başlangıç ve güncel ölçüm
 
-| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B yerel |
-|---|---:|---:|---:|---:|---:|
-| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır |
-| Terminal komutu | 132 | 132 | 132 | 132 | 132 |
-| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 | 95 |
-| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 | 23 |
-| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 | 14 |
-| `vfs.js` | yok | yok | yok | 132 satır | 205 satır |
-| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 |
-| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 |
-| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 (yerel) |
+| Ölçüm | Başlangıç | Faz 1A sonrası | Faz 1B canlı | Faz 2A canlı | Faz 2B canlı | Faz 2C yerel |
+|---|---:|---:|---:|---:|---:|---:|
+| `home-protocol.js` | 4.530 satır | 4.390 satır | 4.329 satır | 4.298 satır | 4.253 satır | 4.113 satır |
+| Terminal komutu | 132 | 132 | 132 | 132 | 132 | 132 |
+| `home-protocol.js` içindeki komut tanımı | 132 | 109 | 95 | 95 | 95 | 95 |
+| `route-commands.js` içindeki komut | yok | 23 | 23 | 23 | 23 | 23 |
+| `guide-commands.js` içindeki komut | yok | yok | 14 | 14 | 14 | 14 |
+| `vfs.js` | yok | yok | yok | 132 satır | 205 satır | 205 satır |
+| `world.js` | yok | yok | yok | yok | yok | 234 satır |
+| Route / rehber registry alias'ı | yok | 99 / yok | 99 / 75 | 99 / 75 | 99 / 75 | 99 / 75 |
+| Ana sayfa `<script>` etiketi | 30 | 31 | 32 | 33 | 33 | 34 |
+| Service Worker cache sürümü | v194 | v195 | v198 | v199 | v200 | v201 (yerel) |
 
 Script sayısının bir artması bu faz için bilinçli bir ara sonuçtur. Faz 1'in
 hedefi bakım sınırı kurmaktır; ilk yükteki script/byte azaltımı ölçümlü lazy-load
@@ -281,7 +282,7 @@ Bilinen, bu dilimde değiştirilmemiş kabuk davranışları:
   çalışıyor. Bu iki konu Faz 2A regresyonu değildir. Parser davranışını dosya
   taşıma ile karıştırmamak için ayrı düzeltme dilimine bırakıldı.
 
-### Faz 2B — Kalıcı `/home` dosya motoru — KOD/TEST TAMAM; YAYIN BEKLİYOR
+### Faz 2B — Kalıcı `/home` dosya motoru — TAMAMLANDI VE CANLI DOĞRULANDI
 
 Uygulanan güvenli dilim:
 
@@ -320,6 +321,12 @@ Karakterizasyon ve doğrulama:
   silme zinciri çevrimdışı geçti ve storage boş kaldı.
 - Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
   testi bilinçli olarak skip edildi.
+- Kullanıcı yayını sonrası canlı ana sayfada `vfs.js?v=2`,
+  `home-protocol.js?v=78` ve Service Worker `convivium-v200` doğrulandı. VFS
+  SHA-256 `4f478a182918304e9490577c7c4e3acdcb79bb2baee13ecbf815f4756bf22bf4`,
+  protocol SHA-256
+  `2d0eb0846ad23ca58a2c544947f9e99f57626b09baf4369133b7d769f7eba852`;
+  iki canlı dosya da main `a32247c` ile birebir eşleşti.
 
 Değişen dosyalar:
 
@@ -332,13 +339,72 @@ Değişen dosyalar:
 | `service-worker.js` | Aynı asset sürümleri ve cache v200 |
 | `scripts/validate-site-integrity.js` | Precache/script sürüm sözleşmeleri |
 
-### Faz 2C — Salt okunur world/room modeli — 2B CANLI KABULÜ SONRASI ADAY
+### Faz 2C — Salt okunur world/room modeli — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
-Önce `currentRoom`, oda görünümü, `look` ve `examine` çıktıları ile kilitli oda
-fallback'lerini karakterize et. İlk dilimde yalnız salt okunur oda verisi ve
-görüntüleme sahipliğini VFS/world modül sınırına al; `take`, `unlock`, `use`,
-ödül/economy ve Supabase yan etkilerini aynı taşımaya katma. Envanter yüksek
-bağlılık gösterirse bu aday yeniden dilimlenmeden kod taşınmamalıdır.
+Uygulanan güvenli dilim:
+
+- Sekiz odanın registry'si, başlıkları, nesne metinleri, `locked/key/grants`
+  verisi ve sırası yeni `assets/js/home/world.js` içinde deep-frozen tek kaynak
+  oldu.
+- `roomExits`, `currentObjective`, `rankTitle`, `prodosPath`, `roomPanel`,
+  `look`, `examine` ve fuzzy nesne eşleme salt okunur world factory'sine taşındı.
+- World factory state'i doğrudan yazmıyor. Envanter, kilit, CWD ve keşif
+  durumunu getter'larla okuyor; ilk `look` keşfini protocol callback'ine
+  bildiriyor. Persist sahipliği protocol'de kaldı.
+- `take`, `unlock`, `use`, inventory mutasyonu, `persist`, `scheduleWorldSave`,
+  audio, seviye/shard ödülleri ve Supabase yan etkileri taşınmadı. Bu komutlar
+  immutable registry'yi `worldMod.getRoom/getCurrentRoom` üzerinden okuyor.
+- World modülü eksik veya kurulamazsa VFS fail-closed kapanıyor; kilitli odalara
+  `cd` ile girilemiyor. World/VFS komutları açık unavailable mesajı verirken
+  terminalin geri kalanı çalışmayı sürdürüyor.
+- `world.js?v=1`, `home-protocol.js?v=79` ve `convivium-v201` atomik yayın dilimi
+  olarak bağlandı. World asset'i syntax/precache/validator/cache-sync
+  sözleşmelerine eklendi; managed asset sayısı 22 oldu.
+- Faz 2A'dan kalan `cd ..`/`cd /` ve noktalı `cat` parser sorunları yine bu
+  refaktöre karıştırılmadı.
+
+Karakterizasyon ve doğrulama:
+
+- Yeni `tests/unit/home-world.test.mjs` 5/5: sekiz odanın tam veri snapshot'ı,
+  deep-freeze, panel metni, keşfin tek çağrısı, fuzzy `examine`, boş oda
+  fallback'i, çıkış/unvan/görev geçişleri, eksik dependency ve protocol sahiplik
+  sınırı.
+- Unit toplamı 31/31; komut uzayı snapshot'ı hâlâ 132 komut, 589 etiket ve 545
+  normalize anahtarı kilitliyor.
+- `npm run check`: unit 31/31, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script ile geçti. `npm run sync:cache` 22 asset'i senkron buldu.
+- Normal Chromium akışında root `look/examine`, `cd notes`, clue inceleme,
+  `take shard`, inventory, `unlock vault`, `cd vault`, vault `look/examine`
+  geçti. Inventory/unlocked/discovered state'i doğru; page/protocol hatası yok.
+- World asset'i bilinçli engellendiğinde beklenen iki konsol kaydı görüldü;
+  `look/examine` kontrollü kapandı, VFS fail-closed olduğu için `cd vault`
+  çalışmadı, `take` state değiştirmedi ve `level` çalıştı. Page error yok.
+- Service Worker kontrollü çevrimdışı reload'da `convivium-v201` içindeki
+  `world.js?v=1`, `vfs.js?v=2` ve `home-protocol.js?v=79` doğrulandı. Aynı
+  keşif → shard → vault açma akışı offline geçti; page error yok.
+- Yerel smoke 8/8; Playwright E2E 7/7 geçti. Gerçek kullanıcı oluşturan kayıt
+  testi bilinçli olarak skip edildi.
+
+Değişen/yeni dosyalar:
+
+| Dosya | Amaç |
+|---|---|
+| `assets/js/home/world.js` | Immutable oda registry'si ve salt okunur world factory |
+| `assets/js/home-protocol.js` | World kurulumu, callback'ler ve mutasyon orkestrasyonu |
+| `tests/unit/home-world.test.mjs` | Registry/görünüm/geçiş/fallback karakterizasyonu |
+| `index.html` | World v1 yükleme sırası ve protocol v79 |
+| `service-worker.js` | World precache ve cache v201 |
+| `scripts/validate-site-integrity.js` | World asset/factory/sıra/sürüm sözleşmesi |
+| `scripts/sync-cache-versions.js` | World asset'ini managed listeye alma |
+| `package.json` | World modülünü syntax kapısına alma |
+
+### Faz 2D — World mutasyon komutları — 2C CANLI KABULÜ SONRASI ADAY
+
+Önce `take/unlock/use` için inventory, unlocked, easter trail, persist,
+`scheduleWorldSave`, audio, access/level ve shard ödül yan etkilerini çağrı
+sırasıyla karakterize et. Ardından yalnız mutasyon kararlarını ayrı bir factory
+sınırına al; state yazımı, ekonomi ve Supabase işlemleri injected callback olarak
+protocol'de kalsın. Ödül veya storage semantiğini bu taşıma sırasında değiştirme.
 
 ### Faz 3 — Ekonomi
 
@@ -446,15 +512,33 @@ Sorun görülürse canlı Faz 2A sınırını koruyarak yalnız Faz 2B geri alı
 4. `vfs.js`, protocol ve Service Worker referanslarını yeni ileri `?v=` ve
    cache sürümüyle yayınla. `convivium-v200` canlıya çıktıysa v199'a düşürme.
 
+## Faz 2C rollback
+
+Sorun görülürse canlı Faz 2B sınırını koruyarak yalnız Faz 2C geri alınır:
+
+1. Sekiz oda registry'sini, başlık/çıkış/görev/unvan helpers'ını ve
+   `roomPanel/look/examine` uygulamalarını protocol içindeki eski sırasına geri
+   koy.
+2. VFS `getRoom/renderRoom` ile `take/unlock` tüketicilerini aynı inline
+   registry'ye birlikte bağla; yarı world modülü/yarı inline veri bırakma.
+3. `home-world.test.mjs` snapshot ve davranış testlerini inline kaynağı
+   doğrulayacak biçimde koru; lock/grant/key snapshot'larını silme.
+4. `world.js` script ve syntax/precache/validator/cache-sync bağlantılarını
+   kaldır. Protocol ve Service Worker'ı yeni ileri sürümlere bump et;
+   yayımlanmış `convivium-v201` hiçbir koşulda v200'e düşürülmez.
+
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Faz 2B için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
-aittir. Yayın sonrası canlıda `vfs.js?v=2`, `home-protocol.js?v=78` ve
-`convivium-v200` doğrulanır; canlı dosya hash'leri main ile karşılaştırılır.
-Terminalde en az `echo ilk > dosya`, `echo ikinci >> dosya`, `cat dosya`,
-`touch bos`, tekrar `touch bos`, `ls home`, `echo filtre | tee kopya`,
-`rm dosya`, `del bos` ve `rm -rf home` çalıştırılır.
+Faz 2C için kullanıcı mevcut diff'i inceler; commit/push/yayın kullanıcıya
+aittir. Yayın sonrası canlıda `world.js?v=1`, `vfs.js?v=2`,
+`home-protocol.js?v=79` ve `convivium-v201` doğrulanır; world/protocol canlı
+hash'leri main ile karşılaştırılır. Bu çalışma ağacındaki beklenen SHA-256:
+world `dc4ed8074e320649c1bc4e76ad2a9b4c6396a6862bd968ebac5054edd557404a`,
+protocol `90fabfa59709db6c135a5cf862fe361800d4e93cf0762f4b0db7fd4c158eb83d`.
+Terminalde en az `look`, `examine glyph`,
+`cd notes`, `look`, `examine clues`, `take shard`, `inventory`, `unlock vault`,
+`cd vault`, `look` ve `examine satir` çalıştırılır.
 
-Canlı kabul temizse Faz 2C için önce salt okunur world/room bağımlılık envanteri
-ve karakterizasyon testi hazırlanır. Parser sorunları ile `take/unlock/use`,
-ekonomi ve Supabase yan etkileri bu okuma-modeli dilimine katılmaz.
+Canlı kabul temizse Faz 2D için önce world mutasyonlarının bütün yan etkileri ve
+çağrı sırası karakterize edilir. Parser sorunları, ekonomi davranışı ve Supabase
+storage semantiği bu taşıma ile aynı değişiklik setinde düzeltilmez.

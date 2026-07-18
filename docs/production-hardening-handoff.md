@@ -1,6 +1,6 @@
 # Üretim Sertleştirme — Handoff
 
-Son güncelleme: 18 Temmuz 2026 (Home Protocol Faz 2B eş güdümü)
+Son güncelleme: 18 Temmuz 2026 (Home Protocol Faz 2C eş güdümü)
 Durum: **KAPANDI — A0/A1/A2/A3/B1/B2 tamamlandı ve canlı doğrulandı. Aktif
 geliştirme hattı yeniden Home Protocol modülerleştirmesidir.**
 Aktif hat: [Home Protocol Modülerleştirme](home-protocol-modularization-handoff.md).
@@ -24,9 +24,10 @@ Monolit refaktörünün Faz 1B ve sonrası için konan aşağıdaki öncelik kil
 5. Eksik CSP'ler, CDN sürüm sabitleme ve gerçek HTTP header hosting kararı.
 6. Ardından terminal Faz 1B ve daha bağlı VFS/ekonomi/Oracle modülleri.
 
-Faz 1B `convivium-v198`, Faz 2A VFS navigation çekirdeği `convivium-v199` ile
-canlıya alındı. Çalışma ağacındaki `convivium-v200`, henüz yayımlanmamış Faz 2B
-kalıcı `/home` motoru dilimini temsil eder.
+Faz 1B `convivium-v198`, Faz 2A VFS navigation çekirdeği `convivium-v199`, Faz
+2B kalıcı `/home` motoru `convivium-v200` ile canlıya alındı. Çalışma ağacındaki
+`convivium-v201`, henüz yayımlanmamış Faz 2C world/room read-model dilimini
+temsil eder.
 
 ## Değişmez kurallar
 
@@ -286,7 +287,8 @@ Sonuç (18 Temmuz 2026):
 | Home Protocol 1A | Tamamlandı; main'de | `cf63bd6`; `npm run check` + headless smoke |
 | Home Protocol 1B | Tamamlandı; canlı | Guide v1/protocol v76; SW v198 |
 | Home Protocol 2A | Tamamlandı; canlı | VFS v1/protocol v77 hash eşleşmesi; SW v199 |
-| Home Protocol 2B | Kod/test tamam; yayın bekliyor | Unit 26/26; normal/fallback/offline Chromium; SW v200 yerel |
+| Home Protocol 2B | Tamamlandı; canlı | VFS v2/protocol v78 hash eşleşmesi; SW v200 |
+| Home Protocol 2C | Kod/test tamam; yayın bekliyor | Unit 31/31; normal/fail-closed/offline Chromium; SW v201 yerel |
 | A0 takip/dondurma | Tamamlandı | Aktif/bekleyen hatlar tüm handoff'larda bağlandı |
 | A1 lock/audit | Tamamlandı | `npm ci`, audit 0, lock hash değişmedi |
 | A2 Worker sınırı | Tamamlandı; canlı | Kimliksiz enrich `401`; Worker 12/12 |
@@ -333,11 +335,11 @@ kapısı yapılmadı, production dry-run paketlemesi başarılı.
 
 Üretim sertleştirme hattı kapalıdır. Yeni aktif iş
 [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md)
-içindeki Faz 2B'dir. Faz 2A canlı kabulü tamamlandı; kalıcı `/home` motorunun
+içindeki Faz 2C'dir. Faz 2B canlı kabulü tamamlandı; world/room read-modelinin
 inceleme, yayın ve devam sırası o belgede tutulur.
 
-Canlı Home Protocol tabanı v199 olarak kabul edilmiştir. Çalışma ağacındaki
-v200 yalnız Faz 2B VFS/protocol asset'leriyle birlikte ele alınmalı; herhangi
+Canlı Home Protocol tabanı v200 olarak kabul edilmiştir. Çalışma ağacındaki
+v201 yalnız Faz 2C world/protocol asset'leriyle birlikte ele alınmalı; herhangi
 bir rollback'te cache sürümü geriye düşürülmemelidir.
 
 > **Eş güdüm kuralı (2026-07-17):** Ayni çalışma ağacında AYNI ANDA iki oturum
