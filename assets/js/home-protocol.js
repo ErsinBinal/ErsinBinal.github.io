@@ -144,6 +144,7 @@
       let worldMod = null;
       let worldActionsMod = null;
       let economyMod = null;
+      let shopMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -1836,15 +1837,6 @@
       };
 
       // --- Signal Shards: bakiye + dukkan (kozmetik) ---
-      const SHOP_ITEMS = [
-        { key: 'theme-magenta', cost: 12, desc: 'terminal temasi: magenta  (sonra: theme magenta)' },
-        { key: 'theme-ice', cost: 12, desc: 'terminal temasi: ice      (sonra: theme ice)' },
-        { key: 'saver-drift', cost: 20, desc: 'ekran koruyucu varyanti: mor drift (screen saver)' },
-        { key: 'bugy-flag', cost: 8, desc: 'bugy aksesuari: mini bayrak' }
-      ];
-
-      const shardOwned = (key) => (state.inventory || []).includes(`shop:${key}`);
-
       const shardsCommand = () => economyMod?.summary?.() || 'shards: economy unavailable';
 
       const applyShopPurchase = (key) => {
@@ -1854,41 +1846,36 @@
         } catch { /* kozmetik bayrak best-effort */ }
       };
 
+      shopMod = (() => {
+        if (!economyMod) return null;
+        const createShop = window.ConviviumHome?.createShop;
+        if (typeof createShop !== 'function') {
+          console.error('[home-protocol] Shop module unavailable');
+          return null;
+        }
+        try {
+          return createShop({
+            normalizeCommand,
+            getBalance: () => state.shards,
+            ownsItem: (key) => (state.inventory || []).includes(`shop:${key}`),
+            spendShards,
+            grantItem: (key) => {
+              state.inventory = [...new Set([...(state.inventory || []), `shop:${key}`])];
+            },
+            persist,
+            scheduleWorldSave,
+            applyPurchase: applyShopPurchase,
+            playPickupAudio: () => audioCue('game.pickup')
+          });
+        } catch (error) {
+          console.error('[home-protocol] Shop module failed', error);
+          return null;
+        }
+      })();
+
       const shopCommand = (arg = '') => {
         if (!economyMod) return 'shop: economy unavailable';
-        const norm = normalizeCommand(arg);
-        if (!norm || norm === 'list') {
-          const rows = SHOP_ITEMS.map((item) => {
-            const mark = shardOwned(item.key) ? '[x]' : `[${String(item.cost).padStart(2)}]`;
-            return `  ${mark} ${item.key.padEnd(14)} ${item.desc}`;
-          });
-          return [
-            '] SHOP',
-            '',
-            `  bakiye: ${state.shards} shard`,
-            '',
-            ...rows,
-            '',
-            '  satin al: shop buy <urun>   ([x] = sende var)',
-            ']'
-          ].join('\n');
-        }
-        const parts = norm.split(/\s+/);
-        if (parts[0] !== 'buy' && parts[0] !== 'al') return 'shop: usage shop | shop buy <urun>';
-        const key = parts.slice(1).join('-');
-        const item = SHOP_ITEMS.find((entry) => entry.key === key);
-        if (!item) return `shop: "${key || '?'}" diye bir urun yok. shop ile listele.`;
-        if (shardOwned(item.key)) return `shop: ${item.key} zaten sende.`;
-        if (!spendShards(item.cost)) return `shop: yetersiz bakiye (${state.shards}/${item.cost} shard).`;
-        state.inventory = [...new Set([...(state.inventory || []), `shop:${item.key}`])];
-        persist();
-        scheduleWorldSave();
-        applyShopPurchase(item.key);
-        audioCue('game.pickup');
-        const hint = item.key.startsWith('theme-') ? ` dene: theme ${item.key.replace('theme-', '')}`
-          : item.key === 'saver-drift' ? ' dene: screen saver'
-          : '';
-        return `shop: ${item.key} alindi (-${item.cost} shard, kalan ${state.shards}).${hint}`;
+        return shopMod?.command?.(arg) || 'shop: unavailable';
       };
 
       const scanCommand = () => {

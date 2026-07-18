@@ -170,6 +170,7 @@ const mustPrecache = [
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/world.js?v=1',
   '/assets/js/home/economy.js?v=1',
+  '/assets/js/home/shop.js?v=1',
   '/assets/js/home/world-actions.js?v=1',
   '/assets/js/home/vfs.js?v=2',
   '/assets/js/home/pipe-90.js?v=1',
@@ -183,7 +184,7 @@ const mustPrecache = [
   '/assets/js/home/chat.js?v=3',
   '/assets/js/supabase-client.js?v=36',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=81',
+  '/assets/js/home-protocol.js?v=82',
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/service-worker-register.js?v=3'
 ];
@@ -200,13 +201,15 @@ const routeCommandsRef = '/assets/js/home/route-commands.js?v=1';
 const guideCommandsRef = '/assets/js/home/guide-commands.js?v=1';
 const worldRef = '/assets/js/home/world.js?v=1';
 const economyRef = '/assets/js/home/economy.js?v=1';
+const shopRef = '/assets/js/home/shop.js?v=1';
 const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
 const vfsRef = '/assets/js/home/vfs.js?v=2';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=81';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=82';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
 const worldIndex = indexHtml.indexOf(worldRef);
 const economyIndex = indexHtml.indexOf(economyRef);
+const shopIndex = indexHtml.indexOf(shopRef);
 const worldActionsIndex = indexHtml.indexOf(worldActionsRef);
 const vfsIndex = indexHtml.indexOf(vfsRef);
 const homeProtocolIndex = indexHtml.indexOf(homeProtocolRef);
@@ -219,13 +222,15 @@ if (routeCommandsIndex === -1) {
   addError(`index.html script eksik: ${worldRef}`);
 } else if (economyIndex === -1) {
   addError(`index.html script eksik: ${economyRef}`);
+} else if (shopIndex === -1) {
+  addError(`index.html script eksik: ${shopRef}`);
 } else if (worldActionsIndex === -1) {
   addError(`index.html script eksik: ${worldActionsRef}`);
 } else if (vfsIndex === -1) {
   addError(`index.html script eksik: ${vfsRef}`);
 } else if (homeProtocolIndex === -1) {
   addError(`index.html script eksik: ${homeProtocolRef}`);
-} else if ([routeCommandsIndex, guideCommandsIndex, worldIndex, economyIndex, worldActionsIndex, vfsIndex].some((index) => index > homeProtocolIndex)) {
+} else if ([routeCommandsIndex, guideCommandsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex].some((index) => index > homeProtocolIndex)) {
   addError('index.html script sirasi hatali: home modulleri home-protocol oncesinde olmali');
 }
 
@@ -242,6 +247,9 @@ if (!homeProtocol.includes('createWorld')) {
 }
 if (!homeProtocol.includes('createEconomy')) {
   addError('home-protocol.js economy factory baglantisi eksik');
+}
+if (!homeProtocol.includes('createShop')) {
+  addError('home-protocol.js shop factory baglantisi eksik');
 }
 if (!homeProtocol.includes('createWorldActions')) {
   addError('home-protocol.js world actions factory baglantisi eksik');

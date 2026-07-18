@@ -12,6 +12,7 @@ const managedAssets = [
   '/assets/js/home/guide-commands.js',
   '/assets/js/home/world.js',
   '/assets/js/home/economy.js',
+  '/assets/js/home/shop.js',
   '/assets/js/home/world-actions.js',
   '/assets/js/home/vfs.js',
   '/assets/js/home/pipe-90.js',
