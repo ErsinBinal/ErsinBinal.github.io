@@ -1198,62 +1198,8 @@
         return `random route: ${label}`;
       };
 
-      // --- Kabuk cekirdegi (Dalga 9a): kalici sanal dosyalar (/home) + env ---
-      // Guvenlik: tum icerik textContent ile basilir (HTML yorumlanmaz), eval yok,
-      // localStorage ayni-origin'dir; ad/boyut/adet tavanlari asagida zorlanir.
-      const VFS_KEY = 'convivium.shell.files';
-      const VFS_MAX_FILES = 24;
-      const VFS_MAX_NAME = 32;
-      const VFS_MAX_CONTENT = 4000;
-      const vfsLoad = () => {
-        try {
-          const raw = JSON.parse(localStorage.getItem(VFS_KEY) || '{}');
-          return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
-        } catch { return {}; }
-      };
-      const vfsSave = (files) => {
-        try { localStorage.setItem(VFS_KEY, JSON.stringify(files)); } catch { /* dolu/kapali */ }
-      };
-      // Dosya adi: kucuk-harf slug (+ opsiyonel .txt/.md/.log uzantisi), yol ayraci yok.
-      const vfsName = (input = '') => {
-        const cleaned = String(input).toLowerCase().trim()
-          .replace(/^\/?(home\/)?/, '')
-          .replace(/[ıİ]/g, 'i').replace(/ğ/g, 'g').replace(/ü/g, 'u')
-          .replace(/ş/g, 's').replace(/ö/g, 'o').replace(/ç/g, 'c')
-          .replace(/[^a-z0-9._-]+/g, '-').replace(/^[-.]+|[-.]+$/g, '');
-        if (!cleaned || cleaned.length > VFS_MAX_NAME) return null;
-        return cleaned;
-      };
-      const vfsList = () => Object.keys(vfsLoad()).sort();
-      const vfsRead = (name) => {
-        const key = vfsName(name);
-        if (!key) return null;
-        const files = vfsLoad();
-        return Object.prototype.hasOwnProperty.call(files, key) ? files[key] : null;
-      };
-      const vfsWrite = (name, content, append = false) => {
-        const key = vfsName(name);
-        if (!key) return `yaz: gecersiz dosya adi (kucuk harf, rakam, tire; en cok ${VFS_MAX_NAME} karakter).`;
-        const files = vfsLoad();
-        const exists = Object.prototype.hasOwnProperty.call(files, key);
-        if (!exists && Object.keys(files).length >= VFS_MAX_FILES) {
-          return `yaz: /home dolu (en cok ${VFS_MAX_FILES} dosya). "rm <ad>" ile yer ac.`;
-        }
-        const body = (append && exists ? files[key] + '\n' : '') + String(content ?? '');
-        if (body.length > VFS_MAX_CONTENT) return `yaz: dosya cok buyuk (tavan ${VFS_MAX_CONTENT} karakter).`;
-        files[key] = body;
-        vfsSave(files);
-        return `${append && exists ? 'eklendi' : 'yazildi'}: /home/${key} (${body.length} karakter)`;
-      };
-      const vfsRemove = (name) => {
-        const key = vfsName(name);
-        const files = vfsLoad();
-        if (!key || !Object.prototype.hasOwnProperty.call(files, key)) return `rm: ${name || '?'}: /home altinda boyle bir dosya yok`;
-        delete files[key];
-        vfsSave(files);
-        return `silindi: /home/${key}`;
-      };
-
+      // --- Kabuk cekirdegi (Dalga 9a): kalici /home VFS modulu + env ---
+      // Icerik textContent ile basilir; storage/ad/boyut sinirlari vfs.js'dedir.
       const ENV_KEY = 'convivium.shell.env';
       const ENV_MAX_VARS = 16;
       const envLoad = () => {
@@ -1292,6 +1238,14 @@
       const cdCommand = (target = '/') => vfsMod?.cd?.(target) || 'cd: virtual filesystem unavailable';
       const catCommand = (target = '') => vfsMod?.cat?.(target) || 'cat: virtual filesystem unavailable';
       const pwdCommand = () => vfsMod?.getCwd?.() || 'pwd: virtual filesystem unavailable';
+      const vfsName = (input = '') => vfsMod?.normalizeFileName?.(input) ?? null;
+      const vfsRead = (name) => vfsMod?.readFile?.(name) ?? null;
+      const vfsWrite = (name, content, append = false) => (
+        vfsMod?.writeFile?.(name, content, append) || 'yaz: virtual filesystem unavailable'
+      );
+      const vfsRemove = (name) => (
+        vfsMod?.removeFile?.(name) || `rm: ${name || '?'}: virtual filesystem unavailable`
+      );
 
       const treeCommand = () => [
         '/',
@@ -1485,9 +1439,10 @@
         try {
           return createVfs({
             normalizeCommand,
-            loadHomeFiles: vfsLoad,
-            readHomeFile: vfsRead,
-            maxHomeFiles: VFS_MAX_FILES,
+            storage: {
+              getItem: (key) => localStorage.getItem(key),
+              setItem: (key, value) => localStorage.setItem(key, value)
+            },
             getAudioEnabled: () => audioEnabled,
             getRoom: (path) => worldRooms[path] || null,
             isRoomUnlocked: (path) => (state.unlocked || []).includes(path),

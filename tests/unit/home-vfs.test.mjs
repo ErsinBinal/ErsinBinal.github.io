@@ -67,6 +67,21 @@ function loadHomeModules({ withConsumers = false } = {}) {
   return context.window.ConviviumHome;
 }
 
+function createStorage(initial = {}, { failGet = false, failSet = false } = {}) {
+  const values = new Map(Object.entries(initial));
+  return {
+    getItem(key) {
+      if (failGet) throw new Error('storage get blocked');
+      return values.get(key) ?? null;
+    },
+    setItem(key, value) {
+      if (failSet) throw new Error('storage set blocked');
+      values.set(key, String(value));
+    },
+    value(key) { return values.get(key) ?? null; }
+  };
+}
+
 function createFixture(overrides = {}) {
   const home = loadHomeModules();
   const rooms = {
@@ -81,12 +96,11 @@ function createFixture(overrides = {}) {
   };
   const cwdChanges = [];
   const discoveries = [];
+  const storage = overrides.storage || createStorage();
   let unlocked = false;
   const vfs = home.createVfs({
     normalizeCommand,
-    loadHomeFiles: () => ({}),
-    readHomeFile: () => null,
-    maxHomeFiles: 24,
+    storage,
     getAudioEnabled: () => false,
     getRoom: (path) => rooms[path] || null,
     isRoomUnlocked: () => unlocked,
@@ -98,6 +112,7 @@ function createFixture(overrides = {}) {
   return {
     home,
     vfs,
+    storage,
     cwdChanges,
     discoveries,
     unlock: () => { unlocked = true; }
@@ -140,9 +155,9 @@ test('VFS preserves path resolution, navigation callbacks and locked-room behavi
 
 test('VFS preserves directory, personal file and public document output', () => {
   const files = { 'z.log': '123', 'a.txt': '', 'note.md': 'merhaba' };
+  const storage = createStorage({ 'convivium.shell.files': JSON.stringify(files) });
   const { vfs } = createFixture({
-    loadHomeFiles: () => ({ ...files }),
-    readHomeFile: (name) => Object.prototype.hasOwnProperty.call(files, name) ? files[name] : null,
+    storage,
     getAudioEnabled: () => true
   });
 
@@ -172,6 +187,72 @@ test('VFS preserves directory, personal file and public document output', () => 
   assert.equal(vfs.cat('missing'), 'cat: missing: public document not found');
 });
 
+test('Persistent /home engine preserves names, write, append, list and remove output', () => {
+  const { vfs, storage } = createFixture();
+
+  assert.equal(vfs.normalizeFileName('/home/Çalışma Notu.TXT'), 'calisma-notu.txt');
+  assert.equal(vfs.normalizeFileName('..'), null);
+  assert.equal(vfs.normalizeFileName('a'.repeat(33)), null);
+  assert.equal(
+    vfs.writeFile('Not.TXT', 'ilk'),
+    'yazildi: /home/not.txt (3 karakter)'
+  );
+  assert.equal(vfs.readFile('not.txt'), 'ilk');
+  assert.deepEqual(Array.from(vfs.listFiles()), ['not.txt']);
+  assert.equal(
+    vfs.writeFile('not.txt', 'ikinci', true),
+    'eklendi: /home/not.txt (10 karakter)'
+  );
+  assert.equal(vfs.readFile('/home/not.txt'), 'ilk\nikinci');
+  assert.equal(vfs.cat('not.txt'), 'ilk\nikinci');
+  assert.equal(vfs.ls('home'), '/home: 1/24 dosya\n  not.txt  (10b)');
+  assert.equal(vfs.removeFile('not.txt'), 'silindi: /home/not.txt');
+  assert.equal(vfs.readFile('not.txt'), null);
+  assert.deepEqual(JSON.parse(storage.value('convivium.shell.files')), {});
+  assert.equal(vfs.removeFile('not.txt'), 'rm: not.txt: /home altinda boyle bir dosya yok');
+});
+
+test('Persistent /home engine preserves file count and content ceilings', () => {
+  const full = Object.fromEntries(
+    Array.from({ length: 24 }, (_, index) => [`f${index}`, index === 0 ? 'eski' : ''])
+  );
+  const storage = createStorage({ 'convivium.shell.files': JSON.stringify(full) });
+  const { vfs } = createFixture({ storage });
+
+  assert.equal(
+    vfs.writeFile('yeni', 'x'),
+    'yaz: /home dolu (en cok 24 dosya). "rm <ad>" ile yer ac.'
+  );
+  assert.equal(vfs.writeFile('f0', 'guncel'), 'yazildi: /home/f0 (6 karakter)');
+  assert.equal(vfs.readFile('f0'), 'guncel');
+  assert.equal(
+    vfs.writeFile('f0', 'x'.repeat(4001)),
+    'yaz: dosya cok buyuk (tavan 4000 karakter).'
+  );
+  assert.equal(vfs.readFile('f0'), 'guncel');
+  assert.equal(
+    vfs.writeFile('?', 'x'),
+    'yaz: gecersiz dosya adi (kucuk harf, rakam, tire; en cok 32 karakter).'
+  );
+});
+
+test('Persistent /home storage remains best-effort when data is corrupt or blocked', () => {
+  const corrupt = createStorage({ 'convivium.shell.files': '["array-degil"]' });
+  const corruptVfs = createFixture({ storage: corrupt }).vfs;
+  assert.deepEqual(Array.from(corruptVfs.listFiles()), []);
+
+  const blockedReadVfs = createFixture({ storage: createStorage({}, { failGet: true }) }).vfs;
+  assert.deepEqual(Array.from(blockedReadVfs.listFiles()), []);
+  assert.equal(blockedReadVfs.readFile('not'), null);
+
+  const blockedWrite = createStorage({}, { failSet: true });
+  const blockedWriteVfs = createFixture({ storage: blockedWrite }).vfs;
+  assert.equal(blockedWriteVfs.writeFile('not', 'metin'), 'yazildi: /home/not (5 karakter)');
+  assert.equal(blockedWriteVfs.readFile('not'), null);
+  blockedWrite.setItem = () => { throw new Error('storage set blocked'); };
+  assert.equal(blockedWriteVfs.removeFile('not'), 'rm: not: /home altinda boyle bir dosya yok');
+});
+
 test('Presence sync and chat payload consume the same live VFS room', () => {
   const home = loadHomeModules({ withConsumers: true });
   const tracked = [];
@@ -193,9 +274,7 @@ test('Presence sync and chat payload consume the same live VFS room', () => {
   let presence;
   const vfs = home.createVfs({
     normalizeCommand,
-    loadHomeFiles: () => ({}),
-    readHomeFile: () => null,
-    maxHomeFiles: 24,
+    storage: createStorage(),
     getAudioEnabled: () => false,
     getRoom: () => null,
     isRoomUnlocked: () => true,
@@ -233,12 +312,15 @@ test('Home protocol wires every live room consumer to the VFS owner', () => {
     'presence, chat ve chat deck ayni canli CWD getterini kullanmali'
   );
   assert.match(protocolSource, /onCwdChange:[\s\S]*?presenceMod\?\.sync\(\)/);
+  assert.doesNotMatch(protocolSource, /const\s+VFS_KEY|const\s+vfsLoad|const\s+vfsSave/);
+  assert.match(protocolSource, /storage:\s*\{[\s\S]*?localStorage\.getItem[\s\S]*?localStorage\.setItem/);
+  assert.match(protocolSource, /vfsMod\?\.writeFile/);
 });
 
 test('VFS factory rejects incomplete orchestration dependencies', () => {
   const home = loadHomeModules();
   assert.throws(
     () => home.createVfs({ normalizeCommand }),
-    /loadHomeFiles, readHomeFile, getAudioEnabled, getRoom, isRoomUnlocked, onCwdChange, onDiscoverRoom, renderRoom/
+    /storage, getAudioEnabled, getRoom, isRoomUnlocked, onCwdChange, onDiscoverRoom, renderRoom/
   );
 });

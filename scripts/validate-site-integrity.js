@@ -168,7 +168,7 @@ const mustPrecache = [
   '/assets/js/home/routes.js?v=5',
   '/assets/js/home/route-commands.js?v=1',
   '/assets/js/home/guide-commands.js?v=1',
-  '/assets/js/home/vfs.js?v=1',
+  '/assets/js/home/vfs.js?v=2',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
@@ -180,7 +180,7 @@ const mustPrecache = [
   '/assets/js/home/chat.js?v=3',
   '/assets/js/supabase-client.js?v=36',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=77',
+  '/assets/js/home-protocol.js?v=78',
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/service-worker-register.js?v=3'
 ];
@@ -195,8 +195,8 @@ const indexPath = path.join(root, 'index.html');
 const indexHtml = fs.readFileSync(indexPath, 'utf8');
 const routeCommandsRef = '/assets/js/home/route-commands.js?v=1';
 const guideCommandsRef = '/assets/js/home/guide-commands.js?v=1';
-const vfsRef = '/assets/js/home/vfs.js?v=1';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=77';
+const vfsRef = '/assets/js/home/vfs.js?v=2';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=78';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
 const vfsIndex = indexHtml.indexOf(vfsRef);

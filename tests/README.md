@@ -6,7 +6,8 @@ katman ve bir CI kapısı vardır:
 ## 1. Unit / karakterizasyon (hızlı, bağımlılıksız)
 
 Ana terminalin route/rehber registry'lerini, global komut-alias-önek dispatch
-uzayını, VFS path/lock/storage çıktılarını, Presence/Chat oda tüketimini,
+uzayını, VFS path/lock/storage çıktılarını, kalıcı `/home` yazma-ekleme-silme
+semantiği ile dosya/ad/içerik limitlerini, Presence/Chat oda tüketimini,
 frontend Supabase Bearer taşımasını ve Service Worker install/update/offline
 yaşam döngüsünü kilitler. Dış ağa çıkmaz.
 
