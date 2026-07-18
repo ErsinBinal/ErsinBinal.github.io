@@ -12,6 +12,8 @@ Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
 [Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
 Aktif P0/P1 güvenlik ve dağıtım hattı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
+Gerçek HTTP güvenlik header'ları ve hosting sınırı:
+[ADR-001 — HTTP Güvenlik Header'ları ve Hosting](adr-001-http-security-headers.md).
 
 İçindekiler:
 1. [Sayfa haritası (gruplu)](#1-makro--sayfa-haritası)

@@ -587,7 +587,7 @@ connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';
 <link rel="canonical" href="https://ersinbinal.github.io/games/crude-buster.html">
 <meta http-equiv="Content-Security-Policy" content="… (§17.3) …">
 <!-- OG/Twitter, theme-color, manifest, icon (neon-serpent ile aynı düzen) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7"></script>
 <script src="/assets/js/supabase-config.js"></script>
 <script src="/assets/js/supabase-client.js?v=33"></script>
 <script src="/assets/js/auth-gate.js?v=22" data-item-key="crude-buster" data-item-type="game" data-item-title="Crude Buster"></script>

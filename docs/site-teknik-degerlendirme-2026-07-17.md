@@ -17,12 +17,12 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 
 | Hat | Güncel durum | Sonuç |
 |---|---|---|
-| Terminal monolit Faz 1A | Ağaçta hazır; push bekliyor | 23 route komutu ve 99 alias registry'ye taşındı; 132 komut korundu; headless smoke geçti |
+| Terminal monolit Faz 1A | Tamamlandı; main'de | 23 route komutu ve 99 alias registry'ye taşındı; 132 komut korundu; headless smoke geçti |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
-| P0 Worker kötüye kullanım sınırı | Kod + testler ağaçta; push bekliyor | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; Worker 12/12 |
-| P0 Worker deploy kapısı | Ağaçta hazır; push bekliyor | deploy-worker.yml: npm ci -> check -> dry-run -> deploy -> health smoke |
-| P1 Service Worker yaşam döngüsü | Tamamlandı; push bekliyor | waitUntil/cache.put + kritik/best-effort precache; event testleri 5/5 |
-| P1 CSP/CDN/header | Sırada | A2/A3/B1 canlı doğrulamasından sonra başlanacak |
+| P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
+| P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
+| P1 Service Worker yaşam döngüsü | Tamamlandı; canlı | waitUntil/cache.put + kritik/best-effort precache; event testleri 5/5; canlı v196 |
+| P1 CSP/CDN/header | Kod/test tamam; yayın bekliyor | 27/27 CSP; 22/22 harici script tam sürüm; Supabase 2.110.7; ADR-001 |
 
 Bu tablo inceleme anındaki bulguyu değiştirmez; yapılan işlerin güncel sonucunu
 gösterir. Ayrıntılı doğrulama komutları yaşayan handoff'ta tutulur.
@@ -295,6 +295,18 @@ Kabul ölçütü:
 - Harici scriptlerde `latest` veya yalnız major sürüm etiketi kalmamalı.
 - Validator eksik CSP ve sürüm sapmasını CI'da yakalamalı.
 
+**Çözüm durumu — 18 Temmuz 2026:** Eksik iki oyun CSP'si eklendi; kapsam
+27/27 oldu. 19 Supabase referansı doğrulanmış `2.110.7` sürümüne sabitlendi ve
+o günkü `@2` çıktısıyla byte-byte aynı olduğu doğrulandı. Toplam 22 harici
+scriptin tamamı tam semver kullanıyor. Validator artık eksik
+veya ilk scriptten sonra gelen CSP'yi, eksik taban direktifleri, tam
+olmayan/bilinmeyen CDN sürümünü ve Supabase pin sapmasını reddediyor.
+Service Worker `convivium-v197` olarak ileri alındı. İki oyun yerel Chromium'da
+gerçek CDN ile açıldı; CSP ihlali, page error veya CDN yükleme hatası yok.
+Hosting değiştirilmedi; GitHub Pages sınırı ve onaylı Cloudflare Pages geçiş
+kapıları [ADR-001](architecture/adr-001-http-security-headers.md) içinde
+kaydedildi. Değişiklikler kullanıcı incelemesi/commit/push bekliyor.
+
 ### P1 — Monolitler ve global script bağımlılıkları
 
 Uygulama sırası ve güncel ilerleme kaydı:
@@ -397,13 +409,14 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 
 | Kontrol | Sonuç |
 |---|---|
-| `npm run check` | Geçti; unit 12/12, Worker runtime 12/12, 27 HTML integrity |
+| `npm run check` | Geçti; unit 12/12, Worker 12/12, 27/27 CSP, 22/22 harici script tam sürüm |
 | Service Worker event entegrasyonu | 5/5 geçti; kritik/opsiyonel install + update/offline |
 | Wrangler production dry-run | Geçti; 34,99 KiB / gzip 9,99 KiB |
 | Tüm JS/MJS syntax kontrolü | 51/51 geçti |
 | Yerel HTML dosya referansları | 351 referans, eksik dosya yok |
 | Worker hariç yerel smoke | 8/8 geçti |
 | Yerel Chromium E2E | 7/7 geçti; gerçek signup testi bilinçli skip |
+| B2 oyun CSP/CDN Chromium | 2/2 geçti; canvas/CDN hazır, CSP ihlali ve page error yok |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |
@@ -435,9 +448,10 @@ akışlar çalıştırılmadı:
 ### Aşama B — PWA ve tarayıcı güvenliği
 
 - [x] Service Worker Promise yaşam döngüsünü düzelt.
-- [ ] Eksik CSP'leri ekle; validator'da zorunlu kıl.
-- [ ] CDN sürümlerini tam sürüme sabitle.
-- [ ] Gerçek HTTP güvenlik header'ları için hosting kararını ver.
+- [x] Eksik CSP'leri ekle; validator'da zorunlu kıl.
+- [x] CDN sürümlerini tam sürüme sabitle.
+- [x] Gerçek HTTP güvenlik header'ları için hosting kararını ver (ADR-001;
+  mevcut host korunuyor, geçiş ayrı kullanıcı onayına bağlı).
 
 ### Aşama C — Modülerlik ve performans
 

@@ -1,13 +1,15 @@
 # Home Protocol Modülerleştirme — Handoff
 
-Son güncelleme: 17 Temmuz 2026 (gece — yerel doğrulama)  
-Durum: **Faz 0 ve Faz 1A çalışma ağacında tamamlandı ve push bekliyor;
-Faz 1B ve sonrası, üretim sertleştirme kapıları kapanana dek beklemede.**  
+Son güncelleme: 18 Temmuz 2026 (üretim sertleştirme eş güdümü)
+Durum: **Faz 0 ve Faz 1A tamamlandı ve main'de (`cf63bd6`); Faz 1B, B2
+CSP/CDN dilimi kullanıcı tarafından commit/push edilip canlı doğrulanana dek
+beklemede.**
 Kapsam: `assets/js/home-protocol.js` ve ana terminalin doğrudan bağımlılıkları.
 
 > Öncelik kilidi: Bu hat Faz 1A sonunda donduruldu. Aktif çalışma ve geri dönüş
 > koşulları [Üretim Sertleştirme Handoff](production-hardening-handoff.md)
-> belgesindedir. Oradaki A1, A2, A3, B1 ve B2 kapıları sonuçlanmadan Faz 1B'ye geçme.
+> belgesindedir. A1, A2, A3 ve B1 kapandı; B2 kod/test tarafında hazırdır.
+> B2 canlı doğrulaması sonuçlanmadan Faz 1B'ye geçme.
 
 Bu belge, refaktör yarım kaldığında sonraki oturumun güvenli biçimde devam
 edebilmesi için tek takip noktasıdır. Davranış değişiklikleri ve yeni özellikler
@@ -216,6 +218,7 @@ Sorun görülürse yalnız Faz 1A geri alınır:
 
 ## Bir sonraki oturumun kesin başlangıç noktası
 
-Önce çalışma ağacı diff'ini gözden geçir; Faz 1A'yı tek, davranış değiştirmeyen
-commit olarak kapat. Ardından P0/Service Worker önceliklerine dön; Faz 1B'ye
-geçilecekse ilk iş global command/alias çakışma testidir.
+Önce [Üretim Sertleştirme Handoff](production-hardening-handoff.md) içindeki B2
+yayın sonrası CSP/CDN/SW v197 kontrolünün kapandığını doğrula. Ardından Faz
+1B'nin ilk işi olarak global command/alias çakışma karakterizasyon testini ekle;
+aynı dilimde kullanıcı metni, rota veya davranış değiştirme.

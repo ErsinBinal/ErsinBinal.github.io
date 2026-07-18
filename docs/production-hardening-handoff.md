@@ -1,8 +1,8 @@
 # Üretim Sertleştirme — Handoff
 
-Son güncelleme: 17 Temmuz 2026 (gece — sertleştirme ve doğrulama)  
-Durum: **AKTİF — A0/A1/A2/B1 kod ve test tarafında tamam; A3 repo kapısı hazır,
-ilk yeni production workflow/version smoke'u bekleniyor.**  
+Son güncelleme: 18 Temmuz 2026 (Faz B2 yerel doğrulama)
+Durum: **AKTİF — A0/A1/A2/A3/B1 tamamlandı ve canlı doğrulandı; Faz B2 kod,
+belge ve test tarafında tamam, kullanıcı incelemesi/commit/push bekliyor.**
 Önceki aktif hat: [Home Protocol Modülerleştirme](home-protocol-modularization-handoff.md)
 Faz 1A sonunda güvenli biçimde donduruldu.
 
@@ -117,7 +117,7 @@ Sonuç (17 Temmuz 2026):
 - `.github/workflows/flow-check.yml`, `npm ci` ve zorunlu `npm run check`
   kullanıyor.
 
-### Faz A2 — Worker istek sınırı — KOD VE TEST TAMAM (YENİ REVİZYON DEPLOY BEKLİYOR)
+### Faz A2 — Worker istek sınırı — TAMAMLANDI VE CANLI DOĞRULANDI
 
 > **Durum notu (2026-07-17 gece):** Kod tarafı uygulandı (DO tabanlı
 > RequestRateLimiter, JWT'li enrich, bounded JSON, beacon sertleştirme,
@@ -174,7 +174,7 @@ Sonuç (17 Temmuz 2026):
 - Wrangler 4.112.0 production dry-run başarılı: 34,99 KiB upload / 9,99 KiB
   gzip; DO, AI ve version metadata binding'leri çözüldü.
 
-### Faz A3 — Deploy kapısı — REPO TARAFI TAMAM; İLK YENİ CI BEKLENİYOR
+### Faz A3 — Deploy kapısı — TAMAMLANDI VE CANLI DOĞRULANDI
 
 - Deploy job'ında `npm ci`, genel kontroller, Worker runtime testleri ve
   Wrangler dry-run production deploy'dan önce zorunlu olmalı.
@@ -197,8 +197,9 @@ Sonuç (17 Temmuz 2026):
   başarısız, eşleşirse service/status/commit/version JSON olarak loglanıyor.
 - `preview_urls = true`; ayrı staging Worker bu dilimde kurulmadı ve production
   secret'ları PR işine açılmadı.
-- Bu son revizyon elle deploy edilmedi. İlk yeni main workflow'unda health/version
-  satırı görülmeden A3 operasyonel olarak tamamen kapanmış sayılmamalı.
+- İlk yeni main workflow'u production deploy ve health/version smoke'u geçti.
+  18 Temmuz kontrolünde `/health` etiketi main HEAD `dc951919493450a948d736cacf6d07bb96681ba4`
+  ile eşleşti; kimliksiz `/enrich-profile` provider öncesinde `401` döndürdü.
 
 ### Faz B1 — Service Worker yaşam döngüsü — TAMAMLANDI
 
@@ -233,7 +234,7 @@ Sonuç (17 Temmuz 2026):
 - `supabase-client.js` v36, Service Worker `convivium-v196`; 19 yönetilen asset
   sürümü senkron.
 
-### Faz B2 — CSP, CDN ve response header kararı — SIRADA
+### Faz B2 — CSP, CDN ve response header kararı — KOD/TEST TAMAM; YAYIN BEKLİYOR
 
 - CSP'siz HTML sayfalarını tamamla ve validator'da CSP varlığını zorunlu yap.
 - Supabase CDN major etiketini doğrulanmış tam sürüme sabitle; HTML ve cache
@@ -245,17 +246,45 @@ Sonuç (17 Temmuz 2026):
 Kabul: 27 HTML'nin tamamında CSP vardır; yalnız-major/latest harici script
 sürümü kalmaz; validator sapmaları CI'da reddeder; hosting trade-off'u yazılıdır.
 
+Sonuç (18 Temmuz 2026):
+
+- `games/neon-river.html` ve `games/universe-2.html`, kendi kaynak ihtiyaçlarıyla
+  sınırlı CSP meta politikalarına kavuştu. Envanter artık 27/27 CSP.
+- 19 Supabase CDN referansı, npm `latest` ve jsDelivr `x-jsd-version`
+  doğrulamasıyla `@supabase/supabase-js@2.110.7` sürümüne sabitlendi. Mevcut
+  `@2` ve yeni tam URL 18 Temmuz'da byte-byte aynı 208.014 bayt içeriği verdi
+  (SHA-256 `61010a711aa585660cc5132babd6da57fd89a973b845412c8916f8573a455c2b`).
+  Phaser, Mammoth ve PDF.js ile birlikte 22/22 harici script tam semver kullanıyor.
+- Site-integrity kontrolü artık CSP yokluğunu/yerleşim sırasını, taban
+  `default-src`/`object-src`/`base-uri` direktiflerini, jsDelivr'da eksik veya
+  tam olmayan semver'i, bilinmeyen harici script şemasını ve Supabase pin
+  sapmasını hata sayıyor. `playwright-report` ve `test-results` yayın sayfası
+  olmadığı için envanterden açıkça dışlanıyor.
+- HTML precache dilimi için Service Worker ileri yönde `convivium-v197` oldu.
+  Canlı site kullanıcı push'una kadar `convivium-v196` kullanmaya devam eder.
+- Hosting değiştirilmedi ve root'a işlevsiz `_headers` eklenmedi. Karar,
+  [ADR-001 — HTTP Güvenlik Header'ları ve Hosting](architecture/adr-001-http-security-headers.md)
+  içinde: GitHub Pages şimdilik korunur; gerçek header önceliklenirse ayrı onaylı
+  Cloudflare Pages preview/geçişi yapılır.
+- `npm run check`: unit 12/12, Worker 12/12, 27 HTML / 27 CSP / 22 tam sürümlü
+  harici script. `npm audit --audit-level=moderate`: 0 bulgu.
+- Yerel Chromium karakterizasyonu 2/2: iki oyun HTTP 200, Supabase globali ve
+  canvas hazır, Neon River'da Phaser hazır; CSP ihlali, page error veya CDN
+  request failure yok.
+- Bu oturum kullanıcı talimatı gereği commit, push, deploy veya hosting değişikliği
+  yapmadı.
+
 ## Güncel durum
 
 | Faz | Durum | Son doğrulama |
 |---|---|---|
-| Home Protocol 1A | Ağaçta hazır; push bekliyor | `npm run check` + headless smoke (route/alias/nav + terminal özellikleri) |
+| Home Protocol 1A | Tamamlandı; main'de | `cf63bd6`; `npm run check` + headless smoke |
 | A0 takip/dondurma | Tamamlandı | Aktif/bekleyen hatlar tüm handoff'larda bağlandı |
 | A1 lock/audit | Tamamlandı | `npm ci`, audit 0, lock hash değişmedi |
-| A2 Worker sınırı | Kod + testler ağaçta; push bekliyor | Worker 12/12; frontend auth unit 2/2; dry-run geçti |
-| A3 deploy kapısı | Ağaçta hazır; push bekliyor | deploy-worker.yml: ci -> check -> dry-run -> deploy -> health smoke |
-| B1 Service Worker | Tamamlandı; push bekliyor | Yaşam döngüsü/offline event testleri 5/5 |
-| B2 CSP/CDN/header | Sırada | A2/A3/B1 canlı doğrulamasından sonra başlanacak |
+| A2 Worker sınırı | Tamamlandı; canlı | Kimliksiz enrich `401`; Worker 12/12 |
+| A3 deploy kapısı | Tamamlandı; canlı | `/health` tag `dc951919…`; CI version smoke eşleşti |
+| B1 Service Worker | Tamamlandı; canlı | `convivium-v196`; yaşam döngüsü/offline event testleri 5/5 |
+| B2 CSP/CDN/header | Kod/test tamam; yayın bekliyor | 27/27 CSP; 22/22 exact script; Chromium 2/2; ADR-001 |
 
 ## Rollback sınırları
 
@@ -269,15 +298,20 @@ sürümü kalmaz; validator sapmaları CI'da reddeder; hosting trade-off'u yazı
   kodu korunabilir.
 - B1: Service Worker değişikliğinde `CACHE_NAME` geriye düşürülmez; yeni ileri
   sürümle rollback yapılır.
+- B2: CSP sorunu görülürse tüm politikayı kaldırma; yalnız engellenen meşru
+  kaynağı ilgili sayfada dar kapsamla ekle. CDN uyumsuzluğunda doğrulanmış başka
+  bir tam sürüme geç ve Service Worker'ı yeni bir ileri sürüme bump et; major
+  etikete geri dönme.
 
 ## Son doğrulama özeti
 
 ```text
 npm ci                           geçti; 162 paket, lock hash değişmedi
 npm audit --audit-level=moderate 0 bulgu
-npm run check                    unit 12/12; Worker 12/12; 27 HTML integrity
+npm run check                    unit 12/12; Worker 12/12; 27/27 CSP; 22/22 exact script
 yerel smoke                      8/8
 yerel Chromium E2E               7/7; gerçek signup 1 test bilinçli skip
+B2 yerel Chromium                2/2; CSP/CDN/canvas, ihlal ve page error yok
 Wrangler production dry-run      geçti; 34,99 KiB / gzip 9,99 KiB
 ```
 
@@ -288,16 +322,15 @@ kapısı yapılmadı, production dry-run paketlemesi başarılı.
 
 ## Sonraki kesin adım
 
-Çalışma ağacı durulunca: tam `npm run check` + Workers-runtime testleri +
-headless smoke; ardından tematik commit'lerle (1A refaktör / A2+A3 worker
-dilimi / B1 SW / dokümanlar) tek push. Push sonrası Flow Check, deploy-worker
-health smoke ve canlı doğrulama (SW cache sürümü, `/health` version, kimliksiz
-enrich 401) kayda geçirilmeli.
+Kullanıcı/reviewer mevcut B2 diff'ini inceler; commit ve push kullanıcıya aittir.
+Push sonrası Flow Check'te yeni site-integrity özetinin `27 HTML; 27 CSP; 22
+exact-version external scripts` verdiğini doğrula. Canlıda iki oyun HTML'inde CSP
+ve Supabase `2.110.7`, `service-worker.js` içinde `convivium-v197` ve tarayıcıda
+CSP/CDN hatası olmadığını kaydet.
 
-Bu canlı doğrulama tamamlanınca geliştirici oturumunun sonraki işi Faz B2'dir:
-önce CSP/CDN envanter testini ekle, sonra eksik CSP'leri ve tam CDN sürümünü tek
-cache/version diliminde kapat; hosting kararını yazılı bırak. B2 bitmeden Home
-Protocol Faz 1B'ye dönme.
+Bu canlı kontrol tamamlanınca üretim sertleştirme hattı kapanır. Sonraki
+geliştirici işi Home Protocol Faz 1B'dir; ilk adım global command/alias çakışma
+karakterizasyon testidir. B2 yayınlanmadan Faz 1B değişikliği başlatma.
 
 > **Eş güdüm kuralı (2026-07-17):** Ayni çalışma ağacında AYNI ANDA iki oturum
 > yazmamalı. Rol ayrımı: geliştirici oturum kodu hazırlar ve commit ATMAZ;
