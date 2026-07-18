@@ -10,7 +10,7 @@ Nokta-zaman teknik incelemesi ve öncelikli geliştirme kuyruğu:
 [17 Temmuz 2026 Site Teknik Değerlendirmesi](../site-teknik-degerlendirme-2026-07-17.md).
 Ana terminal ayrıştırmasının yaşayan uygulama kaydı:
 [Home Protocol Modülerleştirme Handoff](../home-protocol-modularization-handoff.md).
-Aktif terminal ürünü ve `/ruins` extension sınırı:
+Canlı terminal ürünü ve `/ruins` extension sınırı:
 [Sinyal Arkeolojisi Handoff](../sinyal-arkeolojisi-handoff.md).
 P0/P1 güvenlik ve dağıtım kapanış kaydı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).

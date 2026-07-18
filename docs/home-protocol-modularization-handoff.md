@@ -769,5 +769,6 @@ Sorun görülürse canlı Faz 3A sınırını koruyarak yalnız Faz 3B geri alı
 Hat park edildi. Kullanıcı yeniden modülerleştirme istediğinde önce canlı asset
 sürümleri ile bu belgedeki Faz 3B sınırını karşılaştır; yayımlanmış cache
 sürümünü geriye düşürme. Sıradaki mimari aday kart/collect ekonomi sahipliğidir,
-ancak yeni ürün hattıyla aynı değişiklik setine alınmamalıdır. Aktif ürün işi:
-[Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
+ancak yeni ürün hattıyla aynı değişiklik setine alınmamalıdır. İlk yeni ürün
+[Sinyal Arkeolojisi](sinyal-arkeolojisi-handoff.md) canlı kabul edilmiştir;
+sonraki ürün ayrı handoff ve değişiklik setiyle ilerlemelidir.

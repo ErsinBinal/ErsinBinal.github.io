@@ -1,6 +1,6 @@
 # Convivium Yenilik Kuyrugu — Handoff
 
-Tarih: 2026-07-17 (guncellendi). Site incelemesi sonrasi onaylanan 8 yaratici
+Tarih: 2026-07-17 (son güncelleme: 2026-07-18). Site incelemesi sonrası onaylanan 8 yaratıcı
 yenilik + gelistirici notlari kuyrugu TAMAMLANDI. Her parca ayri commit ile
 main'e push edildi (GitHub Pages otomatik yayinlar).
 
@@ -69,22 +69,30 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 > Faz 3B shop satın alma sınırı da canlı kabul edildi; terminal
 > modülerleştirmesi burada park edildi. Kart/collect mimari işi ayrı bekliyor.
 >
-> Aktif ürün geliştirmesi: [Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
+> Son tamamlanan ürün: [Sinyal Arkeolojisi Handoff](sinyal-arkeolojisi-handoff.md).
 > Park edilen mimari hat: [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 
-### Aktif ürün — Sinyal Arkeolojisi
+### Tamamlanan yeni ürün — Sinyal Arkeolojisi
 
-İlk ürün dilimi kod/test tarafında tamamlandı ve yayın bekliyor. `/ruins`
+İlk ürün dilimi `1dba6df` ile main'e gönderildi ve canlı kabul edildi. `/ruins`
 altında üç kurtarılmış kayıt, mevcut
 `ls/cd/look/examine/cat` komutlarıyla keşif ve tarih tabanlı ortak günlük buluntu
 sunuluyor. Yeni backend, SQL, framework veya yeni terminal komutu eklenmedi;
 normal, Ruins-yokluğu ve çevrimdışı Chromium akışları geçti. Atomik yayın
-paketi: ruins v1, world v2, VFS v3, protocol v83 ve SW v205.
+paketi: ruins v1, world v2, VFS v3, protocol v83 ve canlı SW v205. Dört canlı
+asset hash'i main ile birebir eşleşti; offline canlı reload page error olmadan
+çalıştı.
+
+### Sıradaki düşük riskli ürün adayı — Kart paylaşım sayfası
+
+Mevcut günlük kart seed'ini yeniden kullanarak SVG/PNG paylaşım çıktısı üreten
+bağımsız sayfa. Uygulamadan önce ayrı ürün handoff'u açılacak; mevcut
+`card/collect/cards` davranışı ve ekonomi sahipliği bu dilime taşınmayacak.
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi)
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
   (bozuk 1997 BBS sayfasi, yarim TODO.txt, kurtarilmis oyun ekrani). `cd /ruins`
-  ile girilen, zamanla kazilan statik katman. **SECILDI; aktif handoff'a tasindi.**
+  ile girilen, zamanla kazilan statik katman. **TAMAMLANDI; canlı v205.**
 - **Gezgin Mirasi**: bilincli `depart` komutuyla tek cumlelik veda izi birakma;
   sonraki ziyaretci rastgele bir vedayla karsilanir (wall_marks benzeri tablo).
 - **Kolektif Rituel**: gunluk kart toplamada site geneli esik (orn. 10 collect)

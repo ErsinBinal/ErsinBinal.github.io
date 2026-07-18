@@ -25,7 +25,7 @@ Aktif plan, kabul kapıları, rollback ve yarıda kalma kaydı:
 | Terminal monolit Faz 2D | Tamamlandı; canlı | `take/unlock/use` kararları callback tabanlı world-actions factory'sine ayrıldı; yan etki sahipliği protocol'de; SW v202 |
 | Terminal monolit Faz 3A | Tamamlandı; canlı | Shard award/spend/merge kararları economy factory'sine ayrıldı; legacy Supabase fallback test altında; SW v203 |
 | Terminal monolit Faz 3B | Tamamlandı; canlı; hat parkta | Shop katalog/sahiplik/satın alma kararları ayrı factory'de; kozmetik storage/DOM etkileri protocol'de; SW v204 |
-| Yeni ürün: Sinyal Arkeolojisi | Kod/test tamam; yayın bekliyor | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 yerel |
+| Yeni ürün: Sinyal Arkeolojisi | Tamamlandı; canlı | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |
@@ -380,11 +380,13 @@ sahiplik, bakiye ve satın alma kararları 95 satırlık `shop.js` factory'sine
 ayrıldı. Protocol 4.047 satıra indi; state/persist/cloud save, kozmetik storage
 ve audio uygulaması callback olarak kaldı. `bugy-flag` yazımı korundu, fakat bu
 bayrağı okuyan bir çalışma zamanı tüketicisi bulunmadığı kaydedildi.
-Modülerleştirme burada park edildi. Yerel Sinyal Arkeolojisi ürün diliminde
+Modülerleştirme burada park edildi. Canlı Sinyal Arkeolojisi ürün diliminde
 104 satırlık saf `ruins.js`, core snapshot'ları bozmayan opsiyonel world/VFS
 extension'larıyla `/ruins` hacmini ekledi; protocol yalnız 19 satırlık kurulum
 orkestrasyonu alarak 4.066 satıra çıktı. Üç artifact, günlük seed, normal,
 modül-yokluğu ve çevrimdışı akışlar test altında; yeni komut veya backend yok.
+`1dba6df` yayını sonrası dört canlı asset hash'i main ile eşleşti, SW v205 ve
+gerçek çevrimdışı canlı reload kabul edildi.
 
 ### P1 — Performans ve cache kapsamı
 
@@ -490,6 +492,7 @@ evreni küçültmeden ilk temasın daha anlaşılır olmasını sağlar.
 | Faz 3B canlı kabul | Geçti; shop v1/protocol v82 hash'leri main ile aynı, SW v204; mimari hat park edildi |
 | Sinyal Arkeolojisi unit | 7/7 geçti; registry/seed, world/VFS extension, fail-closed sahiplik ve core doküman koruması |
 | Sinyal Arkeolojisi Chromium | Normal keşif/reload, Ruins-yokluğu ve SW kontrollü çevrimdışı akış 3/3; erişilebilir terminal sözleşmesi ve yatay taşma temiz |
+| Sinyal Arkeolojisi canlı kabul | Geçti; ruins v1/world v2/VFS v3/protocol v83 hash'leri main ile aynı, SW v205; offline reload ve artifact okuması page error olmadan çalıştı |
 | Masaüstü sayfa açılışı | 27 sayfa kontrol edildi |
 | Mobil kritik rota açılışı | 10 rota kontrol edildi |
 | Mobil yatay taşma | Gözlenmedi |

@@ -1,8 +1,9 @@
 # Sinyal Arkeolojisi — Ürün Handoff
 
-Son güncelleme: 18 Temmuz 2026 (yerel doğrulama)
-Durum: **KOD/TEST TAMAM; commit/push/yayın bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (canlı kabul)
+Durum: **TAMAMLANDI VE CANLIDA.**
 Başlangıç main: `a6a1bb8`
+Ürün/yayın commit'i: `1dba6df`
 
 Bu belge `/ruins` terminal deneyiminin tek takip noktasıdır. Terminal
 modülerleştirmesi Faz 3B canlı sınırında park edilmiştir; kart/collect veya
@@ -111,7 +112,7 @@ gerektirmez.
 | Core / extension oda | 8 / 1 |
 | Artifact | 3 |
 | Terminal komutu | 132 |
-| Service Worker | v205 (yerel) |
+| Service Worker | v205 (canlı) |
 
 Beklenen SHA-256:
 
@@ -119,6 +120,20 @@ Beklenen SHA-256:
 - world: `518c970073520adb39007a964e2d466865f38bc63650bc91fcaef2379f9596e5`
 - VFS: `fd392650c4500298fe1df44845c79024ee0992d2071f2da69ebeea7b4d8628c3`
 - protocol: `ad793a4bff34cfdc72c373a9f6e9dbd27fa06f9971b2a9901f169af51d0097ac`
+
+## Canlı kabul — 18 Temmuz 2026
+
+- Main'e `1dba6df` ile gönderildi; GitHub Pages ana sayfası ruins v1, world
+  v2, VFS v3 ve protocol v83 asset'lerini doğru sırada yüklüyor.
+- Canlı Service Worker `convivium-v205`; dört asset'in canlı SHA-256 değeri
+  yukarıdaki beklenen değerlerle birebir eşleşti.
+- Changelog ve RSS girdileri canlı uçtan okundu.
+- Canlı Chromium'da `ls / → cd ruins → look → examine buluntu → cat
+  arcade-recovery.scr` geçti; 18 Temmuz ortak buluntusu
+  `arcade-recovery.scr` olarak doğrulandı.
+- Service Worker kontrolü ve v205 cache'i doğrulandıktan sonra ağ tamamen
+  kapatıldı. Offline reload sonrası `/ruins` ve artifact gövdesi tekrar
+  çalıştı; page error oluşmadı.
 
 ## Değişen/yeni dosyalar
 
@@ -158,11 +173,11 @@ Beklenen SHA-256:
 5. Asset query ve Service Worker cache sürümünü ileri bump et; canlıya çıkmış
    cache sürümüne geri dönme.
 
-## Yarım kalırsa kesin başlangıç noktası
+## Kapanış ve sonraki başlangıç noktası
 
-Mevcut diff'i ve yukarıdaki dört hash'i kontrol et; `npm run check` ve
-`npm run sync:cache` yeniden temizse ürün commit'ini oluşturup main'e push et.
-GitHub Pages yayını sonrası canlı asset sürümlerini, dört hash'i,
-`convivium-v205` değerini ve `cd ruins → examine buluntu → cat` akışını doğrula.
-Sonucu bu belgeye ve yenilik kuyruğuna işle. Commit/push/canlı yayın bu ürün
-hattında kullanıcı tarafından Codex'e açıkça yetkilendirilmiştir.
+Bu ürün kapandı; yeni iş burada sürdürülmemeli. Sorun halinde önce canlı v205
+ve yukarıdaki hash'ler kontrol edilmeli, ardından rollback bölümü uygulanmalı.
+Yeni ürün için ayrı handoff açılmalı. Ürün havuzundaki en düşük bağımlılıklı
+sonraki aday, mevcut günlük kart seed'ini kullanan bağımsız kart paylaşım
+sayfasıdır. Commit/push/canlı yayın yeni ürün hattında kullanıcı tarafından
+Codex'e açıkça yetkilendirilmiştir.
