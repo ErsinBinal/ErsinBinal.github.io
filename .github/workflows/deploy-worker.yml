@@ -53,6 +53,20 @@ jobs:
       - name: Health ve version metadata smoke
         env:
           WORKER_HEALTH_URL: https://convivium-oracle.convivium.workers.dev/health
+        # Yeni surum edge'lere kademeli yayilir; /health kisa bir sure ESKI
+        # tag ile 200 donebilir. curl retry'lari yalniz tasima hatalarini
+        # kapsar; bu yuzden tag eslesmesi de sinirli sureyle YOKLANIR
+        # (24 deneme x 5 sn ~= 2 dk). Basarisizlikta son govde loglanir.
         run: |
-          health_json="$(curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 3 "$WORKER_HEALTH_URL")"
-          HEALTH_JSON="$health_json" node -e 'const body = JSON.parse(process.env.HEALTH_JSON); if (body.status !== "ok" || !body.version?.id || body.version.tag !== process.env.GITHUB_SHA) process.exit(1); console.log(JSON.stringify({ service: body.service, status: body.status, commit: process.env.GITHUB_SHA, version: body.version }))'
+          for attempt in $(seq 1 24); do
+            health_json="$(curl --silent --max-time 15 "$WORKER_HEALTH_URL" || true)"
+            if HEALTH_JSON="$health_json" node -e 'const body = JSON.parse(process.env.HEALTH_JSON || "{}"); process.exit(body.status === "ok" && body.version?.id && body.version.tag === process.env.GITHUB_SHA ? 0 : 1)' 2>/dev/null; then
+              HEALTH_JSON="$health_json" ATTEMPT="$attempt" node -e 'const body = JSON.parse(process.env.HEALTH_JSON); console.log(JSON.stringify({ service: body.service, status: body.status, commit: process.env.GITHUB_SHA, attempt: process.env.ATTEMPT, version: body.version }))' || true
+              exit 0
+            fi
+            echo "deneme $attempt/24: surum henuz eslesmiyor, 5 sn sonra tekrar"
+            sleep 5
+          done
+          echo "SON GOVDE: $health_json"
+          echo "beklenen tag: $GITHUB_SHA"
+          exit 1
