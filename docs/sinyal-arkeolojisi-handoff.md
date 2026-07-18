@@ -140,8 +140,8 @@ gerektirmez.
 18 Temmuz 2026 tarihli Sinyal Pusulası N1 dilimi, artifact registry/gövde,
 günlük seçim, world görünümü ve VFS dosyalarını değiştirmeden yalnız ürünün
 bağlamsal öneri metadata'sını ekledi: `examine buluntu`, günün `cat` komutu ve
-`cd /`. Bu nedenle Ruins asset'i v2'ye çıkıyor; N1 yayını beklenen yeni Ruins
-SHA-256 değeri
+`cd /`. Ruins asset'i `4bf06c2` ile v2'ye çıktı ve N1 kapsamında canlı kabul
+edildi. Canlı SHA-256 değeri
 `69c8d2c04f6ed4c05c9061f61bbfbfe5290087959f9c344daf4c5e539098ea8b`.
 İlk v205 kabul hash'i yukarıda tarihsel yayın kaydı olarak korunur.
 

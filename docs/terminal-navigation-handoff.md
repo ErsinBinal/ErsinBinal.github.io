@@ -1,8 +1,9 @@
 # Terminal Navigasyonu — Sinyal Pusulası Handoff
 
-Son güncelleme: 18 Temmuz 2026 (N1 yerel kabul)
-Durum: **N1 KOD/TEST TAMAM; commit/push/canlı kabul bekliyor.**
+Son güncelleme: 18 Temmuz 2026 (N1 canlı kabul)
+Durum: **N1 TAMAMLANDI VE CANLIDA; N2 HENÜZ BAŞLAMADI.**
 Başlangıç main: `c672f35`
+N1 ürün/yayın commit'i: `4bf06c2`
 
 Bu belge terminal yön bulma düzeninin tek takip noktasıdır. Ürün havuzu ve
 park edilen domain modülerleştirmesi bu değişiklik setine karıştırılmayacaktır.
@@ -119,7 +120,7 @@ katmanıdır.
 - İlk Service Worker kurulumundaki `clients.claim()` artık açık terminali
   gereksiz reload etmiyor. Zaten controller'ı olan gerçek güncelleme kabulünde
   tek reload davranışı korunuyor ve iki unit testle kilitleniyor.
-- Atomik yerel paket: navigator v1, Ruins v2, protocol v84, home CSS v28,
+- Atomik canlı paket: navigator v1, Ruins v2, protocol v84, home CSS v28,
   service-worker-register v4 ve `convivium-v206`. Ana sayfa 39 script etiketi,
   cache-sync 27 managed asset içeriyor.
 
@@ -133,7 +134,7 @@ katmanıdır.
 - Standart Chromium E2E 7/7; gerçek kullanıcı oluşturan kayıt testi skip.
 - Smoke 11/11; site integrity 27 HTML / 27 CSP / 22 tam sürümlü harici script.
 
-## N1 yerel ölçüm ve beklenen yayın hash'leri
+## N1 ölçüm ve canlı yayın hash'leri
 
 | Ölçüm | Sonuç |
 |---|---:|
@@ -143,13 +144,29 @@ katmanıdır.
 | Ana sayfa script | 39 |
 | Terminal komutu | 132 |
 | Görünen öneri tavanı | 3 |
-| Service Worker | v206 (yerel) |
+| Service Worker | v206 (canlı) |
 
 - navigator: `beb796a9a834c2a8bc759339c23373dcbe6cff84e16c42eea9bf16fa22b008bc`
 - protocol: `74d54db4d33eca6ea8b4870323f32e204c5c8a09bd41d6a1395171f51adc4bc8`
 - Ruins: `69c8d2c04f6ed4c05c9061f61bbfbfe5290087959f9c344daf4c5e539098ea8b`
 - home CSS: `16d2f0ba42a7f71dce6528051132a2fd048b48e9ec343c1ce1ecfee9ad335125`
 - SW register: `156e000d9a07057b9c8b4bbcfa92e422e4bfc0a7010382d4d0e0a96ef0b660aa`
+
+## N1 canlı kabul — 18 Temmuz 2026
+
+- `4bf06c2` main'e gönderildi; GitHub Pages ana sayfası home CSS v28, Ruins
+  v2, navigator v1, protocol v84 ve SW register v4 referanslarını doğru sırada
+  yüklüyor. Canlı Service Worker `convivium-v206`.
+- Navigator, protocol, Ruins, home CSS ve SW register canlı SHA-256 değerleri
+  yukarıdaki yerel kabul değerleriyle birebir eşleşti. Changelog ve RSS girdisi
+  canlı uçtan okundu.
+- Temiz mobil Chromium oturumunda ilk `clients.claim()` sonrasında açık terminal,
+  `h` girdisi ve tek ana sayfa navigasyonu korundu; istemsiz reload oluşmadı.
+- Canlıda `h → Tab → help`, iki aşamalı `hepl → help`, açık ok seçimiyle
+  `help oyna`, tıklamayla `cd ruins` ve bağlamsal `examine buluntu` geçti.
+- Service Worker kontrolü ve v206 cache'i doğrulandıktan sonra ağ kapatıldı.
+  Ana sayfa offline reload edildi; öneriler ve mobil geometri page error veya
+  yatay taşma olmadan çalıştı.
 
 ## Değişmezler
 
@@ -173,6 +190,6 @@ katmanıdır.
 
 ## Yarım kalırsa kesin başlangıç noktası
 
-Önce bu belgedeki aktif fazı ve git diff'ini kontrol et. N1 kabul kapılarının
-tamamı geçmeden N2 `look`/rota veya N3 Atlas değişikliğine başlama. Canlı kabul
-sonrası N1'i burada kapatıp N2'yi ayrı atomik yayın dilimi olarak aç.
+N1 kapandı ve canlı kabul edildi. Devam ederken önce git durumunu ve bu belgeyi
+kontrol et; N1 koduna yeni kapsam karıştırma. N2 `look`/yerel rota işini ayrı
+atomik yayın dilimi olarak aç, N2 kabul edilmeden N3 Atlas'a başlama.
