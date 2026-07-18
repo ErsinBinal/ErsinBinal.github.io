@@ -213,7 +213,7 @@ flowchart TD
 
 | Sayfa | Ana modül(ler) | Veri | Giriş | Durum |
 |-------|----------------|------|:----:|:----:|
-| index.html | home-protocol + route/guide/VFS (navigation + kalıcı `/home`) + immutable world read-model modülleri, bugy-v2/v3/v4, arcade-kit | — / world_state + localStorage | — | 🟨 |
+| index.html | home-protocol + route/guide/VFS (navigation + kalıcı `/home`) + immutable world read-model + callback tabanlı world-actions modülleri, bugy-v2/v3/v4, arcade-kit | — / world_state + localStorage | — | 🟨 |
 | account/auth.html | auth.js | profiles (trigger) | — | 🟩 |
 | account/dashboard.html | dashboard.js | profiles, game_scores, dart_*, sessions, recos, bugy_pets | ✅ | 🟩 |
 | admin/index.html | admin.js, articles.js | articles | ✅ admin | 🟨 |

@@ -65,9 +65,9 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## Ucu acik isler / olasi sonraki fazlar (kullanici karariyla)
 
-> Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A/2B canlıya alındı. Faz 2C
-> salt okunur world/room modeli yerelde doğrulandı ve kullanıcı yayını bekliyor.
-> Aktif öncelik hattı ana terminal Faz 2 ayrıştırmasıdır.
+> Üretim sertleştirme hattı kapandı; Faz 1A/1B/2A/2B/2C canlıya alındı. Faz 2D
+> `take/unlock/use` world mutasyon karar sınırı yerelde doğrulandı ve kullanıcı
+> incelemesi/commit/push/yayını bekliyor. Sonraki aday ekonomi sahipliğidir.
 >
 > Güncel durum, test kapıları, rollback ve sıradaki kesin adım:
 > [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
