@@ -29,7 +29,7 @@
       <div>
         <p class="auth-kicker">CONVIVIUM</p>
         <h1>KVKK Aydinlatma Metni</h1>
-        <p class="legal-meta">Surum: 26.06.2026 &middot; Son guncelleme: 26.06.2026</p>
+        <p class="legal-meta">Surum: 26.06.2026 &middot; Son guncelleme: 20.07.2026</p>
       </div>
       <nav role="navigation" aria-label="Site navigasyonu">
         <a href="/account/auth.html" class="btn">&#8592; Uyelik</a>
@@ -58,6 +58,7 @@
           <tr><td>Iletisim</td><td>E-posta adresi</td></tr>
           <tr><td>Hesap</td><td>Sifre (sifrelenmis olarak saklanir), rol, kayit/guncelleme tarihleri</td></tr>
           <tr><td>Kullanim</td><td>Site ici oyun skorlari, etkilesim ve oturum bilgileri</td></tr>
+          <tr><td>Sohbet (uye)</td><td>Kullanici adi (handle), arkadaslik/engelleme kayitlari, ozel mesaj (DM) ve grup sohbeti icerigi, gonderim/duzenleme zamani. Ortak/genel kanaldaki (ucucu sohbet) mesajlar sunucuda saklanmaz; bu kanalda kisisel veri islenmesi kalici degildir.</td></tr>
           <tr><td>Profil (opsiyonel)</td><td>Yalnizca <strong>acik rizaniz</strong> ile: ad-soyadinizdan yapay zeka destekli internet aramasiyla derlenen olasi meslek, egitim ve calistiginiz kurum/bolum bilgisi</td></tr>
         </tbody>
       </table>
@@ -66,14 +67,23 @@
       <ul>
         <li>Uyelik kaydinizin olusturulmasi ve oturum yonetimi</li>
         <li>Profil ve site ozelliklerinin (oyunlastirma, "Bugy" arkadasi vb.) sunulmasi</li>
+        <li>Uye sohbeti ozelliginin (arkadaslik, engelleme, ozel mesaj/DM ve grup
+            mesajlasmasi) sunulmasi; kotuye kullanim, hakaret/tehdit gibi ihlal
+            bildirimlerinin degerlendirilmesi ve gerektiginde yetkili makamlarla
+            paylasilmasi</li>
         <li>Acik riza vermeniz halinde profilinizin zenginlestirilmesi ve kisisellestirilmis deneyim</li>
         <li>Guvenlik, kotuye kullanimin onlenmesi ve yasal yukumluluklerin yerine getirilmesi</li>
       </ul>
 
       <h2>4. Hukuki Sebepler</h2>
       <ul>
-        <li><strong>Sozlesmenin kurulmasi/ifasi</strong> (KVKK m.5/2-c): uyelik ve hesap verileri.</li>
-        <li><strong>Mesru menfaat</strong> (KVKK m.5/2-f): guvenlik ve temel site islevleri.</li>
+        <li><strong>Sozlesmenin kurulmasi/ifasi</strong> (KVKK m.5/2-c): uyelik, hesap ve
+            uye sohbeti (arkadaslik/DM/grup) verileri.</li>
+        <li><strong>Mesru menfaat</strong> (KVKK m.5/2-f): guvenlik, kotuye kullanimin
+            onlenmesi ve temel site islevleri.</li>
+        <li><strong>Kanunda acikca ongorulme</strong> (KVKK m.5/2-a): 5651 sayili Kanun
+            uyarinca sohbet/mesajlasma kayitlarinin ilgili sure boyunca muhafazasi ve
+            talep halinde yetkili makamlarla paylasilmasi.</li>
         <li><strong>Acik riza</strong> (KVKK m.5/1): yapay zeka destekli profil arastirmasi/zenginlestirme ozelligi. Bu ozellik tamamen istege baglidir; riza vermemeniz uyeliginizi etkilemez.</li>
       </ul>
 
@@ -91,26 +101,52 @@
         hicbir bilgi saklanmaz.
       </div>
 
-      <h2>6. Verilerin Aktarilmasi (Yurt Disi Dahil)</h2>
+      <h2>6. Uye Sohbeti (Chat/Mesajlasma) Hakkinda</h2>
+      <p>
+        Kullanici adinizi (handle) belirleyip uye sohbeti ozelligini kullandiginizda;
+        arkadaslik/engelleme talepleriniz ve arkadaslariniz/grup uyeleriniz ile
+        gonderdiginiz ozel mesajlar (DM) ve grup mesajlari, gonderen/alici, icerik ve
+        zaman bilgisiyle sunucuda saklanir. Bu veriler yalniz ilgili sohbetin
+        uyelerine (erisim kontrolu, "row level security") acik olacak sekilde
+        islenir; Site personeli tarafindan rutin olarak okunmaz veya izlenmez.
+      </p>
+      <div class="legal-note">
+        Ortak/genel kanal ("ucucu sohbet") farklidir: bu kanaldaki mesajlar sunucuda
+        <strong>saklanmaz</strong>, yalniz o an kanali acik tutan diger kullanicilar
+        tarafindan anlik olarak gorulur ve gecici bir rumuzla ("wanderer-xxxx")
+        iliskilendirilir. Bu kanalda kisisel veri islenmesi kalici degildir.
+      </div>
+      <p>
+        Bir ihlal bildirimi (hakaret, tehdit, taciz vb.) aldigimizda veya yetkili
+        mahkeme/savcilik/idari merci talebi oldugunda, ilgili sohbet kayitlarina
+        sinirli olcude erisebilir ve bunlari 6698 sayili Kanun m.28 ile 5651 sayili
+        Kanun kapsaminda yetkili makamlarla paylasabiliriz. Ayrintilar icin
+        <a href="/legal/kullanim-kosullari.html">Kullanim Kosullari</a> madde 5'e
+        bakiniz.
+      </p>
+
+      <h2>7. Verilerin Aktarilmasi (Yurt Disi Dahil)</h2>
       <p>
         Site, altyapi hizmetlerini bulut saglayicilar uzerinden alir ve bu kapsamda
         kisisel verileriniz <strong>yurt disindaki sunuculara aktarilabilir</strong>:
       </p>
       <ul>
-        <li><strong>Supabase</strong> — hesap ve profil veritabani (sunucu konumu yurt disi).</li>
+        <li><strong>Supabase</strong> — hesap, profil ve uye sohbeti (arkadaslik/DM/grup mesajlari dahil) veritabani (sunucu konumu yurt disi).</li>
         <li><strong>Cloudflare</strong> — guvenli istek araci (Worker).</li>
         <li><strong>Arama / yapay zeka servisleri</strong> (or. Tavily, Google, Cloudflare AI) — yalnizca acik riza verdiyseniz, profil arastirmasi icin.</li>
       </ul>
       <p>Verileriniz bunlarin disinda ucuncu kisilerle pazarlama amaciyla paylasilmaz, satilmaz.</p>
 
-      <h2>7. Saklama Suresi</h2>
+      <h2>8. Saklama Suresi</h2>
       <p>
         Verileriniz, uyeliginiz devam ettigi surece ve ilgili mevzuatta ongorulen sureler
-        boyunca saklanir. Hesabinizi sildirmeniz halinde, yasal saklama yukumlulukleri
-        disindaki verileriniz silinir.
+        boyunca saklanir. Uye sohbeti (DM/grup) kayitlari bakimindan 5651 sayili Kanun ve
+        ilgili ikincil mevzuat uyarinca ongorulen sure (uygulamada asgari alti ay, azami
+        iki yil araligi esas alinir) ayrica dikkate alinir. Hesabinizi sildirmeniz
+        halinde, yasal saklama yukumlulukleri disindaki verileriniz silinir.
       </p>
 
-      <h2>8. Haklariniz (KVKK m.11)</h2>
+      <h2>9. Haklariniz (KVKK m.11)</h2>
       <p>Kisisel verilerinizle ilgili olarak; islenip islenmedigini ogrenme, bilgi talep etme,
       amacina uygun kullanilip kullanilmadigini ogrenme, eksik/yanlis islenmisse duzeltilmesini,
       kosullari olustugunda silinmesini/yok edilmesini isteme, islemelere itiraz etme ve
