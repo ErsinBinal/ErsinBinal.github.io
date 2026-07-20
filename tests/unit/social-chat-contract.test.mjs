@@ -41,5 +41,7 @@ test('game invites remain ephemeral presence broadcasts and auth is checked sepa
   assert.match(chat, /const sendInvite[\s\S]+transmit\(\{[\s\S]+kind: 'invite'/);
   assert.match(chat, /if \(to && payload\.kind !== 'invite'\) return/);
   assert.match(deck, /authSession = await b\.getSession\(\)/);
-  assert.match(deck, /sendGameInvite\('crude', wanderer\.tag\)/);
+  assert.match(deck, /presenceTarget = presenceTarget === wanderer\.tag \? '' : wanderer\.tag/);
+  assert.match(deck, /CRUDE BUSTER DAVETI/);
+  assert.doesNotMatch(deck, /deck-context-actions/);
 });

@@ -27,6 +27,7 @@
     let socialError = '';
     let threads = [];
     let activeThread = null;
+    let presenceTarget = '';
     let refreshTimer;
     let unsubscribeMessages;
     let loadingThread = false;
@@ -396,19 +397,27 @@
     const renderPresence = (root) => {
       root.appendChild(el('h4', 'deck-section-title', 'AKTIF SINYALLER'));
       const others = (typeof getWanderers === 'function' ? getWanderers() : []) || [];
+      if (presenceTarget && !others.some((wanderer) => wanderer.tag === presenceTarget)) presenceTarget = '';
       if (!others.length) root.appendChild(el('div', 'deck-empty', 'cevre sessiz.'));
       others.slice(0, 12).forEach((wanderer) => {
-        const row = el('div', 'deck-presence-row');
-        const identity = el('div', 'deck-wanderer');
+        const identity = button('', `deck-wanderer${presenceTarget === wanderer.tag ? ' is-selected' : ''}`, () => {
+          presenceTarget = presenceTarget === wanderer.tag ? '' : wanderer.tag;
+          renderSide();
+        });
         identity.append(el('strong', '', wanderer.tag), el('span', '', wanderer.room || '/'));
-        const actions = el('div', 'deck-social-actions');
-        actions.append(
-          button('CRUDE', 'deck-mini-btn', () => sendGameInvite('crude', wanderer.tag)),
-          button('DART', 'deck-mini-btn', () => sendGameInvite('dart', wanderer.tag))
-        );
-        row.append(identity, actions);
-        root.appendChild(row);
+        root.appendChild(identity);
       });
+      if (!presenceTarget) return;
+      const invitePanel = el('div', 'deck-invite-panel');
+      invitePanel.appendChild(el('div', 'deck-dm-head', `davet -> ${presenceTarget}`));
+      const actions = el('div', 'deck-dm-actions');
+      actions.append(
+        button('CRUDE BUSTER DAVETI', 'deck-dm-btn', () => sendGameInvite('crude', presenceTarget)),
+        button('DART DAVETI', 'deck-dm-btn', () => sendGameInvite('dart', presenceTarget)),
+        button('KAPAT', 'deck-dm-btn', () => { presenceTarget = ''; renderSide(); })
+      );
+      invitePanel.appendChild(actions);
+      root.appendChild(invitePanel);
     };
 
     const sendCurrent = async () => {
@@ -429,7 +438,7 @@
     };
 
     const sendGameInvite = async (game, targetTag = '') => {
-      let target = cleanHandle(targetTag);
+      let target = cleanHandle(targetTag || presenceTarget);
       if (!target && activeThread?.kind === 'direct') {
         target = cleanHandle((activeThread.members || []).find((member) => member.user_id !== social?.profile?.user_id)?.handle);
       }
@@ -468,10 +477,8 @@
         if (event.key === 'Enter') { event.preventDefault(); sendCurrent(); }
       });
       inputRow.append(inputEl, button('GONDER', 'deck-send', sendCurrent));
-      const inviteRow = el('div', 'deck-context-actions');
-      inviteRow.append(button('CRUDE DAVETI', 'deck-mini-btn', () => sendGameInvite('crude')), button('DART DAVETI', 'deck-mini-btn', () => sendGameInvite('dart')));
       statusEl = el('div', 'deck-status', '');
-      feedWrap.append(feedEl, inputRow, inviteRow, statusEl);
+      feedWrap.append(feedEl, inputRow, statusEl);
       sideEl = el('aside', 'deck-side');
       main.append(feedWrap, sideEl);
       frame.append(header, main, el('footer', 'deck-footer', 'ortak kanal ucucu · ozel sohbetler yalniz arkadaslar arasinda · engeller sunucuda uygulanir'));
