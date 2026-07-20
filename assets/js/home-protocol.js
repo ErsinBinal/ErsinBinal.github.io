@@ -2023,6 +2023,12 @@
         getRoom: getVirtualCwd,
         pulse
       }) || null;
+      // Oturum varsa rastgele presence rumuzunu benzersiz profil handle'iyle
+      // degistir. Kimlik dogrulama tamamlanana kadar ortak kanal anonim kalir.
+      chatMod?.initializeSocial?.().then((profile) => {
+        if (profile) presenceMod?.setIdentity?.(profile);
+        chatDeckMod?.refreshSocial?.();
+      }).catch(() => {});
       // Daha once kanala katilmis kullanici sayfa acilisinda sessizce
       // dinlemeye doner; sinyal cipi boylece yeni ziyarette de calisir.
       chatMod?.resume?.();

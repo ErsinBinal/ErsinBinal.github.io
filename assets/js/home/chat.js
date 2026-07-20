@@ -7,6 +7,8 @@
  * yazilir. v2: dogrudan mesaj (DM/fisilti) + oyun davetleri (invite) ve
  * chat guvertesi icin onEvent akisi. Supabase yoksa sessizce devre disi.
  * createChat(deps) fabrikasi ile kurulur.
+ * v3: ortak kanal ucucu kalir; uye DM/grup mesajlari kalici Supabase
+ * tablolarina gider ve arkadaslik/engel kurali sunucuda uygulanir.
  * (c) 2026 Ersin Binal - https://ersinbinal.github.io
  */
 (() => {
@@ -26,6 +28,7 @@
     let subscribing = false;
     let listening = false; // kullanici sohbeti acti mi (opt-in)
     let lastSentAt = 0;
+    let socialSnapshot = null;
     const history = []; // { tag, room, body, ts, kind, to, game, code, self }
 
     const cleanBody = (value) => String(value || '')
@@ -64,7 +67,9 @@
       const tag = typeof getTag === 'function' ? getTag() : '';
       if (!payload || payload.tag === tag) return;
       const to = cleanTag(payload.to);
-      if (to && to !== tag) return; // baskasina fisilti; bize dusmez
+      // v3'te broadcast uzerinden ozel mesaj kabul edilmez. Broadcast kimligi
+      // taklit edilebilir; DM ve davetler RLS korumali chat_messages'a gider.
+      if (to || payload.kind === 'invite') return;
       const entry = {
         tag: cleanTag(payload.tag) || 'wanderer-????',
         room: String(payload.room || '/').slice(0, 24),
@@ -199,25 +204,53 @@
       return `${prefix}sen ${result.entry.room} > ${body}`;
     };
 
-    const sendDirect = (toTag, rawBody) => {
+    const initializeSocial = async () => {
+      const backend = window.ConviviumBackend;
+      if (!backend?.getSocialSnapshot) return null;
+      try {
+        socialSnapshot = await backend.getSocialSnapshot();
+        return socialSnapshot?.profile || null;
+      } catch {
+        socialSnapshot = null; // giris yapmayanlar ortak kanali kullanabilir
+        return null;
+      }
+    };
+
+    const sendDirect = async (toTag, rawBody) => {
       const to = cleanTag(toTag);
       const body = cleanBody(rawBody);
       if (!to) return { error: 'hedef rumuz gecersiz.' };
       if (!body) return { error: 'bos fisilti olmaz.' };
-      const result = transmit({ to, body, kind: 'dm' });
-      return result.error ? result : { entry: result.entry };
+      const backend = window.ConviviumBackend;
+      if (!backend?.openDirectChat) return { error: 'uye sohbeti hazir degil.' };
+      try {
+        const threadId = await backend.openDirectChat(to);
+        await backend.sendChatMessage(threadId, body);
+        return { threadId };
+      } catch (error) {
+        return { error: error.message || 'ozel mesaj gonderilemedi.' };
+      }
     };
 
-    const sendInvite = (toTag, game) => {
+    const sendInvite = async (toTag, game) => {
       const to = cleanTag(toTag);
       if (!to) return { error: 'hedef rumuz gecersiz.' };
       if (!INVITE_GAMES[game]) return { error: 'bilinmeyen oyun.' };
       const code = randomRoomCode();
-      const result = transmit({
-        to, kind: 'invite', game, code,
-        body: `${INVITE_GAMES[game]} daveti / oda ${code}`
-      });
-      return result.error ? result : { entry: result.entry, code };
+      const backend = window.ConviviumBackend;
+      if (!backend?.openDirectChat) return { error: 'uye sohbeti hazir degil.' };
+      try {
+        const threadId = await backend.openDirectChat(to);
+        await backend.sendChatMessage(
+          threadId,
+          `${INVITE_GAMES[game]} daveti / oda ${code}`,
+          'game_invite',
+          { game, code }
+        );
+        return { threadId, code };
+      } catch (error) {
+        return { error: error.message || 'davet gonderilemedi.' };
+      }
     };
 
     const command = (rawArg = '') => {
@@ -245,6 +278,9 @@
       say,
       open,
       resume,
+      initializeSocial,
+      refreshSocial: initializeSocial,
+      socialSnapshot: () => socialSnapshot,
       sendDirect,
       sendInvite,
       historyList: () => history.map((entry) => ({ ...entry })),

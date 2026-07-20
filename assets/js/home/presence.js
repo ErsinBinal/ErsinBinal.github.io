@@ -30,7 +30,7 @@
     let connected = false;
     let entries = []; // digerleri: { tag, room, page }
 
-    const tag = (() => {
+    let tag = (() => {
       try {
         const existing = sessionStorage.getItem(TAG_KEY);
         if (existing) return existing;
@@ -41,6 +41,7 @@
         return `wanderer-${Math.random().toString(36).slice(2, 6)}`;
       }
     })();
+    let userId = '';
 
     const hudValue = () => document.getElementById('hud-presence');
 
@@ -72,7 +73,7 @@
       Object.keys(state).forEach((key) => {
         (state[key] || []).forEach((entry) => {
           if (entry && entry.tag && entry.tag !== tag) {
-            others.push({ tag: entry.tag, room: entry.room || '/', page: entry.page || '/' });
+            others.push({ tag: entry.tag, userId: entry.user_id || '', room: entry.room || '/', page: entry.page || '/' });
           }
         });
       });
@@ -86,6 +87,7 @@
       try {
         channel.track({
           tag,
+          user_id: userId || undefined,
           page: location.pathname,
           room: typeof getRoom === 'function' ? getRoom() : '/'
         });
@@ -142,6 +144,17 @@
       return lines.join('\n');
     };
 
+    // Giris yapan uyelerde rastgele oturum rumuzu yerine UUID'ye bagli,
+    // benzersiz profil handle'i kullanilir. Gosterilen ad kimlik sayilmaz.
+    const setIdentity = (identity) => {
+      const next = String(identity?.handle || '').toLowerCase();
+      if (!/^[a-z0-9][a-z0-9_-]{2,23}$/.test(next)) return false;
+      tag = next;
+      userId = String(identity?.user_id || '');
+      trackSelf();
+      return true;
+    };
+
     return {
       start,
       sync: trackSelf,
@@ -149,7 +162,8 @@
       count: () => entries.length,
       list: () => entries.map((entry) => ({ ...entry })),
       isActive: () => connected,
-      tag: () => tag
+      tag: () => tag,
+      setIdentity
     };
   };
 })();

@@ -1413,6 +1413,15 @@
 
     .deck-title { color: #d8ffe1; text-shadow: 0 0 10px rgba(0, 255, 102, 0.45); }
 
+    .deck-channel-title {
+      border: 0;
+      background: transparent;
+      color: #9cffb8;
+      font: inherit;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+
     .deck-self-tag { color: rgba(0, 234, 255, 0.85); margin-right: auto; }
 
     .deck-exit {
@@ -1497,6 +1506,8 @@
     .deck-send:focus-visible, .deck-dm-btn:focus-visible { background: rgba(0, 60, 18, 0.9); color: #d8ffe1; }
 
     .deck-status { min-height: 18px; margin-top: 6px; font-size: 0.74rem; color: rgba(0, 234, 255, 0.8); }
+    .deck-status.is-error { color: #ff9a9a; }
+    .deck-context-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
     .deck-side {
       border-left: 1px solid rgba(0, 255, 102, 0.3);
@@ -1509,6 +1520,29 @@
 
     .deck-side-title { font-size: 0.78rem; letter-spacing: 0.1em; color: #d8ffe1; margin: 0 0 2px; }
     .deck-side-hint { font-size: 0.7rem; color: rgba(202, 255, 216, 0.5); margin: 0 0 10px; }
+    .deck-section-title { margin: 14px 0 6px; font-size: 0.7rem; letter-spacing: 0.08em; color: rgba(0, 234, 255, 0.76); }
+    .deck-profile { display: flex; flex-direction: column; border: 1px dashed rgba(0, 234, 255, 0.4); padding: 7px 9px; margin: 7px 0; }
+    .deck-profile strong { color: #baf6ff; }
+    .deck-profile span { color: rgba(202, 255, 216, 0.55); font-size: 0.7rem; }
+    .deck-login-link { color: #00eaff; font-size: 0.76rem; }
+    .deck-search-row { display: flex; gap: 5px; margin: 6px 0; }
+    .deck-search-row .deck-input { padding: 6px 7px; font-size: 0.75rem; }
+    .deck-search-results { display: grid; gap: 5px; }
+    .deck-social-row { display: flex; align-items: stretch; gap: 4px; }
+    .deck-social-identity { display: flex; flex: 1; min-width: 0; flex-direction: column; align-items: flex-start; border: 1px solid rgba(0,255,102,.25); background: rgba(0,22,8,.55); color: inherit; font: inherit; padding: 6px 7px; cursor: pointer; }
+    .deck-social-identity:disabled { cursor: default; opacity: .82; }
+    .deck-social-identity strong { color: #9cffb8; font-size: .73rem; }
+    .deck-social-identity span { max-width: 150px; overflow: hidden; text-overflow: ellipsis; color: rgba(202,255,216,.5); font-size: .65rem; white-space: nowrap; }
+    .deck-social-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 3px; }
+    .deck-mini-btn, .deck-danger-btn { border: 1px solid rgba(0,255,102,.36); background: rgba(0,34,10,.78); color: #9cffb8; font: inherit; font-size: .61rem; padding: 5px 7px; cursor: pointer; }
+    .deck-mini-btn:hover, .deck-mini-btn:focus-visible { border-color: #00eaff; color: #eaffff; }
+    .deck-danger-btn { margin-top: 6px; border-color: rgba(255,90,90,.55); background: rgba(50,5,5,.65); color: #ff9a9a; }
+    .deck-thread { width: 100%; overflow: hidden; margin-bottom: 4px; border: 1px solid rgba(0,255,102,.22); background: rgba(0,18,6,.5); color: rgba(202,255,216,.74); font: inherit; font-size: .7rem; padding: 7px 8px; cursor: pointer; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+    .deck-thread.is-active { border-color: rgba(0,234,255,.7); color: #baf6ff; background: rgba(0,40,30,.65); }
+    .deck-group-create, .deck-group-admin { display: grid; gap: 5px; margin-top: 9px; padding: 7px; border: 1px dashed rgba(0,234,255,.28); }
+    .deck-group-create .deck-input, .deck-group-admin .deck-input { padding: 6px 7px; font-size: .72rem; }
+    .deck-group-admin summary, .deck-handle-box summary { color: rgba(0,234,255,.75); cursor: pointer; font-size: .67rem; }
+    .deck-handle-box { margin: 3px 0 7px; }
 
     .deck-wanderers { display: grid; gap: 6px; }
 

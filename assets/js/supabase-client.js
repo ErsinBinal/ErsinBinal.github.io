@@ -954,6 +954,119 @@
     return data;
   }
 
+  // --- Sosyal katman: benzersiz handle, arkadaslik, engel, DM ve gruplar ---
+  // Yazma islemleri istemciden tabloya dogrudan gitmez. RPC + RLS birlikte
+  // calisir; arayuz manipule edilse bile arkadaslik/uyelik kurali asilemez.
+  async function socialRpc(name, params = {}) {
+    const client = await requireClient();
+    const user = await getUser();
+    if (!user) throw new Error('Bu islem icin giris yapmalisiniz.');
+    const { data, error } = await client.rpc(name, params);
+    if (error) throw new Error(toMessage(error));
+    return data;
+  }
+
+  async function claimHandle(handle) {
+    return socialRpc('claim_handle', { p_handle: String(handle || '').trim().toLowerCase() });
+  }
+
+  async function searchMembers(query, limit = 12) {
+    return socialRpc('search_members', {
+      p_query: String(query || '').trim().slice(0, 40),
+      p_limit: Math.max(1, Math.min(30, Number(limit) || 12))
+    });
+  }
+
+  async function getSocialSnapshot() {
+    return socialRpc('get_social_snapshot');
+  }
+
+  async function sendFriendRequest(handle) {
+    return socialRpc('send_friend_request', { p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function respondFriendRequest(requestId, accept) {
+    return socialRpc('respond_friend_request', { p_request: requestId, p_accept: accept === true });
+  }
+
+  async function cancelFriendRequest(requestId) {
+    return socialRpc('cancel_friend_request', { p_request: requestId });
+  }
+
+  async function removeFriend(handle) {
+    return socialRpc('remove_friend', { p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function blockMember(handle) {
+    return socialRpc('block_member', { p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function unblockMember(handle) {
+    return socialRpc('unblock_member', { p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function openDirectChat(handle) {
+    return socialRpc('open_direct_chat', { p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function createGroupChat(title, handles) {
+    return socialRpc('create_group_chat', {
+      p_title: String(title || '').trim().slice(0, 60),
+      p_handles: Array.from(new Set((handles || []).map((value) => String(value).replace(/^@/, '').trim()).filter(Boolean)))
+    });
+  }
+
+  async function manageGroupMember(threadId, handle, action) {
+    return socialRpc('manage_group_member', {
+      p_thread: threadId,
+      p_handle: String(handle || '').replace(/^@/, ''),
+      p_action: action
+    });
+  }
+
+  async function leaveGroupChat(threadId) {
+    return socialRpc('leave_group_chat', { p_thread: threadId });
+  }
+
+  async function transferGroupOwner(threadId, handle) {
+    return socialRpc('transfer_group_owner', { p_thread: threadId, p_handle: String(handle || '').replace(/^@/, '') });
+  }
+
+  async function deleteGroupChat(threadId) {
+    return socialRpc('delete_group_chat', { p_thread: threadId });
+  }
+
+  async function listChatThreads() {
+    return socialRpc('list_chat_threads');
+  }
+
+  async function listChatMessages(threadId, limit = 60) {
+    const rows = await socialRpc('list_chat_messages', {
+      p_thread: threadId,
+      p_limit: Math.max(1, Math.min(100, Number(limit) || 60))
+    });
+    return (rows || []).slice().reverse();
+  }
+
+  async function sendChatMessage(threadId, body, type = 'text', metadata = {}) {
+    return socialRpc('send_chat_message', {
+      p_thread: threadId,
+      p_body: String(body || '').slice(0, 1000),
+      p_type: type,
+      p_metadata: metadata && typeof metadata === 'object' ? metadata : {}
+    });
+  }
+
+  function subscribeToChatMessages(callback) {
+    const client = getClient();
+    if (!client || typeof callback !== 'function') return null;
+    const channel = client
+      .channel(`private-chat:${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (event) => callback(event.new))
+      .subscribe();
+    return () => { try { client.removeChannel(channel); } catch { /* best effort */ } };
+  }
+
   // --- Sisedeki mesaj (bottle): RPC tabanli, gunluk limit sunucuda ----------
   async function throwBottle(body, replyTo) {
     const client = await requireClient();
@@ -1065,6 +1178,25 @@
     fetchDailySignal,
     fetchWallMarks,
     leaveWallMark,
+    claimHandle,
+    searchMembers,
+    getSocialSnapshot,
+    sendFriendRequest,
+    respondFriendRequest,
+    cancelFriendRequest,
+    removeFriend,
+    blockMember,
+    unblockMember,
+    openDirectChat,
+    createGroupChat,
+    manageGroupMember,
+    leaveGroupChat,
+    transferGroupOwner,
+    deleteGroupChat,
+    listChatThreads,
+    listChatMessages,
+    sendChatMessage,
+    subscribeToChatMessages,
     throwBottle,
     catchBottle,
     listBottles,

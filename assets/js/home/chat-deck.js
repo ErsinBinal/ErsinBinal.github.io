@@ -1,225 +1,400 @@
 /**
- * Convivium - Chat Guvertesi (chat deck)
- * "chat" komutu ekran koruyucu benzeri tam ekran bir guverte acar:
- * solda canli akis + mesaj yazma satiri, sagda aktif gezginler listesi.
- * Bir gezginin rumuzuna tiklaninca fisilti (DM) paneli acilir; oradan
- * Crude Buster co-op ve Dart online davetleri gonderilebilir. Davetler
- * URL parametreli linkler tasir: davet eden "odayi kur" ile, kabul eden
- * "kabul et" ile dogrudan ayni odaya duser. Guverte yalniz EXIT butonu
- * (veya Escape) ile kapanir; ekrana tiklamak kapatmaz.
- * createChatDeck(deps) fabrikasi ile kurulur.
- * (c) 2026 Ersin Binal - https://ersinbinal.github.io
+ * Convivium Chat Deck v4
+ * Ortak ucucu kanal + RLS korumali arkadas/DM/grup merkezi.
  */
 (() => {
   window.ConviviumHome = window.ConviviumHome || {};
 
   window.ConviviumHome.createChatDeck = (deps) => {
     const { getChat, getWanderers, getSelfTag, getRoom, pulse } = deps;
-
     const GAME_LINKS = {
-      crude: {
-        label: 'Crude Buster co-op',
-        host: (code) => `/games/crude-buster.html?coop-host=${code}`,
-        join: (code) => `/games/crude-buster.html?coop-join=${code}`
-      },
-      dart: {
-        label: 'Dart online',
-        host: (code) => `/tools/dart-skorbord.html?online-host=${code}`,
-        join: (code) => `/tools/dart-skorbord.html?online-join=${code}`
-      }
+      crude: { label: 'Crude Buster co-op', host: (c) => `/games/crude-buster.html?coop-host=${c}`, join: (c) => `/games/crude-buster.html?coop-join=${c}` },
+      dart: { label: 'Dart online', host: (c) => `/tools/dart-skorbord.html?online-host=${c}`, join: (c) => `/tools/dart-skorbord.html?online-join=${c}` }
     };
 
-    let overlay = null;
-    let chipEl = null;
-    let chipTimer = null;
+    let overlay;
+    let chipEl;
+    let chipTimer;
     let unreadCount = 0;
-    let feedEl = null;
-    let inputEl = null;
-    let wandererListEl = null;
-    let dmPanelEl = null;
-    let dmTargetEl = null;
-    let dmInputEl = null;
-    let statusEl = null;
-    let refreshTimer = null;
-    let dmTarget = '';
+    let feedEl;
+    let inputEl;
+    let statusEl;
+    let sideEl;
+    let channelEl;
+    let social = null;
+    let threads = [];
+    let activeThread = null;
+    let refreshTimer;
+    let unsubscribeMessages;
+    let loadingThread = false;
 
-    const chat = () => (typeof getChat === 'function' ? getChat() : null);
-
-    const el = (tag, className, text) => {
+    const api = () => (typeof getChat === 'function' ? getChat() : null);
+    const backend = () => window.ConviviumBackend || null;
+    const el = (tag, className, value) => {
       const node = document.createElement(tag);
       if (className) node.className = className;
-      if (text !== undefined) node.textContent = text;
+      if (value !== undefined) node.textContent = value;
       return node;
     };
-
-    const setStatus = (text) => {
-      if (statusEl) statusEl.textContent = text || '';
+    const button = (label, className, action) => {
+      const node = el('button', className, label);
+      node.type = 'button';
+      node.addEventListener('click', action);
+      return node;
     };
-
+    const setStatus = (value, error = false) => {
+      if (!statusEl) return;
+      statusEl.textContent = value || '';
+      statusEl.classList.toggle('is-error', error);
+    };
     const stamp = (ts) => new Date(ts || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    const cleanHandle = (value) => String(value || '').replace(/^@/, '').trim().toLowerCase();
 
-    // Sinyal cipi (sol-alt): guverte kapaliyken gelen mesaji haber verir.
-    // Diger sabit butonlarla cakismaz (sag-alt ses/CMD, sol-ust access,
-    // sag-ust HUD). Tiklaninca guverte acilir; acilinca sayac sifirlanir.
     const ensureChip = () => {
       if (chipEl) return chipEl;
-      chipEl = el('button', 'chat-signal-chip');
-      chipEl.type = 'button';
+      chipEl = button('', 'chat-signal-chip', () => open());
       chipEl.setAttribute('aria-label', 'Yeni sohbet mesaji: chat guvertesini ac');
-      chipEl.addEventListener('click', () => open());
       document.body.appendChild(chipEl);
       return chipEl;
     };
-
     const hideChip = () => {
       unreadCount = 0;
       chipEl?.classList.remove('is-visible', 'is-alert');
     };
-
-    // Cipe kisa omurlu kivilcimlar firlatir: Bugy'nin mesaji "akim gibi"
-    // butona gonderdigi hissini verir, dikkati koseye ceker.
-    const spawnChipSparks = () => {
-      if (!chipEl || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      const rect = chipEl.getBoundingClientRect();
-      const originX = rect.left + Math.min(26, rect.width * 0.18);
-      const originY = rect.top + rect.height / 2;
-      const count = 6;
-      for (let i = 0; i < count; i += 1) {
-        const spark = el('span', 'chat-chip-spark');
-        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.4; // cogunlukla yukari-disari
-        const dist = 16 + Math.random() * 26;
-        spark.style.left = `${Math.round(originX)}px`;
-        spark.style.top = `${Math.round(originY)}px`;
-        spark.style.setProperty('--dx', `${Math.round(Math.cos(angle) * dist)}px`);
-        spark.style.setProperty('--dy', `${Math.round(Math.sin(angle) * dist)}px`);
-        spark.style.animationDelay = `${Math.random() * 90}ms`;
-        document.body.appendChild(spark);
-        spark.addEventListener('animationend', () => spark.remove(), { once: true });
-      }
-    };
-
     const notifyChip = (entry) => {
       const chip = ensureChip();
       unreadCount += 1;
-      const kindMark = entry.kind === 'invite' ? 'davet' : entry.kind === 'dm' ? 'fisilti' : 'sinyal';
-      chip.textContent = `⚡ ${unreadCount} · ${entry.tag} (${kindMark})`;
+      chip.textContent = `⚡ ${unreadCount} · ${entry.sender_handle || entry.tag || 'yeni sinyal'}`;
       chip.classList.add('is-visible');
       chip.classList.remove('is-alert');
-      // Yeni mesajda elektrik-benzeri nabiz + kivilcim (class yeniden tetiklenir).
-      window.requestAnimationFrame(() => chip.classList.add('is-alert'));
-      spawnChipSparks();
-      if (chipTimer) window.clearTimeout(chipTimer);
-      chipTimer = window.setTimeout(() => chipEl?.classList.remove('is-alert'), 4000);
+      requestAnimationFrame(() => chip.classList.add('is-alert'));
+      clearTimeout(chipTimer);
+      chipTimer = setTimeout(() => chip.classList.remove('is-alert'), 4000);
       pulse?.(500, 0.04);
     };
 
-    // Akis satiri: mesaj/fisilti metin, davetler kabul linkli kart olur.
     const appendEntry = (entry) => {
       if (!feedEl || !entry) return;
-      const line = el('div', `deck-line${entry.self ? ' is-self' : ''}${entry.kind === 'dm' ? ' is-dm' : ''}${entry.kind === 'invite' ? ' is-invite' : ''}`);
-      line.appendChild(el('span', 'deck-time', stamp(entry.ts)));
-      const who = entry.self ? 'sen' : entry.tag;
-      if (entry.kind === 'invite') {
-        const game = GAME_LINKS[entry.game];
-        line.appendChild(el('span', 'deck-tag', `${who} davet >`));
-        line.appendChild(el('span', 'deck-body', ` ${game ? game.label : entry.game} / oda ${entry.code} `));
-        if (game && entry.code) {
-          const link = el('a', 'deck-accept', entry.self ? '[ODAYI KUR]' : '[KABUL ET]');
-          link.href = entry.self ? game.host(entry.code) : game.join(entry.code);
-          link.target = '_blank';
-          link.rel = 'noopener';
-          line.appendChild(link);
-        }
-      } else {
-        const scope = entry.kind === 'dm' ? '(fisilti)' : (entry.room || '/');
-        line.appendChild(el('span', 'deck-tag', `${who} ${scope} >`));
-        line.appendChild(el('span', 'deck-body', ` ${entry.body}`));
+      const isInvite = entry.kind === 'invite' || entry.message_type === 'game_invite';
+      const isPrivate = Boolean(entry.thread_id || entry.kind === 'dm');
+      const selfId = social?.profile?.user_id;
+      const isSelf = entry.self || (selfId && entry.sender_id === selfId);
+      const line = el('div', `deck-line${isSelf ? ' is-self' : ''}${isPrivate ? ' is-dm' : ''}${isInvite ? ' is-invite' : ''}`);
+      line.dataset.messageId = entry.id || '';
+      line.appendChild(el('span', 'deck-time', stamp(entry.created_at || entry.ts)));
+      const who = isSelf ? 'sen' : (entry.sender_handle || entry.tag || '?');
+      line.appendChild(el('span', 'deck-tag', `${who} ${isPrivate ? '(ozel)' : (entry.room || '/')} >`));
+      line.appendChild(el('span', 'deck-body', ` ${entry.body || ''}`));
+      const gameKey = entry.metadata?.game || entry.game;
+      const code = entry.metadata?.code || entry.code;
+      const game = GAME_LINKS[gameKey];
+      if (isInvite && game && code) {
+        const link = el('a', 'deck-accept', isSelf ? '[ODAYI KUR]' : '[KABUL ET]');
+        link.href = isSelf ? game.host(code) : game.join(code);
+        link.target = '_blank';
+        link.rel = 'noopener';
+        line.appendChild(link);
       }
       feedEl.appendChild(line);
-      while (feedEl.children.length > 80) feedEl.removeChild(feedEl.firstChild);
+      while (feedEl.children.length > 100) feedEl.firstChild.remove();
       feedEl.scrollTop = feedEl.scrollHeight;
     };
 
-    const renderWanderers = () => {
-      if (!wandererListEl) return;
-      const selfTag = typeof getSelfTag === 'function' ? getSelfTag() : '?';
-      const selfRoom = typeof getRoom === 'function' ? getRoom() : '/';
-      const others = (typeof getWanderers === 'function' ? getWanderers() : []) || [];
-      wandererListEl.textContent = '';
-      const selfRow = el('div', 'deck-wanderer is-self');
-      selfRow.appendChild(el('strong', '', selfTag));
-      selfRow.appendChild(el('span', '', `${selfRoom} (sen)`));
-      wandererListEl.appendChild(selfRow);
-      if (!others.length) {
-        wandererListEl.appendChild(el('div', 'deck-empty', 'cevre sessiz. su an baska gezgin yok.'));
-        if (dmTarget) closeDmPanel();
+    const showGlobal = () => {
+      activeThread = null;
+      if (channelEl) channelEl.textContent = 'ORTAK KANAL · UCUCU';
+      if (inputEl) inputEl.placeholder = 'herkese yaz... (Enter)';
+      if (feedEl) {
+        feedEl.textContent = '';
+        api()?.historyList?.().slice(-40).forEach(appendEntry);
+      }
+      renderSide();
+    };
+
+    const openThread = async (thread) => {
+      if (!thread?.id || loadingThread) return;
+      loadingThread = true;
+      activeThread = thread;
+      if (channelEl) channelEl.textContent = `${thread.kind === 'group' ? 'GRUP' : 'ARKADAS'} · ${thread.title || 'SOHBET'}`;
+      if (inputEl) inputEl.placeholder = 'ozel mesaj... (Enter)';
+      setStatus('mesajlar aliniyor...');
+      try {
+        const rows = await backend().listChatMessages(thread.id, 80);
+        if (activeThread?.id !== thread.id) return;
+        feedEl.textContent = '';
+        rows.forEach(appendEntry);
+        setStatus('');
+      } catch (error) {
+        setStatus(error.message, true);
+      } finally {
+        loadingThread = false;
+        renderSide();
+      }
+    };
+
+    const refreshSocial = async () => {
+      const b = backend();
+      if (!b?.getSocialSnapshot) return null;
+      try {
+        [social, threads] = await Promise.all([b.getSocialSnapshot(), b.listChatThreads()]);
+        threads = threads || [];
+        if (activeThread) activeThread = threads.find((item) => item.id === activeThread.id) || null;
+        renderSide();
+        return social;
+      } catch {
+        social = null;
+        threads = [];
+        renderSide();
+        return null;
+      }
+    };
+
+    const runSocial = async (work, success) => {
+      try {
+        setStatus('isleniyor...');
+        await work();
+        await api()?.refreshSocial?.();
+        await refreshSocial();
+        setStatus(success || 'tamam.');
+      } catch (error) {
+        setStatus(error.message || 'islem tamamlanamadi.', true);
+      }
+    };
+
+    const startFriendChat = async (friend) => {
+      try {
+        setStatus(`@${friend.handle} kanali aciliyor...`);
+        const id = await backend().openDirectChat(friend.handle);
+        await refreshSocial();
+        const thread = threads.find((item) => item.id === id);
+        if (thread) await openThread(thread);
+      } catch (error) {
+        setStatus(error.message, true);
+      }
+    };
+
+    const renderMemberRow = (member, actions = []) => {
+      const row = el('div', 'deck-social-row');
+      const identity = el('button', 'deck-social-identity');
+      identity.type = 'button';
+      identity.append(el('strong', '', `@${member.handle}`), el('span', '', member.display_name || member.handle));
+      if (member.is_friend || social?.friends?.some((f) => f.handle === member.handle)) {
+        identity.addEventListener('click', () => startFriendChat(member));
+      } else {
+        identity.disabled = true;
+      }
+      const actionWrap = el('div', 'deck-social-actions');
+      actions.forEach((item) => actionWrap.appendChild(button(item.label, 'deck-mini-btn', item.action)));
+      row.append(identity, actionWrap);
+      return row;
+    };
+
+    const renderSide = () => {
+      if (!sideEl) return;
+      sideEl.textContent = '';
+      sideEl.appendChild(el('h3', 'deck-side-title', 'UYE AGI'));
+      if (!social?.profile) {
+        sideEl.appendChild(el('p', 'deck-side-hint', 'Arkadaslik, ozel mesaj ve grup icin giris yap. Ortak kanal acik kalir.'));
+        const login = el('a', 'deck-login-link', 'UYELIK / GIRIS');
+        login.href = '/account/auth.html';
+        sideEl.appendChild(login);
+        renderPresence(sideEl);
         return;
       }
-      others.slice(0, 16).forEach((wanderer) => {
-        const row = el('button', 'deck-wanderer');
-        row.type = 'button';
-        row.appendChild(el('strong', '', wanderer.tag));
-        row.appendChild(el('span', '', wanderer.room || '/'));
-        row.addEventListener('click', () => openDmPanel(wanderer.tag));
-        wandererListEl.appendChild(row);
-      });
-      // Hedef gezgin ayrildiysa paneli kapat.
-      if (dmTarget && !others.some((w) => w.tag === dmTarget)) {
-        setStatus(`${dmTarget} frekanstan ayrildi.`);
-        closeDmPanel();
-      }
-    };
 
-    const openDmPanel = (tag) => {
-      dmTarget = tag;
-      if (dmTargetEl) dmTargetEl.textContent = tag;
-      dmPanelEl?.classList.add('is-open');
-      dmInputEl?.focus();
-      pulse?.(420, 0.05);
-    };
+      const profile = el('div', 'deck-profile');
+      profile.append(el('strong', '', `@${social.profile.handle}`), el('span', '', social.profile.display_name || ''));
+      sideEl.appendChild(profile);
 
-    const closeDmPanel = () => {
-      dmTarget = '';
-      dmPanelEl?.classList.remove('is-open');
-    };
+      const handleBox = el('details', 'deck-handle-box');
+      handleBox.appendChild(el('summary', '', 'benzersiz kullanici adini degistir'));
+      const handleRow = el('div', 'deck-search-row');
+      const handleInput = document.createElement('input');
+      handleInput.className = 'deck-input';
+      handleInput.placeholder = '3-24: harf, rakam, _ veya -';
+      handleInput.maxLength = 24;
+      handleInput.addEventListener('keydown', (event) => event.stopPropagation());
+      handleRow.append(handleInput, button('AYIR', 'deck-mini-btn', () => runSocial(
+        () => backend().claimHandle(cleanHandle(handleInput.value)),
+        'Kullanici adi ayrildi. Presence yeni kimligi sonraki acilista kullanacak.'
+      )));
+      handleBox.appendChild(handleRow);
+      sideEl.appendChild(handleBox);
 
-    const sendBroadcast = () => {
-      const body = (inputEl?.value || '').trim();
-      if (!body) return;
-      const api = chat();
-      if (!api) { setStatus('sohbet modulu hazir degil.'); return; }
-      const result = api.say(body);
-      if (/^say: /.test(result)) setStatus(result.replace(/^say: /, ''));
-      else { setStatus(''); if (inputEl) inputEl.value = ''; }
-    };
-
-    const sendWhisper = () => {
-      const body = (dmInputEl?.value || '').trim();
-      if (!body || !dmTarget) return;
-      const api = chat();
-      if (!api?.sendDirect) { setStatus('fisilti modulu hazir degil.'); return; }
-      const result = api.sendDirect(dmTarget, body);
-      if (result.error) { setStatus(result.error); return; }
-      setStatus(`fisilti ${dmTarget} rumuzuna gitti.`);
-      if (dmInputEl) dmInputEl.value = '';
-    };
-
-    const sendInvite = (game) => {
-      if (!dmTarget) return;
-      const api = chat();
-      if (!api?.sendInvite) { setStatus('davet modulu hazir degil.'); return; }
-      const result = api.sendInvite(dmTarget, game);
-      if (result.error) { setStatus(result.error); return; }
-      setStatus(`${GAME_LINKS[game].label} daveti gitti (oda ${result.code}). Akistaki [ODAYI KUR] ile odani ac.`);
-      pulse?.(520, 0.07);
-    };
-
-    const handleKeydown = (event) => {
-      if (event.key === 'Escape') {
+      const searchRow = el('div', 'deck-search-row');
+      const search = document.createElement('input');
+      search.className = 'deck-input';
+      search.placeholder = '@kullanici veya ad ara';
+      search.maxLength = 40;
+      const results = el('div', 'deck-search-results');
+      const doSearch = async () => {
+        const query = search.value.trim();
+        if (query.length < 2) { setStatus('Arama icin en az 2 karakter yaz.', true); return; }
+        try {
+          const rows = await backend().searchMembers(query, 12);
+          results.textContent = '';
+          if (!rows.length) results.appendChild(el('div', 'deck-empty', 'uye bulunamadi.'));
+          rows.forEach((member) => {
+            const actions = [];
+            if (member.is_friend) actions.push({ label: 'SOHBET', action: () => startFriendChat(member) });
+            else if (!member.request_status) actions.push({ label: 'EKLE', action: () => runSocial(() => backend().sendFriendRequest(member.handle), 'Arkadaslik daveti gitti.') });
+            else actions.push({ label: member.request_status === 'pending' ? 'BEKLIYOR' : 'YENILE', action: () => {} });
+            actions.push({ label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(member.handle), `@${member.handle} engellendi.`) });
+            results.appendChild(renderMemberRow(member, actions));
+          });
+        } catch (error) { setStatus(error.message, true); }
+      };
+      search.addEventListener('keydown', (event) => {
         event.stopPropagation();
-        if (dmPanelEl?.classList.contains('is-open')) closeDmPanel();
-        else close();
+        if (event.key === 'Enter') { event.preventDefault(); doSearch(); }
+      });
+      searchRow.append(search, button('ARA', 'deck-mini-btn', doSearch));
+      sideEl.append(searchRow, results);
+
+      if (social.incoming?.length) {
+        sideEl.appendChild(el('h4', 'deck-section-title', `DAVETLER · ${social.incoming.length}`));
+        social.incoming.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
+          { label: 'KABUL', action: () => runSocial(() => backend().respondFriendRequest(member.friendship_id, true), `@${member.handle} arkadaslarina eklendi.`) },
+          { label: 'REDDET', action: () => runSocial(() => backend().respondFriendRequest(member.friendship_id, false), 'Davet reddedildi.') },
+          { label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(member.handle), `@${member.handle} engellendi.`) }
+        ])));
       }
+
+      if (social.outgoing?.length) {
+        sideEl.appendChild(el('h4', 'deck-section-title', `GIDEN DAVETLER · ${social.outgoing.length}`));
+        social.outgoing.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
+          { label: 'IPTAL', action: () => runSocial(() => backend().cancelFriendRequest(member.friendship_id), 'Davet iptal edildi.') }
+        ])));
+      }
+
+      sideEl.appendChild(el('h4', 'deck-section-title', `ARKADASLAR · ${social.friends?.length || 0}`));
+      if (!social.friends?.length) sideEl.appendChild(el('div', 'deck-empty', 'Arama ile ilk baglantini kur.'));
+      social.friends?.forEach((friend) => sideEl.appendChild(renderMemberRow(friend, [
+        { label: 'YAZ', action: () => startFriendChat(friend) },
+        { label: 'CIKAR', action: () => runSocial(() => backend().removeFriend(friend.handle), 'Arkadaslik kaldirildi.') },
+        { label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(friend.handle), `@${friend.handle} engellendi.`) }
+      ])));
+
+      sideEl.appendChild(el('h4', 'deck-section-title', `SOHBETLER · ${threads.length}`));
+      const globalBtn = button('⌁ ORTAK KANAL', `deck-thread${activeThread ? '' : ' is-active'}`, showGlobal);
+      sideEl.appendChild(globalBtn);
+      threads.forEach((thread) => {
+        const label = `${thread.kind === 'group' ? '◈' : '→'} ${thread.title || 'sohbet'}${thread.last_body ? ` · ${thread.last_body.slice(0, 24)}` : ''}`;
+        sideEl.appendChild(button(label, `deck-thread${activeThread?.id === thread.id ? ' is-active' : ''}`, () => openThread(thread)));
+      });
+
+      if (activeThread?.kind === 'group') {
+        const selfMember = (activeThread.members || []).find((member) => member.user_id === social.profile.user_id);
+        const canManage = selfMember?.role === 'owner' || selfMember?.role === 'admin';
+        const groupAdmin = el('details', 'deck-group-admin');
+        groupAdmin.appendChild(el('summary', '', 'grup yonetimi'));
+        (activeThread.members || []).forEach((member) => {
+          const actions = [];
+          if (canManage && member.user_id !== social.profile.user_id && member.role !== 'owner') {
+            actions.push({ label: 'CIKAR', action: () => runSocial(() => backend().manageGroupMember(activeThread.id, member.handle, 'remove'), 'Uye gruptan cikarildi.') });
+          }
+          groupAdmin.appendChild(renderMemberRow(member, actions));
+        });
+        if (canManage) {
+          const addRow = el('div', 'deck-search-row');
+          const addInput = document.createElement('input');
+          addInput.className = 'deck-input';
+          addInput.placeholder = 'arkadas handle ekle';
+          addInput.addEventListener('keydown', (event) => event.stopPropagation());
+          addRow.append(addInput, button('EKLE', 'deck-mini-btn', () => runSocial(
+            () => backend().manageGroupMember(activeThread.id, cleanHandle(addInput.value), 'add'),
+            'Uye gruba eklendi.'
+          )));
+          groupAdmin.appendChild(addRow);
+        }
+        if (selfMember?.role === 'owner') {
+          const transferRow = el('div', 'deck-search-row');
+          const transferInput = document.createElement('input');
+          transferInput.className = 'deck-input';
+          transferInput.placeholder = 'sahipligi devret: handle';
+          transferInput.addEventListener('keydown', (event) => event.stopPropagation());
+          transferRow.append(transferInput, button('DEVRET', 'deck-mini-btn', () => runSocial(
+            () => backend().transferGroupOwner(activeThread.id, cleanHandle(transferInput.value)),
+            'Grup sahipligi devredildi.'
+          )));
+          groupAdmin.append(transferRow, button('GRUBU SIL', 'deck-danger-btn', () => {
+            if (!window.confirm('Bu grup ve tum mesajlari kalici olarak silinsin mi?')) return;
+            runSocial(async () => { await backend().deleteGroupChat(activeThread.id); showGlobal(); }, 'Grup silindi.');
+          }));
+        } else {
+          groupAdmin.appendChild(button('GRUPTAN AYRIL', 'deck-danger-btn', () => runSocial(async () => {
+            await backend().leaveGroupChat(activeThread.id);
+            showGlobal();
+          }, 'Gruptan ayrildin.')));
+        }
+        sideEl.appendChild(groupAdmin);
+      }
+
+      const groupBox = el('div', 'deck-group-create');
+      const title = document.createElement('input');
+      title.className = 'deck-input';
+      title.placeholder = 'grup adi';
+      title.maxLength = 60;
+      const members = document.createElement('input');
+      members.className = 'deck-input';
+      members.placeholder = 'arkadas handle: ada, deniz';
+      members.maxLength = 240;
+      [title, members].forEach((node) => node.addEventListener('keydown', (event) => event.stopPropagation()));
+      groupBox.append(title, members, button('GRUP KUR', 'deck-mini-btn', () => {
+        const handles = members.value.split(',').map(cleanHandle).filter(Boolean);
+        runSocial(async () => {
+          const id = await backend().createGroupChat(title.value, handles);
+          await refreshSocial();
+          const thread = threads.find((item) => item.id === id);
+          if (thread) await openThread(thread);
+        }, 'Grup kuruldu.');
+      }));
+      sideEl.appendChild(groupBox);
+
+      if (social.blocked?.length) {
+        sideEl.appendChild(el('h4', 'deck-section-title', `ENGELLENENLER · ${social.blocked.length}`));
+        social.blocked.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
+          { label: 'ENGELI AC', action: () => runSocial(() => backend().unblockMember(member.handle), 'Engel kaldirildi.') }
+        ])));
+      }
+      renderPresence(sideEl);
+    };
+
+    const renderPresence = (root) => {
+      root.appendChild(el('h4', 'deck-section-title', 'AKTIF SINYALLER'));
+      const others = (typeof getWanderers === 'function' ? getWanderers() : []) || [];
+      if (!others.length) root.appendChild(el('div', 'deck-empty', 'cevre sessiz.'));
+      others.slice(0, 12).forEach((wanderer) => {
+        const row = el('div', 'deck-wanderer');
+        row.append(el('strong', '', wanderer.tag), el('span', '', wanderer.room || '/'));
+        root.appendChild(row);
+      });
+    };
+
+    const sendCurrent = async () => {
+      const body = inputEl?.value.trim();
+      if (!body) return;
+      if (!activeThread) {
+        const result = api()?.say(body) || 'say: sohbet modulu hazir degil.';
+        if (/^say: /.test(result)) setStatus(result.replace(/^say: /, ''), true);
+        else { inputEl.value = ''; setStatus(''); }
+        return;
+      }
+      try {
+        await backend().sendChatMessage(activeThread.id, body);
+        inputEl.value = '';
+        await openThread({ ...activeThread });
+        await refreshSocial();
+      } catch (error) { setStatus(error.message, true); }
+    };
+
+    const sendGameInvite = async (game) => {
+      if (!activeThread || activeThread.kind !== 'direct') { setStatus('Oyun daveti icin bir arkadas sohbeti ac.', true); return; }
+      const code = Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+      try {
+        await backend().sendChatMessage(activeThread.id, `${GAME_LINKS[game].label} daveti / oda ${code}`, 'game_invite', { game, code });
+        await openThread({ ...activeThread });
+      } catch (error) { setStatus(error.message, true); }
     };
 
     const ensureOverlay = () => {
@@ -228,137 +403,81 @@
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-label', 'Convivium chat guvertesi');
       overlay.setAttribute('aria-hidden', 'true');
-
       const frame = el('div', 'deck-frame');
-
       const header = el('header', 'deck-header');
-      header.appendChild(el('span', 'deck-title', 'CONVIVIUM CHAT DECK'));
-      const selfLabel = el('span', 'deck-self-tag', '');
-      header.appendChild(selfLabel);
-      const exitBtn = el('button', 'deck-exit', 'EXIT');
-      exitBtn.type = 'button';
-      exitBtn.addEventListener('click', close);
-      header.appendChild(exitBtn);
-      frame.appendChild(header);
-
+      header.append(el('span', 'deck-title', 'CONVIVIUM CHAT DECK'));
+      channelEl = el('button', 'deck-channel-title', 'ORTAK KANAL · UCUCU');
+      channelEl.type = 'button';
+      channelEl.addEventListener('click', showGlobal);
+      header.append(channelEl, el('span', 'deck-self-tag', `@${typeof getSelfTag === 'function' ? getSelfTag() : '?'}`), button('EXIT', 'deck-exit', close));
       const main = el('div', 'deck-main');
-
       const feedWrap = el('section', 'deck-feed-wrap');
       feedEl = el('div', 'deck-feed');
       feedEl.setAttribute('aria-live', 'polite');
-      feedWrap.appendChild(feedEl);
       const inputRow = el('div', 'deck-input-row');
       inputEl = document.createElement('input');
-      inputEl.type = 'text';
-      inputEl.maxLength = 200;
-      inputEl.placeholder = 'herkese yaz... (Enter)';
       inputEl.className = 'deck-input';
+      inputEl.maxLength = 1000;
+      inputEl.placeholder = 'herkese yaz... (Enter)';
       inputEl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') { event.preventDefault(); sendBroadcast(); }
-        event.stopPropagation(); // terminal kisayollari karismasinlar
-      });
-      const sendBtn = el('button', 'deck-send', 'GONDER');
-      sendBtn.type = 'button';
-      sendBtn.addEventListener('click', sendBroadcast);
-      inputRow.append(inputEl, sendBtn);
-      feedWrap.appendChild(inputRow);
-      statusEl = el('div', 'deck-status', '');
-      feedWrap.appendChild(statusEl);
-      main.appendChild(feedWrap);
-
-      const side = el('aside', 'deck-side');
-      side.appendChild(el('h3', 'deck-side-title', 'AKTIF GEZGINLER'));
-      side.appendChild(el('p', 'deck-side-hint', 'rumuza tikla: fisilti + oyun daveti'));
-      wandererListEl = el('div', 'deck-wanderers');
-      side.appendChild(wandererListEl);
-
-      dmPanelEl = el('div', 'deck-dm');
-      const dmHead = el('div', 'deck-dm-head');
-      dmHead.appendChild(el('span', '', 'fisilti -> '));
-      dmTargetEl = el('strong', '', '');
-      dmHead.appendChild(dmTargetEl);
-      const dmClose = el('button', 'deck-dm-close', 'x');
-      dmClose.type = 'button';
-      dmClose.addEventListener('click', closeDmPanel);
-      dmHead.appendChild(dmClose);
-      dmPanelEl.appendChild(dmHead);
-      dmInputEl = document.createElement('input');
-      dmInputEl.type = 'text';
-      dmInputEl.maxLength = 200;
-      dmInputEl.placeholder = 'ozel mesaj... (Enter)';
-      dmInputEl.className = 'deck-input';
-      dmInputEl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') { event.preventDefault(); sendWhisper(); }
         event.stopPropagation();
+        if (event.key === 'Enter') { event.preventDefault(); sendCurrent(); }
       });
-      dmPanelEl.appendChild(dmInputEl);
-      const dmActions = el('div', 'deck-dm-actions');
-      const whisperBtn = el('button', 'deck-dm-btn', 'FISILTI GONDER');
-      whisperBtn.type = 'button';
-      whisperBtn.addEventListener('click', sendWhisper);
-      const crudeBtn = el('button', 'deck-dm-btn', 'CRUDE BUSTER DAVETI');
-      crudeBtn.type = 'button';
-      crudeBtn.addEventListener('click', () => sendInvite('crude'));
-      const dartBtn = el('button', 'deck-dm-btn', 'DART DAVETI');
-      dartBtn.type = 'button';
-      dartBtn.addEventListener('click', () => sendInvite('dart'));
-      dmActions.append(whisperBtn, crudeBtn, dartBtn);
-      dmPanelEl.appendChild(dmActions);
-      side.appendChild(dmPanelEl);
-
-      main.appendChild(side);
-      frame.appendChild(main);
-      frame.appendChild(el('footer', 'deck-footer', 'ucucu kanal: mesajlar kaydedilmez / davetler oda koduyla gider / EXIT ile kapanir'));
+      inputRow.append(inputEl, button('GONDER', 'deck-send', sendCurrent));
+      const inviteRow = el('div', 'deck-context-actions');
+      inviteRow.append(button('CRUDE DAVETI', 'deck-mini-btn', () => sendGameInvite('crude')), button('DART DAVETI', 'deck-mini-btn', () => sendGameInvite('dart')));
+      statusEl = el('div', 'deck-status', '');
+      feedWrap.append(feedEl, inputRow, inviteRow, statusEl);
+      sideEl = el('aside', 'deck-side');
+      main.append(feedWrap, sideEl);
+      frame.append(header, main, el('footer', 'deck-footer', 'ortak kanal ucucu · ozel sohbetler yalniz arkadaslar arasinda · engeller sunucuda uygulanir'));
       overlay.appendChild(frame);
       document.body.appendChild(overlay);
-
-      overlay.__selfLabel = selfLabel;
       return overlay;
     };
 
+    const handleKeydown = (event) => {
+      if (event.key === 'Escape') { event.stopPropagation(); close(); }
+    };
     const open = () => {
-      const node = ensureOverlay();
-      hideChip(); // okunmamis sayaci sifirla
-      const api = chat();
-      api?.command?.('on'); // guverte acikken kanal da dinlemede
-      node.classList.add('is-active');
-      node.setAttribute('aria-hidden', 'false');
+      ensureOverlay();
+      hideChip();
+      api()?.command?.('on');
+      overlay.classList.add('is-active');
+      overlay.setAttribute('aria-hidden', 'false');
       document.body.classList.add('chat-deck-active');
-      if (node.__selfLabel) node.__selfLabel.textContent = `rumuzun: ${typeof getSelfTag === 'function' ? getSelfTag() : '?'}`;
-      if (feedEl && !feedEl.children.length && api?.historyList) {
-        api.historyList().slice(-20).forEach(appendEntry);
+      showGlobal();
+      refreshSocial();
+      clearInterval(refreshTimer);
+      refreshTimer = setInterval(refreshSocial, 15000);
+      if (!unsubscribeMessages) {
+        unsubscribeMessages = backend()?.subscribeToChatMessages?.((message) => {
+          if (overlay?.classList.contains('is-active') && activeThread?.id === message.thread_id) {
+            openThread({ ...activeThread });
+          } else {
+            notifyChip(message);
+          }
+          refreshSocial();
+        });
       }
-      renderWanderers();
-      if (refreshTimer) window.clearInterval(refreshTimer);
-      refreshTimer = window.setInterval(renderWanderers, 3000);
       document.addEventListener('keydown', handleKeydown, { capture: true });
-      inputEl?.focus();
-      pulse?.(480, 0.06);
+      inputEl.focus();
       return 'chat deck acik. (kapat: EXIT)';
     };
-
     function close() {
       if (!overlay) return;
       overlay.classList.remove('is-active');
       overlay.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('chat-deck-active');
-      if (refreshTimer) window.clearInterval(refreshTimer);
+      clearInterval(refreshTimer);
       refreshTimer = null;
       document.removeEventListener('keydown', handleKeydown, { capture: true });
-      closeDmPanel();
-      // Kanal dinlemede kalir: terminal say/chat akisi devam eder.
     }
-
     const receive = (entry) => {
-      appendEntry(entry);
+      if (!activeThread && overlay?.classList.contains('is-active')) appendEntry(entry);
       if (!entry?.self && !overlay?.classList.contains('is-active')) notifyChip(entry);
     };
 
-    return {
-      open,
-      close,
-      receive,
-      isActive: () => Boolean(overlay?.classList.contains('is-active'))
-    };
+    return { open, close, receive, refreshSocial, isActive: () => Boolean(overlay?.classList.contains('is-active')) };
   };
 })();
