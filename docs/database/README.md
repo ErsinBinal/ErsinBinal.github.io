@@ -71,9 +71,11 @@ ekler.
 
 **Canli durum (2026-07-20):** Anon REST uzerinden yapilan salt-okunur RPC
 kontrolunde `get_social_snapshot`, `open_direct_chat` ve `block_member`
-`PGRST202` dondu. Migration canli projeye henuz uygulanmamistir. Frontend bu
-durumda ortak ucucu kanali calistirir; ozel mesaj ve engel icin guvensiz bir
-istemci fallback'i kullanmaz. Uygulama/kabul kaydi:
+`PGRST202` dondu. Bu sonuc migration'in eksik oldugunu kanitlamaz: migration
+RPC calistirma yetkisini `public`/`anon` rollerinden bilerek kaldirip yalniz
+`authenticated` role verir. Kesin durum girisli hesapla kontrol edilmelidir.
+Frontend eksik schema durumunda ortak ucucu kanali calistirir; ozel mesaj ve
+engel icin guvensiz bir istemci fallback'i kullanmaz. Uygulama/kabul kaydi:
 [`../chat-social-ux-handoff.md`](../chat-social-ux-handoff.md).
 
 ## Guvenlik Notlari

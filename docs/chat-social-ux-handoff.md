@@ -1,7 +1,7 @@
 # Sosyal Sohbet UX — Ozel Mesaj, Engel ve Sembol Rafi Handoff
 
 Tarih: 2026-07-20  
-Durum: Frontend canli ve kabul edildi; Supabase migration kullanici aksiyonu bekliyor.
+Durum: Frontend canli ve kabul edildi; authenticated backend kabulu bekliyor.
 Taban: `a3eec1b`–`e21872b` sosyal sohbet omurgasi.
 
 ## 1. Urun karari
@@ -53,24 +53,34 @@ Engeli kaldirmak eski arkadasligi veya silinen sohbeti geri getirmez. Bu nedenle
 engelleme tek tiklik sessiz bir eylem degil, sonuclari yazan onayli bir guvenlik
 eylemidir. Grup mesajlarinin yonetim/uyelik kurallari ayri kalir.
 
-## 4. Backend aktivasyon kapisi — KULLANICI AKSIYONU
+## 4. Backend kabul kapisi — AUTHENTICATED KULLANICI KONTROLU
 
-2026-07-20 tarihinde canli Supabase anon REST yuzeyinde yapilan salt-okunur
-kontrolde asagidaki RPC'ler `HTTP 404 / PGRST202` dondu:
+2026-07-20 tarihinde canli Supabase'in **anon** REST yuzeyinde yapilan
+salt-okunur kontrolde asagidaki RPC'ler `HTTP 404 / PGRST202` dondu:
 
 - `get_social_snapshot`
 - `open_direct_chat`
 - `block_member`
 
-Bu, frontend kodunun mevcut olmasina ragmen sosyal sohbet migration'inin canli
-veritabanina uygulanmadigini gosterir. Aktivasyon icin Supabase SQL Editor'de
-bir kez su dosyanin tamami calistirilmalidir:
+Bu sonuc migration'in eksik oldugunu tek basina kanitlamaz. Migration bu
+fonksiyonlarin `public` ve `anon` calistirma yetkisini bilerek iptal eder, yalniz
+`authenticated` role yetki verir. PostgREST yetkisiz fonksiyonu schema
+cache'inde yokmus gibi gosterebilir. Bu nedenle canli backend durumu anonim
+istekle kesinlestirilemez.
+
+Dogru kontrol:
+
+1. Uye hesabi ile giris yap ve terminalde `chat` ac.
+2. `OZEL MESAJ MERKEZI`, uye arama ve arkadas listesi aciliyorsa migration
+   zaten etkindir; SQL'i yeniden calistirmaya gerek yoktur.
+3. Giris acik oldugu halde arayuz `Ozel mesaj ve engel sunucusu henuz etkin
+   degil` diyorsa Supabase SQL Editor'de su dosyanin tamami bir kez calistirilir:
 
 [`database/2026-07-20-social-chat.sql`](database/2026-07-20-social-chat.sql)
 
-Bu islem Codex tarafindan yapilmaz; repo kurali geregi kullanici aksiyonudur.
-SQL uygulanana kadar ortak ucucu kanal calisir, ozel mesaj/engel katmani ise
-acik bir `sunucu henuz etkin degil` durumunda kalir.
+SQL gerekiyorsa bu islem Codex tarafindan yapilmaz; repo kurali geregi kullanici
+aksiyonudur. Eksik schema durumunda ortak ucucu kanal calisir, ozel mesaj/engel
+katmani ise acik bir `sunucu henuz etkin degil` durumunda kalir.
 
 ## 5. Degisen ana dosyalar
 
@@ -88,7 +98,8 @@ acik bir `sunucu henuz etkin degil` durumunda kalir.
 
 1. Frontend kalite kapilarini ve yerel Chromium akisini gecir.
 2. Frontend paketini main'e gonder; canli asset surumlerini/hash'lerini kontrol et.
-3. Kullanici SQL migration'ini Supabase SQL Editor'de uygular.
+3. Kullanici girisli hesapla backend durumunu kontrol eder; yalniz eksik
+   mesaji gorurse SQL migration'ini Supabase SQL Editor'de uygular.
 4. Iki test hesabiyla: arkadas ekle → ozel mesaj ac → mesaj gonder → engelle →
    iki yonlu erisim reddi → engeli kaldir akisini kabul et.
 5. Kabul sonucunu bu belgeye ve teknik degerlendirme raporuna kaydet.
@@ -121,5 +132,6 @@ Canli frontend kabul sonucu:
 - Canli sitede iki chat Chromium senaryosu 2/2 gecti.
 - Canli smoke 11/11 gecti; Oracle Worker version tag'i `52bdd38...` ile eslesti.
 
-Frontend kabul edilmistir. Tam urun kabulunde kalan tek kapilar 4. bolumdeki
-SQL ve sonrasindaki iki gercek hesapli backend senaryosudur.
+Frontend kabul edilmistir. Tam urun kabulunde kalan kapi 4. bolumdeki girisli
+backend kontrolu ve iki gercek hesapli senaryodur; SQL yalniz schema eksikse
+gerekir.

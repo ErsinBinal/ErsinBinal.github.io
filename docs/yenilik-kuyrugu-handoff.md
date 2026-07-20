@@ -23,7 +23,7 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 | Ek: Ortak ekran koruyucu (gezgin uydulari + mesaj yildizlari) | `d0ddb1e` | presence.list() + screenSaver.pushSignal; SW v185 |
 | Ek: Chat guvertesi + davetler + sinyal cipi + Bugy balon entegrasyonu | `eb97127`..`32aad94` | chat-deck.js, oyun davet URL'leri; SW v186-v194 |
 
-## KULLANICI AKSIYONU BEKLEYENLER (Supabase SQL Editor)
+## KULLANICI KONTROLU / AKSIYONU BEKLEYENLER (Supabase)
 
 1. `docs/database/2026-07-17-bottles.sql` — bottle_messages tablosu + RLS +
    throw_bottle/catch_bottle RPC'leri. Calistirilana kadar `bottle` komutu
@@ -32,10 +32,11 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
    Calistirilana kadar shard bakiyesi yalniz localStorage'da yasar
    (client kolon hatasinda eski secime otomatik duser; senkron kirilmaz).
 3. `docs/database/2026-07-20-social-chat.sql` — benzersiz handle, arkadaslik,
-   sunucu engeli, kalici birebir mesaj ve grup sohbeti. 2026-07-20 canli
-   kontrolunde `get_social_snapshot`, `open_direct_chat` ve `block_member`
-   `PGRST202` dondu; migration henuz canlida degil. Uygulanana kadar ortak
-   ucucu kanal acik kalir, ozel mesaj/engel arayuzu fail-closed bekler. Ayrinti:
+   sunucu engeli, kalici birebir mesaj ve grup sohbeti. Anon `PGRST202`, RPC'ler
+   tasarim geregi anon rolden gizli oldugu icin migration durumunu kanitlamaz.
+   Girisli hesapla kontrol et; arayuz acikca sunucunun etkin olmadigini soylerse
+   SQL'i bir kez calistir. Ortak kanal her durumda acik, uye katmani fail-closed.
+   Ayrinti:
    [Sosyal Sohbet UX Handoff](chat-social-ux-handoff.md).
 
 ## Kurulan modul deseni (yeni ozellikler bunu izlemeli)
@@ -153,14 +154,15 @@ kendisi YOK. Secenekler (kombinasyon da olur, orn. c+a):
   tek bir kelime (duvar yazilari, gece frekansi, kart sozleri icine gomulur).
   Onu bulan iki kisi kapiyi acar.
 
-### 2. Sosyal sohbet — frontend canli, SQL aktivasyonu bekliyor
+### 2. Sosyal sohbet — frontend canli, girisli backend kabulu bekliyor
 
 Uyelikli kalici ozel mesaj, arkadaslik, kisi engelleme ve grup omurgasi repoda
 tamamlandi. Ozel mesaj/engel eylemleri guvertede gorunur hale getirildi;
 engelleme arkadaslik ile birebir thread'i kaldirdigi icin sonuclari aciklayan
 onaya baglandi. Ortak ve ozel mesaj kutusuna emoji kullanmayan 24 parcalik
-SMS donemi ASCII sembol rafi eklendi. Tam urun kabulü icin once yukaridaki sosyal
-chat SQL'i kullanici calistirmali, sonra iki hesapli kabul akisi yapilmalidir.
+SMS donemi ASCII sembol rafi eklendi. Tam urun kabulü icin once girisli hesapla
+backend kontrol edilmeli; schema eksikse yukaridaki SQL calistirilmali, sonra
+iki hesapli kabul akisi yapilmalidir.
 Frontend `52bdd38` paketiyle canli ve hash/Chromium kabulunden gecmistir.
 
 Oda-bazli ucucu `whisper` veya oda basina broadcast kanal ayrimi bu kalici uye
