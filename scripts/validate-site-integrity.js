@@ -179,7 +179,8 @@ const mustPrecache = [
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
   '/assets/js/home/presence.js?v=3',
-  '/assets/js/home/chat-deck.js?v=6',
+  '/assets/js/home/chat-symbols.js?v=1',
+  '/assets/js/home/chat-deck.js?v=7',
   '/assets/js/home/coop-gate.js?v=1',
   '/assets/js/home/night-mode.js?v=1',
   '/assets/js/home/radio.js?v=1',
@@ -208,6 +209,7 @@ const shopRef = '/assets/js/home/shop.js?v=1';
 const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
 const vfsRef = '/assets/js/home/vfs.js?v=3';
 const navigatorRef = '/assets/js/home/navigator.js?v=2';
+const chatSymbolsRef = '/assets/js/home/chat-symbols.js?v=1';
 const homeProtocolRef = '/assets/js/home-protocol.js?v=86';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
@@ -218,6 +220,7 @@ const shopIndex = indexHtml.indexOf(shopRef);
 const worldActionsIndex = indexHtml.indexOf(worldActionsRef);
 const vfsIndex = indexHtml.indexOf(vfsRef);
 const navigatorIndex = indexHtml.indexOf(navigatorRef);
+const chatSymbolsIndex = indexHtml.indexOf(chatSymbolsRef);
 const homeProtocolIndex = indexHtml.indexOf(homeProtocolRef);
 
 if (routeCommandsIndex === -1) {
@@ -238,9 +241,11 @@ if (routeCommandsIndex === -1) {
   addError(`index.html script eksik: ${vfsRef}`);
 } else if (navigatorIndex === -1) {
   addError(`index.html script eksik: ${navigatorRef}`);
+} else if (chatSymbolsIndex === -1) {
+  addError(`index.html script eksik: ${chatSymbolsRef}`);
 } else if (homeProtocolIndex === -1) {
   addError(`index.html script eksik: ${homeProtocolRef}`);
-} else if ([routeCommandsIndex, guideCommandsIndex, ruinsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex, navigatorIndex].some((index) => index > homeProtocolIndex)) {
+} else if ([routeCommandsIndex, guideCommandsIndex, ruinsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex, navigatorIndex, chatSymbolsIndex].some((index) => index > homeProtocolIndex)) {
   addError('index.html script sirasi hatali: home modulleri home-protocol oncesinde olmali');
 }
 

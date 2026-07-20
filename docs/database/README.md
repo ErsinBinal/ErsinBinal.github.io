@@ -69,6 +69,13 @@ uzerinden yapilir ve arkadaslik, engel ve grup uyeligi sunucuda tekrar kontrol
 edilir. Migration `chat_messages` tablosunu Supabase Realtime publication'a da
 ekler.
 
+**Canli durum (2026-07-20):** Anon REST uzerinden yapilan salt-okunur RPC
+kontrolunde `get_social_snapshot`, `open_direct_chat` ve `block_member`
+`PGRST202` dondu. Migration canli projeye henuz uygulanmamistir. Frontend bu
+durumda ortak ucucu kanali calistirir; ozel mesaj ve engel icin guvensiz bir
+istemci fallback'i kullanmaz. Uygulama/kabul kaydi:
+[`../chat-social-ux-handoff.md`](../chat-social-ux-handoff.md).
+
 ## Guvenlik Notlari
 
 - `anonKey` gizli degildir; tarayiciya konabilir.

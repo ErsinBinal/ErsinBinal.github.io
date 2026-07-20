@@ -1,5 +1,5 @@
 /**
- * Convivium Chat Deck v4
+ * Convivium Chat Deck v7
  * Ortak ucucu kanal + RLS korumali arkadas/DM/grup merkezi.
  */
 (() => {
@@ -7,6 +7,7 @@
 
   window.ConviviumHome.createChatDeck = (deps) => {
     const { getChat, getWanderers, getSelfTag, getRoom, pulse } = deps;
+    const symbols = window.ConviviumHome.chatSymbols;
     const GAME_LINKS = {
       crude: { label: 'Crude Buster co-op', host: (c) => `/games/crude-buster.html?coop-host=${c}`, join: (c) => `/games/crude-buster.html?coop-join=${c}` },
       dart: { label: 'Dart online', host: (c) => `/tools/dart-skorbord.html?online-host=${c}`, join: (c) => `/tools/dart-skorbord.html?online-join=${c}` }
@@ -31,6 +32,9 @@
     let refreshTimer;
     let unsubscribeMessages;
     let loadingThread = false;
+    let symbolShelfEl;
+    let symbolTriggerEl;
+    let lastFocusEl;
 
     const api = () => (typeof getChat === 'function' ? getChat() : null);
     const backend = () => window.ConviviumBackend || null;
@@ -53,6 +57,71 @@
     };
     const stamp = (ts) => new Date(ts || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     const cleanHandle = (value) => String(value || '').replace(/^@/, '').trim().toLowerCase();
+    const isSchemaMissing = (error) => /PGRST202|schema cache|Could not find the function/i.test(String(error?.message || error || ''));
+
+    const closeSymbolShelf = (restoreFocus = true) => {
+      if (!symbolShelfEl) return false;
+      const wasOpen = symbolShelfEl.classList.contains('is-open');
+      symbolShelfEl.classList.remove('is-open');
+      symbolShelfEl.setAttribute('aria-hidden', 'true');
+      symbolTriggerEl?.setAttribute('aria-expanded', 'false');
+      const trigger = symbolTriggerEl;
+      symbolTriggerEl = null;
+      if (wasOpen && restoreFocus) trigger?.focus();
+      return wasOpen;
+    };
+
+    const insertSymbol = (symbol) => {
+      if (!inputEl || !symbols?.insertAtCursor) return;
+      const result = symbols.insertAtCursor(
+        inputEl.value,
+        symbol,
+        inputEl.selectionStart,
+        inputEl.selectionEnd,
+        Number(inputEl.maxLength) || 1000
+      );
+      inputEl.value = result.value;
+      inputEl.focus();
+      inputEl.setSelectionRange?.(result.caret, result.caret);
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const ensureSymbolShelf = (feedWrap) => {
+      if (symbolShelfEl || !symbols?.categories) return symbolShelfEl;
+      symbolShelfEl = el('section', 'deck-symbol-shelf');
+      symbolShelfEl.setAttribute('role', 'dialog');
+      symbolShelfEl.setAttribute('aria-label', 'Tuslu telefon sembol rafi');
+      symbolShelfEl.setAttribute('aria-hidden', 'true');
+      const head = el('div', 'deck-symbol-head');
+      head.append(el('strong', '', 'SMS DONEMI SEMBOL RAFI'), el('span', '', 'emoji degil; metne eklenir'));
+      head.appendChild(button('KAPAT', 'deck-symbol-close', () => closeSymbolShelf()));
+      symbolShelfEl.appendChild(head);
+      symbols.categories.forEach((category) => {
+        const group = el('div', 'deck-symbol-group');
+        group.appendChild(el('h4', '', category.label));
+        const grid = el('div', 'deck-symbol-grid');
+        category.items.forEach((item) => {
+          const choice = button(item.symbol, 'deck-symbol', () => insertSymbol(item.symbol));
+          choice.title = item.name;
+          choice.setAttribute('aria-label', `${item.name}: ${item.symbol}`);
+          grid.appendChild(choice);
+        });
+        group.appendChild(grid);
+        symbolShelfEl.appendChild(group);
+      });
+      feedWrap.appendChild(symbolShelfEl);
+      return symbolShelfEl;
+    };
+
+    const toggleSymbolShelf = (trigger) => {
+      if (!symbolShelfEl) { setStatus('Sembol rafi hazir degil.', true); return; }
+      if (symbolShelfEl.classList.contains('is-open')) { closeSymbolShelf(); return; }
+      symbolTriggerEl = trigger;
+      trigger.setAttribute('aria-expanded', 'true');
+      symbolShelfEl.classList.add('is-open');
+      symbolShelfEl.setAttribute('aria-hidden', 'false');
+      symbolShelfEl.querySelector('.deck-symbol')?.focus();
+    };
 
     const ensureChip = () => {
       if (chipEl) return chipEl;
@@ -119,7 +188,7 @@
       if (!thread?.id || loadingThread) return;
       loadingThread = true;
       activeThread = thread;
-      if (channelEl) channelEl.textContent = `${thread.kind === 'group' ? 'GRUP' : 'ARKADAS'} · ${thread.title || 'SOHBET'}`;
+      if (channelEl) channelEl.textContent = `${thread.kind === 'group' ? 'GRUP' : 'OZEL MESAJ'} · ${thread.title || 'SOHBET'}`;
       if (inputEl) inputEl.placeholder = 'ozel mesaj... (Enter)';
       setStatus('mesajlar aliniyor...');
       try {
@@ -167,7 +236,9 @@
         return social;
       } catch (error) {
         social = null;
-        socialError = error?.message || 'Sosyal sohbet servisine ulasilamadi.';
+        socialError = isSchemaMissing(error)
+          ? 'Ozel mesaj ve engel sunucusu henuz etkin degil. Guvensiz bir istemci taklidine geri dusulmez.'
+          : (error?.message || 'Sosyal sohbet servisine ulasilamadi.');
         threads = [];
         renderSide();
         return null;
@@ -184,6 +255,19 @@
       } catch (error) {
         setStatus(error.message || 'islem tamamlanamadi.', true);
       }
+    };
+
+    const requestBlock = (member, leaveThread = false) => {
+      const handle = cleanHandle(member?.handle);
+      if (!handle) { setStatus('Engellenecek uye bulunamadi.', true); return; }
+      const accepted = window.confirm(
+        `@${handle} engellensin mi? Arkadaslik ve birebir sohbet kanali kapanir; eski birebir mesajlar silinebilir.`
+      );
+      if (!accepted) return;
+      runSocial(async () => {
+        await backend().blockMember(handle);
+        if (leaveThread) showGlobal();
+      }, `@${handle} engellendi. Mesaj ve arkadaslik baglantisi kapatildi.`);
     };
 
     const startFriendChat = async (friend) => {
@@ -209,7 +293,11 @@
         identity.disabled = true;
       }
       const actionWrap = el('div', 'deck-social-actions');
-      actions.forEach((item) => actionWrap.appendChild(button(item.label, 'deck-mini-btn', item.action)));
+      actions.forEach((item) => actionWrap.appendChild(button(
+        item.label,
+        `deck-mini-btn${item.danger ? ' is-danger' : ''}`,
+        item.action
+      )));
       row.append(identity, actionWrap);
       return row;
     };
@@ -217,6 +305,7 @@
     const renderSide = () => {
       if (!sideEl) return;
       sideEl.textContent = '';
+      sideEl.dataset.socialState = social?.profile ? 'ready' : authChecked ? (authSession?.user ? 'unavailable' : 'guest') : 'checking';
       sideEl.appendChild(el('h3', 'deck-side-title', 'UYE AGI'));
       if (!social?.profile) {
         if (!authChecked) {
@@ -226,11 +315,28 @@
           const profile = el('div', 'deck-profile');
           profile.append(el('strong', '', fallbackName), el('span', '', 'oturum acik'));
           sideEl.append(profile, el('p', 'deck-side-hint is-warning', socialError || 'Uye agi hazirlaniyor. Ortak kanal ve oyun davetleri kullanilabilir.'));
+          const unavailable = el('div', 'deck-capability-preview');
+          unavailable.append(
+            el('strong', '', 'OZEL MESAJLAR + KISI ENGELLEME'),
+            el('span', '', 'Sunucu yetki katmani hazir oldugunda burada acilir; ortak kanal acik kalir.')
+          );
+          const disabledPrivate = button('OZEL MESAJ', 'deck-mini-btn', () => {});
+          const disabledBlock = button('ENGELLE', 'deck-mini-btn is-danger', () => {});
+          disabledPrivate.disabled = true;
+          disabledBlock.disabled = true;
+          unavailable.append(disabledPrivate, disabledBlock);
+          sideEl.appendChild(unavailable);
         } else {
-          sideEl.appendChild(el('p', 'deck-side-hint', 'Arkadaslik, ozel mesaj ve grup icin giris yap. Ortak kanal ve oyun davetleri acik kalir.'));
+          sideEl.appendChild(el('p', 'deck-side-hint', 'Ozel mesaj, kisi engelleme ve grup icin giris yap. Ortak kanal ve oyun davetleri acik kalir.'));
           const login = el('a', 'deck-login-link', 'UYELIK / GIRIS');
           login.href = '/account/auth.html';
           sideEl.appendChild(login);
+          const guestPreview = el('div', 'deck-capability-preview');
+          guestPreview.append(
+            el('strong', '', 'UYE FREKANSLARI'),
+            el('span', '', 'OZEL MESAJ · KISI ENGELLEME · GRUP SOHBETI')
+          );
+          sideEl.appendChild(guestPreview);
         }
         renderPresence(sideEl);
         return;
@@ -239,6 +345,12 @@
       const profile = el('div', 'deck-profile');
       profile.append(el('strong', '', `@${social.profile.handle}`), el('span', '', social.profile.display_name || ''));
       sideEl.appendChild(profile);
+      const socialGuide = el('div', 'deck-social-guide');
+      socialGuide.append(
+        el('strong', '', 'OZEL MESAJ MERKEZI'),
+        el('span', '', 'Arkadas satirinda OZEL MESAJ; konusma icinde ENGELLE. Engeller sunucuda uygulanir.')
+      );
+      sideEl.appendChild(socialGuide);
 
       const handleBox = el('details', 'deck-handle-box');
       handleBox.appendChild(el('summary', '', 'benzersiz kullanici adini degistir'));
@@ -270,10 +382,10 @@
           if (!rows.length) results.appendChild(el('div', 'deck-empty', 'uye bulunamadi.'));
           rows.forEach((member) => {
             const actions = [];
-            if (member.is_friend) actions.push({ label: 'SOHBET', action: () => startFriendChat(member) });
+            if (member.is_friend) actions.push({ label: 'OZEL MESAJ', action: () => startFriendChat(member) });
             else if (!member.request_status) actions.push({ label: 'EKLE', action: () => runSocial(() => backend().sendFriendRequest(member.handle), 'Arkadaslik daveti gitti.') });
             else actions.push({ label: member.request_status === 'pending' ? 'BEKLIYOR' : 'YENILE', action: () => {} });
-            actions.push({ label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(member.handle), `@${member.handle} engellendi.`) });
+            actions.push({ label: 'ENGELLE', danger: true, action: () => requestBlock(member) });
             results.appendChild(renderMemberRow(member, actions));
           });
         } catch (error) { setStatus(error.message, true); }
@@ -290,7 +402,7 @@
         social.incoming.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
           { label: 'KABUL', action: () => runSocial(() => backend().respondFriendRequest(member.friendship_id, true), `@${member.handle} arkadaslarina eklendi.`) },
           { label: 'REDDET', action: () => runSocial(() => backend().respondFriendRequest(member.friendship_id, false), 'Davet reddedildi.') },
-          { label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(member.handle), `@${member.handle} engellendi.`) }
+          { label: 'ENGELLE', danger: true, action: () => requestBlock(member) }
         ])));
       }
 
@@ -301,21 +413,41 @@
         ])));
       }
 
-      sideEl.appendChild(el('h4', 'deck-section-title', `ARKADASLAR · ${social.friends?.length || 0}`));
+      sideEl.appendChild(el('h4', 'deck-section-title', `ARKADASLAR / OZEL MESAJ · ${social.friends?.length || 0}`));
       if (!social.friends?.length) sideEl.appendChild(el('div', 'deck-empty', 'Arama ile ilk baglantini kur.'));
       social.friends?.forEach((friend) => sideEl.appendChild(renderMemberRow(friend, [
-        { label: 'YAZ', action: () => startFriendChat(friend) },
+        { label: 'OZEL MESAJ', action: () => startFriendChat(friend) },
         { label: 'CIKAR', action: () => runSocial(() => backend().removeFriend(friend.handle), 'Arkadaslik kaldirildi.') },
-        { label: 'ENGELLE', action: () => runSocial(() => backend().blockMember(friend.handle), `@${friend.handle} engellendi.`) }
+        { label: 'ENGELLE', danger: true, action: () => requestBlock(friend) }
       ])));
 
-      sideEl.appendChild(el('h4', 'deck-section-title', `SOHBETLER · ${threads.length}`));
+      if (social.blocked?.length) {
+        sideEl.appendChild(el('h4', 'deck-section-title is-security', `GUVENLIK / ENGELLENENLER · ${social.blocked.length}`));
+        social.blocked.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
+          { label: 'ENGELI KALDIR', action: () => runSocial(() => backend().unblockMember(member.handle), 'Engel kaldirildi; arkadaslik ve eski sohbet kendiliginden geri gelmez.') }
+        ])));
+      }
+
+      sideEl.appendChild(el('h4', 'deck-section-title', `OZEL MESAJLAR VE GRUPLAR · ${threads.length}`));
       const globalBtn = button('⌁ ORTAK KANAL', `deck-thread${activeThread ? '' : ' is-active'}`, showGlobal);
       sideEl.appendChild(globalBtn);
       threads.forEach((thread) => {
-        const label = `${thread.kind === 'group' ? '◈' : '→'} ${thread.title || 'sohbet'}${thread.last_body ? ` · ${thread.last_body.slice(0, 24)}` : ''}`;
+        const label = `${thread.kind === 'group' ? '◈ GRUP' : '→ OZEL'} · ${thread.title || 'sohbet'}${thread.last_body ? ` · ${thread.last_body.slice(0, 24)}` : ''}`;
         sideEl.appendChild(button(label, `deck-thread${activeThread?.id === thread.id ? ' is-active' : ''}`, () => openThread(thread)));
       });
+
+      if (activeThread?.kind === 'direct') {
+        const other = (activeThread.members || []).find((member) => member.user_id !== social.profile.user_id);
+        if (other) {
+          const directTools = el('div', 'deck-direct-tools');
+          directTools.append(
+            el('strong', '', `OZEL MESAJ · @${other.handle}`),
+            el('span', '', 'Bu konusma sunucuda saklanir ve yalniz taraflara aciktir.'),
+            button('KISIYI ENGELLE', 'deck-danger-btn', () => requestBlock(other, true))
+          );
+          sideEl.appendChild(directTools);
+        }
+      }
 
       if (activeThread?.kind === 'group') {
         const selfMember = (activeThread.members || []).find((member) => member.user_id === social.profile.user_id);
@@ -385,12 +517,6 @@
       }));
       sideEl.appendChild(groupBox);
 
-      if (social.blocked?.length) {
-        sideEl.appendChild(el('h4', 'deck-section-title', `ENGELLENENLER · ${social.blocked.length}`));
-        social.blocked.forEach((member) => sideEl.appendChild(renderMemberRow(member, [
-          { label: 'ENGELI AC', action: () => runSocial(() => backend().unblockMember(member.handle), 'Engel kaldirildi.') }
-        ])));
-      }
       renderPresence(sideEl);
     };
 
@@ -426,12 +552,13 @@
       if (!activeThread) {
         const result = api()?.say(body) || 'say: sohbet modulu hazir degil.';
         if (/^say: /.test(result)) setStatus(result.replace(/^say: /, ''), true);
-        else { inputEl.value = ''; setStatus(''); }
+        else { inputEl.value = ''; setStatus(''); closeSymbolShelf(false); }
         return;
       }
       try {
         await backend().sendChatMessage(activeThread.id, body);
         inputEl.value = '';
+        closeSymbolShelf(false);
         await openThread({ ...activeThread });
         await refreshSocial();
       } catch (error) { setStatus(error.message, true); }
@@ -455,6 +582,7 @@
       overlay = el('div', 'chat-deck');
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-label', 'Convivium chat guvertesi');
+      overlay.setAttribute('aria-modal', 'true');
       overlay.setAttribute('aria-hidden', 'true');
       const frame = el('div', 'deck-frame');
       const header = el('header', 'deck-header');
@@ -476,9 +604,14 @@
         event.stopPropagation();
         if (event.key === 'Enter') { event.preventDefault(); sendCurrent(); }
       });
-      inputRow.append(inputEl, button('GONDER', 'deck-send', sendCurrent));
+      const symbolButton = button('SEMBOLLER', 'deck-symbol-toggle', () => toggleSymbolShelf(symbolButton));
+      symbolButton.setAttribute('aria-haspopup', 'dialog');
+      symbolButton.setAttribute('aria-expanded', 'false');
+      inputRow.append(inputEl, symbolButton, button('GONDER', 'deck-send', sendCurrent));
       statusEl = el('div', 'deck-status', '');
+      statusEl.setAttribute('role', 'status');
       feedWrap.append(feedEl, inputRow, statusEl);
+      ensureSymbolShelf(feedWrap);
       sideEl = el('aside', 'deck-side');
       main.append(feedWrap, sideEl);
       frame.append(header, main, el('footer', 'deck-footer', 'ortak kanal ucucu · ozel sohbetler yalniz arkadaslar arasinda · engeller sunucuda uygulanir'));
@@ -488,10 +621,30 @@
     };
 
     const handleKeydown = (event) => {
-      if (event.key === 'Escape') { event.stopPropagation(); close(); }
+      if (event.key === 'Tab' && overlay?.classList.contains('is-active')) {
+        const focusable = [...overlay.querySelectorAll('button:not(:disabled), input:not(:disabled), a[href], summary')]
+          .filter((node) => node.getClientRects().length > 0);
+        if (focusable.length) {
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        if (!closeSymbolShelf()) close();
+      }
     };
     const open = () => {
       ensureOverlay();
+      lastFocusEl = document.activeElement;
       hideChip();
       api()?.command?.('on');
       overlay.classList.add('is-active');
@@ -517,12 +670,15 @@
     };
     function close() {
       if (!overlay) return;
+      closeSymbolShelf(false);
       overlay.classList.remove('is-active');
       overlay.setAttribute('aria-hidden', 'true');
       document.body.classList.remove('chat-deck-active');
       clearInterval(refreshTimer);
       refreshTimer = null;
       document.removeEventListener('keydown', handleKeydown, { capture: true });
+      if (lastFocusEl?.isConnected) lastFocusEl.focus();
+      lastFocusEl = null;
     }
     const receive = (entry) => {
       if (overlay?.classList.contains('is-active') && (!activeThread || entry?.kind === 'invite')) appendEntry(entry);

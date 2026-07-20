@@ -51,6 +51,77 @@ test.describe('Uyelik onay akisi', () => {
   });
 });
 
+test.describe('Chat guvertesi kesif ve sembol akisi', () => {
+  test('ozel mesaj ve engel gorunur; ASCII sembol imlece eklenir', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    await page.locator('#command-input').fill('chat');
+    await page.locator('#command-input').press('Enter');
+
+    const deck = page.getByRole('dialog', { name: 'Convivium chat guvertesi' });
+    await expect(deck).toBeVisible();
+    await expect(deck).toContainText('Ozel mesaj, kisi engelleme ve grup icin giris yap');
+    await expect(deck).toContainText('OZEL MESAJ · KISI ENGELLEME · GRUP SOHBETI');
+
+    await deck.getByRole('button', { name: 'SEMBOLLER' }).click();
+    const shelf = deck.getByRole('dialog', { name: 'Tuslu telefon sembol rafi' });
+    await expect(shelf).toBeVisible();
+    expect(await deck.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+    await shelf.getByRole('button', { name: 'gulumseme: :)', exact: true }).click();
+    await expect(deck.locator('.deck-input-row .deck-input')).toHaveValue(':)');
+
+    await page.keyboard.press('Escape');
+    await expect(shelf).toBeHidden();
+    await expect(deck).toBeVisible();
+    await deck.getByRole('button', { name: 'EXIT' }).click();
+    await expect(deck).toBeHidden();
+  });
+
+  test('uye birebir kanalinda engel sonuclari onaylanir ve guvenlik listesine tasinir', async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate(() => {
+      const self = { user_id: 'self', handle: 'ersin', display_name: 'Ersin', role: 'owner' };
+      const friend = { user_id: 'friend', handle: 'ada', display_name: 'Ada', role: 'member' };
+      const snapshot = () => ({
+        profile: self,
+        friends: window.__socialBlocked ? [] : [friend],
+        incoming: [],
+        outgoing: [],
+        blocked: window.__socialBlocked ? [friend] : []
+      });
+      const thread = { id: 'dm-1', kind: 'direct', title: 'Ada', members: [self, friend], last_body: '', last_at: null };
+      window.__socialBlocked = false;
+      window.ConviviumBackend = {
+        getSession: async () => ({ user: { id: 'self', user_metadata: { display_name: 'Ersin' } } }),
+        getSocialSnapshot: async () => snapshot(),
+        listChatThreads: async () => window.__socialBlocked ? [] : [thread],
+        listChatMessages: async () => [],
+        openDirectChat: async () => 'dm-1',
+        blockMember: async (handle) => { window.__blockedHandle = handle; window.__socialBlocked = true; return true; },
+        unblockMember: async () => { window.__socialBlocked = false; return true; },
+        subscribeToChatMessages: () => () => {}
+      };
+    });
+
+    await page.locator('#command-input').fill('chat');
+    await page.locator('#command-input').press('Enter');
+    const deck = page.getByRole('dialog', { name: 'Convivium chat guvertesi' });
+    await expect(deck).toContainText('OZEL MESAJ MERKEZI');
+    await deck.getByRole('button', { name: /OZEL · Ada/ }).click();
+    await expect(deck).toContainText('Bu konusma sunucuda saklanir ve yalniz taraflara aciktir.');
+
+    page.once('dialog', async (dialog) => {
+      expect(dialog.message()).toContain('Arkadaslik ve birebir sohbet kanali kapanir');
+      await dialog.accept();
+    });
+    await deck.getByRole('button', { name: 'KISIYI ENGELLE' }).click();
+
+    await expect.poll(() => page.evaluate(() => window.__blockedHandle)).toBe('ada');
+    await expect(deck).toContainText('GUVENLIK / ENGELLENENLER · 1');
+    await expect(deck.getByRole('button', { name: 'ENGELI KALDIR' })).toBeVisible();
+  });
+});
+
 // PROD'da gercek kullanici olusturmamak icin varsayilan KAPALI.
 // Acmak icin: RUN_SIGNUP=1 TEST_EMAIL=... TEST_PASSWORD=... npm run test:e2e
 test.describe('Tam kayit akisi (opsiyonel)', () => {

@@ -30,6 +30,8 @@ tamamlanan N1 kabulü ve sıradaki navigasyon fazları ise
 | Yeni ürün: Sinyal Arkeolojisi | Tamamlandı; canlı | Üç immutable kurmaca artifact, deterministik günlük buluntu, opsiyonel `/ruins` world/VFS extension; SW v205 |
 | Terminal navigasyonu N1 | Tamamlandı; canlı | 6 niyetli kısa Pusula, canonical/alias/fuzzy/parametre tamamlama, erişilebilir üçlü öneri ve ilk SW claim reload koruması; SW v206 |
 | Terminal navigasyonu N1.1 | Tamamlandı; canlı | Hardcoded eski yardım ve mükerrer protocol typo motoru kaldırıldı; `help all` canlı registry indeksi, tek navigator düzeltmesi ve kişisel alias önceliği; SW v207 |
+| Üye sosyal sohbet omurgası | Repo ve frontend tamam; Supabase SQL bekliyor | RLS/RPC korumalı arkadaşlık, kalıcı özel/grup mesajı ve sunucu engeli; canlı RPC kontrolü `PGRST202` |
+| Sosyal sohbet UX + sembol rafı | Frontend ve yerel kabul tamam; yayın bekliyor | Açık `ÖZEL MESAJ`, konuşma içi engel ve onay; ortak/özel kutuda 24 ASCII SMS dönemi ifadesi; 82 unit + 12 Worker + 9 Chromium aktif senaryosu geçti |
 | P0 tekrarlanabilir kurulum | Tamamlandı | `npm ci` tekrarlanabilir; audit 0; CI `npm ci` + `npm run check` kullanıyor |
 | P0 Worker kötüye kullanım sınırı | Tamamlandı; canlı | DO sayaç, Supabase auth, bounded JSON, yerel-only beacon, `/health`; kimliksiz enrich 401 |
 | P0 Worker deploy kapısı | Tamamlandı; canlı | CI health/version tag'i `dc951919…` ile eşleşti |

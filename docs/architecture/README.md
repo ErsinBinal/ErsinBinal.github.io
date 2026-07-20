@@ -14,6 +14,8 @@ Canlı terminal ürünü ve `/ruins` extension sınırı:
 [Sinyal Arkeolojisi Handoff](../sinyal-arkeolojisi-handoff.md).
 Terminal yön bulma, tamamlama ve Yaşayan Atlas fazları:
 [Terminal Navigasyonu — Sinyal Pusulası Handoff](../terminal-navigation-handoff.md).
+Üye özel mesajı, engelleme ve SMS dönemi sembol rafı:
+[Sosyal Sohbet UX Handoff](../chat-social-ux-handoff.md).
 P0/P1 güvenlik ve dağıtım kapanış kaydı:
 [Üretim Sertleştirme Handoff](../production-hardening-handoff.md).
 Gerçek HTTP güvenlik header'ları ve hosting sınırı:
@@ -112,6 +114,7 @@ flowchart LR
     bugy2[bugy-pet.js]
     oracle2[oracle terminal]
     games2[oyunlar / arcade-kit]
+    chat2[chat-deck + supabase-client]
   end
 
   subgraph DB[(Supabase)]
@@ -127,6 +130,11 @@ flowchart LR
     daily[(daily_signal)]
     wall[(wall_marks)]
     world[(world_state)]
+    friendships[(friendships)]
+    blocks[(member_blocks)]
+    threads[(chat_threads)]
+    members[(chat_members)]
+    messages[(chat_messages)]
   end
 
   auth2 --> profiles
@@ -137,9 +145,10 @@ flowchart LR
   bugy2 --> bugypets
   oracle2 --> oraclep
   games2 --> scores & daily & wall & world
+  chat2 --> profiles & friendships & blocks & threads & members & messages
 
   classDef tracked fill:#0a3a1a,stroke:#0f0,color:#dfffe0
-  class profiles,articles,scores,sessions,recos,dmatch,dthrow,bugypets,oraclep,daily,wall,world tracked
+  class profiles,articles,scores,sessions,recos,dmatch,dthrow,bugypets,oraclep,daily,wall,world,friendships,blocks,threads,members,messages tracked
 ```
 
 > 🟩 = `docs/database/supabase-schema.sql` içinde tanımlı. Tüm tablolar artık
@@ -218,7 +227,7 @@ flowchart TD
 
 | Sayfa | Ana modül(ler) | Veri | Giriş | Durum |
 |-------|----------------|------|:----:|:----:|
-| index.html | home-protocol + route/guide/VFS (navigation + kalıcı `/home`) + immutable world + callback tabanlı world-actions/economy modülleri, bugy-v2/v3/v4, arcade-kit | — / world_state + localStorage | — | 🟨 |
+| index.html | home-protocol + route/guide/VFS + world-actions/economy + chat-deck/chat-symbols, bugy-v2/v3/v4, arcade-kit | world_state + sosyal sohbet tabloları + localStorage | DM/grup ✅ | 🟨 |
 | account/auth.html | auth.js | profiles (trigger) | — | 🟩 |
 | account/dashboard.html | dashboard.js | profiles, game_scores, dart_*, sessions, recos, bugy_pets | ✅ | 🟩 |
 | admin/index.html | admin.js, articles.js | articles | ✅ admin | 🟨 |

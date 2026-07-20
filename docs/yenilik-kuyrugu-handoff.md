@@ -1,6 +1,6 @@
 # Convivium Yenilik Kuyrugu — Handoff
 
-Tarih: 2026-07-17 (son güncelleme: 2026-07-18). Site incelemesi sonrası onaylanan 8 yaratıcı
+Tarih: 2026-07-17 (son güncelleme: 2026-07-20). Site incelemesi sonrası onaylanan 8 yaratıcı
 yenilik + gelistirici notlari kuyrugu TAMAMLANDI. Her parca ayri commit ile
 main'e push edildi (GitHub Pages otomatik yayinlar).
 
@@ -31,6 +31,12 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 2. `docs/database/2026-07-17-shards.sql` — world_state.shards kolonu.
    Calistirilana kadar shard bakiyesi yalniz localStorage'da yasar
    (client kolon hatasinda eski secime otomatik duser; senkron kirilmaz).
+3. `docs/database/2026-07-20-social-chat.sql` — benzersiz handle, arkadaslik,
+   sunucu engeli, kalici birebir mesaj ve grup sohbeti. 2026-07-20 canli
+   kontrolunde `get_social_snapshot`, `open_direct_chat` ve `block_member`
+   `PGRST202` dondu; migration henuz canlida degil. Uygulanana kadar ortak
+   ucucu kanal acik kalir, ozel mesaj/engel arayuzu fail-closed bekler. Ayrinti:
+   [Sosyal Sohbet UX Handoff](chat-social-ux-handoff.md).
 
 ## Kurulan modul deseni (yeni ozellikler bunu izlemeli)
 
@@ -73,6 +79,8 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 > Park edilen mimari hat: [Home Protocol Modülerleştirme Handoff](home-protocol-modularization-handoff.md).
 > Terminal navigasyon programı: [Sinyal Pusulası Handoff](terminal-navigation-handoff.md)
 > (N1 ve N1.1 canlı; N2 sıradaki ayrı dilim).
+> Sosyal sohbet aktivasyon ve UX kaydı:
+> [Sosyal Sohbet UX Handoff](chat-social-ux-handoff.md).
 
 ### Tamamlanan deneyim omurgası — Sinyal Pusulası N1
 
@@ -145,10 +153,17 @@ kendisi YOK. Secenekler (kombinasyon da olur, orn. c+a):
   tek bir kelime (duvar yazilari, gece frekansi, kart sozleri icine gomulur).
   Onu bulan iki kisi kapiyi acar.
 
-### 2. Chat genisletmeleri
-- Oda-bazli `whisper`: yalniz ayni terminal odasindakilere (`virtualCwd`)
-  giden mesaj; chat.js'te payload'da `room` zaten var, filtre yeterli.
-- Kanal ayrimi istenirse `chat:site` yerine oda basina kanal.
+### 2. Sosyal sohbet — frontend hazir, SQL aktivasyonu bekliyor
+
+Uyelikli kalici ozel mesaj, arkadaslik, kisi engelleme ve grup omurgasi repoda
+tamamlandi. Ozel mesaj/engel eylemleri guvertede gorunur hale getirildi;
+engelleme arkadaslik ile birebir thread'i kaldirdigi icin sonuclari aciklayan
+onaya baglandi. Ortak ve ozel mesaj kutusuna emoji kullanmayan 24 parcalik
+SMS donemi ASCII sembol rafi eklendi. Canli kabul icin once yukaridaki sosyal
+chat SQL'i kullanici calistirmali, sonra iki hesapli kabul akisi yapilmalidir.
+
+Oda-bazli ucucu `whisper` veya oda basina broadcast kanal ayrimi bu kalici uye
+mesajlasmasindan farkli, istege bagli ileriki bir urun dilimidir.
 
 ### 3. Kart paylasim sayfasi
 Gunun sinyal kartinin SVG/PNG gorselini uretip paylasma sayfasi.
