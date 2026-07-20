@@ -153,14 +153,15 @@ kendisi YOK. Secenekler (kombinasyon da olur, orn. c+a):
   tek bir kelime (duvar yazilari, gece frekansi, kart sozleri icine gomulur).
   Onu bulan iki kisi kapiyi acar.
 
-### 2. Sosyal sohbet — frontend hazir, SQL aktivasyonu bekliyor
+### 2. Sosyal sohbet — frontend canli, SQL aktivasyonu bekliyor
 
 Uyelikli kalici ozel mesaj, arkadaslik, kisi engelleme ve grup omurgasi repoda
 tamamlandi. Ozel mesaj/engel eylemleri guvertede gorunur hale getirildi;
 engelleme arkadaslik ile birebir thread'i kaldirdigi icin sonuclari aciklayan
 onaya baglandi. Ortak ve ozel mesaj kutusuna emoji kullanmayan 24 parcalik
-SMS donemi ASCII sembol rafi eklendi. Canli kabul icin once yukaridaki sosyal
+SMS donemi ASCII sembol rafi eklendi. Tam urun kabulü icin once yukaridaki sosyal
 chat SQL'i kullanici calistirmali, sonra iki hesapli kabul akisi yapilmalidir.
+Frontend `52bdd38` paketiyle canli ve hash/Chromium kabulunden gecmistir.
 
 Oda-bazli ucucu `whisper` veya oda basina broadcast kanal ayrimi bu kalici uye
 mesajlasmasindan farkli, istege bagli ileriki bir urun dilimidir.

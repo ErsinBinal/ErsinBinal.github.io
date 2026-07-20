@@ -1,7 +1,7 @@
 # Sosyal Sohbet UX — Ozel Mesaj, Engel ve Sembol Rafi Handoff
 
 Tarih: 2026-07-20  
-Durum: Frontend ve yerel kabul tamam; yayin ile Supabase migration bekliyor.  
+Durum: Frontend canli ve kabul edildi; Supabase migration kullanici aksiyonu bekliyor.
 Taban: `a3eec1b`–`e21872b` sosyal sohbet omurgasi.
 
 ## 1. Urun karari
@@ -110,5 +110,16 @@ uygulanmadan frontend tarafinda yeni bir kalici mesaj fallback'i yazilmayacak.
 - Ana semanin son 437 satiri migration dosyasiyla SHA-256 bazinda birebir ayni.
 
 Yayin paketi: `home.css?v=32`, `chat-symbols.js?v=1`, `chat-deck.js?v=7`,
-Service Worker `convivium-v211`. Canli kabul ve SQL sonrasi iki-hesapli backend
-kabul sonucu bu bolume eklenecek.
+Service Worker `convivium-v211`.
+
+Canli frontend kabul sonucu:
+
+- Ozellik commit'i `52bdd38`; Pages yeniden tetikleme commit'i `b4386c7`.
+- GitHub Pages `pages build and deployment` basarili.
+- CSS, sembol modulu, chat guvertesi ve Service Worker canli SHA-256 hash'leri
+  yerel main dosyalariyla birebir eslesti.
+- Canli sitede iki chat Chromium senaryosu 2/2 gecti.
+- Canli smoke 11/11 gecti; Oracle Worker version tag'i `52bdd38...` ile eslesti.
+
+Frontend kabul edilmistir. Tam urun kabulunde kalan tek kapilar 4. bolumdeki
+SQL ve sonrasindaki iki gercek hesapli backend senaryosudur.
