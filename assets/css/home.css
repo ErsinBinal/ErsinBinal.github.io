@@ -1520,6 +1520,7 @@
 
     .deck-side-title { font-size: 0.78rem; letter-spacing: 0.1em; color: #d8ffe1; margin: 0 0 2px; }
     .deck-side-hint { font-size: 0.7rem; color: rgba(202, 255, 216, 0.5); margin: 0 0 10px; }
+    .deck-side-hint.is-warning { color: #ffd98a; }
     .deck-section-title { margin: 14px 0 6px; font-size: 0.7rem; letter-spacing: 0.08em; color: rgba(0, 234, 255, 0.76); }
     .deck-profile { display: flex; flex-direction: column; border: 1px dashed rgba(0, 234, 255, 0.4); padding: 7px 9px; margin: 7px 0; }
     .deck-profile strong { color: #baf6ff; }
@@ -1545,6 +1546,9 @@
     .deck-handle-box { margin: 3px 0 7px; }
 
     .deck-wanderers { display: grid; gap: 6px; }
+
+    .deck-presence-row { display: flex; align-items: stretch; gap: 4px; margin-bottom: 5px; }
+    .deck-presence-row .deck-wanderer { flex: 1; cursor: default; }
 
     .deck-wanderer {
       display: flex;

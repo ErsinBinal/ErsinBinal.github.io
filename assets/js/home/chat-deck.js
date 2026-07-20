@@ -22,6 +22,9 @@
     let sideEl;
     let channelEl;
     let social = null;
+    let authSession = null;
+    let authChecked = false;
+    let socialError = '';
     let threads = [];
     let activeThread = null;
     let refreshTimer;
@@ -134,15 +137,36 @@
 
     const refreshSocial = async () => {
       const b = backend();
-      if (!b?.getSocialSnapshot) return null;
+      if (!b?.getSession) return null;
+      try {
+        authSession = await b.getSession();
+      } catch {
+        authSession = null;
+      }
+      authChecked = true;
+      if (!authSession) {
+        social = null;
+        socialError = '';
+        threads = [];
+        renderSide();
+        return null;
+      }
+      if (!b?.getSocialSnapshot) {
+        social = null;
+        socialError = 'Sosyal sohbet servisi henuz hazir degil.';
+        renderSide();
+        return null;
+      }
       try {
         [social, threads] = await Promise.all([b.getSocialSnapshot(), b.listChatThreads()]);
+        socialError = '';
         threads = threads || [];
         if (activeThread) activeThread = threads.find((item) => item.id === activeThread.id) || null;
         renderSide();
         return social;
-      } catch {
+      } catch (error) {
         social = null;
+        socialError = error?.message || 'Sosyal sohbet servisine ulasilamadi.';
         threads = [];
         renderSide();
         return null;
@@ -194,10 +218,19 @@
       sideEl.textContent = '';
       sideEl.appendChild(el('h3', 'deck-side-title', 'UYE AGI'));
       if (!social?.profile) {
-        sideEl.appendChild(el('p', 'deck-side-hint', 'Arkadaslik, ozel mesaj ve grup icin giris yap. Ortak kanal acik kalir.'));
-        const login = el('a', 'deck-login-link', 'UYELIK / GIRIS');
-        login.href = '/account/auth.html';
-        sideEl.appendChild(login);
+        if (!authChecked) {
+          sideEl.appendChild(el('p', 'deck-side-hint', 'oturum kontrol ediliyor...'));
+        } else if (authSession?.user) {
+          const fallbackName = authSession.user.user_metadata?.display_name || authSession.user.email || 'uye';
+          const profile = el('div', 'deck-profile');
+          profile.append(el('strong', '', fallbackName), el('span', '', 'oturum acik'));
+          sideEl.append(profile, el('p', 'deck-side-hint is-warning', socialError || 'Uye agi hazirlaniyor. Ortak kanal ve oyun davetleri kullanilabilir.'));
+        } else {
+          sideEl.appendChild(el('p', 'deck-side-hint', 'Arkadaslik, ozel mesaj ve grup icin giris yap. Ortak kanal ve oyun davetleri acik kalir.'));
+          const login = el('a', 'deck-login-link', 'UYELIK / GIRIS');
+          login.href = '/account/auth.html';
+          sideEl.appendChild(login);
+        }
         renderPresence(sideEl);
         return;
       }
@@ -365,8 +398,15 @@
       const others = (typeof getWanderers === 'function' ? getWanderers() : []) || [];
       if (!others.length) root.appendChild(el('div', 'deck-empty', 'cevre sessiz.'));
       others.slice(0, 12).forEach((wanderer) => {
-        const row = el('div', 'deck-wanderer');
-        row.append(el('strong', '', wanderer.tag), el('span', '', wanderer.room || '/'));
+        const row = el('div', 'deck-presence-row');
+        const identity = el('div', 'deck-wanderer');
+        identity.append(el('strong', '', wanderer.tag), el('span', '', wanderer.room || '/'));
+        const actions = el('div', 'deck-social-actions');
+        actions.append(
+          button('CRUDE', 'deck-mini-btn', () => sendGameInvite('crude', wanderer.tag)),
+          button('DART', 'deck-mini-btn', () => sendGameInvite('dart', wanderer.tag))
+        );
+        row.append(identity, actions);
         root.appendChild(row);
       });
     };
@@ -388,13 +428,17 @@
       } catch (error) { setStatus(error.message, true); }
     };
 
-    const sendGameInvite = async (game) => {
-      if (!activeThread || activeThread.kind !== 'direct') { setStatus('Oyun daveti icin bir arkadas sohbeti ac.', true); return; }
-      const code = Array.from({ length: 5 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)]).join('');
+    const sendGameInvite = async (game, targetTag = '') => {
+      let target = cleanHandle(targetTag);
+      if (!target && activeThread?.kind === 'direct') {
+        target = cleanHandle((activeThread.members || []).find((member) => member.user_id !== social?.profile?.user_id)?.handle);
+      }
+      if (!target) { setStatus('Oyun daveti icin AKTIF SINYALLER listesinden bir gezgin sec.', true); return; }
       try {
-        await backend().sendChatMessage(activeThread.id, `${GAME_LINKS[game].label} daveti / oda ${code}`, 'game_invite', { game, code });
-        await openThread({ ...activeThread });
-      } catch (error) { setStatus(error.message, true); }
+        const result = await Promise.resolve(api()?.sendInvite?.(target, game));
+        if (!result || result.error) { setStatus(result?.error || 'Davet gonderilemedi.', true); return; }
+        setStatus(`${GAME_LINKS[game].label} daveti ${target} sinyaline gitti (oda ${result.code}).`);
+      } catch (error) { setStatus(error.message || 'Davet gonderilemedi.', true); }
     };
 
     const ensureOverlay = () => {
@@ -474,7 +518,7 @@
       document.removeEventListener('keydown', handleKeydown, { capture: true });
     }
     const receive = (entry) => {
-      if (!activeThread && overlay?.classList.contains('is-active')) appendEntry(entry);
+      if (overlay?.classList.contains('is-active') && (!activeThread || entry?.kind === 'invite')) appendEntry(entry);
       if (!entry?.self && !overlay?.classList.contains('is-active')) notifyChip(entry);
     };
 

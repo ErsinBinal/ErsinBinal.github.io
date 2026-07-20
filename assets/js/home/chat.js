@@ -67,9 +67,10 @@
       const tag = typeof getTag === 'function' ? getTag() : '';
       if (!payload || payload.tag === tag) return;
       const to = cleanTag(payload.to);
-      // v3'te broadcast uzerinden ozel mesaj kabul edilmez. Broadcast kimligi
-      // taklit edilebilir; DM ve davetler RLS korumali chat_messages'a gider.
-      if (to || payload.kind === 'invite') return;
+      // Metin DM'leri RLS korumali chat_messages'a gider. Oyun davetleri ise
+      // eski mantigini korur: yalniz o anki presence rumuzuna ucucu broadcast.
+      if (to && to !== tag) return;
+      if (to && payload.kind !== 'invite') return;
       const entry = {
         tag: cleanTag(payload.tag) || 'wanderer-????',
         room: String(payload.room || '/').slice(0, 24),
@@ -232,25 +233,19 @@
       }
     };
 
-    const sendInvite = async (toTag, game) => {
+    const sendInvite = (toTag, game) => {
       const to = cleanTag(toTag);
       if (!to) return { error: 'hedef rumuz gecersiz.' };
       if (!INVITE_GAMES[game]) return { error: 'bilinmeyen oyun.' };
       const code = randomRoomCode();
-      const backend = window.ConviviumBackend;
-      if (!backend?.openDirectChat) return { error: 'uye sohbeti hazir degil.' };
-      try {
-        const threadId = await backend.openDirectChat(to);
-        await backend.sendChatMessage(
-          threadId,
-          `${INVITE_GAMES[game]} daveti / oda ${code}`,
-          'game_invite',
-          { game, code }
-        );
-        return { threadId, code };
-      } catch (error) {
-        return { error: error.message || 'davet gonderilemedi.' };
-      }
+      const result = transmit({
+        to,
+        kind: 'invite',
+        game,
+        code,
+        body: `${INVITE_GAMES[game]} daveti / oda ${code}`
+      });
+      return result.error ? result : { entry: result.entry, code };
     };
 
     const command = (rawArg = '') => {

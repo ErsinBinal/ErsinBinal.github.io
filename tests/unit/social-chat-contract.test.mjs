@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const migration = await readFile(new URL('../../docs/database/2026-07-20-social-chat.sql', import.meta.url), 'utf8');
 const client = await readFile(new URL('../../assets/js/supabase-client.js', import.meta.url), 'utf8');
+const chat = await readFile(new URL('../../assets/js/home/chat.js', import.meta.url), 'utf8');
 const deck = await readFile(new URL('../../assets/js/home/chat-deck.js', import.meta.url), 'utf8');
 
 test('social identities use a case-insensitive unique handle', () => {
@@ -34,4 +35,11 @@ test('chat deck keeps global chat and provides member/group controls', () => {
   assert.match(deck, /createGroupChat/);
   assert.match(deck, /blockMember/);
   assert.match(deck, /transferGroupOwner/);
+});
+
+test('game invites remain ephemeral presence broadcasts and auth is checked separately', () => {
+  assert.match(chat, /const sendInvite[\s\S]+transmit\(\{[\s\S]+kind: 'invite'/);
+  assert.match(chat, /if \(to && payload\.kind !== 'invite'\) return/);
+  assert.match(deck, /authSession = await b\.getSession\(\)/);
+  assert.match(deck, /sendGameInvite\('crude', wanderer\.tag\)/);
 });

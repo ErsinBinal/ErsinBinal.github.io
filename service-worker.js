@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v208';
+const CACHE_NAME = 'convivium-v209';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -45,7 +45,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/bugy-cinema.css?v=3',
   '/assets/css/bugy-pet.css?v=7',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=29',
+  '/assets/css/home.css?v=30',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/js/lazy-load.js',
   '/assets/js/theme.js',
@@ -75,8 +75,8 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/coop-gate.js?v=1',
   '/assets/js/home/night-mode.js?v=1',
   '/assets/js/home/radio.js?v=1',
-  '/assets/js/home/chat.js?v=4',
-  '/assets/js/home/chat-deck.js?v=4',
+  '/assets/js/home/chat.js?v=5',
+  '/assets/js/home/chat-deck.js?v=5',
   '/assets/js/sfx.js?v=19',
   '/assets/js/home-protocol.js?v=86',
   '/assets/js/bugy-studio.js?v=6',
