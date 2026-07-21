@@ -55,6 +55,10 @@
       statusEl.textContent = value || '';
       statusEl.classList.toggle('is-error', error);
     };
+    // Olcum aleti nabzini durustce surer: yesil = broadcast kanali bagli.
+    const syncLink = () => {
+      if (overlay) overlay.dataset.link = api()?.isActive?.() ? 'live' : 'cold';
+    };
     const stamp = (ts) => new Date(ts || Date.now()).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     const cleanHandle = (value) => String(value || '').replace(/^@/, '').trim().toLowerCase();
     const isSchemaMissing = (error) => /PGRST202|schema cache|Could not find the function/i.test(String(error?.message || error || ''));
@@ -206,6 +210,7 @@
     };
 
     const refreshSocial = async () => {
+      syncLink();
       const b = backend();
       if (!b?.getSession) return null;
       try {
@@ -586,7 +591,7 @@
       overlay.setAttribute('aria-hidden', 'true');
       const frame = el('div', 'deck-frame');
       const header = el('header', 'deck-header');
-      header.append(el('span', 'deck-title', 'CONVIVIUM CHAT DECK'));
+      header.append(el('span', 'deck-beacon'), el('span', 'deck-title', 'CONVIVIUM CHAT DECK'));
       channelEl = el('button', 'deck-channel-title', 'ORTAK KANAL · UCUCU');
       channelEl.type = 'button';
       channelEl.addEventListener('click', showGlobal);
@@ -604,10 +609,12 @@
         event.stopPropagation();
         if (event.key === 'Enter') { event.preventDefault(); sendCurrent(); }
       });
+      const inputShell = el('span', 'deck-input-shell');
+      inputShell.appendChild(inputEl);
       const symbolButton = button('SEMBOLLER', 'deck-symbol-toggle', () => toggleSymbolShelf(symbolButton));
       symbolButton.setAttribute('aria-haspopup', 'dialog');
       symbolButton.setAttribute('aria-expanded', 'false');
-      inputRow.append(inputEl, symbolButton, button('GONDER', 'deck-send', sendCurrent));
+      inputRow.append(inputShell, symbolButton, button('GONDER', 'deck-send', sendCurrent));
       statusEl = el('div', 'deck-status', '');
       statusEl.setAttribute('role', 'status');
       feedWrap.append(feedEl, inputRow, statusEl);
@@ -615,6 +622,9 @@
       sideEl = el('aside', 'deck-side');
       main.append(feedWrap, sideEl);
       frame.append(header, main, el('footer', 'deck-footer', 'ortak kanal ucucu · ozel sohbetler yalniz arkadaslar arasinda · engeller sunucuda uygulanir'));
+      const corners = el('div', 'deck-corners');
+      ['tl', 'tr', 'bl', 'br'].forEach((pos) => corners.appendChild(el('span', `deck-corner deck-corner-${pos}`)));
+      frame.appendChild(corners);
       overlay.appendChild(frame);
       document.body.appendChild(overlay);
       return overlay;
@@ -651,6 +661,8 @@
       overlay.setAttribute('aria-hidden', 'false');
       document.body.classList.add('chat-deck-active');
       showGlobal();
+      syncLink();
+      setTimeout(syncLink, 1500);
       refreshSocial();
       clearInterval(refreshTimer);
       refreshTimer = setInterval(refreshSocial, 15000);
