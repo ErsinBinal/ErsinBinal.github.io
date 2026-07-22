@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Mon, 20 Jul 2026 17:40:00 +0300</lastBuildDate>
+    <lastBuildDate>Wed, 22 Jul 2026 12:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Kolektif Rituel: frekans esigi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-22-kolektif-rituel</guid>
+      <pubDate>Wed, 22 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Gunluk sinyal karti toplamalari artik site genelinde sayiliyor: gun icinde 5 gezgin karti toplarsa frekans esigi asilir ve o gun kart toplayan herkes +2 shard ortak rezonans bonusu alir. "frekans" komutu gunun nabzini ASCII barla gosterir.</description>
+    </item>
 
     <item>
       <title>Ozel mesaj merkezi ve tuslu telefon sembolleri</title>

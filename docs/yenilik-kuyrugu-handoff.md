@@ -129,8 +129,11 @@ göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
   ile girilen, zamanla kazilan statik katman. **TAMAMLANDI; canlı v205.**
 - **Gezgin Mirasi**: bilincli `depart` komutuyla tek cumlelik veda izi birakma;
   sonraki ziyaretci rastgele bir vedayla karsilanir (wall_marks benzeri tablo).
-- **Kolektif Rituel**: gunluk kart toplamada site geneli esik (orn. 10 collect)
-  asilirsa herkese ortak bonus — "frekans esigi asildi". site_events + count.
+- **Kolektif Rituel**: gunluk kart toplamada site geneli esik asilirsa herkese
+  ortak bonus. **TAMAMLANDI (esik 5, +2 shard); bkz.
+  [Kolektif Rituel Handoff](kolektif-rituel-handoff.md). SQL bekliyor.**
+  Kullanici karari (2026-07-22): 3 urunluk kuyruk onaylandi — 1) Kolektif
+  Rituel, 2) Ruya Gunlugu x Ruins, 3) finger @handle + arkadasa kart hediyesi.
 - **Sinyal Firtinasi (shard loteri)**: gunun seed'iyle belirli dakikalarda 30
   sn'lik firtina; o an sitede olup `catch signal` yazan shard kazanir.
 - **Kart Takasi**: gunluk kartlar bottle uzerinden takas edilir

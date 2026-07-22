@@ -1107,8 +1107,18 @@
   // Sema: docs/database/2026-07-02-site-events.sql (anon yalniz INSERT; SELECT yok).
   const SITE_EVENT_KEYS = new Set([
     'home.view', 'articles.view', 'command.first', 'oracle.ask',
-    'game.start', 'login.done', 'offline.node.solved'
+    'game.start', 'login.done', 'offline.node.solved',
+    'card.collect'
   ]);
+
+  // Kolektif Rituel: gunun toplam collect sayisi (yalniz sayi; kimlik yok).
+  // RPC kurulmadiysa hata firlatir; cagiran zarifce dusurur.
+  async function fetchCollectPulse(dateKey) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('collect_pulse', dateKey ? { p_date: dateKey } : {});
+    if (error) throw new Error(toMessage(error));
+    return Number(data) || 0;
+  }
   async function recordSiteEvent(eventKey, page) {
     try {
       if (!SITE_EVENT_KEYS.has(eventKey)) return false;
@@ -1201,6 +1211,7 @@
     catchBottle,
     listBottles,
     recordSiteEvent,
+    fetchCollectPulse,
     slugify
   };
 })();

@@ -1541,7 +1541,47 @@
         ].join('\n');
       };
 
-      const collectCommand = () => {
+      // Kolektif Rituel (assets/js/home/ritual-pulse.js): gunun site geneli
+      // collect sayisi esigi asarsa, o gun kart toplayanlara bir kez +2 shard.
+      const ritualClaimKey = 'convivium.ritual.claim';
+      const ritualPulseMod = (() => {
+        const createRitualPulse = window.ConviviumHome?.createRitualPulse;
+        if (typeof createRitualPulse !== 'function') {
+          console.error('[home-protocol] ritual-pulse module unavailable');
+          return null;
+        }
+        try {
+          return createRitualPulse({
+            fetchPulse: () => {
+              const backend = window.ConviviumBackend;
+              if (!backend?.fetchCollectPulse || !backend.isConfigured?.()) {
+                return Promise.reject(new Error('pulse backend yok'));
+              }
+              return backend.fetchCollectPulse();
+            },
+            getDayKey: cardDateKey,
+            ownsTodayCard: () => (state.inventory || []).includes(`card:${cardDateKey()}`),
+            hasClaimed: (day) => {
+              try { return localStorage.getItem(ritualClaimKey) === day; } catch { return false; }
+            },
+            markClaimed: (day) => {
+              try { localStorage.setItem(ritualClaimKey, day); } catch { /* best-effort */ }
+            },
+            onBonus: (amount, reason) => awardShards(amount, reason),
+            onStorm: (count) => {
+              audioCue('game.power');
+              pulse(640, 0.09);
+              if (consoleLine) consoleLine.textContent = `frekans esigi asildi: ${count} gezgin`;
+              screenSaverMod?.pushSignal?.(`frekans esigi asildi: ${count} gezgin`);
+            }
+          });
+        } catch (error) {
+          console.error('[home-protocol] ritual-pulse module failed', error);
+          return null;
+        }
+      })();
+
+      const collectCommand = async () => {
         if (!economyMod) return 'collect: economy unavailable';
         const dateKey = cardDateKey();
         const key = `card:${dateKey}`;
@@ -1553,8 +1593,20 @@
         scheduleWorldSave();
         awardShards(1, 'sinyal karti');
         audioCue('game.pickup');
+        // Kimliksiz kolektif sayaca dus (tablo/anahtar yoksa sessiz no-op).
+        window.ConviviumBackend?.recordSiteEvent?.('card.collect', '/');
         const card = buildDailyCard(dateKey);
-        return `collect: ${card.code} karti koleksiyona eklendi (+1 shard). cards ile bak.`;
+        const base = `collect: ${card.code} karti koleksiyona eklendi (+1 shard). cards ile bak.`;
+        if (!ritualPulseMod) return base;
+        // recordSiteEvent async; sayaca dusmesi icin kisa bir nefes.
+        await new Promise((resolve) => window.setTimeout(resolve, 400));
+        const claimLines = await ritualPulseMod.maybeClaim();
+        return claimLines.length ? [base, ...claimLines].join('\n') : base;
+      };
+
+      const frequencyCommand = async () => {
+        if (!ritualPulseMod) return 'frekans: modul hazir degil.';
+        return ritualPulseMod.report();
       };
 
       const cardsCommand = () => {
@@ -2816,6 +2868,12 @@
           description: 'gunun kartini koleksiyona ekler (gunde 1)',
           aliases: ['topla', 'collect card', 'karti topla'],
           action: collectCommand
+        },
+        {
+          command: 'frekans',
+          description: 'kolektif rituel: bugunku toplama sayisi ve esik durumu',
+          aliases: ['frequency', 'kolektif', 'nabiz'],
+          action: frequencyCommand
         },
         {
           command: 'cards',
