@@ -11,6 +11,12 @@
   const dartStatsEl = document.getElementById('dashboardDartStats');
   const leaderboardEl = document.getElementById('dashboardDartLeaderboard');
   const signOutButton = document.getElementById('dashboardSignOut');
+  const handleChipEl = document.getElementById('dashboardHandle');
+  const accessChipEl = document.getElementById('dashboardAccessChip');
+  const statStripEl = document.getElementById('dashboardStats');
+  const socialEl = document.getElementById('dashboardSocial');
+
+  const ROLE_LABELS = { admin: 'ARCHITECT', operator: 'OPERATOR', reader: 'READER' };
 
   const gameNames = {
     'cyberpunk-logic': 'Cyberpunk Logic',
@@ -947,6 +953,111 @@
     };
   }
 
+  // --- Kontrol guvertesi: ust kimlik cipleri ---
+  function renderIdentityChips(session, profile) {
+    if (handleChipEl) {
+      const handle = profile?.handle;
+      if (handle) {
+        handleChipEl.textContent = `@${handle}`;
+        handleChipEl.hidden = false;
+      } else {
+        handleChipEl.hidden = true;
+      }
+    }
+    if (accessChipEl) {
+      const role = String(profile?.role || 'reader').toLowerCase();
+      accessChipEl.textContent = `ACCESS: ${ROLE_LABELS[role] || role.toUpperCase()}`;
+      accessChipEl.hidden = false;
+    }
+  }
+
+  // --- Stat seridi: tek bakista durum ---
+  function renderStatStrip(worldState, scores, sessions, dartStats) {
+    if (!statStripEl) return;
+    const shards = Math.max(0, Number(worldState?.shards) || 0);
+    const inventory = Array.isArray(worldState?.inventory) ? worldState.inventory : [];
+    const cards = inventory.filter((item) => String(item).startsWith('card:')).length;
+    const unlocked = Array.isArray(worldState?.unlocked) ? worldState.unlocked.length : 0;
+    const dart = dartStats && !dartStats.error ? dartStats : null;
+    const dartWins = dart ? ['x01', 'atc', 'cricket'].reduce((sum, mode) => sum + (dart.byMode?.[mode]?.wins || 0), 0) : 0;
+    const dartLosses = dart ? ['x01', 'atc', 'cricket'].reduce((sum, mode) => sum + (dart.byMode?.[mode]?.losses || 0), 0) : 0;
+    const totalMinutes = Math.round((sessions || []).reduce((sum, row) => sum + (Number(row.duration_seconds) || 0), 0) / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+    const durationValue = hours > 0 ? `${hours}<small>s</small> ${mins}<small>dk</small>` : `${mins}<small>dk</small>`;
+
+    const tiles = [
+      { cls: '', k: 'shards', v: String(shards), meter: Math.min(100, Math.round((shards / 60) * 100)) },
+      { cls: 'is-cyan', k: 'kartlar', v: `${cards} <small>/ 30</small>`, meter: Math.min(100, Math.round((cards / 30) * 100)) },
+      { cls: '', k: 'acilan oda', v: `${unlocked} <small>/ 8</small>`, meter: Math.min(100, Math.round((unlocked / 8) * 100)) },
+      { cls: 'is-cyan', k: 'oyun', v: String((scores || []).length) },
+      { cls: '', k: 'dart G / M', v: `${dartWins}<small> / ${dartLosses}</small>` },
+      { cls: 'is-mag', k: 'protokol suresi', v: durationValue }
+    ];
+
+    statStripEl.innerHTML = tiles.map((t) => `
+      <div class="deck-stat ${t.cls}">
+        <div class="k">${t.k}</div>
+        <div class="v">${t.v}</div>
+        ${t.meter !== undefined ? `<div class="deck-meter"><i style="width:${t.meter}%"></i></div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  // --- Sosyal kimlik karti (yeni sosyal katmanin vitrini) ---
+  function renderSocial(session, profile, snapshot) {
+    if (!socialEl) return;
+    const handle = profile?.handle || snapshot?.profile?.handle;
+    if (!handle) {
+      socialEl.innerHTML = `<p class="deck-social-empty">Henuz bir gezgin adin (@handle) yok. Ana terminalde sohbet guverte'sini acinca kimligin olusur; sonra buradan arkadaslarini ve finger gorunurlugunu yonetirsin.</p>`;
+      return;
+    }
+    const friends = Array.isArray(snapshot?.friends) ? snapshot.friends.length : 0;
+    const incoming = Array.isArray(snapshot?.incoming) ? snapshot.incoming.length : 0;
+    const outgoing = Array.isArray(snapshot?.outgoing) ? snapshot.outgoing.length : 0;
+    const displayName = profile?.display_name || snapshot?.profile?.display_name || handle;
+    const role = ROLE_LABELS[String(profile?.role || 'reader').toLowerCase()] || 'READER';
+    const days = profile?.created_at
+      ? Math.max(0, Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000))
+      : null;
+    const isPublic = profile?.public_profile === true;
+
+    socialEl.innerHTML = `
+      <div class="deck-social-hero">
+        <div class="deck-avatar" aria-hidden="true">&#9670;</div>
+        <div class="who">
+          <b>@${escapeHtml(handle)}</b>
+          <span>${escapeHtml(displayName)} &middot; ${role}${days !== null ? ` &middot; ${days} gun` : ''}</span>
+        </div>
+      </div>
+      <div class="deck-social-stats">
+        <div><div class="n">${friends}</div><div class="l">arkadas</div></div>
+        <div><div class="n">${incoming}</div><div class="l">bekleyen davet</div></div>
+        <div><div class="n">${outgoing}</div><div class="l">giden davet</div></div>
+      </div>
+      <div class="deck-toggle-row">
+        <span class="t">gezgin kartin <b>${isPublic ? 'herkese acik' : 'gizli'}</b>${isPublic ? ` &middot; finger @${escapeHtml(handle)}` : ''}</span>
+        <button class="deck-switch ${isPublic ? '' : 'is-off'}" id="dashboardFingerToggle" type="button" aria-pressed="${isPublic}">${isPublic ? 'ACIK' : 'KAPALI'}</button>
+      </div>
+    `;
+
+    const toggle = document.getElementById('dashboardFingerToggle');
+    if (toggle && backend.setPublicProfile) {
+      toggle.addEventListener('click', async () => {
+        const next = !(profile.public_profile === true);
+        toggle.disabled = true;
+        try {
+          const applied = await backend.setPublicProfile(next);
+          profile.public_profile = applied === true;
+          renderSocial(session, profile, snapshot);
+        } catch (error) {
+          toggle.disabled = false;
+          toggle.textContent = 'HATA';
+        }
+      });
+    }
+  }
+
   async function init() {
     if (!backend || !backend.isConfigured()) {
       setStatus('Supabase baglantisi yapilandirilmadi.', 'error');
@@ -961,7 +1072,7 @@
         return;
       }
 
-      const [profile, scores, recommendations, sessions, dartStats, bugy, oracleProfile] = await Promise.all([
+      const [profile, scores, recommendations, sessions, dartStats, bugy, oracleProfile, worldState, social] = await Promise.all([
         backend.getProfile(),
         backend.fetchUserGameScores(40),
         backend.fetchUserAppRecommendations(30),
@@ -974,9 +1085,18 @@
           : Promise.resolve(null),
         backend.fetchOracleProfile
           ? backend.fetchOracleProfile().catch(() => null)
+          : Promise.resolve(null),
+        backend.fetchWorldState
+          ? backend.fetchWorldState().catch(() => null)
+          : Promise.resolve(null),
+        backend.getSocialSnapshot
+          ? backend.getSocialSnapshot().catch(() => null)
           : Promise.resolve(null)
       ]);
 
+      renderIdentityChips(session, profile);
+      renderStatStrip(worldState, scores, sessions, dartStats);
+      renderSocial(session, profile, social);
       renderProfile(session, profile);
       renderBugy(bugy, profile);
       renderGames(scores);

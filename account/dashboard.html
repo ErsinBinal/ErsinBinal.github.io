@@ -29,74 +29,81 @@
   <link rel="stylesheet" href="/assets/css/dart-dashboard.css?v=6">
   <link rel="stylesheet" href="/assets/css/bugy-v4.css?v=6">
   <link rel="stylesheet" href="/assets/css/bugy-pet.css?v=7">
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=1">
 </head>
 <body class="dashboard-page">
   <a class="skip-link" href="#content">Icerigi atla</a>
 
   <div class="site site-wide">
-    <header class="site-header dashboard-header" role="banner">
-      <div>
-        <p class="auth-kicker">CONVIVIUM ACCOUNT</p>
-        <h1>Dashboard</h1>
-        <p>Oyun skorları, oynama suresi ve uygulamalardan gelen son oneriler.</p>
-      </div>
+    <header class="site-header dashboard-header deck-topbar" role="banner">
+      <p class="deck-mark">CONVIVIUM <b>//</b> KONTROL GÜVERTESİ</p>
+      <span class="deck-topbar-spacer"></span>
+      <span id="dashboardHandle" class="deck-chip deck-chip-handle" hidden></span>
+      <span id="dashboardAccessChip" class="deck-chip" hidden></span>
       <nav class="auth-nav" role="navigation" aria-label="Site navigasyonu">
-        <a href="/" class="btn">&#8592; Ana Sayfa</a>
-        <a href="/account/auth.html" class="btn">Uyelik</a>
+        <a href="/" class="btn">&#8592; Ana Terminal</a>
         <a href="/tools/bugy-studio.html" class="btn">Bugy Studio</a>
-        <button id="dashboardSignOut" class="btn" type="button">Oturumu Kapat</button>
+        <button id="dashboardSignOut" class="btn btn-signout" type="button">Oturumu Kapat</button>
       </nav>
     </header>
 
     <main id="content" class="dashboard-layout" role="main">
-      <section class="system-status dashboard-status" aria-live="polite">
-        <strong>Durum</strong>
-        <p id="dashboardStatus">Yukleniyor...</p>
-      </section>
+      <div class="deck-headline">
+        <h1 class="deck-title">dashboard</h1>
+        <p class="deck-status" id="dashboardStatus" aria-live="polite">Yukleniyor...</p>
+      </div>
 
-      <section class="dashboard-profile system-status">
-        <strong>Profil</strong>
-        <div id="dashboardProfile" class="dashboard-profile-lines"></div>
-      </section>
+      <!-- Stat seridi: sayfayi acar acmaz "ben neredeyim" -->
+      <section id="dashboardStats" class="deck-stat-strip" aria-label="Ozet sayilar"></section>
 
-      <section class="dashboard-grid">
-        <article class="dashboard-panel">
-          <h2>Bugy</h2>
-          <div id="dashboardBugy" class="dashboard-list bugy-onboard"></div>
+      <section class="dashboard-grid deck-grid">
+        <article class="dashboard-panel deck-panel deck-social col-5" aria-label="Gezgin kimligi">
+          <h2>Gezgin Kimligi</h2>
+          <div id="dashboardSocial" class="deck-social-body"></div>
         </article>
 
-        <article class="dashboard-panel">
-          <h2>Oyun Gecmisi</h2>
-          <div id="dashboardGames" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel">
-          <h2>Son Oneriler</h2>
-          <div id="dashboardRecommendations" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Dart Istatistikleri</h2>
-          <div id="dashboardDartStats" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Dart Siralamasi</h2>
-          <div id="dashboardDartLeaderboard" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Son Oturumlar</h2>
-          <div id="dashboardSessions" class="dashboard-list"></div>
-        </article>
-
-        <article class="dashboard-panel dashboard-panel-wide">
-          <h2>Iz Raporu (Wrapped)</h2>
+        <article class="dashboard-panel deck-panel col-7">
+          <h2>Iz Raporu</h2>
           <div id="dashboardWrapped" class="dashboard-list dashboard-wrapped">
             <canvas id="wrappedCanvas" width="640" height="800" style="display:none; max-width: 100%; height: auto; border: 1px solid rgba(0, 255, 102, 0.35);" aria-label="Convivium iz raporu karti"></canvas>
             <p id="wrappedEmpty" style="display:none;">Henuz yeterli iz yok. Oyun oyna, oracle'a sor, dart at — rapor kendini yazar.</p>
             <button id="wrappedDownload" class="btn" type="button" style="display:none;">Karti indir (PNG)</button>
           </div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-7">
+          <h2>Oyun Gecmisi</h2>
+          <div id="dashboardGames" class="dashboard-list"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-5">
+          <h2>Dart Istatistikleri</h2>
+          <div id="dashboardDartStats" class="dashboard-list"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-6">
+          <h2>Son Oturumlar</h2>
+          <div id="dashboardSessions" class="dashboard-list"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-6">
+          <h2>Son Oneriler</h2>
+          <div id="dashboardRecommendations" class="dashboard-list"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-7">
+          <h2>Dart Siralamasi</h2>
+          <div id="dashboardDartLeaderboard" class="dashboard-list"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel col-5">
+          <h2>Bugy</h2>
+          <div id="dashboardBugy" class="dashboard-list bugy-onboard"></div>
+        </article>
+
+        <article class="dashboard-panel deck-panel deck-profile col-12">
+          <h2>Profil Detayi</h2>
+          <div id="dashboardProfile" class="dashboard-profile-lines"></div>
         </article>
       </section>
     </main>
@@ -104,11 +111,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=40" defer></script>
+  <script src="/assets/js/supabase-client.js?v=41" defer></script>
   <script src="/assets/js/dart-board-svg.js?v=3" defer></script>
   <script src="/assets/js/bugy-v4.js?v=12" defer></script>
   <script src="/assets/js/bugy-pet.js?v=12" defer></script>
-  <script src="/assets/js/dashboard.js?v=36" defer></script>
+  <script src="/assets/js/dashboard.js?v=37" defer></script>
   <script src="/assets/js/sfx.js?v=19" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌‌​​​‌‌​‌​​​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌​‌​​​​‌‌​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>

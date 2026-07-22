@@ -223,11 +223,24 @@
 
     const { data, error } = await client
       .from('profiles')
-      .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, companion_pref, created_at')
+      .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, companion_pref, created_at, handle, public_profile')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (error) throw new Error(toMessage(error));
+    if (error) {
+      // handle/public_profile kolonlari henuz kurulmadiysa (sosyal SQL yoksa)
+      // eski secime dus; dashboard sosyal karti zarifce bos gorunur.
+      if (/handle|public_profile/i.test(String(error.message || ''))) {
+        const legacy = await client
+          .from('profiles')
+          .select('user_id, display_name, first_name, last_name, role, profession, education, department, ai_consent, terms_version, terms_accepted_at, companion_pref, created_at')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (legacy.error) throw new Error(toMessage(legacy.error));
+        return legacy.data;
+      }
+      throw new Error(toMessage(error));
+    }
     return data;
   }
 

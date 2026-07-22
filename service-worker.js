@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v215';
+const CACHE_NAME = 'convivium-v216';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -37,6 +37,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/animations.css',
   '/assets/css/components.css?v=37',
   '/assets/css/dart-dashboard.css?v=6',
+  '/assets/css/dashboard.css?v=1',
   '/assets/css/articles.css?v=4',
   '/assets/css/dart-skorbord.css?v=3',
   '/assets/css/arcade-kit.css?v=36',
@@ -105,7 +106,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=40',
+  '/assets/js/supabase-client.js?v=41',
   '/assets/js/articles.js?v=7',
   '/assets/img/guides/apps-guide.svg',
   '/assets/img/guides/games-guide.svg',
@@ -123,7 +124,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/auth.js?v=6',
   '/assets/js/admin.js?v=37',
-  '/assets/js/dashboard.js?v=36',
+  '/assets/js/dashboard.js?v=37',
   '/manifest.json'
 ];
 
