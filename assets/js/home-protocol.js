@@ -1668,6 +1668,89 @@
         return ritualPulseMod.report();
       };
 
+      // --- finger @handle: opt-in kamusal gezgin karti -----------------------
+      const fingerErrorText = (error) => {
+        const msg = String(error?.message || '');
+        if (/login_required|giris|jwt/i.test(msg)) return 'finger: bu islem icin once giris yap (/account/auth.html).';
+        if (/does not exist|could not find|schema cache|function/i.test(msg)) return 'finger: kayit defteri henuz kurulmamis.';
+        return 'finger: kayit okunamadi.';
+      };
+
+      const fingerCommand = async (rawArg = '') => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.fingerProfile || !backend.isConfigured?.()) return 'finger: kayit defteri cevrimdisi.';
+        const arg = String(rawArg || '').trim();
+        const norm = arg.toLowerCase();
+        if (!arg) return 'finger: usage finger @handle | finger on | finger off';
+        if (norm === 'on' || norm === 'off') {
+          if (!authState.granted) return 'finger: gorunurluk ayari icin once giris yap.';
+          try {
+            const enabled = await backend.setPublicProfile(norm === 'on');
+            return enabled
+              ? 'finger: gezgin kartin artik HERKESE ACIK. (kapat: finger off)'
+              : 'finger: gezgin kartin gizlendi.';
+          } catch (error) {
+            return fingerErrorText(error);
+          }
+        }
+        try {
+          const row = await backend.fingerProfile(arg);
+          if (!row) return `finger: @${arg.replace(/^@/, '')} — kayit yok ya da kart kapali. (sahibi acmak icin: finger on)`;
+          return [
+            `] FINGER @${row.handle}`,
+            '',
+            `  gezgin   : ${row.display_name}`,
+            `  kayit    : ${row.member_since}`,
+            `  shards   : ${row.shards}`,
+            `  kartlar  : ${row.cards}`,
+            `  acilan oda: ${row.unlocked_rooms}`,
+            ']'
+          ].join('\n');
+        } catch (error) {
+          return fingerErrorText(error);
+        }
+      };
+
+      // --- gift: arkadasa sinyal karti hediyesi ------------------------------
+      const giftErrorText = (error) => {
+        const msg = String(error?.message || '');
+        if (/login_required|giris|jwt/i.test(msg)) return 'gift: hediye icin once giris yap (/account/auth.html).';
+        if (/card_invalid/i.test(msg)) return 'gift: kart bicimi card:YYYY-MM-DD olmali. (cards ile listele)';
+        if (/target_invalid/i.test(msg)) return 'gift: boyle bir gezgin yok (kendine de hediye olmaz).';
+        if (/not_friends/i.test(msg)) return 'gift: hediye yalniz engellenmemis KARSILIKLI arkadaslara gider.';
+        if (/card_not_owned/i.test(msg)) return 'gift: bu kart koleksiyonunda yok. (cards ile bak)';
+        if (/already_owned/i.test(msg)) return 'gift: o gezginde bu kart zaten var; kart sende kaldi.';
+        if (/does not exist|could not find|schema cache|function/i.test(msg)) return 'gift: hediye agi henuz kurulmamis.';
+        return 'gift: hediye gonderilemedi.';
+      };
+
+      const giftCommand = async (rawArg = '') => {
+        const backend = window.ConviviumBackend;
+        if (!backend?.giftCard || !backend.isConfigured?.()) return 'gift: hediye agi cevrimdisi.';
+        const match = String(rawArg || '').trim().match(/^(card:\d{4}-\d{2}-\d{2})\s+@?([\w-]{3,24})$/i);
+        if (!match) return 'gift: usage gift card:YYYY-MM-DD @handle  (kartlarin: cards)';
+        const card = match[1].toLowerCase();
+        const handle = match[2];
+        if (!(state.inventory || []).includes(card)) {
+          return 'gift: bu kart koleksiyonunda yok. (cards ile bak)';
+        }
+        try {
+          await backend.giftCard(handle, card);
+        } catch (error) {
+          return giftErrorText(error);
+        }
+        // Sunucu transferi yapti; yerel envanteri da dusur ve buluta yaz
+        // (union-merge kartlari geri dirilmesin diye hemen kaydet).
+        state.inventory = (state.inventory || []).filter((item) => item !== card);
+        persist();
+        scheduleWorldSave(true);
+        audioCue('game.pickup');
+        return [
+          `gift: ${card} karti @${handle} gezginine ucuruldu.`,
+          'ozel sohbetine hediye notu dustu; kart artik onun koleksiyonunda.'
+        ].join('\n');
+      };
+
       const cardsCommand = () => {
         const collected = (state.inventory || [])
           .filter((item) => item.startsWith('card:'))
@@ -2941,6 +3024,18 @@
           action: () => dreamsMod ? dreamsMod.dreamCommand() : 'dream: ruya defteri kayip.'
         },
         {
+          command: 'finger',
+          description: 'gezgin kartina bak: finger @handle · kendi kartin: finger on|off',
+          aliases: ['whois'],
+          action: () => fingerCommand('')
+        },
+        {
+          command: 'gift',
+          description: 'arkadasa sinyal karti hediye et: gift card:YYYY-MM-DD @handle',
+          aliases: ['hediye'],
+          action: () => giftCommand('')
+        },
+        {
           command: 'cards',
           description: 'toplanan sinyal karti koleksiyonunu listeler',
           aliases: ['kartlar', 'koleksiyon', 'collection'],
@@ -3798,6 +3893,25 @@
           const result = chatMod ? chatMod.say(rawBody) : 'say: sohbet modulu hazir degil.';
           // Basarili gonderim koruyucuda da kayar (hata metinleri "say:" ile baslar).
           if (!result.startsWith('say:')) screenSaverMod?.pushSignal?.(result);
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // finger/gift: handle ve card:tarih normalize'da bozulur; ham ele alinir.
+        if (/^\s*(finger|whois)(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*(finger|whois)\s*/i, '');
+          const result = await fingerCommand(rawArg);
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        if (/^\s*(gift|hediye)(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*(gift|hediye)\s*/i, '');
+          const result = await giftCommand(rawArg);
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';

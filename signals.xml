@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Wed, 22 Jul 2026 15:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Wed, 22 Jul 2026 18:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>finger ve kart hediyesi: gezgin kartlari sosyallesti</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-22-finger-hediye</guid>
+      <pubDate>Wed, 22 Jul 2026 18:00:00 +0300</pubDate>
+      <description>Eski internetin finger protokolu Convivium'da: "finger @handle" ile acik gezgin kartlarina bak (shards, kart sayisi, acilan odalar; varsayilan kapali, "finger on" ile acilir). "gift card:YYYY-MM-DD @handle" ile arkadaslara sinyal karti hediye edilir; transfer sunucuda atomiktir ve ozel sohbete not duser.</description>
+    </item>
 
     <item>
       <title>Ruya Gunlugu: site her gece ruya goruyor</title>

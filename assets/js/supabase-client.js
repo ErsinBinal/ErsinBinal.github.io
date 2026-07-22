@@ -1111,6 +1111,35 @@
     'card.collect'
   ]);
 
+  // finger: opt-in kamusal gezgin karti (yalniz ozet sayilar).
+  async function fingerProfile(handle) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('finger_profile', {
+      p_handle: String(handle || '').replace(/^@/, '').trim().slice(0, 24)
+    });
+    if (error) throw new Error(toMessage(error));
+    const row = Array.isArray(data) ? data[0] : data;
+    return row && row.handle ? row : null;
+  }
+
+  async function setPublicProfile(enabled) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('set_public_profile', { p_enabled: enabled === true });
+    if (error) throw new Error(toMessage(error));
+    return data === true;
+  }
+
+  // Kart hediyesi: sunucu tarafinda atomik transfer + ozel sohbete sistem notu.
+  async function giftCard(handle, card) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('gift_card', {
+      p_handle: String(handle || '').replace(/^@/, '').trim().slice(0, 24),
+      p_card: String(card || '').trim().slice(0, 20)
+    });
+    if (error) throw new Error(toMessage(error));
+    return data; // thread id
+  }
+
   // Ruya Gunlugu: verilen gunun kimliksiz olay agregatlari (key + toplam).
   async function fetchDreamStats(dateKey) {
     const client = await requireClient();
@@ -1221,6 +1250,9 @@
     recordSiteEvent,
     fetchCollectPulse,
     fetchDreamStats,
+    fingerProfile,
+    setPublicProfile,
+    giftCard,
     slugify
   };
 })();

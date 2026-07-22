@@ -136,8 +136,9 @@ göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
   Rituel, 2) Ruya Gunlugu x Ruins, 3) finger @handle + arkadasa kart hediyesi.
 - **Sinyal Firtinasi (shard loteri)**: gunun seed'iyle belirli dakikalarda 30
   sn'lik firtina; o an sitede olup `catch signal` yazan shard kazanir.
-- **Kart Takasi**: gunluk kartlar bottle uzerinden takas edilir
-  (`bottle throw card:2026-07-12`); kacan gunlerin kartlari dolasima girer.
+- **Kart Takasi**: **TAMAMLANDI — daha iyi tasarimla: rastgele bottle yerine
+  arkadasa dogrudan hediye (`gift card:YYYY-MM-DD @handle`) + `finger @handle`
+  kamusal gezgin karti (opt-in). SQL bekliyor.**
 - **Oracle Ruya Gunlugu**: **TAMAMLANDI (cron'suz, deterministik seed+agregat
   tasarimiyla); 7 gun onceki ruya /ruins kalintisi olur. SQL bekliyor.**
 - **Webring/Antenna**: baska kisisel sitelerin RSS'lerini Worker'da toplayan
