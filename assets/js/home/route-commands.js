@@ -185,6 +185,13 @@
       description: 'site manifest dosyasini acar',
       aliases: ['manifest file'],
       href: 'manifest.json'
+    },
+    {
+      command: 'hologram',
+      description: 'kurtarilmis 3D kalintilarin hologram kasasini acar',
+      aliases: ['holo', 'holo scan', 'hologram kasasi', 'kasada tara'],
+      routeKey: 'holo',
+      fallback: '/holo/'
     }
   ].map(freezeEntry));
 

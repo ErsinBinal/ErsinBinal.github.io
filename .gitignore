@@ -10,3 +10,7 @@ node_modules/
 # Playwright
 playwright-report/
 test-results/
+
+# Meshy API anahtari (asla commit edilmez)
+.meshy-key
+

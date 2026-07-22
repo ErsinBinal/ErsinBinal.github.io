@@ -1363,12 +1363,13 @@
           path: base.path,
           title: base.title,
           room: {
-            look: `${base.room.look} Kosede asinmis bir ruya kaydi: ${ruinsRelic.id}.`,
+            look: `${base.room.look} Kosede asinmis bir ruya kaydi: ${ruinsRelic.id}. Kalintilarin 3D taramasi icin: hologram.`,
             objects: {
               ...base.room.objects,
-              ruya: `Yedi gun onceki ruyanin tozu (${ruinsRelic.dateKey}). Oku: cat ${ruinsRelic.id}`
+              ruya: `Yedi gun onceki ruyanin tozu (${ruinsRelic.dateKey}). Oku: cat ${ruinsRelic.id}`,
+              hologram: 'Kalintilarin yesil hologram taramasi. Ac: hologram'
             },
-            navigation: [...base.room.navigation, `cat ${ruinsRelic.id}`]
+            navigation: [...base.room.navigation, `cat ${ruinsRelic.id}`, 'hologram']
           }
         };
       })();

@@ -35,14 +35,15 @@ const expectedCommands = [
   'dashboard',
   'admin',
   'universe',
-  'open manifest'
+  'open manifest',
+  'hologram'
 ];
 
 test('route registry preserves command count and order', () => {
   const home = loadModule();
 
   assert.equal(typeof home.createRouteCommands, 'function');
-  assert.equal(home.routeCommandRegistry.length, 23);
+  assert.equal(home.routeCommandRegistry.length, 24);
   assert.deepEqual(
     Array.from(home.routeCommandRegistry, (entry) => entry.command),
     expectedCommands
@@ -54,8 +55,8 @@ test('route registry snapshot preserves every label, alias and target', () => {
   const snapshot = JSON.stringify(home.routeCommandRegistry);
   const digest = createHash('sha256').update(snapshot).digest('hex');
 
-  assert.equal(home.routeCommandRegistry.reduce((total, entry) => total + entry.aliases.length, 0), 99);
-  assert.equal(digest, 'cb909336311656fcf73906d396408888d044ec9372f0fc98c137786fff2b2492');
+  assert.equal(home.routeCommandRegistry.reduce((total, entry) => total + entry.aliases.length, 0), 103);
+  assert.equal(digest, 'd12caa301a47e595c2ea8e411e26da91bee755f3d4b389778bf665476d9a40b9');
 });
 
 test('factory preserves route targets, fallbacks and origin behavior', () => {
@@ -74,14 +75,15 @@ test('factory preserves route targets, fallbacks and origin behavior', () => {
   const definitions = home.createRouteCommands({ route, goTo, scrollToOrigin });
   const byCommand = new Map(definitions.map((definition) => [definition.command, definition]));
 
-  assert.equal(definitions.length, 23);
+  assert.equal(definitions.length, 24);
   assert.equal(byCommand.get('home').action(), 'origin selected');
   assert.equal(byCommand.get('open dossier').action(), '/mapped/dossier');
   assert.equal(byCommand.get('open oracle').action(), '/mapped/oracle');
   assert.equal(byCommand.get('run logic').action(), '/games/cyberpunk-logic-game.html');
-  assert.equal(byCommand.get('admin').action(), '/admin/');
   assert.equal(byCommand.get('open manifest').action(), 'manifest.json');
-  assert.equal(routeCalls.length, 21);
+  assert.equal(byCommand.get('hologram').action(), '/holo/');
+  assert.equal(byCommand.get('open manifest').action(), 'manifest.json');
+  assert.equal(routeCalls.length, 22);
 
   for (const definition of definitions) {
     assert.equal(typeof definition.command, 'string');

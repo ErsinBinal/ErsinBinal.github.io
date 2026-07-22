@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Wed, 22 Jul 2026 18:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Wed, 22 Jul 2026 21:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Hologram Kasasi: kurtarilmis 3D kalintilar</title>
+      <link>https://ersinbinal.github.io/holo/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-22-hologram-kasasi</guid>
+      <pubDate>Wed, 22 Jul 2026 21:00:00 +0300</pubDate>
+      <description>Sinyal Arkeolojisi'nin 3D evrimi: terminalin kurtarilmis kalintilari (bozuk terminal, sinyal rolesi, arcade dolabi, prizma, atil drone, veri cekirdegi) artik yesil tel-kafes hologram olarak taraniyor. Surukle-cevir; her gun bir kalinti "gunun buluntusu" olur. Terminalde "hologram" komutu ya da Ruins odasindan ulasilir.</description>
+    </item>
 
     <item>
       <title>finger ve kart hediyesi: gezgin kartlari sosyallesti</title>

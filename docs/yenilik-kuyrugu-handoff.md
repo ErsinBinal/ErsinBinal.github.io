@@ -127,6 +127,9 @@ göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
   (bozuk 1997 BBS sayfasi, yarim TODO.txt, kurtarilmis oyun ekrani). `cd /ruins`
   ile girilen, zamanla kazilan statik katman. **TAMAMLANDI; canlı v205.**
+  **3D evrimi: Hologram Kasasi (/holo/, `hologram` komutu) — Meshy ile uretilen
+  6 kalinti yesil hologram olarak taranir; canli. Sprite hatti (8 prop GLB)
+  bankada, ayri dilimde.**
 - **Gezgin Mirasi**: bilincli `depart` komutuyla tek cumlelik veda izi birakma;
   sonraki ziyaretci rastgele bir vedayla karsilanir (wall_marks benzeri tablo).
 - **Kolektif Rituel**: gunluk kart toplamada site geneli esik asilirsa herkese

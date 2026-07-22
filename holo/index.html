@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-0791C9FB
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-0791C9FB">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hologram Kasasi - Convivium</title>
+  <meta name="description" content="Convivium terminalinin kurtarilmis 3D kalintilari: yesil hologram olarak taranan sinyal arkeolojisi.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/holo/">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self'; font-src 'self';">
+  <meta name="theme-color" content="#00ff66">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <style>
+    :root {
+      --green: #00ff66;
+      --green-soft: #caffd8;
+      --cyan: #00eaff;
+      --muted: #6a9f74;
+      --ground: #050d05;
+      --mono: 'Share Tech Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: var(--ground);
+      color: var(--green-soft);
+      font-family: var(--mono);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 5;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);
+      mix-blend-mode: multiply; opacity: 0.5;
+    }
+    header {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 11px 16px; border-bottom: 1px solid rgba(0,255,102,0.3);
+      background: rgba(4,14,8,0.8); z-index: 6;
+    }
+    header .mark { font-size: 0.72rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+    header .mark b { color: var(--green); font-weight: 400; }
+    header .spacer { margin-left: auto; }
+    .back {
+      color: var(--green); text-decoration: none; font-size: 0.76rem; letter-spacing: 0.06em;
+      border: 1px solid rgba(0,255,102,0.4); padding: 6px 12px; background: rgba(0,255,102,0.05);
+    }
+    .back:hover, .back:focus-visible { background: rgba(0,255,102,0.14); color: var(--green-soft); outline: none; }
+
+    main { flex: 1; position: relative; min-height: 0; }
+    #stage { position: absolute; inset: 0; display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+    #stage:active { cursor: grabbing; }
+
+    .overlay-top {
+      position: absolute; left: 16px; top: 14px; z-index: 4; pointer-events: none;
+      text-shadow: 0 0 10px rgba(0,255,102,0.4);
+    }
+    .overlay-top h1 { font-size: clamp(1.1rem, 3.4vw, 1.6rem); font-weight: 400; letter-spacing: 0.06em; color: var(--green); }
+    .overlay-top h1::before { content: '] '; color: var(--muted); }
+    .relic-meta { color: var(--cyan); font-size: 0.8rem; margin-top: 4px; max-width: 60ch; }
+    .relic-note { color: var(--muted); font-size: 0.76rem; margin-top: 2px; }
+    .scan-label { position: absolute; right: 16px; top: 14px; z-index: 4; color: var(--muted); font-size: 0.68rem; letter-spacing: 0.14em; text-align: right; pointer-events: none; }
+
+    .loader, .fallback {
+      position: absolute; inset: 0; z-index: 3; display: grid; place-items: center;
+      color: var(--muted); font-size: 0.9rem; text-align: center; padding: 24px;
+    }
+    .fallback { display: none; }
+    .fallback a { color: var(--cyan); }
+
+    .rail {
+      display: flex; gap: 8px; padding: 12px 16px; overflow-x: auto;
+      border-top: 1px solid rgba(0,255,102,0.3); background: rgba(4,14,8,0.8); z-index: 6;
+    }
+    .rail button {
+      flex: none; font: inherit; font-size: 0.72rem; letter-spacing: 0.05em;
+      padding: 8px 12px; border: 1px solid rgba(0,255,102,0.3); background: rgba(0,255,102,0.04);
+      color: var(--muted); cursor: pointer; white-space: nowrap;
+    }
+    .rail button:hover, .rail button:focus-visible { color: var(--green-soft); border-color: rgba(0,234,255,0.5); outline: none; }
+    .rail button.is-active { color: var(--green); border-color: var(--green); background: rgba(0,255,102,0.1); }
+    .rail button .daily { color: var(--cyan); }
+    .hint { padding: 0 16px 12px; color: var(--muted); font-size: 0.72rem; background: rgba(4,14,8,0.8); z-index: 6; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="mark">CONVIVIUM <b>//</b> HOLOGRAM KASASI</span>
+    <span class="spacer"></span>
+    <a class="back" href="/">&#8592; Ana Terminal</a>
+  </header>
+
+  <main>
+    <canvas id="stage"></canvas>
+    <div class="overlay-top">
+      <h1 id="relicTitle">SINYAL ARKEOLOJISI</h1>
+      <p class="relic-meta" id="relicMeta">kalinti taraniyor...</p>
+      <p class="relic-note" id="relicNote"></p>
+    </div>
+    <div class="scan-label">HOLO-SCAN v1<br>GB-CVM ARCHIVE</div>
+    <div class="loader" id="loader">hologram derleniyor...</div>
+    <div class="fallback" id="fallback">
+      Bu cihaz 3D hologram taramasini calistiramiyor (WebGL yok).<br>
+      Kalintilari terminalden metin olarak okuyabilirsin: <a href="/">ana terminal</a> &rarr; <em>cd ruins</em>.
+    </div>
+  </main>
+
+  <nav class="rail" id="rail" aria-label="Kalinti secimi"></nav>
+  <p class="hint">Surukle: cevir &middot; iki parmak / tekerlek: yakinlas &middot; her gun bir kalinti "gunun buluntusu" olur.</p>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    const RELICS = [
+      { file: 'holo-01-terminal', title: 'KAPANMAYAN TERMINAL', meta: 'CONVIVIUM RELAY // NODE 04 — 1997', note: 'Tasiyici sesi kaydin sonunda hala acik.' },
+      { file: 'holo-02-relay', title: 'SINYAL ROLESI', meta: 'terk edilmis anten dizisi', note: 'Frekans hala aliyor; kimse dinlemiyor.' },
+      { file: 'holo-03-arcade', title: 'KAYIP ARCADE', meta: 'RECOVERED SCREEN 03', note: 'Oyun baslamadan once oyuncunun adini unutmus.' },
+      { file: 'holo-04-prism', title: 'PRIZMA', meta: '/vault muhur anahtari', note: 'Shard ve coolant burada birlesti.' },
+      { file: 'holo-05-drone', title: 'ATIL DRONE', meta: 'kulucka oncesi model', note: 'Tek gozu sonuk; yine de seni izliyor gibi.' },
+      { file: 'holo-06-core', title: 'VERI CEKIRDEGI', meta: '/core arsiv yiginı', note: 'Kablolar dolanmis, paneller sonuk.' }
+    ];
+
+    const canvas = document.getElementById('stage');
+    const loader = document.getElementById('loader');
+    const fallback = document.getElementById('fallback');
+    const railEl = document.getElementById('rail');
+    const titleEl = document.getElementById('relicTitle');
+    const metaEl = document.getElementById('relicMeta');
+    const noteEl = document.getElementById('relicNote');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Gunun buluntusu: tarih hash'i (Ruins ile ayni ruh).
+    const dayKey = new Date().toISOString().slice(0, 10);
+    const dayHash = Array.from(dayKey).reduce((h, c) => ((h * 31) + c.charCodeAt(0)) >>> 0, 7);
+    const dailyIndex = dayHash % RELICS.length;
+
+    let THREE, GLTFLoader, renderer, scene, camera, group, gltfLoader;
+    let active = -1, rotY = 0, rotX = 0.1, dragging = false, lastX = 0, lastY = 0, dist = 3, autoSpin = !reduce;
+    let uniformsList = [];
+    const clock = { t: 0 };
+
+    // --- Hologram shader: yesil, fresnel kenar, tarama-cizgisi + gecen tarama bandi ---
+    const holoVertex = `
+      varying vec3 vNormalV; varying vec3 vViewDir; varying vec4 vClip; varying float vWorldY;
+      void main() {
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        vNormalV = normalize(normalMatrix * normal);
+        vViewDir = normalize(-mv.xyz);
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vWorldY = wp.y;
+        vClip = projectionMatrix * mv;
+        gl_Position = vClip;
+      }`;
+    const holoFragment = `
+      precision mediump float;
+      uniform float uTime; uniform vec3 uColor; uniform float uScan;
+      varying vec3 vNormalV; varying vec3 vViewDir; varying vec4 vClip; varying float vWorldY;
+      void main() {
+        float fres = pow(1.0 - abs(dot(normalize(vViewDir), normalize(vNormalV))), 2.4);
+        vec2 sc = vClip.xy / vClip.w;
+        float scan = 0.5 + 0.5 * sin((sc.y * 0.5 + 0.5) * 260.0 - uTime * 2.0);
+        scan = mix(1.0, scan, uScan);
+        float sweep = smoothstep(0.06, 0.0, abs(fract(vWorldY * 0.35 - uTime * 0.18) - 0.5) - 0.02);
+        float flick = 0.92 + 0.08 * sin(uTime * 40.0);
+        float body = 0.16 + fres * 0.9;
+        vec3 col = uColor * (body + sweep * 0.8) * scan * flick;
+        float alpha = clamp(body * 0.7 + fres * 0.5 + sweep * 0.5, 0.05, 0.95);
+        gl_FragColor = vec4(col, alpha);
+      }`;
+
+    function makeHoloMaterial() {
+      const u = { uTime: { value: 0 }, uColor: { value: new THREE.Color(0x00ff88) }, uScan: { value: reduce ? 0.0 : 1.0 } };
+      uniformsList.push(u);
+      return new THREE.ShaderMaterial({
+        uniforms: u, vertexShader: holoVertex, fragmentShader: holoFragment,
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide
+      });
+    }
+
+    async function boot() {
+      try {
+        THREE = await import('three');
+        ({ GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js'));
+      } catch (e) {
+        loader.style.display = 'none'; fallback.style.display = 'grid'; return;
+      }
+      const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+      if (!gl) { loader.style.display = 'none'; fallback.style.display = 'grid'; return; }
+
+      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(38, 1, 0.01, 100);
+      group = new THREE.Group();
+      scene.add(group);
+      gltfLoader = new GLTFLoader();
+      resize();
+      window.addEventListener('resize', resize, { passive: true });
+      bindPointer();
+      buildRail();
+      animate();
+      await loadRelic(dailyIndex);
+    }
+
+    function resize() {
+      const w = canvas.clientWidth || window.innerWidth;
+      const h = canvas.clientHeight || window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+
+    async function loadRelic(index) {
+      if (index === active) return;
+      active = index;
+      const r = RELICS[index];
+      loader.style.display = 'grid';
+      titleEl.textContent = r.title;
+      metaEl.textContent = r.meta;
+      noteEl.textContent = r.note;
+      [...railEl.children].forEach((b, i) => b.classList.toggle('is-active', i === index));
+      // eski modeli temizle
+      while (group.children.length) {
+        const c = group.children.pop();
+        c.traverse?.((o) => { o.geometry?.dispose?.(); o.material?.dispose?.(); });
+        group.remove(c);
+      }
+      uniformsList = [];
+      try {
+        const gltf = await gltfLoader.loadAsync('/assets/models/holo/' + r.file + '.glb');
+        const obj = gltf.scene;
+        obj.traverse((o) => {
+          if (o.isMesh) {
+            o.material = makeHoloMaterial();
+            const wire = new THREE.LineSegments(
+              new THREE.EdgesGeometry(o.geometry, 28),
+              new THREE.LineBasicMaterial({ color: 0x00ff66, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })
+            );
+            o.add(wire);
+          }
+        });
+        // normalize: merkezle + olcekle
+        const box = new THREE.Box3().setFromObject(obj);
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const scale = 2.0 / (Math.max(size.x, size.y, size.z) || 1);
+        obj.position.sub(center);
+        const holder = new THREE.Group();
+        holder.add(obj);
+        holder.scale.setScalar(scale);
+        group.add(holder);
+        dist = 3.2;
+      } catch (e) {
+        titleEl.textContent = 'TARAMA HATASI';
+        metaEl.textContent = r.file + '.glb yuklenemedi.';
+      }
+      loader.style.display = 'none';
+    }
+
+    function bindPointer() {
+      canvas.addEventListener('pointerdown', (e) => { dragging = true; autoSpin = false; lastX = e.clientX; lastY = e.clientY; canvas.setPointerCapture?.(e.pointerId); });
+      canvas.addEventListener('pointermove', (e) => {
+        if (!dragging) return;
+        rotY += (e.clientX - lastX) * 0.008;
+        rotX = Math.max(-1.3, Math.min(1.3, rotX + (e.clientY - lastY) * 0.008));
+        lastX = e.clientX; lastY = e.clientY;
+      });
+      const stop = () => { dragging = false; };
+      canvas.addEventListener('pointerup', stop);
+      canvas.addEventListener('pointercancel', stop);
+      canvas.addEventListener('wheel', (e) => { e.preventDefault(); dist = Math.max(1.6, Math.min(7, dist + Math.sign(e.deltaY) * 0.3)); }, { passive: false });
+    }
+
+    function buildRail() {
+      RELICS.forEach((r, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = (i === dailyIndex ? '<span class="daily">&#9670; </span>' : '') + r.title;
+        b.addEventListener('click', () => loadRelic(i));
+        railEl.appendChild(b);
+      });
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      clock.t += 0.016;
+      if (autoSpin) rotY += 0.0032;
+      group.rotation.y = rotY;
+      group.rotation.x = rotX;
+      const tt = reduce ? 0 : clock.t;
+      uniformsList.forEach((u) => { u.uTime.value = tt; });
+      camera.position.set(0, 0.3, dist);
+      camera.lookAt(0, 0, 0);
+      if (renderer) renderer.render(scene, camera);
+    }
+
+    boot();
+  </script>
+  <script src="/assets/js/service-worker-register.js?v=4" defer></script>
+  <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌‌​​​‌‌​‌​​​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌‌​​‌​​‌‌​‌​​​​‌‌​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
+  <script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>

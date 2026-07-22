@@ -27,6 +27,7 @@
     realistsBar: '/tools/the-realists-bar.html',
     paradox: '/tools/paradox-terminal.html',
     bugyStudio: '/tools/bugy-studio.html',
-    ekolAynasi: '/tools/ekol-aynasi.html'
+    ekolAynasi: '/tools/ekol-aynasi.html',
+    holo: '/holo/'
   });
 })();
