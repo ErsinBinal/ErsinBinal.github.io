@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Wed, 22 Jul 2026 12:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Wed, 22 Jul 2026 15:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Ruya Gunlugu: site her gece ruya goruyor</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-22-ruya-gunlugu</guid>
+      <pubDate>Wed, 22 Jul 2026 15:00:00 +0300</pubDate>
+      <description>"dream" komutu sitenin dun gece gordugu ortak ruyayi okur: dunun kimliksiz sinyal toplamlari gunun seed'iyle deterministik bir ruya metnine dokunur — herkes ayni ruyayi gorur. Yedi gun onceki ruya /ruins'e asinmis bir kalinti olarak duser.</description>
+    </item>
 
     <item>
       <title>Kolektif Rituel: frekans esigi</title>

@@ -170,6 +170,7 @@ const mustPrecache = [
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=2',
   '/assets/js/home/ritual-pulse.js?v=1',
+  '/assets/js/home/dreams.js?v=1',
   '/assets/js/home/world.js?v=2',
   '/assets/js/home/economy.js?v=1',
   '/assets/js/home/shop.js?v=1',
@@ -186,9 +187,9 @@ const mustPrecache = [
   '/assets/js/home/night-mode.js?v=1',
   '/assets/js/home/radio.js?v=1',
   '/assets/js/home/chat.js?v=5',
-  '/assets/js/supabase-client.js?v=38',
+  '/assets/js/supabase-client.js?v=39',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=87',
+  '/assets/js/home-protocol.js?v=88',
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/service-worker-register.js?v=4'
 ];
@@ -211,7 +212,7 @@ const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
 const vfsRef = '/assets/js/home/vfs.js?v=3';
 const navigatorRef = '/assets/js/home/navigator.js?v=2';
 const chatSymbolsRef = '/assets/js/home/chat-symbols.js?v=1';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=87';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=88';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
 const ruinsIndex = indexHtml.indexOf(ruinsRef);

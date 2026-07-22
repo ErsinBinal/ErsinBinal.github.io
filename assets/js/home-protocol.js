@@ -148,6 +148,7 @@
       let economyMod = null;
       let shopMod = null;
       let ruinsMod = null;
+      let dreamsMod = null;
       let navigatorMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
@@ -1324,6 +1325,64 @@
         }
       })();
 
+      // Ruya Gunlugu (assets/js/home/dreams.js): dunun agregat sinyalleri
+      // gunun seed'iyle deterministik ruyaya dokunur; 7 gun onceki ruya
+      // /ruins'e asinmis kalinti olarak dusurulur (asagida kompozisyon).
+      dreamsMod = (() => {
+        const createDreams = window.ConviviumHome?.createDreams;
+        if (typeof createDreams !== 'function') {
+          console.error('[home-protocol] Dreams module unavailable');
+          return null;
+        }
+        try {
+          return createDreams({
+            fetchStats: (dateKey) => {
+              const backend = window.ConviviumBackend;
+              if (!backend?.fetchDreamStats || !backend.isConfigured?.()) {
+                return Promise.reject(new Error('dream backend yok'));
+              }
+              return backend.fetchDreamStats(dateKey);
+            },
+            getDayKey: () => new Date().toISOString().slice(0, 10)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Dreams module failed', error);
+          return null;
+        }
+      })();
+
+      // Ruins + Ruya kompozisyonu: vfs/world ayni path'e ikinci mount'u
+      // yok saydigi icin birlesik nesneler BURADA kurulur (ruins.js sabit
+      // kalir; kalinti senkron uretildigi icin cevrimdisi da calisir).
+      const ruinsRelic = dreamsMod?.relic?.() || null;
+      const composedRuinsExtension = (() => {
+        if (!ruinsMod) return null;
+        if (!ruinsRelic) return ruinsMod.roomExtension;
+        const base = ruinsMod.roomExtension;
+        return {
+          path: base.path,
+          title: base.title,
+          room: {
+            look: `${base.room.look} Kosede asinmis bir ruya kaydi: ${ruinsRelic.id}.`,
+            objects: {
+              ...base.room.objects,
+              ruya: `Yedi gun onceki ruyanin tozu (${ruinsRelic.dateKey}). Oku: cat ${ruinsRelic.id}`
+            },
+            navigation: [...base.room.navigation, `cat ${ruinsRelic.id}`]
+          }
+        };
+      })();
+      const composedRuinsMount = (() => {
+        if (!ruinsMod) return null;
+        if (!ruinsRelic) return ruinsMod.vfsMount;
+        const base = ruinsMod.vfsMount;
+        return {
+          path: base.path,
+          files: [...base.files, ruinsRelic.id],
+          documents: { ...base.documents, [ruinsRelic.id]: ruinsRelic.body }
+        };
+      })();
+
       worldMod = (() => {
         const createWorld = window.ConviviumHome?.createWorld;
         if (typeof createWorld !== 'function') {
@@ -1342,7 +1401,7 @@
               state.discovered = [...new Set([...state.discovered, path])];
               persist();
             },
-            roomExtensions: ruinsMod ? [ruinsMod.roomExtension] : []
+            roomExtensions: composedRuinsExtension ? [composedRuinsExtension] : []
           });
         } catch (error) {
           console.error('[home-protocol] World module failed', error);
@@ -1381,7 +1440,7 @@
               awardShards(2, `kesif ${path}`);
             },
             renderRoom: roomPanel,
-            mounts: ruinsMod ? [ruinsMod.vfsMount] : []
+            mounts: composedRuinsMount ? [composedRuinsMount] : []
           });
         } catch (error) {
           console.error('[home-protocol] VFS module failed', error);
@@ -2874,6 +2933,12 @@
           description: 'kolektif rituel: bugunku toplama sayisi ve esik durumu',
           aliases: ['frequency', 'kolektif', 'nabiz'],
           action: frequencyCommand
+        },
+        {
+          command: 'dream',
+          description: 'sitenin dun gece gordugu ortak ruyayi okur',
+          aliases: ['ruya', 'rüya', 'dun gece', 'ruya gunlugu'],
+          action: () => dreamsMod ? dreamsMod.dreamCommand() : 'dream: ruya defteri kayip.'
         },
         {
           command: 'cards',

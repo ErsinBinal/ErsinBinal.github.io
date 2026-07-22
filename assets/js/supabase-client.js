@@ -1111,6 +1111,14 @@
     'card.collect'
   ]);
 
+  // Ruya Gunlugu: verilen gunun kimliksiz olay agregatlari (key + toplam).
+  async function fetchDreamStats(dateKey) {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('dream_stats', { p_date: dateKey });
+    if (error) throw new Error(toMessage(error));
+    return Array.isArray(data) ? data : [];
+  }
+
   // Kolektif Rituel: gunun toplam collect sayisi (yalniz sayi; kimlik yok).
   // RPC kurulmadiysa hata firlatir; cagiran zarifce dusurur.
   async function fetchCollectPulse(dateKey) {
@@ -1212,6 +1220,7 @@
     listBottles,
     recordSiteEvent,
     fetchCollectPulse,
+    fetchDreamStats,
     slugify
   };
 })();

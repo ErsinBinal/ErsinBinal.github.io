@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v213';
+const CACHE_NAME = 'convivium-v214';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -63,6 +63,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=2',
   '/assets/js/home/ritual-pulse.js?v=1',
+  '/assets/js/home/dreams.js?v=1',
   '/assets/js/home/world.js?v=2',
   '/assets/js/home/economy.js?v=1',
   '/assets/js/home/shop.js?v=1',
@@ -80,7 +81,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/chat-symbols.js?v=1',
   '/assets/js/home/chat-deck.js?v=8',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=87',
+  '/assets/js/home-protocol.js?v=88',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=4',
   '/assets/js/origin-beacon.js?v=1',
@@ -104,7 +105,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=38',
+  '/assets/js/supabase-client.js?v=39',
   '/assets/js/articles.js?v=7',
   '/assets/img/guides/apps-guide.svg',
   '/assets/img/guides/games-guide.svg',

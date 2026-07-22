@@ -138,8 +138,8 @@ göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
   sn'lik firtina; o an sitede olup `catch signal` yazan shard kazanir.
 - **Kart Takasi**: gunluk kartlar bottle uzerinden takas edilir
   (`bottle throw card:2026-07-12`); kacan gunlerin kartlari dolasima girer.
-- **Oracle Ruya Gunlugu**: Worker cron her gece site_events toplamlarindan tek
-  paragraflik anonim "ruya" yazar; `dream` komutuyla okunur.
+- **Oracle Ruya Gunlugu**: **TAMAMLANDI (cron'suz, deterministik seed+agregat
+  tasarimiyla); 7 gun onceki ruya /ruins kalintisi olur. SQL bekliyor.**
 - **Webring/Antenna**: baska kisisel sitelerin RSS'lerini Worker'da toplayan
   kucuk bir antenna sayfasi (signals.xml'in tersi; eski internet ruhu).
 - (Ortak ekran koruyucu fikri SECILDI ve uygulandi — asagidaki tabloya bakin.)
