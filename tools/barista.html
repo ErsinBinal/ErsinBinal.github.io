@@ -259,18 +259,34 @@
            3. UI
            ============================ */
         .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
-        /* Holografik host: sahnenin merkezinde, halkalarin taradigi donen barista hologrami */
+        /* Holografik host: sahne merkezinde, halkalarin taradigi kahve-bari hologrami (one-bakan salinim) */
         .barista-holo {
             position: absolute; top: 50%; left: 50%;
-            width: 150px; height: 150px; margin: -78px 0 0 -75px;
-            background: url("/assets/img/barista-host.png?v=1") 0 0 no-repeat;
+            width: 190px; height: 190px; margin: -95px 0 0 -95px;
+            background: url("/assets/img/barista-host.png?v=2") 0 0 no-repeat;
             background-size: auto 100%;
-            animation: barista-turn 5s steps(24) infinite, barista-flicker 3.6s ease-in-out infinite;
+            animation: barista-turn 6s steps(12) infinite, barista-flicker 3.6s ease-in-out infinite;
             pointer-events: none; z-index: 2;
             filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.35));
         }
-        @keyframes barista-turn { to { background-position: -3600px 0; } }
+        @keyframes barista-turn { to { background-position: -2280px 0; } }
         @keyframes barista-flicker { 0%, 100% { opacity: 0.9; } 46% { opacity: 1; } 50% { opacity: 0.78; } 54% { opacity: 1; } }
+        /* Secim yapinca kisa barista tepkisi: fincan uzatan kare pop */
+        .barista-react {
+            position: absolute; top: 50%; left: 50%;
+            width: 130px; height: 130px; margin: -78px 0 0 -65px;
+            background: url("/assets/img/barista-react.png?v=1") center / contain no-repeat;
+            opacity: 0; pointer-events: none; z-index: 6;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));
+        }
+        .barista-react.show { animation: barista-react-pop 1.4s ease-out; }
+        @keyframes barista-react-pop {
+            0% { opacity: 0; transform: translateY(12px) scale(0.82); }
+            18% { opacity: 1; transform: translateY(0) scale(1.06); }
+            34% { transform: scale(1); }
+            78% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-8px) scale(1); }
+        }
         .dialogue-header { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: block; }
         .typing-text { font-size: 1rem; line-height: 1.5; color: var(--text-main); }
 
@@ -361,6 +377,8 @@
                     </div>
                 </div>
             </div>
+
+            <div class="barista-react" aria-hidden="true"></div>
 
         </div>
 
@@ -481,6 +499,13 @@
         const liquidFill = document.getElementById('liquid-fill');
         const foamLine = document.getElementById('foam-line');
         const resultCard = document.getElementById('result-card');
+        const reactEl = document.querySelector('.barista-react');
+        function reactBarista() {
+            if (!reactEl) return;
+            reactEl.classList.remove('show');
+            void reactEl.offsetWidth;   // reflow: animasyonu bastan baslat
+            reactEl.classList.add('show');
+        }
 
         function type(txt, cb) {
             dialogue.textContent = "";
@@ -500,7 +525,7 @@
                         const btn = document.createElement('button');
                         btn.className = 'option-btn';
                         btn.innerHTML = `<span>> ${o.l}</span>`;
-                        btn.onclick = () => { userPrefs[q.key] = o.v; currentStep++; renderStep(); };
+                        btn.onclick = () => { reactBarista(); userPrefs[q.key] = o.v; currentStep++; renderStep(); };
                         optArea.appendChild(btn);
                     });
                     optArea.style.animation = "fadeIn 0.5s forwards";
