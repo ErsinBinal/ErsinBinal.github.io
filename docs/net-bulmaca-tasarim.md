@@ -1,9 +1,20 @@
 # /net — "Sinyal Ağı" Ağ Keşif Bulmacası — Tasarım Çalışması
 
 Tarih: 2026-07-23
-Durum: **TASARIM — onay bekliyor.** Onaylanınca Faz 1'den kodlanır.
-Kararlar (kilitli): ekran koruyucu = **HTML tam-ekran** (native .scr/.saver
-statik sitede üretilemez); ilerleme = **önce bu doküman, sonra faz faz kod**.
+Durum: **TASARIM — Faz 1 kodlanmaya hazır.** Aşağıdaki kararlar kilitlendi.
+
+**Kilitli kararlar (kullanıcı, 2026-07-23):**
+- Ekran koruyucu = **HTML tam-ekran** (native .scr/.saver statik sitede üretilemez).
+- **Cihaz sayısı: 10–20.**
+- **Cihaz isimleri = o an online kullanıcıların chat handle'ları**; yeterli
+  online yoksa **uydurulur** (aşağıda gizlilik notu).
+- **Ödül hologramları: EBUS (eş) ve DEB (oğul) HARİÇ diğer tüm hologramlar.**
+- **Tema: Convivium evreninden — kopuk değil.** Ağ = canlı Convivium düğümleri;
+  "terk edilmiş ev/ofis" değil.
+- **Shard ödülleri: KAPALI başlar.** Asıl ödül ekran koruyucu; shard sonradan
+  tek satırla açılabilir (shard = sitenin mevcut puan birimi; oyun/kart/ritüelle
+  kazanılır, dashboard'da görünür).
+- İlerleme: önce bu doküman, sonra faz faz kod.
 
 ---
 
@@ -103,8 +114,28 @@ aralıklarla online" hissi, deterministik ve adil biçimde.
 
 ## 6. Bulmaca zinciri (somut — çözümleriyle)
 
-Ağ: `10.0.13.0/24` — terk edilmiş bir ev/ofis ağı (site "kurtarılmış sinyal"
-temasına bağlı). 8 cihaz; 3'ü dekor/red herring, 5'i zincir.
+Ağ: **Convivium düğüm ağı** `10.13.x.x` — terk edilmiş değil, **canlı** bir
+ağ. Convivium evrenine bağlı: taradığın düğümler o an sitede gezen diğer
+gezginler + sabit altyapı düğümleri.
+
+**Cihaz sayısı: 10–20.** İki tür:
+- **Sabit bulmaca zinciri (5 düğüm, uydurma/kanonik):** puzzle bunlara dayanır;
+  kim online olursa olsun aynı kalır → determinizm & adillik korunur.
+- **Canlı/dekor düğümler (5–15 arası, dinamik):** hostname'leri **o an online
+  kullanıcıların chat handle'larından** alınır (presence sisteminden). Yeterli
+  online kullanıcı yoksa **uydurma handle'lar** (kanonik bir isim havuzundan)
+  eklenir ki toplam her zaman 10–20 olsun. Bunlar çoğunlukla şifresiz/önemsiz
+  (dekor, atmosfer, red herring); bazıları küçük ipucu taşıyabilir.
+
+> **GİZLİLİK NOTU (kritik):** Canlı düğümler yalnızca **herkese açık chat
+> handle'ını** bir etiket olarak kullanır — presence zaten bu handle'ı
+> gösteriyor. **Hiçbir gerçek kullanıcı verisi kullanılmaz;** tüm dosya/şifre/
+> not içeriği %100 kurgusaldır ve deterministik üretilir. Bulmacanın çözümü
+> asla gerçek bir kullanıcıya bağlı değildir (zincir sabit düğümlerde). Yani
+> "birinin makinesine sızmak" tamamen oyun kurgusu; kimsenin verisi görünmez.
+
+Aşağıdaki tablo **sabit zinciri** gösterir (5 düğüm). Kalan 5–15 düğüm canlı/
+dekordur.
 
 | # | IP | Host | Erişim | Şifre / çözüm | Verdiği ipucu |
 |---|---|---|---|---|---|
@@ -170,21 +201,26 @@ ve **kısa kurulum notu** platforma göre değişir (Windows: "tam ekran aç,
 F11"; Mac: "tam ekran, Ctrl+Cmd+F" / "gerçek .saver için 3. parti sarmalayıcı").
 Native ekran koruyucu isteyen için mini rehber linki.
 
-**Hangi hologramlar:** kasadaki kalıntılar (holo-01..15) + bekleyen 4 yeni
-(bobber, kaykay, konsol, gameboy). Kasa cihazda 3-4 tanesi "indirilebilir"
-listelenir; ilki bedava, kalanları shard/ilerleme ile açılabilir (opsiyon).
+**Hangi hologramlar:** kasadaki tüm kalıntılar (holo-01..19) **HARİÇ
+holo-14-ebus (eş) ve holo-15-deb (oğul)** — aile hologramları indirilebilir
+ödül havuzuna girmez, yalnız kasada kalır. (Not: holo-13-ERSINUS teknik olarak
+izinli; istenirse o da çıkarılabilir.) Kasa cihazda 3–4 tanesi listelenir;
+tümü bedava (shard kilidi kapalı, bkz. §9).
 
 **Ağırlık:** her saver HTML ~1 relic GLB (≈150-250KB base64 → ~350KB dosya).
 İndirme anında üretilir/servis edilir; sitenin runtime yükü sıfır.
 
 ---
 
-## 9. Ekonomi bağı (opsiyonel ama önerilir)
+## 9. Ekonomi bağı — **KAPALI başlar** (kullanıcı kararı)
 
-- Kasa (VAULT-CVM) ilk kez kırılınca: **+8 shard** + ekran koruyucu kilidi.
-- Ara cihazları kırmak: her biri ilk seferde **+2 shard** (küçük teşvik).
-- İlerleme `localStorage`'da; dashboard'da "ele geçirilen düğümler" rozeti
-  (ileride). Supabase şart değil — tamamen istemci-tarafı başlar.
+Shard = sitenin mevcut puan birimi (oyun/kart/ritüelle kazanılır, dashboard'da
+görünür). Bu bulmacada **asıl ödül ekran koruyucudur; shard ödülü kapalıdır.**
+İlerleme yine `localStorage`'da tutulur (kırılan/uyandırılan düğümler) ama
+shard verilmez.
+
+İleride tek satırla açılabilir (o zaman: kasa +8, ara cihaz +2 gibi). Şimdilik
+kapalı — kullanıcı bu sistemi kullanmıyor, sürtünme eklemeyelim.
 
 ---
 
@@ -193,17 +229,18 @@ listelenir; ilki bedava, kalanları shard/ilerleme ile açılabilir (opsiyon).
 **`scan` çıktısı:**
 ```
 ] net$ scan
-  ağ taranıyor 10.0.13.0/24 ................ 8 düğüm
+  convivium ağı taranıyor 10.13.0.0/16 ........ 14 düğüm
 
-  IP           HOST           DURUM     SON GÖRÜLME
-  10.0.13.1    ROUTER-GW      ● ONLINE  —
-  10.0.13.2    AURA-TV        ● ONLINE  —
-  10.0.13.7    CAM-BALKON     ○ OFFLINE  12 dk önce   [wake]
-  10.0.13.11   NAS-EV         ● ONLINE  —
-  10.0.13.20   PRINTER-HP     ● ONLINE  —
-  10.0.13.66   ??? [gizli]    ○ OFFLINE  —            [wake?]
+  IP           HOST            DURUM     SON GÖRÜLME
+  10.13.0.1    CVM-RELAY       ● ONLINE  —            (altyapı)
+  10.13.0.2    AURA-NODE       ● ONLINE  —            (zincir)
+  10.13.4.19   @ersin_dev      ● ONLINE  —            (gezgin)
+  10.13.4.23   @nightowl       ● ONLINE  —            (gezgin)
+  10.13.7.7    CAM-BALKON      ○ OFFLINE  12 dk önce   [wake]  (zincir)
+  10.13.9.31   @driftsignal    ○ OFFLINE  3 dk önce   [wake]  (gezgin)
+  10.13.13.66  ??? [gizli]     ○ OFFLINE  —           [wake?] (kasa)
   ...
-  bağlan: connect <ip>   ·   uyandır: wake <mac>
+  ● online kullanıcı handle'ları  ·  bağlan: connect <ip>  ·  uyandır: wake <mac>
 ```
 
 **`connect` (şifreli):**
@@ -265,13 +302,18 @@ Her faz davranış-nötr ekleme; mevcut terminal komutları etkilenmez.
 
 ---
 
-## 13. Açık sorular (senin onayına)
+## 13. Kararlar & kalan tek soru
 
-1. Bilmece zorluğu: yukarıdaki 5 cihazlık zincir uygun mu, daha kısa/uzun mu?
-2. Şifreler: örnekler (1618 / 34567 / 0307 / 1925) uygun mu, kendi
-   sayıların/tarihlerin mi olsun (örn. gerçek bir anlam)?
-3. Ekran koruyucu ödülü: hangi hologramlar (kasa kalıntıları mı, yeni 4'lü mü,
-   hepsi mi)? İlki bedava + kalanları shard ile mi?
-4. Ekonomi: shard ödülleri açık mı, kapalı mı başlasın?
-5. Ağ teması: "terk edilmiş ev/ofis" mi, yoksa Convivium evreninden özel bir
-   düğüm mü (lore bağı daha güçlü)?
+**Çözüldü (2026-07-23):**
+- Cihaz sayısı → **10–20** (5 sabit zincir + gerisi canlı/dekor). ✓
+- Cihaz isimleri → **online kullanıcı handle'ları**, yetmezse uydurma. ✓
+- Ödül → **EBUS + DEB hariç** tüm hologramlar. ✓
+- Ekran koruyucu → **HTML tam-ekran**. ✓
+- Tema → **Convivium canlı ağı** (kopuk değil). ✓
+- Shard → **kapalı** başlar. ✓
+
+**Kalan tek küçük soru (Faz 2'de netleşebilir):**
+- Şifre değerleri: önerdiğim örnekler (`1618` altın oran, `34567`, `0307`,
+  final `1925`) uygun mu — yoksa **senin için anlamlı** sayı/tarihler mi olsun
+  (örn. gerçek bir yıl, bir kelime)? Cevap gelmezse önerdiğim değerlerle
+  kodlarım; sonra tek yerden değiştirmek kolay.
