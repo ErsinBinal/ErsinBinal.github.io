@@ -192,6 +192,13 @@
       aliases: ['holo', 'holo scan', 'hologram kasasi', 'kasada tara'],
       routeKey: 'holo',
       fallback: '/holo/'
+    },
+    {
+      command: 'esyalar',
+      description: 'kurtarilmis esyalarin piksel envanterini acar',
+      aliases: ['envanter', 'buluntular', 'sinyal envanteri', 'kurtarilmis esyalar'],
+      routeKey: 'arsiv',
+      fallback: '/arsiv/'
     }
   ].map(freezeEntry));
 

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-B95AF151
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-B95AF151">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kurtarilmis Esyalar - Convivium</title>
+  <meta name="description" content="Convivium arsivinden kurtarilmis kucuk kalintilar: 3D'den piksel sprite'a donusturulmus esyalar, her biri sitenin kendi mitolojisine bagli.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/arsiv/">
+  <meta name="robots" content="index, follow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self';">
+  <meta name="theme-color" content="#00ff66">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <style>
+    :root {
+      --green: #00ff66;
+      --green-soft: #caffd8;
+      --cyan: #00eaff;
+      --muted: #6a9f74;
+      --ground: #060f08;
+      --panel: #0a1a0e;
+      --line: rgba(0,255,102,0.22);
+      --mono: 'Share Tech Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, monospace;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--ground);
+      color: var(--green-soft);
+      font-family: var(--mono);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 20;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.16) 0 1px, transparent 1px 3px);
+      mix-blend-mode: multiply; opacity: 0.55;
+    }
+
+    header {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 11px 16px; border-bottom: 1px solid rgba(0,255,102,0.3);
+      background: rgba(4,14,8,0.85); position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(2px);
+    }
+    header .mark { font-size: 0.72rem; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+    header .mark b { color: var(--green); font-weight: 400; }
+    header .spacer { margin-left: auto; }
+    .navlink {
+      color: var(--green); text-decoration: none; font-size: 0.74rem; letter-spacing: 0.05em;
+      border: 1px solid rgba(0,255,102,0.4); padding: 6px 12px; background: rgba(0,255,102,0.05);
+    }
+    .navlink.alt { color: var(--cyan); border-color: rgba(0,234,255,0.4); background: rgba(0,234,255,0.05); }
+    .navlink:hover, .navlink:focus-visible { background: rgba(0,255,102,0.14); color: var(--green-soft); outline: none; }
+    .navlink.alt:hover, .navlink.alt:focus-visible { background: rgba(0,234,255,0.14); color: #dffcff; }
+
+    .intro { max-width: 1180px; margin: 0 auto; padding: 30px 20px 6px; }
+    .intro h1 {
+      font-size: clamp(1.35rem, 4vw, 2rem); font-weight: 400; letter-spacing: 0.05em;
+      color: var(--green); text-shadow: 0 0 14px rgba(0,255,102,0.35);
+    }
+    .intro h1::before { content: '] '; color: var(--muted); }
+    .intro p { color: var(--muted); font-size: 0.86rem; margin-top: 8px; max-width: 68ch; }
+    .intro .count { color: var(--cyan); }
+
+    .shelf {
+      max-width: 1180px; margin: 0 auto; padding: 22px 20px 60px;
+      display: grid; gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+
+    .item {
+      border: 1px solid var(--line); background: var(--panel);
+      display: flex; flex-direction: column; position: relative;
+      transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .item:hover, .item:focus-within {
+      border-color: rgba(0,234,255,0.5); transform: translateY(-3px);
+      box-shadow: 0 8px 26px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,234,255,0.12);
+    }
+    .item .code {
+      position: absolute; top: 8px; right: 10px; z-index: 2;
+      font-size: 0.62rem; letter-spacing: 0.16em; color: var(--muted);
+    }
+
+    .frame {
+      position: relative; aspect-ratio: 1 / 1; overflow: hidden;
+      background:
+        radial-gradient(120% 120% at 50% 30%, rgba(0,255,102,0.07), transparent 62%),
+        repeating-linear-gradient(0deg, rgba(0,255,102,0.05) 0 1px, transparent 1px 22px),
+        repeating-linear-gradient(90deg, rgba(0,255,102,0.05) 0 1px, transparent 1px 22px),
+        #071108;
+      border-bottom: 1px solid var(--line);
+      display: grid; place-items: center;
+    }
+    .frame img {
+      width: 78%; height: 78%; object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(0,255,102,0.35));
+      animation: bob 5s ease-in-out infinite;
+      will-change: transform;
+    }
+    .item:nth-child(2n) .frame img { animation-delay: -1.3s; animation-duration: 5.6s; }
+    .item:nth-child(3n) .frame img { animation-delay: -2.6s; animation-duration: 6.1s; }
+    .item:nth-child(4n) .frame img { animation-delay: -0.7s; animation-duration: 5.3s; }
+    @keyframes bob {
+      0%,100% { transform: translateY(3px) rotate(-0.4deg); }
+      50%     { transform: translateY(-4px) rotate(0.4deg); }
+    }
+    .frame::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.10) 0 1px, transparent 1px 3px);
+    }
+
+    .body { padding: 12px 13px 14px; display: flex; flex-direction: column; gap: 5px; flex: 1; }
+    .body h2 {
+      font-size: 0.92rem; font-weight: 400; letter-spacing: 0.04em; color: var(--green-soft);
+    }
+    .body h2::before { content: '] '; color: var(--muted); }
+    .kind { color: var(--cyan); font-size: 0.72rem; letter-spacing: 0.03em; }
+    .note { color: var(--muted); font-size: 0.76rem; flex: 1; }
+    .src {
+      align-self: flex-start; margin-top: 4px;
+      color: var(--green); text-decoration: none; font-size: 0.7rem; letter-spacing: 0.04em;
+      border: 1px solid rgba(0,255,102,0.3); padding: 4px 9px; background: rgba(0,255,102,0.04);
+    }
+    .src::before { content: '\2192\00a0'; color: var(--muted); }
+    .src:hover, .src:focus-visible { color: var(--green-soft); border-color: rgba(0,234,255,0.5); background: rgba(0,234,255,0.08); outline: none; }
+
+    footer { border-top: 1px solid var(--line); padding: 18px 20px 40px; text-align: center; }
+    footer p { color: var(--muted); font-size: 0.72rem; max-width: 60ch; margin: 0 auto; }
+    footer a { color: var(--cyan); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .frame img { animation: none; transform: none; }
+      .item { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="mark">CONVIVIUM <b>//</b> KURTARILMIS ESYALAR</span>
+    <span class="spacer"></span>
+    <a class="navlink alt" href="/holo/">Hologram Kasasi</a>
+    <a class="navlink" href="/">&#8592; Ana Terminal</a>
+  </header>
+
+  <section class="intro">
+    <h1>SINYAL ENVANTERI</h1>
+    <p>Hologram Kasasi anitlari tutar; burasi ise kucuk buluntulari.
+      Arsivden cikarilan <span class="count">sekiz esya</span>, 3D taramadan piksele
+      dusurulmus &mdash; her biri sitenin kendi mitolojisinden bir parca.
+      Ustune gelince kimlik kartini gorursun; <em>kaynak</em> etiketi seni
+      esyanin ait oldugu odaya goturur.</p>
+  </section>
+
+  <main class="shelf">
+
+    <article class="item">
+      <span class="code">ENV-01</span>
+      <div class="frame"><img src="/assets/sprites/prop-coolant.png" alt="Sogutucu bidonu piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>SOGUTUCU BIDONU</h2>
+        <p class="kind">akiskan modulu &middot; valfli</p>
+        <p class="note">Neon River hattindan kalma; valfi hala damliyor.</p>
+        <a class="src" href="/games/neon-river.html">run flow</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-02</span>
+      <div class="frame"><img src="/assets/sprites/prop-chip.png" alt="Devre parcasi piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>DEVRE PARCASI</h2>
+        <p class="kind">shard &middot; ham cekirdek</p>
+        <p class="note">Ekonominin ham hali; kenarlari hala keskin.</p>
+        <a class="src" href="/account/dashboard.html">dashboard</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-03</span>
+      <div class="frame"><img src="/assets/sprites/prop-cassette.png" alt="Ses kaseti piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>SES KASETI</h2>
+        <p class="kind">kayit &middot; A yuzu</p>
+        <p class="note">Convivium Radio'nun kayip bandi; oynatici hala ariyor.</p>
+        <a class="src" href="/">radio</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-04</span>
+      <div class="frame"><img src="/assets/sprites/prop-keycard.png" alt="Erisim karti piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>ERISIM KARTI</h2>
+        <p class="kind">kimlik &middot; manyetik</p>
+        <p class="note">Eski bir giris anahtari; seridi silinmis ama hala sicak.</p>
+        <a class="src" href="/account/auth.html">access</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-05</span>
+      <div class="frame"><img src="/assets/sprites/prop-crate.png" alt="Tahta sandik piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>TAHTA SANDIK</h2>
+        <p class="kind">sahne &middot; firlatilabilir</p>
+        <p class="note">Crude Buster sokaklarindan; devrilmeyi bekliyor.</p>
+        <a class="src" href="/games/crude-buster.html">run crude</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-06</span>
+      <div class="frame"><img src="/assets/sprites/prop-barrel.png" alt="Celik fici piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>CELIK FICI</h2>
+        <p class="kind">sahne &middot; firlatilabilir</p>
+        <p class="note">O dovuste devrilen fici; hala gocuk, hala yuvarlaniyor.</p>
+        <a class="src" href="/games/crude-buster.html">run crude</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-07</span>
+      <div class="frame"><img src="/assets/sprites/prop-dartboard.png" alt="Dart tahtasi piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>DART TAHTASI</h2>
+        <p class="kind">hedef &middot; uc ok</p>
+        <p class="note">Skorbord'un ilk tahtasi; oklar hala sapli kalmis.</p>
+        <a class="src" href="/tools/dart-skorbord.html">dart</a>
+      </div>
+    </article>
+
+    <article class="item">
+      <span class="code">ENV-08</span>
+      <div class="frame"><img src="/assets/sprites/prop-mug.png" alt="Ritual takimi piksel sprite" loading="lazy" width="512" height="512"></div>
+      <div class="body">
+        <h2>RITUEL TAKIMI</h2>
+        <p class="kind">kupa + kadeh</p>
+        <p class="note">Barista ile bartender'in ortak masasi; buhari yeni sogumus.</p>
+        <a class="src" href="/tools/bartender.html">bartender</a>
+      </div>
+    </article>
+
+  </main>
+
+  <footer>
+    <p>Bu esyalar 3D taranip terminalin yesiline dusuruldu. Anitsal olanlar
+      icin <a href="/holo/">Hologram Kasasi</a>'na, hepsinin dunyasi icin
+      <a href="/">ana terminale</a> don.</p>
+  </footer>
+
+  <script src="/assets/js/service-worker-register.js?v=4"></script>
+</body>
+</html>

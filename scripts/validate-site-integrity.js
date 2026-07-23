@@ -163,11 +163,12 @@ const mustPrecache = [
   '/account/dashboard.html',
   '/oracle/',
   '/holo/',
+  '/arsiv/',
   '/offline.html',
   '/assets/css/components.css?v=37',
   '/assets/js/deb-companion.js?v=4',
-  '/assets/js/home/routes.js?v=6',
-  '/assets/js/home/route-commands.js?v=2',
+  '/assets/js/home/routes.js?v=7',
+  '/assets/js/home/route-commands.js?v=3',
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=2',
   '/assets/js/home/ritual-pulse.js?v=1',
@@ -190,7 +191,7 @@ const mustPrecache = [
   '/assets/js/home/chat.js?v=5',
   '/assets/js/supabase-client.js?v=41',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=90',
+  '/assets/js/home-protocol.js?v=91',
   '/assets/js/dart-skorbord.js?v=10',
   '/assets/js/service-worker-register.js?v=4'
 ];
@@ -203,7 +204,7 @@ for (const asset of mustPrecache) {
 
 const indexPath = path.join(root, 'index.html');
 const indexHtml = fs.readFileSync(indexPath, 'utf8');
-const routeCommandsRef = '/assets/js/home/route-commands.js?v=2';
+const routeCommandsRef = '/assets/js/home/route-commands.js?v=3';
 const guideCommandsRef = '/assets/js/home/guide-commands.js?v=1';
 const ruinsRef = '/assets/js/home/ruins.js?v=2';
 const worldRef = '/assets/js/home/world.js?v=2';
@@ -213,7 +214,7 @@ const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
 const vfsRef = '/assets/js/home/vfs.js?v=3';
 const navigatorRef = '/assets/js/home/navigator.js?v=2';
 const chatSymbolsRef = '/assets/js/home/chat-symbols.js?v=1';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=90';
+const homeProtocolRef = '/assets/js/home-protocol.js?v=91';
 const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
 const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
 const ruinsIndex = indexHtml.indexOf(ruinsRef);

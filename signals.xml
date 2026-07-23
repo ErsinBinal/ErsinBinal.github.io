@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Wed, 22 Jul 2026 21:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Kurtarilmis Esyalar: piksel envanteri</title>
+      <link>https://ersinbinal.github.io/arsiv/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-23-kurtarilmis-esyalar</guid>
+      <pubDate>Thu, 23 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Hologram Kasasi'nin 2D kardesi: sekiz esya (sogutucu bidonu, devre parcasi, ses kaseti, erisim karti, tahta sandik, celik fici, dart tahtasi, ritual takimi) 3D taranip terminalin yesiline dusuruldu. Her biri sitenin kendi mitolojisine bagli; "kaynak" etiketi esyanin ait oldugu odaya goturur. Terminalde "esyalar" komutu ya da Ruins odasindan ulasilir; WebGL gerekmez.</description>
+    </item>
 
     <item>
       <title>Hologram Kasasi: kurtarilmis 3D kalintilar</title>
