@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Thu, 23 Jul 2026 16:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 20:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Neon River: NEON MOD</title>
+      <link>https://ersinbinal.github.io/games/neon-river.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-23-neon-river-neon-mod</guid>
+      <pubDate>Thu, 23 Jul 2026 20:00:00 +0300</pubDate>
+      <description>Neon River'a NEON MOD eklendi: menudeki MOD dugmesiyle acilir. Bes yeni uzay gemisi + alti dusman + boss, hepsi 3D taranip cyan-magenta neon sprite'a dusuruldu. Skor 2500'de boss dalgasi. Klasik mod degismedi.</description>
+    </item>
 
     <item>
       <title>Hane kayitlari: aile Hologram Kasasi'na girdi</title>
