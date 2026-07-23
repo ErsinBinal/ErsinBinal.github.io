@@ -13,7 +13,7 @@
 <meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-46F47797">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: blob:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; font-src 'self';">
     <title>NEON RIVER: ULTIMATE</title>
     <meta name="description" content="Neon ızgarada akıntıya karşı hayatta kalma temalı retro arcade oyunu.">
     <meta name="author" content="Ersin Binal">
@@ -115,29 +115,6 @@ let selectedShipIndex = 2;
 const DIMENSION_PORTAL_SCORE = 5000;
 const DIMENSION_TARGET = '/games/universe-2.html?rift=neon';
 
-// --- NEON MOD: bankadaki Meshy filosu (yeni gemiler + dusmanlar + boss) ---
-// Tum yeni davranis gameMode==='neon' dalinda; klasik mod degismez.
-let gameMode = (localStorage.getItem('neonRiverMode') === 'neon') ? 'neon' : 'classic';
-const NEON_SHIPS = [
-    { id:0, name:'INTERCEPTOR', color:0x00eaff, speed:560, rate:200, desc:'HIZLI KESICI', key:'nf_ship-interceptor' },
-    { id:1, name:'GUNSHIP',     color:0x00eaff, speed:360, rate:300, desc:'AGIR TOPCU',    key:'nf_ship-gunship' },
-    { id:2, name:'DELTA',       color:0x00eaff, speed:470, rate:250, desc:'CEVIK DELTA',   key:'nf_ship-delta' },
-    { id:3, name:'ARROW',       color:0x00eaff, speed:620, rate:180, desc:'OK / KESKIN',   key:'nf_ship-arrow' },
-    { id:4, name:'ORBITER',     color:0x00eaff, speed:450, rate:250, desc:'DENGELI POD',   key:'nf_ship-orbiter' }
-];
-const NEON_ENEMY_KEYS = ['nf_enemy-drone','nf_enemy-hunter','nf_enemy-turret','nf_enemy-swarmer'];
-const NEON_BOSS_KEY = 'nf_enemy-boss-carrier';
-const NEON_SPRITE_FILES = {
-    'nf_ship-interceptor':'ship-interceptor','nf_ship-gunship':'ship-gunship','nf_ship-delta':'ship-delta',
-    'nf_ship-arrow':'ship-arrow','nf_ship-orbiter':'ship-orbiter',
-    'nf_enemy-drone':'enemy-drone','nf_enemy-hunter':'enemy-hunter','nf_enemy-turret':'enemy-turret',
-    'nf_enemy-swarmer':'enemy-swarmer','nf_enemy-boss-carrier':'enemy-boss-carrier'
-};
-function loadNeonSprites(scene) {
-    for (const key in NEON_SPRITE_FILES) scene.load.image(key, '/assets/img/neon-fleet/' + NEON_SPRITE_FILES[key] + '.png?v=1');
-}
-function activeShips() { return gameMode === 'neon' ? NEON_SHIPS : SHIPS; }
-
 // --- YARDIMCI: 3D VOXEL ÇİZİCİ ---
 function createVoxelTexture(scene, key, matrix, palette, scale=1) {
     let g = scene.make.graphics({x:0, y:0, add:false});
@@ -189,7 +166,6 @@ class MenuScene extends Phaser.Scene {
             };
             createVoxelTexture(this, 'ship_icon_'+idx, shipMatrix, palette, 4);
         });
-        loadNeonSprites(this);   // NEON MOD gemi/dusman gorselleri
     }
 
     create() {
@@ -215,21 +191,12 @@ class MenuScene extends Phaser.Scene {
         this.add.text(cw/2, titleY, 'NEON RIVER', { fontSize: titleSize, color: '#00ffff', fontStyle: 'bold' }).setOrigin(0.5).setShadow(0,0,'#00ffff',10);
         this.add.text(cw/2, subtitleY, 'ULTIMATE EDITION', { fontSize: subtitleSize, color: '#ffffff' }).setOrigin(0.5);
 
-        // --- MOD SECIMI (KLASIK / NEON) ---
-        this.compact = compact; this.ultraCompact = ultraCompact;
-        if (selectedShipIndex >= activeShips().length) selectedShipIndex = 0;
-        this.modeBtn = this.add.text(cw - 10, subtitleY, this.modeLabel(),
-            { fontSize: ultraCompact ? '13px' : '15px', color: '#ff00ff', backgroundColor: '#180022', padding: {x:8,y:5} })
-            .setOrigin(1, 0.5).setInteractive();
-        this.modeBtn.on('pointerdown', () => this.toggleMode());
-
         // --- GEMİ SEÇİMİ ---
         this.add.text(cw/2, selectY, '< UÇAK SEÇİMİ >', { fontSize: '20px', color: '#ffff00' }).setOrigin(0.5);
-
-        this.shipDisplay = this.add.image(cw/2, shipY, this.shipTexKey(selectedShipIndex));
-        this.applyShipScale();
-        this.shipName = this.add.text(cw/2, shipNameY, activeShips()[selectedShipIndex].name, { fontSize: shipNameSize, color: '#fff' }).setOrigin(0.5);
-        this.shipDesc = this.add.text(cw/2, shipDescY, activeShips()[selectedShipIndex].desc, { fontSize: shipDescSize, color: '#aaa' }).setOrigin(0.5);
+        
+        this.shipDisplay = this.add.image(cw/2, shipY, 'ship_icon_'+selectedShipIndex).setScale(ultraCompact ? 0.76 : compact ? 0.86 : 1);
+        this.shipName = this.add.text(cw/2, shipNameY, SHIPS[selectedShipIndex].name, { fontSize: shipNameSize, color: '#fff' }).setOrigin(0.5);
+        this.shipDesc = this.add.text(cw/2, shipDescY, SHIPS[selectedShipIndex].desc, { fontSize: shipDescSize, color: '#aaa' }).setOrigin(0.5);
 
         // Ok butonları
         let leftBtn = this.add.text(cw/2 - 120, shipY, '<', { fontSize: '64px', color: '#0f0' }).setOrigin(0.5).setInteractive();
@@ -258,30 +225,14 @@ class MenuScene extends Phaser.Scene {
     }
 
     changeShip(dir) {
-        const n = activeShips().length;
         selectedShipIndex += dir;
-        if(selectedShipIndex < 0) selectedShipIndex = n - 1;
-        if(selectedShipIndex >= n) selectedShipIndex = 0;
-
-        this.shipDisplay.setTexture(this.shipTexKey(selectedShipIndex));
-        this.applyShipScale();
-        this.shipName.setText(activeShips()[selectedShipIndex].name);
-        this.shipDesc.setText(activeShips()[selectedShipIndex].desc);
+        if(selectedShipIndex < 0) selectedShipIndex = SHIPS.length - 1;
+        if(selectedShipIndex >= SHIPS.length) selectedShipIndex = 0;
+        
+        this.shipDisplay.setTexture('ship_icon_'+selectedShipIndex);
+        this.shipName.setText(SHIPS[selectedShipIndex].name);
+        this.shipDesc.setText(SHIPS[selectedShipIndex].desc);
         SynthAudio.playFuel(); // Tık sesi
-    }
-
-    shipTexKey(idx) { return gameMode === 'neon' ? NEON_SHIPS[idx].key : 'ship_icon_'+idx; }
-    applyShipScale() {
-        if (gameMode === 'neon') this.shipDisplay.setScale(this.ultraCompact ? 0.7 : this.compact ? 0.82 : 0.95);
-        else this.shipDisplay.setScale(this.ultraCompact ? 0.76 : this.compact ? 0.86 : 1);
-    }
-    modeLabel() { return gameMode === 'neon' ? 'MOD: NEON ▸' : 'MOD: KLASIK'; }
-    toggleMode() {
-        gameMode = (gameMode === 'neon') ? 'classic' : 'neon';
-        localStorage.setItem('neonRiverMode', gameMode);
-        if (selectedShipIndex >= activeShips().length) selectedShipIndex = 0;
-        SynthAudio.playFuel();
-        this.scene.restart();
     }
 }
 
@@ -314,7 +265,7 @@ class GameScene extends Phaser.Scene {
         // 3. GEMİLER VE OBJEKLER
         // Oyuncu Gemisi (Daha küçük, oyun içi)
         createVoxelTexture(this, 'player', [[0,0,1,0,0],[0,1,1,1,0],[1,1,2,1,1],[1,0,3,0,1]], 
-        { 1: activeShips()[selectedShipIndex].color, 2: 0xccffff, 3: 0xffaa00 }, 2);
+        { 1: SHIPS[selectedShipIndex].color, 2: 0xccffff, 3: 0xffaa00 }, 2);
 
         // Düşmanlar
         createVoxelTexture(this, 'enemy1', [[1,0,1],[0,1,0],[1,1,1],[0,2,0]], { 1: 0xff0000, 2:0xaaaaaa }, 3);
@@ -342,8 +293,6 @@ class GameScene extends Phaser.Scene {
         }
         gp.strokePath();
         gp.generateTexture('rift_portal', 180, 180);
-
-        if (gameMode === 'neon') loadNeonSprites(this);   // NEON MOD gorselleri
     }
 
     create() {
@@ -367,16 +316,10 @@ class GameScene extends Phaser.Scene {
         this.terrainGroup = this.add.group(); // Ağaçlar ve dağlar
 
         // Oyuncu
-        const playerKey = gameMode === 'neon' ? activeShips()[selectedShipIndex].key : 'player';
-        this.player = this.physics.add.sprite(this.W/2, this.H - 100, playerKey);
-        if (gameMode === 'neon') {
-            this.player.setScale(0.42);
-            this.player.body.setSize(this.player.width * 0.5, this.player.height * 0.5, true);
-        }
+        this.player = this.physics.add.sprite(this.W/2, this.H - 100, 'player');
         this.player.setCollideWorldBounds(true);
         this.player.setDrag(800);
         this.player.setDepth(10);
-        this.bossSpawned = false;   // NEON boss bir kez
 
         // Gruplar
         this.bullets = this.physics.add.group();
@@ -393,7 +336,7 @@ class GameScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
         this.input.on('pointermove', (p) => {
             if(!this.isOver && p.isDown) {
-                this.physics.moveTo(this.player, p.x, p.y-50, activeShips()[selectedShipIndex].speed);
+                this.physics.moveTo(this.player, p.x, p.y-50, SHIPS[selectedShipIndex].speed);
                 this.fire();
             }
         });
@@ -430,7 +373,7 @@ class GameScene extends Phaser.Scene {
         // Klavye Kontrolü
         this.player.setVelocityX(0);
         this.player.setVelocityY(0);
-        let s = activeShips()[selectedShipIndex].speed;
+        let s = SHIPS[selectedShipIndex].speed;
         
         if(this.cursors.left.isDown) this.player.setVelocityX(-s);
         else if(this.cursors.right.isDown) this.player.setVelocityX(s);
@@ -470,15 +413,6 @@ class GameScene extends Phaser.Scene {
         if(Phaser.Math.Between(0, 100) < 20) {
             let f = this.fuels.create(x, -50, 'fuel');
             f.setVelocityY(this.gameSpeed * 40);
-        } else if (gameMode === 'neon') {
-            let key = Phaser.Utils.Array.GetRandom(NEON_ENEMY_KEYS);
-            let e = this.enemies.create(x, -50, key);
-            e.setScale(0.36).setAngle(180);
-            e.body.setSize(e.width * 0.55, e.height * 0.55, true);
-            e.setVelocityY(this.gameSpeed * 50 + 50);
-            if(key === 'nf_enemy-hunter') { // S-Çizen düşman
-                 this.tweens.add({ targets: e, x: e.x + 100, duration: 2000, yoyo: true, repeat: -1 });
-            }
         } else {
             let type = Phaser.Math.Between(0,1) ? 'enemy1' : 'enemy2';
             let e = this.enemies.create(x, -50, type);
@@ -487,21 +421,6 @@ class GameScene extends Phaser.Scene {
                  this.tweens.add({ targets: e, x: e.x + 100, duration: 2000, yoyo: true, repeat: -1 });
             }
         }
-
-        if (gameMode === 'neon' && this.score >= 2500 && this.bossSpawned === false) this.spawnBoss();
-    }
-
-    spawnBoss() {
-        this.bossSpawned = true;
-        let boss = this.enemies.create(this.W/2, -140, NEON_BOSS_KEY);
-        boss.setScale(0.95).setAngle(180).setDepth(9);
-        boss.body.setSize(boss.width * 0.7, boss.height * 0.55, true);
-        boss.setData('hp', 14);
-        boss.setVelocityY(55);
-        this.tweens.add({ targets: boss, x: this.W - 130, duration: 2600, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
-        let warn = this.add.text(this.W/2, 64, '⚠ BOSS', { fontSize: '28px', color: '#ff2ea6', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(20);
-        this.tweens.add({ targets: warn, alpha: 0, delay: 1800, duration: 900, onComplete: () => warn.destroy() });
-        SynthAudio.playPowerup();
     }
 
     spawnTerrain() {
@@ -522,7 +441,7 @@ class GameScene extends Phaser.Scene {
     fire() {
         let now = this.time.now;
         if(!this.lastFired) this.lastFired = 0;
-        if(now - this.lastFired < activeShips()[selectedShipIndex].rate) return;
+        if(now - this.lastFired < SHIPS[selectedShipIndex].rate) return;
 
         let b = this.bullets.create(this.player.x, this.player.y - 30, 'bullet');
         b.setVelocityY(-800);
@@ -544,19 +463,10 @@ class GameScene extends Phaser.Scene {
 
     hitEnemy(bullet, enemy) {
         bullet.destroy();
-        const hp = enemy.getData('hp');
-        if (hp && hp > 1) {              // NEON boss: cok vuruslu
-            enemy.setData('hp', hp - 1);
-            enemy.setTintFill(0xffffff);
-            this.time.delayedCall(60, () => { if (enemy.active) enemy.clearTint(); });
-            this.addScore(20);
-            return;
-        }
-        const ex = enemy.x, ey = enemy.y;
         enemy.destroy();
-        this.explosionEffect(ex, ey, 0xffaa00);
+        this.explosionEffect(enemy.x, enemy.y, 0xffaa00);
         SynthAudio.playExplosion();
-        this.addScore(hp ? 1200 : 100);   // boss oldurunce buyuk odul
+        this.addScore(100);
     }
 
     collectFuel(player, fuel) {

@@ -1,5 +1,12 @@
 # Neon River — Neon Filo (bankalanmis assetler + neon-mod plani)
 
+> **DURUM (2026-07-23):** Neon mod canliya alindi ama kullanici geri
+> bildirimiyle **GERI ALINDI** (oyun klasik haline dondu). Asagidaki GLB'ler
+> `assets/models/fleet/`'te bankada duruyor; ileride baska bir amacla
+> kullanilabilir. Neon sprite'lari (`assets/img/neon-fleet/`) ve oyun kodu
+> kaldirildi.
+
+
 Tarih: 2026-07-23
 Durum: **GLB'ler bankalandi** (`assets/models/fleet/`). "Neon mod" oynanisi
 henuz KODLANMADI — bu dosya o dilim icin handoff.
