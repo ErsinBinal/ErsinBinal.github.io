@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 16:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Hane kayitlari: aile Hologram Kasasi'na girdi</title>
+      <link>https://ersinbinal.github.io/holo/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-23-hane-kayitlari</guid>
+      <pubDate>Thu, 23 Jul 2026 16:00:00 +0300</pubDate>
+      <description>Hologram Kasasi'na uc sicak kayit eklendi: ERSINUS, EBUS ve DEB. Fotograftan 3D taranip terminalin yesil hologramina cevrildi; kasada diger kalintilarla birlikte doner ama tonlari terk edilmedi, hala evde. DEB ayni zamanda De.Binal, Crude Buster co-op'unun diger eli. Kasa 12'den 15 kayda cikti.</description>
+    </item>
 
     <item>
       <title>Kurtarilmis Esyalar: piksel envanteri</title>
