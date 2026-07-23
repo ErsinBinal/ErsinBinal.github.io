@@ -258,11 +258,19 @@
         /* ============================
            3. UI
            ============================ */
-        .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; display: flex; gap: 16px; align-items: flex-start; }
-        .barista-avatar { width: 88px; height: 88px; flex: none; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 243, 255, 0.25)); animation: barista-bob 4s ease-in-out infinite; }
-        .dialogue-body { flex: 1; min-width: 0; }
-        @keyframes barista-bob { 0%, 100% { transform: translateY(2px); } 50% { transform: translateY(-3px); } }
-        @media (max-width: 480px) { .barista-avatar { width: 64px; height: 64px; } }
+        .dialogue-card { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--primary); padding: 20px; margin-bottom: 20px; text-align: left; min-height: 80px; }
+        /* Holografik host: sahnenin merkezinde, halkalarin taradigi donen barista hologrami */
+        .barista-holo {
+            position: absolute; top: 50%; left: 50%;
+            width: 150px; height: 150px; margin: -78px 0 0 -75px;
+            background: url("/assets/img/barista-host.png?v=1") 0 0 no-repeat;
+            background-size: auto 100%;
+            animation: barista-turn 5s steps(24) infinite, barista-flicker 3.6s ease-in-out infinite;
+            pointer-events: none; z-index: 2;
+            filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.35));
+        }
+        @keyframes barista-turn { to { background-position: -3600px 0; } }
+        @keyframes barista-flicker { 0%, 100% { opacity: 0.9; } 46% { opacity: 1; } 50% { opacity: 0.78; } 54% { opacity: 1; } }
         .dialogue-header { font-size: 0.6rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; display: block; }
         .typing-text { font-size: 1rem; line-height: 1.5; color: var(--text-main); }
 
@@ -311,7 +319,7 @@
                 <div class="hud-ring ring-2"></div>
                 <div class="hud-ring ring-3"></div>
                 <div class="hud-scanner"></div>
-                <div class="hud-core">☕</div>
+                <div class="barista-holo" role="img" aria-label="Cyber Barista hologrami: onluklu robot barista"></div>
                 
                 <div class="hud-data data-tl">
                     SYS: ONLINE<br>
@@ -357,11 +365,8 @@
         </div>
 
         <div class="dialogue-card">
-            <img class="barista-avatar" src="/assets/img/barista-bot.png?v=1" alt="Cyber Barista robotu, elinde kahve fincaniyla" width="88" height="88" decoding="async">
-            <div class="dialogue-body">
-                <span class="dialogue-header">THE CYBER-BARISTA v3.0</span>
-                <div id="dialogue-text" class="typing-text"></div>
-            </div>
+            <span class="dialogue-header">THE CYBER-BARISTA v3.0</span>
+            <div id="dialogue-text" class="typing-text"></div>
         </div>
 
         <div id="options-area" class="options-grid"></div>
