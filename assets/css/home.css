@@ -94,31 +94,25 @@
       opacity: 0;
       text-shadow: var(--glow-primary);
       filter: drop-shadow(0 0 8px rgba(0, 255, 0, 0.5));
-      animation: glyph-cycle 12s infinite;
+      /* Tek zaman cizelgesi: 6 glyph + 5 hologram = 11 oge, 22s, 2s slot -> ayni anda tek oge */
+      animation: glyph-cycle 22s infinite;
     }
 
-    .signal-glyph:nth-child(2) { animation-delay: 2s; color: var(--color-accent); }
-    .signal-glyph:nth-child(3) { animation-delay: 4s; color: var(--color-accent-pink); }
-    .signal-glyph:nth-child(4) { animation-delay: 6s; color: var(--color-primary); }
-    .signal-glyph:nth-child(5) { animation-delay: 8s; color: var(--color-accent); }
-    .signal-glyph:nth-child(6) { animation-delay: 10s; color: var(--color-accent-pink); }
+    .signal-glyph:nth-child(1) { animation-delay: 0s; }
+    .signal-glyph:nth-child(2) { animation-delay: 4s; color: var(--color-accent); }
+    .signal-glyph:nth-child(3) { animation-delay: 8s; color: var(--color-accent-pink); }
+    .signal-glyph:nth-child(4) { animation-delay: 12s; color: var(--color-primary); }
+    .signal-glyph:nth-child(5) { animation-delay: 16s; color: var(--color-accent); }
+    .signal-glyph:nth-child(6) { animation-delay: 20s; color: var(--color-accent-pink); }
 
     @keyframes glyph-cycle {
-      0%, 11% {
-        opacity: 0;
-        transform: scale(0.72) rotate(-8deg);
-      }
-      16%, 25% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-      }
-      32%, 100% {
-        opacity: 0;
-        transform: scale(0.72) rotate(8deg);
-      }
+      0% { opacity: 0; transform: scale(0.72) rotate(-8deg); }
+      2% { opacity: 1; transform: scale(1) rotate(0deg); }
+      6% { opacity: 1; transform: scale(1) rotate(0deg); }
+      8%, 100% { opacity: 0; transform: scale(0.72) rotate(8deg); }
     }
 
-    /* Sinyal ara sira kurtarilmis bir holograma "kilitlenir" (onceden render, WebGL yok) */
+    /* Hologramlar glyphlerle AYNI 22s cizelgede, aralarindaki slotlarda (delay 2,6,10,14,18) */
     .signal-holo {
       position: absolute;
       inset: 7%;
@@ -127,20 +121,20 @@
       object-fit: contain;
       opacity: 0;
       pointer-events: none;
-      animation: holo-lock 30s infinite;
+      animation: holo-lock 22s infinite;
     }
-    .signal-holo:nth-of-type(1) { animation-delay: 3s; }
-    .signal-holo:nth-of-type(2) { animation-delay: 9s; }
-    .signal-holo:nth-of-type(3) { animation-delay: 15s; }
-    .signal-holo:nth-of-type(4) { animation-delay: 21s; }
-    .signal-holo:nth-of-type(5) { animation-delay: 27s; }
+    .signal-holo:nth-of-type(1) { animation-delay: 2s; }
+    .signal-holo:nth-of-type(2) { animation-delay: 6s; }
+    .signal-holo:nth-of-type(3) { animation-delay: 10s; }
+    .signal-holo:nth-of-type(4) { animation-delay: 14s; }
+    .signal-holo:nth-of-type(5) { animation-delay: 18s; }
 
     @keyframes holo-lock {
       0% { opacity: 0; transform: scale(0.92); }
-      2% { opacity: 0.15; transform: scale(0.96); filter: brightness(1.7); }
-      6%, 12% { opacity: 1; transform: scale(1); filter: brightness(1); }
-      16% { opacity: 0; transform: scale(1.05); }
-      100% { opacity: 0; transform: scale(0.92); }
+      1.5% { opacity: 0.2; transform: scale(0.96); filter: brightness(1.6); }
+      3% { opacity: 1; transform: scale(1); filter: brightness(1); }
+      6% { opacity: 1; transform: scale(1); }
+      8%, 100% { opacity: 0; transform: scale(1.04); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -839,7 +833,7 @@
     .signal-glyph {
       font-size: 3.2rem;
       font-family: var(--font-display);
-      animation: glyph-cycle 12s infinite;
+      animation: glyph-cycle 22s infinite;
     }
 
     .site-header .eyebrow,
