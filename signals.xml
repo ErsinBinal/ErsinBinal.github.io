@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Thu, 23 Jul 2026 16:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 22:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Kasaya dort retro kalinti: bobber, kaykay, konsol, avuc konsolu</title>
+      <link>https://ersinbinal.github.io/holo/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-23-kasa-retro-objeler</guid>
+      <pubDate>Thu, 23 Jul 2026 22:00:00 +0300</pubDate>
+      <description>Hologram Kasasi 15'ten 19 kayda cikti: bobber motosiklet, kaykay, ev oyun konsolu ve avuc konsolu (game boy), hepsi terminalin yesil hologramina cevrildi.</description>
+    </item>
 
     <item>
       <title>Hane kayitlari: aile Hologram Kasasi'na girdi</title>
