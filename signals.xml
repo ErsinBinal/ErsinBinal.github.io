@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 20:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 24 Jul 2026 23:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Terminal onramp: daha az kaybolma</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-24-terminal-onramp</guid>
+      <pubDate>Fri, 24 Jul 2026 23:00:00 +0300</pubDate>
+      <description>Terminal yeni gelene daha nazik: acilista dost karsilama + net ilk adimlar; look sadelesti (tek oneri, oda isimlerine duz-dil aciklama, tam liste map'te); imlec artik altta, cikti yukari akiyor. Komutlar/odalar/puzzle'lar korundu, sadece sunum netlesti.</description>
+    </item>
 
     <item>
       <title>Sinyal Agi: kasa + indirilebilir hologram ekran koruyucular (Faz 3)</title>

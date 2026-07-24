@@ -2483,6 +2483,17 @@
       pointer-events: auto;
     }
 
+    /* Imlec asagida: cikti (scrollback) ustte, oneriler ve giris satiri altta.
+       Gercek terminal/sohbet akisi -- goz her zaman yazdigin yerde kalir. */
+    .command-output { order: 1; }
+    .command-help { order: 2; }
+    .command-suggestions { order: 3; }
+    .command-row {
+      order: 4;
+      border-bottom: none;
+      border-top: 1px solid rgba(0, 255, 102, 0.16);
+    }
+
     /* Pipe (game-mode) ayni yerde/boyutta acilir; sadece renk vurgusu degisir.
        Boylece kabuk normal ve oyun modunda tutarli durur, ekrana islanmaz. */
     .command-shell.is-game-mode {

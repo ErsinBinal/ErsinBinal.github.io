@@ -171,10 +171,13 @@ test('World accepts Ruins as an optional ninth room while preserving core progre
     '  SINYAL ARKEOLOJISI  ::  GEZGIN',
     '  Sinyal Arkeolojisi. Kurmaca arsivin tozu altinda uc dijital kalinti var: terminal, todo, ekran. Bugunun yuzey sinyali: arcade-recovery.scr.',
     '',
-    '  INCELE  terminal  todo  ekran  buluntu',
-    '  GIT     /  ROUTES  LAB  NOTES  SYSTEM  VAULT*    (* kilitli)',
-    '  CANTA   (bos)',
-    "  GOREV   notes esigine git, 'clue' incele, shard'i al",
+    "  SIRADAKI notes odasina gir (cd notes), 'clue'yu incele ve shard'i al",
+    '  GIT      home (ana hat)  ·  routes (sayfalar)  ·  lab (oyunlar)  ·  notes (saha notlari)  ·  system (sistem araclari)',
+    '           kilitli: vault   ·   tam liste: map',
+    '  BAK      terminal · todo · ekran · buluntu   (examine <sey>)',
+    '  CANTA    (bos)',
+    '',
+    '  kaybolursan: basla · yardim: help',
     ']'
   ].join('\n'));
 });

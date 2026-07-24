@@ -665,9 +665,11 @@
       ];
 
       const commandReadyText = () => [
-        'CONVIVIUM // READY',
-        `${levels[state.level] || levels[0]} · nodes ${state.opened.length}`,
-        '] look    ] basla    ] help'
+        '] Convivium terminaline hos geldin.',
+        '  look          etrafina bak — neredesin, nereye gidilir',
+        '  open dossier  makaleleri ac',
+        '  basla         adim adim rehber',
+        `  yardim: help · kapat: Esc    ${levels[state.level] || levels[0]} · nodes ${state.opened.length}`
       ].join('\n');
 
       const renderCommandBoot = () => {

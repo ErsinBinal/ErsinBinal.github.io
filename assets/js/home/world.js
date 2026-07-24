@@ -167,15 +167,15 @@
       const inv = new Set(inventory());
       const unlocked = new Set(unlockedRooms());
       if (!unlocked.has('/vault')) {
-        if (!inv.has('shard')) return "notes esigine git, 'clue' incele, shard'i al";
-        return 'unlock vault ile kasayi ac, sonra cd vault';
+        if (!inv.has('shard')) return "notes odasina gir (cd notes), 'clue'yu incele ve shard'i al";
+        return "shard'in var -> 'unlock vault' ile kasayi ac, sonra cd vault";
       }
-      if (!unlocked.has('/core')) return 'lab esigine git, pipe bulmacasini coz (-> /core acilir)';
+      if (!unlocked.has('/core')) return 'lab odasina gir (cd lab), pipe bulmacasini coz -> cekirdek acilir';
       if (!unlocked.has('/atlas')) {
-        if (!inv.has('prism')) return "shard'i coolant ile birlestir: use shard on coolant";
-        return 'unlock atlas ile son odayi ac, sonra cd atlas';
+        if (!inv.has('prism')) return "cekirdekteki coolant'i shard ile birlestir: use shard on coolant -> prizma";
+        return "prizman var -> 'unlock atlas' ile son odayi ac, sonra cd atlas";
       }
-      return 'her sey tamam, ARCHITECT · wall ile iz birak, daily ile gunun sinyali';
+      return 'her sey tamam. ARCHITECT. wall ile iz birak, daily ile gunun sinyali.';
     };
 
     const rankTitle = () => {
@@ -186,7 +186,14 @@
     };
 
     const prodosPath = (path) => path === '/' ? '/CONVIVIUM' : `/CONVIVIUM${path.toUpperCase()}`;
-    const padField = (label) => (`${label}        `).slice(0, 8);
+    const padField = (label) => (`${label}         `).slice(0, 9);
+
+    // Oda isimlerine duz-dil aciklama (onramp: kullanici tahmin etmesin).
+    const ROOM_GLOSS = {
+      '/': 'ana hat', '/routes': 'sayfalar', '/lab': 'oyunlar', '/notes': 'saha notlari',
+      '/system': 'sistem araclari', '/net': 'ag bulmacasi', '/ruins': 'kalintilar',
+      '/core': 'cekirdek', '/vault': 'kasa', '/atlas': 'gizli harita'
+    };
 
     const roomPanel = (path) => {
       const room = getRoom(path);
@@ -194,18 +201,37 @@
       const title = (roomTitles[path] || path).toUpperCase();
       const objects = Object.keys(room.objects || {});
       const inv = inventory();
-      const exits = roomExits(path);
-      const lockHint = exits.includes('*') ? '    (* kilitli)' : '';
+      const unlocked = new Set(unlockedRooms());
+      const bothThreads = unlocked.has('/vault') && unlocked.has('/core');
+
+      // Cikislar: acik odalar duz-dil glosla; kilitliler ayri satirda.
+      const open = []; const locked = [];
+      roomOrder.forEach((rp) => {
+        if (rp === path) return;
+        if (rp === '/core' && !unlocked.has('/core')) return;
+        if (rp === '/atlas' && !bothThreads && !unlocked.has('/atlas')) return;
+        const nm = rp === '/' ? 'home' : rp.replace(/^\//, '');
+        if (rooms[rp]?.locked && !unlocked.has(rp)) { locked.push(nm); return; }
+        const g = ROOM_GLOSS[rp];
+        open.push(g ? `${nm} (${g})` : nm);
+      });
+
       const lines = [];
       lines.push(`] ${prodosPath(path)}`);
       lines.push('');
       lines.push(`  ${title}  ::  ${rankTitle()}`);
       lines.push(`  ${room.look}`);
       lines.push('');
-      if (objects.length) lines.push(`  ${padField('INCELE')}${objects.join('  ')}`);
-      lines.push(`  ${padField('GIT')}${exits}${lockHint}`);
-      lines.push(`  ${padField('CANTA')}${inv.length ? inv.join('  ') : '(bos)'}`);
-      lines.push(`  ${padField('GOREV')}${currentObjective()}`);
+      lines.push(`  ${padField('SIRADAKI')}${currentObjective()}`);
+      lines.push(`  ${padField('GIT')}${open.join('  ·  ')}`);
+      const tail = [];
+      if (locked.length) tail.push(`kilitli: ${locked.join(' · ')}`);
+      tail.push('tam liste: map');
+      lines.push(`  ${padField('')}${tail.join('   ·   ')}`);
+      if (objects.length) lines.push(`  ${padField('BAK')}${objects.join(' · ')}   (examine <sey>)`);
+      lines.push(`  ${padField('CANTA')}${inv.length ? inv.join(' · ') : '(bos)'}`);
+      lines.push('');
+      lines.push('  kaybolursan: basla · yardim: help');
       lines.push(']');
       return lines.join('\n');
     };

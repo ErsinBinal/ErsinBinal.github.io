@@ -141,10 +141,13 @@ test('World look and examine preserve panel output, discovery and fuzzy matching
     '  ANA HAT  ::  GEZGIN',
     '  Convivium ana hattindasin. Dort esik soluk soluk yaniyor: routes, lab, notes, system. Zeminde tek bir cizik isaret var.',
     '',
-    '  INCELE  isaret  glyph',
-    '  GIT     ROUTES  LAB  NOTES  SYSTEM  VAULT*    (* kilitli)',
-    '  CANTA   (bos)',
-    "  GOREV   notes esigine git, 'clue' incele, shard'i al",
+    "  SIRADAKI notes odasina gir (cd notes), 'clue'yu incele ve shard'i al",
+    '  GIT      routes (sayfalar)  ·  lab (oyunlar)  ·  notes (saha notlari)  ·  system (sistem araclari)',
+    '           kilitli: vault   ·   tam liste: map',
+    '  BAK      isaret · glyph   (examine <sey>)',
+    '  CANTA    (bos)',
+    '',
+    '  kaybolursan: basla · yardim: help',
     ']'
   ].join('\n');
 
@@ -168,26 +171,26 @@ test('World read model preserves room exits, rank and objective transitions', ()
   const { world, state } = createFixture();
   assert.equal(world.rankTitle(), 'GEZGIN');
   assert.equal(world.roomExits('/'), 'ROUTES  LAB  NOTES  SYSTEM  VAULT*');
-  assert.equal(world.currentObjective(), "notes esigine git, 'clue' incele, shard'i al");
+  assert.equal(world.currentObjective(), "notes odasina gir (cd notes), 'clue'yu incele ve shard'i al");
 
   state.inventory = ['shard'];
-  assert.equal(world.currentObjective(), 'unlock vault ile kasayi ac, sonra cd vault');
+  assert.equal(world.currentObjective(), "shard'in var -> 'unlock vault' ile kasayi ac, sonra cd vault");
   state.unlocked = ['/vault'];
   assert.equal(world.rankTitle(), 'INITIATE');
-  assert.equal(world.currentObjective(), 'lab esigine git, pipe bulmacasini coz (-> /core acilir)');
+  assert.equal(world.currentObjective(), 'lab odasina gir (cd lab), pipe bulmacasini coz -> cekirdek acilir');
   assert.equal(world.roomExits('/vault'), '/  ROUTES  LAB  NOTES  SYSTEM');
 
   state.unlocked = ['/vault', '/core'];
   state.inventory = ['shard', 'coolant'];
   assert.equal(world.rankTitle(), 'KEEPER');
-  assert.equal(world.currentObjective(), "shard'i coolant ile birlestir: use shard on coolant");
+  assert.equal(world.currentObjective(), "cekirdekteki coolant'i shard ile birlestir: use shard on coolant -> prizma");
   assert.equal(world.roomExits('/core'), '/  ROUTES  LAB  NOTES  SYSTEM  VAULT  ATLAS*');
 
   state.inventory.push('prism');
-  assert.equal(world.currentObjective(), 'unlock atlas ile son odayi ac, sonra cd atlas');
+  assert.equal(world.currentObjective(), "prizman var -> 'unlock atlas' ile son odayi ac, sonra cd atlas");
   state.unlocked.push('/atlas');
   assert.equal(world.rankTitle(), 'ARCHITECT');
-  assert.equal(world.currentObjective(), 'her sey tamam, ARCHITECT · wall ile iz birak, daily ile gunun sinyali');
+  assert.equal(world.currentObjective(), 'her sey tamam. ARCHITECT. wall ile iz birak, daily ile gunun sinyali.');
   assert.equal(world.prodosPath('/notes'), '/CONVIVIUM/NOTES');
 });
 
