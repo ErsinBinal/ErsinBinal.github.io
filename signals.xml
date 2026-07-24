@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Thu, 23 Jul 2026 22:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 24 Jul 2026 12:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sinyal Agi: terminale ag kesfi (Faz 1)</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-24-sinyal-agi-faz1</guid>
+      <pubDate>Fri, 24 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Terminale ag-kesif katmani: cd net, nmap ile cevredeki dugumleri tara (online/offline; isimler o an gezen kullanicilardan), connect ile online sifresiz dugume baglan, ls/cat/cd ile dosyalarini gez. Deterministik + cevrimdisi. Sifre bulmacasi ve odul ekran koruyucular sonraki fazlarda.</description>
+    </item>
 
     <item>
       <title>Kasaya dort retro kalinti: bobber, kaykay, konsol, avuc konsolu</title>

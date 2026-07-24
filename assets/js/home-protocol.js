@@ -149,6 +149,7 @@
       let shopMod = null;
       let ruinsMod = null;
       let dreamsMod = null;
+      let netMod = null;
       let navigatorMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
@@ -1251,9 +1252,11 @@
 
       const getVirtualCwd = () => vfsMod?.getCwd?.() || '/';
       const resolveVirtualPath = (target = '') => vfsMod?.resolvePath?.(target) || '/';
-      const lsCommand = (target = '') => vfsMod?.ls?.(target) || 'ls: virtual filesystem unavailable';
-      const cdCommand = (target = '/') => vfsMod?.cd?.(target) || 'cd: virtual filesystem unavailable';
-      const catCommand = (target = '') => vfsMod?.cat?.(target) || 'cat: virtual filesystem unavailable';
+      // net'e BAGLIYKEN ls/cd/cat cihazin dosya agacinda calisir; bagli degilken
+      // (netMod yok/bagli degil) normal VFS -- davranis-notr.
+      const lsCommand = (target = '') => (netMod && netMod.isConnected() ? netMod.ls(target) : (vfsMod?.ls?.(target) || 'ls: virtual filesystem unavailable'));
+      const cdCommand = (target = '/') => (netMod && netMod.isConnected() ? netMod.cd(target) : (vfsMod?.cd?.(target) || 'cd: virtual filesystem unavailable'));
+      const catCommand = (target = '') => (netMod && netMod.isConnected() ? netMod.cat(target) : (vfsMod?.cat?.(target) || 'cat: virtual filesystem unavailable'));
       const pwdCommand = () => vfsMod?.getCwd?.() || 'pwd: virtual filesystem unavailable';
       const getWorldRoom = (path) => worldMod?.getRoom?.(path) || null;
       const currentRoom = () => worldMod?.getCurrentRoom?.() || null;
@@ -1321,6 +1324,25 @@
           });
         } catch (error) {
           console.error('[home-protocol] Ruins module failed', error);
+          return null;
+        }
+      })();
+
+      // Sinyal Agi (assets/js/home/net.js): ag-kesif bulmacasi Faz 1.
+      // getOnlineHandles lazy -> presenceMod runtime'da (nmap aninda) hazir olur.
+      netMod = (() => {
+        const createNet = window.ConviviumHome?.createNet;
+        if (typeof createNet !== 'function') {
+          console.error('[home-protocol] Net module unavailable');
+          return null;
+        }
+        try {
+          return createNet({
+            now: () => Date.now(),
+            getOnlineHandles: () => (presenceMod?.list?.() || []).map((entry) => entry && entry.tag).filter(Boolean)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Net module failed', error);
           return null;
         }
       })();
@@ -1403,7 +1425,10 @@
               state.discovered = [...new Set([...state.discovered, path])];
               persist();
             },
-            roomExtensions: composedRuinsExtension ? [composedRuinsExtension] : []
+            roomExtensions: [
+              ...(composedRuinsExtension ? [composedRuinsExtension] : []),
+              ...(netMod ? [netMod.roomExtension] : [])
+            ]
           });
         } catch (error) {
           console.error('[home-protocol] World module failed', error);
@@ -1442,7 +1467,10 @@
               awardShards(2, `kesif ${path}`);
             },
             renderRoom: roomPanel,
-            mounts: composedRuinsMount ? [composedRuinsMount] : []
+            mounts: [
+              ...(composedRuinsMount ? [composedRuinsMount] : []),
+              ...(netMod ? [netMod.vfsMount] : [])
+            ]
           });
         } catch (error) {
           console.error('[home-protocol] VFS module failed', error);
@@ -2714,7 +2742,7 @@
           command: 'cd',
           description: 'sanal dizin degistirir',
           aliases: ['chdir'],
-          action: () => 'cd: usage cd routes|lab|notes|system'
+          action: () => (netMod && netMod.isConnected() ? netMod.cd('/') : 'cd: usage cd routes|lab|notes|system')
         },
         {
           command: 'cat',
@@ -2952,6 +2980,18 @@
           description: 'public node tarama efektini baslatir',
           aliases: ['node scan'],
           action: scanCommand
+        },
+        {
+          command: 'nmap',
+          description: 'Sinyal Agi: cevredeki cihazlari tarar (once cd net)',
+          aliases: ['netscan'],
+          action: () => netMod ? netMod.scan() : 'net: modul hazir degil.'
+        },
+        {
+          command: 'disconnect',
+          description: 'Sinyal Agi: bagli cihazdan cikar',
+          aliases: ['dc'],
+          action: () => netMod ? netMod.disconnect() : 'net: modul hazir degil.'
         },
         {
           command: 'next',
@@ -3924,6 +3964,16 @@
         if (/^\s*(bottle|sise|şişe)(\s|$)/i.test(query)) {
           const rawArg = query.replace(/^\s*(bottle|sise|şişe)\s*/i, '');
           const result = await bottleCommand(rawArg);
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // Sinyal Agi connect: IP'deki noktalar normalize'da bozulur; ham ele alinir.
+        if (/^\s*connect(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*connect\s*/i, '');
+          const result = netMod ? netMod.connect(rawArg) : 'net: modul hazir degil.';
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';

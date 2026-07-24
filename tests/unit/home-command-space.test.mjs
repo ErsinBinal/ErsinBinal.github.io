@@ -170,10 +170,10 @@ test('global command/alias namespace preserves the complete normalized snapshot'
     .update(JSON.stringify(definitions))
     .digest('hex');
 
-  assert.equal(definitions.length, 138);
-  assert.equal(labels, 612);
-  assert.equal(claims.size, 567);
-  assert.equal(digest, '7a24bfac49917fa9e1e168f91ebcfbb599ac0e1eeaaefa2e8287530bde66d98c');
+  assert.equal(definitions.length, 140);
+  assert.equal(labels, 616);
+  assert.equal(claims.size, 571);
+  assert.equal(digest, '006e1fe16686fab50b405584befbad4ecc3b851e3f0ba4007ea7706c7b239501');
 
   const sameOwnerFolds = [...claims.values()].filter(
     (owners) => owners.length > 1 && new Set(owners.map((claim) => claim.owner)).size === 1
