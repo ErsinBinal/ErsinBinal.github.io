@@ -145,11 +145,57 @@
       tree: {
         'mesajlar.txt': [
           'GSM-TEL // acildi',
-          'TEBRIKLER -- zinciri cozdun: 1618 -> 34567 -> uyandir -> 0307.',
-          'Son dugum kasada: 10.13.13.66 (???-KASA).',
-          'Icindeki odul -- indirilebilir hologram ekran koruyucular -- Faz 3\'te acilir.',
-          'Simdilik: iyi is. Sinyal seninle.'
+          'Zincirin sonu yaklasti: 1618 -> 34567 -> uyandir -> 0307.',
+          '',
+          'SON DUGUM: gizli kasa 10.13.13.66. O da uykuda.',
+          '  uyandir -> wake C0:FF:EE:13:66',
+          '  son sifre -> ilk iki anahtarin TOPLAMI: 1618 + 0307 = ?',
+          '',
+          'Kasadaki odul: indirilebilir hologram ekran koruyucular.'
         ].join('\n')
+      }
+    },
+    // --- Kasa (Faz 3 odulu): uyku + son sifre (1618+0307=1925) -> ekran koruyucular ---
+    {
+      id: 'holo-kasa', ip: '10.13.13.66', mac: 'C0:FF:EE:13:66', host: 'HOLO-KASA',
+      kind: 'kasa', alwaysOn: false, onlineChance: 0, wakeable: true, hidden: true,
+      auth: {
+        password: '1925',
+        hint: 'Ilk iki anahtarin toplami: 1618 + 0307.',
+        hint2: '1618 + 0307 = 1925.'
+      },
+      downloads: {
+        'holo-saver-terminal.html': '/assets/savers/holo-saver-terminal.html',
+        'holo-saver-gameboy.html': '/assets/savers/holo-saver-gameboy.html',
+        'holo-saver-drone.html': '/assets/savers/holo-saver-drone.html'
+      },
+      tree: {
+        'TEBRIKLER.txt': [
+          '>>> HOLO-KASA ACILDI <<<',
+          'Zinciri bastan sona cozdun. Iyi is, gezgin.',
+          'Odul: /paylasim/ekran-koruyucu/ altinda indirilebilir hologramlar.',
+          'Her biri tam-ekran donen bir yesil hologram; Windows ve Mac\'te calisir.'
+        ].join('\n'),
+        paylasim: {
+          'ekran-koruyucu': {
+            'README.txt': [
+              'HOLOGRAM EKRAN KORUYUCULAR (bagimsiz HTML, offline calisir)',
+              '',
+              'Indir:  download <dosya>',
+              '  ornek: download holo-saver-terminal.html',
+              '',
+              'Kullan: indirilen .html dosyasina cift tikla -> tikla (tam ekran).',
+              '  Windows: F11 de tam ekran yapar. Mac: yesil dugme / Ctrl+Cmd+F.',
+              '  Cikis: Esc.',
+              '',
+              'Not: gercek .scr/.saver yerine bu HTML kullanilir -- her yerde acilir,',
+              'guvenlidir ve internet gerektirmez.'
+            ].join('\n'),
+            'holo-saver-terminal.html': 'Kapanmayan Terminal hologrami (donen). Indir: download holo-saver-terminal.html',
+            'holo-saver-gameboy.html': 'Avuc konsolu hologrami (donen). Indir: download holo-saver-gameboy.html',
+            'holo-saver-drone.html': 'Atil drone hologrami (donen). Indir: download holo-saver-drone.html'
+          }
+        }
       }
     }
   ];
@@ -162,9 +208,10 @@
   const sanitizeHandle = (raw) => String(raw || '')
     .replace(/^wanderer-/i, '').replace(/[^a-z0-9_]/gi, '').slice(0, 14).toLowerCase();
 
-  function createNet({ now, getOnlineHandles } = {}) {
+  function createNet({ now, getOnlineHandles, triggerDownload } = {}) {
     const nowFn = typeof now === 'function' ? now : () => Date.now();
     const onlineFn = typeof getOnlineHandles === 'function' ? getOnlineHandles : () => [];
+    const dl = typeof triggerDownload === 'function' ? triggerDownload : () => {};
     const store = (typeof localStorage !== 'undefined') ? localStorage : null;
 
     // Kalici ilerleme: kirilan + uyandirilan cihazlar
@@ -213,8 +260,9 @@
       });
     };
 
-    const vault = { id: 'vault-cvm', ip: '10.13.13.66', mac: '00:CV:MV:13:66', host: '??? [gizli]', kind: 'kasa', vaultLocked: true, onlineChance: 0 };
-    const allDevices = () => [...FIXED_DEVICES.map((d) => ({ ...d, decoy: false })), vault, ...decoys()];
+    const allDevices = () => [...FIXED_DEVICES.map((d) => ({ ...d, decoy: false })), ...decoys()];
+    // Gizli/kilitli dugumun tarama gorunumu: kirilana kadar "??? [gizli]".
+    const shownHost = (d) => (d.hidden && !progress.cracked.has(d.id)) ? '??? [gizli]' : d.host;
     const findByIp = (ip) => allDevices().find((d) => d.ip === String(ip).trim());
     const findByMac = (mac) => allDevices().find((d) => d.mac && normPass(d.mac) === normPass(mac));
 
@@ -231,15 +279,16 @@
     const scan = () => {
       const b = bucket();
       const rows = allDevices().map((d) => {
-        const on = d.vaultLocked ? false : isOnline(d, b);
+        const on = isOnline(d, b);
+        const hiddenUncracked = d.hidden && !progress.cracked.has(d.id);
         const durum = on ? '● ONLINE ' : '○ OFFLINE';
-        const son = on ? '—' : (d.vaultLocked ? '—' : lastSeen(d));
-        const lock = d.auth ? (progress.cracked.has(d.id) ? ' [+]' : ' [!]') : '';
-        const tag = d.decoy ? '(gezgin)' : d.vaultLocked ? '(???)' : '(dugum)';
-        const wake = (!on && !d.vaultLocked) ? '  [wake]' : '';
-        return `  ${d.ip.padEnd(12)} ${(d.host + lock).padEnd(16)} ${durum}  ${son.padEnd(11)} ${tag}${wake}`;
+        const son = on ? '—' : lastSeen(d);
+        const lock = (d.auth && !hiddenUncracked) ? (progress.cracked.has(d.id) ? ' [+]' : ' [!]') : '';
+        const tag = d.decoy ? '(gezgin)' : hiddenUncracked ? '(???)' : '(dugum)';
+        const wake = (!on && !d.decoy) ? '  [wake]' : '';
+        return `  ${d.ip.padEnd(12)} ${(shownHost(d) + lock).padEnd(16)} ${durum}  ${son.padEnd(11)} ${tag}${wake}`;
       });
-      const online = allDevices().filter((d) => !d.vaultLocked && isOnline(d, b)).length;
+      const online = allDevices().filter((d) => isOnline(d, b)).length;
       return [
         `  convivium agi taraniyor 10.13.0.0/16 ........ ${allDevices().length} dugum (${online} online)`,
         '', '  IP           HOST             DURUM     SON GORULME', ...rows, '',
@@ -252,13 +301,16 @@
       if (!ip) return 'connect: kullanim: connect <ip>   (once nmap)';
       const d = findByIp(ip);
       if (!d) return `connect: ${ip} agda gorunmuyor. once: nmap`;
-      if (d.vaultLocked) return `connect: ${d.host} -- bu dugum yanit vermiyor. (kasa Faz 3\'te acilir)`;
-      if (!isOnline(d)) return `connect: ${d.host} (${ip}) OFFLINE${d.wakeable ? ` -- uykuda. uyandir: wake ${d.mac}` : ` -- son gorulme ${lastSeen(d)}.`}`;
-      if (d.decoy) return `connect: ${d.host} (${ip}) -- baglanti reddedildi, acik port yok. (canli gezgin)`;
+      const host = shownHost(d);
+      if (!isOnline(d)) {
+        if (d.wakeable) return `connect: ${host} (${ip}) OFFLINE -- uykuda.${d.hidden ? ' MAC\'ini bir dugumun notunda bulman gerek.' : ` uyandir: wake ${d.mac}`}`;
+        return `connect: ${host} (${ip}) OFFLINE -- son gorulme ${lastSeen(d)}.`;
+      }
+      if (d.decoy) return `connect: ${host} (${ip}) -- baglanti reddedildi, acik port yok. (canli gezgin)`;
       if (!d.auth || progress.cracked.has(d.id)) return enter(d);
       // kilitli, henuz kirilmamis -> kimlik bekle
       pending = d; attempts = 0;
-      return [`connect: ${d.host} (${ip}) -- KIMLIK DOGRULAMA GEREKLI`, `  ipucu: ${d.auth.hint}`, '  dene: pass <deneme>   ·   ipucu: hint'].join('\n');
+      return [`connect: ${host} (${ip}) -- KIMLIK DOGRULAMA GEREKLI`, `  ipucu: ${d.auth.hint}`, '  dene: pass <deneme>   ·   ipucu: hint'].join('\n');
     };
 
     const pass = (attemptRaw) => {
@@ -328,6 +380,17 @@
       return `cat: ${target} bulunamadi. (ls ile bak)`;
     };
 
+    const download = (fileRaw) => {
+      if (!connected) return 'download: bir cihaza bagli degilsin.';
+      if (!connected.downloads) return 'download: bu cihazda indirilecek bir sey yok.';
+      const file = String(fileRaw || '').trim();
+      if (!file) return `download: kullanim: download <dosya>   (ls: /paylasim/ekran-koruyucu)`;
+      const key = Object.keys(connected.downloads).find((k) => norm(k) === norm(file));
+      if (!key) return `download: ${file} yok. (ls ile bak)`;
+      dl(connected.downloads[key], key);
+      return `  ▸ indiriliyor: ${key}\n  Ac: cift tikla -> ekranda tikla (tam ekran). Cikis: Esc. (Windows + Mac)`;
+    };
+
     const status = () => (connected
       ? `net: ${connected.host} (${connected.ip}) bagli, konum ${promptPath()}`
       : pending ? `net: ${pending.host} kimlik bekliyor (pass <deneme>)` : 'net: bagli degil. nmap ile dugumleri gor.');
@@ -344,7 +407,7 @@
           tarama: 'Cevredeki cihazlari listeler (online/offline/kilit). Yaz: nmap',
           dugum: 'Online dugume baglan: connect <ip>. Sifreliyse: pass <deneme>',
           kilit: 'Sifreler baska dugumlerin notlarinda. Ilk halka: CAM-BALKON (Log: altin deger).',
-          kasa: 'Yanit vermeyen gizli dugum 10.13.13.66; odul (ekran koruyucular) Faz 3\'te.'
+          kasa: 'Gizli kasa 10.13.13.66. Zinciri coz, uyandir ve ac -> odul: indirilebilir hologram ekran koruyucular (download).'
         },
         navigation: ['nmap', 'connect <ip>', 'pass <deneme>', 'wake <mac>', 'cd /']
       }
@@ -365,7 +428,7 @@
     });
 
     return Object.freeze({
-      roomExtension, vfsMount, scan, connect, pass, wake, hint, disconnect,
+      roomExtension, vfsMount, scan, connect, pass, wake, hint, disconnect, download,
       isConnected, pendingAuth, ls, cd, cat, status,
       _isOnline: isOnline, _allDevices: allDevices
     });

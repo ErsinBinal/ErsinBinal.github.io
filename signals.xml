@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 16:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 24 Jul 2026 20:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Sinyal Agi: kasa + indirilebilir hologram ekran koruyucular (Faz 3)</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-24-sinyal-agi-faz3</guid>
+      <pubDate>Fri, 24 Jul 2026 20:00:00 +0300</pubDate>
+      <description>Sinyal Agi bulmacasi tamamlandi: zinciri cozup gizli kasayi (wake + pass) acinca odul, download ile indirilen tam-ekran donen hologram ekran koruyuculari. Bagimsiz HTML, Windows+Mac, internetsiz calisir. Ilerleme kalici.</description>
+    </item>
 
     <item>
       <title>Sinyal Agi: sifre bulmacasi + Wake-on-LAN (Faz 2)</title>

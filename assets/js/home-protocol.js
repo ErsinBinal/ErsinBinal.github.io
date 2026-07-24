@@ -1339,7 +1339,14 @@
         try {
           return createNet({
             now: () => Date.now(),
-            getOnlineHandles: () => (presenceMod?.list?.() || []).map((entry) => entry && entry.tag).filter(Boolean)
+            getOnlineHandles: () => (presenceMod?.list?.() || []).map((entry) => entry && entry.tag).filter(Boolean),
+            triggerDownload: (url, filename) => {
+              try {
+                const a = document.createElement('a');
+                a.href = url; a.download = filename || '';
+                document.body.appendChild(a); a.click(); a.remove();
+              } catch { /* indirme baslatilamadi */ }
+            }
           });
         } catch (error) {
           console.error('[home-protocol] Net module failed', error);
@@ -3993,6 +4000,16 @@
         if (/^\s*wake(\s|$)/i.test(query)) {
           const rawArg = query.replace(/^\s*wake\s*/i, '');
           const result = netMod ? netMod.wake(rawArg) : 'net: modul hazir degil.';
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // Sinyal Agi download: dosya adi (.html) normalize'da bozulur; ham ele alinir.
+        if (/^\s*download(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*download\s*/i, '');
+          const result = netMod ? netMod.download(rawArg) : 'net: modul hazir degil.';
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';
