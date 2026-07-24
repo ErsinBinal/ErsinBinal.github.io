@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v229';
+const CACHE_NAME = 'convivium-v230';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -65,7 +65,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/route-commands.js?v=3',
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=2',
-  '/assets/js/home/net.js?v=1',
+  '/assets/js/home/net.js?v=2',
   '/assets/js/home/ritual-pulse.js?v=1',
   '/assets/js/home/dreams.js?v=1',
   '/assets/js/home/world.js?v=2',
@@ -85,7 +85,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/chat-symbols.js?v=1',
   '/assets/js/home/chat-deck.js?v=8',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=92',
+  '/assets/js/home-protocol.js?v=93',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=4',
   '/assets/js/origin-beacon.js?v=1',

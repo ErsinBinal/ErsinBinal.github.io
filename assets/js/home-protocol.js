@@ -3184,9 +3184,9 @@
         },
         {
           command: 'clues',
-          description: 'hidden katman ipuclarini gosterir',
+          description: 'hidden katman ipuclarini gosterir (net kilidinde: o dugumun ipucu)',
           aliases: ['clue', 'ipucu', 'ipuclari', 'hint'],
-          action: cluesCommand
+          action: () => { const nh = netMod ? netMod.hint() : null; return nh != null ? nh : cluesCommand(); }
         },
         {
           command: 'ritual',
@@ -3974,6 +3974,25 @@
         if (/^\s*connect(\s|$)/i.test(query)) {
           const rawArg = query.replace(/^\s*connect\s*/i, '');
           const result = netMod ? netMod.connect(rawArg) : 'net: modul hazir degil.';
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        // Sinyal Agi pass/wake: sifre ve MAC ham kalmali (nokta/iki-nokta/buyuk harf).
+        if (/^\s*pass(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*pass\s*/i, '');
+          const result = netMod ? netMod.pass(rawArg) : 'net: modul hazir degil.';
+          printTerminal(result);
+          audioCue('terminal.complete');
+          commandInput.value = '';
+          clearCommandSuggestions();
+          return;
+        }
+        if (/^\s*wake(\s|$)/i.test(query)) {
+          const rawArg = query.replace(/^\s*wake\s*/i, '');
+          const result = netMod ? netMod.wake(rawArg) : 'net: modul hazir degil.';
           printTerminal(result);
           audioCue('terminal.complete');
           commandInput.value = '';
