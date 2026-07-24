@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 23:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Fri, 24 Jul 2026 23:30:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Crude Buster: gorsel cila gecisi</title>
+      <link>https://ersinbinal.github.io/games/crude-buster.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-24-crude-buster-cila</guid>
+      <pubDate>Fri, 24 Jul 2026 23:30:00 +0300</pubDate>
+      <description>Crude Buster'a davranis-notr bir cila kati: kahramanlar konturlu ve golgeli, vurusta beyaz flas ve squash&amp;stretch; her darbe hasar sayisi/halka/toz, KO'da freeze-frame + ekran flasi. Sahneye CRT tarama + vignette, ufuk parlakligi, titresen isik ve ucusan korlar. HUD'da segmentli can barlari ve parildayan skor. Oynanis aynen korundu.</description>
+    </item>
 
     <item>
       <title>Terminal onramp: daha az kaybolma</title>

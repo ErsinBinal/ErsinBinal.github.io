@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v233';
+const CACHE_NAME = 'convivium-v234';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -117,9 +117,9 @@ const PRECACHE_ASSETS = [
   '/assets/img/guides/terminal-games-guide.svg',
   '/assets/img/guides/terminal-guide.svg',
   '/assets/js/auth-gate.js?v=22',
-  '/assets/css/crude-buster.css?v=1',
+  '/assets/css/crude-buster.css?v=2',
   '/assets/js/crude-buster-net.js?v=2',
-  '/assets/js/crude-buster.js?v=2',
+  '/assets/js/crude-buster.js?v=3',
   '/assets/js/dart-board-svg.js?v=3',
   '/assets/js/dart-online.js?v=2',
   '/assets/js/dart-atc.js?v=4',
