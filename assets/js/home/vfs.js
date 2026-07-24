@@ -183,10 +183,12 @@
         if (!names.length) return '/home: (bos) — "echo merhaba > not.txt" ile ilk dosyani yaz.';
         return [
           `/home: ${names.length}/${MAX_FILES} dosya`,
-          ...names.map((name) => `  ${name}  (${files[name].length}b)`)
+          ...names.map((name) => `  ${name}  (${files[name].length}b)`),
+          '  (oku: cat <dosya>)'
         ].join('\n');
       }
-      return [`${path}:`, ...items.map((item) => `  ${item}`)].join('\n');
+      if (!items.length) return `${path}:  (bos)`;
+      return [`${path}:`, ...items.map((item) => `  ${item}`), '  (oku: cat <dosya>)'].join('\n');
     };
 
     const cd = (target = '/') => {

@@ -210,13 +210,15 @@ test('VFS mounts Ruins files and documents without changing personal storage sem
     '  system',
     '  vault',
     '  home',
-    '  ruins'
+    '  ruins',
+    '  (oku: cat <dosya>)'
   ].join('\n'));
   assert.equal(vfs.ls('ruins'), [
     '/ruins:',
     '  bbs-1997.log',
     '  todo-fragment.txt',
-    '  arcade-recovery.scr'
+    '  arcade-recovery.scr',
+    '  (oku: cat <dosya>)'
   ].join('\n'));
   assert.equal(vfs.cd('ruins'), 'ROOM:/ruins');
   assert.deepEqual(cwdChanges, ['/ruins']);

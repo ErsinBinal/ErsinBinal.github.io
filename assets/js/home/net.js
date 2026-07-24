@@ -358,8 +358,13 @@
       if (!connected) return 'ls: bir cihaza bagli degilsin. (nmap / connect <ip>)';
       const dir = nodeAt(cwd); if (!dir) return 'ls: dizin yok.';
       const keys = Object.keys(dir);
-      if (!keys.length) return `] net:${connected.host}:${promptPath()}$  (bos klasor)`;
-      return `] net:${connected.host}:${promptPath()}$\n  ${keys.map((k) => (typeof dir[k] === 'object' ? k + '/' : k)).join('   ')}`;
+      if (!keys.length) return `] net:${connected.host}:${promptPath()}$  (bos klasor · geri: cd /)`;
+      const listed = keys.map((k) => (typeof dir[k] === 'object' ? k + '/' : k)).join('   ');
+      const hint = [
+        keys.some((k) => typeof dir[k] === 'string') ? 'oku: cat <dosya>' : '',
+        keys.some((k) => typeof dir[k] === 'object') ? 'gir: cd <klasor>' : ''
+      ].filter(Boolean).join(' · ');
+      return `] net:${connected.host}:${promptPath()}$\n  ${listed}${hint ? `\n  (${hint})` : ''}`;
     };
     const cd = (targetRaw) => {
       if (!connected) return 'cd: bir cihaza bagli degilsin.';

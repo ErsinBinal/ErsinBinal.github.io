@@ -168,13 +168,15 @@ test('VFS preserves directory, personal file and public document output', () => 
     '  notes',
     '  system',
     '  vault',
-    '  home'
+    '  home',
+    '  (oku: cat <dosya>)'
   ].join('\n'));
   assert.equal(vfs.ls('home'), [
     '/home: 3/24 dosya',
     '  a.txt  (0b)',
     '  note.md  (7b)',
-    '  z.log  (3b)'
+    '  z.log  (3b)',
+    '  (oku: cat <dosya>)'
   ].join('\n'));
   assert.equal(vfs.ls('missing'), 'ls: /missing: not found');
   assert.equal(vfs.cat('a.txt'), '(bos dosya)');
@@ -205,7 +207,7 @@ test('Persistent /home engine preserves names, write, append, list and remove ou
   );
   assert.equal(vfs.readFile('/home/not.txt'), 'ilk\nikinci');
   assert.equal(vfs.cat('not.txt'), 'ilk\nikinci');
-  assert.equal(vfs.ls('home'), '/home: 1/24 dosya\n  not.txt  (10b)');
+  assert.equal(vfs.ls('home'), '/home: 1/24 dosya\n  not.txt  (10b)\n  (oku: cat <dosya>)');
   assert.equal(vfs.removeFile('not.txt'), 'silindi: /home/not.txt');
   assert.equal(vfs.readFile('not.txt'), null);
   assert.deepEqual(JSON.parse(storage.value('convivium.shell.files')), {});

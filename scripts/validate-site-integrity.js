@@ -171,14 +171,14 @@ const mustPrecache = [
   '/assets/js/home/route-commands.js?v=3',
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=2',
-  '/assets/js/home/net.js?v=3',
+  '/assets/js/home/net.js?v=4',
   '/assets/js/home/ritual-pulse.js?v=1',
   '/assets/js/home/dreams.js?v=1',
   '/assets/js/home/world.js?v=3',
   '/assets/js/home/economy.js?v=1',
   '/assets/js/home/shop.js?v=1',
   '/assets/js/home/world-actions.js?v=1',
-  '/assets/js/home/vfs.js?v=3',
+  '/assets/js/home/vfs.js?v=4',
   '/assets/js/home/navigator.js?v=2',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
@@ -212,7 +212,7 @@ const worldRef = '/assets/js/home/world.js?v=3';
 const economyRef = '/assets/js/home/economy.js?v=1';
 const shopRef = '/assets/js/home/shop.js?v=1';
 const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
-const vfsRef = '/assets/js/home/vfs.js?v=3';
+const vfsRef = '/assets/js/home/vfs.js?v=4';
 const navigatorRef = '/assets/js/home/navigator.js?v=2';
 const chatSymbolsRef = '/assets/js/home/chat-symbols.js?v=1';
 const homeProtocolRef = '/assets/js/home-protocol.js?v=95';
