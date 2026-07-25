@@ -16,6 +16,9 @@
 
   const LS_KEY = 'convivium.bugy.pet';
   const ENGINE_KEY = 'convivium.bugy.engine';
+  // Net yerel ayna: kullanicinin son secimi (off/v1/v2/v3/v4/pet). engine anahtari
+  // pet ile v4'u ayirt edemedigi icin (ikisi de 'v4' motorunda yasar) ayri tutulur.
+  const PREF_KEY = 'convivium.bugy.pref';
 
   // Uygulama/oyun sayfalarinda pet gozukmesin (istek: yalnizca icerik sayfalari).
   const BLOCKED_PATH = /\/(games|tools)\//;
@@ -255,6 +258,9 @@
 
   async function saveCompanionPref(pref) {
     if (userProfile) userProfile.companion_pref = pref;
+    // Net yerel ayna hemen yazilir: sunucu yazimi gecikse/basarisiz olsa bile
+    // secim ana sayfada aninda gecerli olur ve 'pet'/'v4' ayrimi korunur.
+    try { if (PREF_VALUES.includes(pref)) localStorage.setItem(PREF_KEY, pref); } catch { /* yok say */ }
     const api = backend();
     if (api && api.upsertProfile) {
       try { await api.upsertProfile({ companion_pref: pref }); } catch { /* tablo eski olabilir */ }
@@ -756,16 +762,15 @@
       ? userProfile.companion_pref
       : null;
 
-    // Cihazdaki son KLASIK motor secimi (v1/v2/v3) sunucu tercihinden tazedir:
-    // dashboard/terminal her degisiklikte localStorage engine'e guvenilir sekilde
-    // yazar. Sunucu yazimi gecikir/basarisiz olsa bile secim ana sayfada geri
-    // EZILMESIN (home-protocol da localStorage-oncelikli calisir; iki kontrolor
-    // tutarli olur). Not: v4/pet pet-verisi + skin gerektirdiginden bu hizli
-    // yola DAHIL DEGIL; onlar sunucu/pet mantigiyla yonetilir.
-    const lsEngine = localStorage.getItem(ENGINE_KEY);
-    if (['v1', 'v2', 'v3'].includes(lsEngine) && lsEngine !== pref) {
-      pref = lsEngine;
-      saveCompanionPref(lsEngine); // sunucuyu da tazele (best-effort)
+    // Cihazdaki son secim (net yerel ayna) sunucu tercihinden tazedir: dashboard/
+    // terminal her degisiklikte yazar. Sunucu yazimi gecikir/basarisiz olsa bile
+    // secim ana sayfada geri EZILMESIN. 'pet' DAHIL tum secimleri kapsar (engine
+    // anahtari pet/v4'u ayirt edemedigi icin ayri, net ayna kullanilir). Boylece
+    // "Surpriz Bugy" secilince ana sayfada pet + bakim/ihtiyaclar menusu gelir.
+    const localPref = localStorage.getItem(PREF_KEY);
+    if (PREF_VALUES.includes(localPref) && localPref !== pref) {
+      pref = localPref;
+      saveCompanionPref(localPref); // sunucuyu da tazele (best-effort)
     }
 
     // KILIT: v4 ve pet yalnizca hak edende. Cozmemis biri (orn. eski/kacak
