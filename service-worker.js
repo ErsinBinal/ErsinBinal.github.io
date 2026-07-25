@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v241';
+const CACHE_NAME = 'convivium-v242';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -119,15 +119,15 @@ const PRECACHE_ASSETS = [
   '/assets/js/auth-gate.js?v=22',
   '/assets/css/crude-buster.css?v=2',
   '/assets/js/crude-buster-net.js?v=2',
-  '/assets/js/crude-buster.js?v=10',
-  '/assets/img/crude/ebinal-sheet.png?v=3',
-  '/assets/img/crude/debinal-sheet.png?v=2',
-  '/assets/img/crude/punk-sheet.png?v=2',
-  '/assets/img/crude/knife-sheet.png?v=2',
-  '/assets/img/crude/brute-sheet.png?v=2',
-  '/assets/img/crude/thrower-sheet.png?v=2',
-  '/assets/img/crude/bruteBoss-sheet.png?v=2',
-  '/assets/img/crude/cyborgBoss-sheet.png?v=2',
+  '/assets/js/crude-buster.js?v=11',
+  '/assets/img/crude/ebinal-sheet.png?v=4',
+  '/assets/img/crude/debinal-sheet.png?v=3',
+  '/assets/img/crude/punk-sheet.png?v=3',
+  '/assets/img/crude/knife-sheet.png?v=3',
+  '/assets/img/crude/brute-sheet.png?v=3',
+  '/assets/img/crude/thrower-sheet.png?v=3',
+  '/assets/img/crude/bruteBoss-sheet.png?v=3',
+  '/assets/img/crude/cyborgBoss-sheet.png?v=3',
   '/assets/js/dart-board-svg.js?v=3',
   '/assets/js/dart-online.js?v=2',
   '/assets/js/dart-atc.js?v=4',

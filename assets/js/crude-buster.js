@@ -1281,7 +1281,7 @@ window.CrudeBuster = (function () {
     rows: {
       idle:   { row: 0, frames: 6 },
       walk:   { row: 1, frames: 8 },
-      attack: { row: 2, frames: 8 },
+      attack: { row: 2, frames: 6 },
       jump:   { row: 3, frames: 6 },
       throw:  { row: 4, frames: 7 },
       hold:   { row: 5, frames: 4 },
@@ -1291,14 +1291,14 @@ window.CrudeBuster = (function () {
   };
   // pal -> sprite sheet. Yeni karakter eklemek = burada bir satir + PNG.
   var SHEET_DEFS = [
-    { pal: 'ebinal',     src: '/assets/img/crude/ebinal-sheet.png?v=3',      drawH: 58, footPad: 3 },
-    { pal: 'debinal',    src: '/assets/img/crude/debinal-sheet.png?v=2',     drawH: 56, footPad: 3 },
-    { pal: 'punk',       src: '/assets/img/crude/punk-sheet.png?v=2',        drawH: 54, footPad: 3 },
-    { pal: 'knife',      src: '/assets/img/crude/knife-sheet.png?v=2',       drawH: 54, footPad: 3 },
-    { pal: 'brute',      src: '/assets/img/crude/brute-sheet.png?v=2',       drawH: 50, footPad: 3 },
-    { pal: 'thrower',    src: '/assets/img/crude/thrower-sheet.png?v=2',     drawH: 52, footPad: 3 },
-    { pal: 'bruteBoss',  src: '/assets/img/crude/bruteBoss-sheet.png?v=2',   drawH: 48, footPad: 3 },
-    { pal: 'cyborgBoss', src: '/assets/img/crude/cyborgBoss-sheet.png?v=2',  drawH: 48, footPad: 3 }
+    { pal: 'ebinal',     src: '/assets/img/crude/ebinal-sheet.png?v=4',      drawH: 58, footPad: 3 },
+    { pal: 'debinal',    src: '/assets/img/crude/debinal-sheet.png?v=3',     drawH: 56, footPad: 3 },
+    { pal: 'punk',       src: '/assets/img/crude/punk-sheet.png?v=3',        drawH: 54, footPad: 3 },
+    { pal: 'knife',      src: '/assets/img/crude/knife-sheet.png?v=3',       drawH: 54, footPad: 3 },
+    { pal: 'brute',      src: '/assets/img/crude/brute-sheet.png?v=3',       drawH: 50, footPad: 3 },
+    { pal: 'thrower',    src: '/assets/img/crude/thrower-sheet.png?v=3',     drawH: 52, footPad: 3 },
+    { pal: 'bruteBoss',  src: '/assets/img/crude/bruteBoss-sheet.png?v=3',   drawH: 48, footPad: 3 },
+    { pal: 'cyborgBoss', src: '/assets/img/crude/cyborgBoss-sheet.png?v=3',  drawH: 48, footPad: 3 }
   ];
   var SHEETS = {};   // pal -> { img, ready, drawH, footPad }
   function loadSheets() {
