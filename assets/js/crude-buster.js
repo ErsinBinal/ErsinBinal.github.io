@@ -1274,10 +1274,10 @@ window.CrudeBuster = (function () {
   function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }  // flaştan bağımsız (kontur/gölge)
   function frac(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }  // deterministik 0..1 (kayan doku için)
 
-  // ---- Rendered karakter sprite sheet (Meshy 3D -> yan ortografik render) ----
-  var HERO_SHEET = {
-    img: null, ready: false,
-    cell: { w: 96, h: 128 }, cols: 6,
+  // ---- Rendered karakter sprite'lari (Meshy 3D -> yan ortografik render) ----
+  // Tum karakterler ayni action seti/layout'unu paylasir (8 durum x satir).
+  var SHEET_LAYOUT = {
+    cell: { w: 96, h: 128 }, cols: 8,
     rows: {
       idle:   { row: 0, frames: 6 },
       walk:   { row: 1, frames: 8 },
@@ -1289,30 +1289,45 @@ window.CrudeBuster = (function () {
       down:   { row: 7, frames: 4 }
     }
   };
-  var HERO_DRAW_H = 48, HERO_FOOT_PAD = 2;   // ekran yüksekliği + ayak hizası ince ayarı
+  // pal -> sprite sheet. Yeni karakter eklemek = burada bir satir + PNG.
+  var SHEET_DEFS = [
+    { pal: 'ebinal',  src: '/assets/img/crude/ebinal-sheet.png?v=2',  drawH: 48, footPad: 2 },
+    { pal: 'debinal', src: '/assets/img/crude/debinal-sheet.png?v=1', drawH: 46, footPad: 2 }
+  ];
+  var SHEETS = {};   // pal -> { img, ready, drawH, footPad }
+  function loadSheets() {
+    for (var i = 0; i < SHEET_DEFS.length; i++) {
+      var def = SHEET_DEFS[i];
+      if (SHEETS[def.pal]) continue;
+      var rec = { img: new Image(), ready: false, drawH: def.drawH || 48, footPad: def.footPad || 2 };
+      (function (r) { r.img.onload = function () { r.ready = true; }; })(rec);
+      rec.img.src = def.src;
+      SHEETS[def.pal] = rec;
+    }
+  }
 
-  function heroAnimFor(e) {
-    var st = e.state;
+  function charAnimFor(e) {
+    var st = e.state, R = SHEET_LAYOUT.rows;
     if (st === 'walk' || st === 'approach' || st === 'holdwalk') return { key: 'walk', idx: Math.floor(e.animT * 10) };
-    if (st === 'attack' || st === 'special' || st === 'charge') return { key: 'attack', idx: Math.floor((e.stateT / 0.34) * HERO_SHEET.rows.attack.frames), hold: true };
+    if (st === 'attack' || st === 'special' || st === 'charge') return { key: 'attack', idx: Math.floor((e.stateT / 0.34) * R.attack.frames), hold: true };
     if (st === 'jump' || st === 'jumpkick') return { key: 'jump', idx: Math.floor(e.stateT * 12), hold: true };
-    if (st === 'throwing') return { key: 'throw', idx: Math.floor((e.stateT / 0.4) * HERO_SHEET.rows.throw.frames), hold: true };
+    if (st === 'throwing') return { key: 'throw', idx: Math.floor((e.stateT / 0.4) * R.throw.frames), hold: true };
     if (st === 'grabbing' || st === 'holding') return { key: 'hold', idx: Math.floor(e.animT * 3) };
     if (st === 'hurt') return { key: 'hurt', idx: Math.floor(e.stateT * 10), hold: true };
     if (st === 'knockdown' || st === 'down' || st === 'downed' || st === 'dead' || st === 'thrown' || st === 'tossed') return { key: 'down', idx: Math.floor(e.stateT * 8), hold: true };
     return { key: 'idle', idx: Math.floor(e.animT * 4) };   // idle
   }
 
-  function drawHeroSprite(e, sx, feetY, s) {
-    var a = heroAnimFor(e);
-    var meta = HERO_SHEET.rows[a.key] || HERO_SHEET.rows.idle;
+  function drawCharSprite(e, sheet, sx, feetY, s) {
+    var a = charAnimFor(e);
+    var meta = SHEET_LAYOUT.rows[a.key] || SHEET_LAYOUT.rows.idle;
     var fi = a.hold ? Math.min(meta.frames - 1, Math.max(0, a.idx)) : ((a.idx % meta.frames) + meta.frames) % meta.frames;
-    var cw = HERO_SHEET.cell.w, ch = HERO_SHEET.cell.h;
-    var dh = HERO_DRAW_H * s, dw = dh * (cw / ch);
-    var dx = Math.round(sx - dw / 2), dy = Math.round(feetY - dh + HERO_FOOT_PAD);
+    var cw = SHEET_LAYOUT.cell.w, ch = SHEET_LAYOUT.cell.h;
+    var dh = sheet.drawH * s, dw = dh * (cw / ch);
+    var dx = Math.round(sx - dw / 2), dy = Math.round(feetY - dh + sheet.footPad);
     ctx.save();
     if (e.facing < 0) { ctx.translate(2 * Math.round(sx), 0); ctx.scale(-1, 1); }
-    ctx.drawImage(HERO_SHEET.img, fi * cw, meta.row * ch, cw, ch, dx, dy, dw, dh);
+    ctx.drawImage(sheet.img, fi * cw, meta.row * ch, cw, ch, dx, dy, dw, dh);
     ctx.restore();
   }
 
@@ -1331,8 +1346,9 @@ window.CrudeBuster = (function () {
     // yanıp sönme (invuln)
     if (e.invulnT > 0 && Math.floor(e.animT * 20) % 2 === 0) return;
 
-    // rendered sprite (E.Binal) hazırsa prosedürel gövde yerine sprite bas
-    if (HERO_SHEET.ready && e.kind === 'hero' && e.pal === 'ebinal') { drawHeroSprite(e, sx, feetY, s); return; }
+    // bu karakterin render sprite'i varsa prosedürel gövde yerine sprite bas
+    var sheet = SHEETS[e.pal];
+    if (sheet && sheet.ready) { drawCharSprite(e, sheet, sx, feetY, s); return; }
 
     var f = e.facing >= 0 ? 1 : -1;
     var st = e.state;
@@ -2032,12 +2048,8 @@ window.CrudeBuster = (function () {
     canvas = q('cb-canvas');
     if (canvas) { canvas.width = VW; canvas.height = VH; ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; }
 
-    // rendered kahraman sprite sheet'i (varsa) yükle; yoksa prosedürel devam
-    if (!HERO_SHEET.img) {
-      HERO_SHEET.img = new Image();
-      HERO_SHEET.img.onload = function () { HERO_SHEET.ready = true; };
-      HERO_SHEET.img.src = '/assets/img/crude/ebinal-sheet.png?v=2';
-    }
+    // rendered karakter sprite sheet'lerini yükle (varsa); yoksa prosedürel devam
+    loadSheets();
 
     G.dom = {
       canvas: canvas,
