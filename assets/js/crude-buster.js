@@ -1274,6 +1274,44 @@ window.CrudeBuster = (function () {
   function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }  // flaştan bağımsız (kontur/gölge)
   function frac(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }  // deterministik 0..1 (kayan doku için)
 
+  // ---- Rendered karakter sprite sheet (Meshy 3D -> yan ortografik render) ----
+  var HERO_SHEET = {
+    img: null, ready: false,
+    cell: { w: 96, h: 128 }, cols: 6,
+    rows: {
+      idle:   { row: 0, frames: 4 },
+      walk:   { row: 1, frames: 6 },
+      attack: { row: 2, frames: 4 },
+      hurt:   { row: 3, frames: 4 },
+      down:   { row: 4, frames: 3 }
+    }
+  };
+  var HERO_DRAW_H = 48, HERO_FOOT_PAD = 2;   // ekran yüksekliği + ayak hizası ince ayarı
+
+  function heroAnimFor(e) {
+    var st = e.state;
+    if (st === 'walk' || st === 'approach' || st === 'holdwalk') return { key: 'walk', idx: Math.floor(e.animT * 10) };
+    if (st === 'attack' || st === 'special') return { key: 'attack', idx: Math.floor((e.stateT / 0.28) * HERO_SHEET.rows.attack.frames), hold: true };
+    if (st === 'hurt') return { key: 'hurt', idx: Math.floor(e.stateT * 12), hold: true };
+    // knockdown/dead: down klibi kadraj dışına düştüğü için reeling (hurt) son karesi tutulur
+    if (st === 'knockdown' || st === 'down' || st === 'dead' || st === 'thrown' || st === 'tossed') return { key: 'hurt', idx: 99, hold: true };
+    if (st === 'jump' || st === 'jumpkick') return { key: 'attack', idx: 1, hold: true };
+    return { key: 'idle', idx: Math.floor(e.animT * 4) };   // idle / holding / grabbing
+  }
+
+  function drawHeroSprite(e, sx, feetY, s) {
+    var a = heroAnimFor(e);
+    var meta = HERO_SHEET.rows[a.key] || HERO_SHEET.rows.idle;
+    var fi = a.hold ? Math.min(meta.frames - 1, Math.max(0, a.idx)) : ((a.idx % meta.frames) + meta.frames) % meta.frames;
+    var cw = HERO_SHEET.cell.w, ch = HERO_SHEET.cell.h;
+    var dh = HERO_DRAW_H * s, dw = dh * (cw / ch);
+    var dx = Math.round(sx - dw / 2), dy = Math.round(feetY - dh + HERO_FOOT_PAD);
+    ctx.save();
+    if (e.facing < 0) { ctx.translate(2 * Math.round(sx), 0); ctx.scale(-1, 1); }
+    ctx.drawImage(HERO_SHEET.img, fi * cw, meta.row * ch, cw, ch, dx, dy, dw, dh);
+    ctx.restore();
+  }
+
   function drawFighter(e, pal) {
     if (!pal) pal = PAL.punk;
     var sx = e.x - world.camX;
@@ -1288,6 +1326,9 @@ window.CrudeBuster = (function () {
 
     // yanıp sönme (invuln)
     if (e.invulnT > 0 && Math.floor(e.animT * 20) % 2 === 0) return;
+
+    // rendered sprite (E.Binal) hazırsa prosedürel gövde yerine sprite bas
+    if (HERO_SHEET.ready && e.kind === 'hero' && e.pal === 'ebinal') { drawHeroSprite(e, sx, feetY, s); return; }
 
     var f = e.facing >= 0 ? 1 : -1;
     var st = e.state;
@@ -1986,6 +2027,13 @@ window.CrudeBuster = (function () {
 
     canvas = q('cb-canvas');
     if (canvas) { canvas.width = VW; canvas.height = VH; ctx = canvas.getContext('2d'); ctx.imageSmoothingEnabled = false; }
+
+    // rendered kahraman sprite sheet'i (varsa) yükle; yoksa prosedürel devam
+    if (!HERO_SHEET.img) {
+      HERO_SHEET.img = new Image();
+      HERO_SHEET.img.onload = function () { HERO_SHEET.ready = true; };
+      HERO_SHEET.img.src = '/assets/img/crude/ebinal-sheet.png?v=1';
+    }
 
     G.dom = {
       canvas: canvas,

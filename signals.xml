@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Fri, 24 Jul 2026 23:30:00 +0300</lastBuildDate>
+    <lastBuildDate>Sat, 25 Jul 2026 12:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Crude Buster: E.Binal artik render edilmis 3D karakter</title>
+      <link>https://ersinbinal.github.io/games/crude-buster.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-07-25-crude-buster-3d-karakter</guid>
+      <pubDate>Sat, 25 Jul 2026 12:00:00 +0300</pubDate>
+      <description>Kutu tavanini kirdik: E.Binal artik prosedurel dikdortgenlerle degil, 3D'den render edilmis detayli bir sprite ile ciziliyor. Hat: Meshy 3D model -> otomatik rig -> animasyonlar (idle/yuru/yumruk/hasar) -> yan ortografik render -> sprite sheet. Oyunda aynalanir ve duruma gore animasyon secilir. Dusmanlar simdilik prosedurel; gecis kademeli.</description>
+    </item>
 
     <item>
       <title>Crude Buster: gorsel cila gecisi</title>
