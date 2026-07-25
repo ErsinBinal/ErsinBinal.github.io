@@ -280,14 +280,28 @@
     }
     payload.updated_at = new Date().toISOString();
 
-    const { data, error } = await client
+    // Kismi UPDATE (upsert DEGIL): profiles.handle NOT NULL ve bu payload'da yok.
+    // upsert'in insert fazi (ON CONFLICT DO UPDATE olsa bile) once insert satirini
+    // dogrular ve handle=NULL NOT NULL'a takilip TUM guncellemeyi dusururdu
+    // (companion_pref dahil hicbir profil degisikligi yazilamiyordu). Mevcut satiri
+    // guncelliyoruz; satir yoksa (nadir) handle uretip insert ediyoruz.
+    const updated = await client
       .from('profiles')
-      .upsert(payload, { onConflict: 'user_id' })
+      .update(payload)
+      .eq('user_id', user.id)
+      .select()
+      .maybeSingle();
+    if (updated.error) throw new Error(toMessage(updated.error));
+    if (updated.data) return updated.data;
+
+    const insertPayload = { ...payload, handle: payload.handle || `user-${String(user.id).slice(0, 8)}` };
+    const inserted = await client
+      .from('profiles')
+      .insert(insertPayload)
       .select()
       .single();
-
-    if (error) throw new Error(toMessage(error));
-    return data;
+    if (inserted.error) throw new Error(toMessage(inserted.error));
+    return inserted.data;
   }
 
   // Profil arastirma yalnizca giris yapmis kullanicinin Supabase access token'i

@@ -158,6 +158,21 @@
 
         <article class="entry">
             <time datetime="2026-07-25">2026-07-25</time><span class="tag">duzeltme</span>
+            <h2>Profil kaydi tamir edildi (bugy dahil ayarlar sunucuda kalici)</h2>
+            <p>Kok neden bulundu (Supabase incelemesiyle): profiles tablosuna
+            eklenen <code>handle</code> sutunu NOT NULL; client profil kaydini
+            <em>upsert</em> ile yapiyor ve handle'i gondermedigi icin upsert'in
+            insert fazi NOT NULL'a takilip <strong>tum profil guncellemesini
+            dusuruyordu</strong> &mdash; 2026-07-22'den beri companion_pref (ve
+            diger profil alanlari) sunucuya yazilamiyordu. Duzeltme: kayit artik
+            kismi <em>UPDATE</em> ile yapiliyor (satir yoksa handle uretip insert).
+            Boylece bugy secimi ve kisisel ayarlar sunucuda kalici olur; baska
+            cihazda oturum acinca da gecerli. (Pet zaten bugy_pets tablosunda
+            tutuluyordu.)</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-07-25">2026-07-25</time><span class="tag">duzeltme</span>
             <h2>Bugy secimi ana sayfada artik degismiyor</h2>
             <p>Sorun: kontrol panelinden farkli bir bugy secince ana sayfa hep
             eskisine donuyordu. Neden: ana sayfada bugy'yi iki sistem yonetiyor
