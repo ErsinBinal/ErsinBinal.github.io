@@ -1332,7 +1332,8 @@ window.CrudeBuster = (function () {
     var dh = sheet.drawH * s, dw = dh * (cw / ch);
     var dx = Math.round(sx - dw / 2), dy = Math.round(feetY - dh + sheet.footPad);
     ctx.save();
-    if (e.facing < 0) { ctx.translate(2 * Math.round(sx), 0); ctx.scale(-1, 1); }
+    // sprite'lar 3/4 ön-SOL render edildi; sağa bakış (facing>=0) için aynala
+    if (e.facing >= 0) { ctx.translate(2 * Math.round(sx), 0); ctx.scale(-1, 1); }
     ctx.drawImage(sheet.img, fi * cw, meta.row * ch, cw, ch, dx, dy, dw, dh);
     ctx.restore();
   }
