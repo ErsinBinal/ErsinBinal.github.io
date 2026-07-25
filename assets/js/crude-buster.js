@@ -1291,8 +1291,14 @@ window.CrudeBuster = (function () {
   };
   // pal -> sprite sheet. Yeni karakter eklemek = burada bir satir + PNG.
   var SHEET_DEFS = [
-    { pal: 'ebinal',  src: '/assets/img/crude/ebinal-sheet.png?v=2',  drawH: 48, footPad: 2 },
-    { pal: 'debinal', src: '/assets/img/crude/debinal-sheet.png?v=1', drawH: 46, footPad: 2 }
+    { pal: 'ebinal',     src: '/assets/img/crude/ebinal-sheet.png?v=2',      drawH: 48, footPad: 2 },
+    { pal: 'debinal',    src: '/assets/img/crude/debinal-sheet.png?v=1',     drawH: 46, footPad: 2 },
+    { pal: 'punk',       src: '/assets/img/crude/punk-sheet.png?v=1',        drawH: 46, footPad: 2 },
+    { pal: 'knife',      src: '/assets/img/crude/knife-sheet.png?v=1',       drawH: 46, footPad: 2 },
+    { pal: 'brute',      src: '/assets/img/crude/brute-sheet.png?v=1',       drawH: 46, footPad: 2 },
+    { pal: 'thrower',    src: '/assets/img/crude/thrower-sheet.png?v=1',     drawH: 46, footPad: 2 },
+    { pal: 'bruteBoss',  src: '/assets/img/crude/bruteBoss-sheet.png?v=1',   drawH: 46, footPad: 2 },
+    { pal: 'cyborgBoss', src: '/assets/img/crude/cyborgBoss-sheet.png?v=1',  drawH: 46, footPad: 2 }
   ];
   var SHEETS = {};   // pal -> { img, ready, drawH, footPad }
   function loadSheets() {
