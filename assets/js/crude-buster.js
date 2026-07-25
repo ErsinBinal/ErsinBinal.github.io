@@ -1073,31 +1073,104 @@ window.CrudeBuster = (function () {
 
   function drawBackground() {
     var bg = STAGES[world.stageIndex] ? STAGES[world.stageIndex].bg : 'ruins';
+    var warm = (bg !== 'subway');
     if (bg === 'subway') {
       var g1 = ctx.createLinearGradient(0, 0, 0, VH);
       g1.addColorStop(0, '#0a0f14'); g1.addColorStop(1, '#141a20');
       ctx.fillStyle = g1; ctx.fillRect(0, 0, VW, VH);
-      // tünel halkaları
+
+      // arka duvar fayans gridi (parallax 0.3)
+      var wallB = GROUND_TOP - 16;
+      ctx.strokeStyle = 'rgba(160,200,210,0.05)'; ctx.lineWidth = 1;
+      var toff = (world.camX * 0.3) % 26;
+      for (var tcc = -1; tcc < VW / 26 + 2; tcc++) { var txx = tcc * 26 - toff; ctx.beginPath(); ctx.moveTo(txx, 12); ctx.lineTo(txx, wallB); ctx.stroke(); }
+      for (var trr = 0; trr < 9; trr++) { var tyy = 18 + trr * 20; if (tyy > wallB) break; ctx.beginPath(); ctx.moveTo(0, tyy); ctx.lineTo(VW, tyy); ctx.stroke(); }
+
+      // duvarda dikey nem/kir izleri
+      for (var gs = Math.floor((world.camX * 0.3) / 74) - 1; gs < ((world.camX * 0.3) + VW) / 74 + 1; gs++) {
+        if (frac(gs * 3.7) > 0.55) continue;
+        var gx2 = gs * 74 - (world.camX * 0.3) + frac(gs * 1.9) * 60;
+        var lg2 = ctx.createLinearGradient(0, 18, 0, wallB);
+        lg2.addColorStop(0, 'rgba(0,0,0,0.22)'); lg2.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = lg2; ctx.fillRect(gx2, 18, 2 + (frac(gs * 5.1) < 0.3 ? 2 : 0), wallB - 18);
+      }
+
+      // üst boru hattı
+      rect(0, 14, VW, 5, 'rgba(38,48,56,0.85)');
+      rect(0, 13, VW, 1, 'rgba(140,160,170,0.3)');
+      rect(0, 19, VW, 1, 'rgba(0,0,0,0.4)');
+
+      // sinyal ışıkları (kırmızı/yeşil, kırmızı yanıp söner)
+      for (var sg = Math.floor((world.camX * 0.3) / 210) - 1; sg < ((world.camX * 0.3) + VW) / 210 + 1; sg++) {
+        var sgx = sg * 210 - world.camX * 0.3 + 40;
+        var green = frac(sg * 2.3) > 0.5;
+        var sfl = green ? 1 : (Math.sin(world.clock * 3 + sg) > 0 ? 1 : 0.2);
+        ctx.shadowColor = green ? 'rgba(80,255,140,0.8)' : 'rgba(255,70,80,0.8)'; ctx.shadowBlur = 5;
+        rect(sgx, 30, 3, 3, (green ? 'rgba(90,255,150,' : 'rgba(255,80,90,') + (0.55 + 0.45 * sfl).toFixed(3) + ')');
+        ctx.shadowBlur = 0;
+      }
+
+      // tünel halkaları + tünel sonu ışığı
       ctx.strokeStyle = 'rgba(0,180,200,0.12)'; ctx.lineWidth = 2;
       for (var r = 0; r < 6; r++) {
         var rx = ((r * 120 - (world.camX * 0.4) % 120) + 120) % (VW + 120) - 60;
         ctx.beginPath(); ctx.ellipse(rx, GROUND_TOP - 40, 70, 90, 0, 0, Math.PI * 2); ctx.stroke();
       }
+      var teg = ctx.createRadialGradient(VW * 0.5, GROUND_TOP - 52, 2, VW * 0.5, GROUND_TOP - 52, 44);
+      teg.addColorStop(0, 'rgba(120,220,255,0.16)'); teg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = teg; ctx.fillRect(VW * 0.5 - 44, GROUND_TOP - 96, 88, 88);
     } else {
       var g = ctx.createLinearGradient(0, 0, 0, VH);
       g.addColorStop(0, '#3a2418'); g.addColorStop(0.5, '#6b3a22'); g.addColorStop(1, '#20140c');
       ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH);
-      // uzak yıkık silüet (parallax 0.25)
-      ctx.fillStyle = '#241a12';
+
+      // en uzak pus silüeti (parallax 0.12)
+      ctx.fillStyle = 'rgba(58,40,30,0.55)';
+      var offH = (world.camX * 0.12) % 130;
+      for (var hb = -1; hb < 6; hb++) {
+        var hbx = hb * 130 - offH;
+        var hbh = 40 + ((hb * 53) % 34);
+        ctx.fillRect(hbx, GROUND_TOP - 50 - hbh, 74, hbh + 50);
+      }
+
+      // uzak yıkık silüet (parallax 0.25) + pencereler + baca dumanı
       var off = (world.camX * 0.25) % 160;
       for (var b = -1; b < 6; b++) {
         var bx = b * 160 - off;
         var bh = 60 + ((b * 37) % 40);
-        ctx.fillRect(bx, GROUND_TOP - 60 - bh, 90, bh + 60);
-        // kırık üst
-        ctx.fillRect(bx + 20, GROUND_TOP - 66 - bh, 14, 8);
-        ctx.fillRect(bx + 60, GROUND_TOP - 70 - bh, 10, 12);
+        var btop = GROUND_TOP - 60 - bh;
+        ctx.fillStyle = '#241a12';
+        ctx.fillRect(bx, btop, 90, bh + 60);
+        ctx.fillRect(bx + 20, btop - 6, 14, 8);        // kırık üst
+        ctx.fillRect(bx + 60, btop - 10, 10, 12);
+        rect(bx, btop, 2, bh + 60, 'rgba(255,180,120,0.05)');  // ay ışığı kenarı
+
+        // pencereler: çoğu karanlık, bazıları yanık ve titrer
+        for (var wc = 0; wc < 5; wc++) {
+          for (var wr = 0; wr < 8; wr++) {
+            var wxp = bx + 12 + wc * 15;
+            var wyp = btop + 10 + wr * 15;
+            if (wyp > GROUND_TOP - 14) break;
+            var seed = frac((b + 3) * 13.1 + wc * 2.7 + wr * 5.3);
+            if (seed > 0.8) {
+              var wfl = 0.45 + 0.55 * Math.sin(world.clock * (2.5 + seed * 5) + seed * 22);
+              rect(wxp, wyp, 7, 9, 'rgba(255,190,95,' + (0.18 + 0.32 * wfl).toFixed(3) + ')');
+            } else {
+              rect(wxp, wyp, 7, 9, 'rgba(0,0,0,' + (0.14 + seed * 0.16).toFixed(3) + ')');
+            }
+          }
+        }
+        // her 3 binada bir baca dumanı (savrularak yükselir)
+        if ((((b % 3) + 3) % 3) === 1) {
+          var chx = bx + 46;
+          for (var sp = 0; sp < 8; sp++) {
+            var sa = 0.11 - sp * 0.012; if (sa <= 0) break;
+            var sway = Math.sin(world.clock * 0.6 + sp * 0.5 + b) * (2 + sp * 0.7);
+            rect(chx + sway - 3, btop - 4 - sp * 7, 6 + sp, 4, 'rgba(120,110,105,' + sa.toFixed(3) + ')');
+          }
+        }
       }
+
       // orta moloz (parallax 0.5)
       ctx.fillStyle = '#33241a';
       var off2 = (world.camX * 0.5) % 120;
@@ -1109,7 +1182,6 @@ window.CrudeBuster = (function () {
     }
 
     // --- atmosfer: ufuk parıltısı + titreşen ışık kaynağı ---
-    var warm = (bg !== 'subway');
     var hg = ctx.createLinearGradient(0, GROUND_TOP - 46, 0, GROUND_TOP + 6);
     hg.addColorStop(0, 'rgba(0,0,0,0)');
     hg.addColorStop(1, warm ? 'rgba(255,150,70,0.13)' : 'rgba(80,200,220,0.11)');
@@ -1120,27 +1192,87 @@ window.CrudeBuster = (function () {
     lg.addColorStop(0, (warm ? 'rgba(255,140,50,' : 'rgba(120,225,255,') + (0.17 * flick).toFixed(3) + ')');
     lg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = lg; ctx.fillRect(lx - 58, GROUND_TOP - 130, 116, 116);
+    world.lightX = lx; world.lightFlick = flick; world.lightWarm = warm;
   }
 
   function drawFloor() {
     var y0 = GROUND_TOP, y1 = GROUND_TOP + DEPTH_MAX + 30;
     var subway = STAGES[world.stageIndex] && STAGES[world.stageIndex].bg === 'subway';
+    var cam = world.camX;
+    // taban + arka bordür + gölge
     ctx.fillStyle = subway ? '#1c1410' : '#2a1c12';
     ctx.fillRect(0, y0, VW, y1 - y0);
-    ctx.fillStyle = subway ? '#241a14' : '#38271a';
+    ctx.fillStyle = subway ? '#241a14' : '#3a2a1a';
     ctx.fillRect(0, y0, VW, 4);
-    // perspektif çizgiler
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
-    var off = (world.camX) % 48;
-    for (var i = -1; i < VW / 24 + 2; i++) {
-      var x = i * 48 - off;
-      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x - 14, y1); ctx.stroke();
+    rect(0, y0 + 4, VW, 2, 'rgba(0,0,0,0.4)');
+
+    if (subway) {
+      // traversler (ties) — dünya ankrajlı
+      for (var tt = Math.floor(cam / 28) - 1; tt < (cam + VW) / 28 + 1; tt++) {
+        var ttx = tt * 28 - cam;
+        rect(ttx, y0 + 42, 11, 30, 'rgba(28,20,15,0.85)');
+        rect(ttx, y0 + 42, 11, 2, 'rgba(70,58,46,0.5)');
+      }
+      // iki ray + parlak üst
+      rect(0, y0 + 47, VW, 2, 'rgba(140,150,160,0.5)');
+      rect(0, y0 + 69, VW, 2, 'rgba(140,150,160,0.5)');
+      rect(0, y0 + 46, VW, 1, 'rgba(220,230,240,0.28)');
+      rect(0, y0 + 68, VW, 1, 'rgba(220,230,240,0.28)');
+    } else {
+      // döşeme dikey ekleri (perspektif)
+      ctx.strokeStyle = 'rgba(0,0,0,0.22)'; ctx.lineWidth = 1;
+      var off = cam % 48;
+      for (var i = -1; i < VW / 24 + 2; i++) {
+        var x = i * 48 - off;
+        ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x - 14, y1); ctx.stroke();
+      }
+      // yatay derz bantları
+      rect(0, y0 + 24, VW, 1, 'rgba(255,240,210,0.04)');
+      rect(0, y0 + 56, VW, 1, 'rgba(0,0,0,0.16)');
+      // asfalt çatlakları (deterministik, kayan)
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1;
+      for (var ct = Math.floor(cam / 96) - 1; ct < (cam + VW) / 96 + 1; ct++) {
+        if (frac(ct * 2.1) > 0.42) continue;
+        var crx = ct * 96 - cam + frac(ct * 4.7) * 70;
+        var cry = y0 + 14 + frac(ct * 6.3) * (y1 - y0 - 26);
+        ctx.beginPath(); ctx.moveTo(crx, cry); ctx.lineTo(crx + 6, cry + 3); ctx.lineTo(crx + 3, cry + 8); ctx.lineTo(crx + 10, cry + 11); ctx.stroke();
+      }
+    }
+
+    // çakıl/leke grain (her iki sahne, kayan)
+    for (var gt = Math.floor(cam / 16) - 1; gt < (cam + VW) / 16 + 1; gt++) {
+      var r1 = frac(gt * 1.7), r2 = frac(gt * 3.3), r3 = frac(gt * 5.1);
+      var grx = gt * 16 - cam + r1 * 16;
+      var gry = y0 + 8 + r2 * (y1 - y0 - 12);
+      rect(grx, gry, r3 < 0.15 ? 2 : 1, 1, r3 < 0.5 ? 'rgba(0,0,0,0.2)' : 'rgba(255,240,210,0.05)');
+    }
+
+    // su birikintileri (kaynağı yansıtan ince şerit)
+    var warmF = !subway;
+    for (var pt = Math.floor(cam / 150) - 1; pt < (cam + VW) / 150 + 1; pt++) {
+      if (frac(pt * 3.9) > 0.5) continue;
+      var pdx = pt * 150 - cam + frac(pt * 1.3) * 120;
+      var pdy = y0 + 30 + frac(pt * 2.7) * 44;
+      var pw = 12 + frac(pt * 5.5) * 12;
+      ctx.fillStyle = 'rgba(8,12,16,0.5)';
+      ctx.beginPath(); ctx.ellipse(pdx, pdy, pw, pw * 0.3, 0, 0, Math.PI * 2); ctx.fill();
+      rect(pdx - pw * 0.55, pdy - 1, pw * 1.1, 1, warmF ? 'rgba(255,150,70,0.14)' : 'rgba(120,220,255,0.16)');
+    }
+
+    // ışık kaynağının zemine yansıyan havuzu
+    if (world.lightFlick) {
+      var rlx = world.lightX;
+      var rg = ctx.createRadialGradient(rlx, y0 + 4, 2, rlx, y0 + 4, 72);
+      rg.addColorStop(0, (world.lightWarm ? 'rgba(255,150,70,' : 'rgba(120,220,255,') + (0.10 * world.lightFlick).toFixed(3) + ')');
+      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg; ctx.fillRect(rlx - 72, y0, 144, y1 - y0);
     }
   }
 
   var flashCol = null;   // set != null -> px() gövdeyi beyaza boyar (vuruş flaşı)
   function px(x, y, w, h, c) { ctx.fillStyle = flashCol || c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }
   function rect(x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); }  // flaştan bağımsız (kontur/gölge)
+  function frac(n) { var x = Math.sin(n * 127.1) * 43758.5453; return x - Math.floor(x); }  // deterministik 0..1 (kayan doku için)
 
   function drawFighter(e, pal) {
     if (!pal) pal = PAL.punk;
@@ -1218,9 +1350,23 @@ window.CrudeBuster = (function () {
     var headY = -37 * s + bob;
     rect(-6 * s + lean, headY - 1 * s, 12 * s, 13 * s, 'rgba(6,10,8,0.55)');  // baş konturu
     px(-5 * s + lean, headY, 10 * s, 11 * s, pal.skin);
+    // saç + arka favori
     px(-6 * s + lean, headY - 2 * s, 12 * s, 4 * s, pal.hair);
-    if (!flashing) rect(1 * s + lean, headY, 4 * s, 11 * s, 'rgba(255,255,255,0.09)'); // yüz highlight
-    px(1 * s + lean, headY + 4 * s, 3 * s, 2 * s, '#101010'); // göz
+    px(-6 * s + lean, headY + 1 * s, 2 * s, 5 * s, pal.hair);
+    if (!flashing) {
+      rect(-5 * s + lean, headY - 2 * s, 5 * s, 1 * s, 'rgba(255,255,255,0.12)'); // saç parıltısı
+      rect(1 * s + lean, headY, 4 * s, 11 * s, 'rgba(255,255,255,0.09)');          // yüz ışığı
+      rect(-5 * s + lean, headY + 6 * s, 3 * s, 5 * s, 'rgba(0,0,0,0.16)');         // yanak/çene gölgesi
+      rect(4 * s + lean, headY + 5 * s, 2 * s, 2 * s, 'rgba(0,0,0,0.22)');          // burun gölgesi
+    }
+    // belirgin kaş
+    rect(0 * s + lean, headY + 2 * s, 5 * s, 2 * s, pal.hair);
+    // göz + parıltı
+    px(1 * s + lean, headY + 4 * s, 3 * s, 2 * s, '#101010');
+    if (!flashing) rect(3 * s + lean, headY + 4 * s, 1 * s, 1 * s, 'rgba(255,255,255,0.5)'); // göz parıltısı
+    // ağız (saldırı/özelde daha sert)
+    var mouthW = (st === 'attack' || st === 'special') ? 3 * s : 2 * s;
+    rect(0 * s + lean, headY + 8 * s, mouthW, 1 * s, 'rgba(30,10,8,0.5)');
 
     // kollar
     var armY = torsoY + 2 * s;
