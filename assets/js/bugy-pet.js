@@ -193,7 +193,15 @@
       try {
         const remote = await api.fetchBugyPet();
         if (remote) { migrateSpecies(remote); writeLocal(remote); return remote; }
-        // remote null = bu kullanicinin henuz peti yok; yerel kopyayi guvenme.
+        // Sunucuda pet yok. Ama yerelde gecerli (hatched) bir pet varsa, sunucu
+        // kaydi kaybolmus / sessiz upsert hatasiyla hic yazilmamis olabilir.
+        // Yereli koru ve sunucuya geri yaz (self-heal) -> pet + bakim menusu
+        // kaybolmaz. (Kisisel site; cihaz basina tek kullanici.)
+        const local = migrateSpecies(readLocal());
+        if (local && local.hatched) {
+          try { if (api.upsertBugyPet) await api.upsertBugyPet(local); } catch { /* tablo yok olabilir */ }
+          return local;
+        }
         return null;
       } catch {
         // Tablo yoksa / ag hatasi: yerel kopyayla devam (zarif dusus).
