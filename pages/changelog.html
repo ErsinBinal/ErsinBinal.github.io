@@ -158,6 +158,19 @@
 
         <article class="entry">
             <time datetime="2026-07-25">2026-07-25</time><span class="tag">duzeltme</span>
+            <h2>Bugy secimi ana sayfada artik degismiyor</h2>
+            <p>Sorun: kontrol panelinden farkli bir bugy secince ana sayfa hep
+            eskisine donuyordu. Neden: ana sayfada bugy'yi iki sistem yonetiyor
+            ve <strong>sunucu tercihi</strong> (companion_pref) yereldeki taze
+            secimi eziyordu &mdash; sunucu kaydi takiliysa (yazilamiyorsa) hep ona
+            donuyordu. Duzeltme: cihazdaki son secim (localStorage) sunucudan
+            oncelikli sayilir ve sunucu da tazelenir; iki kontrolor tutarli
+            calisir. (Supabase kontrolu: companion_pref sutunu + RLS saglam;
+            takilan sunucu degeri artik secimi engellemiyor.)</p>
+        </article>
+
+        <article class="entry">
+            <time datetime="2026-07-25">2026-07-25</time><span class="tag">duzeltme</span>
             <h2>Surpriz Bugy (pet) ana sayfada kaybolmuyor</h2>
             <p>Sorun: Surpriz Bugy'i secince ana sayfada gorunmuyor ve besleme/
             temizlik bakim menusu cikmiyordu. Neden: pet sunucuya kaydedilemediginde

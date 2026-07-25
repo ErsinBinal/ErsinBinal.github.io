@@ -756,6 +756,18 @@
       ? userProfile.companion_pref
       : null;
 
+    // Cihazdaki son KLASIK motor secimi (v1/v2/v3) sunucu tercihinden tazedir:
+    // dashboard/terminal her degisiklikte localStorage engine'e guvenilir sekilde
+    // yazar. Sunucu yazimi gecikir/basarisiz olsa bile secim ana sayfada geri
+    // EZILMESIN (home-protocol da localStorage-oncelikli calisir; iki kontrolor
+    // tutarli olur). Not: v4/pet pet-verisi + skin gerektirdiginden bu hizli
+    // yola DAHIL DEGIL; onlar sunucu/pet mantigiyla yonetilir.
+    const lsEngine = localStorage.getItem(ENGINE_KEY);
+    if (['v1', 'v2', 'v3'].includes(lsEngine) && lsEngine !== pref) {
+      pref = lsEngine;
+      saveCompanionPref(lsEngine); // sunucuyu da tazele (best-effort)
+    }
+
     // KILIT: v4 ve pet yalnizca hak edende. Cozmemis biri (orn. eski/kacak
     // bir profil tercihi) bunu tasisa bile yok sayilir; Classic'e duser.
     if (LOCKED_PREFS.includes(pref) && !unlocked) pref = null;
