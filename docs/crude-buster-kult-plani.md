@@ -108,8 +108,14 @@ mizahı, ama Convivium'un CRT-fosfor estetiğinde ve **elle render edilmiş 3B k
 - **Aile içeriği:** yalnız stilize karakterler; ham fotoğraf yok ([[crude-buster-sprite-hatti]] güvenlik).
 - **Sürüm disiplini:** her gönderide `?v=` + SW cache + gate (syntax+integrity+unit).
 
-## 7. Senden ihtiyaçlarım (destek)
-- **Ton/ruh:** ciddi-gritty noir mı, kalpli-esprili retro (River City) mi? (sanat+yazı+müzik hepsini belirler)
-- **Kişisellik:** baba-oğul hikâyesini ne kadar gerçek/kişisel yapalım (E. & oğlu)?
-- **Tempo:** büyük kült (çok oturum) mu, sıkı-cilalı dikey dilim mi?
-- İleride: ses/isim/replik gibi somut varlıklar gerekirse isteyeceğim.
+## 7. KİLİTLİ KARARLAR (2026-07-25, kullanıcı onayı)
+- **Ton/ruh:** **Fosfor-noir + sıcak kalp.** Karanlık atmosferik dünya, ama
+  kahramanlarda sıcaklık + ölçülü mizah. Denge.
+- **Kişisellik:** **Tam kişisel.** Gerçek baba-oğul göndermeleri, iç şakalar,
+  aileye özel detaylar/replikler. → Faz 5'te (hikâye/replik) kullanıcıdan somut
+  malzeme (iç şaka, paylaşılan anı, lakap) İSTENECEK. Görsel yine stilize (ham foto yok).
+- **Tempo:** **Büyük kült, adım adım.** Tüm fazlar; her adım yayınlanır+test edilir.
+
+### Bekleyen destek istekleri (zamanı gelince)
+- Faz 5: baba-oğul iç şakaları / paylaşılan anı / lakaplar (replik ve beat'ler için).
+- Ses/isim/özel içerik gerekirse.
