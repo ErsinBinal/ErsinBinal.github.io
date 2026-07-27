@@ -153,7 +153,8 @@
       { file: 'holo-18-console', title: 'OYUN KONSOLU', meta: 'kartuslu ev konsolu', note: 'Kayit silinmemis; kaldigin yeri hatirliyor.' },
       { file: 'holo-19-gameboy', title: 'AVUC KONSOLU', meta: 'tasinabilir piksel ekran', note: 'Pili bitti ama ekran hala bir sey hatirliyor.' },
       { file: 'nefertiti', proc: 'nefertiti', title: 'NEFERTITI TAPINAGI', meta: 'kayip Amarna sinyali // gunes tapinagi', note: 'Tarama bir GLB\'den gelmiyor; terminal onu hafizadan yeniden orguluyor. Gunese bakan cephe hala isik ariyor.' },
-      { file: 'dunya', proc: 'dunya', title: 'DUNYA', meta: 'mavi noktanin yesil kopyasi // ana gezegen', note: 'Kitalar hafizadan orgulendu; eksen 23.5 derece egik, tek uydu hala yorungede. Butun sinyaller burada dogdu.' }
+      { file: 'dunya', proc: 'dunya', title: 'DUNYA', meta: 'mavi noktanin yesil kopyasi // ana gezegen', note: 'Kitalar hafizadan orgulendu; eksen 23.5 derece egik, tek uydu hala yorungede. Butun sinyaller burada dogdu.' },
+      { file: 'sehir', proc: 'sehir', title: 'KURTARILMIS SEHIR', meta: 'wireframe skyline // gece kaydi', note: 'Isiklari cok once sondu; terminal sadece silueti hatirliyor. Zemin izgarasi hala altta akiyor.' }
     ];
 
     const canvas = document.getElementById('stage');
@@ -365,7 +366,64 @@
       return g;
     }
 
-    const PROC_BUILDERS = { nefertiti: buildNefertiti, dunya: buildEarth };
+    // Kurtarilmis sehir: merkeze dogru yukselen bina bloklari (downtown
+    // cekirdegi), setback'li kuleler, antenler ve altta hologram izgara.
+    function buildCity() {
+      const g = new THREE.Group();
+      const add = (geo, x, y, z, ry) => {
+        const m = new THREE.Mesh(geo);
+        m.position.set(x, y, z);
+        if (ry) m.rotation.y = ry;
+        g.add(m);
+        return m;
+      };
+
+      // Deterministik psodo-rasgele (mulberry32) — her yuklemede ayni siluet
+      let a = 0x9e3779b9;
+      const rnd = () => {
+        a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+
+      const span = 9, cols = 6, rows = 6;
+      const cell = span / cols, half = span / 2;
+
+      // Zemin plakasi + yesil hologram izgara
+      add(taperedBox(span + 0.6, span + 0.6, span + 0.6, span + 0.6, 0.25), 0, -0.25, 0);
+      const grid = new THREE.GridHelper(span, cols, 0x00ff66, 0x00ff66);
+      grid.material.transparent = true;
+      grid.material.opacity = 0.28;
+      grid.material.blending = THREE.AdditiveBlending;
+      grid.material.depthWrite = false;
+      grid.position.y = 0.002;
+      g.add(grid);
+
+      // Bina bloklari (merkeze yakin -> daha yuksek)
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          if (rnd() < 0.14) continue; // meydan / bosluk
+          const cx = -half + cell * (i + 0.5);
+          const cz = -half + cell * (j + 0.5);
+          const fw = cell * (0.5 + rnd() * 0.34);
+          const fd = cell * (0.5 + rnd() * 0.34);
+          const distC = Math.hypot(cx, cz) / (half * 1.414);
+          const h = (1.1 + rnd() * 3.4) * (1.25 - distC * 0.7);
+          add(taperedBox(fw, fd, fw * 0.9, fd * 0.9, h), cx, 0, cz);
+          if (rnd() > 0.5) {
+            add(taperedBox(fw * 0.62, fd * 0.62, fw * 0.5, fd * 0.5, h * 0.4), cx, h, cz); // setback
+          }
+          if (rnd() > 0.68) {
+            add(taperedBox(0.06, 0.06, 0.02, 0.02, 0.4 + rnd() * 0.9), cx, h, cz); // anten
+          }
+        }
+      }
+
+      return g;
+    }
+
+    const PROC_BUILDERS = { nefertiti: buildNefertiti, dunya: buildEarth, sehir: buildCity };
 
     async function boot() {
       try {
