@@ -151,7 +151,8 @@
       { file: 'holo-16-bobber', title: 'BOBBER', meta: 'terk edilmis garaj motoru', note: 'Kontagi kayip; yine de gitmeye hazir duruyor.' },
       { file: 'holo-17-skateboard', title: 'KAYKAY', meta: 'asinmis deck, uc parmak bant', note: 'Bir yaz butunuyle bu tahtada gecti.' },
       { file: 'holo-18-console', title: 'OYUN KONSOLU', meta: 'kartuslu ev konsolu', note: 'Kayit silinmemis; kaldigin yeri hatirliyor.' },
-      { file: 'holo-19-gameboy', title: 'AVUC KONSOLU', meta: 'tasinabilir piksel ekran', note: 'Pili bitti ama ekran hala bir sey hatirliyor.' }
+      { file: 'holo-19-gameboy', title: 'AVUC KONSOLU', meta: 'tasinabilir piksel ekran', note: 'Pili bitti ama ekran hala bir sey hatirliyor.' },
+      { file: 'nefertiti', proc: 'nefertiti', title: 'NEFERTITI TAPINAGI', meta: 'kayip Amarna sinyali // gunes tapinagi', note: 'Tarama bir GLB\'den gelmiyor; terminal onu hafizadan yeniden orguluyor. Gunese bakan cephe hala isik ariyor.' }
     ];
 
     const canvas = document.getElementById('stage');
@@ -211,6 +212,90 @@
       });
     }
 
+    // --- Prosedurel kalintilar: GLB olmadan, geometri terminalde orgulur ---
+    // Trapez prizma (Misir pilonu/obeliski icin egik duvar): taban dikdortgeni
+    // ustte daralir; DoubleSide oldugu icin sarim onemsiz, normalleri hesaplariz.
+    function taperedBox(bw, bd, tw, td, h) {
+      const hw = bw / 2, hd = bd / 2, tw2 = tw / 2, td2 = td / 2;
+      const pos = new Float32Array([
+        -hw, 0, -hd, hw, 0, -hd, hw, 0, hd, -hw, 0, hd,
+        -tw2, h, -td2, tw2, h, -td2, tw2, h, td2, -tw2, h, td2
+      ]);
+      const idx = [
+        0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7,
+        3, 2, 6, 3, 6, 7, 1, 0, 4, 1, 4, 5,
+        0, 3, 7, 0, 7, 4, 2, 1, 5, 2, 5, 6
+      ];
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      return g;
+    }
+
+    // Nefertiti gunes tapinagi: iki egik pilon + gecit, obelisk cifti,
+    // papirus baslikli kolonad ve tacli muhafiz heykelleri.
+    function buildNefertiti() {
+      const g = new THREE.Group();
+      const add = (geo, x, y, z, ry) => {
+        const m = new THREE.Mesh(geo);
+        m.position.set(x, y, z);
+        if (ry) m.rotation.y = ry;
+        g.add(m);
+        return m;
+      };
+
+      // Kademeli taban
+      add(taperedBox(9, 6, 8.6, 5.6, 0.35), 0, 0, 0);
+      add(taperedBox(8.2, 5.3, 8.0, 5.1, 0.3), 0, 0.35, 0);
+      const baseY = 0.65;
+
+      // Pilonlar + cavetto korniz
+      const pylonH = 4.6;
+      const pylonGeo = taperedBox(2.6, 1.7, 2.1, 1.4, pylonH);
+      const corniceGeo = taperedBox(2.3, 1.5, 2.9, 2.0, 0.5);
+      [-2.1, 2.1].forEach((x) => {
+        add(pylonGeo, x, baseY, 1.4);
+        add(corniceGeo, x, baseY + pylonH, 1.4);
+      });
+
+      // Gecit: sovaler + lento + korniz
+      const jambH = 3.4;
+      const jambGeo = taperedBox(0.55, 1.4, 0.5, 1.4, jambH);
+      add(jambGeo, -0.95, baseY, 1.4);
+      add(jambGeo, 0.95, baseY, 1.4);
+      add(taperedBox(2.6, 1.5, 2.6, 1.5, 0.5), 0, baseY + jambH, 1.4);
+      add(taperedBox(2.4, 1.4, 2.9, 1.8, 0.4), 0, baseY + jambH + 0.5, 1.4);
+
+      // Kolonad (hipostil salon): papirus baslikli kolonlar + arsitrav
+      const colH = 3.6;
+      [-2.4, -0.8, 0.8, 2.4].forEach((x) => {
+        add(new THREE.CylinderGeometry(0.32, 0.4, colH, 10), x, baseY + colH / 2, -1.6);
+        add(new THREE.CylinderGeometry(0.62, 0.34, 0.6, 10), x, baseY + colH + 0.1, -1.6);
+      });
+      add(taperedBox(6.4, 0.7, 6.4, 0.7, 0.55), 0, baseY + colH + 0.4, -1.6);
+      add(taperedBox(6.2, 0.6, 6.9, 1.0, 0.4), 0, baseY + colH + 0.95, -1.6);
+
+      // Obelisk cifti (egik sovel + piramidyon)
+      const obH = 5.2;
+      [-3.2, 3.2].forEach((x) => {
+        add(taperedBox(0.82, 0.82, 0.66, 0.66, 0.4), x, baseY, 3.0);
+        add(taperedBox(0.5, 0.5, 0.16, 0.16, obH), x, baseY + 0.4, 3.0);
+        add(new THREE.ConeGeometry(0.16, 0.6, 4), x, baseY + 0.4 + obH + 0.3, 3.0, Math.PI / 4);
+      });
+
+      // Tacli muhafiz heykelleri (Nefertiti silueti: govde + bas + duz tepe tac)
+      [-0.95, 0.95].forEach((x) => {
+        add(taperedBox(0.52, 0.36, 0.42, 0.3, 1.4), x, baseY, 2.2);
+        add(new THREE.SphereGeometry(0.26, 12, 10), x, baseY + 1.72, 2.2);
+        add(new THREE.CylinderGeometry(0.29, 0.24, 0.72, 12), x, baseY + 2.28, 2.2);
+      });
+
+      return g;
+    }
+
+    const PROC_BUILDERS = { nefertiti: buildNefertiti };
+
     async function boot() {
       try {
         THREE = await import('three');
@@ -260,8 +345,13 @@
       }
       uniformsList = [];
       try {
-        const gltf = await gltfLoader.loadAsync('/assets/models/holo/' + r.file + '.glb');
-        const obj = gltf.scene;
+        let obj;
+        if (r.proc) {
+          obj = PROC_BUILDERS[r.proc]();
+        } else {
+          const gltf = await gltfLoader.loadAsync('/assets/models/holo/' + r.file + '.glb');
+          obj = gltf.scene;
+        }
         obj.traverse((o) => {
           if (o.isMesh) {
             o.material = makeHoloMaterial();
