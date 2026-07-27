@@ -124,6 +124,17 @@ Terminal navigasyonu N1 canlı kabul edildi. Sonraki çalışma, kullanıcı kar
 göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi)
+
+> **Ek (2026-07-27) — İleri algoritma hattı:** PO incelemesiyle 6 algoritmik
+> öneri ayrı tasarım belgesine yazıldı:
+> [İleri Algoritma Önerileri (PO)](ileri-algoritma-onerileri-po.md). Amiral
+> gemileri: **A1 Sinyal Atlası** (içerik grafiği + Personalized PageRank; N3
+> "Yaşayan Atlas"ın algoritmik çekirdeği) ve **A2 Prosedürel Kalıntı Grameri**
+> (shape grammar + Wave Function Collapse; prosedürel holo işinin devamı).
+> Destek: yerel anlamsal arama (BM25+RRF), yaşayan harita (reaksiyon-difüzyon),
+> rollback co-op netcode, Ekol Aynası Bayesçi uzantısı. Önerilen başlangıç:
+> A1 Faz 1.
+
 - **Sinyal Arkeolojisi**: sitenin "eski surumlerinden kalma" sahte kalintilar
   (bozuk 1997 BBS sayfasi, yarim TODO.txt, kurtarilmis oyun ekrani). `cd /ruins`
   ile girilen, zamanla kazilan statik katman. **TAMAMLANDI; canlı v205.**

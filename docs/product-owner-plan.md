@@ -95,3 +95,14 @@ The product goal is to preserve that strange charm while making the site easier 
 3. Add release notes to `README.md`.
 4. Decide whether Candy_Pop remains public-indexed or becomes a hidden prototype area.
 5. Promote or archive Candy_Pop so prototype dependencies do not leak into the main product standard.
+
+## Advanced feature / algorithm track (2026-07-27)
+
+A PO-level review proposing algorithmically rich features that fit the
+deterministic-offline, framework-free DNA — see
+[İleri Algoritma Önerileri (PO)](ileri-algoritma-onerileri-po.md). Flagship
+recommendation: **A1 Sinyal Atlası** (content graph + Personalized PageRank
+navigation) — the missing engine behind the N3 "Yaşayan Atlas" goal and the
+direct fix for the new-visitor discovery problem in the technical review. Second
+flagship: **A2 Prosedürel Kalıntı Grameri** (shape grammar + Wave Function
+Collapse), extending the procedural holo work.
