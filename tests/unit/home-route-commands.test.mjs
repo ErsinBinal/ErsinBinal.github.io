@@ -29,6 +29,7 @@ const expectedCommands = [
   'open oracle',
   'paradox',
   'ekol',
+  'moto',
   'bugy studio',
   'about',
   'access',
@@ -44,7 +45,7 @@ test('route registry preserves command count and order', () => {
   const home = loadModule();
 
   assert.equal(typeof home.createRouteCommands, 'function');
-  assert.equal(home.routeCommandRegistry.length, 25);
+  assert.equal(home.routeCommandRegistry.length, 26);
   assert.deepEqual(
     Array.from(home.routeCommandRegistry, (entry) => entry.command),
     expectedCommands
@@ -56,8 +57,8 @@ test('route registry snapshot preserves every label, alias and target', () => {
   const snapshot = JSON.stringify(home.routeCommandRegistry);
   const digest = createHash('sha256').update(snapshot).digest('hex');
 
-  assert.equal(home.routeCommandRegistry.reduce((total, entry) => total + entry.aliases.length, 0), 107);
-  assert.equal(digest, '3f7212abbc466f69d211defd234757d7ecdcabce0c8deec8213d826088cf4c30');
+  assert.equal(home.routeCommandRegistry.reduce((total, entry) => total + entry.aliases.length, 0), 114);
+  assert.equal(digest, '26e7181a33b1d1b8d48bbac53ec2ec4d0f2b7db593d9dcfd997cde01de418bce');
 });
 
 test('factory preserves route targets, fallbacks and origin behavior', () => {
@@ -76,7 +77,7 @@ test('factory preserves route targets, fallbacks and origin behavior', () => {
   const definitions = home.createRouteCommands({ route, goTo, scrollToOrigin });
   const byCommand = new Map(definitions.map((definition) => [definition.command, definition]));
 
-  assert.equal(definitions.length, 25);
+  assert.equal(definitions.length, 26);
   assert.equal(byCommand.get('home').action(), 'origin selected');
   assert.equal(byCommand.get('open dossier').action(), '/mapped/dossier');
   assert.equal(byCommand.get('open oracle').action(), '/mapped/oracle');
@@ -85,7 +86,7 @@ test('factory preserves route targets, fallbacks and origin behavior', () => {
   assert.equal(byCommand.get('hologram').action(), '/holo/');
   assert.equal(byCommand.get('esyalar').action(), '/arsiv/');
   assert.equal(byCommand.get('open manifest').action(), 'manifest.json');
-  assert.equal(routeCalls.length, 23);
+  assert.equal(routeCalls.length, 24);
 
   for (const definition of definitions) {
     assert.equal(typeof definition.command, 'string');

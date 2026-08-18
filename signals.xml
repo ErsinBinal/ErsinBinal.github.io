@@ -12,8 +12,16 @@
     <description>Convivium web laboratuvarina dusen yeni ozellikler, oyunlar ve deneyler. Ersin Binal'in kisisel deneysel web alani.</description>
     <language>tr</language>
     <copyright>Copyright (c) 2026 Ersin Binal. All rights reserved.</copyright>
-    <lastBuildDate>Mon, 27 Jul 2026 13:00:00 +0300</lastBuildDate>
+    <lastBuildDate>Tue, 18 Aug 2026 21:00:00 +0300</lastBuildDate>
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Demir At Terazisi: motosiklet kiyas terminali</title>
+      <link>https://ersinbinal.github.io/tools/demir-at.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-18-demir-at-terazisi</guid>
+      <pubDate>Tue, 18 Aug 2026 21:00:00 +0300</pubDate>
+      <description>Garaja bir terazi kuruldu: bes sinif (naked, cruiser, bobber, adventure, scrambler) x iki marka = on motosiklet; agirlik, beygir ve tork yan yana tartiliyor. Asil hikaye turetilmis oranlarda: hp/ton, Nm/100kg ve sasi borcu (kg/hp). Barlar iki kipte okunur (garajin %5-%95 araligi ya da sinif medyanina oran), sacilimda Pareto siniri isaretli, bilanco cumlesi deterministik bir kural tablosundan uretilir. Kareler Wikimedia Commons'un ozgur lisansli fotograflarindan fosfor-yesil tarama maskesiyle uretildi. Terminalde: moto</description>
+    </item>
 
     <item>
       <title>Hologram Kasasi: Kurtarilmis Sehir (prosedurel wireframe skyline)</title>

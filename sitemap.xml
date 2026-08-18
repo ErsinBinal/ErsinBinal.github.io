@@ -139,6 +139,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://ersinbinal.github.io/tools/demir-at.html</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://ersinbinal.github.io/holo/</loc>
     <lastmod>2026-07-22</lastmod>
     <changefreq>monthly</changefreq>

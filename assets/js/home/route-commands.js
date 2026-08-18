@@ -121,6 +121,13 @@
       fallback: '/tools/ekol-aynasi.html'
     },
     {
+      command: 'moto',
+      description: 'Demir At Terazisi - motosiklet kiyas terminali',
+      aliases: ['kiyas', 'kıyas', 'terazi', 'motor', 'motosiklet', 'demir at', 'moto kiyas'],
+      routeKey: 'demirAt',
+      fallback: '/tools/demir-at.html'
+    },
+    {
       command: 'bugy studio',
       description: 'Bugy Studio deney aracini acar',
       aliases: ['bugy lab', 'studio bugy', 'pet studio'],

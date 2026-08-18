@@ -28,6 +28,7 @@
     paradox: '/tools/paradox-terminal.html',
     bugyStudio: '/tools/bugy-studio.html',
     ekolAynasi: '/tools/ekol-aynasi.html',
+    demirAt: '/tools/demir-at.html',
     holo: '/holo/',
     arsiv: '/arsiv/'
   });

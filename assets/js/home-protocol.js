@@ -1033,6 +1033,7 @@
         ['/oracle/', 'oracle room'],
         ['/tools/paradox-terminal.html', 'paradox terminal'],
         ['/tools/ekol-aynasi.html', 'ekol aynasi'],
+        ['/tools/demir-at.html', 'demir at terazisi'],
         [route('dart', '/tools/dart-skorbord.html'), 'dart skorbord']
       ];
 

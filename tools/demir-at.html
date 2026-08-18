@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<!--
+  Convivium Origin Marker
+  (c) 2026 Ersin Binal - https://ersinbinal.github.io
+  Bu kaynak kod, tasarim ve icerik teliflidir. Kopyalama veya yeniden yayim,
+  LICENSE ve NOTICE.md uyarinca yazili izin olmadan yasaktir.
+  origin-id: CVM-AB27226B
+-->
+<meta name="author" content="Ersin Binal">
+<meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-AB27226B">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demir At Terazisi — Motosiklet Kıyas | Convivium</title>
+  <meta name="description" content="Motosikletleri ağırlık, beygir ve tork üçlüsüyle kıyaslayan terminal: güç/ağırlık, tork/ağırlık ve şasi borcu oranlarını sınıf bağlamında okur.">
+  <meta name="author" content="Ersin Binal">
+  <link rel="canonical" href="https://ersinbinal.github.io/tools/demir-at.html">
+  <meta name="robots" content="index, follow">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://convivium-oracle.convivium.workers.dev; media-src 'self' data: blob:; connect-src 'self'; font-src 'self';">
+
+  <meta property="og:site_name" content="Convivium">
+  <meta property="og:title" content="Demir At Terazisi — Motosiklet Kıyas | Convivium">
+  <meta property="og:description" content="Ağırlık, beygir, tork. Asıl hikâye hp/ton, Nm/100kg ve kg/hp oranlarında.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://ersinbinal.github.io/tools/demir-at.html">
+  <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+  <meta property="og:locale" content="tr_TR">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Demir At Terazisi — Motosiklet Kıyas">
+  <meta name="twitter:description" content="Ağırlık, beygir, tork. Asıl hikâye oranlarda.">
+  <meta name="twitter:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
+
+  <meta name="theme-color" content="#00ff00">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
+  <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/components.css?v=37">
+  <link rel="stylesheet" href="/assets/css/demir-at.css?v=1">
+</head>
+<body class="terazi-page">
+  <a class="skip-link" href="#content">İçeriği atla</a>
+
+  <main id="content" class="terazi-shell" role="main">
+    <header class="terazi-top">
+      <div>
+        <p class="kicker">Convivium / moto kıyas terminali</p>
+        <h1>Demir At Terazisi</h1>
+      </div>
+      <div class="spacer"></div>
+      <div class="meta">
+        <span>veri: <strong id="dataVersion">v1</strong></span>
+        <a class="btn" href="/">&#8592; ana sayfa</a>
+      </div>
+    </header>
+
+    <section class="terazi-filters" aria-label="Filtreler">
+      <div class="filter-row">
+        <span class="filter-label" id="classLabel">Sınıf</span>
+        <div id="classChips" role="group" aria-labelledby="classLabel"></div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label" id="brandLabel">Marka</span>
+        <div id="brandChips" role="group" aria-labelledby="brandLabel"></div>
+      </div>
+      <div class="filter-row">
+        <span class="filter-label" id="modeLabel">Ölçüm</span>
+        <div id="modeChips" role="group" aria-labelledby="modeLabel"></div>
+        <label class="visually-hidden" for="search">Motosiklet ara</label>
+        <input id="search" class="terazi-search" type="search" placeholder="ara: mt-09, bobber, bmw…" autocomplete="off">
+      </div>
+    </section>
+
+    <section class="slots" aria-label="Karşılaştırma slotları">
+      <article class="slot" data-side="a">
+        <div class="slot-frame">
+          <span class="frame-tag">slot a</span>
+          <img id="frameA" src="/assets/img/moto/yamaha-mt-09.webp" alt="" width="720" height="450" loading="eager" decoding="async">
+        </div>
+        <h2 class="slot-title" id="titleA">—</h2>
+        <p class="slot-sub" id="subA"></p>
+        <div class="slot-actions">
+          <button class="btn" type="button" id="pickA" aria-expanded="false" aria-controls="pickerA">değiştir ▾</button>
+        </div>
+        <div class="picker" id="pickerA" role="listbox" aria-label="Slot A için motosiklet seç" hidden></div>
+      </article>
+
+      <div class="swap-column">
+        <button class="btn" type="button" id="swap" title="Slotları takas et (S)">⇄</button>
+      </div>
+
+      <article class="slot" data-side="b">
+        <div class="slot-frame">
+          <span class="frame-tag">slot b</span>
+          <img id="frameB" src="/assets/img/moto/harley-davidson-fat-boy-114.webp" alt="" width="720" height="450" loading="eager" decoding="async">
+        </div>
+        <h2 class="slot-title" id="titleB">—</h2>
+        <p class="slot-sub" id="subB"></p>
+        <div class="slot-actions">
+          <button class="btn" type="button" id="pickB" aria-expanded="false" aria-controls="pickerB">değiştir ▾</button>
+        </div>
+        <div class="picker" id="pickerB" role="listbox" aria-label="Slot B için motosiklet seç" hidden></div>
+      </article>
+    </section>
+
+    <section class="panel" aria-labelledby="balanceTitle">
+      <h2 id="balanceTitle">Terazi</h2>
+      <p class="panel-note" id="balanceNote"></p>
+      <div id="balanceRows"></div>
+    </section>
+
+    <section class="charts">
+      <div class="panel" aria-labelledby="radarTitle">
+        <h2 id="radarTitle">Radar</h2>
+        <p class="panel-note">Beş eksen üst üste: güç, tork, tork/ağırlık, hafiflik, güç/ağırlık.</p>
+        <div id="radar"></div>
+        <p class="legend"><span><i class="a"></i>slot a</span><span><i class="b"></i>slot b</span></p>
+      </div>
+      <div class="panel" aria-labelledby="scatterTitle">
+        <h2 id="scatterTitle">Saçılım — tüm garaj</h2>
+        <p class="panel-note">Kesikli çizgiler eş güç/ağırlık oranları. Halkalı noktalar Pareto sınırında: kendi ağırlığında daha güçlüsü yok.</p>
+        <div id="scatter"></div>
+        <p class="legend"><span><i class="a"></i>slot a</span><span><i class="b"></i>slot b</span><span><i class="pareto"></i>Pareto sınırı</span></p>
+      </div>
+    </section>
+
+    <section aria-labelledby="verdictTitle">
+      <h2 id="verdictTitle" class="visually-hidden">Bilanço</h2>
+      <p class="verdict" id="verdict" aria-live="polite"></p>
+      <div class="verdict-actions">
+        <button class="btn" type="button" id="nextPair" title="Sıradaki çift (R)">sıradaki çift</button>
+        <button class="btn" type="button" id="copyLink">bağlantıyı kopyala</button>
+        <button class="btn" type="button" id="toggleTable" aria-expanded="false" aria-controls="tableWrap">tabloyu göster</button>
+        <button class="btn" type="button" id="csv">csv</button>
+      </div>
+    </section>
+
+    <div class="panel data-table-wrap" id="tableWrap" hidden>
+      <table class="data-table">
+        <caption class="visually-hidden">Garajdaki on motosikletin ağırlık, güç, tork ve türetilmiş oran değerleri</caption>
+        <thead>
+          <tr>
+            <th scope="col">motosiklet</th>
+            <th scope="col">sınıf</th>
+            <th scope="col">kg</th>
+            <th scope="col">hp</th>
+            <th scope="col">Nm</th>
+            <th scope="col">hp/ton</th>
+            <th scope="col">Nm/100kg</th>
+            <th scope="col">kg/hp</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <p class="panel-note">* Üretici beygir yayımlamıyor; değer bağımsız ölçümlerden tahminidir.</p>
+    </div>
+
+    <footer class="terazi-foot">
+      <p>Ağırlıklar <strong>kerb (yaş, tüm sıvılar dolu)</strong>, güç ve tork üretici beyanı, AB homologasyon değerleridir. Kuru ağırlıkla karıştırılmaz.</p>
+      <p>Kareler Wikimedia Commons'taki özgür lisanslı fotoğraflardan üretilmiştir; kaynak ve lisans listesi <code>assets/img/moto/SOURCES.md</code> dosyasındadır. Marka ve model adları yalnızca tanımlayıcı olarak kullanılır; marka logosu kullanılmaz.</p>
+      <p>Kısayollar: <kbd>S</kbd> takas · <kbd>R</kbd> sıradaki çift · <kbd>Esc</kbd> seçiciyi kapat</p>
+    </footer>
+  </main>
+
+  <script src="/assets/js/moto-data.js?v=1" defer></script>
+  <script src="/assets/js/moto-metrics.js?v=1" defer></script>
+  <script src="/assets/js/demir-at.js?v=1" defer></script>
+  <script src="/assets/js/service-worker-register.js?v=4" defer></script>
+  <script src="/assets/js/theme.js" defer></script>
+  <script src="/assets/js/origin-beacon.js?v=1"></script>
+</body>
+</html>
