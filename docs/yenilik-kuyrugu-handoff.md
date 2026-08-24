@@ -125,6 +125,17 @@ göre bu ürün adayı veya ayrı N2 navigasyon dilimi olarak açılacak.
 
 ### 0. Fikir havuzu (2026-07-17 beyin firtinasi)
 
+> **Ek (2026-08-23) — Zekanin Saygidurusu / Kazi Evi programi:** 5 bagimsiz
+> yonelim + adversaryal fizibilite + juri siralamasindan sentezlenen buyuk donem
+> plani: [Kazi Evi](zekanin-saygidurusu-buyuk-plan.md). 15 oneriden 5'i kaldi.
+> Yasa: kazi > uretim > taklit; site ICERIK hakkinda sir tutabilir, MEKANIZMA
+> hakkinda asla. ZORUNLU ON KOSUL: Faz -1 yayin rituali otomasyonu (bugun bir
+> surum bumpi 7 elle dokunus). Amiral gemileri: Z1 TORTU (580 commit'lik gercek
+> jeolojiyi kaz), Z2 Iz/step, Z3 SIGIL (terminalde bugun sifir History API),
+> Z4 Arsiv/0212 (yerel siber tarih korpusu + offline BM25), Z5 Okkam.
+> ELENEN: SAAT — TORTU ile ayni anlati yuvasi icin yarisip durustlukte kaybetti.
+
+
 > **Ek (2026-07-27) — İleri algoritma hattı:** PO incelemesiyle 6 algoritmik
 > öneri ayrı tasarım belgesine yazıldı:
 > [İleri Algoritma Önerileri (PO)](ileri-algoritma-onerileri-po.md). Amiral

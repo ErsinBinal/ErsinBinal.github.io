@@ -106,3 +106,28 @@ navigation) — the missing engine behind the N3 "Yaşayan Atlas" goal and the
 direct fix for the new-visitor discovery problem in the technical review. Second
 flagship: **A2 Prosedürel Kalıntı Grameri** (shape grammar + Wave Function
 Collapse), extending the procedural holo work.
+
+## Zekânın Saygıduruşu — Kazı Evi (2026-08-23)
+
+Beş bağımsız yaratıcı yönelim + adversaryal fizibilite turu + jüri sıralamasından
+sentezlenen büyük dönem programı — see
+[Zekânın Saygıduruşu — Kazı Evi](zekanin-saygidurusu-buyuk-plan.md).
+15 amiral gemisi önerisinden 5'i kaldı; elenenlerin gerekçeleri belgede kayıtlı.
+
+**İmza:** gerekçeni seyredilebilir kılmak · senin hakkındaki ölçüyü sana yazdırmak ·
+yenilebileceğini kabul etmek.
+
+**Yasa:** kazı > üretim > taklit. Site İÇERİK hakkında sır tutabilir, MEKANİZMA
+hakkında asla. Determinizm öğrenmeyi değil, GİZLİ öğrenmeyi yasaklar.
+
+**Zorunlu ön koşul:** Faz -1 — yayın ritüeli otomasyonu (bugün bir sürüm bumpı
+7 elle dokunuş; uzun bir yol haritası ~110 mekanik düzenleme demek).
+
+**Amiral gemileri:** Z1 TORTU (580 commit'lik gerçek jeolojiyi kaz — üretim–bakım
+makasını kalıcı kapatan tek dilim) · Z2 İZ + `step` · Z3 SİGİL (terminalde bugün
+sıfır History API çağrısı var) · Z4 ARŞİV·0212 (yerel siber tarih korpusu + offline
+BM25) · Z5 OKKAM (MDL düellosu).
+
+Bu program A1/A2/B1/B4'ü kısmen yutar: B1 artık Z4.3, A1/A2 ise Z2'nin emitörleri
+olarak yeniden çerçevelendi. WASM, logprobs, gömü katmanı, 3B WFC ve `/net` üzerinde
+DPLL ölçülmüş gerekçelerle plandan çıkarıldı.
