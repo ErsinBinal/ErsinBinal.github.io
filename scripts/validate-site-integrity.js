@@ -155,7 +155,19 @@ if (!precacheMatch) {
   }
 }
 
-const mustPrecache = [
+const indexPath = path.join(root, 'index.html');
+const indexHtml = fs.readFileSync(indexPath, 'utf8');
+
+// Surumlu asset referanslarini index.html'den TURET; elle pin tutma.
+// Kural: isimler politika (asagidaki listeler), surumler otomatik.
+const versionedAssetRef = /\b(?:href|src)=["'](\/assets\/[^"'?#]+)\?v=([^"'&#]+)[^"']*["']/g;
+const indexVersionedAssets = new Map();
+for (const match of indexHtml.matchAll(versionedAssetRef)) {
+  indexVersionedAssets.set(match[1], match[2]);
+}
+
+// Cevrimdisi calismasi gereken rotalar — urun karari, elle tutulur.
+const mustPrecacheRoutes = [
   '/',
   '/index.html',
   '/pages/makaleler.html',
@@ -164,94 +176,82 @@ const mustPrecache = [
   '/oracle/',
   '/holo/',
   '/arsiv/',
-  '/offline.html',
-  '/assets/css/components.css?v=37',
-  '/assets/js/deb-companion.js?v=4',
-  '/assets/js/home/routes.js?v=8',
-  '/assets/js/home/route-commands.js?v=4',
-  '/assets/js/home/guide-commands.js?v=1',
-  '/assets/js/home/ruins.js?v=2',
-  '/assets/js/home/net.js?v=4',
-  '/assets/js/home/ritual-pulse.js?v=1',
-  '/assets/js/home/dreams.js?v=1',
-  '/assets/js/home/world.js?v=3',
-  '/assets/js/home/economy.js?v=1',
-  '/assets/js/home/shop.js?v=1',
-  '/assets/js/home/world-actions.js?v=1',
-  '/assets/js/home/vfs.js?v=4',
-  '/assets/js/home/navigator.js?v=2',
-  '/assets/js/home/pipe-90.js?v=1',
-  '/assets/js/home/outrun-86.js?v=1',
-  '/assets/js/home/screen-saver.js?v=4',
-  '/assets/js/home/presence.js?v=3',
-  '/assets/js/home/chat-symbols.js?v=1',
-  '/assets/js/home/chat-deck.js?v=8',
-  '/assets/js/home/coop-gate.js?v=1',
-  '/assets/js/home/night-mode.js?v=1',
-  '/assets/js/home/radio.js?v=1',
-  '/assets/js/home/chat.js?v=5',
-  '/assets/js/supabase-client.js?v=42',
-  '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=96',
-  '/assets/js/dart-skorbord.js?v=10',
-  '/assets/js/service-worker-register.js?v=4'
+  '/offline.html'
 ];
 
-for (const asset of mustPrecache) {
-  if (!precacheAssets.has(asset)) {
-    addError(`service-worker.js precache eksik: ${asset}`);
+// Ana sayfa disindan gelen, yine de cevrimdisi gereken asset'ler (yolsuz, surumsuz).
+const extraMustPrecacheAssets = [
+  '/assets/js/dart-skorbord.js'
+];
+
+// Bilincli olarak precache DISI birakilan turler (D6: kucuk ilk yuk).
+// Gorseller tembel yuklenir; service worker calisma aninda cache'ler.
+const lazyAssetPattern = /\.(?:jpg|jpeg|png|webp|gif|svg|glb)$/i;
+
+for (const route of mustPrecacheRoutes) {
+  if (!precacheAssets.has(route)) {
+    addError(`service-worker.js precache eksik: ${route}`);
   }
 }
 
-const indexPath = path.join(root, 'index.html');
-const indexHtml = fs.readFileSync(indexPath, 'utf8');
-const routeCommandsRef = '/assets/js/home/route-commands.js?v=4';
-const guideCommandsRef = '/assets/js/home/guide-commands.js?v=1';
-const ruinsRef = '/assets/js/home/ruins.js?v=2';
-const worldRef = '/assets/js/home/world.js?v=3';
-const economyRef = '/assets/js/home/economy.js?v=1';
-const shopRef = '/assets/js/home/shop.js?v=1';
-const worldActionsRef = '/assets/js/home/world-actions.js?v=1';
-const vfsRef = '/assets/js/home/vfs.js?v=4';
-const navigatorRef = '/assets/js/home/navigator.js?v=2';
-const chatSymbolsRef = '/assets/js/home/chat-symbols.js?v=1';
-const homeProtocolRef = '/assets/js/home-protocol.js?v=96';
-const routeCommandsIndex = indexHtml.indexOf(routeCommandsRef);
-const guideCommandsIndex = indexHtml.indexOf(guideCommandsRef);
-const ruinsIndex = indexHtml.indexOf(ruinsRef);
-const worldIndex = indexHtml.indexOf(worldRef);
-const economyIndex = indexHtml.indexOf(economyRef);
-const shopIndex = indexHtml.indexOf(shopRef);
-const worldActionsIndex = indexHtml.indexOf(worldActionsRef);
-const vfsIndex = indexHtml.indexOf(vfsRef);
-const navigatorIndex = indexHtml.indexOf(navigatorRef);
-const chatSymbolsIndex = indexHtml.indexOf(chatSymbolsRef);
-const homeProtocolIndex = indexHtml.indexOf(homeProtocolRef);
+// index.html'in yukledigi her surumlu script/stil precache'de olmali.
+for (const [assetPath, version] of indexVersionedAssets.entries()) {
+  if (lazyAssetPattern.test(assetPath)) continue;
+  const ref = `${assetPath}?v=${version}`;
+  if (!precacheAssets.has(ref)) {
+    addError(`service-worker.js precache eksik (index.html yukluyor): ${ref}`);
+  }
+}
 
-if (routeCommandsIndex === -1) {
-  addError(`index.html script eksik: ${routeCommandsRef}`);
-} else if (guideCommandsIndex === -1) {
-  addError(`index.html script eksik: ${guideCommandsRef}`);
-} else if (ruinsIndex === -1) {
-  addError(`index.html script eksik: ${ruinsRef}`);
-} else if (worldIndex === -1) {
-  addError(`index.html script eksik: ${worldRef}`);
-} else if (economyIndex === -1) {
-  addError(`index.html script eksik: ${economyRef}`);
-} else if (shopIndex === -1) {
-  addError(`index.html script eksik: ${shopRef}`);
-} else if (worldActionsIndex === -1) {
-  addError(`index.html script eksik: ${worldActionsRef}`);
-} else if (vfsIndex === -1) {
-  addError(`index.html script eksik: ${vfsRef}`);
-} else if (navigatorIndex === -1) {
-  addError(`index.html script eksik: ${navigatorRef}`);
-} else if (chatSymbolsIndex === -1) {
-  addError(`index.html script eksik: ${chatSymbolsRef}`);
-} else if (homeProtocolIndex === -1) {
-  addError(`index.html script eksik: ${homeProtocolRef}`);
-} else if ([routeCommandsIndex, guideCommandsIndex, ruinsIndex, worldIndex, economyIndex, shopIndex, worldActionsIndex, vfsIndex, navigatorIndex, chatSymbolsIndex].some((index) => index > homeProtocolIndex)) {
-  addError('index.html script sirasi hatali: home modulleri home-protocol oncesinde olmali');
+for (const assetPath of extraMustPrecacheAssets) {
+  const hit = [...precacheAssets].some((entry) => entry.split('?')[0] === assetPath);
+  if (!hit) {
+    addError(`service-worker.js precache eksik: ${assetPath}`);
+  }
+}
+// Kritik home modulleri — ISIMLER politika, surumler index.html'den okunur.
+// Surum pini YOK: bir modul bumplandiginda bu liste degismez.
+const criticalHomeModules = [
+  '/assets/js/home/route-commands.js',
+  '/assets/js/home/guide-commands.js',
+  '/assets/js/home/ruins.js',
+  '/assets/js/home/world.js',
+  '/assets/js/home/economy.js',
+  '/assets/js/home/shop.js',
+  '/assets/js/home/world-actions.js',
+  '/assets/js/home/vfs.js',
+  '/assets/js/home/navigator.js',
+  '/assets/js/home/chat-symbols.js'
+];
+const homeProtocolPathRef = '/assets/js/home-protocol.js';
+
+// Yukleme sirasi: script etiketlerinin index.html icindeki gercek konumu.
+const scriptOrder = new Map();
+for (const match of indexHtml.matchAll(/<script\b[^>]*\bsrc=["']([^"'?#]+)[^"']*["']/g)) {
+  if (!scriptOrder.has(match[1])) scriptOrder.set(match[1], match.index);
+}
+
+const homeProtocolAt = scriptOrder.get(homeProtocolPathRef);
+if (homeProtocolAt === undefined) {
+  addError(`index.html script eksik: ${homeProtocolPathRef}`);
+} else {
+  for (const modulePath of criticalHomeModules) {
+    const at = scriptOrder.get(modulePath);
+    if (at === undefined) {
+      addError(`index.html script eksik: ${modulePath}`);
+    } else if (at > homeProtocolAt) {
+      addError(`index.html script sirasi hatali: ${modulePath} home-protocol.js sonrasinda`);
+    }
+  }
+  // Kural, listedekilerle sinirli degil: her home modulu protocol'den once gelmeli.
+  const alreadyChecked = new Set(criticalHomeModules);
+  for (const [scriptPath, at] of scriptOrder.entries()) {
+    if (!scriptPath.startsWith('/assets/js/home/')) continue;
+    if (alreadyChecked.has(scriptPath)) continue;
+    if (at > homeProtocolAt) {
+      addError(`index.html script sirasi hatali: ${scriptPath} home-protocol.js sonrasinda`);
+    }
+  }
 }
 
 if (!indexHtml.includes('role="combobox"') || !indexHtml.includes('aria-controls="command-suggestions"')) {

@@ -60,7 +60,8 @@ The product goal is to preserve that strange charm while making the site easier 
   - shell UI
   - persistence and auth sync
 - Move large inline game scripts out of HTML only when there is a clear maintenance win.
-- Keep manual cache version drift low through `npm run sync:cache`.
+- Cache version drift is now structurally impossible: versions derive from HTML and
+  `npm run check` fails on drift (`check:sync`).
 
 ### P3: Measurement
 

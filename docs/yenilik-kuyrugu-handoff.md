@@ -45,9 +45,10 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 - Dosya `window.ConviviumHome.create<Ad>(deps)` fabrikasi tanimlar (IIFE, ES module degil).
 - home-protocol.js icinde bagimliliklarla kurulur, `let <ad>Mod = null` tutucusuna atanir.
 - index.html'de script etiketi **home-protocol.js'ten ONCE** eklenir (`defer`, `?v=1`).
-- Su listelere ekleme yapilir: service-worker.js `PRECACHE_ASSETS`,
-  `scripts/validate-site-integrity.js mustPrecache`, `scripts/sync-cache-versions.js managedAssets`,
-  package.json `check:syntax`.
+- Yalniz service-worker.js `PRECACHE_ASSETS` listesine eklenir.
+  **(2026-08-26 sonrasi)** `validate-site-integrity.js` beklentileri index.html'den TURETIR,
+  `sync-cache-versions.js` surumlu asset kumesini HTML'den TURETIR ve `check:syntax` glob'dur —
+  bu uc listeye artik elle dokunulmaz.
 - Her deploy'da: degisen versiyonlu asset'lerin `?v=` degeri + SW `CACHE_NAME` artirilir
   (guncel deger icin service-worker.js'e bak; bu belgede sabit sayi tutma).
   index.html degistiyse zaten SW bump gerekir.
@@ -215,8 +216,10 @@ feed'i zenginlestiren bir endpoint yazilabilir.
 
 ## Dogrulama ritueli (her parca icin)
 
-1. Degisen dosyalarda `?v=` bump + SW `CACHE_NAME` artir (`sync:cache:bump`).
-2. `npm run check:syntax` + `node scripts/validate-site-integrity.js`.
+1. `npm run publish:slice -- --title "..." --summary "..." --link /rota` — degisen asset'lerin
+   `?v=` bumpi, senkron, `CACHE_NAME`, changelog ve RSS girdisi tek komutta yapilir, sonunda
+   `npm run check` kosar. (Elle yol: `npm run sync:cache:bump` + `npm run check`.)
+2. (publish:slice bunu zaten kosar.)
 3. Commit + push -> Actions "Flow Check" smoke yesil mi bak.
 4. Canlida hizli el testi (terminal komutu calisiyor mu).
 5. Kullaniciya gorunur ozellikse changelog + signals.xml guncelle.

@@ -44,19 +44,22 @@ Do not hard-code old root page URLs in new code. Use canonical paths such as `/g
 
 ## Cache Versions
 
-Asset query versions must remain aligned across HTML, `service-worker.js`, and `scripts/validate-site-integrity.js`.
+HTML is the single source of truth for asset versions. `service-worker.js` and
+`scripts/validate-site-integrity.js` are kept aligned automatically; neither file holds a
+hand-maintained asset list, and `check:syntax` is a filesystem glob.
 
-Use:
+Publish a slice with the full ritual in one command:
 
 ```bash
-npm run sync:cache
-npm run sync:cache:bump
+npm run publish:slice -- --title "Baslik" --summary "Tek paragraf" --link /rota.html
 ```
 
-Then run:
+Manual path, if you need the steps separately:
 
 ```bash
-npm run check
+npm run sync:cache          # HTML -> service worker + validator
+npm run sync:cache:bump     # + CACHE_NAME
+npm run check               # syntax glob, sync gate, unit, worker, site integrity
 ```
 
 ## CDN Policy

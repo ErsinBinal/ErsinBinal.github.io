@@ -37,7 +37,11 @@ Do not expose local developer agents, shells, files, or repository write access 
 Common commands:
 
 - `npm run deploy:oracle`: deploy the Oracle Cloudflare Worker.
-- `npm run sync:cache`: sync managed asset query versions into service worker checks.
+- `npm run sync:cache`: sync versioned asset queries into service worker and validator. The
+  set of versioned assets is DERIVED from HTML; there is no manual asset list.
+- `npm run check:sync`: fail if any sync target drifted from HTML (used by `npm run check`).
+- `npm run publish:slice -- --title "..." --summary "..."`: the whole release ritual in one
+  command (asset `?v=` bump, sync, `CACHE_NAME` bump, changelog entry, RSS item, `npm run check`).
 - `npm run convert-images`: convert local image assets.
 - `npm run build:bugy-v3-atlas`: build the Bugy v3 SVG atlas.
 

@@ -2,8 +2,8 @@
 
 **Convivium İnşaat Programı**
 
-Tarih: 2026-08-23
-Durum: **TASARIM — kodlama öncesi.** Hiçbir dilim başlamadı.
+Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
+Durum: **Faz -1 TAMAMLANDI** (§5). Sıradaki: Faz 0 (§6).
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -205,7 +205,7 @@ Beş amiral gemisi bir liste değil, tek bir cümledir:
 
 ---
 
-## 5. Faz -1 — Ritüel borcunu kapat (ZORUNLU ÖN KOŞUL)
+## 5. Faz -1 — Ritüel borcunu kapat ✅ TAMAMLANDI (2026-08-26)
 
 **Bu yapılmadan hiçbir amiral gemisine başlanmaz.** Beş bağımsız eleştirinin üçü
 bunu birbirinden habersiz işaretledi.
@@ -222,9 +222,30 @@ maliyeti geliştirmenin kendisini geçiyor.
 - `scripts/publish-slice.js`: changelog + `signals.xml` + `?v=` + `CACHE_NAME`
   tek komutta.
 
-**Efor:** ~250 satır, 1–2 gün.
-**Bitti kriteri:** Sürüm bumpı **tek komut**. `net.js` sözdizimi kapısında. Elle
-pinli `?v=N` listesi kaynakta kalmadı. `npm run check` yeşil.
+**Sonuç.** Üç elle liste de öldü; hiçbiri kaynakta kalmadı.
+
+| Ölçü | Önce | Sonra |
+|---|---:|---:|
+| Bir dilim yayınlamak için elle dokunuş | 7 | **1** (`npm run publish:slice`) |
+| `sync-cache-versions.js` kapsamı | 30 (elle liste) | **72** (HTML'den türetilir) |
+| `validate-site-integrity.js` sürüm pini | 39 + 11 xRef | **0** |
+| `check:syntax` kapsamı | 25 (elle) | **66** (glob, 0.6 sn) |
+| Sürüm sapması yakalama | yok | `npm run check:sync` (kapı) |
+
+Yeni dosyalar: `scripts/check-syntax.js`, `scripts/publish-slice.js`.
+Yeniden yazıldı: `scripts/sync-cache-versions.js` ve
+`validate-site-integrity.js`'in precache/sıra blokları.
+
+**İlke: isimler politika, sürümler türetilir.** Hangi rotanın çevrimdışı çalışacağı
+ve hangi modülün kritik olduğu insan kararıdır ve elle durur; sürüm numarası asla
+elle yazılmaz.
+
+**Kanıtlar.** `net.js` bumplandığında `--check` sapmayı yakalıyor ve senkron her iki
+hedefte düzeltiyor (eski sistemde bu asset kapsam dışıydı). Kritik modül silinince,
+`home-protocol.js` sonrasına taşınınca ve precache'den düşünce üç negatif test de
+hata veriyor. Uçtan uca `publish:slice` denemesi yedi dokunuşun tamamını yaptı
+(`ruins.js` v2→v3, SW senkron, `convivium-v250`→`v251`, changelog, RSS, check yeşil)
+ve geri alındı. `npm run check`: syntax 66, unit 102/102, worker 12/12, 33 HTML/33 CSP.
 
 ---
 
@@ -560,13 +581,14 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 
 | Ölçü | Bugün | Yön |
 |---|---:|---|
-| Bir dilim yayınlamak için elle dokunuş | **7** | → 1 |
+| Bir dilim yayınlamak için elle dokunuş | ~~7~~ → **1** | ✅ Faz -1 |
 | Ana sayfa script etiketi | **46** | sabit veya ↓ |
 | Service Worker precache öğesi | **134** | ↓ |
 | `home-protocol.js` satırı | **4436** | tavan testi var |
 | İndekslenebilir public proza (kelime) | **~13.000** | ↑↑ |
 | `auth-gate.js` kullanan sayfa | **13** | → 10 |
 | `Math.random()` içeren dosya | **20** | ↓ (ödül/içerik yollarından 0) |
+| Sözdizimi kapısındaki JS dosyası | ~~25~~ → **66** | ✅ Faz -1 |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |
 | Elle yazılmış kalıntı/cihaz/oda | ruins 3 · net 7 · holo 3 | dondurulur, artmaz |
@@ -639,14 +661,7 @@ boşluklar. Bir sonraki dönemin ham maddesi.
 
 ## 14. İlk hamle
 
-**Faz -1'i bu hafta sonu bitir** (~250 satır, 1–2 gün): `sync-cache-versions.js`
-genişletmesi + `check:syntax` glob + `publish-slice.js`.
-
-Gerekçe: bu planın her diliminin maliyeti oradan geçiyor. Otomasyon olmadan
-başlanırsa yol haritasının ortasında ~110 mekanik düzenleme borcu olarak geri
-döner ve terk riski en yüksek noktaya çıkar.
-
-Hemen ardından **Faz 0** (1–2 gün, tek yayın). İki gün sonunda site şunu diyebilir
+**Faz -1 tamamlandı** (§5). Sıradaki: **Faz 0** (§6) — 1–2 gün, tek yayın. İki gün sonunda site şunu diyebilir
 hâle gelir:
 
 > *Bu cevabı şu motor üretti, şu kaynaktan okudu, şu kadarının arşivde dayanağı

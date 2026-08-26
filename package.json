@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Convivium GitHub Pages site: terminal UI, articles, games, PWA assets, Supabase helpers, and Oracle Worker tooling.",
   "scripts": {
-    "check": "npm run check:syntax && npm run test:unit && npm run test:worker && npm run check:site",
+    "check": "npm run check:syntax && npm run check:sync && npm run test:unit && npm run test:worker && npm run check:site",
     "check:site": "node scripts/validate-site-integrity.js",
-    "check:syntax": "node --check service-worker.js && node --check workers/oracle/src/index.js && node --check assets/js/service-worker-register.js && node --check assets/js/home-protocol.js && node --check assets/js/home/route-commands.js && node --check assets/js/home/guide-commands.js && node --check assets/js/home/ruins.js && node --check assets/js/home/ritual-pulse.js && node --check assets/js/home/dreams.js && node --check assets/js/home/world.js && node --check assets/js/home/economy.js && node --check assets/js/home/shop.js && node --check assets/js/home/world-actions.js && node --check assets/js/home/vfs.js && node --check assets/js/home/navigator.js && node --check assets/js/home/pipe-90.js && node --check assets/js/home/outrun-86.js && node --check assets/js/home/screen-saver.js && node --check assets/js/home/presence.js && node --check assets/js/home/coop-gate.js && node --check assets/js/home/night-mode.js && node --check assets/js/home/radio.js && node --check assets/js/home/chat.js && node --check assets/js/home/chat-symbols.js && node --check assets/js/home/chat-deck.js",
+    "check:syntax": "node scripts/check-syntax.js",
     "convert-images": "node scripts/convert-images.js",
     "sync:cache": "node scripts/sync-cache-versions.js",
     "sync:cache:bump": "node scripts/sync-cache-versions.js --bump",
@@ -18,7 +18,9 @@
     "build:bugy-v3": "em++ src/native/bugy-v3/bugy_v3.cpp -O3 --no-entry -s STANDALONE_WASM=1 -s EXPORTED_FUNCTIONS='[\"_bugy_init\",\"_bugy_update\",\"_bugy_trigger\",\"_bugy_next\",\"_bugy_set_skin\",\"_bugy_framebuffer\",\"_bugy_width\",\"_bugy_height\",\"_bugy_x\",\"_bugy_y\",\"_bugy_state\",\"_bugy_skin\"]' -o assets/wasm/bugy-v3.wasm",
     "build:bugy-v3-atlas": "node scripts/build-bugy-v3-atlas.js",
     "build:moto": "node scripts/build-moto-frames.js",
-    "deploy:oracle": "npx wrangler deploy -c workers/oracle/wrangler.toml"
+    "deploy:oracle": "npx wrangler deploy -c workers/oracle/wrangler.toml",
+    "check:sync": "node scripts/sync-cache-versions.js --check",
+    "publish:slice": "node scripts/publish-slice.js"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",

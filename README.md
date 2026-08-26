@@ -68,6 +68,16 @@ npm run convert-images
 npm run build:bugy-v3-atlas
 ```
 
+Bir dilim yayinlarken tum ritüel tek komuttur — degisen asset'lerin `?v=` bumpi,
+service worker ve validator senkronu, `CACHE_NAME` ilerlemesi, changelog girdisi,
+RSS ogesi ve `npm run check`:
+
+```bash
+npm run publish:slice -- --title "Baslik" --summary "Tek paragraf" --link /rota.html
+```
+
+Asset surumlerinin tek dogruluk kaynagi HTML'dir; elle tutulan asset listesi yoktur.
+
 Oracle Worker deploy akisi:
 
 ```bash
