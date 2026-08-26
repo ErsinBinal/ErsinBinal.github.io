@@ -37,7 +37,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7"></script>
   <script src="/assets/js/supabase-config.js"></script>
   <script src="/assets/js/supabase-client.js?v=42"></script>
-  <script src="/assets/js/auth-gate.js?v=22" data-item-key="oracle" data-item-type="app" data-item-title="The Oracle"></script>
+  <script src="/assets/js/auth-gate.js?v=23" data-auth-mode="open" data-item-key="oracle" data-item-type="app" data-item-title="The Oracle"></script>
   <style>
     :root {
       color-scheme: dark;
@@ -1547,6 +1547,13 @@
           const hintRow = row('ses', hint);
           els.output.appendChild(hintRow);
           window.setTimeout(() => hintRow.classList.add('is-visible'), 80);
+          // Mekanizma sirri olmaz: yorumu ureten motor acikca yazilir.
+          const engine = typeof data?.model === 'string' ? data.model : '';
+          if (engine) {
+            const engineRow = row('motor', engine);
+            els.output.appendChild(engineRow);
+            window.setTimeout(() => engineRow.classList.add('is-visible'), 120);
+          }
         } catch {
           // sessiz hata
         }

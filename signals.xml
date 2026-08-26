@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Mekanizma gorunur: neden komutu ve girissiz dusunsel yuzeyler</title>
+      <link>https://ersinbinal.github.io/pages/changelog.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-26-mekanizma-gorunur-neden-komutu-ve-girissiz-dusunsel-yuzeyler</guid>
+      <pubDate>Wed, 26 Aug 2026 15:04:29 +0000</pubDate>
+      <description>Terminal artik kendi kararini gosteriyor: neden &lt;girdi&gt; yazinca oneri motorunun o komutu neden sectigi etken etken dokuluyor (komut oneki, bulundugun baglam, cekirdek komut, yazim mesafesi) ve katkilarin toplami ilan edilen skora esit. Oracle hangi motorun cevapladigini artik gizlemiyor, cevabin altina motor imzasi dusuyor; model yoksa bunu acikca soyluyor. Ekol Aynasi, Paradoks Terminali ve Oracle giris istemeden aciliyor: dusunmeyi gosteren hicbir sey duvarin arkasinda durmuyor, giris yalnizca kaliciligi aciyor.</description>
+    </item>
+    <item>
       <title>Demir At Terazisi: motosiklet kiyas terminali</title>
       <link>https://ersinbinal.github.io/tools/demir-at.html</link>
       <guid isPermaLink="false">cvm-signal-2026-08-18-demir-at-terazisi</guid>

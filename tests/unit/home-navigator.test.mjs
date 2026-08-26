@@ -87,7 +87,7 @@ test('Sinyal Pusulasi renders a compact contextual main help', () => {
     '  OYNA     game guide · run logic',
     '  RITUEL   open oracle · daily · card',
     '  BAGLAN   who · chat · wall',
-    '  SISTEM   pwd · ls · man',
+    '  SISTEM   pwd · ls · neden',
     '  BURADAYIM /CONVIVIUM/RUINS',
     '  SIRADAKI examine buluntu',
     '  DERINLES help kesfet · TAM LISTE help all',
@@ -184,4 +184,55 @@ test('Navigator factory rejects every missing read dependency', () => {
     () => createNavigator({ normalizeCommand }),
     /getCwd, listRooms, getRoom, getObjective, getCommandDefinitions/
   );
+});
+
+// --- Faz 0.3: saf karar sozlesmesi ({value, why}) ---
+
+test('her oneri, skorunu hangi etkenlerden topladigini tasir', () => {
+  const { navigator } = createFixture();
+  const suggestions = navigator.suggest('hel');
+
+  assert.ok(suggestions.length > 0, 'oneri uretilmeli');
+  for (const item of suggestions) {
+    assert.ok(Array.isArray(item.why), `${item.value} icin why dizisi olmali`);
+    assert.ok(item.why.length > 0, `${item.value} icin en az bir etken olmali`);
+    assert.equal(typeof item.score, 'number', 'skor gorunur olmali');
+    for (const part of item.why) {
+      assert.equal(typeof part.etken, 'string');
+      assert.equal(typeof part.katki, 'number');
+    }
+  }
+});
+
+test('gerekcedeki katkilarin toplami ilan edilen skora esittir', () => {
+  const { navigator } = createFixture();
+  // Yazdirilan gerekce ile uygulanan karar arasindaki sapma bir tasarim
+  // tercihi degil, bir TEST HATASIDIR (Kazi Evi, Madde 4).
+  for (const query of ['hel', 'yard', 'hepl', 'map', 'look']) {
+    for (const item of navigator.suggest(query)) {
+      const total = item.why.reduce((sum, part) => sum + part.katki, 0);
+      assert.equal(
+        total,
+        item.score,
+        `${query} -> ${item.value}: gerekce toplami ${total}, ilan edilen skor ${item.score}`
+      );
+    }
+  }
+});
+
+test('typo duzeltmesi gerekcesinde yazim mesafesini acikca gosterir', () => {
+  const { navigator } = createFixture();
+  const [first] = navigator.suggest('hepl');
+
+  assert.equal(first.value, 'help');
+  assert.equal(first.reason, 'duzelt');
+  const distance = first.why.find((part) => part.etken === 'yazim mesafesi');
+  assert.ok(distance, 'yazim mesafesi etkeni bulunmali');
+  assert.match(String(distance.deger), /harf/);
+});
+
+test('why dizisi dondurulmustur (cagiran karari degistiremez)', () => {
+  const { navigator } = createFixture();
+  const [first] = navigator.suggest('hel');
+  assert.ok(Object.isFrozen(first.why), 'why dondurulmus olmali');
 });

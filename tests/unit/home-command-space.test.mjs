@@ -170,10 +170,10 @@ test('global command/alias namespace preserves the complete normalized snapshot'
     .update(JSON.stringify(definitions))
     .digest('hex');
 
-  assert.equal(definitions.length, 141);
-  assert.equal(labels, 624);
-  assert.equal(claims.size, 578);
-  assert.equal(digest, '1ad5f102e410826c34f9db00998478f9ef85b026942ac8095c4f47795fe4a5a1');
+  assert.equal(definitions.length, 142);
+  assert.equal(labels, 627);
+  assert.equal(claims.size, 581);
+  assert.equal(digest, '19dab4e8b368bb7ae8b4405068b497855543eb834bd92d2325dccf33a165d09c');
 
   const sameOwnerFolds = [...claims.values()].filter(
     (owners) => owners.length > 1 && new Set(owners.map((claim) => claim.owner)).size === 1
@@ -213,8 +213,8 @@ test('hidden commands and parameter prefixes preserve known precedence overlaps'
     .update(JSON.stringify(parameterPrefixes))
     .digest('hex');
 
-  assert.equal(parameterPrefixes.length, 37);
-  assert.equal(prefixDigest, '526242f4a0d4580e9d3b674d998aea24ddef357b2caa68f1c5c192447d8876bf');
+  assert.equal(parameterPrefixes.length, 40);
+  assert.equal(prefixDigest, 'ff14e76b124d2f235821d2e5761b99dccd793bced886c8709986c9350f0987a4');
   assert.deepEqual(prefixOverlaps(parameterPrefixes, claims), [
     'chat>chat deck>chat',
     'incele>incele etraf>look',
@@ -294,3 +294,4 @@ test('raw-prefix routes stay ahead of shell, parameter and commandMap dispatch',
   assert.ok(positions.every((position) => position >= 0), 'dispatch katmani isaretleri bulunmali');
   assert.deepEqual(positions, [...positions].sort((left, right) => left - right));
 });
+

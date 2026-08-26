@@ -20,7 +20,8 @@
     "build:moto": "node scripts/build-moto-frames.js",
     "deploy:oracle": "npx wrangler deploy -c workers/oracle/wrangler.toml",
     "check:sync": "node scripts/sync-cache-versions.js --check",
-    "publish:slice": "node scripts/publish-slice.js"
+    "publish:slice": "node scripts/publish-slice.js",
+    "test:accept": "node tests/acceptance/faz0.mjs"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",

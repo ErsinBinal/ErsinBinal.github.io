@@ -2,6 +2,10 @@
   'use strict';
 
   const script = document.currentScript;
+  // Girissiz onur hatti: data-auth-mode="open" olan sayfa giris istemez.
+  // Dusunmeyi gosteren hicbir sey duvarin arkasinda durmaz; giris yalnizca
+  // KALICILIGI acar (oneri kaydi, oturum gecmisi, dashboard izi).
+  const openMode = script?.dataset.authMode === 'open';
   const item = {
     key: script?.dataset.itemKey || document.body?.dataset.itemKey || location.pathname.replace(/^\//, '') || 'convivium',
     type: script?.dataset.itemType === 'game' ? 'game' : 'app',
@@ -73,6 +77,11 @@
 
   async function requireSession() {
     if (!window.ConviviumBackend || !window.ConviviumBackend.isConfigured()) {
+      if (openMode) {
+        // Backend yoksa acik sayfa yine calisir; yalniz kayit yapilmaz.
+        sessionChecked = true;
+        return null;
+      }
       setGateMessage('Bu alan Supabase oturumu ile acilir. Once Supabase ayarlarini tamamlayin.');
       return null;
     }
@@ -82,6 +91,7 @@
       sessionChecked = true;
       sessionUser = session?.user || null;
       if (!session) {
+        if (openMode) return null;
         location.replace(loginUrl());
         return null;
       }
@@ -100,6 +110,10 @@
       }
       return session;
     } catch (error) {
+      if (openMode) {
+        sessionChecked = true;
+        return null;
+      }
       setGateMessage(error.message || 'Oturum kontrolu yapilamadi.');
       return null;
     }
@@ -170,7 +184,7 @@
     }
   };
 
-  lockPage();
+  if (!openMode) lockPage();
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') recordSession(true);

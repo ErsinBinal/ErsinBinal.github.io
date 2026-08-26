@@ -2617,6 +2617,12 @@
       const commandDefinitions = [
         ...guideCommandDefinitions,
         {
+          command: 'neden',
+          description: 'oneri motorunun bir girdide neden o komutu sectigini dokur',
+          aliases: ['why', 'gerekce'],
+          action: () => nedenCommand('')
+        },
+        {
           command: 'whoami',
           description: 'ziyaretci, access ve node durumunu gosterir',
           aliases: ['id', 'me', 'status'],
@@ -3354,6 +3360,39 @@
           }));
       };
 
+      // NEDEN? — oneri motorunun kararini oldugu gibi dokur.
+      // Gerekce sonradan yazilmis bir aciklama degil; navigator'in skoru
+      // hangi etkenlerden topladiginin kaydidir (saf karar sozlesmesi).
+      const nedenCommand = (raw) => {
+        const query = String(raw || '').trim();
+        if (!query) {
+          return [
+            'neden: usage neden <girdi>',
+            'ornek: neden hepl  ->  oneri motorunun o girdide neden `help` dedigini gosterir.'
+          ].join('\n');
+        }
+        if (!navigatorMod) return 'neden: oneri motoru yuklenmedi (SINIRLI MOD).';
+
+        const suggestions = navigatorMod.suggest(query, { limit: 3 });
+        if (!suggestions.length) return `neden: "${query}" icin oneri yok.`;
+
+        const lines = [`neden "${query}" -> ${suggestions.length} oneri:`];
+        suggestions.forEach((item, index) => {
+          lines.push(`${index + 1}. ${item.value}  [${item.reason}] toplam ${item.score}`);
+          const why = Array.isArray(item.why) ? item.why : [];
+          if (!why.length) {
+            lines.push('     (bu oneri gerekce tasimiyor)');
+            return;
+          }
+          why.forEach((part) => {
+            const sign = part.katki >= 0 ? '+' : '';
+            lines.push(`     ${part.etken}: ${part.deger} -> ${sign}${part.katki}`);
+          });
+        });
+        lines.push('degerler navigator.js icindeki skorlama tablosundan gelir.');
+        return lines.join('\n');
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -3493,7 +3532,13 @@
             throw new Error('empty oracle proxy response');
           }
 
-          return answer;
+          // Mekanizma sirri olmaz: hangi motorun cevapladigi cevapla birlikte tasinir.
+          return {
+            answer,
+            model: typeof data?.model === 'string' ? data.model : '',
+            provider: typeof data?.provider === 'string' ? data.provider : '',
+            degraded: Boolean(data?.degraded)
+          };
         } finally {
           window.clearTimeout(timeout);
         }
@@ -3503,8 +3548,22 @@
         try {
           return await askOracleProxy(command);
         } catch {
-          return localOracleAnswer(command);
+          return {
+            answer: localOracleAnswer(command),
+            model: 'yerel-yanit-zinciri',
+            provider: 'local',
+            degraded: true
+          };
         }
+      };
+
+      // Motor imzasi: cevabin altina hangi mekanizmanin urettigi yazilir.
+      // Worker eski surumdeyse model alani bos gelir; o zaman satir da yazilmaz.
+      const oracleEngineSignature = (result) => {
+        if (!result) return '';
+        if (result.degraded) return 'motor: yerel yanit zinciri — dis model sessiz';
+        const engine = result.model || result.provider;
+        return engine ? `motor: ${engine}` : '';
       };
 
       const setCommandBusy = (busy) => {
@@ -3624,7 +3683,9 @@
           window.clearInterval(waitSignal);
           waitSignal = null;
           if (microOracle) microOracle.textContent = 'oracle stream receiving';
-          await typeOracleOutput(result);
+          await typeOracleOutput(result.answer);
+          const signature = oracleEngineSignature(result);
+          if (signature) printTerminal(signature);
           if (microOracle) microOracle.textContent = 'oracle response received';
           updateOsSnapshot(state.level, 'oracle.response');
           award(Math.max(state.level, 1));
@@ -3678,6 +3739,9 @@
         ['take ', value => takeCommand(value)],
         ['al ', value => takeCommand(value)],
         ['help ', value => commandHelpText(value)],
+        ['neden ', value => nedenCommand(value)],
+        ['why ', value => nedenCommand(value)],
+        ['gerekce ', value => nedenCommand(value)],
         ['unlock ', value => unlockRoomCommand(value)],
         ['ac ', value => unlockRoomCommand(value)],
         ['use ', value => useCommand(value)],

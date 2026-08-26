@@ -79,11 +79,12 @@
       id: 'sistem',
       label: 'SISTEM',
       aliases: ['system', 'shell'],
-      brief: 'pwd · ls · man',
-      description: 'Kabuk, dosya sistemi ve erisilebilirlik kontrolleri.',
+      brief: 'pwd · ls · neden',
+      description: 'Kabuk, dosya sistemi ve mekanizma kontrolleri.',
       commands: [
         ['pwd · ls · cat', 'konum ve dosya okuma'],
         ['man <komut>', 'tek komut kilavuzu'],
+        ['neden <girdi>', 'oneri motorunun gerekcesini dokur'],
         ['keys', 'klavye kisayollari'],
         ['shell', 'ileri kabuk ozeti']
       ]
@@ -303,30 +304,41 @@
       }
     };
 
+    // Saf karar sozlesmesi: karar {value, why} dondurur.
+    // `why` her etkenin skora katkisini tasir; `neden` komutu bunu oldugu gibi basar.
+    // Gerekce sonradan uretilen bir aciklama degil, kararin kendi kaydidir.
     const matchCommand = (entry, query, contextRank) => {
       const command = normalized(entry.command);
       const aliases = Array.isArray(entry.aliases) ? entry.aliases.map(normalized) : [];
       let score = -1;
       let reason = '';
+      const why = [];
+      const note = (etken, deger, katki) => why.push({ etken, deger, katki });
 
       if (command === query) {
         score = 1000;
         reason = 'hazir';
+        note('tam eslesme', command, 1000);
       } else if (command.startsWith(query)) {
         score = 800;
         reason = 'tamamla';
+        note('komut oneki', `${query}...`, 800);
       } else if (query.length >= 2 && command.split(' ').some((word) => word.startsWith(query))) {
         score = 690;
         reason = 'tamamla';
+        note('kelime oneki', query, 690);
       } else if (aliases.some((alias) => alias === query)) {
         score = 760;
         reason = 'esanlamli';
+        note('alias tam eslesme', query, 760);
       } else if (aliases.some((alias) => alias.startsWith(query))) {
         score = 700;
         reason = 'esanlamli';
+        note('alias oneki', query, 700);
       } else if (query.length >= 2 && aliases.some((alias) => alias.includes(query))) {
         score = 560;
         reason = 'esanlamli';
+        note('alias icerir', query, 560);
       } else if (query.length >= 3 && !query.includes(' ')) {
         const correctionTerms = [command, ...aliases]
           .map((label) => label.split(' ')[0])
@@ -335,18 +347,28 @@
         if (distance <= 2) {
           score = 430 - (distance * 10);
           reason = 'duzelt';
+          note('yazim mesafesi', `${distance} harf`, score);
         }
       }
 
       if (score < 0) return null;
-      if (contextRank.has(command)) score += 220 - Math.min(contextRank.get(command), 20);
+      if (contextRank.has(command)) {
+        const bonus = 220 - Math.min(contextRank.get(command), 20);
+        score += bonus;
+        note('bulundugun baglam', `sira ${contextRank.get(command) + 1}`, bonus);
+      }
       const coreIndex = CORE_PRIORITY.indexOf(command);
-      if (coreIndex >= 0) score += 100 - coreIndex;
+      if (coreIndex >= 0) {
+        const bonus = 100 - coreIndex;
+        score += bonus;
+        note('cekirdek komut', `sira ${coreIndex + 1}`, bonus);
+      }
       return {
         value: entry.command,
         description: entry.description || 'terminal komutu',
         reason,
-        score
+        score,
+        why: Object.freeze(why)
       };
     };
 
@@ -365,7 +387,8 @@
             value,
             description: 'buradaki akisa uygun',
             reason: 'baglam',
-            score: 1300 - index
+            score: 1300 - index,
+            why: Object.freeze([{ etken: 'bulundugun oda', deger: `sira ${index + 1}`, katki: 1300 - index }])
           });
         }
       });
@@ -378,7 +401,10 @@
         .filter((item) => !hasDirectMatch || item.reason !== 'duzelt')
         .sort((left, right) => right.score - left.score || left.value.length - right.value.length || left.value.localeCompare(right.value))
         .slice(0, safeLimit)
-        .map(({ score, ...item }) => Object.freeze(item));
+        .map((item) => Object.freeze({
+          ...item,
+          why: Object.freeze(item.why || [])
+        }));
       return Object.freeze(result);
     };
 

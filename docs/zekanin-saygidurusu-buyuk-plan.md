@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1 TAMAMLANDI** (§5). Sıradaki: Faz 0 (§6).
+Durum: **Faz -1 ve Faz 0 TAMAMLANDI** (§5, §6). Sıradaki: Z1 TORTU (§7).
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -249,7 +249,7 @@ ve geri alındı. `npm run check`: syntax 66, unit 102/102, worker 12/12, 33 HTM
 
 ---
 
-## 6. Faz 0 — Bedava hamleler (1–2 gün, tek yayın)
+## 6. Faz 0 — Bedava hamleler ✅ TAMAMLANDI (2026-08-26)
 
 Sıfır yeni altyapıyla planın tezinin büyük kısmını satın alır.
 
@@ -262,8 +262,61 @@ Sıfır yeni altyapıyla planın tezinin büyük kısmını satın alır.
 | 0.5 | `home-protocol.js` için satır tavanı testi (mevcut 4436 tavan) | `tests/unit/` | ~15 satır |
 
 **Neden bu sıra:** 0.3 planın başlangıç noktasıdır — graf/PPR değil. Gerekçe
-motorunun %80'i yazılmış (B11); imzayı bugün teslim eder. 0.4 keşif problemine en
-ucuz müdahaledir ve **plan yeni komut eklemeden önce** yapılmalıdır.
+motorunun %80'i yazılmış (B11); imzayı bugün teslim eder.
+
+### Sonuç
+
+**0.1 — Mekanizma görünür.** `index.js:62` gizleme emri silindi; yerine
+*"bir dil modeli olduğunu gizleme; sorulursa hangi motor üzerinde çalıştığını
+söyle"* geldi. Worker yanıtı artık `model` alanı taşıyor; terminalde cevabın
+altına `motor: @cf/meta/llama-3.1-8b-instruct-fp8` düşüyor, model sessizse
+`motor: yerel yanit zinciri — dis model sessiz` yazıyor. `/oracle/` sayfası da
+yorumu üreten motoru gösteriyor.
+
+**0.2 — Girişsiz onur hattı.** `auth-gate.js`'e `data-auth-mode="open"` kipi
+eklendi: sayfa kilitlenmez, giriş istenmez, yönlendirme yapılmaz — ama oturum
+varsa kayıt (öneri, oturum izi) çalışmaya devam eder. Yani **düşünmek bedava,
+kalıcılık girişe bağlı.** Ekol Aynası, Paradoks Terminali ve Oracle açık kipte.
+Üçü de `ConviviumActivity`'yi `?.` ile çağırdığı için oturumsuz zarifçe düşüyor.
+
+**0.3 — NEDEN? tuşu.** Bu, Anayasa Madde 2'nin (saf karar sözleşmesi) ilk
+uygulamasıdır. `navigator.matchCommand` artık `{value, why}` döndürüyor; `why`
+her etkenin skora katkısını taşıyor (komut öneki, alias, yazım mesafesi,
+bulunduğun bağlam, çekirdek komut). Yeni `neden <girdi>` komutu bunu döküyor:
+
+```
+neden "hepl" -> 3 oneri:
+1. help  [duzelt] toplam 729
+     yazim mesafesi: 1 harf -> +420
+     bulundugun baglam: sira 12 -> +209
+     cekirdek komut: sira 1 -> +100
+```
+
+Skor artık dönüşte soyulmuyor — şeffaflığın göstermek istediği şey buydu.
+**Kilit test:** gerekçedeki katkıların toplamı ilan edilen skora eşit olmalı;
+sapma bir tasarım tercihi değil test hatasıdır (Madde 4).
+
+**0.4 — `help` üç kapı: GEREKMEDİ.** Plan bunu düz 132'lik liste varsayımıyla
+yazmıştı; o varsayım **yanlış**. N1 zaten 6 niyetli 12 satırlık Pusula'yı canlıya
+almış (`navigationIntentRegistry`) ve `help all` tam indeksi altta duruyor. Üçe
+indirmek bilgi kaybı olurdu. Yapılan gerçek iş: `neden` SISTEM grubuna eklenerek
+keşfedilebilir kılındı.
+
+**0.5 — Monolit tavanı.** `tests/unit/home-protocol-size.test.mjs`: tavan 4520.
+Faz 0 monoliti 4436 → 4500 satır büyüttü (+64); büyüme `nedenCommand`'ın
+*sunum* katmanı, karar mantığı navigator'a gitti (D3'e uygun). Tavanı yükseltmek
+bilinçli bir karar ve tek satır değişikliği gerektiriyor.
+
+**Kabul.** Yeni `npm run test:accept` — yerel sunucu + Chromium, canlıya değil
+**çalışma ağacına** bakar (yani yayından önce koşar). 6/6: `neden` gerekçe
+döküyor, toplam skor görünüyor, ana sayfada page error yok, üç düşünsel yüzey
+girişsiz açılıyor. `npm run check`: syntax 67, unit **108/108**, worker 12/12,
+33 HTML / 33 CSP.
+
+**Yayın.** Faz -1'in ürettiği ritüelin ilk gerçek kullanımı: `npm run
+publish:slice` üç değişen asset'i kendisi buldu (auth-gate v22→v23, protocol
+v96→v97, navigator v2→v3), senkronladı, `convivium-v250`→`v251` yaptı, changelog
+ve RSS girdisini yazdı ve check'i koştu. **Tek komut.**
 
 ---
 
@@ -588,7 +641,10 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | İndekslenebilir public proza (kelime) | **~13.000** | ↑↑ |
 | `auth-gate.js` kullanan sayfa | **13** | → 10 |
 | `Math.random()` içeren dosya | **20** | ↓ (ödül/içerik yollarından 0) |
-| Sözdizimi kapısındaki JS dosyası | ~~25~~ → **66** | ✅ Faz -1 |
+| Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
+| `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
+| Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
+| Birim test | ~~102~~ → **108** | ✅ |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |
 | Elle yazılmış kalıntı/cihaz/oda | ruins 3 · net 7 · holo 3 | dondurulur, artmaz |
@@ -661,7 +717,14 @@ boşluklar. Bir sonraki dönemin ham maddesi.
 
 ## 14. İlk hamle
 
-**Faz -1 tamamlandı** (§5). Sıradaki: **Faz 0** (§6) — 1–2 gün, tek yayın. İki gün sonunda site şunu diyebilir
+**Faz -1 ve Faz 0 tamamlandı** (§5, §6). Site artık şunu diyebiliyor:
+
+> *Bu cevabı şu motor üretti — ve bunu görmek için giriş yapman gerekmiyor.
+> Sana bu komutu neden önerdiğimi de sorabilirsin.*
+
+Sıradaki: **Z1 TORTU** (§7) — jürinin birinci sıradaki gemisi. İlk dilim Z1.1:
+git çıkarımı + karot süzgeci + `kaz`. Süzgeç pazarlıksız kabul kriteridir;
+onsuz "gerçek arkeoloji" vaadi ilk kazıda çürür. İki gün sonunda site şunu diyebilir
 hâle gelir:
 
 > *Bu cevabı şu motor üretti, şu kaynaktan okudu, şu kadarının arşivde dayanağı
