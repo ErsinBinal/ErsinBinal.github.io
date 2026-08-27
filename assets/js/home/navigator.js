@@ -14,12 +14,13 @@
       id: 'kesfet',
       label: 'KESFET',
       aliases: ['kesif', 'explore'],
-      brief: 'look · cd · map',
-      description: 'Terminal odalarini ve gorunur izleri kesfet.',
+      brief: 'look · cd · kaz',
+      description: 'Terminal odalarini, gorunur izleri ve sitenin kendi gecmisini kesfet.',
       commands: [
         ['look', 'bulundugun yeri oku'],
         ['cd <oda>', 'terminal odasina gec'],
         ['examine <nesne>', 'gorunur bir izi incele'],
+        ['kaz', 'deponun gercek gecmisinden bir tabaka kaz'],
         ['map', 'genel sinyal haritasina bak']
       ]
     },

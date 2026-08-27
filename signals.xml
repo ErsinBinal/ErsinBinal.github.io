@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>TORTU: site artik kalinti yazmiyor, kaziyor</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-27-tortu-site-artik-kalinti-yazmiyor-kaziyor</guid>
+      <pubDate>Thu, 27 Aug 2026 15:30:56 +0000</pubDate>
+      <description>Convivium'un /ruins kalintilari uydurmaydi. Artik gercek bir katman var: deponun 573 commit'lik git tarihi build-time'da kaziliyor ve terminalde kaz komutuyla bir karot cikariliyor. Karot suzgeci pazarliksiz — olculdu, hunk'larin %57'si surum bumpi ya da uc satirdan kisa gurultu; suzgec olmasa kazi surum bumpi arkeolojisine donerdi. taban komutu sitenin uzerinde durdugu zemini ayri gosteriyor: index.html %43, service-worker.js %42; bunlar bir damar degil taban kaya. Ortak-yazar atfi korunuyor ve gosteriliyor. Yazar e-postasi asla yayinlanmiyor: icerik redakte ediliyor ve yazim sonrasi bir kapi dosyayi tariyor.</description>
+    </item>
+    <item>
       <title>Terminal okunur oldu: tek birincil yol, sakin arayuz</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-08-27-terminal-okunur-oldu-tek-birincil-yol-sakin-arayuz</guid>

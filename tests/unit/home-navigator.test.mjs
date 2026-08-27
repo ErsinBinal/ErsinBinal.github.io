@@ -82,7 +82,7 @@ test('Sinyal Pusulasi renders a compact contextual main help', () => {
   assert.equal(navigator.help(), [
     '] SINYAL PUSULASI',
     '',
-    '  KESFET   look · cd · map',
+    '  KESFET   look · cd · kaz',
     '  OKU      open dossier · notes',
     '  OYNA     game guide · run logic',
     '  RITUEL   open oracle · daily · card',

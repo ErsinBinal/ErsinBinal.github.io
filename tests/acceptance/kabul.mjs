@@ -1,4 +1,4 @@
-// Kazi Evi — Faz 0 kabul testi.
+// Kazi Evi — kabul testi (Faz 0 + Z1 TORTU).
 //
 // Yerel statik sunucu + Chromium. Canli siteye DEGIL, calisma agacina bakar;
 // yani yayindan ONCE kosar (playwright.config.mjs canliya bakiyor, bu bakmiyor).
@@ -8,6 +8,8 @@
 // Kapsam:
 //   - `neden` komutu oneri motorunun gerekcesini dokuyor mu
 //   - girissiz onur hatti: uc dusunsel yuzey giris istemeden aciliyor mu
+//   - `kaz` gercek git gecmisinden bir tabaka kaziyor mu
+//   - `taban` taban kayayi ayri gosteriyor mu
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -66,6 +68,27 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   check('neden komutu gerekce dokuyor', /neden "hepl"/.test(t) && /yazim mesafesi/.test(t), t.slice(0, 90).replace(/\n/g, ' | '));
   check('gerekce toplam skor gosteriyor', /toplam \d+/.test(t));
   check('ana sayfada page error yok', errors.length === 0, errors[0] || '');
+  // --- TORTU: gercek jeoloji ---
+  await page.fill('#command-input', 'kaz');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /uydurulmadi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const kaz = await page.textContent('#command-output');
+  check('kaz gercek bir tabaka kaziyor', /KAROT/.test(kaz) && /commit/.test(kaz) && /uydurulmadi/.test(kaz));
+  check('kazilan tabaka surum bumpi degil', !/\?v=\d+/.test(kaz.slice(kaz.indexOf('kazilan katman'))));
+
+  await page.fill('#command-input', 'taban');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    // Cikti animasyonla yazilir; son satir (commit/aktif gun ozeti) gorunene kadar bekle.
+    () => /aktif gun/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const taban = await page.textContent('#command-output');
+  check('taban kaya ayri gosteriliyor', /TABAN KAYA/.test(taban) && /index\.html/.test(taban) && /service-worker\.js/.test(taban));
+
   await page.close();
 }
 

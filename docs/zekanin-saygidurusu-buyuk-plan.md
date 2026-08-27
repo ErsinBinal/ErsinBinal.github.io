@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1 ve Faz 0 TAMAMLANDI** (§5, §6). Sıradaki: Z1 TORTU (§7).
+Durum: **Faz -1, Faz 0 ve Z1.1 TAMAMLANDI.** Sıradaki: Z1.2 (PELT eraları).
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -393,8 +393,40 @@ dondurulur** ve bir daha dördüncüsü yazılmaz.
 tembel) · `assets/js/home/tortu.js` (saf okuyucu)
 
 **Fazlar.**
-- **Z1.1 — Çıkarım + süzgeç + `kaz`.** *Bitti:* karot süzgeci `?v=`-only hunk'ları
-  eliyor (negatif test); e-posta sızmıyor; ortak-yazar atfı görünür.
+- **Z1.1 — Çıkarım + süzgeç + `kaz`.** ✅ **TAMAMLANDI (2026-08-27)**
+
+  `scripts/build-tortu.js` 573 commit'i çıkarıyor, `assets/js/home/tortu.js` saf
+  okuyucu, terminalde `kaz` ve `taban`. Veri `assets/data/tortu.json` (82 KB) —
+  **tembel çekilir, precache'e girmez** (D6); modül precache'te.
+
+  **Süzgeç ölçüldü ve gerekli çıktı:** hunk'ların **%57'si** gürültü
+  (`?v=` bumpı 1054, 3 satırdan kısa 1057, binary 5 / toplam 3712 örneklemde).
+  Süzgeç olmasa kazı gerçekten "sürüm bumpı arkeolojisi" olurdu — planın uyarısı
+  doğrulandı.
+
+  **Ölçümler plana uydu:** taban kaya `index.html` %43 + `service-worker.js` %42;
+  573 commit / 62 aktif gün; 127 karot, 49'u ortak-yazarlı.
+
+  **Gizlilik iki katmanlı.** Karot içeriği gerçek diff'tir ve meşru olarak e-posta
+  taşıyabilir (KVKK sayfası, ortak-yazar satırı): içerik **redakte** ediliyor,
+  yazım sonrası **kapı** dosyayı tarıyor ve bir adres bulursa çıktıyı siliyor.
+  Kapı ilk çalıştırmada gerçekten tetiklendi ve yazımı geri aldı.
+
+  **Kabul.** Birim 121/121 (11'i TORTU'ya ait, süzgecin negatif testi dahil);
+  `npm run test:accept` 9/9 — gerçek Chromium'da `kaz` bir tabaka kazıyor ve
+  kazılan katmanda `?v=` yok. Örnek çıktı:
+
+  ```
+  ] KAROT  13/127  derinlik 114 tabaka
+    tarih   2026-01-17
+    commit  cdbbc3f
+    dosya   Bartender.html
+    kayit   Update print statement from 'Hello' to 'Goodbye'
+    --- kazilan katman ---
+    -      stopBartender();
+    ...
+    bu tabaka uydurulmadi; cdbbc3f commit'inden kazildi.
+  ```
 - **Z1.2 — PELT eraları.** *Bitti:* commit indeksinde çalışıyor; era sınırları
   birim testte sabit; her eranın Türkçe adı var.
 - **Z1.3 — Damarlar + taban kaya.** *Bitti:* Q > 0.30; `index.html` ve
@@ -644,7 +676,8 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **108** | ✅ |
+| Birim test | ~~102~~ → **121** | ✅ |
+| Elle yazılmış kalıntı | ruins 3 (dondurulacak) · **kazılan 127** | ✅ Z1.1 |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |
 | Elle yazılmış kalıntı/cihaz/oda | ruins 3 · net 7 · holo 3 | dondurulur, artmaz |

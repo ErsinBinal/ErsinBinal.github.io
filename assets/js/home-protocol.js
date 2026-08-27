@@ -148,6 +148,7 @@
       let economyMod = null;
       let shopMod = null;
       let ruinsMod = null;
+      let tortuMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1340,6 +1341,37 @@
           });
         } catch (error) {
           console.error('[home-protocol] Ruins module failed', error);
+          return null;
+        }
+      })();
+
+      // TORTU (assets/js/home/tortu.js): sitenin kendi jeolojisi.
+      // Veri build-time'da uretilir (scripts/build-tortu.js) ve TEMBEL cekilir:
+      // precache'e girmez, ana sayfa ilk yukune eklenmez (D6).
+      let tortuData = null;
+      let tortuLoading = null;
+      const loadTortu = () => {
+        if (tortuData || tortuLoading) return tortuLoading;
+        tortuLoading = fetch('/assets/data/tortu.json')
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { tortuData = data; return data; })
+          .catch(() => null);
+        return tortuLoading;
+      };
+
+      tortuMod = (() => {
+        const createTortu = window.ConviviumHome?.createTortu;
+        if (typeof createTortu !== 'function') {
+          console.error('[home-protocol] Tortu module unavailable');
+          return null;
+        }
+        try {
+          return createTortu({
+            getData: () => tortuData,
+            getDayKey: () => new Date().toISOString().slice(0, 10)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Tortu module failed', error);
           return null;
         }
       })();
@@ -2630,6 +2662,18 @@
       const commandDefinitions = [
         ...guideCommandDefinitions,
         {
+          command: 'kaz',
+          description: 'deponun gercek gecmisinden bir tabaka kazar',
+          aliases: ['dig', 'tortu'],
+          action: () => kazCommand('')
+        },
+        {
+          command: 'taban',
+          description: 'sitenin uzerinde durdugu taban kayayi gosterir',
+          aliases: ['bedrock'],
+          action: () => tabanCommand()
+        },
+        {
           command: 'neden',
           description: 'oneri motorunun bir girdide neden o komutu sectigini dokur',
           aliases: ['why', 'gerekce'],
@@ -3406,6 +3450,24 @@
         return lines.join('\n');
       };
 
+      // KAZ — sitenin kendi jeolojisini kazar. Kalinti uydurulmaz, kazilir.
+      const kazCommand = async (raw) => {
+        if (!tortuMod) return 'kaz: tortu modulu yuklenmedi (SINIRLI MOD).';
+        if (!tortuMod.ready()) {
+          await loadTortu();
+          if (!tortuMod.ready()) {
+            return 'kaz: tortu katmani alinamadi. Cevrimdisiysan bir kez cevrimici ac.';
+          }
+        }
+        return tortuMod.dig(raw);
+      };
+
+      const tabanCommand = async () => {
+        if (!tortuMod) return 'taban: tortu modulu yuklenmedi (SINIRLI MOD).';
+        if (!tortuMod.ready()) await loadTortu();
+        return tortuMod.bedrock();
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -3752,6 +3814,9 @@
         ['take ', value => takeCommand(value)],
         ['al ', value => takeCommand(value)],
         ['help ', value => commandHelpText(value)],
+        ['kaz ', value => kazCommand(value)],
+        ['dig ', value => kazCommand(value)],
+        ['tortu ', value => kazCommand(value)],
         ['neden ', value => nedenCommand(value)],
         ['why ', value => nedenCommand(value)],
         ['gerekce ', value => nedenCommand(value)],
