@@ -689,10 +689,14 @@
       display: grid;
       place-items: center;
       width: 72px;
-      min-height: 56px;
+      min-height: 48px;
       margin: 0 auto;
-      border: 1px solid rgba(0, 255, 102, 0.22);
-      background: rgba(0, 0, 0, 0.86);
+      /* Ray bir menu degil, bu sayfadaki ilerleme gostergesidir: kartlarla
+         ayni gorsel agirligi tasimamali. Aktif adim one cikar, gerisi geri
+         cekilir. */
+      border: 1px solid rgba(0, 255, 102, 0.1);
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0.55;
       color: var(--journey-muted);
       font-family: var(--font-display);
       text-decoration: none;
@@ -711,15 +715,22 @@
       font-size: 1rem;
     }
 
+    .rail-link.is-sealed em {
+      letter-spacing: 0.12em;
+      opacity: 0.5;
+    }
+
     .rail-link em {
       margin-top: 5px;
       font-size: 0.68rem;
     }
 
     .rail-link.is-active,
-    .rail-link:hover {
+    .rail-link:hover,
+    .rail-link:focus-visible {
       border-color: var(--journey-cyan);
       color: var(--journey-text);
+      opacity: 1;
       box-shadow: 0 0 18px rgba(0, 234, 255, 0.2);
       text-decoration: none;
       transform: translateX(3px);
@@ -883,8 +894,34 @@
     .primary-actions {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 10px;
       margin-top: 26px;
+    }
+
+    /* Esit vurgu = vurgu yok. Sitenin kalbi terminal; tek birincil yol odur,
+       digerleri ikincil kalir ve ancak istenirse secilir. */
+    .action-link.is-primary {
+      min-width: 168px;
+      padding: 14px 20px;
+      border-color: var(--journey-green, #00ff66);
+      background: rgba(0, 255, 102, 0.14);
+      color: var(--journey-green, #00ff66);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.18);
+    }
+
+    .action-link.is-primary:hover,
+    .action-link.is-primary:focus-visible {
+      background: rgba(0, 255, 102, 0.22);
+      box-shadow: 0 0 28px rgba(0, 255, 102, 0.3);
+    }
+
+    .primary-actions .action-secondary-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     .action-link,
@@ -901,9 +938,9 @@
     .action-link {
       min-width: 108px;
       padding: 10px 14px;
-      border: 1px solid rgba(0, 234, 255, 0.48);
+      border: 1px solid rgba(0, 234, 255, 0.26);
       background: rgba(0, 0, 0, 0.62);
-      color: var(--journey-text);
+      color: var(--journey-muted);
       font-family: var(--font-display);
       text-transform: uppercase;
       cursor: pointer;
@@ -2354,8 +2391,60 @@
         gap: 6px;
       }
 
+      /* Mobilde 8 ciplak rakam saf gurultuydu. Ray artik nokta seridi;
+         yalnizca bulundugun adim adiyla acilir. */
+      .rail-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 34px;
+        padding: 6px 0 0;
+        border: 0;
+        background: none;
+        border-radius: 0;
+        opacity: 0.4;
+      }
+
+      .rail-link span {
+        font-size: 0;
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
       .rail-link em {
         display: none;
+      }
+
+      .rail-link.is-active {
+        opacity: 1;
+        transform: none;
+      }
+
+      .rail-link.is-active span {
+        width: 9px;
+        height: 9px;
+      }
+
+      .rail-link.is-active em {
+        display: block;
+        margin: 5px 0 0;
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+        white-space: nowrap;
+        color: var(--journey-cyan);
+      }
+
+      /* Aktif adimin etiketi seridi buyutmesin: yukseklik sabit, etiket tasar. */
+      .rail-track {
+        position: relative;
+        min-height: 34px;
+      }
+
+      .rail-track {
+        align-items: start;
       }
     }
 
@@ -2440,11 +2529,16 @@
       flex-direction: column;
       width: min(660px, calc(100vw - 36px));
       max-height: calc(100vh - 168px);
-      border: 1px solid rgba(0, 234, 255, 0.42);
+      border: 1px solid rgba(0, 234, 255, 0.55);
+      /* Terminal metni sayfa metniyle carismamali: zemin opak, arkasi bulanik.
+         Onceki deger ust kenarda ~%80 saydamdi ve hero paragrafi ciktinin
+         icinden geciyordu. Saydamlik estetigi blur ile korunuyor. */
       background:
-        linear-gradient(180deg, rgba(0, 234, 255, 0.07), rgba(0, 0, 0, 0.74)),
-        rgba(0, 0, 0, 0.78);
-      box-shadow: 0 0 18px rgba(0, 234, 255, 0.1);
+        linear-gradient(180deg, rgba(0, 234, 255, 0.06), rgba(4, 10, 8, 0.97)),
+        rgba(2, 6, 4, 0.97);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.6), 0 0 22px rgba(0, 234, 255, 0.14);
       overflow: hidden;
       transform: translate3d(0, -8px, 0);
       opacity: 0;
@@ -3584,21 +3678,29 @@
       line-height: 1;
     }
 
+    /* Telemetri navigasyon degildir. Uc buyuk kutu yerine tek, sessiz satir;
+       mobilde ekranin yarisini yemez. */
     .os-snapshot {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px 18px;
       max-width: 760px;
       margin-top: 18px;
+      padding: 8px 0 0;
+      border-top: 1px solid rgba(0, 255, 102, 0.14);
+      font-size: 0.76rem;
+      opacity: 0.72;
     }
 
     .os-snapshot > span {
-      display: grid;
-      gap: 5px;
-      min-height: 58px;
-      padding: 9px 10px;
-      border: 1px solid rgba(0, 255, 102, 0.18);
-      background: rgba(0, 0, 0, 0.52);
+      display: inline-flex;
+      align-items: baseline;
+      gap: 6px;
+      min-height: 0;
+      padding: 0;
+      border: 0;
+      background: none;
       color: var(--journey-muted);
       font-family: var(--font-display);
       font-size: 0.72rem;

@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=36" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=37" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=36">
+  <link rel="stylesheet" href="/assets/css/home.css?v=37">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -110,7 +110,7 @@
   <aside class="system-hud" aria-label="Sistem durumu">
     <div class="hud-line"><span>Access</span><strong class="hud-value" id="hud-access">GUEST</strong></div>
     <div class="hud-line"><span>Route</span><strong class="hud-value" id="hud-route">ORIGIN</strong></div>
-    <div class="hud-line oracle-pulse"><span>Oracle</span><strong class="hud-value" id="micro-oracle">wait for signal</strong></div>
+    <div class="hud-line oracle-pulse"><span>Oracle</span><strong class="hud-value" id="micro-oracle">hazır</strong></div>
     <div class="hud-line presence-pulse"><span>Signals</span><strong class="hud-value" id="hud-presence">scanning</strong></div>
   </aside>
 
@@ -140,9 +140,9 @@
   <!-- Main Content -->
   <main class="container" id="main-content" role="main">
     <div class="experience-frame">
-      <aside class="journey-rail" aria-label="Convivium akış rayı">
+      <aside class="journey-rail" aria-label="Sayfa ilerlemesi">
         <div class="rail-mark">CVM</div>
-        <nav class="rail-track" aria-label="Deneyim aşamaları">
+        <nav class="rail-track" aria-label="Bu sayfadaki bölümler">
           <span class="rail-progress" aria-hidden="true"></span>
           <a class="rail-link is-active" href="#origin" data-step="0"><span>00</span><em>Origin</em></a>
           <a class="rail-link" href="#index" data-step="1"><span>01</span><em>Index</em></a>
@@ -151,9 +151,9 @@
           <a class="rail-link" href="#map" data-step="4"><span>04</span><em>Map</em></a>
           <a class="rail-link" href="#archive" data-step="5"><span>05</span><em>Archive</em></a>
           <a class="rail-link" href="#notes" data-step="6"><span>06</span><em>Notes</em></a>
-          <a class="rail-link" href="#hidden" data-step="7"><span>07</span><em>Hidden</em></a>
+          <a class="rail-link is-sealed" href="#hidden" data-step="7"><span>07</span><em>???</em></a>
         </nav>
-        <div class="rail-status">live route</div>
+        <div class="rail-status">bu sayfa</div>
       </aside>
 
       <div class="journey-stack">
@@ -179,15 +179,17 @@
                 Merhaba. Burası hızlı tüketim için değil; iş modeli, teknoloji, oyun ve ritüel kırıntılarından oluşan seçici bir kişisel indeks.
               </p>
               <nav class="primary-actions" aria-label="Birincil erişim">
-                <a class="action-link" href="/pages/makaleler.html"><span>Read</span>Dossier</a>
-                <a class="action-link" href="#lab"><span>Run</span>Lab</a>
-                <a class="action-link" href="#trace"><span>Trace</span>Idea</a>
-                <button class="action-link" id="command-launch" type="button"><span>Open</span>Command</button>
+                <button class="action-link is-primary" id="command-launch" type="button"><span>Buradan başla</span>Terminali aç</button>
+                <div class="action-secondary-group">
+                  <a class="action-link" href="/pages/makaleler.html"><span>Read</span>Dossier</a>
+                  <a class="action-link" href="#lab"><span>Run</span>Lab</a>
+                  <a class="action-link" href="#trace"><span>Trace</span>Idea</a>
+                </div>
               </nav>
               <div class="os-snapshot" aria-label="Convivium OS önerisi">
-                <span>last signal: <strong id="last-signal">noise.floor</strong></span>
-                <span>recommended route: <strong id="recommended-route">Trace -> Oracle -> Dossier</strong></span>
-                <span>next action: <button class="inline-command command-trigger" type="button" data-command="ritual">run ritual</button></span>
+                <span>sinyal <strong id="last-signal">noise.floor</strong></span>
+                <span>rota <strong id="recommended-route">Trace -> Oracle -> Dossier</strong></span>
+                <span>sıradaki <button class="inline-command command-trigger" type="button" data-command="ritual">run ritual</button></span>
               </div>
             </div>
           </div>
@@ -512,7 +514,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=97" defer></script>
+  <script src="/assets/js/home-protocol.js?v=98" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>

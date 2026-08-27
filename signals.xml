@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Terminal okunur oldu: tek birincil yol, sakin arayuz</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-27-terminal-okunur-oldu-tek-birincil-yol-sakin-arayuz</guid>
+      <pubDate>Thu, 27 Aug 2026 15:05:08 +0000</pubDate>
+      <description>Terminal paneli yari saydamdi ve arkasindaki sayfa metni ciktinin icinden geciyordu; artik opak zemin ve arka plan bulanikligi var, saydamlik estetigi blur ile korundu. Dort esit agirlikli buton yerine tek birincil yol: Terminali ac. Uc buyuk telemetri kutusu tek sessiz satira indi. HUD'daki Oracle slotu artik 2.8 saniyede bir aforizma dondurmuyor, gercek durum gosteriyor; aforizmalar sinyal konsoluna tasindi ve dongu 9 saniyeye cikti, sayfa surekli kimildamiyor. Sol ray bir menu degil bu sayfadaki ilerleme gostergesi olarak geri cekildi; mobilde sekiz ciplak rakam yerine nokta seridi ve yalniz bulundugun adimin etiketi var. Gizli bolumun adi artik ekranda yazmiyor.</description>
+    </item>
+    <item>
       <title>Mekanizma gorunur: neden komutu ve girissiz dusunsel yuzeyler</title>
       <link>https://ersinbinal.github.io/pages/changelog.html</link>
       <guid isPermaLink="false">cvm-signal-2026-08-26-mekanizma-gorunur-neden-komutu-ve-girissiz-dusunsel-yuzeyler</guid>

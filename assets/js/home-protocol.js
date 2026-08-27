@@ -638,12 +638,25 @@
       }
 
       if (consoleLine) {
-        window.setInterval(() => {
-          signalIndex = (signalIndex + 1) % signals.length;
-          consoleLine.textContent = signals[signalIndex];
-          updateOsSnapshot(state.level, signals[signalIndex]);
-          if (microOracle) microOracle.textContent = oracleLines[signalIndex % oracleLines.length];
-        }, 2800);
+        // Sayfa surekli kimildamamali: 2.8 sn'lik dongu sakin bir tempoya alindi.
+        // HUD'daki Oracle slotu bir DURUM alanidir; aforizma dondurmez.
+        // Aforizmalar sinyal konsolunda, sinyallerle donusumlu akar.
+        const consoleLines = signals.flatMap((signal, index) => [
+          signal,
+          oracleLines[index % oracleLines.length]
+        ]);
+        let consoleIndex = 0;
+        const prefersCalm = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+        if (!prefersCalm) {
+          window.setInterval(() => {
+            consoleIndex = (consoleIndex + 1) % consoleLines.length;
+            consoleLine.textContent = consoleLines[consoleIndex];
+            if (consoleIndex % 2 === 0) {
+              signalIndex = (consoleIndex / 2) % signals.length;
+              updateOsSnapshot(state.level, signals[signalIndex]);
+            }
+          }, 9000);
+        }
       }
 
       const commandBootLines = () => [
