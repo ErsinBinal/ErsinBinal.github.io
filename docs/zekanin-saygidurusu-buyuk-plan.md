@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0 ve Z1.1 TAMAMLANDI.** Sıradaki: Z1.2 (PELT eraları).
+Durum: **Faz -1, Faz 0, Z1.1 ve Z1.2 TAMAMLANDI.** Sıradaki: Z1.3 (damarlar).
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -427,8 +427,42 @@ tembel) · `assets/js/home/tortu.js` (saf okuyucu)
     ...
     bu tabaka uydurulmadi; cdbbc3f commit'inden kazildi.
   ```
-- **Z1.2 — PELT eraları.** *Bitti:* commit indeksinde çalışıyor; era sınırları
-  birim testte sabit; her eranın Türkçe adı var.
+- **Z1.2 — PELT eraları.** ✅ **TAMAMLANDI (2026-08-27)**
+
+  `tabaka` komutu 8 erayı Türkçe adlarıyla listeliyor. Gözlem uzayı 8 kategori
+  (kabuk · oyun · araç · gövde · altyapı · varlık · belge · test); maliyet
+  **çok terimli negatif log-olabilirlik** (Gauss değil — gözlem sayım vektörü).
+  `β = 0.8·K·ln(n)`, minSize 20.
+
+  **Eksen doğrulandı:** seri commit indeksi, takvim günü değil — 574 commit ama
+  62 aktif gün, gün serisinin ~%89'u sıfır olurdu ve boşluklar değişim sanılırdı.
+
+  **Adlandırma baskın kategoriden değil, taban ortalamadan sapmadan geliyor.**
+  `gövde` her yerde yüksek olduğu için baskınlık ayırt edici değil; sapma
+  (lift) o dönemin gerçekten neyle uğraştığını söylüyor.
+
+  Çıkan jeoloji gerçek bir anlatı:
+
+  | # | Katman | Dönem | Commit | Baskın sapma |
+  |---|---|---|---:|---|
+  | 1 | Atölye Katmanı | 2025-02-13 → 2026-01-18 | 101 | araç %45 |
+  | 2 | Oyun Katmanı | 2026-01-18 → 2026-06-01 | 105 | oyun %24 |
+  | 3 | Gövde Katmanı | 2026-06-02 → 2026-06-11 | 47 | gövde %49 |
+  | 4 | Atölye Katmanı II | 2026-06-11 → 2026-07-08 | 188 | araç %31 |
+  | 5 | Döküm Katmanı | 2026-07-08 → 2026-07-17 | 20 | varlık |
+  | 6 | Zemin Katmanı | **2026-07-17 (tek gün)** | 25 | altyapı %33 |
+  | 7 | Kayıt Katmanı | 2026-07-18 → 2026-07-22 | 42 | belge %21 |
+  | 8 | Döküm Katmanı II | 2026-07-22 → 2026-08-27 | 46 | varlık %30 |
+
+  **Era 6 tek gün ve bu tarihsel olarak doğru:** 2026-07-17, üretim sertleştirme
+  günü — [teknik değerlendirmenin](site-teknik-degerlendirme-2026-07-17.md)
+  tarihiyle birebir. Algoritma bunu kimse söylemeden buldu.
+
+  **Kabul.** PELT sentetik veriyle test ediliyor (gerçek tarih büyüdükçe test
+  bozulmasın diye): bilinen değişim noktasını tam yakalıyor, homojen seride
+  bölmüyor, deterministik, minSize'a uyuyor. Üretilen eralar sözleşme testinden
+  geçiyor: adlar benzersiz ve Türkçe, aralıklar kronolojik, **eraların commit
+  toplamı depo toplamına eşit**. Birim 130/130, `test:accept` 10/10.
 - **Z1.3 — Damarlar + taban kaya.** *Bitti:* Q > 0.30; `index.html` ve
   `service-worker.js` taban kaya katmanında, damar listesinde değil.
 - **Z1.4 — `/ruins` devri.** *Bitti:* üç elle kalıntı "kuruluş miti" rozetli;
@@ -676,7 +710,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **121** | ✅ |
+| Birim test | ~~102~~ → **130** | ✅ |
 | Elle yazılmış kalıntı | ruins 3 (dondurulacak) · **kazılan 127** | ✅ Z1.1 |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |

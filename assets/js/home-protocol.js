@@ -2668,6 +2668,12 @@
           action: () => kazCommand('')
         },
         {
+          command: 'tabaka',
+          description: 'deponun eralarini gosterir (PELT ile commit indeksinde bulunur)',
+          aliases: ['tabakalar', 'eras', 'katmanlar'],
+          action: () => tabakaCommand()
+        },
+        {
           command: 'taban',
           description: 'sitenin uzerinde durdugu taban kayayi gosterir',
           aliases: ['bedrock'],
@@ -3460,6 +3466,12 @@
           }
         }
         return tortuMod.dig(raw);
+      };
+
+      const tabakaCommand = async () => {
+        if (!tortuMod) return 'tabaka: tortu modulu yuklenmedi (SINIRLI MOD).';
+        if (!tortuMod.ready()) await loadTortu();
+        return tortuMod.layers();
       };
 
       const tabanCommand = async () => {

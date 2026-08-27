@@ -170,10 +170,10 @@ test('global command/alias namespace preserves the complete normalized snapshot'
     .update(JSON.stringify(definitions))
     .digest('hex');
 
-  assert.equal(definitions.length, 144);
-  assert.equal(labels, 632);
-  assert.equal(claims.size, 586);
-  assert.equal(digest, 'c2c3b42e427600b2dd881139a2f19996497295f1a2dee5344cd6b4e6a07b723d');
+  assert.equal(definitions.length, 145);
+  assert.equal(labels, 636);
+  assert.equal(claims.size, 590);
+  assert.equal(digest, 'bf5e0a770e2ec93bfd2da9e544971a03f8fda9a048fb609625ea448f726d24e7');
 
   const sameOwnerFolds = [...claims.values()].filter(
     (owners) => owners.length > 1 && new Set(owners.map((claim) => claim.owner)).size === 1
@@ -294,5 +294,6 @@ test('raw-prefix routes stay ahead of shell, parameter and commandMap dispatch',
   assert.ok(positions.every((position) => position >= 0), 'dispatch katmani isaretleri bulunmali');
   assert.deepEqual(positions, [...positions].sort((left, right) => left - right));
 });
+
 
 

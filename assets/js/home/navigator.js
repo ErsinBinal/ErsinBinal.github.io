@@ -21,6 +21,7 @@
         ['cd <oda>', 'terminal odasina gec'],
         ['examine <nesne>', 'gorunur bir izi incele'],
         ['kaz', 'deponun gercek gecmisinden bir tabaka kaz'],
+        ['tabaka', 'deponun eralarini gor'],
         ['map', 'genel sinyal haritasina bak']
       ]
     },

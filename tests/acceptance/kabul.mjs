@@ -79,11 +79,25 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   check('kaz gercek bir tabaka kaziyor', /KAROT/.test(kaz) && /commit/.test(kaz) && /uydurulmadi/.test(kaz));
   check('kazilan tabaka surum bumpi degil', !/\?v=\d+/.test(kaz.slice(kaz.indexOf('kazilan katman'))));
 
+  await page.fill('#command-input', 'tabaka');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /era$/m.test(document.getElementById('command-output')?.textContent || '') ||
+          /aktif gun \/ \d+ era/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const tabaka = await page.textContent('#command-output');
+  check('tabaka eralari Turkce adlariyla listeliyor',
+    /TABAKALAR/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrasiyordu/.test(tabaka));
+
   await page.fill('#command-input', 'taban');
   await page.press('#command-input', 'Enter');
   await page.waitForFunction(
-    // Cikti animasyonla yazilir; son satir (commit/aktif gun ozeti) gorunene kadar bekle.
-    () => /aktif gun/.test(document.getElementById('command-output')?.textContent || ''),
+    // Cikti animasyonla yazilir. `tabaka` da 'aktif gun' yazdigi icin ona
+    // degil, taban kayanin kendi satirina bak.
+    () => /service-worker\.js/.test(
+      (document.getElementById('command-output')?.textContent || '').split('TABAN KAYA').pop()
+    ),
     { timeout: 20000 }
   ).catch(() => {});
   const taban = await page.textContent('#command-output');
