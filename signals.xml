@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>STEP: komutu calistirmadan gerekcesini calistir</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-28-step-komutu-calistirmadan-gerekcesini-calistir</guid>
+      <pubDate>Fri, 28 Aug 2026 18:35:56 +0000</pubDate>
+      <description>step komutu bir komutu CALISTIRMAZ; kararin nasil verildigini gosterir. step cd hepl yazinca yazim mesafesinin dinamik programlama matrisi ciziliyor, geri izleme yolu koseli parantezle isaretleniyor ve her hucrede hangi secenegin neden kazandigi yaziyor. step suggest hepl oneri siralamasinin gerekcesini dokuyor. Onemli bir durustluk notu: navigator.js rolling DP kullaniyor ve matris tutmuyor, bu yuzden sergi icin ikinci bir uygulama yazildi; ikisinin ayni mesafeyi vermesi bir kabul kriteri ve on alti kelime cifti uzerinde capraz dogrulaniyor. Makinenin erken cikisi da gizlenmiyor: uzunluk farki ikiyi asinca hic hesaplamiyor ve sergi bunu BUDANDI diye soyluyor.</description>
+    </item>
+    <item>
       <title>SIGIL: kazdigin sey artik paylasilabilir</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-08-28-sigil-kazdigin-sey-artik-paylasilabilir</guid>

@@ -139,6 +139,63 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- Z2 IZ + step: komutu calistirmadan gerekcesini calistir ---
+{
+  const page = await browser.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  const hashBefore = await page.evaluate(() => location.hash);
+
+  await page.fill('#command-input', 'step cd hepl');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /sonuc: mesafe/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const stepOut = await page.textContent('#command-output');
+  check('step Levenshtein matrisini ve yolu ciziyor',
+    /lev-typo/.test(stepOut) && /hucre hesaplandi/.test(stepOut) && /--- yol ---/.test(stepOut));
+  check('step kaynagini soyluyor', /navigator\.js editDistance/.test(stepOut));
+
+  // step KOMUTU CALISTIRMAZ: adres degismemeli, rota degismemeli.
+  const hashAfter = await page.evaluate(() => location.hash);
+  check('step yan etki uretmiyor (adres degismedi)', hashBefore === hashAfter,
+    `${hashBefore || '(bos)'} = ${hashAfter || '(bos)'}`);
+
+  await page.fill('#command-input', 'step suggest hepl');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    // Son satiri bekle: cikti animasyonla yazilir, `nav-why` ilk satirda.
+    () => /secilen: /.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const suggestOut = await page.textContent('#command-output');
+  check('step suggest oneri gerekcesini dokuyor',
+    /nav-why/.test(suggestOut) && /yazim mesafesi/.test(suggestOut));
+
+  // Budama gorunur olmali: makine bazi cifti hic hesaplamiyor.
+  await page.fill('#command-input', 'step cd h hologram');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /hesaplanmadi, esik disi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const prunedOut = await page.textContent('#command-output');
+  check('step budamayi gizlemiyor, gosteriyor',
+    /BUDANDI/.test(prunedOut) && /hic hesaplamadi/.test(prunedOut));
+
+  check('step page error uretmiyor', errors.length === 0, errors[0] || '');
+  await page.close();
+}
+
 // --- Z3 SIGIL: adres motoru ---
 // Iz tasinmaz, yeniden turetilir: link icerik tasimaz, cikti alicida
 // yeniden hesaplanir.

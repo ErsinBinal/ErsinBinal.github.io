@@ -89,6 +89,7 @@
         ['pwd · ls · cat', 'konum ve dosya okuma'],
         ['man <komut>', 'tek komut kilavuzu'],
         ['neden <girdi>', 'oneri motorunun gerekcesini dokur'],
+        ['step <komut>', 'komutu calistirmaz, kararin nasil verildigini gosterir'],
         ['keys', 'klavye kisayollari'],
         ['shell', 'ileri kabuk ozeti']
       ]

@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1 TORTU ve Z3 SİGİL TAMAMLANDI.** Sıradaki: Z2 İZ + `step`.
+Durum: **Faz -1, Faz 0, Z1 TORTU, Z2 İZ ve Z3 SİGİL TAMAMLANDI.** Kalan: Z4 ARŞİV·0212, Z5 OKKAM.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -565,14 +565,37 @@ step <komut>  ->  komutu ÇALIŞTIRMAZ; karar fonksiyonunu iz modunda çağırı
 ```
 v1 kapsamı üç komut: `step suggest`, `step cd <yanlışyazım>`, `step kaz`.
 
-**Fazlar.**
-- **Z2.1** — İz formatı + oynatıcı + `lev-typo`. *Bitti:* `traceHash` birim testte
-  sabit; oynatıcı mobilde çalışıyor; ana sayfa yükü değişmedi.
-- **Z2.2** — `nav-why` + `step`. *Bitti:* yan etki gözetleyicisi `step`in hiçbir
-  durum değiştirmediğini kanıtlıyor.
-- **Z2.3** — `tortu-pelt`. *Bitti:* kazı arama ağacı izlenebiliyor.
-- **Z2.4** — `/makine/` vitrini. *Bitti:* üç sergi offline; hiçbiri giriş istemiyor;
-  her biri Türkçe kapı taşıyor; sayfa başı ilk yük < 120KB.
+**Fazlar.** ✅ **Z2.1–Z2.2 TAMAMLANDI (2026-08-28)** · Z2.3–Z2.4 açık
+
+- **Z2.1 — İz formatı + `lev-typo`.** ✅ `assets/js/home/iz.js`, saf modül
+  (DOM/ağ/zaman/rastgelelik yok — test kilitliyor). Levenshtein DP matrisi,
+  geri izleme yolu ve hücre başına gerekçe.
+- **Z2.2 — `nav-why` + `step`.** ✅ `step cd <yanlışyazım>` ve
+  `step suggest <girdi>`. **`step` komutu çalıştırmaz, gerekçesini çalıştırır.**
+
+**Planın uyarısı doğru çıktı ve maliyeti ödendi.** `navigator.js:110-127` rolling
+DP kullanıyor, matris de parent pointer da tutmuyor. Sergi için ikinci bir
+uygulama yazıldı (~110 satır). Bu bir risk doğuruyor: iki uygulama ayrışırsa
+sergi, makinenin ne yaptığı hakkında **yalan söyler.** Bu yüzden en önemli test
+çapraz doğrulama: 16 kelime çiftinde sergi ile canlı `editDistance` **aynı
+mesafeyi** vermek zorunda.
+
+**Erken çıkış gizlenmiyor, serginin konusu oluyor.** `navigator.js` uzunluk farkı
+2'yi aşınca hiç hesaplamıyor (`return 99`). Sergi bunu taklit ediyor ve
+söylüyor: *"BUDANDI — makine bu çifti hiç hesaplamadı."* Göstermek gizlemekten
+öğretici.
+
+**`step` yan etki üretmiyor** — bu D3'ün bedava sonucu. İki katmanda kilitli:
+kaynak sözleşmesi testi (`writeAddress`/`persist`/`award`/`runCommand`
+çağıramaz) ve Chromium'da adresin değişmediğinin doğrulanması.
+
+**Açık kalanlar.** Z2.3 `tortu-pelt` emitörü ve Z2.4 `/makine/` vitrini
+yapılmadı. Vitrin yeni bir HTML rota; terminal yüzeyi önce geldi çünkü değer
+oradaydı.
+
+**Kabul.** Birim 165/165 (12'si İZ). `test:accept` **24/24** — gerçek
+Chromium'da matris çiziliyor, kaynak söyleniyor, budama gösteriliyor,
+`step suggest` gerekçe döküyor ve **adres değişmiyor** (yan etki yok).
 
 **Kesilenler.** `wfc-relic` (3B tile seti asset işi, kod işi değil) ve `dpll-net`
 (`/net` bir CSP değil, kilit-anahtar DAG'ı — doğru hesap, yanlış problem).
@@ -782,7 +805,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **154** | ✅ |
+| Birim test | ~~102~~ → **165** | ✅ |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

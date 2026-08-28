@@ -150,6 +150,7 @@
       let ruinsMod = null;
       let tortuMod = null;
       let sigilMod = null;
+      let izMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1394,6 +1395,21 @@
           return createSigil();
         } catch (error) {
           console.error('[home-protocol] Sigil module failed', error);
+          return null;
+        }
+      })();
+
+      // IZ (assets/js/home/iz.js): kararin kare kare kaydi.
+      izMod = (() => {
+        const createIz = window.ConviviumHome?.createIz;
+        if (typeof createIz !== 'function') {
+          console.error('[home-protocol] Iz module unavailable');
+          return null;
+        }
+        try {
+          return createIz();
+        } catch (error) {
+          console.error('[home-protocol] Iz module failed', error);
           return null;
         }
       })();
@@ -2690,6 +2706,12 @@
           action: () => kazCommand('')
         },
         {
+          command: 'step',
+          description: 'bir komutu calistirmaz, kararin nasil verildigini gosterir',
+          aliases: ['adim', 'gerekcesini calistir'],
+          action: () => stepCommand('')
+        },
+        {
           command: 'iz',
           description: 'bulundugun ciktinin paylasilabilir adresini ve muhrunu gosterir',
           aliases: ['adres', 'sigil', 'permalink'],
@@ -3608,6 +3630,48 @@
         ].join('\n');
       };
 
+      // STEP — komutu CALISTIRMAZ, gerekcesini calistirir.
+      //
+      // Bu, D3'un "saf karar mantigi modulde, yan etki callback'te" kuralinin
+      // bedava sonucudur: karar fonksiyonu yan etkisiz oldugu icin onu izlemek
+      // hicbir seyi degistirmez. `step` calistiktan sonra sitede hicbir durum
+      // degismemis olmali (yan etki gozetleyicisi bunu testte kilitliyor).
+      const stepCommand = (raw) => {
+        if (!izMod) return 'step: iz modulu yuklenmedi (SINIRLI MOD).';
+        const query = String(raw || '').trim();
+        if (!query) {
+          return [
+            'step: usage step <komut>',
+            '  step cd <yanlisyazim>   yazim mesafesi matrisini ve geri izleme yolunu cizer',
+            '  step suggest <girdi>    oneri siralamasinin gerekcesini dokur',
+            '',
+            'step komutu CALISTIRMAZ; kararin nasil verildigini gosterir.'
+          ].join('\n');
+        }
+
+        const suggestMatch = query.match(/^(?:suggest|oneri)\s+(.+)$/i);
+        if (suggestMatch) {
+          if (!navigatorMod) return 'step: oneri motoru yuklenmedi.';
+          const input = suggestMatch[1].trim();
+          return izMod.render(izMod.traceSuggest(input, navigatorMod.suggest(input, { limit: 3 })));
+        }
+
+        const cdMatch = query.match(/^(?:cd|lev|mesafe)\s+(.+?)(?:\s+(.+))?$/i);
+        if (cdMatch) {
+          const typed = cdMatch[1].trim();
+          // Hedef verilmediyse oneri motorunun sectigi kanonik komuta bakilir:
+          // sergi, makinenin GERCEKTEN kiyasladigi cifti gostermeli.
+          const target = (cdMatch[2] || '').trim()
+            || navigatorMod?.suggest(typed, { limit: 1 })?.[0]?.value
+            || typed;
+          return izMod.render(izMod.traceLevenshtein(typed, String(target).split(' ')[0]));
+        }
+
+        // Cikplak girdi: yazim mesafesi izini uret.
+        const target = navigatorMod?.suggest(query, { limit: 1 })?.[0]?.value || query;
+        return izMod.render(izMod.traceLevenshtein(query, String(target).split(' ')[0]));
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -3957,6 +4021,8 @@
         ['kaz ', value => kazCommand(value)],
         ['dig ', value => kazCommand(value)],
         ['tortu ', value => kazCommand(value)],
+        ['step ', value => stepCommand(value)],
+        ['adim ', value => stepCommand(value)],
         ['neden ', value => nedenCommand(value)],
         ['why ', value => nedenCommand(value)],
         ['gerekce ', value => nedenCommand(value)],
