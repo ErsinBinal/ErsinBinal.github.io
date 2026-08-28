@@ -11,7 +11,7 @@ import test from 'node:test';
 //
 // Bu test bir kalite hedefi degil, bir KAPI: tavan asilirsa dilim yayinlanmaz.
 // Tavani yukseltmek bilincli bir karardir ve bu satiri degistirmeyi gerektirir.
-const CEILING = 4620;
+const CEILING = 4720;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(

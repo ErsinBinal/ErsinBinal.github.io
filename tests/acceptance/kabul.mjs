@@ -139,6 +139,83 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- Z3 SIGIL: adres motoru ---
+// Iz tasinmaz, yeniden turetilir: link icerik tasimaz, cikti alicida
+// yeniden hesaplanir.
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  await page.fill('#command-input', 'kaz');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /uydurulmadi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  );
+  const address = await page.evaluate(() => location.hash);
+  check('kaz paylasilabilir adres yaziyor', /^#iz=[A-Za-z0-9_-]+$/.test(address), address);
+  const original = (await page.textContent('#command-output')).match(/commit\s+([0-9a-f]{7})/)?.[1];
+
+  await page.fill('#command-input', 'iz');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /yeniden turetilir/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const izOut = await page.textContent('#command-output');
+  check('iz muhur ve gorsel parmak izi veriyor',
+    /muhur\s+[2-9A-HJ-NP-Z]{6}/.test(izOut) && /\+-{17}\+/.test(izOut));
+
+  // Paylasim: temiz sayfa ayni karotu YENIDEN TURETMELI.
+  const shared = await browser.newPage();
+  await shared.goto(`${base}/index.html${address}`, { waitUntil: 'load' });
+  await shared.waitForTimeout(6500);
+  await shared.click('#command-launch');
+  await shared.waitForFunction(
+    // Son satiri bekle: cikti animasyonla yazilir.
+    () => /uydurulmadi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  ).catch(() => {});
+  const rederived = (await shared.textContent('#command-output')).match(/commit\s+([0-9a-f]{7})/)?.[1];
+  check('paylasilan adres temiz sayfada AYNI karotu yeniden turetiyor',
+    Boolean(original) && original === rederived, `${original} = ${rederived}`);
+  await shared.close();
+
+  // Bozuk adres sessizce yanlis sey acmamali.
+  const tampered = address.slice(0, -1) + (address.slice(-1) === 'A' ? 'B' : 'A');
+  const broken = await browser.newPage();
+  await broken.goto(`${base}/index.html${tampered}`, { waitUntil: 'load' });
+  await broken.waitForTimeout(6500);
+  await broken.click('#command-launch');
+  await broken.waitForFunction(
+    () => /muhru tutmuyor/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const brokenOut = await broken.textContent('#command-output');
+  check('tek karakteri degisen adres REDDEDILIYOR',
+    /muhru tutmuyor/.test(brokenOut) && !/KAROT/.test(brokenOut));
+  await broken.close();
+
+  // Geri tusu: terminalde ilk kez tarayici gecmisi.
+  await page.fill('#command-input', 'tabaka');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /TABAKALAR/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  );
+  await page.goBack();
+  await page.waitForTimeout(2500);
+  const back = await page.evaluate(() => location.hash);
+  check('geri tusu onceki ize donuyor', back === address, back);
+  await page.close();
+}
+
 // --- 2. Girissiz onur hatti: uc yuzey giris istemiyor ---
 for (const [name, url] of [
   ['Ekol Aynasi', '/tools/ekol-aynasi.html'],

@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>SIGIL: kazdigin sey artik paylasilabilir</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-28-sigil-kazdigin-sey-artik-paylasilabilir</guid>
+      <pubDate>Fri, 28 Aug 2026 18:19:58 +0000</pubDate>
+      <description>Terminalde bugune kadar tek bir tarayici gecmisi cagrisi yoktu: kesfettigin hicbir seyin adresi yoktu, geri tusu dusuncede calismiyordu. Artik kaz, tabaka, damar, taban ve neden birer adres yaziyor. Adres icerik TASIMAZ; yalniz tur ve girdi tasir ve cikti alici cihazda YENIDEN TURETILIR — sunucuda depolama yok, link 10-19 karakter. Her adres FNV-1a muhru tasiyor: tek karakteri degisirse sessizce yanlis sey acmak yerine acikca reddediliyor. iz komutu bulundugun ciktinin adresini, alti haneli muhrunu ve Drunken Bishop gorsel parmak izini gosteriyor. Geri tusu artik terminalde de calisiyor.</description>
+    </item>
+    <item>
       <title>TORTU tamamlandi: /ruins artik uydurdugunu soyluyor</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-08-28-tortu-tamamlandi-ruins-artik-uydurdugunu-soyluyor</guid>

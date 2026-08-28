@@ -149,6 +149,7 @@
       let shopMod = null;
       let ruinsMod = null;
       let tortuMod = null;
+      let sigilMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -708,6 +709,9 @@
               if (!commandShell.classList.contains('is-open') || commandInFlight) return;
               transcriptReset(commandReadyText());
               commandShell.classList.remove('is-booting');
+              // Adresle gelindiyse cikti YENIDEN TURETILIR (link icerik tasimaz).
+              const pending = currentAddress();
+              if (pending) runAddress(pending);
             }, 420);
           }
         };
@@ -715,6 +719,8 @@
         if (reduceMotion) {
           transcriptReset(commandReadyText());
           commandShell.classList.remove('is-booting');
+          const pendingReduced = currentAddress();
+          if (pendingReduced) runAddress(pendingReduced);
           return;
         }
 
@@ -1372,6 +1378,22 @@
           });
         } catch (error) {
           console.error('[home-protocol] Tortu module failed', error);
+          return null;
+        }
+      })();
+
+      // SIGIL (assets/js/home/sigil.js): adres motoru.
+      // Iz tasinmaz, yeniden turetilir — adres yalnizca {tur, girdi} tasir.
+      sigilMod = (() => {
+        const createSigil = window.ConviviumHome?.createSigil;
+        if (typeof createSigil !== 'function') {
+          console.error('[home-protocol] Sigil module unavailable');
+          return null;
+        }
+        try {
+          return createSigil();
+        } catch (error) {
+          console.error('[home-protocol] Sigil module failed', error);
           return null;
         }
       })();
@@ -2668,6 +2690,12 @@
           action: () => kazCommand('')
         },
         {
+          command: 'iz',
+          description: 'bulundugun ciktinin paylasilabilir adresini ve muhrunu gosterir',
+          aliases: ['adres', 'sigil', 'permalink'],
+          action: () => izCommand()
+        },
+        {
           command: 'tabaka',
           description: 'deponun eralarini gosterir (PELT ile commit indeksinde bulunur)',
           aliases: ['tabakalar', 'eras', 'katmanlar'],
@@ -3459,6 +3487,7 @@
           });
         });
         lines.push('degerler navigator.js icindeki skorlama tablosundan gelir.');
+        writeAddress('neden', query);
         return lines.join('\n');
       };
 
@@ -3471,25 +3500,112 @@
             return 'kaz: tortu katmani alinamadi. Cevrimdisiysan bir kez cevrimici ac.';
           }
         }
-        return tortuMod.dig(raw);
+        const out = tortuMod.dig(raw);
+        // Kazilan tabaka artik adreslenebilir: paylasilabilir ve geri tusu calisir.
+        if (!/^kaz:/.test(out)) writeAddress('kaz', String(raw || '').trim());
+        return out;
       };
 
       const tabakaCommand = async () => {
         if (!tortuMod) return 'tabaka: tortu modulu yuklenmedi (SINIRLI MOD).';
         if (!tortuMod.ready()) await loadTortu();
-        return tortuMod.layers();
+        const out = tortuMod.layers();
+        if (!/^tabaka:/.test(out)) writeAddress('tabaka');
+        return out;
       };
 
       const damarCommand = async () => {
         if (!tortuMod) return 'damar: tortu modulu yuklenmedi (SINIRLI MOD).';
         if (!tortuMod.ready()) await loadTortu();
-        return tortuMod.veins();
+        const out = tortuMod.veins();
+        if (!/^damar:/.test(out)) writeAddress('damar');
+        return out;
       };
 
       const tabanCommand = async () => {
         if (!tortuMod) return 'taban: tortu modulu yuklenmedi (SINIRLI MOD).';
         if (!tortuMod.ready()) await loadTortu();
-        return tortuMod.bedrock();
+        const out = tortuMod.bedrock();
+        if (!/^taban:/.test(out)) writeAddress('taban');
+        return out;
+      };
+
+      // --- Adres motoru: iz tasinmaz, yeniden turetilir --------------------
+      // Adres yalniz {tur, girdi} tasir; cikti alici cihazda YENIDEN hesaplanir.
+      // Sunucuda depolama yok. Bozulmus adres sessizce yanlis sey acmaz, reddedilir.
+
+      let suppressAddressWrite = false;
+
+      const writeAddress = (kind, input = '') => {
+        if (!sigilMod || suppressAddressWrite) return;
+        const encoded = sigilMod.encode(kind, input);
+        if (!encoded) return;
+        const next = `#iz=${encoded}`;
+        if (window.location.hash === next) return;
+        try {
+          window.history.pushState({ iz: encoded }, '', next);
+        } catch { /* history kullanilamiyorsa adres sessizce atlanir */ }
+      };
+
+      const currentAddress = () => {
+        const match = String(window.location.hash || '').match(/^#iz=([A-Za-z0-9\-_]+)$/);
+        return match ? match[1] : null;
+      };
+
+      // Adresi komuta cevir. Cikti YENIDEN TURETILIR; link icerik tasimaz.
+      const runAddress = async (encoded) => {
+        if (!sigilMod || !encoded) return false;
+        const decoded = sigilMod.decode(encoded);
+        if (!decoded) {
+          printTerminal('iz: adres muhru tutmuyor. Link bozulmus ya da eksik kopyalanmis.');
+          return false;
+        }
+        suppressAddressWrite = true;
+        try {
+          if (decoded.kind === 'kaz') printTerminal(await kazCommand(decoded.input));
+          else if (decoded.kind === 'tabaka') printTerminal(await tabakaCommand());
+          else if (decoded.kind === 'damar') printTerminal(await damarCommand());
+          else if (decoded.kind === 'taban') printTerminal(await tabanCommand());
+          else if (decoded.kind === 'neden') printTerminal(nedenCommand(decoded.input));
+          else return false;
+        } finally {
+          suppressAddressWrite = false;
+        }
+        return true;
+      };
+
+      // `iz` — bulundugun ciktinin adresi, muhru ve gorsel parmak izi.
+      // Geri/ileri tusu: adres degisince cikti yeniden turetilir.
+      // Terminalde ILK KEZ tarayici gecmisi calisir.
+      window.addEventListener('popstate', () => {
+        const encoded = currentAddress();
+        if (!encoded) return;
+        if (!commandShell?.classList.contains('is-open')) return;
+        runAddress(encoded);
+      });
+
+      const izCommand = () => {
+        if (!sigilMod) return 'iz: adres motoru yuklenmedi (SINIRLI MOD).';
+        const encoded = currentAddress();
+        if (!encoded) {
+          return [
+            'iz: su an adreslenmis bir cikti yok.',
+            'Once adres ureten bir komut calistir: kaz · tabaka · damar · taban · neden <girdi>'
+          ].join('\n');
+        }
+        const decoded = sigilMod.decode(encoded);
+        if (!decoded) return 'iz: adres muhru tutmuyor.';
+        return [
+          '] IZ',
+          `  tur     ${decoded.kind}${decoded.input ? ` ${decoded.input}` : ''}`,
+          `  muhur   ${decoded.seal}`,
+          `  adres   ${window.location.origin}/#iz=${encoded}`,
+          '',
+          sigilMod.art(decoded.kind, decoded.input),
+          '',
+          '  Bu link icerik tasimaz; alici cihazda yeniden turetilir.',
+          '  Tek karakteri degisirse muhur tutmaz ve adres reddedilir.'
+        ].join('\n');
       };
 
       const clearCommandSuggestions = () => {

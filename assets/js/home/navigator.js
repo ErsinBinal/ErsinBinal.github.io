@@ -23,6 +23,7 @@
         ['kaz', 'deponun gercek gecmisinden bir tabaka kaz'],
         ['tabaka', 'deponun eralarini gor'],
         ['damar', 'birlikte degisen dosya kumeleri'],
+        ['iz', 'bulundugun ciktinin paylasilabilir adresi'],
         ['map', 'genel sinyal haritasina bak']
       ]
     },

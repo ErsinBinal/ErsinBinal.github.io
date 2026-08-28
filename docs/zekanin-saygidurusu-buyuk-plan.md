@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0 ve Z1 TORTU (tamamı) TAMAMLANDI.** Sıradaki: Z3 SİGİL ya da Z2 İZ.
+Durum: **Faz -1, Faz 0, Z1 TORTU ve Z3 SİGİL TAMAMLANDI.** Sıradaki: Z2 İZ + `step`.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -608,13 +608,29 @@ randomart algoritması) görsel gövdesi — elenen MÜHÜR geminin kurtarılan 
 Mühür `EPOCH`i görünür taşır; yoksa eski SW önbelleği taşıyan ziyaretçi farklı
 mühür görür ve bu bir hata sanılır.
 
-**Fazlar.**
-- **Z3.1** — TLV codec + mühür + `#` yazımı; `kaz` çıktısı adreslenebilir.
-  *Bitti:* paylaşılan link temiz gizli pencerede ve uçak modunda aynı karotu açıyor;
-  tek karakteri değişen link reddediliyor.
-- **Z3.2** — Dört yük tipi + geri/ileri tuşu.
-- **Z3.3** — Drunken Bishop sigil + HUD'da mühür. *Bitti:* referans `ssh-keygen -lv`
-  çıktısıyla bayt bayt aynı.
+**Fazlar.** ✅ **TAMAMLANDI (2026-08-28)**
+
+- **Z3.1 — TLV codec + mühür.** `assets/js/home/sigil.js`, saf modül (DOM yok,
+  ağ yok, `location` yok — test bunu kilitliyor). Kanonik gövde
+  `[sürüm][tag][uzunluk][girdi]` → FNV-1a 32 bit mühür → Base64url padsiz.
+- **Z3.2 — Beş yük tipi + geri/ileri.** `kaz` · `tabaka` · `damar` · `taban` ·
+  `neden`. Tag baytı asla yeniden kullanılmaz; eski adresler çalışmaya devam eder.
+  `popstate` bağlandı: **terminalde ilk kez tarayıcı geçmişi çalışıyor.**
+- **Z3.3 — Görünür mühür + randomart.** 6 haneli mühür, `I/O/0/1` içermeyen
+  alfabeyle (elle kopyalanırken karışmasın). Drunken Bishop görsel parmak izi.
+  *Not:* planın "ssh-keygen ile bayt bayt aynı" kriteri **düşürüldü** — o kriter
+  elenen MÜHÜR gemisine aitti ve SSH anahtarı semantiği gerektiriyor; burada
+  yürüyüş kendi mühür baytlarımız üzerinde.
+
+**Ölçüm plandaki tahmini doğruladı.** Plan "önce p95 URL uzunluğu ölçülür;
+96 karakteri gerçekten aşıyorsa Huffman sonradan eklenir" diyordu. Ölçüldü:
+adresler **10–19 karakter**. Huffman gerekmedi ve yazılmadı.
+
+**Kabul.** Birim 154/154 (15'i SİGİL). `test:accept` **18/18** — gerçek
+Chromium'da: `kaz` adres yazıyor · paylaşılan adres temiz sayfada **aynı karotu
+yeniden türetiyor** (`0c32b63 = 0c32b63`) · tek karakteri değişen adres
+reddediliyor · geri tuşu önceki ize dönüyor. Ayrıca birim testte 19/19 tek
+karakter kurcalaması reddedildi ve FNV-1a bilinen vektörlerle doğrulandı.
 
 ---
 
@@ -766,9 +782,9 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **140** | ✅ |
+| Birim test | ~~102~~ → **154** | ✅ |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
-| Terminalde History API çağrısı | **0** | ↑ |
+| Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |
 | Elle yazılmış kalıntı/cihaz/oda | ruins 3 · net 7 · holo 3 | dondurulur, artmaz |
 | Gerekçe (`why`) üreten karar fonksiyonu | ölçülmedi | CI kapısı |
