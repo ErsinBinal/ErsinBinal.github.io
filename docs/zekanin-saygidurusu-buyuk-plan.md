@@ -83,7 +83,7 @@ Bu bölüm planın zeminidir. Her satır depoda doğrulandı; tahmin yok.
 | B7 | **Dört günlük çekiliş birbirinden habersiz** | `ruins.js:69` `hashDay(dayKey) % registry.length` · `dreams.js:32,102` ayrı `seedOf`+`mulberry32` · `home-protocol.js` kart · `net.js` 10 dk kovası | Hiçbiri dünü okumuyor. Akış-ayrılmış tek PRNG kuralı bunu birleştirir (§4). |
 | B8 | Workers AI modeli logprobs döndürmüyor | `wrangler.toml:12` → `@cf/meta/llama-3.1-8b-instruct-fp8`, `[ai]` binding `{response}` döner | "Belirsizlik ısı haritası" fazı ölü doğar. Plandan çıkarıldı. |
 | B9 | Hiçbir CSP'de `wasm-unsafe-eval` yok; `assets/wasm/` boş | 33 HTML tarandı, 0 eşleşme; `assets/wasm/` yalnız `.gitkeep` (1 bayt) | WASM yolu kapalı. Tüm WASM vaatleri plandan çıkarıldı. |
-| B10 | **20 dosyada `Math.random()`** — `crude-buster.js`'te 12 çağrı | `crude-buster.js:97,98,129,1048,1569…`; ayrıca `home-protocol.js`, `presence.js`, `outrun-86.js`, `screen-saver.js` | "Deterministik DNA" kısmen temenni. §4 kuralı bunu kapatır. |
+| B10 | **23 dosyada `Math.random()`** — `crude-buster.js`'te 12 çağrı | `crude-buster.js:97,98,129,1048,1569…`; ayrıca `home-protocol.js`, `presence.js`, `outrun-86.js`, `screen-saver.js` | "Deterministik DNA" kısmen temenni. §4 kuralı bunu kapatır. **Düzeltme (2026-08-29): ilk ölçüm `head -20` ile yapıldığı için liste kırpılmıştı; gerçek sayı hep 23'tü.** |
 | B11 | Gerekçe motoru **zaten yazılmış**, sadece render edilmiyor | `navigator.js:344-350` → `{value, description, reason, score}`; skor bileşenleri açık: `contextRank +220`, `CORE_PRIORITY +100`, `editDistance` cezası | "NEDEN?" tuşunun %80'i hazır. Faz 0'da bağlanır. |
 | B12 | `editDistance` matris tutmuyor | `navigator.js:110-127` — rolling DP + `if (Math.abs(left.length-right.length) > 2) return 99` erken çıkışı | DP matrisi sergisi ikinci bir implementasyon ister (~150 satır). Maliyet sayıldı. |
 | B13 | D5 ritüeli **7 elle dokunuş** gerektiriyor | `index.html` `?v=` · SW PRECACHE (134 öğe) · `validate-site-integrity.js` `mustPrecache` (elle pinli `?v=N`) · xRef sabitleri · `package.json check:syntax` (25 elle girdi) · `CACHE_NAME` · changelog+RSS | Uzun yol haritası = ~110 mekanik düzenleme. **Faz -1 zorunlu.** |
@@ -836,7 +836,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | `home-protocol.js` satırı | **4436** | tavan testi var |
 | İndekslenebilir public proza (kelime) | **~13.000** | ↑↑ |
 | `auth-gate.js` kullanan sayfa | **13** | → 10 |
-| `Math.random()` içeren dosya | **20** | ↓ (ödül/içerik yollarından 0) |
+| `Math.random()` içeren dosya | **23** | ↓ (ödül/içerik yollarından 0) |
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |

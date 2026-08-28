@@ -25,6 +25,19 @@ main'e push edildi (GitHub Pages otomatik yayinlar).
 
 ## KULLANICI KONTROLU / AKSIYONU BEKLEYENLER (Supabase)
 
+> **TEK ADIM (2026-08-29):** Bekleyen migration'lar tek dosyada, DOGRU SIRADA
+> birlestirildi: [`docs/database/PENDING.sql`](database/PENDING.sql).
+> Supabase panelinde SQL Editor > New query > tamamini yapistir > Run.
+> Dosyanin sonunda bir DOGRULAMA sorgusu var: neyin kuruldugunu listeler.
+>
+> Sira onemliydi ve sessiz bir tuzak vardi: `kolektif-rituel` `site_events`
+> tablosunu ALTER ediyor, o tablo ise ayri/"opsiyonel" bir migration'da
+> yaratiliyor. Paket bunu once koyar.
+>
+> Paket uretilmis dosyadir: `npm run build:migration`. Uretici ayrica her
+> ifadenin idempotent oldugunu dogrular (`--check`), korumasiz bir `create`
+> bulursa paketi URETMEZ.
+
 1. `docs/database/2026-07-17-bottles.sql` — bottle_messages tablosu + RLS +
    throw_bottle/catch_bottle RPC'leri. Calistirilana kadar `bottle` komutu
    "sise agi henuz kurulmamis" der (zarif fallback, hata yok).

@@ -24,7 +24,8 @@
     "test:accept": "node tests/acceptance/kabul.mjs",
     "build:tortu": "node scripts/build-tortu.js",
     "docs:terminal": "node scripts/build-terminal-guide.js",
-    "build:arsiv": "node scripts/build-arsiv-index.js"
+    "build:arsiv": "node scripts/build-arsiv-index.js",
+    "build:migration": "node scripts/build-migration-bundle.js"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",

@@ -94,3 +94,18 @@ engel icin guvensiz bir istemci fallback'i kullanmaz. Uygulama/kabul kaydi:
 - Faz 3: Dashboard oturumlari ve uygulama onerileri.
 - Faz 4: Dart Skorbord mac ve atis istatistikleri.
 - Faz 5: Daha buyuk trafik veya ozel is kurallari gerekirse Cloudflare Workers ya da Supabase Edge Functions.
+
+## Bekleyen migration'lar — tek paket
+
+Uygulanmayi bekleyen migration'lar `PENDING.sql` dosyasinda dogru sirada
+birlestirilmistir. Uretmek icin:
+
+```bash
+npm run build:migration          # PENDING.sql uret
+npm run build:migration -- --check   # yalniz sira + idempotentlik dogrula
+```
+
+Paket idempotenttir: yeniden calistirmak veri kaybetmez. Uretici, korumasiz
+bir `create` ifadesi bulursa paketi uretmeyi reddeder.
+
+Sira onemlidir: `site_events` once gelir cunku `kolektif-rituel` onu ALTER eder.
