@@ -299,3 +299,98 @@ test('uretilen gercek eralar sozlesmeye uyuyor', async () => {
   const total = data.eras.reduce((sum, era) => sum + era.commits, 0);
   assert.equal(total, data.repo.commits, 'eralar butun commitleri kapsamali');
 });
+
+// --- Z1.3: damarlar (Jaccard + Louvain) ----------------------------------
+
+function loadLouvain() {
+  const start = buildSource.indexOf('function louvain(');
+  assert.notEqual(start, -1, 'louvain bulunmali');
+  let depth = 0;
+  let i = buildSource.indexOf('{', start);
+  for (; i < buildSource.length; i += 1) {
+    if (buildSource[i] === '{') depth += 1;
+    else if (buildSource[i] === '}') { depth -= 1; if (depth === 0) break; }
+  }
+  const context = vm.createContext({ Math, Map, Set, Array, Infinity });
+  vm.runInContext(buildSource.slice(start, i + 1), context, { filename: 'louvain.js' });
+  return context;
+}
+
+test('Louvain iki ayrik kumeyi ayirt ediyor', () => {
+  const ctx = loadLouvain();
+  // 0-1-2 tam bagli, 3-4-5 tam bagli, aralarinda tek zayif kenar.
+  const edges = [
+    [0, 1, 1], [1, 2, 1], [0, 2, 1],
+    [3, 4, 1], [4, 5, 1], [3, 5, 1],
+    [2, 3, 0.05]
+  ];
+  const { community, modularity } = ctx.louvain(6, edges);
+  assert.equal(community[0], community[1], '0 ve 1 ayni toplulukta olmali');
+  assert.equal(community[1], community[2]);
+  assert.equal(community[3], community[4]);
+  assert.equal(community[4], community[5]);
+  assert.notEqual(community[0], community[3], 'iki kume ayrilmali');
+  assert.ok(modularity > 0.3, `Q anlamli olmali: ${modularity}`);
+});
+
+test('Louvain deterministik: ayni graf ayni topluluklari verir', () => {
+  const ctx = loadLouvain();
+  const edges = [[0,1,1],[1,2,1],[0,2,1],[3,4,1],[4,5,1],[3,5,1],[2,3,0.05]];
+  const a = Array.from(ctx.louvain(6, edges).community);
+  const b = Array.from(ctx.louvain(6, edges).community);
+  assert.deepEqual(a, b, 'Louvain rastgele dugum sirasi kullanmamali (D1)');
+});
+
+test('Louvain kenarsiz grafta cokmuyor', () => {
+  const ctx = loadLouvain();
+  const { modularity } = ctx.louvain(5, []);
+  assert.equal(modularity, 0);
+});
+
+test('kenar agirligi Jaccard, ham sayim degil', () => {
+  assert.match(buildSource, /HAM SAYIM DEGIL Jaccard/, 'gerekce kaynakta yazili olmali');
+  assert.match(buildSource, /both \/ \(touch\.get\(nodes\[a\]\) \+ touch\.get\(nodes\[b\]\) - both\)/,
+    'Jaccard formulu uygulanmali');
+});
+
+test('taban kaya grafa GIRMIYOR', () => {
+  assert.match(buildSource, /!bedrockPaths\.has\(file\)/, 'taban kaya dugum kumesinden cikarilmali');
+});
+
+test('uretilen damarlar sozlesmeye uyuyor', async () => {
+  const data = JSON.parse(await readFile(
+    new URL('../../assets/data/tortu.json', import.meta.url),
+    'utf8'
+  ));
+  assert.ok(data.veins, 'veins blogu olmali');
+  assert.ok(data.veins.modularity > 0.30, `Q > 0.30 olmali: ${data.veins.modularity}`);
+
+  const bedrockPaths = new Set(data.bedrock.map((rock) => rock.path));
+  const labels = new Set();
+  for (const vein of data.veins.veins) {
+    assert.ok(vein.size >= 3, 'damar en az 3 dosya tasimali');
+    assert.ok(vein.label && vein.label.length > 1, 'damarin adi olmali');
+    assert.ok(!labels.has(vein.label), `damar adi benzersiz olmali: ${vein.label}`);
+    labels.add(vein.label);
+    for (const file of vein.files) {
+      assert.ok(!bedrockPaths.has(file), `taban kaya damarda gorunmemeli: ${file}`);
+    }
+  }
+});
+
+test('damar ciktisi Q degerini ve taban kaya ayrimini soyluyor', () => {
+  const createTortu = loadFactory();
+  const withVeins = {
+    ...sampleData,
+    veins: {
+      modularity: 0.637,
+      veins: [{ no: 1, label: 'workers/oracle', size: 3, files: ['workers/oracle/src/index.js'] }]
+    }
+  };
+  const tortu = createTortu({ getData: () => withVeins, getDayKey: () => '2026-08-28' });
+  const out = tortu.veins();
+  assert.match(out, /DAMARLAR/);
+  assert.match(out, /0\.637/);
+  assert.match(out, /Jaccard/);
+  assert.match(out, /Taban kaya bu grafa girmez/);
+});

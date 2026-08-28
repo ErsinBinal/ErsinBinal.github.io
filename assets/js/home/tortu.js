@@ -158,13 +158,40 @@
       return lines.join('\n');
     };
 
+    // `damar` — birlikte degisen dosya kumeleri. Kenar agirligi Jaccard,
+    // topluluk tespiti Louvain. Taban kaya grafa hic girmez; girerse butun
+    // damarlari birbirine baglayip yapiyi yok eder.
+    const veins = () => {
+      if (!ready()) return 'damar: tortu katmani henuz yuklenmedi.';
+      const data = getData();
+      const block = data.veins || {};
+      const list = Array.isArray(block.veins) ? block.veins : [];
+      if (!list.length) return 'damar: bu depoda damar olusmamis.';
+
+      const lines = [
+        '] DAMARLAR',
+        '  Iki dosya ayni commit\'te sik degisiyorsa aralarinda bir damar vardir.',
+        '  Kenar agirligi ham sayim degil Jaccard; topluluklar Louvain ile bulunur.',
+        `  modulerlik Q = ${block.modularity}  (0.30 ustu anlamli yapi demektir)`,
+        ''
+      ];
+      list.forEach((vein) => {
+        lines.push(`  ${String(vein.no).padStart(2)}. ${vein.label}  (${vein.size} dosya)`);
+        (vein.files || []).slice(0, 4).forEach((file) => lines.push(`      ${file}`));
+        if (vein.size > 4) lines.push(`      ... +${vein.size - 4}`);
+      });
+      lines.push('', '  Taban kaya bu grafa girmez; `taban` ile ayri bak.');
+      return lines.join('\n');
+    };
+
     // Terminal navigasyonu icin: bu odada anlamli sonraki hareketler.
-    const navigation = () => deepFreeze(['kaz', 'tabaka', 'taban', 'cd /']);
+    const navigation = () => deepFreeze(['kaz', 'tabaka', 'damar', 'taban', 'cd /']);
 
     return deepFreeze({
       ready,
       dig,
       layers,
+      veins,
       bedrock,
       eraOf,
       navigation,

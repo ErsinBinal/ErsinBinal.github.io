@@ -2674,6 +2674,12 @@
           action: () => tabakaCommand()
         },
         {
+          command: 'damar',
+          description: 'birlikte degisen dosya kumelerini gosterir (Jaccard + Louvain)',
+          aliases: ['damarlar', 'veins'],
+          action: () => damarCommand()
+        },
+        {
           command: 'taban',
           description: 'sitenin uzerinde durdugu taban kayayi gosterir',
           aliases: ['bedrock'],
@@ -3472,6 +3478,12 @@
         if (!tortuMod) return 'tabaka: tortu modulu yuklenmedi (SINIRLI MOD).';
         if (!tortuMod.ready()) await loadTortu();
         return tortuMod.layers();
+      };
+
+      const damarCommand = async () => {
+        if (!tortuMod) return 'damar: tortu modulu yuklenmedi (SINIRLI MOD).';
+        if (!tortuMod.ready()) await loadTortu();
+        return tortuMod.veins();
       };
 
       const tabanCommand = async () => {

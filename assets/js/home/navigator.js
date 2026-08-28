@@ -22,6 +22,7 @@
         ['examine <nesne>', 'gorunur bir izi incele'],
         ['kaz', 'deponun gercek gecmisinden bir tabaka kaz'],
         ['tabaka', 'deponun eralarini gor'],
+        ['damar', 'birlikte degisen dosya kumeleri'],
         ['map', 'genel sinyal haritasina bak']
       ]
     },

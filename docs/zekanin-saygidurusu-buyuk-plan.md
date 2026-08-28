@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1.1 ve Z1.2 TAMAMLANDI.** Sıradaki: Z1.3 (damarlar).
+Durum: **Faz -1, Faz 0, Z1.1–Z1.3 TAMAMLANDI.** Sıradaki: Z1.4 (`/ruins` devri).
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -463,8 +463,41 @@ tembel) · `assets/js/home/tortu.js` (saf okuyucu)
   bölmüyor, deterministik, minSize'a uyuyor. Üretilen eralar sözleşme testinden
   geçiyor: adlar benzersiz ve Türkçe, aralıklar kronolojik, **eraların commit
   toplamı depo toplamına eşit**. Birim 130/130, `test:accept` 10/10.
-- **Z1.3 — Damarlar + taban kaya.** *Bitti:* Q > 0.30; `index.html` ve
-  `service-worker.js` taban kaya katmanında, damar listesinde değil.
+- **Z1.3 — Damarlar + taban kaya.** ✅ **TAMAMLANDI (2026-08-28)**
+
+  `damar` komutu 14 damarı listeliyor. **Modülerlik Q = 0.637** — hedefin
+  (0.30) iki katı. Kenar ağırlığı ham sayım değil **Jaccard**; topluluk tespiti
+  **Louvain**, deterministik düğüm sırasıyla (Louvain normalde rastgele sıra
+  kullanır — D1 gereği kullanmıyoruz).
+
+  **Taban kaya grafa hiç girmiyor.** Girseydi `index.html` ve
+  `service-worker.js` (%43'er) bütün damarları birbirine bağlayıp yapıyı yok
+  ederdi. Test bunu doğruluyor: hiçbir damar dosyası taban kayada değil.
+
+  **Süpürme commit'leri dışlanıyor:** 20+ dosyaya dokunan commit anlamsal
+  bağlılık değil toplu bakım işaretidir (sürüm bumpı, yeniden adlandırma).
+  569 commit'in 255'i grafa giriyor.
+
+  Çıkan damarlar gerçek tarihi ortaya döküyor:
+
+  | # | Damar | Ne olduğu |
+  |---|---|---|
+  | 1 | Atölye damarı (18) | araç ailesi |
+  | 2 | **kök dizin (18)** | `Barista.html`, `Bartender.html`, `TheOracle.html`, `Paradox_Terminal.html` — **`/tools/`'a taşınmadan önceki kök seviye dönem**; bu dosyalar artık yok |
+  | 3 | Atölye damarı II (8) | bugy ailesi (css + js birlikte) |
+  | 5 | Zemin damarı (5) | `home-protocol.js` + `package.json` + `sync-cache-versions.js` + `validate-site-integrity.js` |
+  | 6 | Candy_Pop (5) | terk edilmiş prototip alanı |
+  | 10 | godot/universe-3 (4) | **depodan tamamen kaybolmuş bir Godot denemesi** |
+
+  **Damar 5 kendi başına bir bulgu:** graf, Faz -1'de otomatikleştirdiğim yayın
+  ritüeli bağlılığını kimse söylemeden buldu. Bu dört dosya birlikte değişiyordu
+  çünkü bir sürüm bumpı dördüne birden dokunmayı gerektiriyordu. Otomasyon
+  sonrası bu damarın zayıflaması beklenir — ölçülebilir bir tahmin.
+
+  **Kabul.** Louvain sentetik grafta test ediliyor: iki bağlı kümeyi zayıf bir
+  kenara rağmen ayırıyor, deterministik, kenarsız grafta çökmüyor. Üretilen
+  damarlar sözleşmeden geçiyor: Q > 0.30, adlar benzersiz, hiçbir damar dosyası
+  taban kayada değil. Birim 137/137, `test:accept` 11/11.
 - **Z1.4 — `/ruins` devri.** *Bitti:* üç elle kalıntı "kuruluş miti" rozetli;
   günün buluntusu tortudan geliyor; `ruins.js` testleri yeşil kalıyor.
 
@@ -710,7 +743,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **130** | ✅ |
+| Birim test | ~~102~~ → **137** | ✅ |
 | Elle yazılmış kalıntı | ruins 3 (dondurulacak) · **kazılan 127** | ✅ Z1.1 |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |

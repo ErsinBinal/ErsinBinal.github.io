@@ -90,6 +90,16 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   check('tabaka eralari Turkce adlariyla listeliyor',
     /TABAKALAR/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrasiyordu/.test(tabaka));
 
+  await page.fill('#command-input', 'damar');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /Taban kaya bu grafa girmez/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const damar = await page.textContent('#command-output');
+  check('damar Jaccard + Louvain sonucunu gosteriyor',
+    /DAMARLAR/.test(damar) && /Jaccard/.test(damar) && /modulerlik Q = 0\.[3-9]/.test(damar));
+
   await page.fill('#command-input', 'taban');
   await page.press('#command-input', 'Enter');
   await page.waitForFunction(

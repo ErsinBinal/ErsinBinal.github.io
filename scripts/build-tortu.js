@@ -70,8 +70,8 @@ const redact = (line) => String(line).replace(EMAIL, '[e-posta redakte]');
 
 function readCommits() {
   // Alan ayraci olarak birim ayraci kullan: subject icinde bulunma ihtimali yok.
-  const SEP = '';
-  const REC = '';
+  const SEP = '\u001f';
+  const REC = '\u001e';
   const raw = git([
     'log',
     '--no-merges',
@@ -313,6 +313,159 @@ function computeEras(commits) {
   }));
 }
 
+// --- Damarlar: birlikte-degisim grafi + Louvain --------------------------
+// Iki dosya ayni commit'te sik degisiyorsa aralarinda bir damar vardir.
+//
+// Kenar agirligi HAM SAYIM DEGIL Jaccard: |A n B| / |A u B|. Ham sayim cok
+// dokunulan dosyayi her seyle iliskili gosterir; Jaccard bunu normalize eder.
+//
+// Taban kaya (frekans > %25) grafa HIC girmez — girerse her damari birbirine
+// baglayip topluluk yapisini yok eder.
+
+const VEIN_MIN_TOUCH = 5;        // bu kadar commit gormeyen dosya damar olusturmaz
+const VEIN_MAX_COMMIT_FILES = 20; // 20+ dosyaya dokunan commit toplu bakimdir, baglilik degil
+const VEIN_JACCARD_MIN = 0.12;
+const VEIN_MIN_SIZE = 3;
+
+function louvain(nodeCount, edges) {
+  const adjacency = Array.from({ length: nodeCount }, () => []);
+  const degree = new Array(nodeCount).fill(0);
+  let m2 = 0;
+  for (const [a, b, w] of edges) {
+    adjacency[a].push([b, w]);
+    adjacency[b].push([a, w]);
+    degree[a] += w;
+    degree[b] += w;
+    m2 += 2 * w;
+  }
+  if (m2 === 0) return { community: Array.from({ length: nodeCount }, (_, i) => i), modularity: 0 };
+
+  const community = Array.from({ length: nodeCount }, (_, i) => i);
+  const sigmaTot = degree.slice();
+  let improved = true;
+  let rounds = 0;
+
+  // Dugum sirasi sabit (yollar siralanmis) ve esitlik bozma deterministik:
+  // Louvain normalde rastgele sira kullanir, burada kullanmiyoruz (D1).
+  while (improved && rounds < 20) {
+    improved = false;
+    rounds += 1;
+    for (let v = 0; v < nodeCount; v += 1) {
+      const current = community[v];
+      sigmaTot[current] -= degree[v];
+      const weightTo = new Map();
+      for (const [u, w] of adjacency[v]) {
+        if (u === v) continue;
+        weightTo.set(community[u], (weightTo.get(community[u]) || 0) + w);
+      }
+      let best = current;
+      let bestGain = (weightTo.get(current) || 0) - (sigmaTot[current] * degree[v]) / m2;
+      for (const candidate of [...weightTo.keys()].sort((x, y) => x - y)) {
+        const gain = weightTo.get(candidate) - (sigmaTot[candidate] * degree[v]) / m2;
+        if (gain > bestGain + 1e-12) { bestGain = gain; best = candidate; }
+      }
+      sigmaTot[best] += degree[v];
+      if (best !== current) { community[v] = best; improved = true; }
+    }
+  }
+
+  const inside = new Map();
+  const totals = new Map();
+  for (const [a, b, w] of edges) {
+    if (community[a] === community[b]) inside.set(community[a], (inside.get(community[a]) || 0) + 2 * w);
+  }
+  for (let v = 0; v < nodeCount; v += 1) {
+    totals.set(community[v], (totals.get(community[v]) || 0) + degree[v]);
+  }
+  let modularity = 0;
+  for (const c of new Set(community)) {
+    modularity += (inside.get(c) || 0) / m2 - ((totals.get(c) || 0) / m2) ** 2;
+  }
+  return { community, modularity };
+}
+
+// Damar adi: dosyalarin cogu ayni dizini paylasiyorsa o dizin, yoksa
+// baskin kategori. Deterministik.
+function nameVein(files) {
+  const dirs = files.map((file) => {
+    const parts = file.split('/');
+    return parts.length > 1 ? parts.slice(0, -1).join('/') : 'kok dizin';
+  });
+  const counts = new Map();
+  dirs.forEach((dir) => counts.set(dir, (counts.get(dir) || 0) + 1));
+  const [topDir, topCount] = [...counts.entries()].sort(
+    (left, right) => right[1] - left[1] || left[0].localeCompare(right[0])
+  )[0];
+  if (topCount / files.length >= 0.6) return topDir;
+
+  const catCounts = new Map();
+  files.forEach((file) => {
+    const key = classifyPath(file);
+    catCounts.set(key, (catCounts.get(key) || 0) + 1);
+  });
+  const topCat = [...catCounts.entries()].sort(
+    (left, right) => right[1] - left[1] || left[0].localeCompare(right[0])
+  )[0][0];
+  return `${CATEGORY_LABEL[topCat]} damari`;
+}
+
+function computeVeins(commits, bedrock) {
+  const bedrockPaths = new Set(bedrock.map((rock) => rock.path));
+  const fileSets = commits.map((commit) => [...new Set(commit.files.map((f) => f.path))]);
+
+  const touch = new Map();
+  for (const files of fileSets) {
+    for (const file of files) touch.set(file, (touch.get(file) || 0) + 1);
+  }
+
+  const nodes = [...touch.entries()]
+    .filter(([file, count]) => count >= VEIN_MIN_TOUCH && !bedrockPaths.has(file))
+    .map(([file]) => file)
+    .sort();
+  if (nodes.length < VEIN_MIN_SIZE) return { modularity: 0, veins: [] };
+
+  const index = new Map(nodes.map((file, i) => [file, i]));
+  const pairs = new Map();
+  for (const files of fileSets) {
+    const inGraph = files.filter((file) => index.has(file)).sort();
+    if (inGraph.length < 2 || inGraph.length > VEIN_MAX_COMMIT_FILES) continue;
+    for (let i = 0; i < inGraph.length; i += 1) {
+      for (let j = i + 1; j < inGraph.length; j += 1) {
+        const key = `${index.get(inGraph[i])}|${index.get(inGraph[j])}`;
+        pairs.set(key, (pairs.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const edges = [];
+  for (const [key, both] of pairs.entries()) {
+    const [a, b] = key.split('|').map(Number);
+    const jaccard = both / (touch.get(nodes[a]) + touch.get(nodes[b]) - both);
+    if (jaccard >= VEIN_JACCARD_MIN) edges.push([a, b, jaccard]);
+  }
+
+  const { community, modularity } = louvain(nodes.length, edges);
+  const groups = new Map();
+  nodes.forEach((file, i) => {
+    if (!groups.has(community[i])) groups.set(community[i], []);
+    groups.get(community[i]).push(file);
+  });
+
+  const used = new Map();
+  const veins = [...groups.values()]
+    .filter((files) => files.length >= VEIN_MIN_SIZE)
+    .sort((left, right) => right.length - left.length || left[0].localeCompare(right[0]))
+    .map((files, i) => {
+      let label = nameVein(files);
+      const seen = (used.get(label) || 0) + 1;
+      used.set(label, seen);
+      if (seen > 1) label = `${label} ${'I'.repeat(seen)}`;
+      return { no: i + 1, label, size: files.length, files: files.slice(0, 8) };
+    });
+
+  return { modularity: Math.round(modularity * 1000) / 1000, veins };
+}
+
 // --- Ana akis ------------------------------------------------------------
 const commits = readCommits();
 if (!commits.length) {
@@ -354,6 +507,7 @@ const payload = {
   },
   bedrock,
   eras: computeEras(commits),
+  veins: computeVeins(commits, bedrock),
   cores: withCores
 };
 
@@ -366,6 +520,10 @@ if (process.argv.includes('--stats')) {
   payload.eras.forEach((era) => {
     const mix = era.mix.map((m) => `${m.key} %${m.pct}`).join(' + ');
     console.log(`  ${String(era.no).padStart(2)}. ${era.label.padEnd(20)} ${era.from} -> ${era.to}  ${String(era.commits).padStart(3)} commit  ${mix}`);
+  });
+  console.log(`damar           : ${payload.veins.veins.length} (modulerlik Q=${payload.veins.modularity})`);
+  payload.veins.veins.slice(0, 8).forEach((v) => {
+    console.log(`  ${String(v.no).padStart(2)}. ${v.label.padEnd(34)} ${String(v.size).padStart(2)} dosya`);
   });
   console.log(`karot           : ${withCores.length}`);
   console.log(`ortak-yazarli   : ${withCores.filter((c) => c.coauthors.length).length}`);
