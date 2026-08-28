@@ -22,7 +22,8 @@
     "check:sync": "node scripts/sync-cache-versions.js --check",
     "publish:slice": "node scripts/publish-slice.js",
     "test:accept": "node tests/acceptance/kabul.mjs",
-    "build:tortu": "node scripts/build-tortu.js"
+    "build:tortu": "node scripts/build-tortu.js",
+    "docs:terminal": "node scripts/build-terminal-guide.js"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",
