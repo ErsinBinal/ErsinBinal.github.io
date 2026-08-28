@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>ARSIV: cevrimdisi arama, skoru gorunur</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-28-arsiv-cevrimdisi-arama-skoru-gorunur</guid>
+      <pubDate>Fri, 28 Aug 2026 18:58:25 +0000</pubDate>
+      <description>ara komutu arsivi tamamen tarayicida ve tamamen cevrimdisi tariyor: 272 pasaj, 1752 terim, BM25 artı MMR cesitlilik, sifir Worker cagrisi. Onemli olan sonuc degil gerekce: her sonucun altinda hangi terimin ne kadar katki verdigi yaziyor (df, tf ve puan). Gomu bu soruyu cevaplayamazdi, o yuzden leksik omurga secildi. Indeks build-time'da uretiliyor, tembel cekiliyor ve precache'e girmiyor; ana sayfa ilk yuku degismedi. Iki icerik karari: /net bulmacasi indekse hic girmiyor ve bulmaca cevaplari otomatik redakte ediliyor — cunku bir bulmacanin cevabi mesru bir icerik sirridir, mekanizma ise asla sir degildir.</description>
+    </item>
+    <item>
       <title>STEP: komutu calistirmadan gerekcesini calistir</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-08-28-step-komutu-calistirmadan-gerekcesini-calistir</guid>

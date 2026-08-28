@@ -151,6 +151,7 @@
       let tortuMod = null;
       let sigilMod = null;
       let izMod = null;
+      let arsivMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1410,6 +1411,34 @@
           return createIz();
         } catch (error) {
           console.error('[home-protocol] Iz module failed', error);
+          return null;
+        }
+      })();
+
+      // ARSIV (assets/js/home/arsiv.js): cevrimdisi BM25 arama.
+      // Indeks build-time'da uretilir ve TEMBEL cekilir (178 KB ham / ~55 KB
+      // gzip): precache'e girmez, ana sayfa ilk yukune eklenmez (D6).
+      let arsivData = null;
+      let arsivLoading = null;
+      const loadArsiv = () => {
+        if (arsivData || arsivLoading) return arsivLoading;
+        arsivLoading = fetch('/assets/data/arsiv-index.json')
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { arsivData = data; return data; })
+          .catch(() => null);
+        return arsivLoading;
+      };
+
+      arsivMod = (() => {
+        const createArsiv = window.ConviviumHome?.createArsiv;
+        if (typeof createArsiv !== 'function') {
+          console.error('[home-protocol] Arsiv module unavailable');
+          return null;
+        }
+        try {
+          return createArsiv({ getData: () => arsivData });
+        } catch (error) {
+          console.error('[home-protocol] Arsiv module failed', error);
           return null;
         }
       })();
@@ -2706,6 +2735,18 @@
           action: () => kazCommand('')
         },
         {
+          command: 'ara',
+          description: 'arsivi cevrimdisi tarar ve skor dokumunu gosterir',
+          aliases: ['bul', 'tara'],
+          action: () => araCommand('')
+        },
+        {
+          command: 'arsiv indeks',
+          description: 'arsiv indeksinin kapsamini gosterir',
+          aliases: ['index', 'indeks'],
+          action: () => arsivCommand()
+        },
+        {
           command: 'step',
           description: 'bir komutu calistirmaz, kararin nasil verildigini gosterir',
           aliases: ['adim', 'gerekcesini calistir'],
@@ -3672,6 +3713,24 @@
         return izMod.render(izMod.traceLevenshtein(query, String(target).split(' ')[0]));
       };
 
+      // ARA — arsivi tamamen cevrimdisi tarar ve NEDEN o pasaj oldugunu doker.
+      const araCommand = async (raw) => {
+        if (!arsivMod) return 'ara: arsiv modulu yuklenmedi (SINIRLI MOD).';
+        if (!arsivMod.ready()) {
+          await loadArsiv();
+          if (!arsivMod.ready()) {
+            return 'ara: arsiv indeksi alinamadi. Cevrimdisiysan bir kez cevrimici ac.';
+          }
+        }
+        return arsivMod.render(raw);
+      };
+
+      const arsivCommand = async () => {
+        if (!arsivMod) return 'arsiv: modul yuklenmedi (SINIRLI MOD).';
+        if (!arsivMod.ready()) await loadArsiv();
+        return arsivMod.stats();
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -4021,6 +4080,8 @@
         ['kaz ', value => kazCommand(value)],
         ['dig ', value => kazCommand(value)],
         ['tortu ', value => kazCommand(value)],
+        ['ara ', value => araCommand(value)],
+        ['bul ', value => araCommand(value)],
         ['step ', value => stepCommand(value)],
         ['adim ', value => stepCommand(value)],
         ['neden ', value => nedenCommand(value)],
@@ -4090,7 +4151,9 @@
         const command = expandAlias(applySynonyms(normalizeCommand(stage)));
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
-          const result = parameterMatch[1](command.slice(parameterMatch[0].length));
+          // Parametreli eylem async olabilir (kaz/ara tembel veri cekiyor).
+          // await edilmezse cikti "[object Promise]" olur ya da tamamen kaybolur.
+          const result = await parameterMatch[1](command.slice(parameterMatch[0].length));
           return { ok: true, out: result !== undefined ? String(result) : '' };
         }
         const action = commandMap[command];
@@ -4380,7 +4443,8 @@
         const action = commandMap[command];
         const parameterMatch = parameterActions.find(([prefix]) => command.startsWith(prefix));
         if (parameterMatch) {
-          const result = parameterMatch[1](command.slice(parameterMatch[0].length));
+          // Bkz. yukarisi: async parametreli eylem await edilmeli.
+          const result = await parameterMatch[1](command.slice(parameterMatch[0].length));
           emitResult(result, query);
           audioCue('terminal.complete');
           commandInput.value = '';

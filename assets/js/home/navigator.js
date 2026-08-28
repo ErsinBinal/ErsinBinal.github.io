@@ -37,6 +37,7 @@
         ['open dossier', 'makale ve uzun notlar'],
         ['notes', 'kisa saha notlari'],
         ['archive', 'arsiv katmani'],
+        ['ara <sorgu>', 'arsivi cevrimdisi tara, skoru gor'],
         ['changelog', 'son degisiklik sinyalleri']
       ]
     },

@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1 TORTU, Z2 İZ ve Z3 SİGİL TAMAMLANDI.** Kalan: Z4 ARŞİV·0212, Z5 OKKAM.
+Durum: **Faz -1, Faz 0, Z1, Z2, Z3 ve Z4.3 TAMAMLANDI.** Kalan: Z4.1 (0212 korpusu — veri tedariki), Z4.2, Z4.4–Z4.5, Z5 OKKAM.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -701,13 +701,48 @@ terim cevaplayabilir. Ayrıca 384 boyut = İngilizce `bge-small`; Türkçe `bge-
 (1024) bütçeyi 2.7× şişirir.
 
 **Fazlar.**
-- **Z4.1 — 0212 korpusu.** Kaynaklı, rozetli, public rota.
-- **Z4.2 — Makine Notları.** `docs/` yeniden yazılıp yayımlanır.
-- **Z4.3 — İndeks + `ara`.** *Bitti:* 20 sorulu altın kümede offline top-5 recall
-  ≥ 0.80; indeks < 80KB; ana sayfa ilk yükü **0 KB arttı**.
-- **Z4.4 — Kanıt sütunu + denetim etiketi.** *Bitti:* 10 tuzak soruda ≥8'inde
-  ARŞİVDE YOK; Worker down iken sütun çökmüyor.
-- **Z4.5 — Offline TextRank.** *Bitti:* uçak modunda `ask` çalışıyor.
+- **Z4.1 — 0212 korpusu.** ⏸ **BAŞLAMADI — ve bilerek.** Bu bir *veri tedarik*
+  işi, kod işi değil. "Gerçek, kaynaklı yerel siber tarih" kaynaksız yazılamaz;
+  yazılırsa `/ruins`'in sahte BBS logunu rozetleyip yerine yenisini koymuş
+  oluruz — planın kendi Madde 3'ünün ihlali. Ya gerçek araştırma + kaynak
+  künyesi (`assets/img/moto/SOURCES.md` deseni) ya da yazarın kendi hafızası
+  gerekiyor. **Kullanıcı kararı bekliyor.**
+- **Z4.2 — Makine Notları.** ⏸ Başlamadı. `docs/` altında artık **44.142 kelime**
+  var (plan 36.855 ölçmüştü). Yayımlamak "taşıma" değil yeniden yazma işi ve
+  yazarın kararı.
+- **Z4.3 — İndeks + `ara`.** ✅ **TAMAMLANDI (2026-08-28)**
+
+  `scripts/build-arsiv-index.js` + `assets/js/home/arsiv.js` + `ara` komutu.
+  **272 pasaj, 1.752 terim**, BM25 (k1=1.2, b=0.75) + MMR çeşitlilik.
+  Tamamen tarayıcıda, tamamen çevrimdışı, sıfır Worker çağrısı.
+
+  **Skor dökülüyor** — "neden bu pasaj" cevaplanabiliyor:
+  `neden: kalint (df 9, tf 2) +4527 · hologram (df 19, tf 2) +3612`.
+  Gömü bunu cevaplayamazdı; leksik omurga bu yüzden seçildi.
+
+  **Bütçe:** 178 KB ham / **63 KB gzip** — telden geçen bu, ve eleştirinin
+  tahmini ("300 pasaj için gzip'li JSON ~60KB, özel ikili format saf israf")
+  birebir tuttu. Delta/varint formatı **yazılmadı.** Tembel çekiliyor,
+  precache dışı, ana sayfa ilk yükü değişmedi.
+
+  **İki içerik kararı:**
+  - `/net` bulmacası indekse **hiç girmiyor.** Şifreler kaynakta zaten açık ama
+    terminalden aranabilir olmak bariyeri "kaynağı oku"dan "`ara sifre` yaz"a
+    indirir. Madde 3 bunu ayırır: bir bulmacanın cevabı meşru bir içerik sırrıdır.
+  - Ayrıca bir **redaksiyon katmanı** var ve cevapları `net.js`'ten *otomatik*
+    çıkarıyor (elle liste bulmaca değişince sessizce sızardı).
+
+  **Bulunan sızıntı (kullanıcı kararı):** `pages/changelog.html:406` ilk şifreyi
+  zaten açıktan yazıyor — *("Log: altin deger" → altin oran, 1618)*. Bu indeksin
+  yarattığı bir şey değil, 2026-07-24 changelog girdisinde duruyor. İndeks
+  redakte ediyor; **changelog'a dokunulmadı** çünkü o yazarın içerik kararı.
+
+  **Kabul.** Birim 178/178 (13'ü ARŞİV). En kritik test: *build ve runtime aynı
+  normalizasyonu kullanmalı* — ayrışırsa sorgu indekste hiçbir şeye denk gelmez
+  ve arama sessizce boş döner. `test:accept` 29/29.
+- **Z4.4 — Kanıt sütunu.** ⏸ Başlamadı. Z4.1/Z4.2 olmadan denetim, boş dolabı
+  denetler.
+- **Z4.5 — Offline TextRank.** ⏸ Başlamadı.
 
 ---
 
@@ -805,7 +840,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **165** | ✅ |
+| Birim test | ~~102~~ → **178** | ✅ |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

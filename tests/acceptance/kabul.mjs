@@ -139,6 +139,54 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- Z4 ARSIV: cevrimdisi BM25 arama ---
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  await page.fill('#command-input', 'ara hologram');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    // Son satiri bekle: cikti animasyonla yazilir.
+    () => /Tamamen tarayicida, cevrimdisi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  ).catch(() => {});
+  const araOut = await page.textContent('#command-output');
+  check('ara arsivi tariyor ve sonuc buluyor',
+    /ARSIV ·/.test(araOut) && /pasaj eslesti/.test(araOut));
+  check('ara skor dokumunu gosteriyor (neden bu pasaj)',
+    /neden: .*df \d+, tf \d+/.test(araOut));
+  check('ara rota veriyor', /rota:\s+\//.test(araOut));
+
+  // Bulmaca cevabi sizmamali.
+  // REGRESYON: parametreli async komut ciktisi kayboluyordu.
+  // parameterActions dispatch'i sonucu await etmiyordu; `kaz` argumansiz
+  // calisiyordu (commandMap yolu await ediyor) ama `kaz 1` sessizce bostu.
+  await page.fill('#command-input', 'kaz 1');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /uydurulmadi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 20000 }
+  ).catch(() => {});
+  const paramOut = await page.textContent('#command-output');
+  check('parametreli async komut cikti veriyor (kaz 1)',
+    /KAROT\s+1\//.test(paramOut) && !/\[object Promise\]/.test(paramOut));
+
+  await page.fill('#command-input', 'ara altin oran');
+  await page.press('#command-input', 'Enter');
+  await page.waitForTimeout(3500);
+  const spoiler = await page.textContent('#command-output');
+  check('bulmaca cevabi aramada SIZMIYOR', !/1618/.test(spoiler));
+
+  await page.close();
+}
+
 // --- Z2 IZ + step: komutu calistirmadan gerekcesini calistir ---
 {
   const page = await browser.newPage();

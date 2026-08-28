@@ -23,7 +23,8 @@
     "publish:slice": "node scripts/publish-slice.js",
     "test:accept": "node tests/acceptance/kabul.mjs",
     "build:tortu": "node scripts/build-tortu.js",
-    "docs:terminal": "node scripts/build-terminal-guide.js"
+    "docs:terminal": "node scripts/build-terminal-guide.js",
+    "build:arsiv": "node scripts/build-arsiv-index.js"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",
