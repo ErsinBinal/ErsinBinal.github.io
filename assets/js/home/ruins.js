@@ -9,6 +9,18 @@
     return Object.freeze(value);
   };
 
+  // KURULUS MITI ROZETI (Z1.4)
+  //
+  // Bu uc kalinti UYDURMADIR: 1997 tarihli BBS oturumu da, 2004 TODO'su da,
+  // kurtarilmis arcade ekrani da hic olmadi. Site "eski" diyorsa ya gercekten
+  // eski olmali ya da bunu ACIKCA soylemeli (Kazi Evi, Madde 3: site ICERIK
+  // hakkinda sir tutabilir, MEKANIZMA hakkinda asla).
+  //
+  // Silinmiyorlar — sitenin kurulus anlatisinin parcasilar. Ama artik rozetli
+  // duruyorlar ve GUNUN BULUNTUSU onlardan gelmiyor: o artik TORTU'dan,
+  // deponun gercek git tarihinden kaziliyor.
+  const MYTH_BADGE = '[KURULUS MITI - bu kayit uydurmadir, kazilmadi]';
+
   const ruinsArtifactRegistry = deepFreeze([
     {
       id: 'bbs-1997.log',
@@ -69,12 +81,19 @@
     const dailyArtifact = ruinsArtifactRegistry[hashDay(dayKey) % ruinsArtifactRegistry.length];
     const objects = Object.fromEntries(ruinsArtifactRegistry.map((artifact) => [
       artifact.object,
-      `${artifact.summary} Oku: cat ${artifact.id}`
+      `${MYTH_BADGE} ${artifact.summary} Oku: cat ${artifact.id}`
     ]));
+
+    // Gunun buluntusu artik uydurma registry'den DEGIL, TORTU'dan gelir.
+    //
+    // Oda hangi karotun cikacagini BILMEK ZORUNDA DEGIL: tortu verisi tembel
+    // yuklenir (85 KB, precache disi) ve odayi boot'ta beklemek D6'yi ihlal
+    // ederdi. Oda yalnizca buluntunun uydurulmadigini soyler ve `kaz`a
+    // yonlendirir; hangi tabakanin cikacagini `kaz` kendi belirler.
     objects.buluntu = [
-      `Bugunun ortak buluntusu: ${dailyArtifact.id} / ${dailyArtifact.title}.`,
-      'Her gezgin bugun ayni parcayi gorur.',
-      `Oku: cat ${dailyArtifact.id}`
+      'Bugunun ortak buluntusu uydurulmadi, KAZILDI.',
+      'Deponun gercek git gecmisinden cikar; her gezgin bugun ayni tabakayi gorur.',
+      'Cikar: kaz'
     ].join(' ');
 
     const roomExtension = deepFreeze({
@@ -82,13 +101,14 @@
       title: 'Sinyal Arkeolojisi',
       room: {
         look: [
-          'Sinyal Arkeolojisi. Kurmaca arsivin tozu altinda uc dijital kalinti var: terminal, todo, ekran.',
-          `Bugunun yuzey sinyali: ${dailyArtifact.id}.`
+          'Sinyal Arkeolojisi. Uc KURMACA kalinti var: terminal, todo, ekran —',
+          'ucu de kurulus miti, rozetli duruyorlar.',
+          'Bugunun buluntusu ise uydurulmadi: deponun gercek gecmisinden kazilir.'
         ].join(' '),
         objects,
         navigation: [
           'examine buluntu',
-          `cat ${dailyArtifact.id}`,
+          'kaz',
           'cd /'
         ]
       }
@@ -97,7 +117,7 @@
       path: '/ruins',
       files: ruinsArtifactRegistry.map((artifact) => artifact.id),
       documents: Object.fromEntries(
-        ruinsArtifactRegistry.map((artifact) => [artifact.id, artifact.body])
+        ruinsArtifactRegistry.map((artifact) => [artifact.id, `${MYTH_BADGE}\n\n${artifact.body}`])
       )
     });
 

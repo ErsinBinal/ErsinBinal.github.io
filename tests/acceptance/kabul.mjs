@@ -113,6 +113,29 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   const taban = await page.textContent('#command-output');
   check('taban kaya ayri gosteriliyor', /TABAN KAYA/.test(taban) && /index\.html/.test(taban) && /service-worker\.js/.test(taban));
 
+  // --- Z1.4: /ruins devri — kurmaca ile kazilmis ayriliyor ---
+  await page.fill('#command-input', 'cd ruins');
+  await page.press('#command-input', 'Enter');
+  await page.waitForTimeout(900);
+  await page.fill('#command-input', 'look');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /uydurulmadi/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const ruins = await page.textContent('#command-output');
+  check('/ruins kurmaca ile kazilmis olani ayiriyor',
+    /KURMACA/.test(ruins) && /uydurulmadi/.test(ruins));
+
+  await page.fill('#command-input', 'examine terminal');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /KURULUS MITI/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const myth = await page.textContent('#command-output');
+  check('uydurma kalinti KURULUS MITI rozeti tasiyor', /KURULUS MITI/.test(myth));
+
   await page.close();
 }
 

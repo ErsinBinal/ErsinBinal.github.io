@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v255';
+const CACHE_NAME = 'convivium-v256';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -66,7 +66,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/routes.js?v=8',
   '/assets/js/home/route-commands.js?v=4',
   '/assets/js/home/guide-commands.js?v=1',
-  '/assets/js/home/ruins.js?v=2',
+  '/assets/js/home/ruins.js?v=3',
   '/assets/js/home/tortu.js?v=3',
   '/assets/js/home/net.js?v=4',
   '/assets/js/home/ritual-pulse.js?v=1',

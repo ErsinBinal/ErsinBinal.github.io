@@ -394,3 +394,62 @@ test('damar ciktisi Q degerini ve taban kaya ayrimini soyluyor', () => {
   assert.match(out, /Jaccard/);
   assert.match(out, /Taban kaya bu grafa girmez/);
 });
+
+// --- Z1.4: /ruins devri --------------------------------------------------
+
+test('uydurma kalintilar KURULUS MITI rozeti tasiyor', async () => {
+  const ruinsSource = await readFile(
+    new URL('../../assets/js/home/ruins.js', import.meta.url),
+    'utf8'
+  );
+  const context = vm.createContext({ window: {}, console });
+  vm.runInContext(ruinsSource, context, { filename: 'ruins.js' });
+  const ruins = context.window.ConviviumHome.createRuins({ getDayKey: () => '2026-08-28' });
+
+  // Uc kurmaca kalinti da rozetli sunulmali.
+  for (const key of ['terminal', 'todo', 'ekran']) {
+    assert.match(
+      ruins.roomExtension.room.objects[key],
+      /KURULUS MITI/,
+      `${key} rozet tasimali`
+    );
+  }
+  // Belge govdeleri de okundugu anda uydurma oldugunu soylemeli.
+  for (const body of Object.values(ruins.vfsMount.documents)) {
+    assert.match(body, /KURULUS MITI/);
+  }
+});
+
+test('gunun buluntusu artik uydurma registry\'den GELMIYOR', async () => {
+  const ruinsSource = await readFile(
+    new URL('../../assets/js/home/ruins.js', import.meta.url),
+    'utf8'
+  );
+  const context = vm.createContext({ window: {}, console });
+  vm.runInContext(ruinsSource, context, { filename: 'ruins.js' });
+  const ruins = context.window.ConviviumHome.createRuins({ getDayKey: () => '2026-08-28' });
+
+  const buluntu = ruins.roomExtension.room.objects.buluntu;
+  assert.match(buluntu, /KAZILDI/, 'buluntu kazildigini soylemeli');
+  assert.match(buluntu, /kaz/, '`kaz` komutuna yonlendirmeli');
+  assert.doesNotMatch(buluntu, /\.log|\.txt|\.scr/, 'uydurma dosya adi gostermemeli');
+
+  assert.ok(
+    ruins.roomExtension.room.navigation.includes('kaz'),
+    'oda navigasyonu kaziya yonlendirmeli'
+  );
+});
+
+test('oda tasviri kurmaca ile kazilmis olani AYIRIYOR', async () => {
+  const ruinsSource = await readFile(
+    new URL('../../assets/js/home/ruins.js', import.meta.url),
+    'utf8'
+  );
+  const context = vm.createContext({ window: {}, console });
+  vm.runInContext(ruinsSource, context, { filename: 'ruins.js' });
+  const ruins = context.window.ConviviumHome.createRuins({ getDayKey: () => '2026-08-28' });
+
+  const look = ruins.roomExtension.room.look;
+  assert.match(look, /KURMACA/, 'kurmaca olanlar acikca kurmaca denmeli');
+  assert.match(look, /uydurulmadi/, 'kazilan acikca ayrilmali');
+});

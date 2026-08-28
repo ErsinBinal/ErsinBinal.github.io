@@ -3,6 +3,9 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import vm from 'node:vm';
 
+// Z1.4 kurulus miti rozeti — ruins.js icindeki MYTH_BADGE ile ayni olmali.
+const MYTH_BADGE = '[KURULUS MITI - bu kayit uydurmadir, kazilmadi]';
+
 const ruinsSource = await readFile(
   new URL('../../assets/js/home/ruins.js', import.meta.url),
   'utf8'
@@ -122,23 +125,26 @@ test('Ruins creates the exact world room and VFS mount without side effects', ()
   assert.equal(ruins.roomExtension.path, '/ruins');
   assert.equal(ruins.roomExtension.title, 'Sinyal Arkeolojisi');
   assert.deepEqual(JSON.parse(JSON.stringify(ruins.roomExtension.room)), {
-    look: 'Sinyal Arkeolojisi. Kurmaca arsivin tozu altinda uc dijital kalinti var: terminal, todo, ekran. Bugunun yuzey sinyali: arcade-recovery.scr.',
+    look: 'Sinyal Arkeolojisi. Uc KURMACA kalinti var: terminal, todo, ekran — ucu de kurulus miti, rozetli duruyorlar. Bugunun buluntusu ise uydurulmadi: deponun gercek gecmisinden kazilir.',
     objects: {
-      terminal: '1997 tarihli kapanmamis bir BBS oturumu. Tasiyici sesi kaydin sonunda hala acik. Oku: cat bbs-1997.log',
-      todo: '2004 tarihli bir gelistirme listesi. Bazi maddeler yirmi iki yil sonra kendiliginden tamamlanmis. Oku: cat todo-fragment.txt',
-      ekran: 'Tarihsiz bir arcade ekran dokumu. Oyun baslamadan once oyuncunun adini unutmus. Oku: cat arcade-recovery.scr',
-      buluntu: 'Bugunun ortak buluntusu: arcade-recovery.scr / Kayip Baslangic Ekrani. Her gezgin bugun ayni parcayi gorur. Oku: cat arcade-recovery.scr'
+      terminal: '[KURULUS MITI - bu kayit uydurmadir, kazilmadi] 1997 tarihli kapanmamis bir BBS oturumu. Tasiyici sesi kaydin sonunda hala acik. Oku: cat bbs-1997.log',
+      todo: '[KURULUS MITI - bu kayit uydurmadir, kazilmadi] 2004 tarihli bir gelistirme listesi. Bazi maddeler yirmi iki yil sonra kendiliginden tamamlanmis. Oku: cat todo-fragment.txt',
+      ekran: '[KURULUS MITI - bu kayit uydurmadir, kazilmadi] Tarihsiz bir arcade ekran dokumu. Oyun baslamadan once oyuncunun adini unutmus. Oku: cat arcade-recovery.scr',
+      buluntu: 'Bugunun ortak buluntusu uydurulmadi, KAZILDI. Deponun gercek git gecmisinden cikar; her gezgin bugun ayni tabakayi gorur. Cikar: kaz'
     },
-    navigation: ['examine buluntu', 'cat arcade-recovery.scr', 'cd /']
+    navigation: ['examine buluntu', 'kaz', 'cd /']
   });
   assert.deepEqual(Array.from(ruins.vfsMount.files), [
     'bbs-1997.log',
     'todo-fragment.txt',
     'arcade-recovery.scr'
   ]);
+  // Z1.4: belge govdeleri kurulus miti rozetiyle sunuluyor; ham metin degismedi.
   assert.deepEqual(
     JSON.parse(JSON.stringify(ruins.vfsMount.documents)),
-    Object.fromEntries(expectedArtifacts.map((artifact) => [artifact.id, artifact.body]))
+    Object.fromEntries(expectedArtifacts.map(
+      (artifact) => [artifact.id, `${MYTH_BADGE}\n\n${artifact.body}`]
+    ))
   );
   assert.equal(Object.isFrozen(ruins.roomExtension), true);
   assert.equal(Object.isFrozen(ruins.roomExtension.room.objects), true);
@@ -169,7 +175,7 @@ test('World accepts Ruins as an optional ninth room while preserving core progre
     '] /CONVIVIUM/RUINS',
     '',
     '  SINYAL ARKEOLOJISI  ::  GEZGIN',
-    '  Sinyal Arkeolojisi. Kurmaca arsivin tozu altinda uc dijital kalinti var: terminal, todo, ekran. Bugunun yuzey sinyali: arcade-recovery.scr.',
+    '  Sinyal Arkeolojisi. Uc KURMACA kalinti var: terminal, todo, ekran — ucu de kurulus miti, rozetli duruyorlar. Bugunun buluntusu ise uydurulmadi: deponun gercek gecmisinden kazilir.',
     '',
     "  SIRADAKI notes odasina gir (cd notes), 'clue'yu incele ve shard'i al",
     '  GIT      home (ana hat)  ·  routes (sayfalar)  ·  lab (oyunlar)  ·  notes (saha notlari)  ·  system (sistem araclari)',
@@ -222,7 +228,11 @@ test('VFS mounts Ruins files and documents without changing personal storage sem
   ].join('\n'));
   assert.equal(vfs.cd('ruins'), 'ROOM:/ruins');
   assert.deepEqual(cwdChanges, ['/ruins']);
-  assert.equal(vfs.cat('arcade-recovery.scr'), expectedArtifacts[2].body);
+  // Z1.4: `cat` de rozeti gosterir — uydurma oldugu okundugu anda bellidir.
+  assert.equal(
+    vfs.cat('arcade-recovery.scr'),
+    `${MYTH_BADGE}\n\n${expectedArtifacts[2].body}`
+  );
   assert.equal(vfs.writeFile('kaz-notu.txt', 'bulundu'), 'yazildi: /home/kaz-notu.txt (7 karakter)');
   assert.equal(vfs.readFile('kaz-notu.txt'), 'bulundu');
 });

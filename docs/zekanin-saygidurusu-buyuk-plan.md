@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1.1–Z1.3 TAMAMLANDI.** Sıradaki: Z1.4 (`/ruins` devri).
+Durum: **Faz -1, Faz 0 ve Z1 TORTU (tamamı) TAMAMLANDI.** Sıradaki: Z3 SİGİL ya da Z2 İZ.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -498,8 +498,31 @@ tembel) · `assets/js/home/tortu.js` (saf okuyucu)
   kenara rağmen ayırıyor, deterministik, kenarsız grafta çökmüyor. Üretilen
   damarlar sözleşmeden geçiyor: Q > 0.30, adlar benzersiz, hiçbir damar dosyası
   taban kayada değil. Birim 137/137, `test:accept` 11/11.
-- **Z1.4 — `/ruins` devri.** *Bitti:* üç elle kalıntı "kuruluş miti" rozetli;
-  günün buluntusu tortudan geliyor; `ruins.js` testleri yeşil kalıyor.
+- **Z1.4 — `/ruins` devri.** ✅ **TAMAMLANDI (2026-08-28)**
+
+  Üç uydurma kalıntı **silinmedi** — sitenin kuruluş anlatısının parçası. Ama
+  artık `[KURULUS MITI - bu kayit uydurmadir, kazilmadi]` rozeti taşıyorlar ve
+  rozet hem `examine`'de hem `cat`'te görünüyor. Rozet **veriye değil
+  görüntülemeye** eklendi; registry snapshot testi bu yüzden bozulmadan geçti.
+
+  **Günün buluntusu artık uydurma registry'den gelmiyor.** Oda hangi karotun
+  çıkacağını bilmek zorunda değil: tortu verisi tembel yükleniyor (85 KB,
+  precache dışı) ve odayı boot'ta beklemek D6'yı ihlal ederdi. Oda yalnızca
+  buluntunun uydurulmadığını söylüyor ve `kaz`'a yönlendiriyor — hangi
+  tabakanın çıkacağını `kaz` kendi belirliyor. Bu, bir veri bağımlılığını
+  tamamen ortadan kaldırdı.
+
+  Oda tasviri artık ikisini açıkça ayırıyor: *"Üç KURMACA kalıntı var — üçü de
+  kuruluş miti. Bugünün buluntusu ise uydurulmadı: deponun gerçek geçmişinden
+  kazılır."*
+
+  Bu, Madde 2'nin (**kazı > üretim > taklit**) ve Madde 3'ün (*"eski" diyorsa
+  gerçekten eski olmalı ya da açıkça "kuruluş miti" rozeti taşımalı*) tam
+  karşılığıdır.
+
+  **Kabul.** Birim 140/140 (`ruins.js` testleri dahil yeşil), `test:accept`
+  13/13 — gerçek Chromium'da `/ruins` kurmaca ile kazılmışı ayırıyor ve
+  `examine terminal` rozeti gösteriyor.
 
 **Risk.** Karot süzgeci zayıf kalırsa kazı "sürüm bumpı arkeolojisi"ne döner —
 süzgeç pazarlıksız Faz 1 kabul kriteridir.
@@ -743,8 +766,8 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **137** | ✅ |
-| Elle yazılmış kalıntı | ruins 3 (dondurulacak) · **kazılan 127** | ✅ Z1.1 |
+| Birim test | ~~102~~ → **140** | ✅ |
+| Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | **0** | ↑ |
 | `@media print` | **0** | ↑ |
 | Elle yazılmış kalıntı/cihaz/oda | ruins 3 · net 7 · holo 3 | dondurulur, artmaz |
