@@ -139,6 +139,50 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- Z5 OKKAM: en kisa program duellosu ---
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  await page.fill('#command-input', 'okkam 1 2 3 4');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /okkam calistir|Daha kisasini/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  ).catch(() => {});
+  const solved = await page.textContent('#command-output');
+  check('okkam en kisa programi buluyor',
+    /INC OUT JNZ/.test(solved) && /bit/.test(solved) && /kazanc/.test(solved));
+
+  // Makinenin siniri gizlenmemeli.
+  await page.fill('#command-input', 'okkam 7 13 2 99');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /Sen daha kisasini bulabilirsen/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 30000 }
+  ).catch(() => {});
+  const limit = await page.textContent('#command-output');
+  check('okkam sinirini ILAN ediyor',
+    /(PES ETTI|BULAMADI)/.test(limit) && /8 katina cikiyor/.test(limit));
+
+  await page.fill('#command-input', 'okkam dil');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /Calistir: okkam calistir/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const lang = await page.textContent('#command-output');
+  check('okkam dil sekiz opcode\'u anlatiyor', /OKK-8/.test(lang) && /JNZ/.test(lang));
+
+  await page.close();
+}
+
 // --- Z4 ARSIV: cevrimdisi BM25 arama ---
 {
   const page = await browser.newPage();

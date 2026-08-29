@@ -26,7 +26,8 @@
     "docs:terminal": "node scripts/build-terminal-guide.js",
     "build:arsiv": "node scripts/build-arsiv-index.js",
     "build:migration": "node scripts/build-migration-bundle.js",
-    "build:guide-shots": "node scripts/build-guide-shots.js"
+    "build:guide-shots": "node scripts/build-guide-shots.js",
+    "build:okkam": "node scripts/build-okkam.js"
   },
   "dependencies": {
     "fast-glob": "^3.2.12",

@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1, Z2, Z3 ve Z4.3 TAMAMLANDI.** Kalan: Z4.1 (0212 korpusu — veri tedariki), Z4.2, Z4.4–Z4.5, Z5 OKKAM.
+Durum: **Faz -1, Faz 0, Z1, Z2, Z3, Z4.3 ve Z5.1 TAMAMLANDI.** Kalan: Z4.1 (0212 korpusu — veri tedariki), Z4.2, Z4.4–Z4.5, Z2.3–Z2.4, Z5.2–Z5.3.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -746,7 +746,7 @@ terim cevaplayabilir. Ayrıca 384 boyut = İngilizce `bge-small`; Türkçe `bge-
 
 ---
 
-### Z5 — OKKAM: En Kısa Program
+### Z5 — OKKAM: En Kısa Program  ✅ **Z5.1 TAMAMLANDI (2026-08-29)** · Z5.2–Z5.3 açık
 
 > Ziyaretçi bir örüntünün kuralını kurar; makine aynı örüntüyü üreten en kısa
 > programı evrensel aramayla arar; ikisi **bit cinsinden** ölçülür — ve makine
@@ -785,6 +785,57 @@ Terminali'nin yerini gerçekten çalışan bir sergi alır.
 
 **Sıra uyarısı.** OKKAM **en sona** konur: oynanabilir bir zorluk bandının varlığı
 ölçülmeden ona tek satır arayüz yazılmamalı.
+
+---
+
+#### Ne yapıldı (2026-08-29)
+
+- **Z5.1 — OKK-8 + Levin araması.** ✅ `assets/js/home/okkam.js` (saf modül,
+  ~280 satır) + terminalde `okkam`, `okkam dil`, `okkam calistir <program>`.
+
+  **Dil planda yazılandan farklı çıktı ve bu bilinçli.** Plan `PUSHk(0..3) ADD
+  SUB MUL DUP SWP OUT JNZ` diyordu; `PUSHk` operand taşıyor ve arama uzayını
+  `K^n` olmaktan çıkarıyordu — Levin ağırlıklandırması tam da o varsayıma
+  dayanıyor. Operandsız sekizli kullanıldı:
+  `INC DEC SWP ADD MUL OUT JNZ CLR`, iki kayıt (A, B), bir çıktı bandı.
+
+  Arama gerçekten çalışıyor:
+  `[1,2,3,4] → INC OUT JNZ` (3 talimat / 9 bit) · `[2,4,6,8] → INC INC OUT JNZ`
+  · `[1,4,9] → INC SWP ADD OUT INC JNZ`
+
+  **Sıra uyarısının istediği ölçüm yapıldı** — arayüzden önce zorluk bandı:
+  3 talimat 16 ms, 6 talimat 5,5 s, 7 talimat 17 s. Oynanabilir bant 3–5 talimat;
+  planın öngördüğü 8–9 talimatlık tavan JS'te gerçekçi değil, gerçek tavan daha
+  alçak. Bu düzeltme sergiyi bozmuyor, konusunu güçlendiriyor.
+
+  **Planda olmayan bir tasarım açığı bulundu ve kapatıldı.** Aramanın yalnız faz
+  sınırı vardı, *iş* sınırı yoktu: ziyaretçi `okkam 7 13 2` yazıp terminali
+  dondurabilirdi. Zorunlu `maxTried` bütçesi (3M deneme) eklendi. İlk build
+  denemem tam bu yüzden 120 saniyede bitmedi — açık teoride değil, ölçümde çıktı.
+
+  **Bütçe bitişi ile "üretilemez" ayrı raporlanıyor.** İkisi aynı şey değil;
+  birini diğerinin yerine yazmak makinenin sınırını dizinin özelliği gibi
+  göstermek olurdu (Madde 3).
+
+  **Zorluk elle yazılmıyor, ölçülüyor.** `scripts/build-okkam.js` her adayı
+  gerçekten arıyor: 12 adaydan 7'si havuza girdi (hepsi ≤330 ms), 5'i
+  *"arama bütçesi bitti — program muhtemelen 5+ talimat"* diye elendi. Build,
+  motoru runtime modülünden yüklüyor; ölçülen zorluk ile görülen zorluk aynı.
+
+  **Kusur gizlenmiyor, sergileniyor.** Makine pes ettiğinde:
+  *"Bu makine 9 talimattan uzun programı arayamaz — arama uzayı her talimatta
+  8 katına çıkıyor. Sen daha kısasını bulabilirsen makine kaybetmiş olur."*
+
+- **Z5.2 — Düello arayüzü (op kartları, `/okkam/` rotası).** ⏸ Başlamadı.
+  Terminal yüzeyi önce geldi; yeni bir HTML rotası sahibi yokken açılmadı.
+- **Z5.3 — Arama izinin Z2 formatında yayını.** ⏸ Başlamadı (Z2.3 ile birlikte).
+
+**Kabul.** Birim 197/197 — 18'i OKKAM: makine, adım bütçesi, taşma, determinizm,
+MDL, sınır ilanı, havuz sözleşmesi (her bulmaca ≤900 ms), modül saflığı.
+Kabul testi 32/32 (üçü OKKAM: çözüm, sınır ilanı, dil).
+
+**Bu dilim tavan kapısını ilk kez tetikledi.** Protokol 4849 → 4898; gerekçe
+`tests/unit/home-protocol-size.test.mjs` içindeki cırcır kaydına yazıldı.
 
 **Kesilenler.** WASM çekirdeği (B9). "Üretim döngüsü" fazı: `p* → base32 → holo
 parametresi` zinciri 30 bitlik bir sayıyı tohum geçirmekten ibaret; `mulberry32`
@@ -832,15 +883,15 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 |---|---:|---|
 | Bir dilim yayınlamak için elle dokunuş | ~~7~~ → **1** | ✅ Faz -1 |
 | Ana sayfa script etiketi | **46** | sabit veya ↓ |
-| Service Worker precache öğesi | **134** | ↓ |
-| `home-protocol.js` satırı | **4436** | tavan testi var |
+| Service Worker precache öğesi | ~~134~~ → **132** (5102 → 3864 KB) | ↓ |
+| `home-protocol.js` satırı | ~~4436~~ → **4897** | tavan 4898, cırcır kaydı zorunlu |
 | İndekslenebilir public proza (kelime) | **~13.000** | ↑↑ |
 | `auth-gate.js` kullanan sayfa | **13** | → 10 |
 | `Math.random()` içeren dosya | **23** | ↓ (ödül/içerik yollarından 0) |
-| Sözdizimi kapısındaki JS dosyası | ~~25~~ → **67** | ✅ Faz -1 |
+| Sözdizimi kapısındaki JS dosyası | ~~25~~ → **79** | ✅ Faz -1 (dosya sistemi taraması) |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **178** | ✅ |
+| Birim test | ~~102~~ → **197** | ✅ (kabul testi ayrıca 32) |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

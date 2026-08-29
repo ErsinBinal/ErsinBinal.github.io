@@ -152,6 +152,7 @@
       let sigilMod = null;
       let izMod = null;
       let arsivMod = null;
+      let okkamMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1439,6 +1440,37 @@
           return createArsiv({ getData: () => arsivData });
         } catch (error) {
           console.error('[home-protocol] Arsiv module failed', error);
+          return null;
+        }
+      })();
+
+      // OKKAM (assets/js/home/okkam.js): en kisa program duellosu.
+      // Bulmaca havuzu build-time'da OLCULUR (scripts/build-okkam.js) ve
+      // TEMBEL cekilir; 1 KB, precache'e girmez.
+      let okkamData = null;
+      let okkamLoading = null;
+      const loadOkkam = () => {
+        if (okkamData || okkamLoading) return okkamLoading;
+        okkamLoading = fetch('/assets/data/okkam.json')
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { okkamData = data; return data; })
+          .catch(() => null);
+        return okkamLoading;
+      };
+
+      okkamMod = (() => {
+        const createOkkam = window.ConviviumHome?.createOkkam;
+        if (typeof createOkkam !== 'function') {
+          console.error('[home-protocol] Okkam module unavailable');
+          return null;
+        }
+        try {
+          return createOkkam({
+            getData: () => okkamData,
+            getDayKey: () => new Date().toISOString().slice(0, 10)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Okkam module failed', error);
           return null;
         }
       })();
@@ -2735,6 +2767,12 @@
           action: () => kazCommand('')
         },
         {
+          command: 'okkam',
+          description: 'en kisa program duellosu: makine bir oruntunun kuralini arar',
+          aliases: ['mdl', 'en kisa program'],
+          action: () => okkamCommand('')
+        },
+        {
           command: 'ara',
           description: 'arsivi cevrimdisi tarar ve skor dokumunu gosterir',
           aliases: ['bul', 'tara'],
@@ -3731,6 +3769,16 @@
         return arsivMod.stats();
       };
 
+      const okkamCommand = async (raw) => {
+        if (!okkamMod) return 'okkam: modul yuklenmedi (SINIRLI MOD).';
+        const query = String(raw || '').trim();
+        // `dil` ve `calistir` havuz gerektirmez; yalniz gunun dizisi gerektirir.
+        if (!/^(dil|calistir)/i.test(query) && !okkamMod.ready()) {
+          await loadOkkam();
+        }
+        return okkamMod.solve(query);
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -4080,6 +4128,7 @@
         ['kaz ', value => kazCommand(value)],
         ['dig ', value => kazCommand(value)],
         ['tortu ', value => kazCommand(value)],
+        ['okkam ', value => okkamCommand(value)],
         ['ara ', value => araCommand(value)],
         ['bul ', value => araCommand(value)],
         ['step ', value => stepCommand(value)],

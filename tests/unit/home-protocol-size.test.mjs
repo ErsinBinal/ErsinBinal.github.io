@@ -10,15 +10,24 @@ import test from 'node:test';
 // carpismada buyumenin hakli olup olmadigi sorulmadi; tavan yukseltildi.
 // Monolit bu surecte 4436'dan 4849'e cikti (test olcusu: split('\\n')).
 //
-// Tavan artik MEVCUT SATIR SAYISINA SABITLENDI. Bundan sonra buyume gercekten
-// reddedilir.
+// Tavan 2026-08-29'da mevcut satir sayisina SABITLENDI ve kapi ayni gun
+// gercekten caldi.
+//
+// YUKSELTME KAYDI (gerekcesiz yukseltme yasak):
+//   4849 -> 4898  (2026-08-29, Z5 OKKAM)
+//     Eklenen: okkam modul kurulumu + tembel yukleyici + okkamCommand sarmalayici.
+//     KARAR MANTIGI PROTOKOLE GIRMEDI — Levin aramasi, OKK-8 yorumlayicisi ve
+//     MDL hesabi assets/js/home/okkam.js icinde (saf, 250+ satir). Protokolde
+//     kalan yalniz orkestrasyon ve yan etki; D3'un soyledigi yer burasi.
+//     Alternatif "module tasi" burada uygulanamazdi: tasinacak karar zaten
+//     modulde.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 4849;
+const CEILING = 4898;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(
@@ -50,7 +59,7 @@ test('yeni home modulleri factory desenini korur', async () => {
   // D3: her modul window.ConviviumHome.create<Ad>(deps) fabrikasi tanimlar.
   const modules = [
     'navigator', 'vfs', 'world', 'economy', 'shop', 'ruins', 'net',
-    'tortu', 'sigil', 'iz', 'arsiv'
+    'tortu', 'sigil', 'iz', 'arsiv', 'okkam'
   ];
   for (const name of modules) {
     const source = await readFile(

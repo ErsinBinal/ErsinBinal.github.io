@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>OKKAM - en kisa program</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-29-okkam-en-kisa-program</guid>
+      <pubDate>Sat, 29 Aug 2026 07:03:09 +0000</pubDate>
+      <description>Terminal artik bir oruntuyu ureten EN KISA programi evrensel (Levin) aramasiyla ariyor ve sonucu bit cinsinden olcuyor (MDL). Sekiz komutluk OKK-8 makinesinin hicbir talimati operand tasimaz; arama uzayi her talimatta 8 katina cikar. Makine bir yerde durur ve bunu saklamadan yazar: sen daha kisasini bulabilirsen makine kaybetmis olur. Komutlar: okkam, okkam dil, okkam calistir INC OUT JNZ</description>
+    </item>
+    <item>
       <title>Ilk ziyaret 1,2 MB hafifledi</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-08-29-ilk-ziyaret-1-2-mb-hafifledi</guid>

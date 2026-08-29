@@ -38,6 +38,7 @@
         ['notes', 'kisa saha notlari'],
         ['archive', 'arsiv katmani'],
         ['ara <sorgu>', 'arsivi cevrimdisi tara, skoru gor'],
+        ['okkam', 'en kisa program duellosu'],
         ['changelog', 'son degisiklik sinyalleri']
       ]
     },
