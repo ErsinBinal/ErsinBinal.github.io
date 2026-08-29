@@ -299,6 +299,9 @@
   };
 
   const topicRules = [
+    // Kullanim Kilavuzu kendi klasoru olarak durur. EN BASTA olmali: asagidaki
+    // 'rehber' kurali da 'kilavuz' kelimesini yakaliyor ve ilk eslesen kazaniyor.
+    { key: 'kilavuz', label: 'Kullanim Kilavuzu', pattern: /kullanim kilavuzu/i },
     { key: 'rehber', label: 'Rehber', pattern: /rehber|guide|how to play|kullanim|kilavuz|terminal|score|dashboard|oturum/i },
     { key: 'oyun', label: 'Oyun', pattern: /oyun|game|play|arcade|runner|serpent|river|pipe|outrun|logic|signal/i },
     { key: 'uygulama', label: 'Uygulama', pattern: /uygulama|app|oracle|barista|bartender|paradox|ekol|tool/i },
@@ -764,7 +767,12 @@
       setStatus('Kayitli arsiv gosteriliyor.');
     }
 
-    state.all = mergeArticles(remoteArticles, fallbackArticles, localArticles);
+    // Kilavuz ayri bir modulden gelir (assets/js/guide-kilavuz.js).
+    // Yuklenmediyse okuma odasi eskisi gibi calisir.
+    const guideArticles = Array.isArray(window.ConviviumGuideArticles)
+      ? window.ConviviumGuideArticles
+      : [];
+    state.all = mergeArticles(remoteArticles, guideArticles, fallbackArticles, localArticles);
     state.filtered = [...state.all];
     const lastDate = latestDate(state.all);
     setText('articleCount', `${state.all.length}${lastDate ? ` / ${lastDate}` : ''}`);
