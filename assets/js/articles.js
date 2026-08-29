@@ -501,6 +501,34 @@
     if (el) el.textContent = value;
   }
 
+  // --- Ust panel: uc satir da GERCEK veriye bagli --------------------------
+  //
+  // Onceki halinde "Okuma" satiri id'siz sabit bir metindi ("Odak modu") ve
+  // hicbir zaman degismiyordu. Simdi ucu de yasiyor:
+  //   Durum  = arsiv kaynagi + son yayin tarihi
+  //   Yazi   = gorunen / toplam (filtre degisince guncellenir)
+  //   Okuma  = acik makalenin okuma ilerlemesi
+  const panel = { source: 'Hazirlaniyor', latest: '' };
+
+  function renderPanel() {
+    setText('articleSource', panel.latest ? `${panel.source} · ${panel.latest}` : panel.source);
+    const total = state.all.length;
+    const shown = state.filtered.length;
+    setText('articleCount', shown === total ? String(total) : `${shown} / ${total}`);
+  }
+
+  function updateReadingState() {
+    const el = document.getElementById('readingState');
+    if (!el) return;
+    if (!state.activeSlug) { el.textContent = 'hazir'; return; }
+    // Okuyucu paneli overflow:hidden; sayfa kayiyor — ilerleme cubuguyla ayni olcu.
+    const doc = document.documentElement;
+    const span = doc.scrollHeight - window.innerHeight;
+    if (span <= 0) { el.textContent = '%100'; return; }
+    const percent = Math.round(Math.min(Math.max(window.scrollY / span, 0), 1) * 100);
+    el.textContent = `%${percent}`;
+  }
+
   function setStatus(message) {
     setText('contentSourceStatus', message);
   }
@@ -595,6 +623,7 @@
     if (!container || !template) return;
 
     setText('visibleCount', state.filtered.length);
+    renderPanel();
     container.innerHTML = '';
 
     if (!state.filtered.length) {
@@ -625,6 +654,7 @@
 
     if (!article) {
       state.activeSlug = '';
+      updateReadingState();
       reader.innerHTML = `
         <div class="reader-empty">
           <span class="reader-empty-mark">_</span>
@@ -635,6 +665,7 @@
     }
 
     state.activeSlug = article.slug;
+    updateReadingState();
     const media = mediaFromContent(article.content);
     const safeContent = generateToc(removeCoverMedia(sanitizeHtml(article.content), media));
     const currentIndex = state.filtered.findIndex((item) => item.slug === article.slug);
@@ -745,7 +776,7 @@
     let remoteArticles = [];
 
     if (backend?.isConfigured?.()) {
-      setText('articleSource', 'Hazirlaniyor');
+      panel.source = 'Hazirlaniyor'; renderPanel();
       setStatus('Yayin arsivi guncelleniyor...');
       try {
         remoteArticles = await withTimeout(
@@ -753,17 +784,17 @@
           3500,
           'Veritabani yaniti zaman asimina ugradi.'
         );
-        setText('articleSource', remoteArticles.length ? 'Canli arsiv' : 'Yerel arsiv');
+        panel.source = remoteArticles.length ? 'Canli arsiv' : 'Yerel arsiv';
         setStatus(remoteArticles.length
           ? `${remoteArticles.length} yayin okuma odasina alindi.`
           : 'Henuz yayinlanmis yeni makale yok; secili arsiv gosteriliyor.');
       } catch (error) {
         console.warn('[Convivium] Remote article load failed:', error);
-        setText('articleSource', 'Yerel arsiv');
+        panel.source = 'Yerel arsiv';
         setStatus('Canli arsive ulasilamadi; kayitli arsiv gosteriliyor.');
       }
     } else {
-      setText('articleSource', 'Yerel arsiv');
+      panel.source = 'Yerel arsiv';
       setStatus('Kayitli arsiv gosteriliyor.');
     }
 
@@ -774,8 +805,17 @@
       : [];
     state.all = mergeArticles(remoteArticles, guideArticles, fallbackArticles, localArticles);
     state.filtered = [...state.all];
-    const lastDate = latestDate(state.all);
-    setText('articleCount', `${state.all.length}${lastDate ? ` / ${lastDate}` : ''}`);
+    panel.latest = latestDate(state.all) || '';
+    renderPanel();
+    updateReadingState();
+
+    // Okuma ilerlemesi: kaydirmayi cerceveye bagla, her scroll olayinda degil.
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => { updateReadingState(); ticking = false; });
+    }, { passive: true });
 
     const search = qs('#search');
     search?.addEventListener('input', (event) => {
