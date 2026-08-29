@@ -801,7 +801,21 @@ Terminali'nin yerini gerçekten çalışan bir sergi alır.
 
   Arama gerçekten çalışıyor:
   `[1,2,3,4] → INC OUT JNZ` (3 talimat / 9 bit) · `[2,4,6,8] → INC INC OUT JNZ`
-  · `[1,4,9] → INC SWP ADD OUT INC JNZ`
+  · `[0,0,0] → OUT OUT OUT` · `[-1,-2,-3] → DEC OUT JNZ`
+
+  **Yayından sonra gerçek bir yalan bulundu ve kapatıldı.** `okkam dil` ekranı
+  `INC SWP ADD OUT INC JNZ → 1, 4, 9, 16, ...` yazıyordu. O program
+  `1, 4, 9, 17, 30, 51` üretiyor: ilk üç terim kareler, sonrası değil. Örnek
+  çıktılar elle yazılmıştı — makine üretmediği bir çıktıyı ilan ediyordu, tam
+  da anayasanın yasakladığı şey. Tek satırı düzeltmek yetmezdi; **örnek
+  çıktılar artık ekran basılırken çalıştırılarak türetiliyor**, yani yapı
+  gereği yalan söylenemiyor (Madde 1: iz taşınmaz, yeniden türetilir).
+
+  Ve yakın-isabet silinmedi, serginin konusu yapıldı: kısa ve YANLIŞ bir kural,
+  uzun ve doğru olandan önce bulunur — kısa-program tümevarımının zor olmasının
+  sebebi tam olarak budur. Bunu bir kapı da koruyor: `okkam dil`'deki her örnek
+  satırı testte gerçekten çalıştırılıp karşılaştırılıyor; yalan geri konularak
+  kapının kapandığı **kanıtlandı** (19/20 → düşüyor).
 
   **Sıra uyarısının istediği ölçüm yapıldı** — arayüzden önce zorluk bandı:
   3 talimat 16 ms, 6 talimat 5,5 s, 7 talimat 17 s. Oynanabilir bant 3–5 talimat;
@@ -830,7 +844,7 @@ Terminali'nin yerini gerçekten çalışan bir sergi alır.
   Terminal yüzeyi önce geldi; yeni bir HTML rotası sahibi yokken açılmadı.
 - **Z5.3 — Arama izinin Z2 formatında yayını.** ⏸ Başlamadı (Z2.3 ile birlikte).
 
-**Kabul.** Birim 197/197 — 18'i OKKAM: makine, adım bütçesi, taşma, determinizm,
+**Kabul.** Birim 199/199 — 20'si OKKAM: makine, adım bütçesi, taşma, determinizm,
 MDL, sınır ilanı, havuz sözleşmesi (her bulmaca ≤900 ms), modül saflığı.
 Kabul testi 32/32 (üçü OKKAM: çözüm, sınır ilanı, dil).
 
@@ -891,7 +905,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **79** | ✅ Faz -1 (dosya sistemi taraması) |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **197** | ✅ (kabul testi ayrıca 32) |
+| Birim test | ~~102~~ → **199** | ✅ (kabul testi ayrıca 32) |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

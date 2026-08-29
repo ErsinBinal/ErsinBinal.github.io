@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>OKKAM dil ekrani artik yalan soyleyemiyor</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-08-29-okkam-dil-ekrani-artik-yalan-soyleyemiyor</guid>
+      <pubDate>Sat, 29 Aug 2026 07:07:23 +0000</pubDate>
+      <description>okkam dil ekrani INC SWP ADD OUT INC JNZ icin &quot;1, 4, 9, 16&quot; yaziyordu; o program 1, 4, 9, 17, 30 uretiyor. Makine uretmedigi bir ciktiyi ilan ediyordu. Ornek ciktilar artik elle yazilmiyor, ekran basilirken calistirilarak turetiliyor. Yakin-isabet silinmedi, serginin konusu yapildi: kisa ve YANLIS bir kural, uzun ve dogru olandan once bulunur.</description>
+    </item>
+    <item>
       <title>OKKAM - en kisa program</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-08-29-okkam-en-kisa-program</guid>

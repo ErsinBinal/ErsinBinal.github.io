@@ -214,6 +214,14 @@
       }
 
       if (/^dil$/i.test(query)) {
+        // Ornek ciktilar ELLE YAZILMAZ, CALISTIRILARAK turetilir.
+        // Elle yazildiginda makine uretmedigi bir ciktiyi ilan edebiliyordu:
+        // `INC SWP ADD OUT INC JNZ` kareler sanilmisti, oysa 1, 4, 9, 17 verir.
+        const demo = (text) => {
+          const program = text.split(' ').map((op) => OPS.indexOf(op));
+          const out = run(program, 400, 6).out;
+          return `    ${text.padEnd(24)} -> ${out.join(', ')}, ...`;
+        };
         return [
           '] OKK-8 — sekiz opcode, iki kayit (A, B), bir cikti bandi',
           '',
@@ -225,10 +233,14 @@
           '  Hicbiri operand tasimaz. Tasisaydi arama uzayi 8^n olmaktan cikardi',
           '  ve Levin agirliklandirmasi anlamsizlasirdi.',
           '',
-          '  Ornekler:',
-          '    INC OUT JNZ           -> 1, 2, 3, 4, ...',
-          '    INC INC OUT JNZ       -> 2, 4, 6, 8, ...',
-          '    INC SWP ADD OUT INC JNZ -> 1, 4, 9, 16, ...',
+          '  Ornekler (ciktilar bu satirlar basilirken CALISTIRILDI):',
+          demo('INC OUT JNZ'),
+          demo('INC INC OUT JNZ'),
+          demo('INC SWP ADD OUT INC JNZ'),
+          '',
+          '  Ucuncusune dikkat: ilk uc terimi 1, 4, 9 — kareler gibi duruyor,',
+          '  sonra ayriliyor. En kisa programi aramanin zor olmasinin sebebi bu:',
+          '  kisa ve YANLIS bir kural, uzun ve dogru olandan once bulunur.',
           '',
           '  Calistir: okkam calistir INC OUT JNZ'
         ].join('\n');

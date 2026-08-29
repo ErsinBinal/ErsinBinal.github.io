@@ -150,6 +150,41 @@ test('havuz yoksa fail-soft', () => {
   assert.match(okkam.solve('calistir INC OUT JNZ'), /1, 2, 3/);
 });
 
+// --- Yalan soylememe kapisi ----------------------------------------------
+//
+// `okkam dil` bir zamanlar `INC SWP ADD OUT INC JNZ -> 1, 4, 9, 16` yaziyordu.
+// O program 1, 4, 9, 17 uretiyor: makine URETMEDIGI bir ciktiyi ilan ediyordu.
+// Bu test, dil ekranindaki her ornegin gercekten calistirildigini kilitler.
+
+test('okkam dil ornekleri URETILIYOR, elle yazilmiyor', () => {
+  const okkam = loadOkkam();
+  const text = okkam.solve('dil');
+  const OPS = Array.from(okkam._ops);
+
+  const lines = text.split('\n').filter((line) => /^\s{4}[A-Z]{3}[A-Z ]* +-> /.test(line));
+  assert.ok(lines.length >= 3, 'dil ekraninda ornek satirlari bulunmali');
+
+  for (const line of lines) {
+    const [left, right] = line.split('->');
+    const program = left.trim().split(/\s+/).map((op) => OPS.indexOf(op));
+    assert.ok(program.every((op) => op >= 0), `gecerli opcode: ${left.trim()}`);
+
+    const claimed = right.replace(/,\s*\.\.\.\s*$/, '').split(',')
+      .map((token) => Number(token.trim()));
+    const actual = Array.from(okkam._run(program, 400, claimed.length).out);
+
+    assert.deepEqual(actual, claimed,
+      `dil ekrani "${left.trim()}" icin uretmedigi ciktiyi ilan ediyor`);
+  }
+});
+
+test('kareler ornegi artik kareler diye SUNULMUYOR', () => {
+  const text = loadOkkam().solve('dil');
+  // Yakin-isabet ACIKCA anlatilmali; sessizce duzeltmek de bir gizlemedir.
+  assert.match(text, /kareler gibi duruyor/);
+  assert.match(text, /sonra ayriliyor/);
+});
+
 // --- Kullanici programi calistirma ---------------------------------------
 
 test('kullanici programi calistirilabiliyor', () => {
