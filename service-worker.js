@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v262';
+const CACHE_NAME = 'convivium-v263';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -13,6 +13,11 @@ const PRECACHE_ASSETS = [
   '/games/ash-runner.html',
   '/games/ash-runner-2.html',
   '/games/crude-buster.html',
+  // Crude Buster sprite sheet'leri (8 dosya / ~1,2 MB) BILEREK precache DISI.
+  // Her ilk ziyaretci onlari indiriyordu; oysa yalniz oyunu oynayanin isine
+  // yarar. Calisma ani cache'i (stale-while-revalidate) ilk oynayista zaten
+  // saklar, yani cevrimdisi oynanabilirlik ilk oynayistan sonra korunur.
+  // Hic oynamayan 1,2 MB indirmez.
   '/games/cyberpunk-logic-game.html',
   '/games/neon-river.html',
   '/games/neon-serpent.html',
@@ -127,14 +132,6 @@ const PRECACHE_ASSETS = [
   '/assets/css/crude-buster.css?v=2',
   '/assets/js/crude-buster-net.js?v=2',
   '/assets/js/crude-buster.js?v=11',
-  '/assets/img/crude/ebinal-sheet.png?v=4',
-  '/assets/img/crude/debinal-sheet.png?v=3',
-  '/assets/img/crude/punk-sheet.png?v=3',
-  '/assets/img/crude/knife-sheet.png?v=3',
-  '/assets/img/crude/brute-sheet.png?v=3',
-  '/assets/img/crude/thrower-sheet.png?v=3',
-  '/assets/img/crude/bruteBoss-sheet.png?v=3',
-  '/assets/img/crude/cyborgBoss-sheet.png?v=3',
   '/assets/js/dart-board-svg.js?v=3',
   '/assets/js/dart-online.js?v=2',
   '/assets/js/dart-atc.js?v=4',
