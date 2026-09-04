@@ -39,6 +39,7 @@
         ['archive', 'arsiv katmani'],
         ['ara <sorgu>', 'arsivi cevrimdisi tara, skoru gor'],
         ['okkam', 'en kisa program duellosu'],
+        ['filiz', 'atolye: sitenin kendi urettikleri'],
         ['changelog', 'son degisiklik sinyalleri']
       ]
     },

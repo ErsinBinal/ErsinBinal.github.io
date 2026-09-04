@@ -153,6 +153,7 @@
       let izMod = null;
       let arsivMod = null;
       let okkamMod = null;
+      let filizMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1475,6 +1476,38 @@
         }
       })();
 
+      // FILIZ (assets/js/home/filiz.js): sitenin atolyesi.
+      // Bulmacalari SITE uretir (scripts/build-filiz.js); uretim gece CI'inda
+      // kosar ve PR acar — main'e kendiliginden hicbir sey girmez (Madde 6).
+      // Veri TEMBEL cekilir; precache'e girmez.
+      let filizData = null;
+      let filizLoading = null;
+      const loadFiliz = () => {
+        if (filizData || filizLoading) return filizLoading;
+        filizLoading = fetch('/assets/data/filiz.json')
+          .then((response) => (response.ok ? response.json() : null))
+          .then((data) => { filizData = data; return data; })
+          .catch(() => null);
+        return filizLoading;
+      };
+
+      filizMod = (() => {
+        const createFiliz = window.ConviviumHome?.createFiliz;
+        if (typeof createFiliz !== 'function') {
+          console.error('[home-protocol] Filiz module unavailable');
+          return null;
+        }
+        try {
+          return createFiliz({
+            getData: () => filizData,
+            getDayKey: () => new Date().toISOString().slice(0, 10)
+          });
+        } catch (error) {
+          console.error('[home-protocol] Filiz module failed', error);
+          return null;
+        }
+      })();
+
       // Sinyal Agi (assets/js/home/net.js): ag-kesif bulmacasi Faz 1.
       // getOnlineHandles lazy -> presenceMod runtime'da (nmap aninda) hazir olur.
       netMod = (() => {
@@ -2773,6 +2806,12 @@
           action: () => okkamCommand('')
         },
         {
+          command: 'filiz',
+          description: 'atolye: sitenin kendi urettigi bulmacalar ve neyi neden eledigi',
+          aliases: ['atolye', 'uretim'],
+          action: () => filizCommand('')
+        },
+        {
           command: 'ara',
           description: 'arsivi cevrimdisi tarar ve skor dokumunu gosterir',
           aliases: ['bul', 'tara'],
@@ -3779,6 +3818,23 @@
         return okkamMod.solve(query);
       };
 
+      // Karar mantigi modulde; burada yalniz veri getirme ve yonlendirme var.
+      const filizCommand = async (raw) => {
+        if (!filizMod) return 'filiz: modul yuklenmedi (SINIRLI MOD).';
+        const query = String(raw || '').trim();
+        if (!filizMod.ready()) await loadFiliz();
+        if (!filizMod.ready()) return 'filiz: atolye kaydi yuklenmedi. Birazdan tekrar dene.';
+        if (/^nasil$/i.test(query)) return filizMod.how();
+        if (/^acik$/i.test(query)) return filizMod.openList();
+        const cozMatch = query.match(/^coz\s+(.+)$/i);
+        if (cozMatch) {
+          if (!okkamMod) return 'filiz: dogrulayici (okkam) yuklenmedi.';
+          return filizMod.verify(cozMatch[1], okkamMod._ops, okkamMod._run);
+        }
+        if (query) return `filiz: bilinmeyen alt komut "${query}". Dene: filiz · filiz acik · filiz coz <program> · filiz nasil`;
+        return filizMod.overview();
+      };
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -4129,6 +4185,7 @@
         ['dig ', value => kazCommand(value)],
         ['tortu ', value => kazCommand(value)],
         ['okkam ', value => okkamCommand(value)],
+        ['filiz ', value => filizCommand(value)],
         ['ara ', value => araCommand(value)],
         ['bul ', value => araCommand(value)],
         ['step ', value => stepCommand(value)],

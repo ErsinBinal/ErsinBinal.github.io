@@ -1,0 +1,124 @@
+name: FILIZ gece uretimi
+
+# Sitenin atolyesi geceleri kendi bulmacalarini uretir.
+#
+# ANAYASA MADDE 6 BURADA MEKANIK HALE GELIR:
+#   6/3  Uretilen sey 4. boyuta ancak DIFF ile gecer.
+#        -> Bu is main'e ASLA push etmez. Yalniz PR acar.
+#   6/4  Uretec kendi elegini, anayasasini ya da yayin ritualini uretemez.
+#        -> scripts/filiz-zar.js izinli dosya listesini zorlar; disina
+#           cikilirsa is DUSER ve PR acilmaz.
+#
+# Yani site kendi kendine uretir ama ELI yoktur, SESI vardir.
+
+on:
+  schedule:
+    - cron: '17 2 * * *'      # her gece 02:17 UTC
+  workflow_dispatch:
+    inputs:
+      butce:
+        description: "Siniflandirma butcesi (saniye)"
+        type: string
+        default: "240"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: filiz-gece
+  cancel-in-progress: true
+
+jobs:
+  uret:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Bagimliliklari kilitli kur
+        run: npm ci
+
+      - name: ZAR kendini denesin (kapi calisiyor mu)
+        run: node scripts/filiz-zar.js --kendini-dene
+
+      - name: URETEC + ELEK
+        run: node scripts/build-filiz.js --butce ${{ github.event.inputs.butce || '240' }}
+
+      - name: ZAR — izinli alanin disina cikildi mi
+        id: zar
+        run: |
+          set +e
+          node scripts/filiz-zar.js
+          code=$?
+          set -e
+          if [ "$code" = "78" ]; then
+            echo "degisiklik=hayir" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          exit $code
+
+      - name: Testler (uretilen veri sozlesmeye uyuyor mu)
+        if: steps.zar.outputs.degisiklik != 'hayir'
+        run: npm run test:unit
+
+      - name: Ozet cikar
+        if: steps.zar.outputs.degisiklik != 'hayir'
+        id: ozet
+        run: |
+          node -e "
+            const d = require('./assets/data/filiz.json');
+            const red = {};
+            (d.red || []).forEach((r) => {
+              const k = String(r.why).replace(/\s*\(.*\)\s*/, '').trim();
+              red[k] = (red[k] || 0) + 1;
+            });
+            const satir = Object.entries(red).sort((a,b)=>b[1]-a[1])
+              .map(([w,n]) => '| ' + n + ' | ' + w + ' |').join('\n');
+            const gövde = [
+              'Gece uretimi. **Bu PR merge edilene kadar site degismez.**',
+              '',
+              '| | |',
+              '|---|---|',
+              '| tarandi | ' + d.uretim.tarandi.toLocaleString('tr-TR') + ' program |',
+              '| bulunan dizi | ' + d.uretim.dizi + ' |',
+              '| elekten gecen | ' + d.elek.gecen + ' |',
+              '| elenen | ' + d.elek.elenen + ' |',
+              '| cozulen raf | ' + d.cozulen.length + ' |',
+              '| acik raf | ' + d.acik.length + ' |',
+              '',
+              '### Elek neyi neden attı',
+              '',
+              '| adet | sebep |',
+              '|---|---|',
+              satir,
+              '',
+              '### Cozulen ornekler',
+              '',
+              (d.cozulen.slice(0,5).map(p => '- \`[' + p.target.join(', ') + ']\` -> \`' + p.program + '\` (%' + p.gain + ' kazanc)').join('\n')),
+              '',
+              '### Acik meydan okumalar (FILIZ biliyor, OKKAM bulamiyor)',
+              '',
+              (d.acik.slice(0,5).map(p => '- \`[' + p.target.join(', ') + ']\` — ' + p.length + ' talimat, muhur \`' + p.seal + '\`').join('\n')),
+              '',
+              '---',
+              'ZAR gecti: yalnizca \`assets/data/filiz.json\` degisti.',
+              'Uretec kendi elegini, anayasayi ya da yayin ritualini yazamaz (Madde 6/4).'
+            ].join('\n');
+            require('fs').writeFileSync('/tmp/filiz-pr.md', gövde);
+          "
+
+      - name: PR ac (main'e ASLA push etme)
+        if: steps.zar.outputs.degisiklik != 'hayir'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: filiz/gece-uretimi
+          base: main
+          commit-message: "chore(filiz): gece uretimi"
+          title: "FILIZ gece uretimi"
+          body-path: /tmp/filiz-pr.md
+          add-paths: assets/data/filiz.json
+          delete-branch: true

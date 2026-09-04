@@ -3,7 +3,7 @@
 **Convivium İnşaat Programı**
 
 Tarih: 2026-08-23 (son güncelleme: 2026-08-26)
-Durum: **Faz -1, Faz 0, Z1, Z2, Z3, Z4.3 ve Z5.1 TAMAMLANDI.** Kalan: Z4.1 (0212 korpusu — veri tedariki), Z4.2, Z4.4–Z4.5, Z2.3–Z2.4, Z5.2–Z5.3.
+Durum: **Faz -1, Faz 0, Z1, Z2, Z3, Z4.3, Z5.1 ve FİLİZ (5. boyut) TAMAMLANDI.** Kalan: Z4.1 (0212 korpusu — veri tedariki), Z4.2, Z4.4–Z4.5, Z2.3–Z2.4, Z5.2–Z5.3.
 Başlangıç main: `4ad68b8` · Canlı Service Worker: `convivium-v250`
 
 Bu belge Convivium'un bir sonraki büyük dönemini tanımlar. Fikir listesi değil,
@@ -117,8 +117,8 @@ Bu, planın kültürel merkezine yerleştirildi (Z4 · 0212).
 
 ## 4. Omurga: Kazı Evi
 
-**Tek nesne İZ'dir** — bir kararın yeniden türetilebilir kaydı. **Tek yasa beş
-maddedir.**
+**Tek nesne İZ'dir** — bir kararın yeniden türetilebilir kaydı. **Tek yasa altı
+maddedir** (ilk beşi geçmişi, altıncısı üretimi yönetir).
 
 ### Madde 1 — Yeniden türetme
 
@@ -175,6 +175,51 @@ kabulü"**dür (B15).
 
 **Çapraz kesen kural:** tüm günlük çekilişler tek bir akış-ayrılmış üreteçten gelir —
 `rng(GENESIS, gün, altsistem)`. B7'deki dört habersiz çekiliş burada birleşir.
+
+### Madde 6 — Üretim, doğrulayıcısı olan yerde serbesttir
+
+*(2026-09-04'te eklendi. Madde 1–5 sitenin **geçmişini** yönetiyordu; bu madde
+sitenin kendi **ürettiğini** yönetir.)*
+
+Beş madde 4. boyutu kurdu: olmuş olan kazılabilir, adreslenebilir, yeniden
+türetilebilir. Madde 6 **5. boyutu** kurar: olabilecek olan. Site yalnız kendi
+geçmişini sergilemez, yeni malzeme de üretir — ama yasa altında.
+
+**6/1 — Doğrulayıcısı olmayan şey üretilmez.** Üretilen her artefaktın, onu
+*düşürebilecek* mekanik bir kontrolü olmak zorundadır. Kontrolü yazamıyorsan
+o şeyi üretemezsin. Bir OKK-8 programı üretilebilir: çalıştırılır, bakılır.
+1990'lar BBS kültürü hakkında bir paragraf üretilemez: çalıştıracak hâli yoktur.
+Bu tek kural, uydurma arşivi ve halüsinasyon prozayı bir çırpıda eler — ve
+Madde 2'nin "kazı > üretim > taklit" sırasını bozmadan üretime yer açar.
+
+**6/2 — Elek reddedebilmeli, ve reddi yayınlanmalı.** Kabul oranı %100'e çıkan
+elek bozulmuştur; red oranı ölçülür ve ekrana yazılır. Hiçbir şeyi elemeyen
+build **düşer**, dosya yazmaz. (Tavan testinin tiyatroya dönüştüğü yerden
+öğrenilen ders, bu kez baştan yasada.)
+
+**6/3 — Üretilen şey 4. boyuta ancak diff ile geçer.** Runtime asla siteye
+yazmaz. Üretim → build artefaktı → `git diff` → yayın ritüeli. **Site
+önerebilir; ancak commit gerçek yapar.** Gece işi `main`'e push edemez, yalnız
+PR açar.
+
+**6/4 — Üreteç kendi üreticisini üretemez.** Üreteç içerik üretir; **eleğini,
+anayasasını, yayın ritüelini ve kendi kaynağını asla.** Bu, döngünün kendi
+kısıtlarını gevşetmesini yapısal olarak imkânsız kılar — "güvenli kendi kendine
+üretim" denen şeyin tek gerçek garantisi budur. İzinli yazma alanı tek bir
+dosyadır ve o liste testte kilitlidir; genişletmek bir anayasa değişikliğidir,
+sessizce olmaz.
+
+**6/5 — Üreteç zeki olabilir; elek aptal ve deterministik olmak zorundadır.**
+AI (Worker sınırından ya da build-time'da) **aday üretebilir**, hiçbir zaman
+*seçemez*. Zeki bir elek kandırılabilir ve sessizce kayar; aptal bir elek
+kayamaz. Madde 4'ün "gizli öğrenme yasak" hükmünün üretim tarafındaki karşılığı.
+
+**6/6 — Her üretilmiş şey soyunu taşır.** Tohum + üreteç sürümü + elek sürümü
+kaydedilir; üretilen artefakt yeniden türetilebilir ve denetlenebilir
+(Madde 1'in üretim tarafına uzantısı).
+
+> **Tek cümle:** site kendi kendine üretir, ama **eli yoktur, sesi vardır.**
+
 `Math.random()` ödül ve içerik yollarından çıkar (B10).
 
 ### Kesen ilkeler
@@ -857,6 +902,72 @@ bunu zaten bedava veriyor.
 
 ---
 
+### FİLİZ — 5. Boyut: sitenin atölyesi  ✅ **TAMAMLANDI (2026-09-04)**
+
+> TORTU geçmişi **kazar**. FİLİZ yeni olanı **üretir**. Site kendi bulmacalarını
+> yapar, çoğunu kendi eler, kalanını `main`'e değil bir **PR**'a bırakır.
+
+**Kavram.** Madde 1–5 sitenin *olmuş olanını* yönetiyordu — 4. boyut. FİLİZ
+*olabilecek olanı* açar: kısa programların uzayı. Üretilen aday orada durur;
+elekten geçen bir commit ile 4. boyuta iner. **Git, iki boyut arasındaki zardır.**
+
+**Üç organ.**
+
+| Organ | Dosya | İş |
+|---|---|---|
+| **ÜRETEÇ** | `scripts/build-filiz.js` | Bütün kısa programları tarar, ne ürettiklerine bakar |
+| **ELEK** | aynı dosya, ayrı aşama | Mekanik eler; **reddedebilmek zorunda** |
+| **ZAR** | `scripts/filiz-zar.js` | İzinli yazma alanını zorlar; dışına çıkılırsa iş düşer |
+
+**Ölçülen ilk gece.**
+
+```
+ÜRETEÇ  1.435.945 program tarandı (uzunluk ≤ 7) → 2.414 farklı dizi
+ELEK    790 geçti, 1624 elendi (%67 red)
+        1431  MDL kazancı yok
+        161   sayılar okunamayacak kadar büyük
+        30    sabit dizi — örüntü yok
+RAFLAR  çözülen 12 · açık 67 · bütçe yetmedi 711
+```
+
+**İki raf, ve asıl fikir ikincisinde.**
+- **ÇÖZÜLEN** — OKKAM ziyaretçi bütçesiyle buluyor. Oynanabilir bulmaca.
+- **AÇIK** — FİLİZ programı **biliyor** (kendisi üretti), OKKAM **bulamıyor.**
+  Site kendi çözemediği soruyu soruyor ve bunu ilan ediyor. Cevap saklı
+  (içerik sırrı serbest), ama **uzunluğu yazılı** ve **mührü var**: `filiz coz
+  <program>` cevabı doğrular. Madde 4'ün "makine kaybedebilir"i burada
+  soyut değil, mekanik.
+
+**Terminal yüzeyi.** `filiz` · `filiz acik` · `filiz coz <program>` · `filiz nasil`
+
+**Gece işi.** `.github/workflows/filiz-gece.yml`, her gece 02:17 UTC. Üretir,
+eler, ZAR'dan geçer, testleri koşar, **PR açar**. `main`'e push eden tek satır
+yok ve bu testle kilitli.
+
+**Madde 6 burada mekanik hâle geldi — ve her kapı kanıtlandı:**
+
+| Kural | Mekanizma | Kanıt |
+|---|---|---|
+| 6/1 doğrulayıcısız üretim yok | üretilen şey programdır, çalıştırılır | test: her `cozulen` girdisi gerçekten koşulup dizisiyle karşılaştırılıyor |
+| 6/2 elek reddedebilmeli | red oranı ölçülür, yayınlanır | red 0 ise build **düşer**; testte red oranı >%20 aranıyor |
+| 6/3 4. boyuta diff ile geçilir | gece işi yalnız PR açar | test: workflow'da `git push` **yok**, `add-paths` tek dosya |
+| 6/4 üreteç üreticisini üretemez | ZAR izinli liste | izole depoda denendi: eleğe dokununca **kapandı** (çıkış 1) |
+| 6/5 elek aptal ve deterministik | elek saf JS, AI yok | modül saflık testi: DOM/ağ/zaman/rastgelelik yok |
+| 6/6 soy taşınır | tohum + FNV-1a mühür | `filiz coz` mührü doğruluyor |
+
+**Dürüstlük düzeltmesi (aynı gün).** İlk sürüm ekranda "1624 elendi" yazıp
+altında 40 sayan bir tablo gösteriyordu — dosyaya red örneklerinin yalnız 40'ı
+yazıldığı için. Ekranda yalan olurdu. Tam döküm ayrı alana (`elek.sayim`)
+taşındı; kırpılmış örnek listesi ayrı durur.
+
+**Bilerek yapılmayan.** Prozа, tarih, arşiv metni, kişi/kurum adı üretimi.
+Doğrulayıcısı yok → Madde 6/1 gereği yasak. Z4.1 (0212 korpusu) hâlâ **veri
+tedariki** bekliyor; uydurulamaz.
+
+**Kabul.** Birim 217/217 (18'i FİLİZ) · kabul testi 37/37 (5'i FİLİZ).
+
+---
+
 ## 8. Destek dilimleri
 
 Tamlık eleştirisinin "eklenmezse plan eksik kalır" dediği altı dilim. Her biri
@@ -905,7 +1016,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **79** | ✅ Faz -1 (dosya sistemi taraması) |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **199** | ✅ (kabul testi ayrıca 32) |
+| Birim test | ~~102~~ → **217** | ✅ (kabul testi ayrıca 37) |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

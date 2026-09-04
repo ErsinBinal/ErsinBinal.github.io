@@ -21,13 +21,22 @@ import test from 'node:test';
 //     kalan yalniz orkestrasyon ve yan etki; D3'un soyledigi yer burasi.
 //     Alternatif "module tasi" burada uygulanamazdi: tasinacak karar zaten
 //     modulde.
+//   4898 -> 4955  (2026-09-04, FILIZ / 5. boyut)
+//     Eklenen: filiz modul kurulumu + tembel yukleyici + filizCommand
+//     sarmalayici (alt komut yonlendirmesi: acik / nasil / coz).
+//     KARAR MANTIGI PROTOKOLE GIRMEDI — uretim scripts/build-filiz.js'de,
+//     okuma/dogrulama assets/js/home/filiz.js icinde (saf), zar
+//     scripts/filiz-zar.js'de. Protokolde kalan yalniz getirme + yonlendirme.
+//     Not: filizCommand alt komutlari protokolde ayristiriyor cunku
+//     dogrulama okkamMod._run'a ihtiyac duyuyor — iki modulu birbirine
+//     baglayan tel protokolun isidir, modulun degil.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 4898;
+const CEILING = 4955;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(

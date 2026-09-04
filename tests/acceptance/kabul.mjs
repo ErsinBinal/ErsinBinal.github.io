@@ -139,6 +139,51 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- FILIZ: 5. boyut, sitenin atolyesi ---
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  await page.fill('#command-input', 'filiz');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /Nasil calisiyor/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  ).catch(() => {});
+  const genel = await page.textContent('#command-output');
+  check('filiz atolyeyi gosteriyor', /URETEC/.test(genel) && /ELEK/.test(genel));
+  check('filiz red sebeplerini YAYINLIYOR', /neden elendiler/.test(genel) && /MDL kazanci yok/.test(genel));
+  check('filiz acik meydan okuma sunuyor', /site kendi cozemedigi soruyu soruyor/.test(genel));
+
+  await page.fill('#command-input', 'filiz nasil');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /Kaynak: \/assets\/data\/filiz\.json/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const nasil = await page.textContent('#command-output');
+  check('filiz mekanizmasini ACIKLIYOR',
+    /Dogrulayicisi olmayan sey uretilmez/.test(nasil) && /kendi elegini/.test(nasil));
+
+  // Yanlis cevap kabul edilmemeli.
+  await page.fill('#command-input', 'filiz coz OUT OUT OUT');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /tutturmuyor|DOGRULANDI|KAYBETTI/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const yanlis = await page.textContent('#command-output');
+  check('filiz yanlis cevabi reddediyor', /tutturmuyor/.test(yanlis));
+
+  await page.close();
+}
+
 // --- Z5 OKKAM: en kisa program duellosu ---
 {
   const page = await browser.newPage();

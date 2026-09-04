@@ -170,10 +170,10 @@ test('global command/alias namespace preserves the complete normalized snapshot'
     .update(JSON.stringify(definitions))
     .digest('hex');
 
-  assert.equal(definitions.length, 151);
-  assert.equal(labels, 655);
-  assert.equal(claims.size, 609);
-  assert.equal(digest, '5a0ccdf648bec07fa73fdbd8d9cb8e613e11ab13767886ed2d89b5440e36d144');
+  assert.equal(definitions.length, 152);
+  assert.equal(labels, 658);
+  assert.equal(claims.size, 612);
+  assert.equal(digest, '4e018232eeff10fcb50f70e14313b3109a244d5aeb84574f794ef41ce90266d7');
 
   const sameOwnerFolds = [...claims.values()].filter(
     (owners) => owners.length > 1 && new Set(owners.map((claim) => claim.owner)).size === 1
@@ -213,8 +213,8 @@ test('hidden commands and parameter prefixes preserve known precedence overlaps'
     .update(JSON.stringify(parameterPrefixes))
     .digest('hex');
 
-  assert.equal(parameterPrefixes.length, 48);
-  assert.equal(prefixDigest, '45e91166718e56b89a58f98b8c26687289f31fd0a22908656d0c5d8ccb61e2fd');
+  assert.equal(parameterPrefixes.length, 49);
+  assert.equal(prefixDigest, '764d96cd447178c03a52c0d0a59114856f36305102d030042c24d29efa4331a6');
   assert.deepEqual(prefixOverlaps(parameterPrefixes, claims), [
     'chat>chat deck>chat',
     'incele>incele etraf>look',

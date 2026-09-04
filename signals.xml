@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>FILIZ - sitenin atolyesi</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-04-filiz-sitenin-atolyesi</guid>
+      <pubDate>Fri, 04 Sep 2026 20:12:10 +0000</pubDate>
+      <description>Site artik kendi bulmacalarini URETIYOR. Uretec butun kisa OKK-8 programlarini tarar, elek mekanik olarak eler ve neyi neden eledigini yayinlar (ilk gecede 2414 adaydan 1624 elendi). Iki raf var: COZULEN, OKKAM in bulabildikleri; ACIK ise sitenin kendi cozemedigi sorular — FILIZ programi biliyor cunku kendisi uretti, ama arama onu bulamiyor. Uretim gece calisir ve main e ASLA dokunmaz, yalniz PR acar. Komutlar: filiz, filiz acik, filiz coz &lt;program&gt;, filiz nasil</description>
+    </item>
+    <item>
       <title>OKKAM dil ekrani artik yalan soyleyemiyor</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-08-29-okkam-dil-ekrani-artik-yalan-soyleyemiyor</guid>
