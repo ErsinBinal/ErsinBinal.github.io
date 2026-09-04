@@ -904,6 +904,9 @@ bunu zaten bedava veriyor.
 
 ### FİLİZ — 5. Boyut: sitenin atölyesi  ✅ **TAMAMLANDI (2026-09-04)**
 
+> **Sade anlatım:** [`docs/filiz-nedir.md`](filiz-nedir.md) — jargonsuz özet,
+> maliyet cevabı ve "bir şey ters giderse" bölümü orada.
+
 > TORTU geçmişi **kazar**. FİLİZ yeni olanı **üretir**. Site kendi bulmacalarını
 > yapar, çoğunu kendi eler, kalanını `main`'e değil bir **PR**'a bırakır.
 
