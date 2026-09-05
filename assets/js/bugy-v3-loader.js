@@ -522,6 +522,12 @@
 
     const loop = now => {
       if (!active) return;
+      // core ARTIK ASENKRON geliyor (ensureCore). loop'u baslatan her yer
+      // onu beklemiyor: `visibilitychange` dogrudan requestAnimationFrame
+      // cagiriyor. wasmUrl bos oldugu icin fallback su an aninda donuyor ve
+      // pencere kapali gorunuyor — ama `npm run build:bugy-v3` ile wasm
+      // gelirse fetch gercek sure alir ve burasi null core ile calisir.
+      if (!core) return;
       const dt = last ? now - last : 16;
       last = now;
       core.update(dt);
@@ -637,7 +643,12 @@
       cancelAnimationFrame(raf);
       if (active && !document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
         last = 0;
-        raf = requestAnimationFrame(loop);
+        // activate() gibi burasi da core'u BEKLER. loop'taki null korumasi
+        // zaten cokmeyi engelliyor ama beklemezsek sekmeye donunce animasyon
+        // sessizce hic baslamaz: loop ilk karede donup biter.
+        ensureCore().then(() => {
+          if (active && !document.hidden) raf = requestAnimationFrame(loop);
+        });
       }
     });
 
