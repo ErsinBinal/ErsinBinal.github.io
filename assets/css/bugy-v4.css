@@ -318,3 +318,34 @@
   .bugy-v4-char { transition: none; }
   .bugy-v4-svg-wrap { transition: none; }
 }
+
+/* Etkilesimli companion, dekoratif resim degil bir kontrol gibi davranir. */
+.bugy-v4-char[role="button"] {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 14px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bugy-v4-layer {
+  transition: opacity 0.2s ease;
+}
+
+@media (max-width: 760px) {
+  .bugy-v4-layer {
+    z-index: 124;
+  }
+
+  .bugy-v4-char {
+    bottom: calc(54px + env(safe-area-inset-bottom));
+    width: 78px;
+    height: 94px;
+    opacity: 0.88;
+  }
+
+  .bugy-v4-balloon {
+    bottom: calc(154px + env(safe-area-inset-bottom));
+    max-width: min(210px, calc(100vw - 24px));
+    font-size: 0.82rem;
+  }
+}

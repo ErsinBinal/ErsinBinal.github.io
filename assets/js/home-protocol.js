@@ -8,7 +8,7 @@
 
       if (pageLoader) {
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const minimumVisible = reduceMotion ? 250 : 1900;
+        const minimumVisible = reduceMotion ? 100 : 900;
         const finishLoader = () => {
           const elapsed = performance.now() - loaderStart;
           window.setTimeout(hidePageLoader, Math.max(0, minimumVisible - elapsed));
@@ -16,7 +16,7 @@
 
         if (document.readyState === 'complete') finishLoader();
         else window.addEventListener('load', finishLoader, { once: true });
-        window.setTimeout(hidePageLoader, reduceMotion ? 700 : 3600);
+        window.setTimeout(hidePageLoader, reduceMotion ? 300 : 2200);
       }
 
       document.body.classList.add('js');
@@ -25,14 +25,14 @@
       const railLinks = [...document.querySelectorAll('.rail-link')];
       const progress = document.querySelector('.rail-progress');
       const consoleLine = document.getElementById('console-line');
-      const hudAccess = document.getElementById('hud-access');
+      const hudAccess = document.getElementById('hud-access'), hudRank = document.getElementById('hud-rank');
       const hudRoute = document.getElementById('hud-route');
       const microOracle = document.getElementById('micro-oracle');
       const accessChip = document.getElementById('access-chip');
       const accessChipButton = document.getElementById('access-chip-button');
       const commandShell = document.getElementById('command-shell');
       const commandInput = document.getElementById('command-input');
-      const commandOutput = document.getElementById('command-output');
+      const commandOutput = document.getElementById('command-output'), commandStatus = document.getElementById('command-status');
       const commandClose = document.getElementById('command-close');
       const commandSuggestions = document.getElementById('command-suggestions');
       const commandLaunch = document.getElementById('command-launch');
@@ -137,6 +137,7 @@
       let currentSuggestions = [];
       let suggestionSelectionExplicit = false;
       let commandBootTimer = null;
+      let commandBooted = false;
       let commandCloseTimer = null;
       let pendingOracleQuery = '';
       let lastFocusedElement = null;
@@ -158,6 +159,7 @@
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
+      let uxMod = null;
       let transcript = '';
       // Terminal oyunlari + ekran koruyucu ayri modullerde yasar
       // (assets/js/home/pipe-90.js, outrun-86.js, screen-saver.js);
@@ -369,6 +371,7 @@
         document.body.classList.toggle('auth-granted', authState.granted);
         document.body.classList.toggle('auth-pending', !authState.checked);
         if (hudAccess) hudAccess.textContent = authState.label;
+        if (hudRank) hudRank.textContent = localLevel;
         if (accessChip) accessChip.textContent = authState.label;
         if (accessChipButton) {
           accessChipButton.setAttribute('aria-label', authState.granted
@@ -385,7 +388,6 @@
       };
 
       const restoreUnlockedGates = () => {
-        if (!authState.granted) return;
         state.unlocked?.forEach(id => {
           const gate = document.getElementById(id);
           if (gate) {
@@ -583,15 +585,7 @@
         });
       };
 
-      const updateGateButton = (gate) => {
-        const button = gate.querySelector('.gate-toggle');
-        if (!button) return;
-        const unlocked = gate.classList.contains('is-unlocked');
-        const open = gate.classList.contains('is-open');
-        button.textContent = !authState.granted && !unlocked ? 'ACCESS DENIED' : open ? 'Collapse' : 'Open';
-        button.setAttribute('aria-expanded', String(open));
-      };
-
+      const updateGateButton = (gate) => uxMod?.syncGate(gate);
       const unlockGate = (gate, open = true) => {
         if (!gate) return;
         gate.classList.add('is-unlocked', 'is-visited');
@@ -608,23 +602,17 @@
         pulse(open ? 330 : 180);
       };
 
-      document.querySelectorAll('.gate-toggle').forEach(button => {
-        button.textContent = 'ACCESS DENIED';
-        button.addEventListener('click', () => {
-          const gate = button.closest('.journey-gate');
-          if (!authState.granted && !gate.classList.contains('is-unlocked') && !requireAccess()) return;
-          if (!gate.classList.contains('is-unlocked')) {
-            unlockGate(gate, true);
-            return;
-          }
-
+      uxMod = window.ConviviumHome?.createUx?.({
+        commandShell, commandLaunch, mobileCommandButton, commandStatus,
+        isUnlocked: gate => gate?.classList.contains('is-unlocked'), onSealedGate: () => { openCommand(); printTerminal('hidden: mühürlü. Sırayla signal · oracle · manifest, ardından unlock hidden.'); },
+        onGateToggle: gate => {
+          if (!gate.classList.contains('is-unlocked')) return unlockGate(gate, true);
           const open = !gate.classList.contains('is-open');
           gate.classList.toggle('is-open', open);
-          updateGateButton(gate);
-          pulse(open ? 280 : 170);
-        });
+          updateGateButton(gate); pulse(open ? 280 : 170);
+        }
       });
-
+      uxMod?.bindGates();
       if ('IntersectionObserver' in window) {
         const observer = new IntersectionObserver(entries => {
           entries.forEach(entry => {
@@ -668,30 +656,20 @@
 
       const commandBootLines = () => [
         'CONVIVIUM DOS/86 initializing...',
-        'BIOS: public interface bus online',
-        'MEM: private token banks not mounted',
         'FS: index / archive / notes / map mounted read-only',
-        'NET: oracle proxy handshake queued',
-        'AI: cloud edge route preferred',
-        'AI: pollinations fallback downgraded to reserve',
+        'NET: oracle proxy on standby',
         `USER: visitor level ${levels[state.level] || levels[0]}`,
-        `STAT: public visits ${state.visits}`,
         `STAT: opened public nodes ${state.opened.length}`,
-        `LOG: recent commands ${(state.commandLog || []).length}`,
         'SEC: secrets unavailable in browser runtime',
-        'UI: command parser warm',
-        'UI: exit vector armed',
         'OK: terminal ready'
       ];
-
       const commandReadyText = () => [
-        '] Convivium terminaline hos geldin.',
+        `] ${state.visits > 1 ? 'Sinyalin tanındı; kaldığın yerden devam.' : 'Convivium terminaline hoş geldin.'}`,
         '  look          etrafina bak — neredesin, nereye gidilir',
         '  open dossier  makaleleri ac',
-        '  basla         adim adim rehber',
+        `  ${state.visits > 1 ? 'next          sıradaki açılmamış rotaya git' : 'basla         adım adım rehber'}`,
         `  yardim: help · kapat: Esc    ${levels[state.level] || levels[0]} · nodes ${state.opened.length}`
       ].join('\n');
-
       const renderCommandBoot = () => {
         if (!commandShell || !commandOutput || commandInFlight) return;
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
@@ -712,6 +690,7 @@
             commandBootTimer = null;
             window.setTimeout(() => {
               if (!commandShell.classList.contains('is-open') || commandInFlight) return;
+              commandBooted = true;
               transcriptReset(commandReadyText());
               commandShell.classList.remove('is-booting');
               // Adresle gelindiyse cikti YENIDEN TURETILIR (link icerik tasimaz).
@@ -722,6 +701,7 @@
         };
 
         if (reduceMotion) {
+          commandBooted = true;
           transcriptReset(commandReadyText());
           commandShell.classList.remove('is-booting');
           const pendingReduced = currentAddress();
@@ -730,9 +710,8 @@
         }
 
         writeLine();
-        commandBootTimer = window.setInterval(writeLine, 135);
+        commandBootTimer = window.setInterval(writeLine, 55);
       };
-
       const closeCommandWithMatrix = () => {
         if (!commandShell || !commandShell.classList.contains('is-open')) return;
         if (terminalTypeTimer !== null) { window.clearInterval(terminalTypeTimer); terminalTypeTimer = null; }
@@ -754,7 +733,7 @@
 
         commandCloseTimer = window.setTimeout(() => {
           commandShell.classList.remove('is-open', 'is-closing');
-          commandShell.setAttribute('aria-hidden', 'true');
+          uxMod?.syncCommandShell(false);
           if (commandInput) {
             commandInput.disabled = false;
             commandInput.value = '';
@@ -766,11 +745,11 @@
       const openCommand = () => {
         if (!commandShell || !commandInput) return;
         audioCue('terminal.open');
-        lastFocusedElement = document.activeElement;
+        if (!commandShell.classList.contains('is-open')) lastFocusedElement = document.activeElement;
         window.clearTimeout(commandCloseTimer);
         commandShell.classList.add('is-open');
         commandShell.classList.remove('is-closing');
-        commandShell.setAttribute('aria-hidden', 'false');
+        uxMod?.syncCommandShell(true);
         renderCommandSuggestions(commandInput.value);
         commandInput.focus();
         if (outrunMod?.isActive()) {
@@ -789,7 +768,8 @@
           pulse(260);
           return;
         }
-        renderCommandBoot();
+        if (!commandBooted) renderCommandBoot();
+        else if (!transcript) transcriptReset(commandReadyText());
         pulse(260);
       };
 
@@ -801,7 +781,7 @@
         window.clearTimeout(commandCloseTimer);
         outrunMod?.stopLoop(); // surus dongusunu durdur (durum korunur, acilinca devam eder)
         commandShell.classList.remove('is-open', 'is-booting', 'is-closing');
-        commandShell.setAttribute('aria-hidden', 'true');
+        uxMod?.syncCommandShell(false);
         clearCommandSuggestions();
         if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') lastFocusedElement.focus();
       };
@@ -1005,7 +985,7 @@
       const scrollToSection = (id, label = id) => {
         const target = document.getElementById(id);
         if (!target) return `${label} not found`;
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
         state.opened = [...new Set([...(state.opened || []), id])];
         persist();
         renderProtocolSurfaces();
@@ -1066,14 +1046,16 @@
 
       const registerProtocolStep = (step) => {
         state.easterTrail = [...(state.easterTrail || []), step].slice(-4);
-        persist();
+        const trail = state.easterTrail.join('>');
+        const progressCount = trail.endsWith('signal>oracle>manifest') ? 3 : trail.endsWith('signal>oracle') ? 2 : trail.endsWith('signal') ? 1 : 0;
+        const feedback = document.querySelector('.sealed-feedback');
+        if (feedback) feedback.textContent = `Ritüel anahtarı bekleniyor · ${progressCount}/3`; persist();
       };
 
       const hasEasterKey = () => {
         const trail = (state.easterTrail || []).slice(-3).join('>');
         return trail === 'signal>oracle>manifest';
       };
-
       const readOfflineNode = () => {
         try {
           const parsed = JSON.parse(localStorage.getItem(offlineNodeKey) || '{}');
@@ -1131,14 +1113,14 @@
       const unlockHiddenCommand = () => {
         const ritualKeyAccepted = hasEasterKey();
         registerProtocolStep('unlock');
-        if (!authState.granted && !ritualKeyAccepted) {
-          if (!requireAccess()) return 'login required';
-        }
+        if (!ritualKeyAccepted && !state.unlocked?.includes('hidden')) return 'hidden: mühür tutmadı. Sıra: signal → oracle → manifest → unlock hidden';
         const gate = document.getElementById('hidden');
-        gate?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        gate?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
         unlockGate(gate, true);
+        const feedback = gate?.querySelector('.sealed-feedback');
+        if (feedback) feedback.textContent = 'Ritüel anahtarı kabul edildi · oda açık';
         award(3);
-        return ritualKeyAccepted ? 'hidden layer unlocked / ritual key accepted' : 'hidden layer unlocked';
+        return 'hidden layer unlocked / ritual key accepted';
       };
 
       const signalCommand = () => {
@@ -1148,7 +1130,6 @@
         if (microOracle) microOracle.textContent = 'signal captured';
         return line;
       };
-
       // Gece frekansinda oracle daha alcak sesle konusur.
       const nightOracleLines = [
         'Bu saatte sorular cevaplardan agirdir.',
@@ -2340,14 +2321,14 @@
       const nextCommand = () => {
         const unopened = stages.find(stage => !(state.opened || []).includes(stage.id) && stage.id);
         if (!unopened) return 'next: all known public nodes have been touched';
-        unopened.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        unopened.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
         return `next: ${unopened.id}`;
       };
 
       const tourCommand = () => {
         const ids = ['origin', 'index', 'lab', 'trace', 'map', 'archive', 'notes', 'hidden'];
         ids.forEach((id, index) => {
-          window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), index * 950);
+          window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }), index * 950);
         });
         return 'tour: route playback started';
       };
@@ -3504,11 +3485,11 @@
         }
       ];
 
-      const keyboardHelpText = () => 'keyboard: D dossier, L logic, T signal, B ash, F flow, M map, N notes, A access, ? command shell, Ctrl+K command shell, Tab complete, Up/Down history, ESC close';
+      const keyboardHelpText = () => 'keyboard: Alt+D dossier, Alt+L logic, Alt+T signal, Alt+B ash, Alt+F flow, Alt+M map, Alt+N notes, Alt+A account, ? / Ctrl+K terminal, Tab complete, Up/Down history, Esc close';
 
       // Yeni gelene yonelik kisa, adim adim baslangic rehberi (ProDOS prompt tarzi).
       const baslaCommand = () => [
-        '] BASLANGIC',
+        '] BAŞLANGIÇ / TERMINAL READY',
         '',
         '  Convivium bir portfolyo degil; gezilen bir terminal-dunyasi.',
         '  Makaleler, oyunlar, oracle, rituel araclari ve kiside kalan izler ayni agda durur.',
@@ -4068,6 +4049,7 @@
         transcript += text;
         if (transcript.length > TRANSCRIPT_MAX) transcript = transcript.slice(-TRANSCRIPT_MAX);
       };
+      const announceTerminal = (text) => { if (commandStatus) commandStatus.textContent = `Terminal sonucu: ${String(text).replace(/\s+/g, ' ').slice(0, 220)}`; };
       const transcriptReset = (seed = '') => {
         transcript = seed ? `${seed}\n` : '';
         renderTranscript();
@@ -4082,7 +4064,7 @@
         const output = String(text || '');
         if (!commandOutput) { resolve(); return; }
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const finish = () => { commitTranscript(`${output}\n`); renderTranscript(); resolve(); };
+        const finish = () => { commitTranscript(`${output}\n`); renderTranscript(); announceTerminal(output); resolve(); };
         if (reduceMotion || output.length < 12) { finish(); return; }
         let index = 0;
         const writeNext = () => {
@@ -4107,6 +4089,7 @@
         terminalTypeTimer = null;
         commitTranscript(`${terminalTypeFull}\n`);
         renderTranscript();
+        announceTerminal(terminalTypeFull);
         return true;
       };
       const printTerminal = (text) => {
@@ -4119,6 +4102,7 @@
         if (reduceMotion || body.length < 24) {
           commitTranscript(`${body}\n`);
           renderTranscript();
+          announceTerminal(body);
           return;
         }
         let index = 0;
@@ -4130,6 +4114,7 @@
             terminalTypeTimer = null;
             commitTranscript(`${body}\n`);
             renderTranscript();
+            announceTerminal(body);
             return;
           }
           renderTranscript(body.slice(0, index));
@@ -4234,8 +4219,8 @@
         ['neden ', value => nedenCommand(value)],
         ['why ', value => nedenCommand(value)],
         ['gerekce ', value => nedenCommand(value)],
-        ['unlock ', value => unlockRoomCommand(value)],
-        ['ac ', value => unlockRoomCommand(value)],
+        ['unlock ', value => normalizeCommand(value) === 'hidden' ? unlockHiddenCommand() : unlockRoomCommand(value)],
+        ['ac ', value => normalizeCommand(value) === 'hidden' ? unlockHiddenCommand() : unlockRoomCommand(value)],
         ['use ', value => useCommand(value)],
         ['kullan ', value => useCommand(value)],
         ['man ', value => manCommand(value)],
@@ -4438,6 +4423,11 @@
       const runCommand = async (raw) => {
         let query = raw.trim().slice(0, 520);
         if (!query || commandInFlight) return;
+        if (commandBootTimer) {
+          window.clearInterval(commandBootTimer); commandBootTimer = null; commandBooted = true;
+          commandShell.classList.remove('is-booting');
+          transcriptReset(commandReadyText());
+        }
         // Gizlilik-dostu sayac: oturumun ILK komutu (kimliksiz, oturumda 1 kez).
         window.ConviviumBackend?.recordSiteEvent?.('command.first', '/');
         // Gecmis genisletme (bash "!"): komut kaydindan ONCE cozulur.
@@ -4477,6 +4467,11 @@
           commandInput.value = '';
           clearCommandSuggestions();
           await sendOracleQuery(confirmedQuery);
+          return;
+        }
+        if (['oracle no', 'cancel oracle', 'oracle iptal'].includes(command)) {
+          pendingOracleQuery = ''; printTerminal('oracle: bekleyen sorgu iptal edildi.');
+          commandInput.value = ''; clearCommandSuggestions();
           return;
         }
         const askPrefix = ['ask ', 'sor ', 'deb ask ', 'nova ask '].find(prefix => command.startsWith(prefix));
@@ -4622,7 +4617,8 @@
           return;
         }
 
-        await sendOracleQuery(query);
+        pendingOracleQuery = query;
+        printTerminal(`Bu ifade bir komut değil: "${query}"\nOracle kanalına göndereyim mi?  oracle yes · iptal: oracle no\nDoğrudan sormak için: ask <soru>`);
         commandInput.value = '';
         clearCommandSuggestions();
       };
@@ -4721,9 +4717,9 @@
           } else {
             runCommand(commandInput.value);
           }
-        } else if (event.key === 'Tab' && !event.shiftKey) {
+        } else if (event.key === 'Tab' && !event.shiftKey && matches.length) {
           event.preventDefault();
-          applySuggestion(matches[activeSuggestionIndex] || matches[0] || commandInput.value);
+          applySuggestion(matches[activeSuggestionIndex] || matches[0]);
         } else if (event.key === 'ArrowUp') {
           event.preventDefault();
           if (currentSuggestions.length && commandInput.value.trim()) {
@@ -4781,7 +4777,7 @@
         });
       });
 
-      commandLaunch?.addEventListener('click', openCommand);
+      commandLaunch?.addEventListener('click', () => { openCommand(); if (!currentAddress()) runCommand(commandLaunch.dataset.entryCommand || 'basla'); });
       mobileCommandButton?.addEventListener('click', openCommand);
       commandClose?.addEventListener('click', closeCommand);
       accessChipButton?.addEventListener('click', () => {
@@ -4867,14 +4863,16 @@
             gate.classList.remove('is-open');
             updateGateButton(gate);
           });
-        } else if (key === 'd') location.href = '/pages/makaleler.html';
-        else if (key === 'l') location.href = '/games/cyberpunk-logic-game.html';
-        else if (key === 't') location.href = '/games/three-body-signal.html';
-        else if (key === 'b') location.href = '/games/ash-runner.html';
-        else if (key === 'f') location.href = '/games/neon-river.html';
-        else if (key === 'm') scrollToSection('map', 'signal map');
-        else if (key === 'n') scrollToSection('notes', 'field notes');
-        else if (key === 'a') location.href = '/account/auth.html';
+        } else if (event.altKey && !event.ctrlKey && !event.metaKey) {
+          if (key === 'd') location.href = '/pages/makaleler.html';
+          else if (key === 'l') location.href = '/games/cyberpunk-logic-game.html';
+          else if (key === 't') location.href = '/games/three-body-signal.html';
+          else if (key === 'b') location.href = '/games/ash-runner.html';
+          else if (key === 'f') location.href = '/games/neon-river.html';
+          else if (key === 'm') scrollToSection('map', 'signal map');
+          else if (key === 'n') scrollToSection('notes', 'field notes');
+          else if (key === 'a') location.href = '/account/auth.html';
+        }
       });
 
       document.querySelectorAll('a, button').forEach(item => {
@@ -4921,6 +4919,7 @@
         context.restore();
       };
 
+      let mapRaf = 0;
       const drawMap = () => {
         if (!canvas || !context) return;
         context.clearRect(0, 0, window.innerWidth, window.innerHeight);
@@ -4946,7 +4945,7 @@
           context.fillRect(node.x, node.y, 1.4, 1.4);
         });
         drawProtocolConnections();
-        requestAnimationFrame(drawMap);
+        if (!document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) mapRaf = requestAnimationFrame(drawMap);
       };
 
       updateAccess();
@@ -4985,7 +4984,8 @@
       renderProtocolSurfaces();
       persist();
       resizeCanvas();
-      drawMap();
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) drawMap();
+      document.addEventListener('visibilitychange', () => { cancelAnimationFrame(mapRaf); if (!document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) drawMap(); });
       window.addEventListener('resize', resizeCanvas);
       window.addEventListener('resize', () => {
         if (!screenSaverMod?.isActive()) return;

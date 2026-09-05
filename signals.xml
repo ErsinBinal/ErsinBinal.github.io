@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Ana yolculuk: retro kabuk, daha berrak yön</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-05-ana-yolculuk-retro-kabuk-daha-berrak-yon</guid>
+      <pubDate>Sat, 05 Sep 2026 07:42:49 +0000</pubDate>
+      <description>Ana sayfanın retro terminal kimliği korunarak başlangıç sırası, kamusal yan rotalar, ritüel kilidi, Oracle onayı, klavye erişimi, mobil akış ve Bugy performansı baştan sona cilalandı.</description>
+    </item>
+    <item>
       <title>Terminal artik kelime uydurmuyor</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-04-terminal-artik-kelime-uydurmuyor</guid>

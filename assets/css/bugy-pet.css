@@ -96,6 +96,30 @@
   color: var(--bp-primary);
 }
 
+.bugy-select-head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.bugy-select-close {
+  flex: 0 0 44px;
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid color-mix(in srgb, var(--bp-primary) 42%, transparent);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--bp-text);
+  font: inherit;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+body.bugy-modal-open {
+  overflow: hidden;
+}
+
 .bugy-select-sub {
   margin: 0 0 16px;
   font-size: 0.84rem;
@@ -480,4 +504,57 @@
   }
   .bugy-egg.is-cracking { opacity: 0; }
   .bugy-meter-track i { transition: none; }
+}
+
+/* Secim ve bakim katmanlari kucuk ekran/klavye kullaniminda da tam erisilir. */
+.bugy-card,
+.bugy-confirm,
+.bugy-care-action,
+.bugy-care-close,
+.bugy-pick {
+  min-height: 44px;
+}
+
+.bugy-select-overlay {
+  padding:
+    max(12px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(12px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+}
+
+.bugy-select {
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+}
+
+@media (max-width: 560px) {
+  .bugy-select {
+    padding: 18px 14px 14px;
+  }
+
+  .bugy-select-sub,
+  .bugy-card span,
+  .bugy-picker-note {
+    font-size: 0.84rem;
+    opacity: 0.86;
+  }
+
+  .bugy-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bugy-name-row {
+    align-items: stretch;
+  }
+
+  .bugy-name-input {
+    min-width: 0;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 350px) {
+  .bugy-card-grid {
+    grid-template-columns: 1fr;
+  }
 }

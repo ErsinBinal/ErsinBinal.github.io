@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v267';
+const CACHE_NAME = 'convivium-v268';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -50,11 +50,11 @@ const PRECACHE_ASSETS = [
   '/assets/css/dart-skorbord.css?v=3',
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
-  '/assets/css/bugy-v4.css?v=6',
+  '/assets/css/bugy-v4.css?v=7',
   '/assets/css/bugy-cinema.css?v=3',
-  '/assets/css/bugy-pet.css?v=7',
+  '/assets/css/bugy-pet.css?v=8',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=37',
+  '/assets/css/home.css?v=38',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/css/demir-at.css?v=1',
   '/assets/js/lazy-load.js',
@@ -63,10 +63,10 @@ const PRECACHE_ASSETS = [
   '/assets/js/arcade-kit.js?v=32',
   '/assets/js/neon-sheep.js?v=29',
   '/assets/js/bugy-v2.js?v=2',
-  '/assets/js/bugy-v3-loader.js?v=6',
-  '/assets/js/bugy-v4.js?v=12',
+  '/assets/js/bugy-v3-loader.js?v=7',
+  '/assets/js/bugy-v4.js?v=13',
   '/assets/js/bugy-v4-cinema.js?v=4',
-  '/assets/js/bugy-pet.js?v=15',
+  '/assets/js/bugy-pet.js?v=16',
   '/assets/js/deb-companion.js?v=4',
   '/assets/js/home/routes.js?v=8',
   '/assets/js/home/route-commands.js?v=4',
@@ -78,6 +78,10 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/arsiv.js?v=1',
   '/assets/js/home/okkam.js?v=3',
   '/assets/js/home/glossary.js?v=1',
+  // ux.js precache'te OLMAK ZORUNDA: command-shell HTML'de `inert` basliyor
+  // ve o niteligi kaldiran tek sey bu modul. Cevrimdisi yuklenemezse
+  // terminal hic acilmaz — yazilamaz, komut kosmaz, gate dugmeleri de islemez.
+  '/assets/js/home/ux.js?v=1',
   '/assets/js/home/filiz.js?v=2',
   '/assets/js/home/net.js?v=4',
   '/assets/js/home/ritual-pulse.js?v=1',
@@ -87,7 +91,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/shop.js?v=1',
   '/assets/js/home/world-actions.js?v=1',
   '/assets/js/home/vfs.js?v=4',
-  '/assets/js/home/navigator.js?v=12',
+  '/assets/js/home/navigator.js?v=13',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',
@@ -99,7 +103,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/chat-symbols.js?v=1',
   '/assets/js/home/chat-deck.js?v=8',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=107',
+  '/assets/js/home-protocol.js?v=108',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=4',
   '/assets/js/origin-beacon.js?v=1',

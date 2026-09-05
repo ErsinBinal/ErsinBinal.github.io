@@ -637,10 +637,12 @@
 
   // --- Onboarding UI -------------------------------------------------------
   let rootEl = null;
+  let selectionReturnFocus = null;
 
   function teardown() {
     if (rootEl && rootEl.parentNode) rootEl.parentNode.removeChild(rootEl);
     rootEl = null;
+    document.body.classList.remove('bugy-modal-open');
   }
 
   function spawnEgg() {
@@ -658,6 +660,7 @@
   }
 
   function crackEgg(egg) {
+    selectionReturnFocus = document.activeElement;
     egg.classList.add('is-cracking');
     egg.disabled = true;
     window.setTimeout(openSelection, 720);
@@ -669,7 +672,8 @@
     rootEl.className = 'bugy-onboard bugy-select-overlay';
     rootEl.setAttribute('role', 'dialog');
     rootEl.setAttribute('aria-modal', 'true');
-    rootEl.setAttribute('aria-label', 'Bugy secimi');
+    rootEl.setAttribute('aria-labelledby', 'bugy-select-title');
+    document.body.classList.add('bugy-modal-open');
 
     // Onizleme (PO-12): kartta yaratigin YETISKIN formunun gercek SVG'si +
     // evrim guc zinciri gorunur; secim artik korlemesine degil. previewSvg
@@ -690,7 +694,10 @@
 
     rootEl.innerHTML = `
       <div class="bugy-select">
-        <h2>Yumurtadan ne çıkacak?</h2>
+        <div class="bugy-select-head">
+          <h2 id="bugy-select-title">Yumurtadan ne çıkacak?</h2>
+          <button type="button" class="bugy-select-close" aria-label="Bugy seçimini kapat">×</button>
+        </div>
         <p class="bugy-select-sub">Bir Bugy seç — sonra ona bir isim ver. Bakımını sen üstleneceksin.</p>
         <div class="bugy-card-grid">${cards}</div>
         <form class="bugy-name-row" novalidate>
@@ -705,11 +712,41 @@
     const input = rootEl.querySelector('.bugy-name-input');
     const confirm = rootEl.querySelector('.bugy-confirm');
     const form = rootEl.querySelector('.bugy-name-row');
+    const cardButtons = [...rootEl.querySelectorAll('.bugy-card')];
+    const dismiss = () => {
+      teardown();
+      spawnEgg();
+      window.requestAnimationFrame(() => {
+        const egg = rootEl?.querySelector('.bugy-egg');
+        if (egg) egg.focus();
+        else selectionReturnFocus?.focus?.();
+      });
+    };
 
-    rootEl.querySelectorAll('.bugy-card').forEach((card) => {
+    rootEl.querySelector('.bugy-select-close').addEventListener('click', dismiss);
+    rootEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        dismiss();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const focusable = [...rootEl.querySelectorAll('button:not(:disabled), input:not(:disabled)')];
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
+
+    cardButtons.forEach((card) => {
+      card.setAttribute('aria-pressed', 'false');
       card.addEventListener('click', () => {
         chosen = card.dataset.species;
-        rootEl.querySelectorAll('.bugy-card').forEach((c) => c.classList.toggle('is-active', c === card));
+        cardButtons.forEach((c) => {
+          c.classList.toggle('is-active', c === card);
+          c.setAttribute('aria-pressed', String(c === card));
+        });
         input.disabled = false;
         confirm.disabled = false;
         if (!input.value) input.value = SPECIES[chosen].label;
@@ -731,6 +768,7 @@
       activateCompanion(pet);
       if (window.BugyV4 && window.BugyV4.summon) window.BugyV4.summon();
     });
+    cardButtons[0]?.focus();
   }
 
   // --- Baslat --------------------------------------------------------------

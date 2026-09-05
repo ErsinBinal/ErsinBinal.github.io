@@ -55,6 +55,7 @@ test.describe('Chat guvertesi kesif ve sembol akisi', () => {
   test('ozel mesaj ve engel gorunur; ASCII sembol imlece eklenir', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/');
+    await page.locator('#mobile-command-button').click();
     await page.locator('#command-input').fill('chat');
     await page.locator('#command-input').press('Enter');
 
@@ -103,6 +104,7 @@ test.describe('Chat guvertesi kesif ve sembol akisi', () => {
       };
     });
 
+    await page.locator('#command-launch').click();
     await page.locator('#command-input').fill('chat');
     await page.locator('#command-input').press('Enter');
     const deck = page.getByRole('dialog', { name: 'Convivium chat guvertesi' });

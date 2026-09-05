@@ -81,16 +81,14 @@
       image.src = `${effectBase}${file}?v=1`;
       return image;
     };
-    const effectImages = Object.fromEntries(
-      Object.entries(effectGroups).map(([name, files]) => [name, files.map(loadEffectImage)])
-    );
+    let effectImages = {};
     const characterSheet = new Image();
     let characterReady = false;
     characterSheet.onload = () => {
       characterReady = true;
       renderAtlas();
     };
-    characterSheet.src = '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1';
+    let assetsStarted = false;
     let active = false;
     let randomEnabled = true;
     let last = 0;
@@ -99,6 +97,7 @@
     let nextRandom = performance.now() + 18000;
     let skin = skins.includes(localStorage.getItem(skinKey)) ? localStorage.getItem(skinKey) : 'classic';
     let core = null;
+    let corePromise = null;
     let behaviorMode = 'walk';
     let behaviorUntil = 0;
     let actionStarted = 0;
@@ -115,6 +114,15 @@
       const roll = Math.random();
       behaviorMode = roll < 0.22 ? 'idle' : roll < 0.44 ? 'hop' : roll < 0.64 ? 'peek' : 'walk';
       behaviorUntil = performance.now() + 1200 + Math.random() * 3400;
+    };
+
+    const loadAssets = () => {
+      if (assetsStarted) return;
+      assetsStarted = true;
+      effectImages = Object.fromEntries(
+        Object.entries(effectGroups).map(([name, files]) => [name, files.map(loadEffectImage)])
+      );
+      characterSheet.src = '/assets/vendor/kenney/roguelike-characters/roguelikeChar_transparent.png?v=1';
     };
 
     const readExport = (exports, name) => exports[name] || exports[`_${name}`];
@@ -497,14 +505,20 @@
       if (!drawCharacter(x, y, actorScale)) drawCharacterFallback(x, y, actorScale * 0.42);
     };
 
-    try {
-      core = await createWasmCore();
-    } catch (error) {
-      core = createFallbackCore();
-    }
-    core.init();
-    core.setSkin(skinCodes[skin] || 0);
-    scheduleBehavior();
+    const ensureCore = () => {
+      if (core) return Promise.resolve(core);
+      if (corePromise) return corePromise;
+      loadAssets();
+      corePromise = createWasmCore().catch(() => createFallbackCore()).then(nextCore => {
+        core = nextCore;
+        core.init();
+        core.setSkin(skinCodes[skin] || 0);
+        scheduleBehavior();
+        renderAtlas();
+        return core;
+      });
+      return corePromise;
+    };
 
     const loop = now => {
       if (!active) return;
@@ -516,7 +530,7 @@
         if (core.trigger(Math.floor(Math.random() * actions.length))) actionStarted = now;
         scheduleRandom();
       }
-      raf = requestAnimationFrame(loop);
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) raf = requestAnimationFrame(loop);
     };
 
     const syncVisibility = () => {
@@ -536,7 +550,11 @@
         syncVisibility();
         last = 0;
         cancelAnimationFrame(raf);
-        raf = requestAnimationFrame(loop);
+        ensureCore().then(() => {
+          if (!active) return;
+          renderAtlas();
+          if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) raf = requestAnimationFrame(loop);
+        });
         dispatch();
         return true;
       },
@@ -555,6 +573,10 @@
       },
       trigger(action) {
         if (!active) this.activate();
+        if (!core) {
+          ensureCore().then(() => { if (active) api.trigger(action); });
+          return true;
+        }
         const ok = core.trigger(actionCodes[action] ?? -1);
         if (ok) actionStarted = performance.now();
         scheduleRandom();
@@ -576,8 +598,10 @@
       setSkin(nextSkin) {
         skin = skins.includes(nextSkin) ? nextSkin : 'classic';
         localStorage.setItem(skinKey, skin);
-        core.setSkin(skinCodes[skin]);
-        renderAtlas();
+        if (core) {
+          core.setSkin(skinCodes[skin]);
+          renderAtlas();
+        }
         dispatch();
         return skin;
       },
@@ -600,7 +624,7 @@
     };
 
     window.addEventListener('keydown', event => {
-      if (event.key !== 'Escape' || !active) return;
+      if (event.key !== 'Escape' || !active || document.querySelector('.command-shell.is-open, .bugy-select-overlay')) return;
       localStorage.setItem(engineKey, 'v1');
       api.deactivate();
       window.Bugy?.summon?.();
@@ -609,6 +633,13 @@
       resizeCanvas();
       renderAtlas();
     }, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      cancelAnimationFrame(raf);
+      if (active && !document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        last = 0;
+        raf = requestAnimationFrame(loop);
+      }
+    });
 
     window.BugyV3 = api;
     if (localStorage.getItem(engineKey) === 'v3') api.activate();

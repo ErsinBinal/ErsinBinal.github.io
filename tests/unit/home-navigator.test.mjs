@@ -139,6 +139,20 @@ test('Canonical completion ranks help first and collapses aliases into their own
   assert.deepEqual(values(navigator.suggest('run s')), ['run signal']);
 });
 
+test('Exact ritual command outranks a contextual command whose alias shares its prefix', () => {
+  const { navigator } = createFixture({
+    getCwd: () => '/',
+    getRoom: () => ({ navigation: [] }),
+    getCommandDefinitions: () => [
+      { command: 'map', description: 'sinyal haritasi', aliases: ['signal map'] },
+      { command: 'signal', description: 'rituelin ilk adimi', aliases: [] }
+    ]
+  });
+
+  assert.equal(navigator.suggest('signal')[0].value, 'signal');
+  assert.equal(navigator.suggest('signal')[0].reason, 'hazir');
+});
+
 test('Navigator is the single canonical typo resolver for direct and parameter flows', () => {
   const { navigator } = createFixture();
 

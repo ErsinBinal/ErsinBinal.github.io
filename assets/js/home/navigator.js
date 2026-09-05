@@ -325,9 +325,9 @@
       const note = (etken, deger, katki) => why.push({ etken, deger, katki });
 
       if (command === query) {
-        score = 1000;
+        score = 1600;
         reason = 'hazir';
-        note('tam eslesme', command, 1000);
+        note('tam eslesme', command, 1600);
       } else if (command.startsWith(query)) {
         score = 800;
         reason = 'tamamla';
@@ -337,9 +337,9 @@
         reason = 'tamamla';
         note('kelime oneki', query, 690);
       } else if (aliases.some((alias) => alias === query)) {
-        score = 760;
+        score = 1400;
         reason = 'esanlamli';
-        note('alias tam eslesme', query, 760);
+        note('alias tam eslesme', query, 1400);
       } else if (aliases.some((alias) => alias.startsWith(query))) {
         score = 700;
         reason = 'esanlamli';

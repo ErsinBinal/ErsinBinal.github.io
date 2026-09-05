@@ -153,7 +153,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.fill('#command-input', 'whatis checksum');
   await page.press('#command-input', 'Enter');
   await page.waitForFunction(
-    () => /kaynak/.test(document.getElementById('command-output')?.textContent || ''),
+    () => /bkz: digest · trace/.test(document.getElementById('command-output')?.textContent || ''),
     { timeout: 15000 }
   ).catch(() => {});
   const w = await page.textContent('#command-output');
@@ -181,7 +181,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.fill('#command-input', 'help');
   await page.press('#command-input', 'Enter');
   await page.waitForFunction(
-    () => /BILMEDIGIN KELIME/.test(document.getElementById('command-output')?.textContent || ''),
+    () => /BILMEDIGIN KELIME whatis <terim> · apropos <kelime>/.test(document.getElementById('command-output')?.textContent || ''),
     { timeout: 15000 }
   ).catch(() => {});
   const h = await page.textContent('#command-output');

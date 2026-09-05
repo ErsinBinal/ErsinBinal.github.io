@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=37" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=38" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -69,14 +69,14 @@
   <link rel="stylesheet" href="/assets/css/components.css?v=37">
   <link rel="stylesheet" href="/assets/css/arcade-kit.css?v=36">
   <link rel="stylesheet" href="/assets/css/neon-sheep.css?v=30">
-  <link rel="stylesheet" href="/assets/css/bugy-v4.css?v=6">
-  <link rel="stylesheet" href="/assets/css/bugy-pet.css?v=7">
+  <link rel="stylesheet" href="/assets/css/bugy-v4.css?v=7">
+  <link rel="stylesheet" href="/assets/css/bugy-pet.css?v=8">
   <link rel="stylesheet" href="/assets/css/bugy-cinema.css?v=3">
   <link rel="stylesheet" href="/assets/css/deb-companion.css?v=2">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=37">
+  <link rel="stylesheet" href="/assets/css/home.css?v=38">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -89,11 +89,11 @@
   <script>
     window.setTimeout(() => {
       document.getElementById('page-loader')?.classList.add('is-hidden');
-    }, 4200);
+    }, 2200);
   </script>
 
   <!-- Skip Link for Accessibility -->
-  <a class="skip-link" href="#main-content">İçeriği atla</a>
+  <a class="skip-link" href="#journey-content">Ana içeriğe geç</a>
 
   <!-- Neon Frame Background Animation -->
   <div class="frame-wrap" aria-hidden="true">
@@ -107,33 +107,37 @@
   </div>
   <canvas class="signal-map" id="signal-map" aria-hidden="true"></canvas>
 
-  <aside class="system-hud" aria-label="Sistem durumu">
-    <div class="hud-line"><span>Access</span><strong class="hud-value" id="hud-access">GUEST</strong></div>
+  <aside class="system-hud" aria-label="Convivium sistem durumu">
+    <div class="hud-line"><span>Session</span><strong class="hud-value" id="hud-access">GUEST</strong></div>
+    <div class="hud-line"><span>Rank</span><strong class="hud-value" id="hud-rank">GUEST</strong></div>
     <div class="hud-line"><span>Route</span><strong class="hud-value" id="hud-route">ORIGIN</strong></div>
     <div class="hud-line oracle-pulse"><span>Oracle</span><strong class="hud-value" id="micro-oracle">hazır</strong></div>
     <div class="hud-line presence-pulse"><span>Signals</span><strong class="hud-value" id="hud-presence">scanning</strong></div>
   </aside>
 
-  <button class="access-chip" id="access-chip-button" type="button" aria-label="Erisim durumunu ac">
-    ACCESS <strong id="access-chip">INITIATE</strong>
+  <button class="access-chip" id="access-chip-button" type="button" aria-label="Oturum durumunu aç">
+    SESSION <strong id="access-chip">INITIATE</strong>
   </button>
-  <button class="sound-toggle" type="button" id="sound-toggle" data-sfx-toggle aria-pressed="false">audio off</button>
-  <button class="mobile-command-button" id="mobile-command-button" type="button" aria-label="Komut satırını aç">CMD</button>
+  <button class="sound-toggle" type="button" id="sound-toggle" data-sfx-toggle aria-pressed="false" lang="en">audio off</button>
+  <button class="mobile-command-button" id="mobile-command-button" type="button" aria-label="Komut satırını aç" aria-controls="command-shell" aria-expanded="false">CMD</button>
 
-  <section class="command-shell" id="command-shell" role="dialog" aria-modal="false" aria-label="Komut satırı" aria-hidden="true">
+  <section class="command-shell" id="command-shell" role="dialog" aria-modal="false" aria-labelledby="command-title" aria-hidden="true" inert>
+    <h2 class="sr-only" id="command-title">Convivium komut satırı</h2>
     <div class="command-row">
       <span class="command-prompt">&gt;</span>
-      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-suggestions" placeholder="type: help / look / open dossier">
+      <label class="sr-only" for="command-input">Komut yaz</label>
+      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-help command-status" placeholder="komut: help / look / open dossier">
       <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
-    <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri" aria-live="polite"></div>
-    <div class="command-output" id="command-output" aria-live="polite">type help for shortcuts</div>
-    <div class="command-help" aria-label="Komut örnekleri">
-      <span>help</span>
-      <span>look</span>
-      <span>map</span>
-      <span>Tab tamamla</span>
-      <span>↑↓ seç</span>
+    <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri"></div>
+    <div class="command-output" id="command-output" role="log" aria-live="off" aria-label="Terminal geçmişi">type help for shortcuts</div>
+    <p class="sr-only" id="command-status" role="status" aria-live="polite" aria-atomic="true">Terminal kapalı.</p>
+    <div class="command-help" id="command-help" aria-label="Komut örnekleri ve tuş yardımı">
+      <button class="command-trigger" type="button" data-command="help">help</button>
+      <button class="command-trigger" type="button" data-command="look">look</button>
+      <button class="command-trigger" type="button" data-command="map">map</button>
+      <span><kbd>Tab</kbd> tamamla</span>
+      <span><kbd>↑↓</kbd> seç</span>
     </div>
   </section>
 
@@ -144,19 +148,19 @@
         <div class="rail-mark">CVM</div>
         <nav class="rail-track" aria-label="Bu sayfadaki bölümler">
           <span class="rail-progress" aria-hidden="true"></span>
-          <a class="rail-link is-active" href="#origin" data-step="0"><span>00</span><em>Origin</em></a>
-          <a class="rail-link" href="#index" data-step="1"><span>01</span><em>Index</em></a>
-          <a class="rail-link" href="#lab" data-step="2"><span>02</span><em>Lab</em></a>
-          <a class="rail-link" href="#trace" data-step="3"><span>03</span><em>Trace</em></a>
-          <a class="rail-link" href="#map" data-step="4"><span>04</span><em>Map</em></a>
-          <a class="rail-link" href="#archive" data-step="5"><span>05</span><em>Archive</em></a>
-          <a class="rail-link" href="#notes" data-step="6"><span>06</span><em>Notes</em></a>
-          <a class="rail-link is-sealed" href="#hidden" data-step="7"><span>07</span><em>???</em></a>
+          <a class="rail-link is-active" href="#origin" data-step="0" aria-label="00 Origin — başlangıç"><span>00</span><em>Origin</em></a>
+          <a class="rail-link" href="#index" data-step="1" aria-label="01 Index — seçilmiş rotalar"><span>01</span><em>Index</em></a>
+          <a class="rail-link" href="#lab" data-step="2" aria-label="02 Lab — oynanabilir deneyler"><span>02</span><em>Lab</em></a>
+          <a class="rail-link" href="#trace" data-step="3" aria-label="03 Trace — yaklaşım"><span>03</span><em>Trace</em></a>
+          <a class="rail-link" href="#map" data-step="4" aria-label="04 Map — sinyal haritası"><span>04</span><em>Map</em></a>
+          <a class="rail-link" href="#archive" data-step="5" aria-label="05 Archive — tüm dosyalar"><span>05</span><em>Archive</em></a>
+          <a class="rail-link" href="#notes" data-step="6" aria-label="06 Notes — saha notları"><span>06</span><em>Notes</em></a>
+          <a class="rail-link is-sealed" href="#hidden" data-step="7" aria-label="07 Gizli oda — kilitli" aria-disabled="true"><span>07</span><em>???</em></a>
         </nav>
         <div class="rail-status">bu sayfa</div>
       </aside>
 
-      <div class="journey-stack">
+      <div class="journey-stack" id="journey-content" tabindex="-1">
         <header class="site-header stage is-visible" id="origin" data-step="0">
           <div class="hero-shell">
             <div class="signal-frame" aria-label="Değişen Convivium sinyali" role="img">
@@ -166,11 +170,11 @@
               <span class="signal-glyph" aria-hidden="true">◇</span>
               <span class="signal-glyph" aria-hidden="true">?</span>
               <span class="signal-glyph" aria-hidden="true">∞</span>
-              <img class="signal-holo" src="/assets/img/holo-signal/holo-01-terminal.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" decoding="async" fetchpriority="low">
-              <img class="signal-holo" src="/assets/img/holo-signal/holo-03-arcade.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" decoding="async" fetchpriority="low">
-              <img class="signal-holo" src="/assets/img/holo-signal/holo-05-drone.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" decoding="async" fetchpriority="low">
-              <img class="signal-holo" src="/assets/img/holo-signal/holo-09-radio.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" decoding="async" fetchpriority="low">
-              <img class="signal-holo" src="/assets/img/holo-signal/holo-12-fossil.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" decoding="async" fetchpriority="low">
+              <img class="signal-holo" src="/assets/img/holo-signal/holo-01-terminal.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" loading="lazy" decoding="async" fetchpriority="low">
+              <img class="signal-holo" src="/assets/img/holo-signal/holo-03-arcade.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" loading="lazy" decoding="async" fetchpriority="low">
+              <img class="signal-holo" src="/assets/img/holo-signal/holo-05-drone.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" loading="lazy" decoding="async" fetchpriority="low">
+              <img class="signal-holo" src="/assets/img/holo-signal/holo-09-radio.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" loading="lazy" decoding="async" fetchpriority="low">
+              <img class="signal-holo" src="/assets/img/holo-signal/holo-12-fossil.jpg?v=1" alt="" aria-hidden="true" width="132" height="132" loading="lazy" decoding="async" fetchpriority="low">
             </div>
             <div>
               <p class="eyebrow">&gt; ERSINBINAL / PRIVATE INDEX</p>
@@ -179,11 +183,11 @@
                 Merhaba. Burası hızlı tüketim için değil; iş modeli, teknoloji, oyun ve ritüel kırıntılarından oluşan seçici bir kişisel indeks.
               </p>
               <nav class="primary-actions" aria-label="Birincil erişim">
-                <button class="action-link is-primary" id="command-launch" type="button"><span>Buradan başla</span>Terminali aç</button>
+                <button class="action-link is-primary" id="command-launch" type="button" data-entry-command="basla" aria-controls="command-shell" aria-expanded="false"><span>Buradan başla</span>Rehberli terminali aç</button>
                 <div class="action-secondary-group">
-                  <a class="action-link" href="/pages/makaleler.html"><span>Read</span>Dossier</a>
-                  <a class="action-link" href="#lab"><span>Run</span>Lab</a>
-                  <a class="action-link" href="#trace"><span>Trace</span>Idea</a>
+                  <a class="action-link" href="/pages/makaleler.html"><span>Oku</span>Makaleler</a>
+                  <a class="action-link" href="#lab"><span>Oyna</span>Deneyler</a>
+                  <a class="action-link" href="#trace"><span>Keşfet</span>Fikrin izi</a>
                 </div>
               </nav>
               <div class="os-snapshot" aria-label="Convivium OS önerisi">
@@ -193,7 +197,7 @@
               </div>
             </div>
           </div>
-          <div class="signal-console" aria-live="polite">
+          <div class="signal-console">
             <span class="console-label">Signal</span>
             <span class="console-line" id="console-line">noise floor calibrated</span>
           </div>
@@ -214,36 +218,36 @@
           </a>
           <a class="terminal-command" href="/account/dashboard.html" data-action="DASH">
             <span>&gt; dashboard</span>
-            Skorlar, sureler ve son oneriler.
+            Skorlar, süreler ve son öneriler.
           </a>
         </section>
 
-        <article class="journey-gate stage" id="index" data-step="1">
+        <article class="journey-gate stage" id="index" data-step="1" aria-labelledby="index-title">
           <div class="gate-index">01</div>
           <div class="gate-main">
-            <p class="gate-kicker">Index / curated anomalies</p>
-            <h2>Seçilmiş anomaliler</h2>
-            <p class="gate-copy">İlk eşik, ağır açıklamadan kaçan notlara açılır. Burada fikir tamamlanmaz; basınç kazanır.</p>
+            <p class="gate-kicker" lang="en">Index / curated entry points</p>
+            <h2 id="index-title">Seçilmiş başlangıçlar</h2>
+            <p class="gate-copy">Convivium'a ilk kez geliyorsan dört kısa rota yeterli. Derine inmek istediğinde Lab bütün deneyleri, Arşiv ise dosya ağacının tamamını açar.</p>
             <div class="route-grid">
               <a class="route-link" href="/pages/makaleler.html">
-                <span class="route-kicker">Model</span>
-                <strong>Revenue Notes</strong>
-                <em>open dossier</em>
+                <span class="route-kicker">Oku · 6–10 dk</span>
+                <strong>Seçilmiş Makaleler</strong>
+                <em lang="en">open dossier</em>
               </a>
               <a class="route-link" href="/games/cyberpunk-logic-game.html">
-                <span class="route-kicker">Logic</span>
+                <span class="route-kicker">Oyna · 3–5 dk</span>
                 <strong>Cyberpunk Logic</strong>
-                <em>run circuit</em>
+                <em lang="en">run circuit</em>
               </a>
-              <a class="route-link" href="/games/three-body-signal.html">
-                <span class="route-kicker">Relay</span>
-                <strong>Uc Gunes Sinyali</strong>
-                <em>run relay</em>
+              <a class="route-link" href="/oracle/">
+                <span class="route-kicker">Sor · 1 dk</span>
+                <strong>The Oracle</strong>
+                <em lang="en">open channel</em>
               </a>
-              <a class="route-link" href="/account/dashboard.html">
-                <span class="route-kicker">Signal</span>
-                <strong>Dashboard</strong>
-                <em>read trace</em>
+              <a class="route-link" href="/pages/ozgecmisim.html">
+                <span class="route-kicker">Tanış · 2 dk</span>
+                <strong>Ersin Binal</strong>
+                <em lang="en">read profile</em>
               </a>
             </div>
             <div class="dossier-tree" aria-label="Dossier OS dosya ağacı">
@@ -253,9 +257,9 @@
               <div>ai.workflow</div>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Index gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Index yan rotaları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="index-drawer">Yan rotaları aç</button>
+            <div class="drawer-menu" id="index-drawer" aria-hidden="true" inert>
               <h3>Subroutes</h3>
               <a class="drawer-link" href="/games/universe-2.html"><span>u2</span>Universe-2</a>
               <a class="drawer-link secret-node" href="manifest.json"><span>δ</span>Manifest Residue</a>
@@ -263,31 +267,31 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage" id="lab" data-step="2">
+        <article class="journey-gate stage" id="lab" data-step="2" aria-labelledby="lab-title">
           <div class="gate-index">02</div>
           <div class="gate-main">
-            <p class="gate-kicker">Lab / playable protocols</p>
-            <h2>Yan protokoller</h2>
-            <p class="gate-copy">Oyun, içecek, terminal: küçük makineler aynı soruyu değişik kılıklarda sorar.</p>
+            <p class="gate-kicker" lang="en">Lab / playable protocols</p>
+            <h2 id="lab-title">Oynanabilir protokoller</h2>
+            <p class="gate-copy">Burada okumaktan çok denersin: oyunlar, terminaller ve ritüel araçları. Satırlar en kısa girişten daha niş deneylere doğru ilerler.</p>
             <div class="project-list">
-              <a class="project-row" href="/games/neon-river.html" data-artifact="river"><span>01</span><strong>Neon River</strong><small>type: game</small><em>status: playable</em></a>
-              <a class="project-row" href="/games/cyberpunk-logic-game.html" data-artifact="logic"><span>02</span><strong>Cyberpunk Logic</strong><small>type: logic game</small><em>status: scored</em></a>
-              <a class="project-row" href="/games/three-body-signal.html" data-artifact="triad"><span>03</span><strong>Uc Gunes Sinyali</strong><small>type: terminal game</small><em>status: 15min op</em></a>
-              <a class="project-row" href="/games/ash-runner.html" data-artifact="ash"><span>04</span><strong>Kül Hattı</strong><small>type: brawler</small><em>status: playable</em></a>
-              <a class="project-row" href="/games/crude-buster.html" data-artifact="ash"><span>05</span><strong>Crude Buster</strong><small>type: co-op brawler</small><em>status: online co-op</em></a>
-              <a class="project-row" href="/tools/bartender.html" data-artifact="bar"><span>06</span><strong>Bartender</strong><small>type: ritual tool</small><em>status: ready</em></a>
-              <a class="project-row" href="/tools/barista.html" data-artifact="coffee"><span>07</span><strong>Cyber Barista</strong><small>type: ritual tool</small><em>status: mood-based</em></a>
-              <a class="project-row" href="/tools/the-realists-bar.html" data-artifact="bar"><span>08</span><strong>The Realists Bar</strong><small>type: assistant</small><em>status: pragmatic</em></a>
-              <a class="project-row" href="/oracle/" data-artifact="oracle"><span>09</span><strong>The Oracle</strong><small>type: oracle</small><em>status: asks back</em></a>
-              <a class="project-row" href="/tools/paradox-terminal.html" data-artifact="terminal"><span>10</span><strong>Paradox Terminal</strong><small>type: terminal</small><em>status: unstable</em></a>
-              <a class="project-row" href="/tools/dart-skorbord.html" data-artifact="logic"><span>11</span><strong>Dart Skorbord</strong><small>type: scoreboard</small><em>status: session saved</em></a>
-              <a class="project-row" href="/tools/ekol-aynasi.html" data-artifact="terminal"><span>12</span><strong>Ekol Aynası</strong><small>type: mirror</small><em>status: reflective</em></a>
-              <a class="project-row" href="/tools/demir-at.html" data-artifact="logic"><span>13</span><strong>Demir At Terazisi</strong><small>type: comparator</small><em>status: 10 motor</em></a>
+              <a class="project-row" href="/games/neon-river.html" data-artifact="river"><span>01</span><strong>Neon River</strong><small lang="en">type: game</small><em lang="en">status: playable</em></a>
+              <a class="project-row" href="/games/cyberpunk-logic-game.html" data-artifact="logic"><span>02</span><strong>Cyberpunk Logic</strong><small lang="en">type: logic game</small><em lang="en">status: scored</em></a>
+              <a class="project-row" href="/games/three-body-signal.html" data-artifact="triad"><span>03</span><strong>Üç Güneş Sinyali</strong><small lang="en">type: terminal game</small><em lang="en">status: 15 min op</em></a>
+              <a class="project-row" href="/games/ash-runner.html" data-artifact="ash"><span>04</span><strong>Kül Hattı</strong><small lang="en">type: brawler</small><em lang="en">status: playable</em></a>
+              <a class="project-row" href="/games/crude-buster.html" data-artifact="ash"><span>05</span><strong>Crude Buster</strong><small lang="en">type: co-op brawler</small><em lang="en">status: online co-op</em></a>
+              <a class="project-row" href="/tools/bartender.html" data-artifact="bar"><span>06</span><strong>Bartender</strong><small lang="en">type: ritual tool</small><em lang="en">status: ready</em></a>
+              <a class="project-row" href="/tools/barista.html" data-artifact="coffee"><span>07</span><strong>Cyber Barista</strong><small lang="en">type: ritual tool</small><em lang="en">status: mood-based</em></a>
+              <a class="project-row" href="/tools/the-realists-bar.html" data-artifact="bar"><span>08</span><strong>The Realists Bar</strong><small lang="en">type: assistant</small><em lang="en">status: pragmatic</em></a>
+              <a class="project-row" href="/oracle/" data-artifact="oracle"><span>09</span><strong>The Oracle</strong><small lang="en">type: oracle</small><em lang="en">status: asks back</em></a>
+              <a class="project-row" href="/tools/paradox-terminal.html" data-artifact="terminal"><span>10</span><strong>Paradox Terminal</strong><small lang="en">type: terminal</small><em lang="en">status: unstable</em></a>
+              <a class="project-row" href="/tools/dart-skorbord.html" data-artifact="logic"><span>11</span><strong>Dart Skorbord</strong><small lang="en">type: scoreboard</small><em lang="en">status: session saved</em></a>
+              <a class="project-row" href="/tools/ekol-aynasi.html" data-artifact="terminal"><span>12</span><strong>Ekol Aynası</strong><small lang="en">type: mirror</small><em lang="en">status: reflective</em></a>
+              <a class="project-row" href="/tools/demir-at.html" data-artifact="logic"><span>13</span><strong>Demir At Terazisi</strong><small lang="en">type: comparator</small><em lang="en">status: 10 bikes</em></a>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Lab gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Lab yan rotaları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="lab-drawer">Yan rotaları aç</button>
+            <div class="drawer-menu" id="lab-drawer" aria-hidden="true" inert>
               <h3>Lab extensions</h3>
               <a class="drawer-link" href="/tools/bartender.html"><span>bt</span>Bartender</a>
               <a class="drawer-link" href="/tools/barista.html"><span>cf</span>Cyber Barista</a>
@@ -297,11 +301,11 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage trace-panel" id="trace" data-step="3">
+        <article class="journey-gate stage trace-panel" id="trace" data-step="3" aria-labelledby="trace-title">
           <div class="gate-index">03</div>
           <div class="gate-main">
-            <p class="gate-kicker">Trace / why these pieces exist</p>
-            <h2>Bu sitenin iz sürdüğü şey</h2>
+            <p class="gate-kicker" lang="en">Trace / why these pieces exist</p>
+            <h2 id="trace-title">Bu sitenin iz sürdüğü şey</h2>
             <p class="gate-copy">Convivium'daki makaleler, oyunlar ve ritüel araçları tek bir sorunun farklı denemeleri: insan karar verirken sistem, arayüz ve alışkanlık onu nasıl değiştirir?</p>
             <div class="hypothesis-grid">
               <div class="hypothesis">
@@ -321,9 +325,9 @@
               </div>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Trace gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Trace yan rotaları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="trace-drawer">Yan rotaları aç</button>
+            <div class="drawer-menu" id="trace-drawer" aria-hidden="true" inert>
               <h3>Trace files</h3>
               <a class="drawer-link" href="/pages/makaleler.html"><span>nt</span>Notes</a>
               <a class="drawer-link" href="sitemap.xml"><span>sm</span>Sitemap</a>
@@ -332,11 +336,11 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage signal-atlas" id="map" data-step="4">
+        <article class="journey-gate stage signal-atlas" id="map" data-step="4" aria-labelledby="map-title">
           <div class="gate-index">04</div>
           <div class="gate-main">
-            <p class="gate-kicker">Signal Map / discovered routes</p>
-            <h2>Sinyal haritası</h2>
+            <p class="gate-kicker" lang="en">Signal Map / discovered routes</p>
+            <h2 id="map-title">Sinyal haritası</h2>
             <p class="gate-copy">Sayfa artık yalnızca link listesi değil; gezildikçe parlayan bir rota ağı. Komut satırında <strong>map</strong> yazarak buraya dönebilirsin.</p>
             <div class="atlas-grid" aria-label="Convivium sinyal haritası">
               <a class="atlas-node" href="#origin" data-signal-node="origin"><span>00</span><strong>Origin</strong><em>entry</em></a>
@@ -345,12 +349,12 @@
               <a class="atlas-node" href="#trace" data-signal-node="trace"><span>03</span><strong>Trace</strong><em>thinking</em></a>
               <a class="atlas-node" href="#archive" data-signal-node="archive"><span>05</span><strong>Archive</strong><em>files</em></a>
               <a class="atlas-node" href="#notes" data-signal-node="notes"><span>06</span><strong>Notes</strong><em>micro</em></a>
-              <a class="atlas-node is-locked" href="#hidden" data-signal-node="hidden"><span>07</span><strong>Hidden</strong><em>locked</em></a>
+              <a class="atlas-node is-locked" href="#hidden" data-signal-node="hidden" aria-label="Gizli oda — kilitli" aria-disabled="true"><span>07</span><strong>Hidden</strong><em>locked</em></a>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Sinyal haritası menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Sinyal haritası komutları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="map-drawer">Harita komutlarını aç</button>
+            <div class="drawer-menu" id="map-drawer" aria-hidden="true" inert>
               <h3>Map commands</h3>
               <button class="drawer-link command-trigger" type="button" data-command="whoami"><span>id</span>whoami</button>
               <button class="drawer-link command-trigger" type="button" data-command="log"><span>lg</span>log</button>
@@ -359,12 +363,12 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage archive-room" id="archive" data-step="5">
+        <article class="journey-gate stage archive-room" id="archive" data-step="5" aria-labelledby="archive-title">
           <div class="gate-index">05</div>
           <div class="gate-main">
-            <p class="gate-kicker">Archive Room / file system</p>
-            <h2>Arşiv odası</h2>
-            <p class="gate-copy">Projeler düz kartlar değil, klasörler gibi davranır. Her klasör başka bir dikkat biçimine açılır.</p>
+            <p class="gate-kicker" lang="en">Archive Room / complete file system</p>
+            <h2 id="archive-title">Arşiv odası</h2>
+            <p class="gate-copy">Index seçkiyi, Lab deneyleri gösterir; Arşiv ise bütün kalıcı rotaların sıkıştırılmış dosya ağacıdır.</p>
             <div class="archive-tree" aria-label="Convivium arşiv ağacı">
               <a href="/pages/makaleler.html"><span>/notes</span><strong>pricing.strategy</strong><em>open dossier</em></a>
               <a href="/games/cyberpunk-logic-game.html"><span>/games</span><strong>cyberpunk.logic</strong><em>run logic</em></a>
@@ -379,9 +383,9 @@
               <a href="/tools/demir-at.html"><span>/garage</span><strong>demir.at</strong><em>weigh</em></a>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Arşiv gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Arşiv komutları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="archive-drawer">Arşiv komutlarını aç</button>
+            <div class="drawer-menu" id="archive-drawer" aria-hidden="true" inert>
               <h3>Archive commands</h3>
               <button class="drawer-link command-trigger" type="button" data-command="archive"><span>ar</span>archive</button>
               <button class="drawer-link command-trigger" type="button" data-command="ritual"><span>rt</span>ritual</button>
@@ -390,11 +394,11 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage field-notes" id="notes" data-step="6">
+        <article class="journey-gate stage field-notes" id="notes" data-step="6" aria-labelledby="notes-title">
           <div class="gate-index">06</div>
           <div class="gate-main">
-            <p class="gate-kicker">Field Notes / low latency thoughts</p>
-            <h2>Saha notları</h2>
+            <p class="gate-kicker" lang="en">Field Notes / low latency thoughts</p>
+            <h2 id="notes-title">Saha notları</h2>
             <p class="gate-copy">Uzun yazıya dönüşmeden önce duran kısa fikirler. Komut satırında <strong>note</strong>, <strong>signal</strong> veya <strong>ritual</strong> yazınca bu katman cevap verir.</p>
             <div class="note-grid" aria-label="Kısa saha notları">
               <article class="field-note">
@@ -415,9 +419,9 @@
               </article>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Saha notları gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Saha notları komutları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="notes-drawer">Not komutlarını aç</button>
+            <div class="drawer-menu" id="notes-drawer" aria-hidden="true" inert>
               <h3>Note commands</h3>
               <button class="drawer-link command-trigger" type="button" data-command="note"><span>nt</span>note</button>
               <button class="drawer-link command-trigger" type="button" data-command="signal"><span>sg</span>signal</button>
@@ -426,18 +430,19 @@
           </aside>
         </article>
 
-        <article class="journey-gate stage" id="hidden" data-step="7">
+        <article class="journey-gate stage sealed-gate" id="hidden" data-step="7" data-access="ritual" aria-labelledby="hidden-title">
           <div class="gate-index">07</div>
           <div class="gate-main">
-            <p class="gate-kicker">Hidden / low frequency room</p>
-            <h2>Arka oda</h2>
-            <p class="gate-copy">Her şey menüde olmak zorunda değil. Bazı kapılar yalnızca iz sürüldüğünde görünür.</p>
+            <p class="gate-kicker" lang="en">Hidden / low frequency room</p>
+            <h2 id="hidden-title">Arka oda <span class="sealed-label">· mühürlü</span></h2>
+            <p class="gate-copy">Bu kapı hesap istemez; dikkat ister. Üç izi terminalde doğru sırayla çağır, ardından <strong>unlock hidden</strong> yaz.</p>
             <div class="clue-panel" aria-label="Hidden katman ipuçları">
               <span>clue 1/3: signal</span>
               <span>clue 2/3: oracle</span>
               <span>clue 3/3: manifest</span>
             </div>
-            <div class="route-grid">
+            <p class="sealed-feedback" role="status">Ritüel anahtarı bekleniyor · 0/3</p>
+            <div class="route-grid sealed-content" hidden inert>
               <a class="route-link" href="/games/universe-2.html">
                 <span class="route-kicker">Fiction</span>
                 <strong>Universe-2</strong>
@@ -450,23 +455,28 @@
               </a>
             </div>
           </div>
-          <aside class="gate-drawer" aria-label="Arka oda gizli menüsü">
-            <button class="gate-toggle" type="button" aria-expanded="false">Access</button>
-            <div class="drawer-menu">
+          <aside class="gate-drawer" aria-label="Arka oda sessiz rotaları">
+            <button class="gate-toggle" type="button" aria-expanded="false" aria-controls="hidden-drawer">Mührü dene</button>
+            <div class="drawer-menu" id="hidden-drawer" aria-hidden="true" inert>
               <h3>Quiet links</h3>
               <a class="drawer-link" href="robots.txt"><span>rb</span>Robots</a>
               <a class="drawer-link" href="manifest.json"><span>mf</span>Manifest</a>
               <a class="drawer-link" href="service-worker.js"><span>sw</span>Service Worker</a>
               <a class="drawer-link secret-node" href="assets/icons/icon.svg"><span>sg</span>Source Glyph</a>
-              <a class="drawer-link secret-node night-door" href="/oracle/"><span>ø</span>03:00 Kanali</a>
+              <a class="drawer-link secret-node night-door" href="/oracle/"><span>ø</span>03:00 Kanalı</a>
             </div>
           </aside>
         </article>
 
         <footer class="site-footer stage status-line" data-step="7">
-          <span class="status-pill">STATUS</span>
-          <p>selective / online / not optimized for everyone</p>
-          <p class="copyright-line">Copyright (c) 2026 Ersin Binal. All rights reserved. Copying, re-hosting, or derivative public use requires written permission.</p>
+          <span class="status-pill" lang="en">STATUS · ONLINE</span>
+          <p>Seçici, deneysel ve bilinçli biçimde retro.</p>
+          <nav class="footer-links" aria-label="Site bilgileri">
+            <a href="/pages/ozgecmisim.html">Hakkında</a>
+            <a href="/pages/changelog.html">Değişiklik günlüğü</a>
+            <a href="https://github.com/ErsinBinal/ErsinBinal.github.io" rel="me">GitHub</a>
+          </nav>
+          <p class="copyright-line" lang="en">Copyright © 2026 Ersin Binal. All rights reserved. Copying, re-hosting, or derivative public use requires written permission.</p>
         </footer>
       </div>
     </div>
@@ -479,10 +489,10 @@
   <script src="/assets/js/arcade-kit.js?v=32" defer></script>
   <script src="/assets/js/neon-sheep.js?v=29" defer></script>
   <script src="/assets/js/bugy-v2.js?v=2" defer></script>
-  <script src="/assets/js/bugy-v3-loader.js?v=6" defer></script>
-  <script src="/assets/js/bugy-v4.js?v=12" defer></script>
+  <script src="/assets/js/bugy-v3-loader.js?v=7" defer></script>
+  <script src="/assets/js/bugy-v4.js?v=13" defer></script>
   <script src="/assets/js/bugy-v4-cinema.js?v=4" defer></script>
-  <script src="/assets/js/bugy-pet.js?v=15" defer></script>
+  <script src="/assets/js/bugy-pet.js?v=16" defer></script>
   <script src="/assets/js/deb-companion.js?v=4" defer></script>
   <script src="/assets/js/home/routes.js?v=8" defer></script>
   <script src="/assets/js/home/route-commands.js?v=4" defer></script>
@@ -503,10 +513,11 @@
   <script src="/assets/js/home/shop.js?v=1" defer></script>
   <script src="/assets/js/home/world-actions.js?v=1" defer></script>
   <script src="/assets/js/home/vfs.js?v=4" defer></script>
-  <script src="/assets/js/home/navigator.js?v=12" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7"></script>
-  <script src="/assets/js/supabase-config.js"></script>
-  <script src="/assets/js/supabase-client.js?v=42"></script>
+  <script src="/assets/js/home/navigator.js?v=13" defer></script>
+  <script src="/assets/js/home/ux.js?v=1" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7" defer></script>
+  <script src="/assets/js/supabase-config.js" defer></script>
+  <script src="/assets/js/supabase-client.js?v=42" defer></script>
 
   <!-- Journey Interaction Layer -->
   <script src="/assets/js/sfx.js?v=19" defer></script>
@@ -521,7 +532,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=107" defer></script>
+  <script src="/assets/js/home-protocol.js?v=108" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>

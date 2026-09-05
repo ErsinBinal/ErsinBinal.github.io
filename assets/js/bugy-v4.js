@@ -268,7 +268,7 @@
 
     const char = document.createElement('div');
     char.className = 'bugy-v4-char';
-    char.setAttribute('role', 'img');
+    char.setAttribute('role', 'button');
 
     // Jest animasyonlari (tada/think/... + evrim) bu ARA katmanda calisir;
     // boylece karakterin KONUM transform'unu (.bugy-v4-char) silmezler.
@@ -331,7 +331,7 @@
       char.dataset.skin = state.skin;
       char.dataset.stage = state.stage;
       char.dataset.feral = state.feral ? '1' : '0';
-      char.setAttribute('aria-label', `${def().label} yaratığı`);
+      char.setAttribute('aria-label', `${def().label} yaratığına yeni bir hareket yaptır`);
       char.style.setProperty('--v4-accent', def().accent);
       char.style.setProperty('--v4-accent2', def().accent2);
       char.style.setProperty('--v4-grow', GROW[state.stage] || 1);
@@ -379,6 +379,14 @@
       balloonText.textContent = text;        // tam metni olc
       balloon.style.width = `${balloon.offsetWidth}px`;
       balloonText.textContent = '';
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        balloonText.textContent = text;
+        hideTimer = window.setTimeout(() => {
+          balloon.classList.remove('is-on');
+          balloon.hidden = true;
+        }, Math.max(4000, Math.min(8000, text.length * 65)));
+        return;
+      }
       let i = 0;
       typeTimer = window.setInterval(() => {
         balloonText.textContent = text.slice(0, i + 1);
@@ -399,6 +407,7 @@
 
     // --- Parcacik patlamasi ---
     const burst = (count = 10) => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const glyph = def().spark;
       const color = state.feral ? '#ff2e5e' : def().accent2;
       for (let n = 0; n < count; n += 1) {
@@ -557,7 +566,7 @@
 
     // --- Animasyon dongusu ---
     const loop = (ts) => {
-      if (!state.active) return;
+      if (!state.active || document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
       const bob = Math.sin(ts / 420) * 5;
       if (!state.busy) {
         state.x += state.dir * 0.55;
@@ -612,7 +621,8 @@
         syncVisibility();
         measureHead(); // gorunur olduktan sonra dogru olcum
         window.cancelAnimationFrame(state.raf);
-        state.raf = window.requestAnimationFrame(loop);
+        place(0);
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) state.raf = window.requestAnimationFrame(loop);
         state.blinkAt = 0;
         state.idleQuipAt = performance.now() + 4000;
         dispatch();
@@ -763,7 +773,7 @@
     });
 
     window.addEventListener('keydown', (event) => {
-      if (event.key !== 'Escape' || !state.active) return;
+      if (event.key !== 'Escape' || !state.active || document.querySelector('.command-shell.is-open, .bugy-select-overlay')) return;
       writeLS(engineKey, 'v1');
       api.deactivate();
       window.Bugy && window.Bugy.summon && window.Bugy.summon();
@@ -773,6 +783,12 @@
       state.x = clamp(state.x, 6, window.innerWidth - CHAR_W - 6);
       if (state.active) place(0);
     }, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      window.cancelAnimationFrame(state.raf);
+      if (state.active && !document.hidden && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        state.raf = window.requestAnimationFrame(loop);
+      }
+    });
 
     renderSvg();
     window.BugyV4 = api;

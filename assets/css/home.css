@@ -3935,3 +3935,443 @@
         white-space: normal;
       }
     }
+
+/* UX polish — retro dil korunurken hiyerarsi, erisim ve mobil akis netlestirilir. */
+:root {
+  --journey-muted: #83b98d;
+}
+
+html {
+  scroll-padding-top: 82px;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+.journey-stack:focus {
+  outline: none;
+}
+
+.route-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.route-link,
+.atlas-node,
+.archive-tree a,
+.terminal-command,
+.action-link,
+.project-row,
+.drawer-link {
+  touch-action: manipulation;
+}
+
+.gate-toggle,
+.drawer-link,
+.command-close,
+.sound-toggle {
+  min-height: 44px;
+}
+
+.gate-toggle {
+  height: auto;
+  min-width: 154px;
+  padding: 8px 12px;
+}
+
+.gate-drawer {
+  align-content: start;
+  grid-template-rows: auto auto;
+  min-height: 0;
+}
+
+.drawer-menu {
+  align-content: start;
+  min-height: 0;
+  margin-top: 12px;
+  visibility: hidden;
+}
+
+.journey-gate.is-open .drawer-menu {
+  visibility: visible;
+}
+
+.gate-drawer::after {
+  content: 'YAN ROTALAR / PUBLIC';
+  top: 58px;
+}
+
+.journey-gate.is-unlocked .gate-drawer::after {
+  content: 'ROTA HAZIR';
+}
+
+.sealed-gate .gate-drawer::after {
+  content: 'SEALED / RITUAL KEY';
+  color: var(--journey-amber);
+}
+
+.sealed-gate:not(.is-unlocked) {
+  border-color: rgba(245, 255, 107, 0.3);
+}
+
+.sealed-content[hidden] {
+  display: none !important;
+}
+
+.sealed-label {
+  color: var(--journey-amber);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sealed-feedback {
+  margin: 0;
+  color: var(--journey-amber);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+}
+
+.sealed-gate.is-unlocked .sealed-label {
+  color: var(--journey-green);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-left: auto;
+}
+
+.footer-links a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--journey-cyan);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.command-help button,
+.command-help span {
+  min-height: 30px;
+  border: 1px solid rgba(0, 255, 102, 0.2);
+  padding: 5px 8px;
+  background: rgba(0, 0, 0, 0.52);
+  color: var(--journey-muted);
+  font: inherit;
+}
+
+.command-help button {
+  color: var(--journey-cyan);
+  cursor: pointer;
+}
+
+.command-help button:hover,
+.command-help button:focus-visible {
+  border-color: var(--journey-pink);
+  color: #fff;
+}
+
+.command-help kbd {
+  color: var(--journey-text);
+  font: inherit;
+}
+
+.command-shell {
+  max-height: calc(100dvh - 188px);
+}
+
+.access-chip {
+  left: auto;
+  right: 112px;
+  top: auto;
+  bottom: 18px;
+}
+
+.command-shell[aria-hidden="true"] {
+  visibility: hidden;
+}
+
+body.command-shell-open .mobile-command-button,
+body.command-shell-open .bugy-v4-layer,
+body.command-shell-open .bugy-v3-layer,
+body.command-shell-open .bugy-v2-layer,
+body.command-shell-open .bugy-care-btn,
+body.command-shell-open .bugy-care-panel,
+body.command-shell-open .bugy-onboard {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mobile-command-button {
+  display: none;
+  min-width: 56px;
+  min-height: 48px;
+}
+
+.rail-link[aria-disabled="true"],
+.atlas-node[aria-disabled="true"] {
+  cursor: help;
+}
+
+@media (min-width: 1041px) {
+  .system-hud {
+    width: min(270px, calc(100vw - 36px));
+  }
+
+  .command-shell {
+    top: 222px;
+    max-height: calc(100dvh - 240px);
+  }
+}
+
+@media (max-width: 1120px) and (min-width: 761px) {
+  .system-hud {
+    display: none;
+  }
+
+  .access-chip,
+  .sound-toggle {
+    top: auto;
+    bottom: 18px;
+  }
+
+  .journey-rail {
+    position: sticky;
+    top: 10px;
+    z-index: 115;
+    background: rgba(0, 8, 4, 0.96);
+    backdrop-filter: blur(12px);
+  }
+}
+
+@media (max-width: 760px) {
+  html {
+    font-size: 16px;
+    scroll-padding-top: calc(68px + env(safe-area-inset-top));
+  }
+
+  body {
+    padding: calc(10px + env(safe-area-inset-top)) 10px calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .experience-frame {
+    gap: 12px;
+  }
+
+  .journey-rail {
+    position: sticky;
+    top: env(safe-area-inset-top);
+    z-index: 118;
+    padding: 8px 6px;
+    border-color: rgba(0, 234, 255, 0.36);
+    background: rgba(0, 7, 4, 0.96);
+    backdrop-filter: blur(12px);
+  }
+
+  .rail-mark,
+  .rail-status {
+    display: none;
+  }
+
+  .rail-track {
+    margin: 0;
+    gap: 4px;
+  }
+
+  .rail-link {
+    min-width: 0;
+    min-height: 44px;
+    padding-top: 8px;
+  }
+
+  .rail-link.is-active em {
+    font-size: 0.68rem;
+  }
+
+  .site-header {
+    min-height: 0;
+    padding: 18px 16px;
+  }
+
+  .hero-shell {
+    gap: 16px;
+  }
+
+  .container h1 {
+    font-size: clamp(2.65rem, 15vw, 3.4rem);
+  }
+
+  .lede,
+  .gate-copy,
+  .hypothesis p,
+  .field-note p {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .primary-actions,
+  .action-secondary-group {
+    gap: 8px;
+  }
+
+  .action-link {
+    min-height: 52px;
+  }
+
+  .journey-gate {
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .journey-gate h2 {
+    font-size: clamp(1.8rem, 9vw, 2.2rem);
+  }
+
+  .route-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .gate-drawer {
+    min-height: 0;
+  }
+
+  .drawer-menu {
+    margin-top: 10px;
+  }
+
+  .project-list {
+    grid-auto-flow: column;
+    grid-auto-columns: min(82vw, 310px);
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, minmax(96px, auto));
+    gap: 8px;
+    margin-top: 4px;
+    padding: 2px 2px 12px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline mandatory;
+    scrollbar-color: var(--journey-cyan) rgba(0, 255, 102, 0.08);
+  }
+
+  .project-row {
+    grid-template-columns: 34px minmax(0, 1fr);
+    align-content: center;
+    min-height: 96px;
+    scroll-snap-align: start;
+  }
+
+  .project-row small,
+  .project-row em {
+    grid-column: 2;
+    font-size: 0.75rem;
+  }
+
+  .archive-tree,
+  .note-grid {
+    grid-auto-flow: column;
+    grid-auto-columns: min(82vw, 310px);
+    grid-template-columns: none;
+    grid-template-rows: repeat(2, minmax(104px, auto));
+    padding: 2px 2px 12px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: inline mandatory;
+  }
+
+  .archive-tree a,
+  .field-note {
+    min-height: 104px;
+    scroll-snap-align: start;
+  }
+
+  .status-line {
+    align-items: flex-start;
+  }
+
+  .footer-links {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .mobile-command-button {
+    display: inline-grid;
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  .command-shell {
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    top: max(8px, env(safe-area-inset-top));
+    max-height: calc(100dvh - max(16px, env(safe-area-inset-top)) - max(16px, env(safe-area-inset-bottom)));
+  }
+
+  .command-input {
+    font-size: 16px;
+  }
+
+  .command-close {
+    width: 44px;
+    height: 44px;
+  }
+
+  .command-output {
+    min-height: 120px;
+    max-height: min(42dvh, 340px);
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .command-shell.is-game-mode,
+  .command-shell.is-game-mode .command-output {
+    max-height: calc(100dvh - 28px);
+  }
+
+  .command-shell.is-game-mode .command-output {
+    min-height: min(52dvh, 420px);
+    font-size: 0.75rem;
+  }
+
+  .command-help {
+    gap: 5px;
+    padding: 7px 8px;
+  }
+
+  .command-help button,
+  .command-help span {
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .command-help button {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 360px) {
+  .rail-link.is-active em {
+    font-size: 0.61rem;
+  }
+
+  .command-help span:last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .signal-map {
+    display: none;
+  }
+}
