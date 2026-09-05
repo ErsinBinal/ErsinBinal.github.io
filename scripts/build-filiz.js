@@ -45,7 +45,11 @@ const K = OPS.length;
 const VISITOR = Object.freeze({ maxPhase: 10, maxTried: 3_000_000 });
 
 const MAX_DISCOVER_LENGTH = arg('uzunluk', 7);
-const CLASSIFY_BUDGET_MS = arg('butce', 240) * 1000;
+// Butce ADAY sayisinda olculur, milisaniyede DEGIL (Madde 5): yavas runner
+// ile hizli runner ayni sonucu verir, yalniz bekleme suresi degisir.
+// Onceden milisaniyeydi ve bu, her gece ayni islemden FARKLI cikti
+// uretiyordu — yani gurultu.
+const CLASSIFY_BUDGET = arg('butce', 150);
 const TERMS = 6;              // hedef dizinin terim sayisi — kural sonsuz, ornek sonlu: 6 terim MDL'i durust kilar
 const MAX_MAGNITUDE = 10_000; // okunamayacak kadar buyuk sayi bulmaca olmaz
 
@@ -104,13 +108,18 @@ const sieve = (candidate) => {
 //   cozulen : OKKAM ziyaretci butcesiyle buluyor -> oynanabilir bulmaca
 //   acik    : FILIZ programi BILIYOR (kendisi uretti), OKKAM bulamiyor
 //             -> durust meydan okuma. Makinenin sinirinin kaniti.
-const classify = (candidates) => {
+// Her gece SIFIRDAN baslamaz: kaldigi yerden devam eder. Aday listesi
+// deterministik siralidir; onceki kosunun nerede kaldigi filiz.json'da
+// tutulur. Boylece gece isi gercekten YENI is uretir — ayni seyi tekrar
+// uretip gurultu PR'i acmaz.
+const classify = (candidates, baslangic) => {
   const solved = [];
   const open = [];
-  let unclassified = 0;
-  const started = Date.now();
-  for (const c of candidates) {
-    if (Date.now() - started > CLASSIFY_BUDGET_MS) { unclassified += 1; continue; }
+  let islenen = 0;
+  for (let i = baslangic; i < candidates.length; i += 1) {
+    if (islenen >= CLASSIFY_BUDGET) break;
+    const c = candidates[i];
+    islenen += 1;
     const t0 = Date.now();
     const r = okkam._search(c.target, VISITOR);
     const ms = Date.now() - t0;
@@ -141,7 +150,7 @@ const classify = (candidates) => {
       });
     }
   }
-  return { solved, open, unclassified };
+  return { solved, open, islenen, son: baslangic + islenen };
 };
 
 // FNV-1a 32 bit — sigil.js ile ayni muhur. Kriptografik degil ve oyle
@@ -171,9 +180,45 @@ for (const candidate of found.values()) {
 // Once kisa programlilar: hem daha ilginc hem siniflandirmasi daha ucuz.
 passed.sort((a, b) => a.length - b.length || a.target.join(',').localeCompare(b.target.join(',')));
 
-const { solved, open, unclassified } = classify(passed);
+// Aday listesinin kimligi. Liste degisirse (OKKAM havuzu buyurse, tarama
+// derinligi degisirse) ilerleme gecersizdir ve sifirdan baslanir. Sessizce
+// yanlis yerden devam etmektense bastan baslamak dogru.
+const listeKimligi = (() => {
+  let h = 0x811c9dc5;
+  for (const c of passed) for (const ch of c.target.join(',') + '|') {
+    h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `${passed.length}-${h.toString(36)}`;
+})();
+
+// Onceki gecenin nerede kaldigini oku.
+let onceki = null;
+try { onceki = JSON.parse(fs.readFileSync(OUT, 'utf8')); } catch { onceki = null; }
+const devam = (onceki && onceki.ilerleme && onceki.ilerleme.liste === listeKimligi)
+  ? Math.max(0, Number(onceki.ilerleme.son) || 0)
+  : 0;
+
+const { solved: yeniSolved, open: yeniOpen, islenen, son } = classify(passed, devam);
+
+// Onceki gecelerin sonuclari KORUNUR — her gece sifirdan baslamaz, uzerine koyar.
+const birlestir = (eski, yeni) => {
+  const gorulen = new Set();
+  const out = [];
+  for (const item of [...(Array.isArray(eski) ? eski : []), ...yeni]) {
+    const key = item.target.join(',');
+    if (gorulen.has(key)) continue;
+    gorulen.add(key);
+    out.push(item);
+  }
+  return out;
+};
+
+const solved = birlestir(devam ? onceki.cozulen : [], yeniSolved);
+const open = birlestir(devam ? onceki.acik : [], yeniOpen);
 solved.sort((a, b) => b.gain - a.gain || a.tried - b.tried);
 open.sort((a, b) => a.length - b.length || b.gain - a.gain);
+
+const kalan = Math.max(0, passed.length - son);
 
 // Red DOKUMU tam sayilir; ornek listesi kirpilir. Ikisi karistirilirsa
 // ekranda "1624 elendi" yazip altinda 40 tane sayan bir tablo cikar ve
@@ -197,13 +242,15 @@ const payload = {
     aday: found.size,
     gecen: passed.length,
     elenen: rejected.length,
-    siniflandirilamayan: unclassified,
+    siniflandirilamayan: kalan,
     // TAM dokum — asagidaki `red` listesi yalnizca ornektir.
     sayim: redSayim
   },
+  // Gece isinin nerede kaldigi. Bu alan olmadan her gece ayni is tekrarlanir.
+  ilerleme: { liste: listeKimligi, son, toplam: passed.length, buGece: islenen },
   raf: { cozulen: solved.length, acik: open.length },
-  cozulen: solved.slice(0, 24),
-  acik: open.slice(0, 24),
+  cozulen: solved.slice(0, 40),
+  acik: open.slice(0, 40),
   // Redler YAYINLANIR. Elek ne attigini saklarsa elek degildir.
   red: rejected.slice(0, 40)
 };
@@ -212,7 +259,9 @@ const pct = (n, d) => (d ? Math.round((n / d) * 100) : 0);
 
 console.log(`URETEC  ${scanned.toLocaleString('tr-TR')} program tarandi (uzunluk <= ${MAX_DISCOVER_LENGTH}), ${found.size} farkli dizi, ${discoverMs}ms`);
 console.log(`ELEK    ${passed.length} gecti, ${rejected.length} elendi (%${pct(rejected.length, found.size)} red)`);
-console.log(`        cozulen ${solved.length} · acik ${open.length}${unclassified ? ` · butce yetmedi ${unclassified}` : ''}`);
+console.log(`ILERLEME ${devam} -> ${son} / ${passed.length}  (bu gece ${islenen} aday islendi, ${kalan} kaldi)`);
+console.log(`        cozulen ${solved.length} · acik ${open.length}`);
+if (!islenen) console.log('        YENI IS YOK — butun adaylar siniflandirildi.');
 
 if (process.argv.includes('--stats')) {
   console.log('\nCOZULEN (OKKAM ziyaretci butcesiyle buluyor):');
@@ -238,6 +287,14 @@ if (!rejected.length) {
 if (!solved.length && !open.length) {
   console.error('build-filiz: hicbir aday siniflandirilamadi, dosya yazilmadi.');
   process.exit(1);
+}
+
+// Bu gece yeni is yapilmadiysa dosyaya DOKUNMA. Yoksa gece isi her gece
+// ayni icerigi yeniden yazip anlamsiz bir PR acar — ve o PR'lar hem
+// depoyu hem TORTU'nun kazdigi gecmisi kirletir.
+if (!islenen && onceki) {
+  console.log('\nfiliz.json degismedi: siniflandirilacak yeni aday yok.');
+  process.exit(0);
 }
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });

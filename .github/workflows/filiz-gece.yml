@@ -17,9 +17,13 @@ on:
   workflow_dispatch:
     inputs:
       butce:
-        description: "Siniflandirma butcesi (saniye)"
+        description: "Bu gece kac aday siniflandirilsin"
         type: string
-        default: "240"
+        default: "150"
+      otomatik:
+        description: "PR otomatik merge edilsin mi"
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -46,7 +50,7 @@ jobs:
         run: node scripts/filiz-zar.js --kendini-dene
 
       - name: URETEC + ELEK
-        run: node scripts/build-filiz.js --butce ${{ github.event.inputs.butce || '240' }}
+        run: node scripts/build-filiz.js --butce ${{ github.event.inputs.butce || '150' }}
 
       - name: ZAR — izinli alanin disina cikildi mi
         id: zar
@@ -112,6 +116,7 @@ jobs:
           "
 
       - name: PR ac (main'e ASLA push etme)
+        id: pr
         if: steps.zar.outputs.degisiklik != 'hayir'
         uses: peter-evans/create-pull-request@v7
         with:
@@ -122,3 +127,38 @@ jobs:
           body-path: /tmp/filiz-pr.md
           add-paths: assets/data/filiz.json
           delete-branch: true
+
+      # OTOMATIK ONAY.
+      #
+      # Anayasa Madde 6/3 DIFF sart kosar, insan tiklamasi degil. Diff burada
+      # kalici: her gece bir PR acilir, squash merge edilir, gecmiste durur
+      # ve tek komutla geri alinabilir.
+      #
+      # Otomatik onay ancak KAPI insanin bakacagi her seyi kapsiyorsa mesru.
+      # Bu is icin oyle, ve ikisi de bu adimdan ONCE kosar:
+      #   ZAR    yalnizca assets/data/filiz.json degisebilir, baska hicbir sey
+      #   TEST   uretilen HER dizinin gercekten uretilebildigini CALISTIRARAK
+      #          dogrular — insanin JSON diff'ine bakarak yapamayacagi sey
+      #
+      # Izinli liste bir gun VERI DISINA cikarsa otomatik onay KAPATILMALIDIR.
+      - name: Otomatik onay (kapi her seyi kapsiyor)
+        if: >-
+          steps.zar.outputs.degisiklik != 'hayir'
+          && steps.pr.outputs.pull-request-number
+          && github.event.inputs.otomatik != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ steps.pr.outputs.pull-request-number }}
+        run: |
+          echo "PR #$PR squash merge ediliyor (zar + testler gecti)."
+          gh pr merge "$PR" --squash --delete-branch --repo "$GITHUB_REPOSITORY"
+
+      - name: Ne oldugunu ozetle
+        if: always()
+        run: |
+          if [ "${{ steps.zar.outputs.degisiklik }}" = "hayir" ]; then
+            echo "Bu gece yeni is yoktu — hicbir sey degismedi." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### FILIZ gece uretimi" >> "$GITHUB_STEP_SUMMARY"
+            cat /tmp/filiz-pr.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          fi

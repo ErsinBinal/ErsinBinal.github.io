@@ -72,9 +72,16 @@ function readCommits() {
   // Alan ayraci olarak birim ayraci kullan: subject icinde bulunma ihtimali yok.
   const SEP = '\u001f';
   const REC = '\u001e';
+  // GECE URETIMI KAZIYA GIRMEZ.
+  //
+  // FILIZ her gece bir commit birakiyor. Bunlar gercek gecmis DEGIL, bir
+  // makinenin duzenli tik tak'i: kaziya girerlerse birkac ay icinde butun
+  // tabakalari doldurup insan emegini gorunmez kilarlar. Yazara gore elenir.
   const raw = git([
     'log',
     '--no-merges',
+    '--invert-grep',
+    '--grep=^chore(filiz): gece uretimi',
     `--format=${REC}%h${SEP}%ad${SEP}%s${SEP}%b`,
     '--date=short',
     '--numstat'

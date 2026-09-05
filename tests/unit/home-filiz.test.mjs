@@ -159,6 +159,78 @@ test('gece isi GATE i PR den ONCE kosuyor', () => {
   assert.ok(zarIndex > 0 && prIndex > zarIndex, 'gate, PR adimindan once gelmeli');
 });
 
+// --- GECE ISI GERCEKTEN YENI IS YAPIYOR MU -----------------------------------
+//
+// Ilk tasarimda uretim tamamen deterministikti ve degisen hicbir seye
+// bagli degildi: ilk kosu her seyi uretiyor, sonraki geceler AYNI seyi
+// uretiyordu. Otomatik onayla birlestiginde bu, her gece anlamsiz bir
+// commit demekti. Asagidaki testler o hatanin geri gelmesini engeller.
+
+test('BUTCE ADAY SAYISINDA, milisaniyede DEGIL (Madde 5)', () => {
+  assert.match(buildSource, /const CLASSIFY_BUDGET = arg\('butce'/);
+  assert.doesNotMatch(buildSource, /CLASSIFY_BUDGET_MS/,
+    'milisaniye butcesi ayni islemden farkli cikti uretir — geri gelmemeli');
+  assert.match(buildSource, /butce ADAY sayisinda olculur/i);
+});
+
+test('siniflandirma KALDIGI YERDEN devam ediyor', () => {
+  assert.match(buildSource, /ilerleme:\s*\{\s*liste:/, 'ilerleme kaydedilmeli');
+  assert.match(buildSource, /classify\(passed, devam\)/, 'onceki kosudan devam etmeli');
+  assert.ok(data.ilerleme, 'uretilen dosyada ilerleme alani olmali');
+  assert.equal(typeof data.ilerleme.son, 'number');
+  assert.equal(typeof data.ilerleme.toplam, 'number');
+  assert.ok(data.ilerleme.son <= data.ilerleme.toplam);
+});
+
+test('aday listesi degisirse ilerleme SIFIRLANIYOR (sessizce yanlis yerden devam etmez)', () => {
+  assert.match(buildSource, /listeKimligi/);
+  assert.match(buildSource, /onceki\.ilerleme\.liste === listeKimligi/);
+});
+
+test('YENI IS YOKSA DOSYAYA DOKUNMUYOR — gurultu PR i acilmaz', () => {
+  assert.match(buildSource, /if \(!islenen && onceki\)/);
+  assert.match(buildSource, /filiz\.json degismedi/);
+});
+
+test('onceki gecelerin sonuclari KORUNUYOR', () => {
+  assert.match(buildSource, /const birlestir =/);
+  assert.match(buildSource, /uzerine koyar/i);
+});
+
+// --- OTOMATIK ONAY -----------------------------------------------------------
+
+test('otomatik onay ZAR ve TESTLERDEN SONRA geliyor', () => {
+  const zar = workflow.indexOf('filiz-zar.js\n          code=');
+  const test_ = workflow.indexOf('npm run test:unit');
+  const merge = workflow.indexOf('gh pr merge');
+  assert.ok(zar > 0 && test_ > zar, 'testler zardan sonra');
+  assert.ok(merge > test_, 'otomatik onay testlerden SONRA gelmeli');
+});
+
+test('otomatik onay PR uzerinden — main e dogrudan push YOK', () => {
+  assert.doesNotMatch(workflow, /git\s+push/);
+  assert.match(workflow, /gh pr merge .* --squash/, 'diff kalici olmali (squash merge)');
+  assert.match(workflow, /steps\.pr\.outputs\.pull-request-number/,
+    'merge yalniz gercekten acilan bir PR uzerinde calismali');
+});
+
+test('otomatik onay KAPATILABILIR', () => {
+  assert.match(workflow, /github\.event\.inputs\.otomatik != 'false'/);
+});
+
+test('otomatik onayin GEREKCESI yazili (izinli liste veri disina cikarsa kapat)', () => {
+  assert.match(workflow, /Izinli liste bir gun VERI DISINA cikarsa otomatik onay KAPATILMALIDIR/);
+});
+
+// --- GECE COMMITLERI KAZIYA GIRMIYOR ----------------------------------------
+
+test('FILIZ gece commitleri TORTU nun kazdigi gecmise GIRMIYOR', async () => {
+  const tortuBuild = await readFile(new URL('../../scripts/build-tortu.js', import.meta.url), 'utf8');
+  assert.match(tortuBuild, /--invert-grep/);
+  assert.match(tortuBuild, /chore\(filiz\): gece uretimi/);
+  assert.match(tortuBuild, /GECE URETIMI KAZIYA GIRMEZ/);
+});
+
 // --- Modul sozlesmesi --------------------------------------------------------
 
 test('modul saf: DOM, ag, zaman, rastgelelik yok', () => {

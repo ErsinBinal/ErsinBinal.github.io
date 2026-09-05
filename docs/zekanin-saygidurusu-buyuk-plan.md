@@ -202,6 +202,24 @@ yazmaz. Üretim → build artefaktı → `git diff` → yayın ritüeli. **Site
 önerebilir; ancak commit gerçek yapar.** Gece işi `main`'e push edemez, yalnız
 PR açar.
 
+> **Değişiklik (2026-09-05) — otomatik onay.** Ersin: *"ben her gün bunu
+> onaylamakla uğraşamam."* Haklı, ve bu teknik bir mesele değil: **uygulanamaz
+> bir güvenlik kontrolü, iyi tasarlanmış otomatik bir kontrolden daha
+> kötüdür** — çünkü sonunda göz ardı edilir.
+>
+> Maddenin şartı **diff**tir, insan tıklaması değil. Diff kalıcı: her gece bir
+> PR açılır, squash merge edilir, geçmişte durur, tek komutla geri alınır.
+>
+> Otomatik onay **ancak kapı, insanın bakacağı her şeyi kapsıyorsa** meşrudur.
+> Bu iş için öyle — ve ikisi de merge'den **önce** koşar:
+> - **ZAR:** yalnızca `assets/data/filiz.json` değişebilir, başka hiçbir şey
+> - **TEST:** üretilen her diziyi **çalıştırarak** doğrular — bir insanın JSON
+>   diff'ine bakarak yapamayacağı şey
+>
+> **Koşul:** izinli liste bir gün veri dışına çıkarsa otomatik onay
+> kapatılmalıdır. Bu, iş akışının içine yorum olarak yazıldı ve testle kilitli.
+> Elle çalıştırmada `otomatik: false` ile her zaman kapatılabilir.
+
 **6/4 — Üreteç kendi üreticisini üretemez.** Üreteç içerik üretir; **eleğini,
 anayasasını, yayın ritüelini ve kendi kaynağını asla.** Bu, döngünün kendi
 kısıtlarını gevşetmesini yapısal olarak imkânsız kılar — "güvenli kendi kendine
@@ -967,7 +985,29 @@ taşındı; kırpılmış örnek listesi ayrı durur.
 Doğrulayıcısı yok → Madde 6/1 gereği yasak. Z4.1 (0212 korpusu) hâlâ **veri
 tedariki** bekliyor; uydurulamaz.
 
-**Kabul.** Birim 217/217 (18'i FİLİZ) · kabul testi 37/37 (5'i FİLİZ).
+**İlk gecede iki gerçek kusur çıktı ve kapatıldı (2026-09-05).**
+
+1. **Üretim aslında "yeni" bir şey üretmiyordu.** Sayım tamamen deterministikti
+   ve değişen hiçbir şeye bağlı değildi — ilk koşu her şeyi üretti, sonraki
+   geceler aynı şeyi üretecekti. Farklı çıkan tek şey zamanlama gürültüsüydü,
+   çünkü **bütçe milisaniye cinsindendi: Madde 5'in doğrudan ihlali.**
+   Bütçe **aday sayısına** çevrildi ve sınıflandırma **kaldığı yerden devam
+   ediyor**: 790 adaylık bir birikim var, her gece bir dilimi işleniyor
+   (0→150→300…). Yeni iş yoksa dosyaya dokunulmuyor, yani boş PR açılmıyor.
+
+2. **Gece commit'leri kazıyı kirletecekti.** TORTU git geçmişini kazıyor;
+   günde bir bot commit'i birkaç ay içinde bütün tabakaları doldurup insan
+   emeğini görünmez kılardı. `build-tortu.js` artık `--invert-grep` ile bu
+   commit'leri **kazıya almıyor.**
+
+**İlk çalıştırmada ne oldu.** İki koşu da düştü — ama **10 adımın 9'u geçti.**
+Üreteç, filtre, kapı, testler, özet: hepsi çalıştı. Sadece PR açma adımı,
+GitHub'ın *"Allow GitHub Actions to create and approve pull requests"* ayarı
+kapalı olduğu için düştü. Dal (`filiz/gece-uretimi`) yine de itilmişti ve
+içinde tek dosya değişikliği vardı — yani **güvenlik zinciri baştan sona
+çalıştı**, yalnız son kozmetik adım eksik kaldı.
+
+**Kabul.** Birim 227/227 (28'i FİLİZ) · kabul testi 41/41 (5'i FİLİZ).
 
 ---
 

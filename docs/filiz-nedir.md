@@ -123,9 +123,22 @@ Her gece **02:17 UTC**'de GitHub'da `FILIZ gece uretimi` çalışır. Sırayla:
 4. Testler koşar
 5. **PR açar** — `main`'e asla push etmez
 
-Sabah GitHub'da seni bekleyen şey bir **pull request** olur; içinde ne üretildiği,
-ne elendiği ve neden elendiği tablo hâlinde yazar. **Sen merge edene kadar site
-değişmez.**
+**Onay otomatik (2026-09-05'ten beri).** PR açılır, kapı ve testler geçtiyse
+kendiliğinden merge edilir. Her gün senin tıklamana gerek yok.
+
+Bu neden güvenli: maddenin şartı **diff**, insan tıklaması değil. Diff kalıcı —
+her gece bir PR, geçmişte duruyor, tek komutla geri alınabilir. Ve merge'den
+**önce** iki kapı var:
+
+- **GATE** — sadece `assets/data/filiz.json` değişebilir, başka hiçbir şey
+- **TEST** — üretilen her diziyi *çalıştırarak* doğrular (senin JSON'a bakarak
+  yapamayacağın şey)
+
+İstediğin zaman kapatabilirsin: Actions → Run workflow → **otomatik: false**.
+
+**Ne kadar iş kaldı?** 790 adaylık bir birikim var, her gece 150 tanesi
+işleniyor. Yani yaklaşık 5-6 gece sürer, sonra biter ve **yeni iş olmadığı için
+PR gelmez.** Bu bir arıza değil: işin bittiği anlamına gelir.
 
 Elle çalıştırmak istersen: GitHub → Actions → *FILIZ gece uretimi* → *Run workflow*.
 
@@ -138,7 +151,7 @@ Kısa cevap: **hiçbir ücret çıkmaz.** Uzun cevabı, sabah içi rahat olsun d
 | Soru | Cevap |
 |---|---|
 | GitHub Actions ücretli mi? | **Genel (public) depolarda ücretsiz ve sınırsız.** Bu depo genel. |
-| İş ne kadar sürüyor? | Gecede ~6 dakika (kurulum 1 dk + üretim 4 dk + test 1 dk) |
+| İş ne kadar sürüyor? | Gecede ~4-6 dakika |
 | AI çağrısı yapıyor mu? | **Hayır.** Tek satır bile yok — kontrol edildi: `fetch` 0, `api` 0, AI 0 |
 | Cloudflare Worker'ı çağırıyor mu? | **Hayır.** O ayrı bir iş, FİLİZ ona dokunmuyor |
 | Bir şey saklıyor mu (artifact/storage)? | Hayır, dosya yüklemiyor |
@@ -154,9 +167,16 @@ fatura çıkmaz, sadece kotadan yer.
 ## 9. Bir şey ters giderse
 
 **Sabah PR gelmediyse.**
-En muhtemel sebep bir GitHub ayarı: *Settings → Actions → General →
-"Allow GitHub Actions to create and approve pull requests"* açık olmalı.
-Kapalıysa iş son adımda düşer. Actions sekmesinde kırmızı görürsün.
+İki ihtimal var:
+
+1. **İş bitmiştir.** Bütün adaylar sınıflandırıldıysa yapacak yeni iş yoktur ve
+   bilerek hiçbir şey yazılmaz. Actions'ta yeşil tik görürsün, özet
+   *"Bu gece yeni iş yoktu"* der. Sorun yok.
+2. **İzin kapalıdır.** *Settings → Actions → General → Workflow permissions* →
+   **"Read and write permissions"** ve **"Allow GitHub Actions to create and
+   approve pull requests"** açık olmalı. Kapalıysa iş son adımda düşer,
+   Actions'ta kırmızı görürsün. (2026-09-05'te tam bu oldu: 10 adımın 9'u
+   geçti, sadece PR açma düştü.)
 
 **"ZAR KAPANDI" yazan bir hata görürsen.**
 Bu bir arıza değil, **kapının çalıştığının kanıtı**. Üretim izinli alanın
