@@ -1073,6 +1073,70 @@ bunu yakaladı, `terim ara` oldu.
 
 ---
 
+### VİZ — makineyi düşünürken göster  ✅ **TAMAMLANDI (2026-09-05)**
+
+**Tetikleyen.** Ersin: *"sitedeki görsel animasyonları nasıl daha artırabiliriz?
+bahsettiğim her şey yalnızca metinlerden ve stillerden ibaret olmasın."*
+
+**Ölçüm, sorunun yerini tam gösterdi.**
+
+| | |
+|---|---|
+| Site geneli `@keyframes` | 120 |
+| Site geneli `transform` | 343 |
+| Canvas kullanan dosya | 9 |
+| **Altı serginin görseli** | **0 canvas · 0 rAF · 0 SVG** |
+
+Yani site görsel olarak fakir değildi — ama **en ilginç şeylerini metin olarak
+anlatıyordu.** Makine Louvain kümesi buluyor, PELT ile dönem sınırı tespit ediyor,
+Levin araması koşturuyor, Levenshtein matrisi dolduruyor; hepsini ASCII tablo
+olarak basıyordu.
+
+**Karar: dekorasyon eklenmedi, zaten hesaplanan şey görünür kılındı.** Madde 3
+"mekanizma sırrı olmaz" diyor — makineyi düşünürken izlemek bu sitenin tezinin
+kendisi. Animasyon burada süs değil, **argüman.**
+
+**Altı sahne** (`assets/js/home/viz.js`, ~530 satır):
+
+| Komut | Sahne | Ne gösteriyor |
+|---|---|---|
+| `kaz` | **strata** | Kazı kesiti — katman kalınlığı gerçek commit yoğunluğu |
+| `tabaka` | **epochs** | PELT taraması; sınırlar yerine oturuyor |
+| `damar` | **clusters** | Louvain kuvvet yerleşimi; Q = 0.637 görünür oluyor |
+| `okkam` | **levin** | Arama uzayı kısadan uzuna taranıyor, biri tutuyor |
+| `step` | **levenshtein** | DP tablosu doluyor, sonra geri iz yanıyor |
+| `iz` · `sigil` | **bishop** | Mühür bir yürüyüşün izi olarak doğuyor |
+
+**Mimari — üç kısıt tasarımı belirledi.**
+
+1. **Metin çıktısı hiç değişmedi.** 279 test mevcut metni kilitliyor ve bu doğru:
+   metin kanonik sürüm, ekran okuyucunun ve `curl`ün gördüğü şey o. Transcript
+   düz `textContent` olduğu için canvas onun **içine giremez** — görsel katman
+   dışarıda, çıktının hemen üstünde yaşıyor.
+2. **Protokol yükü 15 satır.** Altı sahnenin çizimi de, hangi komutun hangi
+   sahneyi açtığı da modülde. Bunu bir test kilitliyor: protokolde `viz` geçen
+   satır sayısı ≤ 22.
+3. **Çizilen şey uydurulmuyor.** Her sahne `tortu.json`un kendi kümelerinden,
+   kendi dönemlerinden besleniyor. `Math.random` yok — aynı veri aynı resmi verir.
+
+**Fail-closed davranış.** Veri henüz gelmemişse görsel **hiç açılmıyor** (boş
+canvas metinden kötüdür); kısa aralıkla 12 kez tekrar deniyor, gelmezse metin
+tek başına yeterli. `prefers-reduced-motion` açıkken tek kare çiziliyor:
+hareket gidiyor, **bilgi gitmiyor.**
+
+**İki görsel hata bulundu ve düzeltildi — ikisi de ekrana bakarak.**
+- Kümelerin kenar kuralı `(i*31 + j*17) % 2` idi; 31 ve 17 tek sayı olduğu için
+  bu `(i+j)` paritesine eşitti ve **her kümeyi iki kopuk yarıya bölüyordu.**
+  Zincir bağlantı denendi — bağlıydı ama gevşekti, kümeler birbirinin içine
+  geçti. Küme içi **tam bağlantı** hem doğru (Louvain topluluğu = yoğun bağlı
+  bölge) hem de ekranda sıkışık kümeler veriyor.
+- Dönem yoğunluk çubukları `(i*37)%12` ile düzenli bir testere üretiyordu ve
+  ekranda ok ucu gibi okunuyordu; karışık bir hash gerçek yoğunluk görünümü verdi.
+
+**Kabul.** Birim 254/254 (16'sı viz) · kabul testi 41/41.
+
+---
+
 ## 8. Destek dilimleri
 
 Tamlık eleştirisinin "eklenmezse plan eksik kalır" dediği altı dilim. Her biri
@@ -1121,7 +1185,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **79** | ✅ Faz -1 (dosya sistemi taraması) |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **227** | ✅ (kabul testi ayrıca 41) |
+| Birim test | ~~102~~ → **254** | ✅ (kabul testi ayrıca 41) |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

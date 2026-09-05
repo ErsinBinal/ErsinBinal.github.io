@@ -156,6 +156,7 @@
       let okkamMod = null;
       let filizMod = null;
       let glossaryMod = null;
+      let vizMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1457,6 +1458,17 @@
           return null;
         }
       })();
+
+      // VIZ (assets/js/home/viz.js): sergilerin gorsel katmani.
+      // Metin ciktisi DEGISMEZ — gorsel onu anlatir, yerini almaz. Butun
+      // cizim ve sahne secimi modulde; burada yalniz kurulum ve tek cagri.
+      vizMod = window.ConviviumHome?.createViz?.({
+        canvas: document.getElementById('command-viz-canvas'),
+        figure: document.getElementById('command-viz'),
+        caption: document.getElementById('command-viz-cap'),
+        getTortu: () => tortuData,
+        prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      }) || null;
 
       // GLOSSARY (assets/js/home/glossary.js): terminalin sozlugu.
       // `whatis` ve `apropos` GERCEK unix komutlaridir ve burada ayni isi
@@ -4443,6 +4455,9 @@
           if (hist.expanded) query = hist.query.trim().slice(0, 520);
         }
         const command = expandAlias(applySynonyms(normalizeCommand(query)));
+        // Gorsel katman: sahne secimi de cizim de modulde. Sahnesi olmayan
+        // komutta kendini gizler, veri hazir degilse hic acilmaz.
+        vizMod?.show(command);
         state.commands += 1;
         const prevLog = state.commandLog || [];
         // Ardisik tekrari yazma (bash ignoredups); gecmis son 30 komutu tutar.

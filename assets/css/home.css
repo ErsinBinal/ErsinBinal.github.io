@@ -4375,3 +4375,33 @@ body.command-shell-open .bugy-onboard {
     display: none;
   }
 }
+
+
+/* --- Terminal gorsel katmani (viz.js) ---------------------------------
+   Transcript duz metin oldugu icin canvas onun ICINE giremez; burada,
+   ciktinin hemen ustunde yasar. Metin kanonik surum olmaya devam eder. */
+.command-viz {
+  margin: 0 0 10px;
+  padding: 0;
+  border: 1px solid rgba(0, 243, 255, .22);
+  background: #060a08;
+  line-height: 0;
+}
+.command-viz[hidden] { display: none; }
+.command-viz canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.command-viz-cap {
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  line-height: 1.5;
+  color: #6f8479;
+  padding: 6px 10px;
+  border-top: 1px solid rgba(0, 243, 255, .14);
+}
+@media (max-width: 640px) {
+  .command-viz-cap { font-size: 9.5px; padding: 5px 8px; }
+}

@@ -37,13 +37,19 @@ import test from 'node:test';
 //     Bu dilim protokolu BUYUTMEK icin degil, terminalin DILINI
 //     sadelestirmek icin acildi: uydurma terimler (karot/damar/elek/zar)
 //     yerine git-unix-CS terimleri kondu.
+//   4996 -> 5011  (2026-09-05, VIZ / gorsel katman)
+//     Eklenen: viz modul kurulumu + runCommand icinde TEK cagri.
+//     KARAR MANTIGI PROTOKOLE GIRMEDI — alti sahnenin cizimi de, hangi
+//     komutun hangi sahneyi actigi da assets/js/home/viz.js icinde
+//     (~520 satir). Protokolde kalan: DOM referanslari + `vizMod?.show()`.
+//     Bir test bunu kilitliyor: protokolde 'viz' gecen satir sayisi <= 22.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 4996;
+const CEILING = 5011;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(

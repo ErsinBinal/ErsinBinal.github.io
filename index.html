@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=38" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=39" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=38">
+  <link rel="stylesheet" href="/assets/css/home.css?v=39">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -130,6 +130,13 @@
       <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
     <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri"></div>
+    <!-- Gorsel katman: transcript duz metin (textContent) oldugu icin canvas
+         onun ICINE giremez — her render'da silinir. Bu yuzden disarida yasar.
+         Metin ciktisi hic degismez; gorsel onu ANLATIR, yerini almaz. -->
+    <figure class="command-viz" id="command-viz" hidden>
+      <canvas id="command-viz-canvas" width="720" height="300" role="img"></canvas>
+      <figcaption class="command-viz-cap" id="command-viz-cap"></figcaption>
+    </figure>
     <div class="command-output" id="command-output" role="log" aria-live="off" aria-label="Terminal geçmişi">type help for shortcuts</div>
     <p class="sr-only" id="command-status" role="status" aria-live="polite" aria-atomic="true">Terminal kapalı.</p>
     <div class="command-help" id="command-help" aria-label="Komut örnekleri ve tuş yardımı">
@@ -504,6 +511,7 @@
   <script src="/assets/js/home/arsiv.js?v=1" defer></script>
   <script src="/assets/js/home/okkam.js?v=3" defer></script>
   <script src="/assets/js/home/glossary.js?v=1" defer></script>
+  <script src="/assets/js/home/viz.js?v=1" defer></script>
   <script src="/assets/js/home/filiz.js?v=2" defer></script>
   <script src="/assets/js/home/net.js?v=4" defer></script>
   <script src="/assets/js/home/ritual-pulse.js?v=1" defer></script>
@@ -532,7 +540,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=108" defer></script>
+  <script src="/assets/js/home-protocol.js?v=109" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>
