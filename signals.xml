@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>CMD / Terminal</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-05-cmd-terminal</guid>
+      <pubDate>Sat, 05 Sep 2026 18:48:32 +0000</pubDate>
+      <description>Ana buton kardeslerinin kalibina dondu: kisa etiket + kisa ad. &quot;Buradan basla / Rehberli terminali ac&quot; yerine CMD / Terminal — mobildeki buton zaten CMD diyordu, artik iki yuzey ayni dili konusuyor. Buton &quot;rehberli&quot; demedigi icin 20+ satirlik rehberi de zorla acmiyor: terminal temiz aciliyor, panelin ust satirlari yukari kacmiyor. Rehber isteyen basla yazar. Ayrica gorsel acan komutlar pusulada listelendi.</description>
+    </item>
+    <item>
       <title>Gorseller telefonda da duruyor</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-05-gorseller-telefonda-da-duruyor</guid>

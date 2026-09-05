@@ -5,7 +5,7 @@ test.describe('Ana sayfa UX sozlesmesi', () => {
     await page.goto('/');
   });
 
-  test('kapali terminal odak almaz; rehberli acilis ilk komutu ezmez', async ({ page }) => {
+  test('kapali terminal odak almaz; TEMIZ acilis uzun rehberi basmaz', async ({ page }) => {
     const shell = page.locator('#command-shell');
     await expect(shell).toHaveAttribute('aria-hidden', 'true');
     expect(await shell.evaluate((node) => node.inert)).toBe(true);
@@ -15,9 +15,14 @@ test.describe('Ana sayfa UX sozlesmesi', () => {
     await page.locator('#command-launch').click();
     await expect(shell).toHaveAttribute('aria-hidden', 'false');
     expect(await shell.evaluate((node) => node.inert)).toBe(false);
-    await expect(page.locator('#command-output')).toContainText('BAŞLANGIÇ / TERMINAL READY');
-    await page.waitForTimeout(900);
-    await expect(page.locator('#command-output')).toContainText('hizli rota');
+    // Buton artik "rehberli" demiyor (CMD / Terminal), o yuzden 20+ satirlik
+    // rehberi de zorla basmiyor: panelin ust satirlari yukari kacmasin.
+    // NOT: "BASLANGIC / TERMINAL READY" acilis animasyonunun degil, `basla`
+    // REHBERININ basligiydi — rehber kosmayinca dogal olarak yok.
+    await page.waitForTimeout(1200);
+    await expect(page.locator('#command-output')).toContainText('yardim: help');
+    await expect(page.locator('#command-output')).not.toContainText('hizli rota');
+    await expect(page.locator('#command-output')).not.toContainText('] basla');
 
     await page.locator('#command-input').press('Escape');
     await expect(shell).toHaveAttribute('aria-hidden', 'true');

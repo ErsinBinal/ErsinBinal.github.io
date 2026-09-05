@@ -190,7 +190,12 @@
                 Merhaba. Burası hızlı tüketim için değil; iş modeli, teknoloji, oyun ve ritüel kırıntılarından oluşan seçici bir kişisel indeks.
               </p>
               <nav class="primary-actions" aria-label="Birincil erişim">
-                <button class="action-link is-primary" id="command-launch" type="button" data-entry-command="basla" aria-controls="command-shell" aria-expanded="false"><span>Buradan başla</span>Rehberli terminali aç</button>
+                <!-- Kardesleriyle ayni kalip: kisa etiket + kisa ad. Mobil
+                     buton da CMD diyor; iki yuzey ayni dili konusuyor.
+                     data-entry-command YOK: buton artik "rehberli" demiyor,
+                     o yuzden uzun rehberi zorla acmiyor. Rehber isteyen
+                     `basla` yazar. -->
+                <button class="action-link is-primary" id="command-launch" type="button" aria-controls="command-shell" aria-expanded="false"><span>CMD</span>Terminal</button>
                 <div class="action-secondary-group">
                   <a class="action-link" href="/pages/makaleler.html"><span>Oku</span>Makaleler</a>
                   <a class="action-link" href="#lab"><span>Oyna</span>Deneyler</a>
@@ -540,7 +545,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=109" defer></script>
+  <script src="/assets/js/home-protocol.js?v=110" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>

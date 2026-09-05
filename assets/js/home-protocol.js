@@ -4792,7 +4792,10 @@
         });
       });
 
-      commandLaunch?.addEventListener('click', () => { openCommand(); if (!currentAddress()) runCommand(commandLaunch.dataset.entryCommand || 'basla'); });
+      // Giris komutu OPSIYONEL: data-entry-command yoksa terminal TEMIZ acilir.
+      // Onceden 'basla' varsayilandi ve buton her acilista 20+ satirlik rehberi
+      // basiyordu — panelin ust satirlari yukari kaciyordu. Rehber isteyen yazar.
+      commandLaunch?.addEventListener('click', () => { openCommand(); const entry = commandLaunch.dataset.entryCommand; if (entry && !currentAddress()) runCommand(entry); });
       mobileCommandButton?.addEventListener('click', openCommand);
       commandClose?.addEventListener('click', closeCommand);
       accessChipButton?.addEventListener('click', () => {
