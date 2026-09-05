@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=42" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=43" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=42">
+  <link rel="stylesheet" href="/assets/css/home.css?v=43">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -136,8 +136,9 @@
     </header>
     <div class="command-row">
       <span class="command-prompt">&gt;</span>
-      <label class="sr-only" for="command-input">Komut yaz</label>
-      <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-help command-status" placeholder="help · look · open dossier · whatis">
+      <!-- Ayri bir <label> yerine aria-label: erisilebilirlik ayni, ama
+           sayfada "Komut yaz" diye bir metin dugumu KALMIYOR. -->
+      <input class="command-input" id="command-input" type="text" aria-label="Komut yaz" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-status" placeholder="help · look · open dossier · whatis">
     </div>
     <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri"></div>
     <!-- Gorsel katman: transcript duz metin (textContent) oldugu icin canvas
@@ -530,13 +531,13 @@
   <script src="/assets/js/home/route-commands.js?v=4" defer></script>
   <script src="/assets/js/home/guide-commands.js?v=1" defer></script>
   <script src="/assets/js/home/ruins.js?v=3" defer></script>
-  <script src="/assets/js/home/tortu.js?v=4" defer></script>
+  <script src="/assets/js/home/tortu.js?v=5" defer></script>
   <script src="/assets/js/home/sigil.js?v=1" defer></script>
   <script src="/assets/js/home/iz.js?v=1" defer></script>
   <script src="/assets/js/home/arsiv.js?v=1" defer></script>
   <script src="/assets/js/home/okkam.js?v=3" defer></script>
   <script src="/assets/js/home/glossary.js?v=1" defer></script>
-  <script src="/assets/js/home/viz.js?v=2" defer></script>
+  <script src="/assets/js/home/viz.js?v=3" defer></script>
   <script src="/assets/js/home/filiz.js?v=2" defer></script>
   <script src="/assets/js/home/net.js?v=4" defer></script>
   <script src="/assets/js/home/ritual-pulse.js?v=1" defer></script>
@@ -565,7 +566,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=111" defer></script>
+  <script src="/assets/js/home-protocol.js?v=112" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>

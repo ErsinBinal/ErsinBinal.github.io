@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v274';
+const CACHE_NAME = 'convivium-v275';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -54,7 +54,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/bugy-cinema.css?v=3',
   '/assets/css/bugy-pet.css?v=8',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=42',
+  '/assets/css/home.css?v=43',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/css/demir-at.css?v=1',
   '/assets/js/lazy-load.js',
@@ -72,13 +72,13 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/route-commands.js?v=4',
   '/assets/js/home/guide-commands.js?v=1',
   '/assets/js/home/ruins.js?v=3',
-  '/assets/js/home/tortu.js?v=4',
+  '/assets/js/home/tortu.js?v=5',
   '/assets/js/home/sigil.js?v=1',
   '/assets/js/home/iz.js?v=1',
   '/assets/js/home/arsiv.js?v=1',
   '/assets/js/home/okkam.js?v=3',
   '/assets/js/home/glossary.js?v=1',
-  '/assets/js/home/viz.js?v=2',
+  '/assets/js/home/viz.js?v=3',
   // ux.js precache'te OLMAK ZORUNDA: command-shell HTML'de `inert` basliyor
   // ve o niteligi kaldiran tek sey bu modul. Cevrimdisi yuklenemezse
   // terminal hic acilmaz — yazilamaz, komut kosmaz, gate dugmeleri de islemez.
@@ -104,7 +104,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/chat-symbols.js?v=1',
   '/assets/js/home/chat-deck.js?v=8',
   '/assets/js/sfx.js?v=19',
-  '/assets/js/home-protocol.js?v=111',
+  '/assets/js/home-protocol.js?v=112',
   '/assets/js/bugy-studio.js?v=6',
   '/assets/js/service-worker-register.js?v=4',
   '/assets/js/origin-beacon.js?v=1',

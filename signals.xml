@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Tek tema, yol gosteren metin</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-05-tek-tema-yol-gosteren-metin</guid>
+      <pubDate>Sat, 05 Sep 2026 19:58:42 +0000</pubDate>
+      <description>Terminal tek font ailesine dondu. Baslik cubugunu ve gorsel altyazisini IBM Plex Mono ile yazmistim; terminalin geri kalani sitenin fontu Share Tech Mono kullaniyordu ve ikisi yan yana temadan kopuk duruyordu. Bes farkli boyut vardi, tutarli olcege indi. Ayrica sergi metinleri yeniden yazildi: once SONUC, sonra anlami, en sonda sonraki adim. Onceki hali uc satir algoritma anlatip ancak ondan sonra veriyi gosteriyordu — yol gostermek yerine ders veriyordu. Ekran okuyucu anonsu da ciktinin ilk 220 karakteri yerine yalniz ILK SATIRI duyuruyor.</description>
+    </item>
+    <item>
       <title>Gorseller tek tikla</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-05-gorseller-tek-tikla</guid>

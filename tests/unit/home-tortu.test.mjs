@@ -256,7 +256,8 @@ test('tabaka eralari Turkce adlariyla listeliyor', () => {
   assert.match(out, /EPOCHS/);
   assert.match(out, /Atolye Katmani/);
   assert.match(out, /Oyun Katmani/);
-  assert.match(out, /neyle ugrasiyordu/, 'eksenin ne oldugu aciklanmali');
+  assert.match(out, /neyle ugrastigi/, 'eksenin ne oldugu aciklanmali');
+  assert.match(out, /Nasil bulundu/, 'metin sonraki adimi gostermeli');
 });
 
 test('karot hangi eraya dustugunu soyluyor', () => {
@@ -391,8 +392,9 @@ test('cluster ciktisi Q degerini ve cekirdek dosya ayrimini soyluyor', () => {
   const out = tortu.veins();
   assert.match(out, /CLUSTERS/);
   assert.match(out, /0\.637/);
-  assert.match(out, /Jaccard/);
   assert.match(out, /Cekirdek dosyalar bu grafa girmez/);
+  // Yeni sekil: once sonuc, sonra anlam, en sonda sonraki adim.
+  assert.match(out, /Nasil bulundu/, 'metin sonraki adimi gostermeli');
 });
 
 // --- Z1.4: /ruins devri --------------------------------------------------

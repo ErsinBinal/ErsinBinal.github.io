@@ -142,11 +142,10 @@
 
       const data = getData();
       const lines = [
-        '] EPOCHS  (donemler)',
-        '  Donemler "ne zaman" ekseninde degil "neyle ugrasiyordu" ekseninde',
-        '  BULUNUR: her commit\'in dosyalari sekiz kategoriye dagilir ve bu',
-        '  dagilimin degistigi noktalar PELT (changepoint detection) ile',
-        '  isaretlenir. Elle yazilmaz.',
+        `] EPOCHS — deponun ${list.length} donemi`,
+        '',
+        '  Bir donem, deponun "neyle ugrastigi"nin degismedigi araliktir.',
+        '  Sinirlar ELLE YAZILMAZ, PELT ile bulunur.',
         ''
       ];
       list.forEach((era) => {
@@ -156,7 +155,9 @@
         lines.push(`      ${era.from} -> ${era.to}   ${String(era.commits).padStart(3)} commit  ${bar}`);
         lines.push(`      ${mix}`);
       });
-      lines.push('', `  ${data.repo.commits} commit / ${data.repo.activeDays} aktif gun / ${list.length} epoch`);
+      lines.push('');
+      lines.push(`  ${data.repo.commits} commit · ${data.repo.activeDays} aktif gun`);
+      lines.push('  Nasil bulundu: `whatis PELT` · Kesiti gor: `kaz`');
       return lines.join('\n');
     };
 
@@ -170,12 +171,17 @@
       const list = Array.isArray(block.veins) ? block.veins : [];
       if (!list.length) return 'damar: bu depoda cluster olusmamis.';
 
+      // Metin ONCE SONUCU verir, sonra anlamini, en sonda sonraki adimi.
+      // Onceki hali uc satir algoritma anlatip ancak ondan sonra veriyi
+      // gosteriyordu: yol gostermek yerine ders veriyordu.
+      const anlam = Number(block.modularity) >= 0.30
+        ? 'kumeler gercekten ayrisiyor'
+        : 'ayrisma zayif — kume yapisi belirsiz';
       const lines = [
-        '] CLUSTERS  (birlikte degisen dosyalar)',
-        '  Iki dosya ayni commit\'te sik degisiyorsa aralarinda bir bag vardir.',
-        '  Kenar agirligi ham sayim degil Jaccard; kumeler Louvain (community',
-        '  detection) ile bulunur.',
-        `  modulerlik Q = ${block.modularity}  (0.30 ustu anlamli yapi demektir)`,
+        `] CLUSTERS — birlikte degisen ${list.length} dosya kumesi`,
+        '',
+        `  Bir kume, ayni commit'lerde birlikte degisen dosyalar demek.`,
+        `  Q = ${block.modularity} → ${anlam}.  (0.30 ustu anlamli sayilir)`,
         ''
       ];
       list.forEach((vein) => {
@@ -183,7 +189,9 @@
         (vein.files || []).slice(0, 4).forEach((file) => lines.push(`      ${file}`));
         if (vein.size > 4) lines.push(`      ... +${vein.size - 4}`);
       });
-      lines.push('', '  Cekirdek dosyalar bu grafa girmez; `taban` ile ayri bak.');
+      lines.push('');
+      lines.push('  Cekirdek dosyalar bu grafa girmez — `taban` ile ayri bak.');
+      lines.push('  Nasil bulundu: `whatis Louvain` · `whatis cluster`');
       return lines.join('\n');
     };
 

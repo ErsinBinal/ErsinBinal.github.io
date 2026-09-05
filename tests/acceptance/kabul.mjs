@@ -88,7 +88,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   ).catch(() => {});
   const tabaka = await page.textContent('#command-output');
   check('tabaka epoch lari Turkce adlariyla listeliyor',
-    /EPOCHS/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrasiyordu/.test(tabaka));
+    /EPOCHS/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrastigi/.test(tabaka)
+    && /Nasil bulundu/.test(tabaka));
 
   await page.fill('#command-input', 'damar');
   await page.press('#command-input', 'Enter');
@@ -97,8 +98,9 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     { timeout: 20000 }
   ).catch(() => {});
   const damar = await page.textContent('#command-output');
-  check('cluster Jaccard + Louvain sonucunu gosteriyor',
-    /CLUSTERS/.test(damar) && /Jaccard/.test(damar) && /modulerlik Q = 0\.[3-9]/.test(damar));
+  check('cluster sonucu ONCE, anlami sonra, yol en sonda',
+    /CLUSTERS/.test(damar) && /Q = 0\.[3-9]/.test(damar)
+    && /kumeler gercekten ayrisiyor/.test(damar) && /Nasil bulundu/.test(damar));
 
   await page.fill('#command-input', 'taban');
   await page.press('#command-input', 'Enter');

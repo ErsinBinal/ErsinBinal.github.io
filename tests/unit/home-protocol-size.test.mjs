@@ -52,13 +52,17 @@ import test from 'node:test';
 //     Eklenen: titlebarPath referansi + renderTranscript icinde tek satir
 //     senkron. Pencere kontrolleri (kapatma) ve kimlik HTML+CSS'te;
 //     protokolde yalniz "yol gercekten degisiyor" baglantisi var.
+//   5018 -> 5026  (2026-09-05, anons kisaltma)
+//     announceTerminal tek satirdan cok satira cikti: ciktinin ilk 220
+//     karakterini ekran okuyucuya dokmek yerine YALNIZ ILK SATIRI
+//     duyuruyor. Yarim kalmis bir paragraf okumak yol gostermez.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 5018;
+const CEILING = 5026;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(

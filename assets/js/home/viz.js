@@ -119,7 +119,9 @@
       return { W: w, H: h };
     };
 
-    const mono = (s) => `${s}px 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace`;
+    // Canvas yazilari da SITENIN fontuyla: terminalin geri kalani
+    // Share Tech Mono kullaniyor, gorsel ondan kopuk durmasin.
+    const mono = (s) => `${s}px 'Share Tech Mono', ui-monospace, 'Cascadia Code', Menlo, monospace`;
 
     // --- SAHNELER -----------------------------------------------------------
     // Her sahne (ctx, W, H, p, data) alir. p = 0..1 ilerleme.

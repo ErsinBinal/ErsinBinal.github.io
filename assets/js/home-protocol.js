@@ -4065,7 +4065,15 @@
         transcript += text;
         if (transcript.length > TRANSCRIPT_MAX) transcript = transcript.slice(-TRANSCRIPT_MAX);
       };
-      const announceTerminal = (text) => { if (commandStatus) commandStatus.textContent = `Terminal sonucu: ${String(text).replace(/\s+/g, ' ').slice(0, 220)}`; };
+      // Anons YALNIZ ILK SATIR. Onceden ciktinin ilk 220 karakteri
+      // aktariliyordu; ekran okuyucuya yarim kalmis bir paragraf okumak
+      // ("...modulerlik Q = 0.637 (") yol gostermez, kafa karistirir.
+      // Basligi duyur, detayi ekranda birak.
+      const announceTerminal = (text) => {
+        if (!commandStatus) return;
+        const ilk = String(text).split('\n').map((s) => s.trim()).filter(Boolean)[0] || '';
+        commandStatus.textContent = ilk.replace(/^\]\s*/, '').slice(0, 120);
+      };
       const transcriptReset = (seed = '') => {
         transcript = seed ? `${seed}\n` : '';
         renderTranscript();
