@@ -4524,3 +4524,46 @@ body.command-shell-open .bugy-onboard {
   min-width: 132px;
   padding: 10px 16px;
 }
+
+/* --- Komut satiri ve nefes payi -------------------------------------------
+   Uc sikayet, uc somut sebep:
+
+   1) "yazilar sol cerceveye degiyor"  -> cikti dolgusu 12px idi.
+   2) "input tum satiri kaplayabilir"  -> .command-row hala UC SUTUNLUYDU
+      (auto 1fr auto); ucuncu sutun tasidigimiz kapatma butonu icindi ve
+      artik 0px olcusunde OLU duruyordu — ustelik 10px gap'i de harciyordu.
+   3) Girisin etrafindaki parlak yesil kutu bir cerceve degil, ODAK
+      HALKASIYDI (terminal acilinca input otomatik odaklaniyor). Kaldirmak
+      erisilebilirlik gerilemesi olurdu; bu yuzden odak GOSTERGESI
+      korunuyor ama kutudan cikip SATIRIN kendisine tasindi — terminalde
+      dogru olan da bu: satir aktif, kutu degil. */
+.command-row {
+  grid-template-columns: auto 1fr;
+  padding: 8px 16px;
+}
+
+.command-input:focus,
+.command-input:focus-visible {
+  outline: none;
+}
+
+/* Odak artik satirda: ust kenar canlanir, zemin isinir, imlec parlar.
+   Klavyeyle gezen icin durum en az kutu kadar acik. */
+.command-row:focus-within {
+  background: rgba(0, 255, 102, 0.07);
+  border-top-color: rgba(0, 255, 102, 0.55);
+  box-shadow: inset 0 1px 0 rgba(0, 255, 102, 0.35);
+}
+.command-row:focus-within .command-prompt {
+  color: #00ff66;
+  text-shadow: 0 0 10px rgba(0, 255, 102, 0.7);
+}
+
+/* Nefes payi: metin cerceveye degmesin. */
+.command-output {
+  padding: 12px 18px;
+}
+.command-help {
+  padding-left: 16px;
+  padding-right: 16px;
+}

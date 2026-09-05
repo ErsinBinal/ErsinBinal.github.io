@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Komut satiri nefes aldi</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-05-komut-satiri-nefes-aldi</guid>
+      <pubDate>Sat, 05 Sep 2026 19:18:14 +0000</pubDate>
+      <description>Komut satiri artik butun satiri kapliyor. Girisin etrafindaki parlak yesil kutu bir cerceve degil ODAK HALKASIYDI; kaldirmak erisilebilirlik gerilemesi olurdu, o yuzden odak gostergesi kutudan cikip SATIRIN kendisine tasindi — ust kenar canlaniyor, zemin isiniyor, imlec parliyor. Ayrica .command-row hala uc sutunluydu; ucuncu sutun basliga tasidigimiz kapatma butonu icindi ve 0px olcusunde olu duruyordu. Cikti dolgusu 12px den 18px e cikti: metin artik cerceveye degmiyor.</description>
+    </item>
+    <item>
       <title>Terminal penceresi</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-05-terminal-penceresi</guid>
