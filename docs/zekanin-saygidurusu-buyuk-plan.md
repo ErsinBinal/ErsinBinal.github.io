@@ -971,6 +971,68 @@ tedariki** bekliyor; uydurulamaz.
 
 ---
 
+### DİL TEMİZLİĞİ — terminal kendi kelimelerini uydurmayı bıraktı  ✅ **2026-09-05**
+
+**Tetikleyen.** Ersin: *"terminalin gelişimini takip edemiyorum artık… terminalde
+kullanılan jargon ve anlatım dili artık bana biraz yabancı geliyor. bu benim
+anlayışsızlığım mı yoksa gerçekten her şey birbirine mi girdi?"*
+
+**Ölçüm cevabı verdi: onun anlayışsızlığı değildi.**
+
+| Bulgu | Sayı |
+|---|---|
+| **9 günde eklenen yeni sergi** | **6** (TORTU, SİGİL, İZ, ARŞİV — üçü aynı gün — OKKAM, FİLİZ) |
+| Yazılabilir toplam | 429 (112 komut + 317 takma ad) |
+| `help` çıktısı | 5 satır |
+| Navigatörde görünen komut | 35 → **%76'sı görünmüyor** |
+| Ayrı yardım yüzeyi | 7 (`help`, `kilavuz`, `man`, `basla`, `tour`, `next`, `neden`) |
+
+**Ve bu planın kendi kuralı çiğnenmişti.** §9: *"Faz bütçesi kuralı. Aynı anda
+birden fazla amiral gemisi açılmaz."* Dokuz günde beş amiral gemisi + FİLİZ
+açıldı. Kuralı yazan da çiğneyen de aynı taraf.
+
+**Karar (Ersin).** *"kendi uydurduğumuz sözcükleri evrensel karşılıklarıyla
+değiştirelim… evrensel yazılım İngilizcesi olsun."*
+
+**Uygulama — iki kategori.**
+
+*İç jargon değiştirildi.* Bir kavramın gerçek dünyada adı varsa yeni ad uydurulmaz:
+
+| Uydurma | Gerçek terim | Kaynak |
+|---|---|---|
+| KAROT | **COMMIT** | git |
+| TABAN KAYA | **CORE FILES** / root commit | git |
+| DAMAR | **CLUSTER** | community detection |
+| TABAKA / era | **EPOCH** | changepoint detection |
+| MÜHÜR | **CHECKSUM** | hashing |
+| ELEK | **FILTER** | yazılım |
+| ZAR | **GATE** | CI/CD |
+| ÜRETEÇ | **GENERATOR** | yazılım |
+| RAF | **BUCKET** | yazılım |
+| KALINTI | **ARTIFACT** | build sistemleri |
+
+*Sergi adları korundu* (TORTU, OKKAM, FİLİZ, SİGİL, ARŞİV, İZ) ama artık her biri
+başlığında **İngilizce karşılığını** basıyor: *"(yazılım dilinde: fuzzing + filter
++ CI gate — whatis fuzz)"*.
+
+**Yeni: sözlük — ve iki gerçek unix komutu.**
+`assets/js/home/glossary.js`, 27 terim. `whatis <terim>` ve `apropos <kelime>`
+uydurulmadı; ikisi de gerçek unix komutu ve burada aynı işi yapıyorlar. Her
+kayıt **kaynağını** söylüyor, böylece *"bu bize mi özgü?"* sorusu cevaplanıyor:
+`cluster → graf teorisi` · `gate → CI/CD` · `TORTU → bu siteye özel ad`.
+
+**Dil bir testle kilitlendi.** `tests/unit/home-glossary.test.mjs`: uydurma
+terimler kullanıcıya **basılan** metne geri sızarsa test düşer (yorum
+satırlarında serbest — orada tarihi anlatıyoruz).
+
+**Bonus: gerçek bir çakışma yakalandı.** `apropos` için düşünülen `ara terim`
+takma adı, arşiv aramasının `ara ` önekiyle çarpışıyordu — komut-uzayı testi
+bunu yakaladı, `terim ara` oldu.
+
+**Kabul.** Birim 227/227 (10'u sözlük).
+
+---
+
 ## 8. Destek dilimleri
 
 Tamlık eleştirisinin "eklenmezse plan eksik kalır" dediği altı dilim. Her biri
@@ -1019,7 +1081,7 @@ paylaşılamaz ve paylaşılamayan kazı yarım kalır.
 | Sözdizimi kapısındaki JS dosyası | ~~25~~ → **79** | ✅ Faz -1 (dosya sistemi taraması) |
 | `auth-gate.js` kullanan sayfa | 13 (~~13 kilitli~~ → **10 kilitli + 3 açık**) | ✅ Faz 0 |
 | Gerekçe (`why`) üreten karar fonksiyonu | ~~0~~ → **navigator.suggest** | ✅ Faz 0 |
-| Birim test | ~~102~~ → **217** | ✅ (kabul testi ayrıca 37) |
+| Birim test | ~~102~~ → **227** | ✅ (kabul testi ayrıca 41) |
 | Elle yazılmış kalıntı | ruins 3 (**rozetli donduruldu**) · kazılan 127 | ✅ Z1.4 |
 | Terminalde History API çağrısı | ~~0~~ → **pushState + popstate** | ✅ Z3 |
 | `@media print` | **0** | ↑ |

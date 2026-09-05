@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Terminal artik kelime uydurmuyor</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-04-terminal-artik-kelime-uydurmuyor</guid>
+      <pubDate>Fri, 04 Sep 2026 23:52:28 +0000</pubDate>
+      <description>Terminal kendi kelimelerini uydurmayi birakti. Bize ozgu terimler (karot, taban kaya, damar, muhur, elek, zar, uretec, kalinti) yerine git-unix-bilgisayar bilimi terimleri kondu: commit, core files, cluster, epoch, checksum, filter, gate, generator, artifact. Sergi adlari kaldi ama artik her biri basliginda Ingilizce karsiligini basiyor. Iki yeni komut ikisi de GERCEK unix komutu: whatis &lt;terim&gt; bir kelimenin ne demek oldugunu VE nereden geldigini yazar, apropos &lt;kelime&gt; sozlukte arar. 27 terim kayitli; her biri kaynagini soyluyor, boylece hangisinin evrensel hangisinin bize ozgu oldugu ekranda belli.</description>
+    </item>
+    <item>
       <title>FILIZ - sitenin atolyesi</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-04-filiz-sitenin-atolyesi</guid>

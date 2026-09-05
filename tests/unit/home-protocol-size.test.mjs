@@ -30,13 +30,20 @@ import test from 'node:test';
 //     Not: filizCommand alt komutlari protokolde ayristiriyor cunku
 //     dogrulama okkamMod._run'a ihtiyac duyuyor — iki modulu birbirine
 //     baglayan tel protokolun isidir, modulun degil.
+//   4955 -> 4996  (2026-09-04, GLOSSARY / dil temizligi)
+//     Eklenen: glossary modul kurulumu + whatis/apropos sarmalayicilari.
+//     KARAR MANTIGI PROTOKOLE GIRMEDI — butun sozluk ve arama
+//     assets/js/home/glossary.js icinde (saf). Protokolde 12 satir tel.
+//     Bu dilim protokolu BUYUTMEK icin degil, terminalin DILINI
+//     sadelestirmek icin acildi: uydurma terimler (karot/damar/elek/zar)
+//     yerine git-unix-CS terimleri kondu.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 4955;
+const CEILING = 4996;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(

@@ -154,6 +154,7 @@
       let arsivMod = null;
       let okkamMod = null;
       let filizMod = null;
+      let glossaryMod = null;
       let dreamsMod = null;
       let netMod = null;
       let navigatorMod = null;
@@ -1472,6 +1473,23 @@
           });
         } catch (error) {
           console.error('[home-protocol] Okkam module failed', error);
+          return null;
+        }
+      })();
+
+      // GLOSSARY (assets/js/home/glossary.js): terminalin sozlugu.
+      // `whatis` ve `apropos` GERCEK unix komutlaridir ve burada ayni isi
+      // yaparlar. Veri gerektirmez; hemen kurulur.
+      glossaryMod = (() => {
+        const createGlossary = window.ConviviumHome?.createGlossary;
+        if (typeof createGlossary !== 'function') {
+          console.error('[home-protocol] Glossary module unavailable');
+          return null;
+        }
+        try {
+          return createGlossary();
+        } catch (error) {
+          console.error('[home-protocol] Glossary module failed', error);
           return null;
         }
       })();
@@ -2806,6 +2824,18 @@
           action: () => okkamCommand('')
         },
         {
+          command: 'whatis',
+          description: 'terim sozlugu: bir kelimenin ne demek oldugunu ve nereden geldigini yazar',
+          aliases: ['sozluk', 'terim'],
+          action: () => whatisCommand('')
+        },
+        {
+          command: 'apropos',
+          description: 'sozlukte kelimeye gore arar (whatis in tersi: tanimdan terime)',
+          aliases: ['terim ara'],
+          action: () => aproposCommand('')
+        },
+        {
           command: 'filiz',
           description: 'atolye: sitenin kendi urettigi bulmacalar ve neyi neden eledigi',
           aliases: ['atolye', 'uretim'],
@@ -3835,6 +3865,15 @@
         return filizMod.overview();
       };
 
+      // whatis / apropos — ikisi de gercek unix komutu.
+      const whatisCommand = (raw) => (glossaryMod
+        ? glossaryMod.whatis(raw)
+        : 'whatis: sozluk yuklenmedi (SINIRLI MOD).');
+
+      const aproposCommand = (raw) => (glossaryMod
+        ? glossaryMod.apropos(raw)
+        : 'apropos: sozluk yuklenmedi (SINIRLI MOD).');
+
       const clearCommandSuggestions = () => {
         commandShell?.classList.remove('has-suggestions');
         currentSuggestions = [];
@@ -4186,6 +4225,8 @@
         ['tortu ', value => kazCommand(value)],
         ['okkam ', value => okkamCommand(value)],
         ['filiz ', value => filizCommand(value)],
+        ['whatis ', value => whatisCommand(value)],
+        ['apropos ', value => aproposCommand(value)],
         ['ara ', value => araCommand(value)],
         ['bul ', value => araCommand(value)],
         ['step ', value => stepCommand(value)],

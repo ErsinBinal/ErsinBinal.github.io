@@ -198,6 +198,8 @@
         const target = puzzle.target;
         const lines = [
           '] OKKAM — en kisa program',
+          '  (yazilim dilinde: program synthesis + MDL — whatis MDL)',
+          '',
           '  Bir oruntunun kuralini ariyoruz: bu diziyi ureten en KISA program hangisi?',
           '  Olcu bit cinsinden (MDL). Makine evrensel arama yapar; sen daha kisasini',
           '  bulabilirsen makine acikca kaybeder.',

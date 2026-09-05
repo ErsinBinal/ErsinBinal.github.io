@@ -76,7 +76,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     { timeout: 20000 }
   ).catch(() => {});
   const kaz = await page.textContent('#command-output');
-  check('kaz gercek bir tabaka kaziyor', /KAROT/.test(kaz) && /commit/.test(kaz) && /uydurulmadi/.test(kaz));
+  check('kaz gercek bir commit kaziyor', /COMMIT/.test(kaz) && /commit/.test(kaz) && /uydurulmadi/.test(kaz));
   check('kazilan tabaka surum bumpi degil', !/\?v=\d+/.test(kaz.slice(kaz.indexOf('kazilan katman'))));
 
   await page.fill('#command-input', 'tabaka');
@@ -87,8 +87,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     { timeout: 20000 }
   ).catch(() => {});
   const tabaka = await page.textContent('#command-output');
-  check('tabaka eralari Turkce adlariyla listeliyor',
-    /TABAKALAR/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrasiyordu/.test(tabaka));
+  check('tabaka epoch lari Turkce adlariyla listeliyor',
+    /EPOCHS/.test(tabaka) && /Katmani/.test(tabaka) && /neyle ugrasiyordu/.test(tabaka));
 
   await page.fill('#command-input', 'damar');
   await page.press('#command-input', 'Enter');
@@ -97,8 +97,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     { timeout: 20000 }
   ).catch(() => {});
   const damar = await page.textContent('#command-output');
-  check('damar Jaccard + Louvain sonucunu gosteriyor',
-    /DAMARLAR/.test(damar) && /Jaccard/.test(damar) && /modulerlik Q = 0\.[3-9]/.test(damar));
+  check('cluster Jaccard + Louvain sonucunu gosteriyor',
+    /CLUSTERS/.test(damar) && /Jaccard/.test(damar) && /modulerlik Q = 0\.[3-9]/.test(damar));
 
   await page.fill('#command-input', 'taban');
   await page.press('#command-input', 'Enter');
@@ -106,12 +106,12 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     // Cikti animasyonla yazilir. `tabaka` da 'aktif gun' yazdigi icin ona
     // degil, taban kayanin kendi satirina bak.
     () => /service-worker\.js/.test(
-      (document.getElementById('command-output')?.textContent || '').split('TABAN KAYA').pop()
+      (document.getElementById('command-output')?.textContent || '').split('CORE FILES').pop()
     ),
     { timeout: 20000 }
   ).catch(() => {});
   const taban = await page.textContent('#command-output');
-  check('taban kaya ayri gosteriliyor', /TABAN KAYA/.test(taban) && /index\.html/.test(taban) && /service-worker\.js/.test(taban));
+  check('cekirdek dosyalar ayri gosteriliyor', /CORE FILES/.test(taban) && /index\.html/.test(taban) && /service-worker\.js/.test(taban));
 
   // --- Z1.4: /ruins devri — kurmaca ile kazilmis ayriliyor ---
   await page.fill('#command-input', 'cd ruins');
@@ -139,6 +139,57 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   await page.close();
 }
 
+// --- SOZLUK: whatis / apropos (terminalin dili) ---
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`, { waitUntil: 'load' });
+  await page.waitForTimeout(6500);
+  await page.click('#command-launch');
+  await page.waitForFunction(
+    () => /terminal ready/i.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 25000 }
+  );
+
+  await page.fill('#command-input', 'whatis checksum');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /kaynak/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const w = await page.textContent('#command-output');
+  check('whatis terimi tanimliyor ve kaynagini soyluyor',
+    /bozulup bozulmadigini/.test(w) && /bilgisayar bilimi/.test(w));
+
+  await page.fill('#command-input', 'whatis TORTU');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /repository archaeology/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const tr = await page.textContent('#command-output');
+  check('bize ozel adlar ACIKCA isaretleniyor', /bu siteye ozel ad/.test(tr));
+
+  await page.fill('#command-input', 'apropos git');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /apropos git/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const ap = await page.textContent('#command-output');
+  check('apropos kelimeye gore ariyor', /commit/.test(ap));
+
+  await page.fill('#command-input', 'help');
+  await page.press('#command-input', 'Enter');
+  await page.waitForFunction(
+    () => /BILMEDIGIN KELIME/.test(document.getElementById('command-output')?.textContent || ''),
+    { timeout: 15000 }
+  ).catch(() => {});
+  const h = await page.textContent('#command-output');
+  check('help sozluge yol gosteriyor', /whatis <terim>/.test(h));
+
+  await page.close();
+}
+
 // --- FILIZ: 5. boyut, sitenin atolyesi ---
 {
   const page = await browser.newPage();
@@ -157,8 +208,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
     { timeout: 25000 }
   ).catch(() => {});
   const genel = await page.textContent('#command-output');
-  check('filiz atolyeyi gosteriyor', /URETEC/.test(genel) && /ELEK/.test(genel));
-  check('filiz red sebeplerini YAYINLIYOR', /neden elendiler/.test(genel) && /MDL kazanci yok/.test(genel));
+  check('filiz atolyeyi gosteriyor', /GENERATOR/.test(genel) && /FILTER/.test(genel));
+  check('filiz red sebeplerini YAYINLIYOR', /filtreden neden gecemediler/.test(genel) && /MDL kazanci yok/.test(genel));
   check('filiz acik meydan okuma sunuyor', /site kendi cozemedigi soruyu soruyor/.test(genel));
 
   await page.fill('#command-input', 'filiz nasil');
@@ -169,7 +220,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   ).catch(() => {});
   const nasil = await page.textContent('#command-output');
   check('filiz mekanizmasini ACIKLIYOR',
-    /Dogrulayicisi olmayan sey uretilmez/.test(nasil) && /kendi elegini/.test(nasil));
+    /Dogrulayicisi olmayan sey uretilmez/.test(nasil) && /kendi filtresini/.test(nasil));
 
   // Yanlis cevap kabul edilmemeli.
   await page.fill('#command-input', 'filiz coz OUT OUT OUT');
@@ -265,7 +316,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   ).catch(() => {});
   const paramOut = await page.textContent('#command-output');
   check('parametreli async komut cikti veriyor (kaz 1)',
-    /KAROT\s+1\//.test(paramOut) && !/\[object Promise\]/.test(paramOut));
+    /COMMIT\s+1\//.test(paramOut) && !/\[object Promise\]/.test(paramOut));
 
   await page.fill('#command-input', 'ara altin oran');
   await page.press('#command-input', 'Enter');
@@ -393,14 +444,14 @@ const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); c
   ).catch(() => {});
   const brokenOut = await broken.textContent('#command-output');
   check('tek karakteri degisen adres REDDEDILIYOR',
-    /muhru tutmuyor/.test(brokenOut) && !/KAROT/.test(brokenOut));
+    /muhru tutmuyor/.test(brokenOut) && !/COMMIT/.test(brokenOut));
   await broken.close();
 
   // Geri tusu: terminalde ilk kez tarayici gecmisi.
   await page.fill('#command-input', 'tabaka');
   await page.press('#command-input', 'Enter');
   await page.waitForFunction(
-    () => /TABAKALAR/.test(document.getElementById('command-output')?.textContent || ''),
+    () => /EPOCHS/.test(document.getElementById('command-output')?.textContent || ''),
     { timeout: 20000 }
   );
   await page.goBack();

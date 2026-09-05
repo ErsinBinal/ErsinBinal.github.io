@@ -133,12 +133,12 @@ test('sha oneki ve derinlik ile hedefli kazi', () => {
   assert.match(tortu.dig('zzz'), /tabaka yok/);
 });
 
-test('taban kaya ayri gosterilir ve damar sayilmaz', () => {
+test('cekirdek dosyalar ayri gosterilir ve cluster sayilmaz', () => {
   const out = fixture().bedrock();
-  assert.match(out, /TABAN KAYA/);
+  assert.match(out, /CORE FILES/);
   assert.match(out, /index\.html/);
   assert.match(out, /service-worker\.js/);
-  assert.match(out, /damar degildir/);
+  assert.match(out, /CLUSTER degildir/);
 });
 
 test('cikti hicbir kosulda e-posta tasimiyor', () => {
@@ -253,7 +253,7 @@ test('tabaka eralari Turkce adlariyla listeliyor', () => {
   const createTortu = loadFactory();
   const tortu = createTortu({ getData: () => withEras, getDayKey: () => '2026-08-27' });
   const out = tortu.layers();
-  assert.match(out, /TABAKALAR/);
+  assert.match(out, /EPOCHS/);
   assert.match(out, /Atolye Katmani/);
   assert.match(out, /Oyun Katmani/);
   assert.match(out, /neyle ugrasiyordu/, 'eksenin ne oldugu aciklanmali');
@@ -270,9 +270,9 @@ test('era verisi yoksa kaz yine calisir (fail-closed degil, fail-soft)', () => {
   const createTortu = loadFactory();
   const tortu = createTortu({ getData: () => sampleData, getDayKey: () => '2026-08-27' });
   const out = tortu.dig('aaa');
-  assert.match(out, /KAROT/, 'era olmadan da karot cikmali');
+  assert.match(out, /COMMIT/, 'epoch olmadan da commit cikmali');
   assert.doesNotMatch(out, /katman\s+\d/, 'era yoksa katman satiri yazilmamali');
-  assert.match(tortu.layers(), /era hesaplanmamis/);
+  assert.match(tortu.layers(), /epoch hesaplanmamis/);
 });
 
 test('uretilen gercek eralar sozlesmeye uyuyor', async () => {
@@ -378,7 +378,7 @@ test('uretilen damarlar sozlesmeye uyuyor', async () => {
   }
 });
 
-test('damar ciktisi Q degerini ve taban kaya ayrimini soyluyor', () => {
+test('cluster ciktisi Q degerini ve cekirdek dosya ayrimini soyluyor', () => {
   const createTortu = loadFactory();
   const withVeins = {
     ...sampleData,
@@ -389,10 +389,10 @@ test('damar ciktisi Q degerini ve taban kaya ayrimini soyluyor', () => {
   };
   const tortu = createTortu({ getData: () => withVeins, getDayKey: () => '2026-08-28' });
   const out = tortu.veins();
-  assert.match(out, /DAMARLAR/);
+  assert.match(out, /CLUSTERS/);
   assert.match(out, /0\.637/);
   assert.match(out, /Jaccard/);
-  assert.match(out, /Taban kaya bu grafa girmez/);
+  assert.match(out, /Cekirdek dosyalar bu grafa girmez/);
 });
 
 // --- Z1.4: /ruins devri --------------------------------------------------

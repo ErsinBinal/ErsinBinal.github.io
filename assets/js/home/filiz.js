@@ -74,15 +74,17 @@
 
       const lines = [
         '] FILIZ — atolye',
+        '  (yazilim dilinde: fuzzing + filter + CI gate — whatis fuzz)',
+        '',
         '  TORTU gecmisi kazar. FILIZ yeni olani uretir.',
         '  Uretilen her dizinin altinda onu GERCEKTEN ureten bir program var;',
         '  o program her an tekrar kosulabilir. Dogrulanamayan sey uretilmez.',
         '',
-        '  URETEC',
+        '  GENERATOR  (uretec)',
         `    tarandi   ${Number(uretim.tarandi || 0).toLocaleString('tr-TR')} program (uzunluk <= ${uretim.uzunluk || '?'})`,
         `    bulundu   ${Number(uretim.dizi || 0).toLocaleString('tr-TR')} farkli dizi`,
         '',
-        '  ELEK',
+        '  FILTER  (elek)',
         `    aday      ${elek.aday || 0}`,
         `    gecen     ${elek.gecen || 0}`,
         `    elenen    ${elek.elenen || 0}  (%${redOrani} red)`,
@@ -94,7 +96,7 @@
       // saymak "1624 elendi" deyip 40 gostermek olurdu.
       const sayim = (elek && elek.sayim) ? elek.sayim : null;
       if (sayim) {
-        lines.push('    neden elendiler:');
+        lines.push('    filtreden neden gecemediler:');
         Object.entries(sayim)
           .sort((a, b) => b[1] - a[1])
           .forEach(([why, n]) => lines.push(`      ${String(n).padStart(5)}  ${why}`));
@@ -103,7 +105,7 @@
 
       // Raf sayilari da TAM sayidan gelir; asagidaki listeler kirpiktir.
       const raf = d.raf || { cozulen: cozulen.length, acik: acik.length };
-      lines.push(`  RAFLAR    cozulen ${raf.cozulen} · acik ${raf.acik}`);
+      lines.push(`  BUCKETS   solved ${raf.cozulen} · open ${raf.acik}`);
       if (elek.siniflandirilamayan) {
         lines.push(`            ${elek.siniflandirilamayan} aday siniflandirilamadi — gece butcesi yetmedi.`);
         lines.push('            Bu bir eksiklik degil, ILAN EDILEN bir sinir.');
@@ -111,7 +113,7 @@
       lines.push('');
 
       if (cozulen.length) {
-        lines.push('  COZULEN — OKKAM bunlari buluyor:');
+        lines.push('  SOLVED — OKKAM bunlari buluyor:');
         cozulen.slice(0, 5).forEach((p) => lines.push(
           `    ${seq(p.target).padEnd(26)} ${String(p.program).padEnd(28)} %${p.gain} kazanc`
         ));
@@ -120,12 +122,12 @@
 
       const today = dailyOpen();
       if (today) {
-        lines.push('  ACIK — site kendi cozemedigi soruyu soruyor:');
+        lines.push('  OPEN — site kendi cozemedigi soruyu soruyor:');
         lines.push('');
         lines.push(`    ${seq(today.target)}`);
         lines.push(`    FILIZ bu diziyi ureten ${today.length} talimatlik bir program BILIYOR`);
         lines.push('    — kendisi uretti. Ama OKKAM ziyaretci butcesiyle onu bulamiyor.');
-        lines.push(`    muhur ${today.seal}   (cevabin dogrulugu bununla olculur)`);
+        lines.push(`    checksum ${today.seal}   (cevabin dogrulugu bununla olculur)`);
         lines.push('');
         lines.push('    Denemek icin:  filiz coz INC OUT JNZ');
       }
@@ -140,13 +142,13 @@
       const acik = list('acik');
       if (!acik.length) return 'filiz: acik meydan okuma yok.';
       const lines = [
-        '] FILIZ — acik meydan okumalar',
+        '] FILIZ — open (acik meydan okumalar)',
         '  FILIZ bu dizileri ureten programi biliyor. OKKAM bulamiyor.',
         '  Makinenin siniri burada somut: uzunlugu yaziyor, cevabi degil.',
         ''
       ];
       acik.slice(0, 16).forEach((p) => lines.push(
-        `    ${seq(p.target).padEnd(30)} ${p.length} talimat / ${p.bits} bit   muhur ${p.seal}`
+        `    ${seq(p.target).padEnd(30)} ${p.length} talimat / ${p.bits} bit   checksum ${p.seal}`
       ));
       lines.push('');
       lines.push('  Cozmek icin: filiz coz <program>   (ornek: filiz coz INC OUT JNZ)');
@@ -156,19 +158,19 @@
     const how = () => [
       '] FILIZ nasil calisiyor',
       '',
-      '  UC ORGAN',
-      '    URETEC  butun kisa programlari tarar, ne urettiklerine bakar',
-      '    ELEK    mekanik olarak eler ve REDDEDEBILIR; redlerini yayinlar',
-      '    ZAR     hicbir sey siteye kendiliginden girmez: git diff + onay',
+      '  UC ORGAN  (hepsi standart yazilim terimi — whatis ile bak)',
+      '    GENERATOR  butun kisa programlari tarar, ne urettiklerine bakar',
+      '    FILTER     mekanik olarak eler ve REDDEDEBILIR; redlerini yayinlar',
+      '    GATE       hicbir sey siteye kendiliginden girmez: git diff + onay',
       '',
       '  UC KURAL (Anayasa Madde 6)',
       '    1. Dogrulayicisi olmayan sey uretilmez.',
       '       Bulmaca uretilebilir — calistirip bakariz.',
       '       Gecmis hakkinda hikaye uretilemez — calistiracak halimiz yok.',
-      '    2. Elek reddedebilmeli. Red orani sifira duserse kapi bozulmustur.',
-      '    3. Uretec kendi elegini, anayasasini ya da yayin ritualini uretemez.',
+      '    2. Filter reddedebilmeli. Red orani sifira duserse gate bozulmustur.',
+      '    3. Generator kendi filtresini, anayasasini ya da yayin ritualini uretemez.',
       '',
-      '  Uretec ile elek AYNI motoru kullanir (okkam.js): olculen zorluk,',
+      '  Generator ile filter AYNI motoru kullanir (okkam.js): olculen zorluk,',
       '  senin gordugun zorluktur.',
       '',
       '  Havuz: filiz · Kaynak: /assets/data/filiz.json'

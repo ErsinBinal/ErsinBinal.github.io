@@ -49,22 +49,27 @@ denendi ve kapandı.
 
 | Organ | Ne yapar | Dosya |
 |---|---|---|
-| **ÜRETEÇ** | Bütün kısa programları tarar, ne ürettiklerine bakar | `scripts/build-filiz.js` |
-| **ELEK** | Mekanik eler; **reddedebilmek zorunda** | aynı dosya, ikinci aşama |
-| **ZAR** | Çırağın eline vurulan yer: nereye yazabileceğini kilitler | `scripts/filiz-zar.js` |
+| **GENERATOR** | Bütün kısa programları tarar, ne ürettiklerine bakar | `scripts/build-filiz.js` |
+| **FILTER** | Mekanik eler; **reddedebilmek zorunda** | aynı dosya, ikinci aşama |
+| **GATE** | Çırağın eline vurulan yer: nereye yazabileceğini kilitler | `scripts/filiz-zar.js` |
+
+> **Not (2026-09-05):** Bu üç kelime önce "üreteç / elek / zar" diye
+> uydurulmuştu. Hepsi gerçek yazılım terimleriyle değiştirildi —
+> `generator`, `filter`, `gate` (CI/CD'nin kendi kelimesi). Terminalde
+> `whatis gate` yazarsan tanımını ve nereden geldiğini görürsün.
 
 İlk gece ölçülen:
 
 ```
-ÜRETEÇ  1.435.945 program tarandı  →  2.414 farklı dizi
-ELEK    790 geçti, 1.624 elendi (%67 red)
+GENERATOR  1.435.945 program tarandı  →  2.414 farklı dizi
+FILTER     790 geçti, 1.624 elendi (%67 red)
           1431  MDL kazancı yok
            161  sayılar okunamayacak kadar büyük
             30  sabit dizi — örüntü yok
              2  zaten OKKAM havuzunda
 ```
 
-**Neden %67 red iyi bir şey:** hiçbir şeyi elemeyen elek, elek değildir. Eğer
+**Neden %67 red iyi bir şey:** hiçbir şeyi elemeyen filtre, filtre değildir. Eğer
 red oranı bir gün sıfıra düşerse kapı bozulmuş demektir — o yüzden build
 o durumda **düşüyor**, dosya yazmıyor.
 
@@ -85,7 +90,7 @@ FILIZ bu diziyi ureten 5 talimatlik bir program BILIYOR
 muhur 1h9utqp
 ```
 
-Cevap saklı ama **uzunluğu yazılı** ve **mührü var**. Biri doğru programı
+Cevap saklı ama **uzunluğu yazılı** ve **checksum'ı var**. Biri doğru programı
 bulursa `filiz coz` onu doğruluyor:
 
 > **DOĞRULANDI — FİLİZ'in bildiği programın ta kendisi.
@@ -101,6 +106,8 @@ bulursa `filiz coz` onu doğruluyor:
 | `filiz acik` | Bütün açık meydan okumalar |
 | `filiz coz <program>` | Cevabını doğrular (örn. `filiz coz DEC OUT DEC JNZ`) |
 | `filiz nasil` | Mekanizmayı anlatır |
+| `whatis <terim>` | Bilmediğin kelimenin ne demek olduğunu ve **nereden geldiğini** yazar |
+| `apropos <kelime>` | Sözlükte kelimeye göre arar |
 
 Takma adlar: `atolye`, `uretim`.
 
@@ -169,8 +176,9 @@ Build kendini durdurur ve dosya yazmaz. Bu da kasıtlı.
 | Dosya | İş |
 |---|---|
 | `scripts/build-filiz.js` | Üreteç + elek. Bütün işi bu yapar |
-| `scripts/filiz-zar.js` | Zar. Nereye yazılabileceğini kilitler |
+| `scripts/filiz-zar.js` | Gate. Nereye yazılabileceğini kilitler |
 | `assets/js/home/filiz.js` | Terminaldeki `filiz` komutunun beyni (saf okuyucu) |
+| `assets/js/home/glossary.js` | Sözlük — `whatis` ve `apropos` buradan besleniyor |
 | `assets/data/filiz.json` | Üretimin çıktısı. **Gece işinin yazabildiği tek dosya** |
 | `.github/workflows/filiz-gece.yml` | Gece işi |
 | `tests/unit/home-filiz.test.mjs` | 18 test — çoğu "ne yapabildiğini" değil **"ne yapamadığını"** kilitler |

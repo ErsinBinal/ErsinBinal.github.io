@@ -65,7 +65,7 @@
     const renderCore = (core, depth, total) => {
       if (!core) return 'kaz: bu derinlikte tabaka yok.';
       const lines = [
-        `] KAROT ${pad(depth + 1, 3)}/${total}  derinlik ${total - depth - 1} tabaka`,
+        `] COMMIT ${pad(depth + 1, 3)}/${total}  ${total - depth - 1} commit geride`,
         `  tarih   ${core.date}`,
         `  commit  ${core.sha}`,
         `  dosya   ${core.path}`,
@@ -112,14 +112,15 @@
     // `taban` — commit frekansi cok yuksek dosyalar bir damar degil, TABAN KAYADIR.
     const bedrock = () => {
       const data = getData();
-      if (!ready()) return 'taban: tortu katmani henuz yuklenmedi.';
+      if (!ready()) return 'taban: veri henuz yuklenmedi.';
       const rocks = Array.isArray(data.bedrock) ? data.bedrock : [];
-      if (!rocks.length) return 'taban: bu depoda taban kaya olusmamis.';
+      if (!rocks.length) return 'taban: bu depoda cekirdek dosya cikmadi.';
 
       const lines = [
-        '] TABAN KAYA',
-        '  Her commit\'te degisen dosyalar bir damar degildir; sitenin uzerinde',
-        '  durdugu zemindir. Kazi bunlari ayri tutar, yoksa her katmanda cikarlar.',
+        '] CORE FILES  (cekirdek dosyalar)',
+        '  Neredeyse her commit\'te degisen dosyalar bir CLUSTER degildir —',
+        '  sitenin uzerinde durdugu zemindir. Analiz bunlari ayri tutar,',
+        '  yoksa butun cluster\'lari birbirine baglayip yapiyi yok ederler.',
         ''
       ];
       rocks.forEach((rock) => {
@@ -135,16 +136,17 @@
     // bulunur; takvim gununde degil. Gerekce: 574 commit / 62 aktif gun,
     // gun serisinin ~%89'u sifir olurdu.
     const layers = () => {
-      if (!ready()) return 'tabaka: tortu katmani henuz yuklenmedi.';
+      if (!ready()) return 'tabaka: veri henuz yuklenmedi.';
       const list = eras();
-      if (!list.length) return 'tabaka: era hesaplanmamis.';
+      if (!list.length) return 'tabaka: epoch hesaplanmamis.';
 
       const data = getData();
       const lines = [
-        '] TABAKALAR',
-        '  Eralar "ne zaman" ekseninde degil "neyle ugrasiyordu" ekseninde',
-        '  bulunur: her commit\'in dosyalari sekiz kategoriye dagilir ve bu',
-        '  dagilimin degistigi yerler PELT ile isaretlenir.',
+        '] EPOCHS  (donemler)',
+        '  Donemler "ne zaman" ekseninde degil "neyle ugrasiyordu" ekseninde',
+        '  BULUNUR: her commit\'in dosyalari sekiz kategoriye dagilir ve bu',
+        '  dagilimin degistigi noktalar PELT (changepoint detection) ile',
+        '  isaretlenir. Elle yazilmaz.',
         ''
       ];
       list.forEach((era) => {
@@ -154,7 +156,7 @@
         lines.push(`      ${era.from} -> ${era.to}   ${String(era.commits).padStart(3)} commit  ${bar}`);
         lines.push(`      ${mix}`);
       });
-      lines.push('', `  ${data.repo.commits} commit / ${data.repo.activeDays} aktif gun / ${list.length} era`);
+      lines.push('', `  ${data.repo.commits} commit / ${data.repo.activeDays} aktif gun / ${list.length} epoch`);
       return lines.join('\n');
     };
 
@@ -162,16 +164,17 @@
     // topluluk tespiti Louvain. Taban kaya grafa hic girmez; girerse butun
     // damarlari birbirine baglayip yapiyi yok eder.
     const veins = () => {
-      if (!ready()) return 'damar: tortu katmani henuz yuklenmedi.';
+      if (!ready()) return 'damar: veri henuz yuklenmedi.';
       const data = getData();
       const block = data.veins || {};
       const list = Array.isArray(block.veins) ? block.veins : [];
-      if (!list.length) return 'damar: bu depoda damar olusmamis.';
+      if (!list.length) return 'damar: bu depoda cluster olusmamis.';
 
       const lines = [
-        '] DAMARLAR',
-        '  Iki dosya ayni commit\'te sik degisiyorsa aralarinda bir damar vardir.',
-        '  Kenar agirligi ham sayim degil Jaccard; topluluklar Louvain ile bulunur.',
+        '] CLUSTERS  (birlikte degisen dosyalar)',
+        '  Iki dosya ayni commit\'te sik degisiyorsa aralarinda bir bag vardir.',
+        '  Kenar agirligi ham sayim degil Jaccard; kumeler Louvain (community',
+        '  detection) ile bulunur.',
         `  modulerlik Q = ${block.modularity}  (0.30 ustu anlamli yapi demektir)`,
         ''
       ];
@@ -180,7 +183,7 @@
         (vein.files || []).slice(0, 4).forEach((file) => lines.push(`      ${file}`));
         if (vein.size > 4) lines.push(`      ... +${vein.size - 4}`);
       });
-      lines.push('', '  Taban kaya bu grafa girmez; `taban` ile ayri bak.');
+      lines.push('', '  Cekirdek dosyalar bu grafa girmez; `taban` ile ayri bak.');
       return lines.join('\n');
     };
 

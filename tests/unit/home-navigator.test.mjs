@@ -91,6 +91,7 @@ test('Sinyal Pusulasi renders a compact contextual main help', () => {
     '  BURADAYIM /CONVIVIUM/RUINS',
     '  SIRADAKI examine buluntu',
     '  DERINLES help kesfet · TAM LISTE help all',
+    '  BILMEDIGIN KELIME whatis <terim> · apropos <kelime>',
     ']'
   ].join('\n'));
 });

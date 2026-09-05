@@ -29,7 +29,7 @@ function loadOkkam() {
 
 // --- MADDE 6/2: elek reddedebilmeli -----------------------------------------
 
-test('ELEK GERCEKTEN REDDEDIYOR — hicbir seyi elemeyen elek tiyatrodur', () => {
+test('FILTER GERCEKTEN REDDEDIYOR — hicbir seyi elemeyen filtre tiyatrodur', () => {
   assert.ok(data.elek.elenen > 0, 'red sayisi sifir olamaz');
   const oran = data.elek.elenen / data.elek.aday;
   assert.ok(oran > 0.2, `red orani cok dusuk (%${Math.round(oran * 100)}) — kapi bozulmus olabilir`);
@@ -41,13 +41,13 @@ test('build eleyemezse DOSYA YAZMIYOR', () => {
   assert.match(buildSource, /process\.exit\(1\)/);
 });
 
-test('red sebepleri YAYINLANIYOR — elek ne attigini saklamaz', () => {
+test('red sebepleri YAYINLANIYOR — filter ne attigini saklamaz', () => {
   assert.ok(Array.isArray(data.red) && data.red.length > 0);
   for (const r of data.red) {
     assert.ok(Array.isArray(r.target), 'reddedilen hedef kayitli olmali');
     assert.ok(typeof r.why === 'string' && r.why.length > 3, 'her red gerekceli olmali');
   }
-  assert.match(loadFiliz().overview(), /neden elendiler/);
+  assert.match(loadFiliz().overview(), /filtreden neden gecemediler/);
 });
 
 // --- MADDE 6/1: dogrulayicisi olmayan sey uretilmez --------------------------
@@ -115,7 +115,7 @@ test('yanlis cevap KABUL EDILMIYOR', () => {
 
 // --- MADDE 6/4: uretec kendi uretecini uretemez ------------------------------
 
-test('ZAR: izinli alan YALNIZ uretim ciktisi', () => {
+test('GATE: izinli alan YALNIZ uretim ciktisi', () => {
   const izinli = zarSource.match(/const IZINLI = \[([\s\S]*?)\]/);
   assert.ok(izinli, 'izinli liste bulunmali');
   const liste = izinli[1].match(/'([^']+)'/g).map((s) => s.replace(/'/g, ''));
@@ -123,7 +123,7 @@ test('ZAR: izinli alan YALNIZ uretim ciktisi', () => {
     'izinli listeye baska dosya eklenmis — bu bir anayasa degisikligidir, sessizce olmaz');
 });
 
-test('ZAR eleği, anayasayi ve yayin ritualini KORUYOR', () => {
+test('GATE filtreyi, anayasayi ve yayin ritualini KORUYOR', () => {
   const yasak = [
     'scripts/build-filiz.js',
     'scripts/filiz-zar.js',
@@ -138,7 +138,7 @@ test('ZAR eleği, anayasayi ve yayin ritualini KORUYOR', () => {
   }
 });
 
-test('ZAR kendini deneyebiliyor (kapi tiyatro degil)', () => {
+test('GATE kendini deneyebiliyor (kapi tiyatro degil)', () => {
   assert.match(zarSource, /--kendini-dene/);
   assert.match(zarSource, /ZAR KENDINI DENEDI VE GECTI/);
 });
@@ -153,10 +153,10 @@ test('GECE ISI MAIN E PUSH ETMIYOR — yalniz PR aciyor', () => {
     'PR yalniz uretim ciktisini tasimali');
 });
 
-test('gece isi ZAR i PR den ONCE kosuyor', () => {
+test('gece isi GATE i PR den ONCE kosuyor', () => {
   const zarIndex = workflow.indexOf('filiz-zar.js\n          code=');
   const prIndex = workflow.indexOf('create-pull-request');
-  assert.ok(zarIndex > 0 && prIndex > zarIndex, 'zar, PR adimindan once gelmeli');
+  assert.ok(zarIndex > 0 && prIndex > zarIndex, 'gate, PR adimindan once gelmeli');
 });
 
 // --- Modul sozlesmesi --------------------------------------------------------
@@ -178,7 +178,7 @@ test('veri yoksa fail-soft', () => {
   assert.equal(filiz.ready(), false);
 });
 
-test('uretec ile elek AYNI motoru kullaniyor', () => {
+test('generator ile filter AYNI motoru kullaniyor', () => {
   assert.match(buildSource, /assets', 'js', 'home', 'okkam\.js'/);
   assert.match(buildSource, /okkam\._search/);
   assert.match(buildSource, /okkam\._run/);
@@ -192,9 +192,9 @@ test('siniflandirma ZIYARETCI butcesiyle yapiliyor', () => {
 
 test('filiz nasil calistigini ANLATIYOR (Madde 3)', () => {
   const how = loadFiliz().how();
-  assert.match(how, /URETEC/);
-  assert.match(how, /ELEK/);
-  assert.match(how, /ZAR/);
+  assert.match(how, /GENERATOR/);
+  assert.match(how, /FILTER/);
+  assert.match(how, /GATE/);
   assert.match(how, /Dogrulayicisi olmayan sey uretilmez/);
-  assert.match(how, /kendi elegini/);
+  assert.match(how, /kendi filtresini/);
 });
