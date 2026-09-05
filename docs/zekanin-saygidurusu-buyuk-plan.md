@@ -1133,6 +1133,31 @@ hareket gidiyor, **bilgi gitmiyor.**
 - Dönem yoğunluk çubukları `(i*37)%12` ile düzenli bir testere üretiyordu ve
   ekranda ok ucu gibi okunuyordu; karışık bir hash gerçek yoğunluk görünümü verdi.
 
+**Telefonda kırıldı ve düzeltildi (aynı gün, Ersin bildirdi).** Masaüstünde
+doğru görünen sahneler 390 pikselde bozuluyordu ve sebebi tekti: **canvas oranı
+sabitti.** 720×300 oranı telefonda 390×163 demek — DP tablosunun alt yarısı
+kayboluyor, kuvvet yerleşimi altı kümeyi ayıramıyor, piskoposun ızgarası taşıyordu.
+Genişlik azaldığında gereken şey daha az yükseklik değil, **daha çok yükseklik**:
+dar ekranda oran 0.74'e çıkarıldı. Üstüne dört düzeltme:
+
+- **Başlık çakışması** (`kaz`, `tabaka`): sol ve sağ başlık üst üste biniyordu
+  (`...8 katma366. commit`). Artık ölçülüyor; sığmıyorsa sağdaki kalıyor, çünkü
+  sonda inerken değişen bilgi odur.
+- **Katman etiketleri** (`kaz`): ince katmanlarda (20 ve 25 commit) iç içe
+  geçiyordu. Geniş ekranda bir satır aşağı itiliyor; dar ekranda etiket sütunu
+  hiç yok — katman adı zaten başlıkta, sonda inerken güncelleniyor.
+- **Döndürülmüş dönem adları** (`tabaka`): alt kenardan taşıyordu. Dar ekranda
+  dönem **numarası** yazılıyor; sınırın nerede olduğunu yine söylüyor.
+- **Kümeler** (`damar`): dar ekranda altı küme ayrışamıyordu. Dört küme, altı
+  düğüm — sayının tamamı başlıkta zaten yazıyor.
+
+Ayrıca dönem şeridinin genliği bant yüksekliğine bağlandı (sabitken telefonda
+ince bir çizgiye düşüp etrafında boşluk kalıyordu), ve DP hücresi artık hem
+genişliğe hem **yüksekliğe** sığıyor.
+
+**Keşfedilebilirlik.** Görsel açan komutlar pusulada yazılı:
+`CANLI GORSEL kaz · tabaka · damar · okkam · step · iz`.
+
 **Kabul.** Birim 254/254 (16'sı viz) · kabul testi 41/41.
 
 ---

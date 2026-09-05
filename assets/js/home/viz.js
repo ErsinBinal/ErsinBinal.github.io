@@ -106,7 +106,11 @@
     const sizeCanvas = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = canvas.clientWidth || 720;
-      const h = Math.round(w * (300 / 720));
+      // Dar ekranda DAHA UZUN oran. 720x300 orani telefonda 390x163 demekti;
+      // DP tablosu yariya kesiliyor, kuvvet yerlesimi kumeleri ayiramiyor,
+      // piskoposun izgarasi tasiyordu. Genislik azaldiginda ihtiyac duyulan
+      // sey daha az yukseklik degil, DAHA COK yukseklik.
+      const h = Math.round(w * (w < 520 ? 0.74 : 300 / 720));
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
       canvas.style.height = `${h}px`;
@@ -131,7 +135,14 @@
         const total = eras.reduce((a, b) => a + b.n, 0);
         const PAD = 18, TOP = 40, BOT = 16;
         const bandH = H - TOP - BOT;
-        const labelW = Math.min(190, W * 0.34);
+        // Dar ekranda etiket SUTUNU YOK. Sekiz katmanin en incesi burada
+        // 6 piksel; yan yana etiket yazmak ust uste binmek demek. Katman adi
+        // zaten basliktaki "N. commit · <katman>" satirinda, sonda inerken
+        // guncelleniyor — bilgi kaybolmuyor, yalniz yeri degisiyor.
+        const small = W < 520;
+        const labelW = small ? 0 : Math.min(190, W * 0.34);
+        const lineH = 13;
+        let lastLabelY = -Infinity;
         let y = TOP;
         eras.forEach((e, i) => {
           const h = (e.n / total) * bandH;
@@ -149,13 +160,22 @@
           }
           g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 1;
           g.beginPath(); g.moveTo(PAD, y + 0.5); g.lineTo(W - PAD - labelW, y + 0.5); g.stroke();
-          g.font = mono(10); g.textBaseline = 'middle';
-          g.fillStyle = C.dim;
-          g.fillText(e.label, W - PAD - labelW + 10, y + h / 2);
-          g.fillStyle = C.faint;
-          g.textAlign = 'right';
-          g.fillText(`${e.n}`, W - PAD, y + h / 2);
-          g.textAlign = 'left';
+          if (!small) {
+            // Etiketler katman ORTASINA yazilir; ince katmanlarda bu ust uste
+            // binmeye yol acar (20 ve 25 commit'lik katmanlar bitisik).
+            // Bir onceki etiketten en az bir satir asagi it; sigmiyorsa yazma.
+            const ly = Math.max(y + h / 2, lastLabelY + lineH);
+            if (ly < TOP + bandH) {
+              g.font = mono(10); g.textBaseline = 'middle';
+              g.fillStyle = C.dim;
+              g.fillText(e.label, W - PAD - labelW + 10, ly);
+              g.fillStyle = C.faint;
+              g.textAlign = 'right';
+              g.fillText(`${e.n}`, W - PAD, ly);
+              g.textAlign = 'left';
+              lastLabelY = ly;
+            }
+          }
           y += h;
         });
         g.textBaseline = 'alphabetic';
@@ -169,10 +189,16 @@
         const depth = Math.floor(p * total);
         let acc = 0, cur = eras[0].label;
         for (const e of eras) { acc += e.n; if (depth < acc) { cur = e.label; break; } }
-        g.font = mono(11); g.fillStyle = C.dim;
-        g.fillText(`${total} commit / ${eras.length} katman`, PAD, 22);
+        // Iki baslik dar ekranda birbirinin ustune biniyordu ("...8 katma366.
+        // commit"). Olcup karar ver: sigmiyorsa SAG baslik kalir, cunku sonda
+        // inerken degisen bilgi odur.
+        g.font = mono(11);
+        const sag = `${depth}. commit · ${cur}`;
+        const sol = `${total} commit / ${eras.length} katman`;
+        const sigar = g.measureText(sag).width + g.measureText(sol).width + 24 < W - PAD * 2;
+        if (sigar) { g.fillStyle = C.dim; g.fillText(sol, PAD, 22); }
         g.textAlign = 'right'; g.fillStyle = C.signal;
-        g.fillText(`${depth}. commit · ${cur}`, W - PAD, 22);
+        g.fillText(sag, W - PAD, 22);
         g.textAlign = 'left';
       },
 
@@ -187,8 +213,14 @@
         const w = W - PAD * 2;
         const bounds = []; let acc = 0;
         eras.forEach((e) => { acc += e.n; bounds.push(acc / total); });
-        g.font = mono(11); g.fillStyle = C.dim;
-        g.fillText(`${total} commit · sekiz kategoriye dagilim`, PAD, 22);
+        const small = W < 520;
+        g.font = mono(11);
+        // Iki baslik dar ekranda ust uste biniyordu; olcup karar ver.
+        const sag0 = `${Math.floor(p * total)} / ${total} tarandi`;
+        const sol0 = `${total} commit · sekiz kategoriye dagilim`;
+        if (g.measureText(sol0).width + g.measureText(sag0).width + 24 < W - PAD * 2) {
+          g.fillStyle = C.dim; g.fillText(sol0, PAD, 22);
+        }
         let idx = 0, run = 0;
         for (let i = 0; i < total; i += 1) {
           const x = PAD + (i / total) * w;
@@ -197,7 +229,10 @@
           // Yukseklik commit gurultusunu temsil eder. (i*37)%12 duzenli bir
           // testere uretiyordu ve ekranda ok ucu gibi okunuyordu; karisik bir
           // hash daha durust bir "yogunluk" gorunumu veriyor.
-          const h = 4 + ((((i * 1103515245) + 12345) >>> 16) % 13);
+          // Genlik BANT YUKSEKLIGINE oranli: sabit birakilinca telefonda
+          // serit ince bir cizgiye dusup etrafinda kocaman bosluk kaliyordu.
+          const amp = Math.max(9, BH * 0.34);
+          const h = amp * (0.42 + ((((i * 1103515245) + 12345) >>> 16) % 13) / 22);
           g.fillStyle = eras[idx].color;
           g.globalAlpha = 0.32;
           g.fillRect(x, TOP + BH / 2 - h, Math.max(1, w / total), h * 2);
@@ -212,8 +247,16 @@
           g.beginPath(); g.moveTo(x, TOP - 8); g.lineTo(x, TOP + BH + 8); g.stroke();
           g.globalAlpha = age;
           g.fillStyle = eras[i + 1].color;
-          g.save(); g.translate(x + 4, TOP + BH + 40); g.rotate(-Math.PI / 2.6);
-          g.fillText(eras[i + 1].label, 0, 0); g.restore();
+          if (small) {
+            // Dar ekranda dondurulmus tam ad alt kenardan tasiyordu.
+            // Donem NUMARASI sigar ve sinirin nerede oldugunu yine soyler.
+            g.textAlign = 'center';
+            g.fillText(String(i + 2), x, TOP + BH + 18);
+            g.textAlign = 'left';
+          } else {
+            g.save(); g.translate(x + 4, TOP + BH + 40); g.rotate(-Math.PI / 2.6);
+            g.fillText(eras[i + 1].label, 0, 0); g.restore();
+          }
           g.globalAlpha = 1;
         });
         if (p < 1) {
@@ -232,13 +275,17 @@
       // Louvain: kuvvet yerlesimi, kumeler oturuyor.
       clusters(g, W, H, p, data, state) {
         const block = data.veins || {};
-        const list = (block.veins || []).slice(0, 6);
+        // Dar ekranda alti kume ayrisamiyor — kuvvet yerlesimi icin yer yok,
+        // dugumler kenarlara yapisip birbirine karisiyordu. Az kume, okunur
+        // kume; sayinin tamami baslikta zaten yaziyor.
+        const small = W < 520;
+        const list = (block.veins || []).slice(0, small ? 4 : 6);
         if (!list.length) return;
         if (!state.nodes) {
           state.nodes = []; state.edges = [];
           list.forEach((cl, ci) => {
             const base = state.nodes.length;
-            const k = Math.min(cl.size || 4, 10);
+            const k = Math.min(cl.size || 4, small ? 6 : 10);
             for (let i = 0; i < k; i += 1) {
               // deterministik dagilim — Math.random yok
               const a = (ci * 97 + i * 37) % 360;
@@ -375,8 +422,13 @@
           state.D = D; state.path = path;
         }
         const D = state.D, path = state.path;
-        const CS = Math.min(30, Math.floor((W - 150) / Cc));
-        const OX = (W - Cc * CS) / 2 + 14, OY = 62;
+        // Hucre boyutu hem GENISLIGE hem YUKSEKLIGE sigmali. Onceden yalniz
+        // genislige bakiyordu ve telefonda tablonun alt yarisi kayboluyordu.
+        const OY = 58;
+        const CS = Math.max(14, Math.min(30,
+          Math.floor((W - 90) / Cc),
+          Math.floor((H - OY - 30) / R)));
+        const OX = (W - Cc * CS) / 2 + 12;
         const FILL = R * Cc;
         const fillN = Math.min(FILL, Math.floor(p * 1.7 * FILL));
         const pathP = Math.max(0, Math.min(1, (p - 0.62) / 0.26));

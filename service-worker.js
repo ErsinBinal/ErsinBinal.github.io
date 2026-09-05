@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v269';
+const CACHE_NAME = 'convivium-v270';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -78,7 +78,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/arsiv.js?v=1',
   '/assets/js/home/okkam.js?v=3',
   '/assets/js/home/glossary.js?v=1',
-  '/assets/js/home/viz.js?v=1',
+  '/assets/js/home/viz.js?v=2',
   // ux.js precache'te OLMAK ZORUNDA: command-shell HTML'de `inert` basliyor
   // ve o niteligi kaldiran tek sey bu modul. Cevrimdisi yuklenemezse
   // terminal hic acilmaz — yazilamaz, komut kosmaz, gate dugmeleri de islemez.
@@ -92,7 +92,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/shop.js?v=1',
   '/assets/js/home/world-actions.js?v=1',
   '/assets/js/home/vfs.js?v=4',
-  '/assets/js/home/navigator.js?v=13',
+  '/assets/js/home/navigator.js?v=14',
   '/assets/js/home/pipe-90.js?v=1',
   '/assets/js/home/outrun-86.js?v=1',
   '/assets/js/home/screen-saver.js?v=4',

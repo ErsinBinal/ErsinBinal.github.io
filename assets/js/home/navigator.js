@@ -184,6 +184,7 @@
           `  SIRADAKI ${objective}`,
           '  DERINLES help kesfet · TAM LISTE help all',
           '  BILMEDIGIN KELIME whatis <terim> · apropos <kelime>',
+          '  CANLI GORSEL kaz · tabaka · damar · okkam · step · iz',
           ']'
         ].join('\n');
       }
