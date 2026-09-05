@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Terminal penceresi</title>
+      <link>https://ersinbinal.github.io/#terminal</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-05-terminal-penceresi</guid>
+      <pubDate>Sat, 05 Sep 2026 19:02:01 +0000</pubDate>
+      <description>Terminal artik gercek bir pencere: ust tarafta baslik cubugu var — canli lamba, kimlik ve GERCEK yol (cd yapinca degisiyor), sagda Esc ipucu ve kapatma. Kapatma butonu imlecin yanindan buraya tasindi; orada bir pencere kontrolu gibi degil, girise ilistirilmis bir dugme gibi duruyordu. Ayrica birincil butonun olcegi duzeldi: .action-link font-size vermiyordu, bu yuzden &lt;a&gt; etiketleri 16px alirken &lt;button&gt; tarayici varsayilani 13.3px kullaniyordu — birincil butonun yazisi ikincillerden kucuktu. Ayni siniftan ikinci hata: &lt;button&gt; metni ortaliyordu, &lt;a&gt; sola yasliyordu.</description>
+    </item>
+    <item>
       <title>CMD / Terminal</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-05-cmd-terminal</guid>

@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=39" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=40" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=39">
+  <link rel="stylesheet" href="/assets/css/home.css?v=40">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -123,11 +123,21 @@
 
   <section class="command-shell" id="command-shell" role="dialog" aria-modal="false" aria-labelledby="command-title" aria-hidden="true" inert>
     <h2 class="sr-only" id="command-title">Convivium komut satırı</h2>
+    <!-- Baslik cubugu: pencerenin kimligi ve kapatma kontrolu. Kapatma
+         butonu ONCEDEN giris satirinin sagindaydi; orada bir pencere
+         kontrolu gibi degil, imlecin yanina ilistirilmis bir dugme gibi
+         duruyordu. Pencere kontrolleri baslik cubuguna ait. -->
+    <header class="command-titlebar">
+      <span class="command-titlebar-lamp" aria-hidden="true"></span>
+      <span class="command-titlebar-id">convivium</span>
+      <span class="command-titlebar-path" id="command-titlebar-path" aria-hidden="true">/</span>
+      <span class="command-titlebar-keys" aria-hidden="true"><kbd>Esc</kbd></span>
+      <button class="command-close" id="command-close" type="button" aria-label="Terminali kapat">×</button>
+    </header>
     <div class="command-row">
       <span class="command-prompt">&gt;</span>
       <label class="sr-only" for="command-input">Komut yaz</label>
       <input class="command-input" id="command-input" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-controls="command-suggestions" aria-expanded="false" aria-describedby="command-help command-status" placeholder="komut: help / look / open dossier">
-      <button class="command-close" id="command-close" type="button" aria-label="Komut satırını kapat">×</button>
     </div>
     <div class="command-suggestions" id="command-suggestions" role="listbox" aria-label="Komut tamamlama seçenekleri"></div>
     <!-- Gorsel katman: transcript duz metin (textContent) oldugu icin canvas
@@ -545,7 +555,7 @@
   <script src="/assets/js/home/chat.js?v=5" defer></script>
   <script src="/assets/js/home/chat-symbols.js?v=1" defer></script>
   <script src="/assets/js/home/chat-deck.js?v=8" defer></script>
-  <script src="/assets/js/home-protocol.js?v=110" defer></script>
+  <script src="/assets/js/home-protocol.js?v=111" defer></script>
 
   <!-- Service Worker Registration -->
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>

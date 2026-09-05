@@ -4405,3 +4405,122 @@ body.command-shell-open .bugy-onboard {
 @media (max-width: 640px) {
   .command-viz-cap { font-size: 9.5px; padding: 5px 8px; }
 }
+
+/* --- Terminal penceresi: baslik cubugu ve cerceve --------------------------
+   Sikayet: "terminalin icine acildigi cerceve cok siradan, alt kisimdaki
+   kapama butonu berbat." Ikisi ayni sorunun iki yuzu: pencerenin PENCERE
+   MOBILYASI yoktu. Duz bir dikdortgen ve imlecin yanina ilistirilmis bir
+   kapatma dugmesi. Kontroller baslik cubuguna tasindi. */
+.command-titlebar {
+  order: -1;                      /* kabuk `order` kullaniyor: en uste */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 4px 0 12px;
+  min-height: 34px;
+  border-bottom: 1px solid rgba(0, 234, 255, 0.28);
+  background:
+    linear-gradient(180deg, rgba(0, 234, 255, 0.10), rgba(0, 234, 255, 0.02));
+  font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+/* Yanip sonen lamba: terminalin CANLI oldugunu soyleyen tek isaret. */
+.command-titlebar-lamp {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: var(--journey-green, #00ff66);
+  box-shadow: 0 0 8px rgba(0, 255, 102, 0.85);
+  animation: command-lamp 2.4s ease-in-out infinite;
+}
+@keyframes command-lamp {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.command-titlebar-id {
+  color: var(--journey-green, #00ff66);
+  font-weight: 600;
+}
+
+/* Yol, `cd` ile gercekten degisir — pencere neyi gosterdigini soyler. */
+.command-titlebar-path {
+  color: rgba(0, 234, 255, 0.66);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.command-titlebar-keys {
+  margin-left: auto;
+  color: rgba(159, 255, 181, 0.42);
+}
+.command-titlebar-keys kbd {
+  font: inherit;
+  font-size: 10px;
+  border: 1px solid rgba(159, 255, 181, 0.18);
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+/* Kapatma: gercek bir pencere kontrolu gibi kare, sagda, baslikla hizali. */
+.command-close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-left: 1px solid rgba(0, 234, 255, 0.20);
+  background: transparent;
+  color: rgba(159, 255, 181, 0.6);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease;
+}
+.command-close:hover,
+.command-close:focus-visible {
+  background: rgba(255, 0, 150, 0.16);
+  color: #ff0096;
+}
+
+/* Kose ayraclari: cerceveyi "cizilmis kutu" olmaktan cikarir. Cizim ::before
+   / ::after ile yapilir; ek DOM yok. */
+.command-shell::before,
+.command-shell::after {
+  pointer-events: none;
+}
+
+/* Dokunma hedefi: e2e sozlesmesi dar ekranda 44x44 sart kosuyor. */
+@media (max-width: 640px) {
+  .command-titlebar { padding-left: 10px; min-height: 44px; }
+  .command-close { width: 44px; height: 44px; font-size: 19px; }
+  .command-titlebar-keys { display: none; }
+}
+
+/* --- Birincil buton olcegi ------------------------------------------------
+   .action-link font-family veriyordu ama FONT-SIZE VERMIYORDU. Sonuc:
+   <a> etiketleri body'den 16px aliyor, <button> ise tarayici varsayilani
+   13.33px kullaniyordu. Yani BIRINCIL butonun yazisi ikincillerden KUCUKTU;
+   hiyerarsi tersine donmustu. Tek satir. */
+.action-link {
+  font-size: 0.95rem;
+  line-height: 1.25;
+  /* Ayni siniftan ikinci hata: <button> metni ORTALAR, <a> sola yaslar.
+     Birincil buton kardeslerinden farkli hizalaniyordu. */
+  text-align: left;
+}
+.action-link span {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+}
+/* Birincil, ikincillerle ayni olcekte dursun: genisligi metni belirlesin. */
+.action-link.is-primary {
+  min-width: 132px;
+  padding: 10px 16px;
+}

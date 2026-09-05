@@ -34,6 +34,7 @@
       const commandInput = document.getElementById('command-input');
       const commandOutput = document.getElementById('command-output'), commandStatus = document.getElementById('command-status');
       const commandClose = document.getElementById('command-close');
+      const titlebarPath = document.getElementById('command-titlebar-path');
       const commandSuggestions = document.getElementById('command-suggestions');
       const commandLaunch = document.getElementById('command-launch');
       const mobileCommandButton = document.getElementById('mobile-command-button');
@@ -4055,6 +4056,9 @@
       const renderTranscript = (pending = '') => {
         if (!commandOutput) return;
         commandOutput.textContent = transcript + pending;
+        // Baslik cubugundaki yol GERCEK dizini gosterir: `cd` yapinca degisir.
+        // Her ciktidan sonra senkron — pencere neyi gosterdigini soyluyor.
+        if (titlebarPath) titlebarPath.textContent = getVirtualCwd();
         scrollTranscriptToEnd();
       };
       const commitTranscript = (text) => {

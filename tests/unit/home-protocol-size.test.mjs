@@ -48,13 +48,17 @@ import test from 'node:test';
 //     opsiyonel yapildi (data-entry-command yoksa terminal temiz acilir);
 //     davranis degisikliginin NEDENI koda yazildi, cunku "neden artik
 //     rehber basmiyor" sorusu ileride tekrar sorulacak.
+//   5014 -> 5018  (2026-09-05, terminal baslik cubugu)
+//     Eklenen: titlebarPath referansi + renderTranscript icinde tek satir
+//     senkron. Pencere kontrolleri (kapatma) ve kimlik HTML+CSS'te;
+//     protokolde yalniz "yol gercekten degisiyor" baglantisi var.
 //
 // Bu test kirildiginda iki mesru cevap vardir:
 //   1. Yeni karar mantigini assets/js/home/<ad>.js altina saf bir factory
 //      olarak tasi (tercih edilen; mimari zaten bunu soyluyor).
 //   2. Tavani bilincli olarak yukselt — ama o zaman yukaridaki circir kaydina
 //      yeni degeri VE gerekcesini yaz. Gerekcesiz yukseltme yasak.
-const CEILING = 5014;
+const CEILING = 5018;
 
 test('home-protocol.js satir tavanini asmiyor', async () => {
   const source = await readFile(
