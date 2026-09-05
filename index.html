@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=41" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=42" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=41">
+  <link rel="stylesheet" href="/assets/css/home.css?v=42">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -155,6 +155,16 @@
       <button class="command-trigger" type="button" data-command="map">map</button>
       <span><kbd>Tab</kbd> tamamla</span>
       <span><kbd>↑↓</kbd> seç</span>
+      <!-- Gorsel acan komutlar TEK TIKLA. Yazarak bulunmalari icin once
+           komutu bilmek gerekiyordu; iki kez "nasil ulasiyorum" sorulmasi
+           kesfedilebilirligin yetmedigini gosterdi. -->
+      <span class="command-help-group" aria-hidden="true">canlı görsel</span>
+      <button class="command-trigger is-viz" type="button" data-command="kaz">kaz</button>
+      <button class="command-trigger is-viz" type="button" data-command="tabaka">tabaka</button>
+      <button class="command-trigger is-viz" type="button" data-command="damar">damar</button>
+      <button class="command-trigger is-viz" type="button" data-command="okkam">okkam</button>
+      <button class="command-trigger is-viz" type="button" data-command="step tabka">step</button>
+      <button class="command-trigger is-viz" type="button" data-command="iz">iz</button>
     </div>
   </section>
 

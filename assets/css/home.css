@@ -4567,3 +4567,30 @@ body.command-shell-open .bugy-onboard {
   padding-left: 16px;
   padding-right: 16px;
 }
+
+/* Gorsel acan komutlar yardim seridinde ayri bir grup: camgobegi, cunku
+   gorsel katmanin vurgu rengi o. Yazmadan, tek tikla ulasilir. */
+/* Bu bir ETIKET, buton degil. Mevcut `.command-help span` kurali cerceve
+   veriyordu ve "CANLI GORSEL" tiklanabilir bir sey gibi duruyordu.
+   flex-basis:100% ile grup kendi satirina iner: serit kalabalik gorunmez. */
+.command-help-group {
+  flex-basis: 100%;
+  display: block;
+  border: 0 !important;
+  padding: 6px 0 0 !important;
+  margin: 2px 0 -2px;
+  color: rgba(0, 243, 255, 0.45);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.command-trigger.is-viz {
+  border-color: rgba(0, 243, 255, 0.34);
+  color: rgba(0, 243, 255, 0.82);
+}
+.command-trigger.is-viz:hover,
+.command-trigger.is-viz:focus-visible {
+  border-color: #00f3ff;
+  color: #00f3ff;
+  background: rgba(0, 243, 255, 0.10);
+}
