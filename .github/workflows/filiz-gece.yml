@@ -115,8 +115,16 @@ jobs:
             require('fs').writeFileSync('/tmp/filiz-pr.md', gövde);
           "
 
+      # PR ACILAMAZSA IS DUSMEZ.
+      # 2026-09-05..08 arasi dort gece ust uste burada dustu; hata:
+      # "Resource not accessible by integration" — yani deponun
+      # "Allow GitHub Actions to create and approve pull requests" ayari
+      # kapali. Dal ITILEBILIYORDU (contents: write calisiyor), sadece PR
+      # acilamiyordu. Sessizce dusmek yerine: dal hazir kalir, ozete
+      # tek tiklik karsilastirma bagi yazilir, is YESIL biter.
       - name: PR ac (main'e ASLA push etme)
         id: pr
+        continue-on-error: true
         if: steps.zar.outputs.degisiklik != 'hayir'
         uses: peter-evans/create-pull-request@v7
         with:
@@ -127,6 +135,22 @@ jobs:
           body-path: /tmp/filiz-pr.md
           add-paths: assets/data/filiz.json
           delete-branch: true
+
+      - name: PR acilamadiysa yolu goster
+        if: steps.pr.outcome == 'failure'
+        run: |
+          {
+            echo "### PR acilamadi — is yine de basarili"
+            echo ""
+            echo "Uretim tamamlandi ve **dal itildi**; kaybolan bir sey yok."
+            echo ""
+            echo "Sebep genellikle tek bir depo ayaridir:"
+            echo "Settings → Actions → General → Workflow permissions →"
+            echo "**Allow GitHub Actions to create and approve pull requests**"
+            echo ""
+            echo "Simdi tek tikla acabilirsin:"
+            echo "https://github.com/$GITHUB_REPOSITORY/compare/main...filiz/gece-uretimi?expand=1"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       # OTOMATIK ONAY.
       #
@@ -144,6 +168,7 @@ jobs:
       - name: Otomatik onay (kapi her seyi kapsiyor)
         if: >-
           steps.zar.outputs.degisiklik != 'hayir'
+          && steps.pr.outcome == 'success'
           && steps.pr.outputs.pull-request-number
           && github.event.inputs.otomatik != 'false'
         env:

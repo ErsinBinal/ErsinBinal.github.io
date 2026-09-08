@@ -249,8 +249,12 @@ const payload = {
   // Gece isinin nerede kaldigi. Bu alan olmadan her gece ayni is tekrarlanir.
   ilerleme: { liste: listeKimligi, son, toplam: passed.length, buGece: islenen },
   raf: { cozulen: solved.length, acik: open.length },
-  cozulen: solved.slice(0, 40),
-  acik: open.slice(0, 40),
+  // Raf siniri 40'ti ve liste program uzunluguna gore siraliydi: ilk gece
+  // en kisa programlar rafi dolduruyor, sonraki gecelerin buldugu (daha
+  // uzun) programlar HIC giremiyordu. Yani gece isi calisiyor ama hicbir
+  // yere inmiyordu — uc gece ust uste yalniz sayac ilerledi.
+  cozulen: solved.slice(0, 60),
+  acik: open.slice(0, 120),
   // Redler YAYINLANIR. Elek ne attigini saklarsa elek degildir.
   red: rejected.slice(0, 40)
 };
