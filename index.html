@@ -61,7 +61,7 @@
   <!-- Preload Critical Assets -->
   <link rel="preload" href="/assets/css/common.css" as="style">
   <link rel="preload" href="/assets/css/animations.css" as="style">
-  <link rel="preload" href="/assets/css/home.css?v=44" as="style">
+  <link rel="preload" href="/assets/css/home.css?v=45" as="style">
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/common.css">
@@ -76,7 +76,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Share+Tech+Mono&display=swap">
 
   <!-- Page-specific styles -->
-  <link rel="stylesheet" href="/assets/css/home.css?v=44">
+  <link rel="stylesheet" href="/assets/css/home.css?v=45">
 </head>
 <body class="scanline-effect">
   <div class="page-loader" id="page-loader" role="status" aria-live="polite" aria-label="Convivium yükleniyor">
@@ -320,6 +320,18 @@
               <a class="project-row" href="/tools/dart-skorbord.html" data-artifact="logic"><span>11</span><strong>Dart Skorbord</strong><small lang="en">type: scoreboard</small><em lang="en">status: session saved</em></a>
               <a class="project-row" href="/tools/ekol-aynasi.html" data-artifact="terminal"><span>12</span><strong>Ekol Aynası</strong><small lang="en">type: mirror</small><em lang="en">status: reflective</em></a>
               <a class="project-row" href="/tools/demir-at.html" data-artifact="logic"><span>13</span><strong>Demir At Terazisi</strong><small lang="en">type: comparator</small><em lang="en">status: 10 bikes</em></a>
+            </div>
+
+            <!-- Terminal oyunlari bu listede HIC yoktu: yalnizca yazarak
+                 ulasiliyorlardi. .command-trigger zaten terminali acip
+                 komutu kosuyor, yani buradan tek tikla girilir. -->
+            <div class="terminal-games" aria-label="Terminalde oynanan oyunlar">
+              <span class="terminal-games-label">terminalde oynanır</span>
+              <button class="command-trigger is-game" type="button" data-command="pipe">pipe<em>reaktör soğutma</em></button>
+              <button class="command-trigger is-game" type="button" data-command="outrun">outrun<em>arcade sürüş</em></button>
+              <button class="command-trigger is-game" type="button" data-command="bugy">bugy<em>gezinen pet</em></button>
+              <button class="command-trigger is-game" type="button" data-command="deb">deb<em>companion katmanı</em></button>
+              <button class="command-trigger is-game" type="button" data-command="screen saver">screen saver<em>ekran koruyucu</em></button>
             </div>
           </div>
           <aside class="gate-drawer" aria-label="Lab yan rotaları">

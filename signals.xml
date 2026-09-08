@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Terminal oyunlarina kisayol</title>
+      <link>https://ersinbinal.github.io/#lab</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-08-terminal-oyunlarina-kisayol</guid>
+      <pubDate>Tue, 08 Sep 2026 18:50:05 +0000</pubDate>
+      <description>Terminal oyunlari (pipe, outrun, bugy, deb, screen saver) Lab bolumunun proje listesinde HIC yoktu — yalniz yazarak ulasiliyorlardi. Artik listenin altinda tek tikla girilen kisayollar var; her biri terminali acip komutu kosuyor. Ayrica terminal penceresi OKUMAK icin optimize edildi: cikti tavani 320 pikseldi (950px ekranda ~19 satir), ekranin yarisindan fazlasini kullanabiliyor artik; punto 12,5 ten 13,1 e, satir araligi 1,3 ten 1,55 e cikti. Uzun bir cikti okurken 19 yerine 25 satir goruyorsun.</description>
+    </item>
+    <item>
       <title>Ana sayfa nabzi</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-09-08-ana-sayfa-nabzi</guid>
