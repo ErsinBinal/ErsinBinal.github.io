@@ -2,7 +2,7 @@
 //
 // Bir dilim yayinlarken bugune kadar 7 ayri yere elle dokunmak gerekiyordu:
 // HTML'deki ?v=, service-worker PRECACHE, validate-site-integrity pinleri,
-// CACHE_NAME, changelog girdisi, signals.xml ogesi ve check zinciri.
+// CACHE_NAME, changelog girdisi, signals.xml ogesi, nabiz ve check zinciri.
 // Bu betik altisini yapar, yedincisini (check) sonunda kosar.
 //
 // Kullanim:
@@ -161,7 +161,14 @@ execFileSync(process.execPath, [path.join(root, 'scripts', 'sync-cache-versions.
   cwd: root, stdio: 'inherit'
 });
 
-// 6) Kapi.
+// 6) Nabiz: ana sayfadaki sayilar changelog ve RSS'ten TURETILIYOR, bu yuzden
+// onlar yazildiktan SONRA yeniden uretilmeli. Sira yanlis oldugunda kendi
+// surukleme kapimiz yayini durduruyordu (changelog 77, nabiz.json 76).
+execFileSync(process.execPath, [path.join(root, 'scripts', 'build-nabiz.js')], {
+  cwd: root, stdio: 'inherit'
+});
+
+// 7) Kapi.
 console.log('\nnpm run check:');
 try {
   execFileSync('npm', ['run', 'check'], { cwd: root, stdio: 'inherit' });
