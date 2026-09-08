@@ -4087,12 +4087,10 @@ body {
   max-height: calc(100dvh - 188px);
 }
 
-.access-chip {
-  left: auto;
-  right: 112px;
-  top: auto;
-  bottom: 18px;
-}
+/* SESSION cipi SOL USTTE kalir.
+   ff7c6da bunu sag alta tasimisti; Ersin eski yerini istedi ve hakli:
+   oturum durumu sayfanin GIRISINDE okunur, dipnotunda degil.
+   Mobil kurali (asagida) dokunulmadi — orada alt kenar dogru. */
 
 .command-shell[aria-hidden="true"] {
   visibility: hidden;
