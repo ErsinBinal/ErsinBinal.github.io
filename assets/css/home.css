@@ -4597,3 +4597,123 @@ body.command-shell-open .bugy-onboard {
   color: #00f3ff;
   background: rgba(0, 243, 255, 0.10);
 }
+
+/* --- NABIZ: ana sayfanin canli yuzeyleri (assets/js/home/pulse.js) ---------
+   Kural: sayfaya YENI KUTU EKLEMEZ. Var olan elemanlarin kosesine ya da
+   hemen altina yerlesir, metin tasimaz, akisi bozmaz. */
+
+/* 1 · CMD karti — butonun ustunde acilir, sayfayi ITMEZ (absolute). */
+.primary-actions { position: relative; }
+.pulse-card {
+  /* ASAGI acilir. Yukari acildiginda "Convivium_" basligini kapatiyordu;
+     sitenin adini ortmek, altindaki dekoratif seridi ortmekten kotudur. */
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 40;
+  width: min(268px, calc(100vw - 40px));
+  padding: 0 0 8px;
+  border: 1px solid rgba(0, 243, 255, 0.45);
+  background: rgba(4, 10, 8, 0.97);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--font-display);
+  animation: pulse-card-in 0.18s ease-out;
+}
+.pulse-card[hidden] { display: none; }
+@keyframes pulse-card-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.pulse-card-bar {
+  padding: 6px 10px;
+  background: rgba(0, 243, 255, 0.12);
+  border-bottom: 1px solid rgba(0, 243, 255, 0.22);
+  color: #00f3ff;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+}
+.pulse-card-list { margin: 0; padding: 7px 10px 5px; }
+.pulse-card-list div {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 1px 0;
+}
+.pulse-card-list dt { color: #6f8479; font-size: 12px; }
+.pulse-card-list dd { margin: 0; color: #9fffb5; font-size: 12.5px; }
+.pulse-card-grid { display: block; width: calc(100% - 20px); margin: 2px 10px 0; }
+.pulse-card-foot {
+  margin: 6px 10px 0; color: #47584f; font-size: 10.5px;
+}
+
+/* 2 · Kazi seridi — hero butonlarinin hemen alti, tam genislik. */
+.pulse-strip {
+  position: relative;
+  margin: 14px 0 0;
+  border: 1px solid rgba(0, 234, 255, 0.16);
+  background: #060a08;
+  cursor: pointer;
+  line-height: 0;
+}
+.pulse-strip:hover, .pulse-strip.is-hover { border-color: rgba(0, 243, 255, 0.4); }
+.pulse-strip:focus-visible { outline: 2px solid #00f3ff; outline-offset: 2px; }
+.pulse-strip-canvas { display: block; width: 100%; height: auto; }
+.pulse-strip-label {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-display); font-size: 10.5px;
+  color: #00f3ff; background: rgba(4, 10, 8, .82); padding: 2px 6px;
+  line-height: 1.4; pointer-events: none; white-space: nowrap;
+  max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis;
+}
+
+/* 3 · Kart rozetleri — kartin sag ust kosesi. */
+.terminal-command[data-action] { position: relative; }
+.pulse-badge {
+  position: absolute; top: 10px; right: 10px;
+  width: 64px; height: 20px;
+  border: 1px solid rgba(0, 234, 255, 0.24);
+  background: rgba(0, 0, 0, 0.42);
+  line-height: 0; pointer-events: none;
+}
+.pulse-badge canvas { display: block; width: 100%; height: 100%; }
+
+/* 4 · Atolye nabzi — SINYAL seridinin hemen alti, tek satir. */
+.pulse-workshop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 10px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid rgba(0, 255, 102, 0.12);
+}
+.pulse-workshop-canvas { display: block; width: 100%; height: auto; }
+.pulse-workshop-text {
+  font-family: var(--font-display); font-size: 10.5px;
+  color: #47584f; white-space: nowrap;
+}
+.pulse-workshop-text b { color: #9fffb5; font-weight: 400; }
+
+/* --- MOBIL ---------------------------------------------------------------
+   Dar ekranda hedef: yuzeyler ekrani ISGAL ETMESIN.
+   - kart tam genislige yayilir ve butonun ALTINA gecer (ustte yer yok)
+   - rozetler kucululur, kart basligiyla carpismasin
+   - atolye nabzi tek sutuna iner, metin alta gecer */
+@media (max-width: 640px) {
+  .pulse-card { width: min(300px, calc(100vw - 32px)); }
+  .pulse-badge { width: 48px; height: 16px; top: 8px; right: 8px; }
+  .pulse-strip { margin-top: 12px; }
+  .pulse-strip-label { font-size: 9.5px; }
+  .pulse-workshop {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  /* Metin canvas'in USTUNE alinir: sayfanin sag alt kosesinde sabit duran
+     maskot ve CMD butonu, altta kalan metnin uzerine biniyordu. */
+  .pulse-workshop-text { order: -1; }
+  .pulse-workshop-text { white-space: normal; font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-card { animation: none; }
+}

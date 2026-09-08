@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Convivium GitHub Pages site: terminal UI, articles, games, PWA assets, Supabase helpers, and Oracle Worker tooling.",
   "scripts": {
-    "check": "npm run check:syntax && npm run check:sync && npm run test:unit && npm run test:worker && npm run check:site",
+    "check": "npm run check:syntax && npm run check:sync && npm run test:unit && npm run test:worker && npm run build:nabiz -- --check && npm run check:site",
     "check:site": "node scripts/validate-site-integrity.js",
     "check:syntax": "node scripts/check-syntax.js",
     "convert-images": "node scripts/convert-images.js",
@@ -29,6 +29,7 @@
     "build:guide-shots": "node scripts/build-guide-shots.js",
     "build:okkam": "node scripts/build-okkam.js",
     "build:filiz": "node scripts/build-filiz.js",
+    "build:nabiz": "node scripts/build-nabiz.js",
     "filiz:zar": "node scripts/filiz-zar.js"
   },
   "dependencies": {

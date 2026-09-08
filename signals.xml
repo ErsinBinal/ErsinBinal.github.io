@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Ana sayfa nabzi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-08-ana-sayfa-nabzi</guid>
+      <pubDate>Tue, 08 Sep 2026 18:17:47 +0000</pubDate>
+      <description>Terminale koydugumuz canli grafiklerin ayni mantigi ana sayfaya tasindi. Dort yuzey: CMD butonuna gelince acilan kart (434 yazilabilir, 16 oyun komutu, 7 okkam bulmacasi, 27 sozluk terimi), hero altinda 575 commit ve 8 donemi tasiyan kazi seridi, dort kartin kosesinde kendi verisinden beslenen rozetler, ve FILIZ in gece calistigini gosteren atolye nabzi. Hicbiri yeni bir kutu ya da baslik eklemiyor; hepsi var olan elemanlara tutunuyor. Ana sayfada gorunen hicbir sayi elle yazilmadi: hepsi build de turetiliyor ve bayatlarsa kapi calıyor.</description>
+    </item>
+    <item>
       <title>Tek tema, yol gosteren metin</title>
       <link>https://ersinbinal.github.io/#terminal</link>
       <guid isPermaLink="false">cvm-signal-2026-09-05-tek-tema-yol-gosteren-metin</guid>

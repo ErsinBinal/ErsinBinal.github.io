@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v275';
+const CACHE_NAME = 'convivium-v276';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -54,7 +54,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/bugy-cinema.css?v=3',
   '/assets/css/bugy-pet.css?v=8',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=43',
+  '/assets/css/home.css?v=44',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/css/demir-at.css?v=1',
   '/assets/js/lazy-load.js',
@@ -79,6 +79,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/okkam.js?v=3',
   '/assets/js/home/glossary.js?v=1',
   '/assets/js/home/viz.js?v=3',
+  '/assets/js/home/pulse.js?v=1',
   // ux.js precache'te OLMAK ZORUNDA: command-shell HTML'de `inert` basliyor
   // ve o niteligi kaldiran tek sey bu modul. Cevrimdisi yuklenemezse
   // terminal hic acilmaz — yazilamaz, komut kosmaz, gate dugmeleri de islemez.
