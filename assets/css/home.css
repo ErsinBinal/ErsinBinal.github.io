@@ -4087,10 +4087,19 @@ body {
   max-height: calc(100dvh - 188px);
 }
 
-/* SESSION cipi SOL USTTE kalir.
-   ff7c6da bunu sag alta tasimisti; Ersin eski yerini istedi ve hakli:
-   oturum durumu sayfanin GIRISINDE okunur, dipnotunda degil.
-   Mobil kurali (asagida) dokunulmadi — orada alt kenar dogru. */
+/* SESSION cipi SAG USTTE, HUD'un HEMEN USTUNDE.
+   ff7c6da bunu sag alta tasimisti. Sag ust kose zaten HUD'un yeri; ikisi
+   ust uste binmesin diye cip en uste alinir ve HUD onun altina iner.
+   Sag kenarda hizali bir YIGIN olur: once oturum, sonra ayrinti. */
+.access-chip {
+  left: auto;
+  right: 18px;
+  top: 18px;
+}
+.system-hud {
+  /* cip 34px + 10px bosluk */
+  top: 62px;
+}
 
 .command-shell[aria-hidden="true"] {
   visibility: hidden;
