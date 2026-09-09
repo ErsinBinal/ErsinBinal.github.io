@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Kenar dili siteye yayildi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-09-kenar-dili-siteye-yayildi</guid>
+      <pubDate>Wed, 09 Sep 2026 16:41:31 +0000</pubDate>
+      <description>Kenar dili artik yalniz ana sayfada degil: 22 sayfaya yayildi — makaleler, changelog, arsiv, ozgecmis, oracle, hesap, admin, araclar. Site 34 HTML sayfasindan olusuyor ve yalniz 11i common.css cekiyordu; bu yuzden dil ayri bir dosyaya alindi (kenar.css) ve her sayfaya tek satirla baglandi: tek kaynak, kopya yok. Oyun sayfalari ve ekran koruyuculari bilerek disarida — tam ekran tuval, kendi sanat yonleri var. Ayrica hover tepkisi degisti: donen kenar enerjisi &quot;radar&quot; gibi okunuyordu, kaldirildi. Yerine mekanik bir tepki geldi: uzerine gelince kesik kose ACILIYOR. Donme yok, surekli animasyon yok.</description>
+    </item>
+    <item>
       <title>Kenar dili</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-09-09-kenar-dili</guid>

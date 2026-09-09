@@ -1,0 +1,111 @@
+/* ==========================================================================
+   KENAR DILI — sitenin tek kenar kaynagi
+   ==========================================================================
+   Site 34 HTML sayfasindan olusuyor ve yalniz 11'i common.css cekiyor;
+   gerisi kendi stiliyle geliyor. Bu yuzden dil AYRI bir dosyada ve her
+   sayfaya tek satirla baglaniyor — tek kaynak, kopya yok.
+
+   Kural: kenar bir uslup degil bir DIL.
+     kesik kose  -> uzerine BASILAN seyler (buton, kart, satir, cip)
+     kose ayraci -> IZLENEN yuzeyler (panel, konsol, raf)
+     tepki       -> hover/focus'ta kesik DERINLESIR
+
+   DONME YOK. Ilk denemede hover'da conic-gradient donduruyordu; "radar"
+   gibi okundu ve elendi. Yerine mekanik bir tepki: kose acilir.
+
+   DOKUNULMAYANLAR: games/* ve assets/savers/* — tam ekran tuval, kendi
+   sanat yonleri var. playwright-report uretilmis dosya.
+   ====================================================================== */
+
+@property --kesik {
+  syntax: '<length>';
+  initial-value: 8px;
+  inherits: false;
+}
+
+/* --- Kesik kose: uzerine basilan seyler ---------------------------------- */
+.btn,
+.card,
+.console-command,
+.content-list-button,
+.article-row,
+.command-trigger,
+.back-to-top,
+.back-link,
+.chip,
+.entry,
+.action-btn,
+.choice-btn,
+.feedback-btn,
+.history-item,
+.navlink,
+.item {
+  --kesik: 8px;
+  clip-path: polygon(
+    var(--kesik) 0, 100% 0,
+    100% calc(100% - var(--kesik)), calc(100% - var(--kesik)) 100%,
+    0 100%, 0 var(--kesik)
+  );
+  transition: --kesik .22s cubic-bezier(.2, .8, .3, 1),
+              border-color .22s ease, background .22s ease, color .22s ease;
+}
+
+/* Tepki: kose ACILIR. Donen bir sey yok, tek gecis. */
+.btn:hover, .btn:focus-visible,
+.card:hover, .card:focus-within,
+.console-command:hover, .console-command:focus-visible,
+.content-list-button:hover, .content-list-button:focus-visible,
+.article-row:hover, .article-row:focus-within,
+.command-trigger:hover, .command-trigger:focus-visible,
+.back-to-top:hover, .back-to-top:focus-visible,
+.back-link:hover, .back-link:focus-visible,
+.chip:hover, .chip:focus-visible,
+.entry:hover, .entry:focus-within,
+.action-btn:hover, .action-btn:focus-visible,
+.choice-btn:hover, .choice-btn:focus-visible,
+.feedback-btn:hover, .feedback-btn:focus-visible,
+.history-item:hover, .history-item:focus-within,
+.navlink:hover, .navlink:focus-visible,
+.item:hover, .item:focus-within {
+  --kesik: 15px;
+}
+
+/* --- Kose ayraci: izlenen yuzeyler --------------------------------------- */
+.article-stack-panel,
+.articles-console,
+.auth-modal-card,
+.content-list-panel,
+.dossier-tree,
+.history-panel,
+.shelf,
+.frame {
+  --ayrac: 20px;
+  --ayrac-renk: rgba(0, 234, 255, .7);
+  background-image:
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
+    linear-gradient(var(--ayrac-renk), var(--ayrac-renk));
+  background-repeat: no-repeat;
+  background-size:
+    var(--ayrac) 1px, 1px var(--ayrac),
+    var(--ayrac) 1px, 1px var(--ayrac),
+    var(--ayrac) 1px, 1px var(--ayrac),
+    var(--ayrac) 1px, 1px var(--ayrac);
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .card, .console-command, .content-list-button, .article-row,
+  .command-trigger, .back-to-top, .back-link, .chip, .entry,
+  .action-btn, .choice-btn, .feedback-btn, .history-item,
+  .navlink, .item { transition: none; }
+}

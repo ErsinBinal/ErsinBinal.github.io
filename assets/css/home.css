@@ -4840,9 +4840,12 @@ body.command-shell-open .bugy-onboard {
    Durum olarak ise bedavaya yakin ve anlamli — "bu eleman su an aktif".
    ====================================================================== */
 
-@property --kenar-aci {
-  syntax: '<angle>';
-  initial-value: 0deg;
+/* RADAR KALDIRILDI. Donen conic-gradient "sonar" gibi okunuyordu ve
+   Ersin begenmedi. Yerine MEKANIK bir tepki: kesik kose derinlesiyor,
+   kenar canlaniyor. Donmuyor, surekli animasyon yok, tek gecis. */
+@property --kesik {
+  syntax: '<length>';
+  initial-value: 9px;
   inherits: false;
 }
 
@@ -4858,6 +4861,8 @@ body.command-shell-open .bugy-onboard {
     100% calc(100% - var(--kesik)), calc(100% - var(--kesik)) 100%,
     0 100%, 0 var(--kesik)
   );
+  transition: --kesik .22s cubic-bezier(.2, .8, .3, 1),
+              background .22s ease, color .22s ease;
 }
 
 .action-link {
@@ -4868,11 +4873,10 @@ body.command-shell-open .bugy-onboard {
 }
 .action-link:hover,
 .action-link:focus-visible {
+  --kesik: 16px;
   background:
-    linear-gradient(rgba(0, 0, 0, .62), rgba(0, 0, 0, .62)) padding-box,
-    conic-gradient(from var(--kenar-aci),
-      rgba(0, 234, 255, .18) 0 70%, #00eaff 84%, rgba(0, 234, 255, .18) 92% 100%) border-box;
-  animation: kenar-dolas 3.4s linear infinite;
+    linear-gradient(rgba(0, 20, 24, .72), rgba(0, 0, 0, .62)) padding-box,
+    linear-gradient(#00eaff, #00eaff) border-box;
 }
 /* DIKKAT: ic katman SAYDAM oldugunda altindaki kenar rengi icinden gecer.
    Birincil butonun zemini rgba(0,255,102,.14) idi; tek katman birakinca
@@ -4887,12 +4891,11 @@ body.command-shell-open .bugy-onboard {
 }
 .action-link.is-primary:hover,
 .action-link.is-primary:focus-visible {
+  --kesik: 16px;
   background:
     linear-gradient(rgba(0, 255, 102, .22), rgba(0, 255, 102, .22)) padding-box,
     linear-gradient(rgba(0, 12, 6, .92), rgba(0, 12, 6, .92)) padding-box,
-    conic-gradient(from var(--kenar-aci),
-      rgba(0, 255, 102, .25) 0 70%, #9fffb5 84%, rgba(0, 255, 102, .25) 92% 100%) border-box;
-  animation: kenar-dolas 3.4s linear infinite;
+    linear-gradient(#9fffb5, #9fffb5) border-box;
 }
 
 /* Kartin zemini OPAK olmali (#050505): saydam biraktigimda arka plandaki
@@ -4915,15 +4918,13 @@ body.command-shell-open .bugy-onboard {
 .terminal-command::before { display: none; }
 .terminal-command:hover,
 .terminal-command:focus-visible {
+  --kesik: 16px;
   background:
-    linear-gradient(90deg, rgba(0, 243, 255, .09), rgba(0, 0, 0, .42)) padding-box,
+    linear-gradient(90deg, rgba(0, 243, 255, .12), rgba(0, 0, 0, .42)) padding-box,
     linear-gradient(#050505, #050505) padding-box,
-    conic-gradient(from var(--kenar-aci),
-      rgba(0, 255, 102, .18) 0 70%, #00eaff 84%, rgba(0, 255, 102, .18) 92% 100%) border-box;
-  animation: kenar-dolas 3.4s linear infinite;
+    linear-gradient(90deg, #00f3ff 0 2px, #00eaff 2px) border-box;
 }
 
-@keyframes kenar-dolas { to { --kenar-aci: 360deg; } }
 
 /* --- A · KOSE AYRACI ------------------------------------------------------
    Kenar cizilmez, IMA edilir. Izlenen yuzeylere: terminal penceresi ve HUD.
@@ -4967,7 +4968,5 @@ body.command-shell-open .bugy-onboard {
   border-bottom: 1px solid rgba(0, 234, 255, .75); border-right: 1px solid rgba(0, 234, 255, .75); }
 
 @media (prefers-reduced-motion: reduce) {
-  .action-link:hover, .action-link:focus-visible,
-  .action-link.is-primary:hover, .action-link.is-primary:focus-visible,
-  .terminal-command:hover, .terminal-command:focus-visible { animation: none; }
+  .action-link, .terminal-command { transition: none; }
 }
