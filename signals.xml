@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Kenar dili</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-09-kenar-dili</guid>
+      <pubDate>Wed, 09 Sep 2026 16:23:26 +0000</pubDate>
+      <description>Sitede 74 kenar bildirimi vardi ve hepsi ayni: 1px solid, sifir clip-path. Kenar artik bir uslup degil bir DIL: uzerine basilan seyler (butonlar, kartlar) kesik koseli; izlenen seyler (terminal penceresi, HUD) kose ayracli — kenar cizilmiyor, ima ediliyor; dolasan kenar enerjisi ise yalniz hover ve odakta calisiyor, durgun sayfada sifir animasyon. HUD satirlari tekrarli oldugu icin tam ayrac yerine iki kose aldi: yarim murekkep, ayni okuma. Lab listesindeki 13 satira dokunulmadi — 13 centik yan yana liste gurultusu olurdu.</description>
+    </item>
+    <item>
       <title>Yakindaki ve ziyaret nabzi</title>
       <link>https://ersinbinal.github.io/</link>
       <guid isPermaLink="false">cvm-signal-2026-09-09-yakindaki-ve-ziyaret-nabzi</guid>

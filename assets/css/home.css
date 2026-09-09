@@ -2489,6 +2489,7 @@
     }
 
     .hud-line {
+      position: relative;      /* kose ayraclari icin */
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       gap: 12px;
@@ -4823,4 +4824,150 @@ body.command-shell-open .bugy-onboard {
 @media (max-width: 640px) {
   .pulse-visits { grid-template-columns: minmax(0, 1fr); gap: 3px; }
   .pulse-visits-text { order: -1; white-space: normal; font-size: 10px; }
+}
+
+/* ==========================================================================
+   KENAR DILI — A (kose ayraci) · B (kesik kose) · F (dolasan enerji)
+   ==========================================================================
+   Sitede 74 kenar bildirimi vardi ve hepsi ayni: 1px solid. Kenar bir
+   USLUP degil, bir DIL olmali — farkli kenar, farkli rol:
+
+     B · kesik kose     -> UZERINE BASILAN seyler (butonlar, kartlar)
+     A · kose ayraci    -> IZLENEN seyler (terminal penceresi, HUD)
+     F · dolasan enerji -> DURUM (yalniz hover/focus; surekli degil)
+
+   F'i kalici yapmadik: 74 kenarda donen gradient telefonun pilini yakar.
+   Durum olarak ise bedavaya yakin ve anlamli — "bu eleman su an aktif".
+   ====================================================================== */
+
+@property --kenar-aci {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+/* --- B · KESIK KOSE -------------------------------------------------------
+   Iki katmanli arka plan + clip-path: sozde-eleman GEREKMEZ (kartlarin
+   ikisi de dolu). border 1px seffaf birakilir; padding-box katmani paneli,
+   border-box katmani kenari boyar; clip-path ikisini birden keser. */
+.action-link,
+.terminal-command {
+  --kesik: 9px;
+  clip-path: polygon(
+    var(--kesik) 0, 100% 0,
+    100% calc(100% - var(--kesik)), calc(100% - var(--kesik)) 100%,
+    0 100%, 0 var(--kesik)
+  );
+}
+
+.action-link {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(rgba(0, 0, 0, .62), rgba(0, 0, 0, .62)) padding-box,
+    linear-gradient(rgba(0, 234, 255, .26), rgba(0, 234, 255, .26)) border-box;
+}
+.action-link:hover,
+.action-link:focus-visible {
+  background:
+    linear-gradient(rgba(0, 0, 0, .62), rgba(0, 0, 0, .62)) padding-box,
+    conic-gradient(from var(--kenar-aci),
+      rgba(0, 234, 255, .18) 0 70%, #00eaff 84%, rgba(0, 234, 255, .18) 92% 100%) border-box;
+  animation: kenar-dolas 3.4s linear infinite;
+}
+/* DIKKAT: ic katman SAYDAM oldugunda altindaki kenar rengi icinden gecer.
+   Birincil butonun zemini rgba(0,255,102,.14) idi; tek katman birakinca
+   buton komple dolu yesil oldu ve yazi kayboldu. Koyu bir TABAN katmani
+   kenari kapatir, uzerindeki yesil tint eski gorunumu korur. */
+.action-link.is-primary {
+  border-color: transparent;
+  background:
+    linear-gradient(rgba(0, 255, 102, .14), rgba(0, 255, 102, .14)) padding-box,
+    linear-gradient(rgba(0, 12, 6, .92), rgba(0, 12, 6, .92)) padding-box,
+    linear-gradient(var(--journey-green, #00ff66), var(--journey-green, #00ff66)) border-box;
+}
+.action-link.is-primary:hover,
+.action-link.is-primary:focus-visible {
+  background:
+    linear-gradient(rgba(0, 255, 102, .22), rgba(0, 255, 102, .22)) padding-box,
+    linear-gradient(rgba(0, 12, 6, .92), rgba(0, 12, 6, .92)) padding-box,
+    conic-gradient(from var(--kenar-aci),
+      rgba(0, 255, 102, .25) 0 70%, #9fffb5 84%, rgba(0, 255, 102, .25) 92% 100%) border-box;
+  animation: kenar-dolas 3.4s linear infinite;
+}
+
+/* Kartin zemini OPAK olmali (#050505): saydam biraktigimda arka plandaki
+   neon cerceve animasyonu kartin icinden geciyordu. Soldaki 2px vurgu
+   seridi de kartin kimligi — kenar genisligi asimetrik birakilip
+   border-box katmani yatay gradientle boyanarak korunuyor. */
+.terminal-command {
+  border-width: 1px 1px 1px 2px;
+  border-style: solid;
+  border-color: transparent;
+  background:
+    linear-gradient(90deg, rgba(0, 243, 255, .055), rgba(0, 0, 0, .42)) padding-box,
+    linear-gradient(#050505, #050505) padding-box,
+    linear-gradient(90deg,
+      var(--color-accent, #00f3ff) 0 2px,
+      rgba(0, 255, 102, .22) 2px) border-box;
+}
+/* Karttaki hover parlamasi (::before) yerine kenar enerjisi: ayni etki
+   butcesi, ama hareket KENARDA — icerigin uzerinden gecmiyor. */
+.terminal-command::before { display: none; }
+.terminal-command:hover,
+.terminal-command:focus-visible {
+  background:
+    linear-gradient(90deg, rgba(0, 243, 255, .09), rgba(0, 0, 0, .42)) padding-box,
+    linear-gradient(#050505, #050505) padding-box,
+    conic-gradient(from var(--kenar-aci),
+      rgba(0, 255, 102, .18) 0 70%, #00eaff 84%, rgba(0, 255, 102, .18) 92% 100%) border-box;
+  animation: kenar-dolas 3.4s linear infinite;
+}
+
+@keyframes kenar-dolas { to { --kenar-aci: 360deg; } }
+
+/* --- A · KOSE AYRACI ------------------------------------------------------
+   Kenar cizilmez, IMA edilir. Izlenen yuzeylere: terminal penceresi ve HUD.
+   Sozde-eleman kullanilmaz (kabukta ikisi de dolu); dort kose gradient ile. */
+.command-shell {
+  border-color: rgba(0, 234, 255, .16);   /* cerceve geri cekilir */
+  background-image:
+    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
+    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
+    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
+    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
+    linear-gradient(180deg, rgba(0, 234, 255, 0.06), rgba(4, 10, 8, 0.97));
+  background-repeat: no-repeat;
+  background-size:
+    22px 1px, 1px 22px,   /* sol ust  */
+    22px 1px, 1px 22px,   /* sag ust  */
+    22px 1px, 1px 22px,   /* sol alt  */
+    22px 1px, 1px 22px,   /* sag alt  */
+    auto;
+  background-position:
+    left top, left top,
+    right top, right top,
+    left bottom, left bottom,
+    right bottom, right bottom,
+    center;
+}
+
+/* HUD satirlari TEKRARLI: tam ayrac yerine iki kose — yarim murekkep,
+   ayni okuma. Bes satir yan yana durdugunda fark buyuk. */
+.hud-line { border-color: rgba(0, 234, 255, .12); }
+.hud-line::before,
+.hud-line::after {
+  content: '';
+  position: absolute;
+  width: 9px; height: 9px;
+  pointer-events: none;
+}
+.hud-line::before { top: -1px; left: -1px;
+  border-top: 1px solid rgba(0, 234, 255, .75); border-left: 1px solid rgba(0, 234, 255, .75); }
+.hud-line::after { bottom: -1px; right: -1px;
+  border-bottom: 1px solid rgba(0, 234, 255, .75); border-right: 1px solid rgba(0, 234, 255, .75); }
+
+@media (prefers-reduced-motion: reduce) {
+  .action-link:hover, .action-link:focus-visible,
+  .action-link.is-primary:hover, .action-link.is-primary:focus-visible,
+  .terminal-command:hover, .terminal-command:focus-visible { animation: none; }
 }
