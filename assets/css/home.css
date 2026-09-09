@@ -4785,3 +4785,42 @@ body.command-shell-open .bugy-onboard {
   .terminal-games { gap: 6px; }
   .command-trigger.is-game { flex: 1 1 calc(50% - 6px); font-size: 12px; }
 }
+
+/* 5 · Yakindaki — HUD'un SIGNALS satirinda, sayinin SOLUNDA kucuk takimyildizi.
+   Yeni satir/kutu YOK: var olan degerin yanina girer. */
+/* .hud-line iki sutunlu bir grid (etiket | deger). Canvas'i araya koyunca
+   ucuncu cocuk oluyor ve deger ALT SATIRA dusuyordu. Bu satira ozel ucuncu
+   sutun aciliyor: etiket | takimyildizi | sayi. */
+.hud-line.presence-pulse { grid-template-columns: auto auto minmax(0, 1fr); }
+.pulse-nearby {
+  display: block;
+  width: 42px;
+  height: auto;
+  margin-right: 8px;
+  align-self: center;
+  opacity: 0.9;
+}
+@media (max-width: 640px) { .pulse-nearby { display: none; } }
+
+/* 6 · Ziyaret nabzi — atolye nabzinin hemen alti, ayni gorsel dil.
+   Tek bir buyuk sayi degil SEKIL: olcum gelistirme gunlerinde patliyor
+   ve bunu gizlemek yerine gostermek dogru. */
+.pulse-visits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0 0;
+  padding: 5px 0 0;
+}
+.pulse-visits-canvas { display: block; width: 100%; height: auto; }
+.pulse-visits-text {
+  font-family: var(--font-display); font-size: 10.5px;
+  color: #47584f; white-space: nowrap;
+}
+.pulse-visits-text b { color: #00f3ff; font-weight: 400; }
+
+@media (max-width: 640px) {
+  .pulse-visits { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .pulse-visits-text { order: -1; white-space: normal; font-size: 10px; }
+}

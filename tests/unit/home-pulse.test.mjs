@@ -194,6 +194,47 @@ test('PROTOKOLE DOKUNULMADI — bu bir ana sayfa yuzeyi', async () => {
     'nabiz protokolden bagimsiz olmali');
 });
 
+// --- Yakindaki + ziyaret nabzi -----------------------------------------------
+
+test('YAKINDAKI presence modulunun ICINE girmiyor — HUD metnini okuyor', () => {
+  const k = kod(pulseSource);
+  assert.match(k, /hud-presence/);
+  assert.match(k, /MutationObserver/);
+  assert.doesNotMatch(k, /createPresence|supabase|channel\(/i,
+    'presence ic yapisina baglanmamali');
+});
+
+test('yakindaki SEFFAF ciziliyor — HUD satirinda kutu gibi durmasin', () => {
+  assert.match(kod(pulseSource), /seffaf: true/);
+  assert.match(kod(pulseSource), /clearRect\(0, 0/);
+});
+
+test('ZIYARET NABZI tek sayi degil SEKIL gosteriyor', () => {
+  const k = kod(pulseSource);
+  assert.match(k, /enYuksek/, 'gunluk dizi olceklenmeli');
+  assert.match(k, /acikGun/, 'kac gun hareketli oldugu sayilmali');
+  // Etiket "ziyaretci" degil: olculen sey tekil insan degil, olay.
+  assert.match(k, /sayfa açılışı/);
+  assert.doesNotMatch(k, /ziyaretçi sayısı|tekil ziyaretçi/);
+});
+
+test('ziyaret nabzi 30 GUNLUK tam eksen ciziyor — sessiz gunler de gorunur', () => {
+  assert.match(kod(pulseSource), /i = 29; i >= 0/);
+});
+
+test('RPC dususe zarifce dayaniyor — olcum deneyimi bozmaz', () => {
+  const k = kod(pulseSource);
+  assert.match(k, /fetchSitePulse/);
+  assert.match(k, /catch \{ \/\* olcum asla deneyimi bozmaz \*\/ \}/);
+});
+
+test('site_pulse_daily SATIR degil TOPLAM donduruyor', async () => {
+  const client = await readFile(new URL('../../assets/js/supabase-client.js', import.meta.url), 'utf8');
+  assert.match(client, /site_pulse_daily/);
+  assert.match(client, /RLS anon okumayi engelliyor/,
+    'gizlilik gerekcesi kaynakta yazili olmali');
+});
+
 test('modul kendi kendini baslatiyor', () => {
   assert.match(pulseSource, /DOMContentLoaded/);
   assert.match(kod(pulseSource), /command-launch'\)\) return/);

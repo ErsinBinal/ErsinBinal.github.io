@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v279';
+const CACHE_NAME = 'convivium-v280';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -54,7 +54,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/bugy-cinema.css?v=3',
   '/assets/css/bugy-pet.css?v=8',
   '/assets/css/deb-companion.css?v=2',
-  '/assets/css/home.css?v=45',
+  '/assets/css/home.css?v=46',
   '/assets/css/bugy-studio.css?v=3',
   '/assets/css/demir-at.css?v=1',
   '/assets/js/lazy-load.js',
@@ -79,7 +79,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/home/okkam.js?v=3',
   '/assets/js/home/glossary.js?v=1',
   '/assets/js/home/viz.js?v=3',
-  '/assets/js/home/pulse.js?v=1',
+  '/assets/js/home/pulse.js?v=2',
   // ux.js precache'te OLMAK ZORUNDA: command-shell HTML'de `inert` basliyor
   // ve o niteligi kaldiran tek sey bu modul. Cevrimdisi yuklenemezse
   // terminal hic acilmaz — yazilamaz, komut kosmaz, gate dugmeleri de islemez.
@@ -129,7 +129,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=42',
+  '/assets/js/supabase-client.js?v=43',
   '/assets/js/articles.js?v=9',
   '/assets/js/guide-kilavuz.js?v=1',
   '/assets/img/guides/apps-guide.svg',

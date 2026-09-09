@@ -1183,6 +1183,15 @@
     if (error) throw new Error(toMessage(error));
     return Number(data) || 0;
   }
+  // Ana sayfa nabzi: son 30 gunun GUNLUK sayimi. RPC satir dondurmez,
+  // yalniz toplam — site_events'te RLS anon okumayi engelliyor ve oyle kaliyor.
+  async function fetchSitePulse() {
+    const client = await requireClient();
+    const { data, error } = await client.rpc('site_pulse_daily');
+    if (error) throw new Error(toMessage(error));
+    return Array.isArray(data) ? data : [];
+  }
+
   async function recordSiteEvent(eventKey, page) {
     try {
       if (!SITE_EVENT_KEYS.has(eventKey)) return false;
@@ -1275,6 +1284,7 @@
     catchBottle,
     listBottles,
     recordSiteEvent,
+    fetchSitePulse,
     fetchCollectPulse,
     fetchDreamStats,
     fingerProfile,

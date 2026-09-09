@@ -90,14 +90,16 @@
       return { ctx, W: w, H: h };
     };
 
-    const oynat = (canvas, oran, sure, ciz, { hepsi = false } = {}) => {
+    const oynat = (canvas, oran, sure, ciz, { hepsi = false, seffaf = false } = {}) => {
       let raf = 0;
       let gorunur = false;
       let olcu = kur(canvas, oran);
 
       const kare = (p) => {
-        olcu.ctx.fillStyle = C.bg;
-        olcu.ctx.fillRect(0, 0, olcu.W, olcu.H);
+        // Seffaf yuzeyler kendi zeminini BOYAMAZ: HUD satirinin uzerinde
+        // kucuk bir kutu gibi durmasinlar, satirin zemini gorunsun.
+        if (seffaf) olcu.ctx.clearRect(0, 0, olcu.W, olcu.H);
+        else { olcu.ctx.fillStyle = C.bg; olcu.ctx.fillRect(0, 0, olcu.W, olcu.H); }
         ciz(olcu.ctx, olcu.W, olcu.H, p);
       };
 
@@ -398,18 +400,136 @@
       }));
     };
 
+
+    // --- 5 · YAKINDAKI ------------------------------------------------------
+    // Sitede BASKA BIR INSAN yuzunden degisen tek sey. presence.js zaten
+    // Supabase gercek zamanli kanaliyla bagli ve `#hud-presence`e
+    // "N nearby" yaziyor; biz o METNI izleyip takimyildizi ciziyoruz.
+    //
+    // Neden MutationObserver: presence modulunun ic yapisina baglanmadan,
+    // protokole tek satir eklemeden calisir. Sayi veridir; nokta gorseldir.
+    const yakindaki = () => {
+      const deger = doc.getElementById('hud-presence');
+      if (!deger) return;
+
+      const cv = doc.createElement('canvas');
+      cv.className = 'pulse-nearby';
+      cv.setAttribute('aria-hidden', 'true');   // sayi zaten metinde, tekrar degil
+      deger.parentElement.insertBefore(cv, deger);
+
+      let sayi = 0;
+      const oku = () => {
+        const m = String(deger.textContent || '').match(/(\d+)\s*nearby/i);
+        sayi = m ? Math.min(12, Number(m[1])) : 0;
+      };
+      oku();
+
+      const gozlemci = new MutationObserver(oku);
+      gozlemci.observe(deger, { childList: true, characterData: true, subtree: true });
+      temizle.push(() => gozlemci.disconnect());
+
+      // Sen HER ZAMAN varsin: ilk nokta sensin, digerleri sayidan gelir.
+      temizle.push(oynat(cv, 0.42, 12000, (g, W, H, p) => {
+        const toplam = sayi + 1;
+        for (let i = 0; i < toplam; i += 1) {
+          // Deterministik yerlesim: ayni sayi ayni deseni verir.
+          const a = (i * 2.399) + p * 0.6;
+          const r = i === 0 ? 0 : Math.min(W, H) * (0.20 + (i % 3) * 0.09);
+          const x = W / 2 + Math.cos(a) * r;
+          const y = H / 2 + Math.sin(a) * r * 0.8;
+          if (i > 0) {
+            g.strokeStyle = 'rgba(0,243,255,.16)'; g.lineWidth = 1;
+            g.beginPath(); g.moveTo(W / 2, H / 2); g.lineTo(x, y); g.stroke();
+          }
+          const nabiz = 0.65 + 0.35 * Math.sin(p * 6.284 + i * 1.7);
+          g.globalAlpha = 0.22 * nabiz;
+          g.fillStyle = i === 0 ? C.phos : C.signal;
+          g.beginPath(); g.arc(x, y, 6, 0, 6.284); g.fill();
+          g.globalAlpha = nabiz;
+          g.beginPath(); g.arc(x, y, 2.2, 0, 6.284); g.fill();
+          g.globalAlpha = 1;
+        }
+      }, { seffaf: true }));
+    };
+
+
+    // --- 6 · ZIYARET NABZI --------------------------------------------------
+    // Son 30 gunun GUNLUK sayfa acilisi. Tek bir buyuk sayi degil, SEKIL:
+    //
+    // Cunku tek sayi burada YANILTICI olurdu. Bu olcum gelistirme gunlerinde
+    // patliyor (bir gun 298, sessiz gunler 1-2) cunku tarayici testleri de
+    // sayiliyor. Sekli gostermek dogruyu gosterir: patlamalar ve sessizlik
+    // birlikte gorunur. Etiket de "ziyaretci" degil "sayfa acilisi" —
+    // olculen sey tekil insan degil, home.view olayi.
+    const ziyaretNabzi = (gunler) => {
+      const yuva = doc.querySelector('.pulse-workshop') || doc.querySelector('.os-snapshot');
+      if (!yuva || !Array.isArray(gunler) || !gunler.length) return;
+
+      // 30 gunluk tam eksen: yayin YAPILMAYAN gunler de gorunmeli.
+      const bugun = new Date();
+      const dizi = [];
+      for (let i = 29; i >= 0; i -= 1) {
+        const d = new Date(bugun);
+        d.setDate(d.getDate() - i);
+        const anahtar = d.toISOString().slice(0, 10);
+        const kayit = gunler.find((g) => String(g.gun).slice(0, 10) === anahtar);
+        dizi.push(kayit ? Number(kayit.ziyaret) || 0 : 0);
+      }
+      const enYuksek = Math.max(1, ...dizi);
+      const toplam = dizi.reduce((a, b) => a + b, 0);
+      const acikGun = dizi.filter((n) => n > 0).length;
+
+      const sarmal = doc.createElement('div');
+      sarmal.className = 'pulse-visits';
+      sarmal.innerHTML =
+        '<canvas class="pulse-visits-canvas"></canvas>' +
+        `<span class="pulse-visits-text">${tr(toplam)} sayfa açılışı · ` +
+        `<b>${acikGun}</b>/30 gün</span>`;
+      sarmal.setAttribute('aria-label',
+        `Son 30 gunde ${toplam} sayfa acilisi, ${acikGun} gun hareketli`);
+      yuva.insertAdjacentElement('afterend', sarmal);
+
+      const cv = sarmal.querySelector('.pulse-visits-canvas');
+      temizle.push(oynat(cv, 0.052, 11000, (g, W, H, p) => {
+        const bw = W / dizi.length;
+        dizi.forEach((n, i) => {
+          const x = i * bw;
+          if (!n) {
+            g.fillStyle = '#1b2a22';
+            g.fillRect(x, H - 2, Math.max(1, bw - 1.4), 2);
+            return;
+          }
+          const h = Math.max(2, (n / enYuksek) * (H - 3));
+          // Yuksek gunler farkli renk: patlamalar gizlenmiyor, isaretleniyor.
+          g.fillStyle = n >= enYuksek * 0.5 ? C.signal : C.phos;
+          g.globalAlpha = 0.72;
+          g.fillRect(x, H - h, Math.max(1, bw - 1.4), h);
+        });
+        g.globalAlpha = 1;
+        const lx = p * W;
+        g.strokeStyle = 'rgba(0,243,255,.5)'; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(lx, 0); g.lineTo(lx, H); g.stroke();
+      }));
+    };
+
     const baslat = () => {
       if (!doc) return;
       try { cmdKarti(); } catch (e) { console.error('[pulse] cmd', e); }
       try { kaziSeridi(); } catch (e) { console.error('[pulse] serit', e); }
       try { kartRozetleri(); } catch (e) { console.error('[pulse] rozet', e); }
       try { atolyeNabzi(); } catch (e) { console.error('[pulse] atolye', e); }
+      try { yakindaki(); } catch (e) { console.error('[pulse] yakindaki', e); }
     };
 
     const dur = () => { temizle.forEach((f) => { try { f(); } catch { /* yoksay */ } }); };
 
     // Atolye nabzi filiz.json'u bekledigi icin ayrica cagrilabilir olmali.
-    return Object.freeze({ baslat, dur, hazir, _atolyeTek: atolyeNabzi, _renkler: C });
+    return Object.freeze({
+      baslat, dur, hazir,
+      _atolyeTek: atolyeNabzi,
+      _ziyaretTek: ziyaretNabzi,
+      _renkler: C
+    });
   };
 
   // --- ONYUKLEYICI ----------------------------------------------------------
@@ -441,14 +561,22 @@
     });
     pulse.baslat();
 
-    // Atolye nabzi filiz.json'u bekler; geldiginde tek basina eklenir.
+    // Atolye nabzi filiz.json'u, ziyaret nabzi Supabase'i bekler; ikisi de
+    // BOSTA gelir ve tek tek eklenir. Gelmezlerse sayfa eksiksiz calisir.
     bosta(async () => {
       filiz = await cek('/assets/data/filiz.json');
-      if (filiz) root.createPulse({
+      const gec = root.createPulse({
         getNabiz: () => nabiz,
         getFiliz: () => filiz,
         prefersReducedMotion: () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
-      })._atolyeTek();
+      });
+      if (filiz) gec._atolyeTek();
+
+      // Ziyaret nabzi: RPC yoksa ya da ag dusukse sessizce ATLANIR.
+      try {
+        const gunler = await window.ConviviumBackend?.fetchSitePulse?.();
+        if (gunler && gunler.length) gec._ziyaretTek(gunler);
+      } catch { /* olcum asla deneyimi bozmaz */ }
     });
   };
 

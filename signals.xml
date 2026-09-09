@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Yakindaki ve ziyaret nabzi</title>
+      <link>https://ersinbinal.github.io/</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-09-yakindaki-ve-ziyaret-nabzi</guid>
+      <pubDate>Wed, 09 Sep 2026 15:01:29 +0000</pubDate>
+      <description>Iki canli yuzey daha. YAKINDAKI: HUD un SIGNALS satirinda kucuk bir takimyildizi — her ziyaretci bir nokta, biri girince beliriyor cikinca soniyor. Supabase gercek zamanli presence kanali zaten bagliydi, yalniz metinle gosteriliyordu; artik goruluyor. Sitede baska bir insan yuzunden degisen tek sey bu. ZIYARET NABZI: son 30 gunun gunluk sayfa acilisi. Tek bir buyuk sayi degil SEKIL — cunku olcum gelistirme gunlerinde patliyor ve bunu gizlemek yerine gostermek dogru. Etiket de ziyaretci degil sayfa acilisi: olculen sey tekil insan degil.</description>
+    </item>
+    <item>
       <title>Terminal oyunlarina kisayol</title>
       <link>https://ersinbinal.github.io/#lab</link>
       <guid isPermaLink="false">cvm-signal-2026-09-08-terminal-oyunlarina-kisayol</guid>
