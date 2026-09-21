@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Yorumlar acildi</title>
+      <link>https://ersinbinal.github.io/pages/makaleler.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-21-yorumlar-acildi</guid>
+      <pubDate>Mon, 21 Sep 2026 11:57:36 +0000</pubDate>
+      <description>Kalici adres sayfalarina ziyaretci yorumlari geldi. Supabase SDK'si KULLANILMADI: SDK jsDelivr'dan geliyor ve bu sayfaya baglamak CSP'ye ucuncu taraf bir script kaynagi eklemek demekti. Sayfanin SDK'dan ihtiyaci olan sey iki RPC cagrisi; onlari fetch ile yapmak 220 satir. Boylece CSP script-src 'self' kaliyor — inline yok, ucuncu taraf yok. Yorum adasi ILERLEYICI bir katman: sayfa JS olmadan da tam render oluyor, ada yuklenmezse yalniz yorumlar gorunmez, yazi degil. Yazma tabloya degil hiz sinirli fonksiyona gidiyor (10 dakikada 5, gunde 30) ve ziyaretci metni textContent ile basiliyor, HTML olarak asla yorumlanmiyor. Site oturumu sessionStorage'da tutuldugu icin paylasilan bir baglantiyla yeni sekmede gelen kisi oturumsuzdur: yorumlari okur, yazmak icin giris yapar — bunu gizlemiyoruz, arayuzde soyluyoruz. Bu arada eski bir hata da cikti: permalink sayfalari components.css cekmedigi icin .btn butonlari tarayici varsayilani olarak kaliyordu. Surum artik sablona YAZILMIYOR, her uretimde okuma odasinin HTML'inden turetiliyor — o an dogru olan bir sayi ilk bump'ta yalan olurdu. On uc uctan uca test eklendi.</description>
+    </item>
+    <item>
       <title>Okuma odasi dort mercek kazandi</title>
       <link>https://ersinbinal.github.io/pages/makaleler.html</link>
       <guid isPermaLink="false">cvm-signal-2026-09-21-okuma-odasi-dort-mercek-kazandi</guid>

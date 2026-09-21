@@ -53,6 +53,25 @@ const SITE = 'https://ersinbinal.github.io';
 const kontrol = process.argv.includes('--check');
 const agsiz = process.argv.includes('--offline');
 
+// --- Surumlu asset: SITENIN KENDI HTML'inden turetilir ----------------------
+//
+// .btn kenar dilini tasiyor ve components.css'te tanimli; permalink sayfasi
+// onu cekmezse butonlar tarayici varsayilani olarak kaliyor (bir sure oyle
+// kaldi). Ama components.css SURUMLU (?v=N) ve validate-site-integrity ayni
+// asset'in iki farkli surumle gecmesini hata sayar.
+//
+// Cozum surumu buraya yazmak DEGIL — o an dogru olur, ilk bump'ta yalan olur.
+// Surum her uretimde okuma odasinin HTML'inden okunur: tek kaynak sitenin
+// kendisi, suruklenme imkansiz.
+function surumOku(dosya, asset) {
+  try {
+    const html = fs.readFileSync(path.join(root, dosya), 'utf8');
+    const kalip = new RegExp(`${asset.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\?v=([^"'&#]+)`);
+    const m = html.match(kalip);
+    return m ? `?v=${m[1]}` : '';
+  } catch { return ''; }
+}
+
 // --- Supabase ayarlari: TEK kaynaktan, elle kopyalanmaz ---------------------
 function supabaseAyar() {
   const src = fs.readFileSync(path.join(root, 'assets', 'js', 'supabase-config.js'), 'utf8');
@@ -167,7 +186,7 @@ async function kayitlariGetir() {
     console.warn(`  ag atlandi: ${e.message}`);
     return { kaynak: 'yerel', satirlar: null };
   }
-  const TEMEL = 'slug,title,summary,content_html,published_at,created_at,updated_at';
+  const TEMEL = 'id,slug,title,summary,content_html,published_at,created_at,updated_at';
   const TURLU = `${TEMEL},kind,tags`;
   const TAM = `${TURLU},meta`;
 
@@ -243,6 +262,7 @@ function normalize(satirlar) {
     const kayit = {
       tur,
       slug,
+      id: satir.id || null,
       baslik,
       ozet: String(satir.summary || '').trim() || duzMetin(govde).slice(0, 180),
       tarih,
@@ -328,7 +348,7 @@ function sayfaUret(kayit) {
   <meta name="description" content="${kacis(kayit.ozet.slice(0, 200))}">
   <link rel="canonical" href="${kacis(kanonik)}">
   <meta name="robots" content="index, follow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; object-src 'none'; base-uri 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'none'; form-action 'none'; frame-ancestors 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src https://*.supabase.co; form-action 'none'; frame-ancestors 'self'">
 
   <meta property="og:site_name" content="Convivium">
   <meta property="og:title" content="${kacis(baslik)}">
@@ -345,6 +365,7 @@ function sayfaUret(kayit) {
   <meta name="theme-color" content="#00ff00">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
+  <link rel="stylesheet" href="/assets/css/components.css${surumOku('pages/makaleler.html', '/assets/css/components.css')}">
   <link rel="stylesheet" href="/assets/css/yazi.css">
   <link rel="stylesheet" href="/assets/css/kenar.css">
 </head>
@@ -371,6 +392,11 @@ ${kayit._govde}
       </article>
     </main>
 
+    ${kayit.id ? `<section class="yorumlar" id="yorumlar" data-makale="${kacis(kayit.id)}" aria-label="Yorumlar">
+      <h2 class="yorumlar-baslik">Yorumlar</h2>
+      <p class="yorumlar-durum" id="yorumlarDurum">Yorumlar yukleniyor...</p>
+    </section>` : ''}
+
     <footer class="yazi-alt">
       <a href="/pages/makaleler.html" class="btn">Tum yazilar</a>
       <a href="/signals.xml" class="btn">RSS</a>
@@ -389,6 +415,8 @@ ${JSON.stringify({
   author: { '@type': 'Person', name: 'Ersin Binal' }
 }, null, 2)}
   </script>
+${kayit.id ? `  <script src="/assets/js/supabase-config.js"></script>
+  <script src="/assets/js/yorum.js" defer></script>` : ''}
 </body>
 </html>
 `;
