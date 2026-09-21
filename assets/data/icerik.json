@@ -1,11 +1,35 @@
 {
   "v": 1,
-  "kaynak": "supabase-eski-sema",
+  "kaynak": "supabase",
   "sayim": {
     "toplam": 2,
     "makale": 2,
+    "kitap": 0,
+    "film": 0,
     "not": 0
   },
+  "turler": [
+    {
+      "anahtar": "makale",
+      "ad": "Makale",
+      "coklu": "Makaleler"
+    },
+    {
+      "anahtar": "kitap",
+      "ad": "Kitap",
+      "coklu": "Kitaplar"
+    },
+    {
+      "anahtar": "film",
+      "ad": "Film",
+      "coklu": "Filmler"
+    },
+    {
+      "anahtar": "not",
+      "ad": "Karalama",
+      "coklu": "Karalamalar"
+    }
+  ],
   "etiketler": [],
   "kayitlar": [
     {

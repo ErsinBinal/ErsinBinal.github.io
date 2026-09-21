@@ -1299,3 +1299,84 @@ figcaption {
     padding: 16px;
   }
 }
+
+/* --- Admin: icerik turu ve kunye alanlari ---------------------------------- */
+/* Form dort turu tasiyor ama hepsini ayni anda gostermiyor: kitap kunyesi
+ * film yazarken gurultudur. Tur secimi bir segment; secili olan doluyor.
+ * Cerceve yok — kenar dili basilan/izlenen seyler icin, bunlar form alani. */
+
+.kind-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-bottom: 1rem;
+}
+
+.kind-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.kind-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.kind-option span {
+  display: inline-block;
+  padding: .34rem .85rem;
+  background: var(--color-bg-card);
+  color: var(--color-text-dim);
+  border-radius: var(--border-radius-sm);
+  font-size: .8rem;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.kind-option input:checked + span {
+  background: var(--color-primary-dim);
+  color: var(--color-bg);
+}
+
+.kind-option input:focus-visible + span {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.kunye-set {
+  margin: 1rem 0 0;
+  padding: .9rem 1rem 1.1rem;
+  background: var(--color-bg-card);
+  border-radius: var(--border-radius-md);
+}
+
+/* fieldset degil, div[role="group"]. Sebep: fieldset'in tarayici kenarini
+ * sifirlamak `border: 0` gerektiriyor ve kenar kapisi bunu HAKLI olarak bir
+ * kenar bildirimi sayiyor. Kapiyi gevsetmek yerine ihtiyaci kaldirdik —
+ * gruplamanin erisilebilirligi role+aria-labelledby ile korunuyor. */
+.kunye-baslik {
+  margin: 0 0 .7rem;
+  color: var(--color-primary-dim);
+  font-size: .74rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.kunye-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: .7rem .9rem;
+}
+
+.kunye-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: .28rem;
+  font-size: .76rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--color-primary-dim);
+}

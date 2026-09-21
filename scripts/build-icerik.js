@@ -115,6 +115,42 @@ function okumaSuresi(html) {
   return Math.max(1, Math.round(kelime / 200));
 }
 
+// --- Turler -----------------------------------------------------------------
+// Her tur bir BOLUM degil, ayni omurganin bir mercegi. Kategori menusu bu
+// listeden uretilir; yeni tur eklemek tek satir.
+const TURLER = {
+  makale: { ad: 'Makale',    coklu: 'Makaleler',    basliksiz: false },
+  kitap:  { ad: 'Kitap',     coklu: 'Kitaplar',     basliksiz: false },
+  film:   { ad: 'Film',      coklu: 'Filmler',      basliksiz: false },
+  not:    { ad: 'Karalama',  coklu: 'Karalamalar',  basliksiz: true }
+};
+
+// Ture ozgu meta alanlari. Beyaz liste: veritabani ne tasirsa tasisin,
+// sayfaya yalniz bunlar cikar. Tanimsiz alan sessizce dusurulur.
+const META_ALANLARI = {
+  kitap: ['yazar', 'yil', 'puan', 'kapak', 'sayfa', 'cevirmen'],
+  film:  ['yonetmen', 'yil', 'puan', 'afis', 'sure', 'ulke'],
+  makale: [],
+  not: []
+};
+
+function metaTemizle(tur, ham) {
+  const izinli = META_ALANLARI[tur] || [];
+  const cikti = {};
+  if (!ham || typeof ham !== 'object' || Array.isArray(ham)) return cikti;
+  for (const alan of izinli) {
+    const deger = ham[alan];
+    if (deger == null || deger === '') continue;
+    if (typeof deger === 'number') {
+      if (Number.isFinite(deger)) cikti[alan] = deger;
+    } else {
+      const metin = String(deger).trim().slice(0, 120);
+      if (metin) cikti[alan] = metin;
+    }
+  }
+  return cikti;
+}
+
 const AY = ['Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
   'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik'];
 function tarihYaz(iso) {
@@ -132,7 +168,8 @@ async function kayitlariGetir() {
     return { kaynak: 'yerel', satirlar: null };
   }
   const TEMEL = 'slug,title,summary,content_html,published_at,created_at,updated_at';
-  const YENI = `${TEMEL},kind,tags`;
+  const TURLU = `${TEMEL},kind,tags`;
+  const TAM = `${TURLU},meta`;
 
   const cek = async (alanlar) => {
     const url = `${ayar.url}/rest/v1/articles`
@@ -144,23 +181,33 @@ async function kayitlariGetir() {
     return cevap.json();
   };
 
-  try {
-    return { kaynak: 'supabase', satirlar: await cek(YENI) };
-  } catch (e) {
-    // Migration henuz kosmadiysa kind/tags kolonlari yok. Bu bir hata degil,
-    // bir sira meselesi: eski semayla cek, tur 'makale' varsayilir. Ayni
-    // desen shards migration'inda da var — kolon yokken zarifce dus.
+  // Sema UC durumda olabilir, cunku migration'lar sirayla kosuyor:
+  //   tam    : kind + tags + meta   (kitap/film degerlendirmeleri calisir)
+  //   turlu  : kind + tags          (not calisir, meta yok)
+  //   temel  : hicbiri              (hepsi makale)
+  // Kademeli dusus: eksik kolon yayini DURDURMAZ, yalniz o ozelligi kapatir.
+  const kademeler = [
+    ['supabase', TAM],
+    ['supabase-meta-yok', TURLU],
+    ['supabase-eski-sema', TEMEL]
+  ];
+  let sonHata = null;
+  for (const [ad, alanlar] of kademeler) {
     try {
-      const satirlar = await cek(TEMEL);
-      console.warn('  kind/tags kolonlari yok — migration henuz kosmamis.');
-      console.warn('  Hepsi makale sayildi. Kosmak icin: docs/database/PENDING.sql');
-      return { kaynak: 'supabase-eski-sema', satirlar };
-    } catch (e2) {
-      // Ag yoksa yayini durdurmuyoruz: elde anlik goruntu varsa onunla devam.
-      console.warn(`  Supabase okunamadi (${e2.message}) — mevcut icerik.json kullanilacak.`);
-      return { kaynak: 'yerel', satirlar: null };
-    }
+      const satirlar = await cek(alanlar);
+      if (ad === 'supabase-meta-yok') {
+        console.warn('  meta kolonu yok — kitap/film alanlari bos gecilecek.');
+        console.warn('  Kosmak icin: docs/database/PENDING.sql');
+      } else if (ad === 'supabase-eski-sema') {
+        console.warn('  kind/tags/meta kolonlari yok — migration henuz kosmamis.');
+        console.warn('  Hepsi makale sayildi. Kosmak icin: docs/database/PENDING.sql');
+      }
+      return { kaynak: ad, satirlar };
+    } catch (e) { sonHata = e; }
   }
+  // Ag yoksa yayini durdurmuyoruz: elde anlik goruntu varsa onunla devam.
+  console.warn(`  Supabase okunamadi (${sonHata && sonHata.message}) — mevcut icerik.json kullanilacak.`);
+  return { kaynak: 'yerel', satirlar: null };
 }
 
 function mevcutJson() {
@@ -180,10 +227,13 @@ function normalize(satirlar) {
     if (gorulen.has(slug)) { atlanan.push(`slug tekrar: ${slug}`); continue; }
     gorulen.add(slug);
 
-    const tur = satir.kind === 'not' ? 'not' : 'makale';
+    const tur = TURLER[satir.kind] ? satir.kind : 'makale';
     const govde = govdeTemizle(satir.content_html);
     const baslik = String(satir.title || '').trim();
-    if (tur === 'makale' && !baslik) { atlanan.push(`makale bassiz: ${slug}`); continue; }
+    if (!TURLER[tur].basliksiz && !baslik) {
+      atlanan.push(`${tur} bassiz: ${slug}`); continue;
+    }
+    const meta = metaTemizle(tur, satir.meta);
 
     const tarih = satir.published_at || satir.created_at || null;
     const etiketler = Array.isArray(satir.tags)
@@ -200,8 +250,9 @@ function normalize(satirlar) {
       yol: `/y/${slug}.html`,
       sure: okumaSuresi(govde)
     };
+    if (Object.keys(meta).length) kayit.meta = meta;
     // Not kisa: govdesi omurgada tasinir, akis satir ici gosterir.
-    // Makale govdesi yalniz kendi sayfasinda durur.
+    // Uzun turlerin govdesi yalniz kendi sayfasinda durur.
     if (tur === 'not') kayit.govde = govde;
     kayitlar.push({ ...kayit, _govde: govde });
   }
@@ -211,16 +262,52 @@ function normalize(satirlar) {
 }
 
 // --- Permalink sayfasi ------------------------------------------------------
+// Kitap/film kunyesi: degerlendirmenin KONUSU. Makalede boyle bir sey yok —
+// makalenin konusu kendisidir. Bu yuzden kunye yalniz meta tasiyan turde cikar.
+const META_ETIKET = {
+  yazar: 'Yazar', cevirmen: 'Ceviri', yil: 'Yil', sayfa: 'Sayfa',
+  yonetmen: 'Yonetmen', sure: 'Sure', ulke: 'Ulke'
+};
+
+function kunyeUret(kayit) {
+  const meta = kayit.meta || {};
+  const satirlar = Object.entries(META_ETIKET)
+    .filter(([alan]) => meta[alan] != null)
+    .map(([alan, etiket]) =>
+      `<div class="yazi-kunye-satir"><dt>${kacis(etiket)}</dt><dd>${kacis(meta[alan])}</dd></div>`);
+
+  // Puan ayri: sayi degil OLCU. 10 uzerinden, gorsel olarak da okunur.
+  const puan = Number(meta.puan);
+  const puanBlok = Number.isFinite(puan) && puan > 0 && puan <= 10
+    ? `<p class="yazi-puan" aria-label="Puan: ${puan} / 10">`
+      + `<span class="yazi-puan-sayi">${puan}</span>`
+      + `<span class="yazi-puan-bar"><span style="width:${Math.round(puan * 10)}%"></span></span>`
+      + `<span class="yazi-puan-max">/ 10</span></p>`
+    : '';
+
+  if (!satirlar.length && !puanBlok) return '';
+  const gorsel = meta.kapak || meta.afis;
+  return '<aside class="yazi-kunye">'
+    + (gorsel ? `<img class="yazi-kunye-gorsel" src="${kacis(gorsel)}" alt="" loading="lazy">` : '')
+    + '<div class="yazi-kunye-govde">'
+    + (satirlar.length ? `<dl class="yazi-kunye-liste">${satirlar.join('')}</dl>` : '')
+    + puanBlok
+    + '</div></aside>';
+}
+
 function sayfaUret(kayit) {
-  const baslik = kayit.baslik || `Not — ${tarihYaz(kayit.tarih)}`;
+  const turBilgi = TURLER[kayit.tur] || TURLER.makale;
+  const baslik = kayit.baslik || `Karalama — ${tarihYaz(kayit.tarih)}`;
   const kanonik = `${SITE}${kayit.yol}`;
   const etiket = kayit.etiketler.length
     ? `<ul class="yazi-etiketler">${kayit.etiketler.map((t) => `<li>${kacis(t)}</li>`).join('')}</ul>`
     : '';
   const ustBilgi = [
+    turBilgi.ad.toUpperCase(),
     tarihYaz(kayit.tarih),
-    kayit.tur === 'makale' ? `${kayit.sure} dk okuma` : 'not'
+    kayit.tur === 'not' ? null : `${kayit.sure} dk okuma`
   ].filter(Boolean).join(' &middot; ');
+  const kunye = kunyeUret(kayit);
 
   return `<!DOCTYPE html>
 <html lang="tr">
@@ -276,6 +363,7 @@ function sayfaUret(kayit) {
           <p class="yazi-ust">${ustBilgi}</p>
           <h1>${kacis(baslik)}</h1>
         </header>
+        ${kunye}
         <div class="yazi-govde">
 ${kayit._govde}
         </div>
@@ -292,7 +380,7 @@ ${kayit._govde}
   <script type="application/ld+json">
 ${JSON.stringify({
   '@context': 'https://schema.org',
-  '@type': kayit.tur === 'makale' ? 'Article' : 'SocialMediaPosting',
+  '@type': { makale: 'Article', kitap: 'Review', film: 'Review', not: 'SocialMediaPosting' }[kayit.tur] || 'Article',
   headline: baslik,
   description: kayit.ozet.slice(0, 200),
   url: kanonik,
@@ -361,11 +449,13 @@ function paketle(kayitlar, kaynak) {
   return {
     v: 1,
     kaynak,
-    sayim: {
-      toplam: kayitlar.length,
-      makale: kayitlar.filter((k) => k.tur === 'makale').length,
-      not: kayitlar.filter((k) => k.tur === 'not').length
-    },
+    sayim: Object.keys(TURLER).reduce(
+      (acc, tur) => ({ ...acc, [tur]: kayitlar.filter((k) => k.tur === tur).length }),
+      { toplam: kayitlar.length }
+    ),
+    turler: Object.entries(TURLER).map(([anahtar, t]) => ({
+      anahtar, ad: t.ad, coklu: t.coklu
+    })),
     etiketler,
     kayitlar: kayitlar.map(({ _govde, ...genel }) => genel)
   };
@@ -424,8 +514,10 @@ function paketle(kayitlar, kaynak) {
       console.error('Duzeltmek icin: npm run build:icerik');
       process.exit(1);
     }
-    console.log(`icerik omurgasi tutarli (${sayim} kayit: `
-      + `${eski.sayim.makale} makale, ${eski.sayim.not} not).`);
+    const ozet = Object.keys(TURLER)
+      .filter((t) => eski.sayim[t]).map((t) => `${eski.sayim[t]} ${TURLER[t].ad.toLowerCase()}`);
+    console.log(`icerik omurgasi tutarli (${sayim} kayit`
+      + `${ozet.length ? ': ' + ozet.join(', ') : ''}).`);
     process.exit(0);
   }
 
@@ -451,7 +543,9 @@ function paketle(kayitlar, kaynak) {
   const sm = sitemapYaz(paket.kayitlar, false);
 
   console.log(`icerik omurgasi yazildi (kaynak: ${kaynakAdi})`);
-  console.log(`  ${paket.sayim.toplam} kayit: ${paket.sayim.makale} makale, ${paket.sayim.not} not`);
+  const dokum = Object.keys(TURLER)
+    .map((t) => `${paket.sayim[t]} ${TURLER[t].ad.toLowerCase()}`).join(', ');
+  console.log(`  ${paket.sayim.toplam} kayit: ${dokum}`);
   console.log(`  /y/ : ${yazilan} sayfa yazildi`
     + (korunan ? `, ${korunan} korundu (agsiz)` : '')
     + (silinen ? `, ${silinen} sahipsiz silindi` : ''));

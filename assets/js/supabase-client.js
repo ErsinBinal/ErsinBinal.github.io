@@ -102,10 +102,66 @@
       .slice(0, 96);
   }
 
+  // --- Icerik turleri --------------------------------------------------------
+  // Tek omurga, dort mercek. Veritabanindaki articles_kind_check ile AYNI
+  // liste; ikisi ayrisirsa kayit sunucuda reddedilir, burada degil.
+  const ARTICLE_KINDS = ['makale', 'not', 'kitap', 'film'];
+
+  // Ture ozgu meta alanlari — veritabanindaki beyaz listenin ikizi.
+  const ARTICLE_META_FIELDS = {
+    kitap: ['yazar', 'cevirmen', 'yil', 'sayfa', 'puan', 'kapak'],
+    film: ['yonetmen', 'yil', 'sure', 'ulke', 'puan', 'afis'],
+    makale: [],
+    not: []
+  };
+
+  // Notun basligi yok, o yuzden slug'i da yok. Elle slug uydurmak zorunda
+  // kalirsan kisa not yazma surtunmesi geri gelir — tarihten uretiyoruz.
+  function autoSlug(kind) {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `${kind}-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+      + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  }
+
+  function normalizeTags(tags) {
+    const dizi = Array.isArray(tags)
+      ? tags
+      : String(tags || '').split(',');
+    const temiz = [];
+    for (const ham of dizi) {
+      const t = String(ham).trim().toLowerCase().slice(0, 24);
+      if (t && !temiz.includes(t)) temiz.push(t);
+      if (temiz.length === 6) break;   // sunucudaki kisitla ayni sinir
+    }
+    return temiz;
+  }
+
+  function normalizeMeta(kind, meta) {
+    const izinli = ARTICLE_META_FIELDS[kind] || [];
+    const cikti = {};
+    if (!meta || typeof meta !== 'object') return cikti;
+    for (const alan of izinli) {
+      const ham = meta[alan];
+      if (ham == null || ham === '') continue;
+      if (['yil', 'sayfa', 'puan', 'sure'].includes(alan)) {
+        const sayi = Number(ham);
+        if (Number.isFinite(sayi)) cikti[alan] = sayi;
+      } else {
+        const metin = String(ham).trim().slice(0, 120);
+        if (metin) cikti[alan] = metin;
+      }
+    }
+    return cikti;
+  }
+
   function normalizeArticle(row) {
     return {
       id: row.id,
       slug: row.slug,
+      kind: ARTICLE_KINDS.includes(row.kind) ? row.kind : 'makale',
+      tags: Array.isArray(row.tags) ? row.tags : [],
+      meta: (row.meta && typeof row.meta === 'object') ? row.meta : {},
       title: row.title,
       date: (row.published_at || row.created_at || '').slice(0, 10),
       summary: row.summary || '',
@@ -374,7 +430,7 @@
     const client = await requireClient();
     const { data, error } = await client
       .from('articles')
-      .select('id, slug, title, summary, content_html, status, published_at, created_at, updated_at')
+      .select('id, slug, title, summary, content_html, kind, tags, meta, status, published_at, created_at, updated_at')
       .eq('status', 'published')
       .order('published_at', { ascending: false, nullsFirst: false })
       .order('created_at', { ascending: false });
@@ -387,7 +443,7 @@
     const client = await requireClient();
     const { data, error } = await client
       .from('articles')
-      .select('id, slug, title, summary, content_html, status, published_at, created_at, updated_at')
+      .select('id, slug, title, summary, content_html, kind, tags, meta, status, published_at, created_at, updated_at')
       .order('updated_at', { ascending: false });
 
     if (error) throw new Error(toMessage(error));
@@ -399,11 +455,15 @@
     const user = await getUser();
     if (!user) throw new Error('Oturum bulunamadi.');
 
+    const kind = ARTICLE_KINDS.includes(article.kind) ? article.kind : 'makale';
     const payload = {
-      slug: slugify(article.slug || article.title),
-      title: article.title.trim(),
-      summary: article.summary.trim(),
-      content_html: article.content_html.trim(),
+      slug: slugify(article.slug || article.title) || autoSlug(kind),
+      title: (article.title || '').trim(),
+      summary: (article.summary || '').trim(),
+      content_html: (article.content_html || '').trim(),
+      kind,
+      tags: normalizeTags(article.tags),
+      meta: normalizeMeta(kind, article.meta),
       status: ['draft', 'published', 'archived'].includes(article.status) ? article.status : 'draft',
       published_at: article.status === 'published'
         ? (article.published_at || new Date().toISOString())
@@ -1216,13 +1276,21 @@
     }
   }
 
+  // Dogrulama TURE GORE. Nottan baslik ve ozet istemek, kisa not yazmayi
+  // imkansiz kilar — zaten bugun yazilmamasinin sebebi buydu.
   function validateArticlePayload(payload) {
-    if (!payload.title) throw new Error('Baslik gerekli.');
+    const kisa = payload.kind === 'not';
+    if (!kisa && !payload.title) throw new Error('Baslik gerekli.');
     if (!payload.slug) throw new Error('Gecerli bir slug gerekli.');
-    if (!payload.summary) throw new Error('Ozet gerekli.');
-    if (!payload.content_html) throw new Error('Makale icerigi gerekli.');
+    if (!kisa && !payload.summary) throw new Error('Ozet gerekli.');
+    if (!payload.content_html) throw new Error('Icerik bos olamaz.');
+    if (!ARTICLE_KINDS.includes(payload.kind)) throw new Error('Gecersiz icerik turu.');
     if (!['draft', 'published', 'archived'].includes(payload.status)) {
       throw new Error('Gecerli bir yayin durumu secin.');
+    }
+    const puan = payload.meta && payload.meta.puan;
+    if (puan != null && (puan < 0 || puan > 10)) {
+      throw new Error('Puan 0 ile 10 arasinda olmali.');
     }
   }
 

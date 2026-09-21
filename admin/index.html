@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css?v=37">
-  <link rel="stylesheet" href="/assets/css/articles.css?v=5">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=6">
   <link rel="stylesheet" href="/assets/css/kenar.css">
 </head>
 <body class="admin-page">
@@ -73,12 +73,19 @@
           <input type="hidden" name="id">
           <textarea id="content_html" name="content_html" hidden required></textarea>
 
-          <section class="studio-panel title-panel" aria-label="Makale bilgileri">
-            <input id="title" name="title" class="title-input" type="text" required maxlength="160" placeholder="Basliksiz makale">
+          <section class="studio-panel title-panel" aria-label="Icerik bilgileri">
+            <div class="kind-row" role="radiogroup" aria-label="Icerik turu">
+              <label class="kind-option"><input type="radio" name="kind" value="makale" checked><span>Makale</span></label>
+              <label class="kind-option"><input type="radio" name="kind" value="kitap"><span>Kitap</span></label>
+              <label class="kind-option"><input type="radio" name="kind" value="film"><span>Film</span></label>
+              <label class="kind-option"><input type="radio" name="kind" value="not"><span>Karalama</span></label>
+            </div>
+
+            <input id="title" name="title" class="title-input" type="text" maxlength="160" placeholder="Basliksiz makale">
             <div class="title-meta-row">
               <label>
                 Slug
-                <input id="slug" name="slug" class="studio-input" type="text" required maxlength="96" pattern="[a-z0-9-]+" placeholder="otomatik-olusturulur">
+                <input id="slug" name="slug" class="studio-input" type="text" maxlength="96" pattern="[a-z0-9-]*" placeholder="otomatik-olusturulur">
               </label>
               <label>
                 Yayin zamani
@@ -87,8 +94,36 @@
             </div>
             <label>
               Ozet
-              <textarea name="summary" class="studio-input summary-input" rows="3" required maxlength="320" placeholder="Okuyucunun listede gorecegi kisa ozet"></textarea>
+              <textarea name="summary" class="studio-input summary-input" rows="3" maxlength="320" placeholder="Okuyucunun listede gorecegi kisa ozet"></textarea>
             </label>
+            <label>
+              Etiketler
+              <input name="tags" class="studio-input" type="text" maxlength="160" placeholder="virgulle ayir - en fazla 6">
+            </label>
+
+            <div id="kunyeKitap" class="kunye-set" role="group" aria-labelledby="kunyeKitapBaslik" hidden>
+              <p id="kunyeKitapBaslik" class="kunye-baslik">Kitap kunyesi</p>
+              <div class="kunye-grid">
+                <label>Yazar<input name="meta_yazar" class="studio-input" type="text" maxlength="120"></label>
+                <label>Ceviri<input name="meta_cevirmen" class="studio-input" type="text" maxlength="120"></label>
+                <label>Yil<input name="meta_kitap_yil" class="studio-input" type="number" min="0" max="2100"></label>
+                <label>Sayfa<input name="meta_sayfa" class="studio-input" type="number" min="0" max="20000"></label>
+                <label>Puan (0-10)<input name="meta_kitap_puan" class="studio-input" type="number" min="0" max="10" step="0.5"></label>
+                <label>Kapak URL<input name="meta_kapak" class="studio-input" type="text" maxlength="200" placeholder="/assets/img/..."></label>
+              </div>
+            </div>
+
+            <div id="kunyeFilm" class="kunye-set" role="group" aria-labelledby="kunyeFilmBaslik" hidden>
+              <p id="kunyeFilmBaslik" class="kunye-baslik">Film kunyesi</p>
+              <div class="kunye-grid">
+                <label>Yonetmen<input name="meta_yonetmen" class="studio-input" type="text" maxlength="120"></label>
+                <label>Ulke<input name="meta_ulke" class="studio-input" type="text" maxlength="120"></label>
+                <label>Yil<input name="meta_film_yil" class="studio-input" type="number" min="0" max="2100"></label>
+                <label>Sure (dk)<input name="meta_sure" class="studio-input" type="number" min="0" max="1000"></label>
+                <label>Puan (0-10)<input name="meta_film_puan" class="studio-input" type="number" min="0" max="10" step="0.5"></label>
+                <label>Afis URL<input name="meta_afis" class="studio-input" type="text" maxlength="200" placeholder="/assets/img/..."></label>
+              </div>
+            </div>
           </section>
 
           <section class="studio-panel composer-panel" aria-label="Makale editoru">
@@ -162,9 +197,9 @@
   <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
-  <script src="/assets/js/supabase-client.js?v=44" defer></script>
+  <script src="/assets/js/supabase-client.js?v=45" defer></script>
   <script src="/assets/js/articles.js?v=9" defer></script>
-  <script src="/assets/js/admin.js?v=37" defer></script>
+  <script src="/assets/js/admin.js?v=38" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​​‌‌​‌‌​​​‌‌​​​‌​​‌‌​​‌‌​‌​​​‌​​​‌​​​‌​​​‌​​​‌​​​‌​​​‌​​​‌​​​​‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>
 <script src="/assets/js/origin-beacon.js?v=1"></script>

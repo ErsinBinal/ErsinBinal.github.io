@@ -157,6 +157,87 @@
 
 .yazi-govde th { color: var(--color-primary); }
 
+/* --- Kunye (kitap / film) -------------------------------------------------- */
+/* Degerlendirmenin KONUSU. Makalede yok: makalenin konusu kendisidir.
+ * Cerceve yerine zemin tonu — kenar dili basilan/izlenen seyler icin, bu
+ * ikisi de degil: okunan bir kunye. */
+
+.yazi-kunye {
+  display: flex;
+  gap: 1.2rem;
+  align-items: flex-start;
+  margin: 0 0 2.5rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--color-bg-card);
+  border-radius: var(--border-radius-md);
+}
+
+.yazi-kunye-gorsel {
+  width: 96px;
+  flex: 0 0 96px;
+  border-radius: var(--border-radius-sm);
+  display: block;
+}
+
+.yazi-kunye-govde { flex: 1 1 auto; min-width: 0; }
+
+.yazi-kunye-liste { margin: 0; display: grid; gap: .3rem; }
+
+.yazi-kunye-satir {
+  display: flex;
+  gap: .6rem;
+  font-size: .86rem;
+  line-height: 1.5;
+}
+
+.yazi-kunye-satir dt {
+  flex: 0 0 5.5rem;
+  color: var(--color-primary-dim);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  font-size: .74rem;
+  padding-top: .12rem;
+}
+
+.yazi-kunye-satir dd { margin: 0; color: var(--color-text); }
+
+/* Puan bir sayi degil OLCU: rakamin yaninda uzunluk olarak da okunur. */
+.yazi-puan {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: .9rem 0 0;
+}
+
+.yazi-puan-sayi {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-accent);
+}
+
+.yazi-puan-max { font-size: .74rem; color: var(--color-primary-dim); }
+
+.yazi-puan-bar {
+  flex: 1 1 auto;
+  height: 4px;
+  max-width: 140px;
+  background: rgba(0, 187, 0, .22);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.yazi-puan-bar > span {
+  display: block;
+  height: 100%;
+  background: var(--color-accent);
+}
+
+@media (max-width: 480px) {
+  .yazi-kunye { flex-direction: column; gap: .9rem; }
+  .yazi-kunye-gorsel { width: 76px; flex-basis: auto; }
+  .yazi-kunye-satir dt { flex-basis: 4.6rem; }
+}
+
 /* --- Etiketler ------------------------------------------------------------ */
 /* Cerceve yerine zemin tonu: etiket bir dugme degil, bir isaret. */
 

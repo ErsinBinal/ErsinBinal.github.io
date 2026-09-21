@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Icerik dort ture acildi</title>
+      <link>https://ersinbinal.github.io/pages/makaleler.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-21-icerik-dort-ture-acildi</guid>
+      <pubDate>Mon, 21 Sep 2026 11:41:32 +0000</pubDate>
+      <description>Makaleler alani tek bir seyi taniyordu: uzun yazi. Artik dort tur var ve dorduda AYNI omurgada: makale, kitap, film, karalama. Ayri tablo acilmadi cunku bunlar ayri bolum degil, ayni omurganin mercekleri — ayri tablo dort sorgu, dort RLS seti ve dort yayin yolu demekti; alti ay sonra biri bayatlardi. Kitap ve film birer degerlendirme, yani bir KONUSU var: yazar, yonetmen, yil, puan, kapak. Bu alanlar meta jsonb'de duruyor, ayri kolonlarda degil — filmin yazari yok, notun ikisi de yok; her tur icin kolon acsak tablo bos kolonla dolardi. Puan sayi degil OLCU: rakamin yaninda uzunluk olarak da okunuyor. Karalama basliksiz olabiliyor ve slug'ini tarihten kendisi uretiyor; baslik zorunlu kalsaydi kisa not yazma surtunmesi geri gelirdi. Ziyaretci yorumlari icin tablo, RLS ve hiz sinirli RPC kuruldu (10 dakikada 5, gunde 30); yazma tabloya degil fonksiyona gidiyor cunku hiz sinirini uygulayacak baska yer yok. Anon okuyabiliyor, yazamiyor, dogrudan INSERT ile RLS'i de atlatamiyor — ucu de canli veritabaninda sinandi. Admin paneli tur secici, etiket alani ve kunye formlariyla geldi; kitap kunyesi film yazarken gorunmuyor.</description>
+    </item>
+    <item>
       <title>Yazilarin artik adresi var</title>
       <link>https://ersinbinal.github.io/pages/makaleler.html</link>
       <guid isPermaLink="false">cvm-signal-2026-09-21-yazilarin-artik-adresi-var</guid>

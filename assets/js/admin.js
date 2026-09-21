@@ -218,6 +218,90 @@
     });
   }
 
+  // --- Icerik turu ----------------------------------------------------------
+  // Form dort turu de tasiyor ama hepsini ayni anda GOSTERMIYOR: kitap
+  // kunyesi film yazarken gurultu. Tur degisince yalniz ilgili alanlar acilir.
+  const KIND_UI = {
+    makale: { baslik: 'Basliksiz makale',  ozet: true,  kunye: null },
+    kitap:  { baslik: 'Kitabin adi',        ozet: true,  kunye: 'kunyeKitap' },
+    film:   { baslik: 'Filmin adi',         ozet: true,  kunye: 'kunyeFilm' },
+    not:    { baslik: 'Baslik istege bagli', ozet: false, kunye: null }
+  };
+
+  // Backend'deki autoSlug ile AYNI bicim; burada da lazim cunku form
+  // gonderilmeden once slug alanini dolduruyoruz.
+  function autoSlug(kind) {
+    const d = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `${kind}-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+      + `-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  }
+
+  function currentKind() {
+    const secili = form.querySelector('input[name="kind"]:checked');
+    return secili && KIND_UI[secili.value] ? secili.value : 'makale';
+  }
+
+  function applyKindUi() {
+    const kind = currentKind();
+    const ui = KIND_UI[kind];
+    form.elements.title.placeholder = ui.baslik;
+
+    // Ozet notta gizlenir: uc cumlelik bir notun ozeti kendisidir.
+    const ozetAlani = form.elements.summary.closest('label');
+    if (ozetAlani) ozetAlani.hidden = !ui.ozet;
+
+    for (const id of ['kunyeKitap', 'kunyeFilm']) {
+      const set = document.getElementById(id);
+      if (set) set.hidden = (ui.kunye !== id);
+    }
+
+    // Notun slug'i sunucuda tarihten uretilir; elle doldurma baskisi kalkar.
+    form.elements.slug.placeholder = kind === 'not'
+      ? 'otomatik (tarihten uretilir)'
+      : 'otomatik-olusturulur';
+  }
+
+  function readMeta(kind) {
+    const al = (ad) => {
+      const el = form.elements[ad];
+      return el ? el.value : '';
+    };
+    if (kind === 'kitap') {
+      return {
+        yazar: al('meta_yazar'), cevirmen: al('meta_cevirmen'),
+        yil: al('meta_kitap_yil'), sayfa: al('meta_sayfa'),
+        puan: al('meta_kitap_puan'), kapak: al('meta_kapak')
+      };
+    }
+    if (kind === 'film') {
+      return {
+        yonetmen: al('meta_yonetmen'), ulke: al('meta_ulke'),
+        yil: al('meta_film_yil'), sure: al('meta_sure'),
+        puan: al('meta_film_puan'), afis: al('meta_afis')
+      };
+    }
+    return {};
+  }
+
+  function writeMeta(kind, meta) {
+    const yaz = (ad, deger) => {
+      const el = form.elements[ad];
+      if (el) el.value = deger == null ? '' : deger;
+    };
+    const m = meta || {};
+    yaz('meta_yazar', m.yazar); yaz('meta_cevirmen', m.cevirmen);
+    yaz('meta_kitap_yil', kind === 'kitap' ? m.yil : '');
+    yaz('meta_sayfa', m.sayfa);
+    yaz('meta_kitap_puan', kind === 'kitap' ? m.puan : '');
+    yaz('meta_kapak', m.kapak);
+    yaz('meta_yonetmen', m.yonetmen); yaz('meta_ulke', m.ulke);
+    yaz('meta_film_yil', kind === 'film' ? m.yil : '');
+    yaz('meta_sure', m.sure);
+    yaz('meta_film_puan', kind === 'film' ? m.puan : '');
+    yaz('meta_afis', m.afis);
+  }
+
   function fillForm(article) {
     const hasArticle = Boolean(article);
     state.activeId = hasArticle ? article.id : '';
@@ -231,6 +315,16 @@
     form.elements.published_at.value = hasArticle && article.published_at ? article.published_at.slice(0, 16) : '';
     setEditorHtml(hasArticle ? article.content_html || '' : '');
 
+    const kind = hasArticle && KIND_UI[article.kind] ? article.kind : 'makale';
+    const kindInput = form.querySelector(`input[name="kind"][value="${kind}"]`);
+    if (kindInput) kindInput.checked = true;
+    if (form.elements.tags) {
+      form.elements.tags.value = hasArticle && Array.isArray(article.tags)
+        ? article.tags.join(', ') : '';
+    }
+    writeMeta(kind, hasArticle ? article.meta : {});
+    applyKindUi();
+
     deleteButton.disabled = !hasArticle;
     submitButton.textContent = hasArticle ? 'Guncelle' : 'Kaydet';
     setDirty(false);
@@ -238,10 +332,11 @@
   }
 
   function validateArticle(data) {
-    if (!data.title.trim()) throw new Error('Baslik gerekli.');
-    if (!data.slug.trim()) throw new Error('Slug gerekli.');
-    if (!data.summary.trim()) throw new Error('Ozet gerekli.');
-    if (!stripHtml(data.content_html).trim()) throw new Error('Makale icerigi bos olamaz.');
+    const kisa = data.kind === 'not';
+    if (!kisa && !String(data.title || '').trim()) throw new Error('Baslik gerekli.');
+    if (!String(data.slug || '').trim()) throw new Error('Slug gerekli.');
+    if (!kisa && !String(data.summary || '').trim()) throw new Error('Ozet gerekli.');
+    if (!stripHtml(data.content_html).trim()) throw new Error('Icerik bos olamaz.');
   }
 
   async function loadArticles(selectId = state.activeId) {
@@ -265,7 +360,9 @@
       form.elements.status.value = forceStatus;
     }
 
-    data.slug = slugify(data.slug || data.title);
+    data.kind = currentKind();
+    // Not basliksiz olabilir; o zaman slug'i da tarihten uretilir.
+    data.slug = slugify(data.slug || data.title) || autoSlug(data.kind);
     form.elements.slug.value = data.slug;
     data.content_html = sanitizeHtml(data.content_html);
     if (data.status === 'published' && !data.published_at) {
@@ -282,6 +379,9 @@
       title: data.title,
       slug: data.slug,
       summary: data.summary,
+      kind: data.kind,
+      tags: data.tags,
+      meta: readMeta(data.kind),
       status: data.status,
       published_at: data.published_at,
       content_html: data.content_html
@@ -489,6 +589,10 @@
     fillForm(null);
     clearAutosave();
     setStatus('Yeni makale hazir.', 'info');
+  });
+
+  form.querySelectorAll('input[name="kind"]').forEach((radio) => {
+    radio.addEventListener('change', () => { applyKindUi(); setDirty(true); });
   });
 
   saveDraftButton.addEventListener('click', () => {

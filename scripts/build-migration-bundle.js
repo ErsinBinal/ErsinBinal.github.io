@@ -35,6 +35,8 @@ const ORDER = [
     'profiles kolonlari + RPC. Ana semadaki profiles tablosuna dayanir.'],
   ['2026-09-21-icerik-kind.sql',
     'articles kolonlari (kind/tags). Ana semadaki articles tablosuna dayanir.'],
+  ['2026-09-21-icerik-turleri-ve-yorumlar.sql',
+    'articles kind genisler + meta + article_comments. icerik-kind ONCE kosmali.'],
   ['2026-07-20-social-chat.sql',
     'En buyugu: 5 tablo, RLS ve RPC. En sona konur, digerlerine dayanmaz.']
 ];
@@ -169,7 +171,22 @@ union all select 'kisit: articles_kind_check',
 union all select 'kisit: articles_tags_sane',
        case when exists (select 1 from pg_constraint
               where conname='articles_tags_sane' and conrelid='public.articles'::regclass)
-            then 'VAR' else 'YOK' end;
+            then 'VAR' else 'YOK' end
+union all select 'kolon: articles.meta',
+       case when exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='articles' and column_name='meta')
+            then 'VAR' else 'YOK' end
+union all select 'tur listesi: kitap+film',
+       case when exists (select 1 from pg_constraint
+              where conname='articles_kind_check' and conrelid='public.articles'::regclass
+                and pg_get_constraintdef(oid) like '%kitap%')
+            then 'VAR' else 'YOK' end
+union all select 'tablo: article_comments',
+       case when to_regclass('public.article_comments') is null then 'YOK' else 'VAR' end
+union all select 'rpc: post_comment',
+       case when to_regprocedure('public.post_comment(uuid,text)') is null then 'YOK' else 'VAR' end
+union all select 'rpc: list_comments',
+       case when to_regprocedure('public.list_comments(uuid,integer)') is null then 'YOK' else 'VAR' end;
 `;
 
 fs.writeFileSync(OUT, header + body + verify);

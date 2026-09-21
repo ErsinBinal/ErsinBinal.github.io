@@ -3,7 +3,7 @@
  * Offline destek ve cache yonetimi
  */
 
-const CACHE_NAME = 'convivium-v283';
+const CACHE_NAME = 'convivium-v284';
 const OFFLINE_URL = '/offline.html';
 
 // Cache'lenecek dosyalar
@@ -47,7 +47,7 @@ const PRECACHE_ASSETS = [
   '/assets/css/components.css?v=37',
   '/assets/css/dart-dashboard.css?v=6',
   '/assets/css/dashboard.css?v=1',
-  '/assets/css/articles.css?v=5',
+  '/assets/css/articles.css?v=6',
   '/assets/css/dart-skorbord.css?v=3',
   '/assets/css/arcade-kit.css?v=36',
   '/assets/css/neon-sheep.css?v=30',
@@ -130,7 +130,7 @@ const PRECACHE_ASSETS = [
   '/assets/vendor/kenney/smoke-particles/explosion03.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion06.png?v=1',
   '/assets/vendor/kenney/smoke-particles/explosion08.png?v=1',
-  '/assets/js/supabase-client.js?v=44',
+  '/assets/js/supabase-client.js?v=45',
   '/assets/js/articles.js?v=9',
   '/assets/js/guide-kilavuz.js?v=1',
   '/assets/img/guides/apps-guide.svg',
@@ -151,7 +151,7 @@ const PRECACHE_ASSETS = [
   '/assets/js/moto-metrics.js?v=1',
   '/assets/js/demir-at.js?v=1',
   '/assets/js/auth.js?v=6',
-  '/assets/js/admin.js?v=37',
+  '/assets/js/admin.js?v=38',
   '/assets/js/dashboard.js?v=37',
   '/manifest.json'
 ];
