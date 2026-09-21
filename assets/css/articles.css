@@ -43,9 +43,12 @@
   padding: 22px;
   border: 1px solid rgba(0, 255, 0, 0.62);
   border-radius: var(--border-radius-lg, 8px);
-  background:
-    linear-gradient(115deg, rgba(0, 255, 0, 0.12), rgba(0, 243, 255, 0.05) 44%, rgba(255, 0, 150, 0.08)),
-    rgba(0, 0, 0, 0.72);
+  --zemin: linear-gradient(115deg, rgba(0, 255, 0, 0.12), rgba(0, 243, 255, 0.05) 44%, rgba(255, 0, 150, 0.08));
+  background-color: rgba(0, 0, 0, 0.72);
+  background-image: var(--kenar-ayrac-katman), var(--zemin);
+  background-repeat: no-repeat;
+  background-size: var(--kenar-ayrac-boy), auto;
+  background-position: var(--kenar-ayrac-yer), center;
   box-shadow:
     0 0 34px rgba(0, 255, 0, 0.13),
     inset 0 0 70px rgba(0, 0, 0, 0.58);

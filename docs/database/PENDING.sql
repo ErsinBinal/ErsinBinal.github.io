@@ -19,7 +19,7 @@
 
 
 -- ============================================================
--- 1/7  2026-07-02-site-events.sql
+-- 1/8  2026-07-02-site-events.sql
 -- Once bu: kolektif-rituel bu tabloyu ALTER ediyor. Ana semada yok, ayri tutuluyor.
 -- ============================================================
 
@@ -70,7 +70,7 @@ create policy "site_events_insert_all"
 
 
 -- ============================================================
--- 2/7  2026-07-17-shards.sql
+-- 2/8  2026-07-17-shards.sql
 -- world_state.shards kolonu. Ana semadaki world_state tablosuna dayanir.
 -- ============================================================
 
@@ -84,7 +84,7 @@ alter table public.world_state
 
 
 -- ============================================================
--- 3/7  2026-07-22-ruya-gunlugu.sql
+-- 3/8  2026-07-22-ruya-gunlugu.sql
 -- Yalniz fonksiyon; bagimliligi yok.
 -- ============================================================
 
@@ -116,7 +116,7 @@ grant execute on function public.dream_stats(date) to anon, authenticated;
 
 
 -- ============================================================
--- 4/7  2026-07-22-kolektif-rituel.sql
+-- 4/8  2026-07-22-kolektif-rituel.sql
 -- site_events tablosunu ALTER eder — yukaridaki ilk adim kosmus olmali.
 -- ============================================================
 
@@ -161,7 +161,7 @@ grant execute on function public.collect_pulse(date) to anon, authenticated;
 
 
 -- ============================================================
--- 5/7  2026-07-17-bottles.sql
+-- 5/8  2026-07-17-bottles.sql
 -- Kendi tablosunu yaratir; auth.users disinda bagimliligi yok.
 -- ============================================================
 
@@ -273,7 +273,7 @@ grant execute on function public.catch_bottle() to authenticated;
 
 
 -- ============================================================
--- 6/7  2026-07-22-finger-hediye.sql
+-- 6/8  2026-07-22-finger-hediye.sql
 -- profiles kolonlari + RPC. Ana semadaki profiles tablosuna dayanir.
 -- ============================================================
 
@@ -391,7 +391,88 @@ grant execute on function public.gift_card(text, text) to authenticated;
 
 
 -- ============================================================
--- 7/7  2026-07-20-social-chat.sql
+-- 7/8  2026-09-21-icerik-kind.sql
+-- articles kolonlari (kind/tags). Ana semadaki articles tablosuna dayanir.
+-- ============================================================
+
+-- Convivium — ICERIK TURU: makale + not  (2026-09-21)
+--
+-- NEDEN
+--   Bugun articles tablosu tek bir sey taniyor: uzun yazi. Uc cumlelik bir not
+--   bu semada garip duruyor (title zorunlu, summary bekleniyor), o yuzden hic
+--   yazilmiyor. Eksik olan ikinci bir tablo degil, tek bir KOLON: kind.
+--
+--   Ikinci tablo acmak kolay gorunur ama bedeli buyuk: iki sorgu, iki RLS seti,
+--   iki yayin yolu, iki RSS. Alti ay sonra biri guncel biri bayat olur. Tek
+--   depo + tur ayrimi ayni isi tek kapiyla yapar.
+--
+-- NE DEGISIYOR
+--   kind  : 'makale' (uzun, islenmis) | 'not' (kisa, ham sinyal)
+--   tags  : konu filtreleri icin; bugun konu basliktan tahmin ediliyordu.
+--   title : yalniz makale icin zorunlu. Notun basligi olmak zorunda degil —
+--           zorunlu tutulursa not yazma surtunmesi geri gelir.
+--
+-- NE DEGISMIYOR
+--   RLS. "Published articles are readable" politikasi tur ayrimi yapmiyor,
+--   ikisini de kapsiyor. Yeni politika gerekmiyor — az politika, az yuzey.
+--
+-- GUVENLIDIR: idempotent. Mevcut satirlarin hepsi 'makale' olur.
+
+alter table public.articles
+  add column if not exists kind text not null default 'makale';
+
+alter table public.articles
+  add column if not exists tags text[] not null default '{}';
+
+-- Tur beyaz listesi. Istemci ne gonderirse gondersin tanimsiz tur yazilamaz.
+alter table public.articles
+  drop constraint if exists articles_kind_check;
+alter table public.articles
+  add constraint articles_kind_check
+  check (kind in ('makale', 'not'));
+
+-- Baslik yalniz makalede zorunlu. title kolonu not null oldugu icin bos string
+-- zaten gecerliydi; bu kisit "makale bos baslikla yayimlanmasin" der, nota
+-- dokunmaz.
+alter table public.articles
+  drop constraint if exists articles_title_required;
+alter table public.articles
+  add constraint articles_title_required
+  check (kind <> 'makale' or char_length(btrim(title)) > 0);
+
+-- Etiket gurultusunu sinirla: en fazla 6 etiket, toplam uzunluk makul.
+--
+-- ILK HALI GECERSIZDI. Her etiketi tek tek olcmek icin
+--   (select bool_and(char_length(t) between 1 and 24) from unnest(tags) as t)
+-- yazilmisti. PostgreSQL CHECK kisiti icinde ALT SORGUYA izin vermez
+-- ("cannot use subquery in check constraint") — kisit eklenmedi, bolum patladi.
+--
+-- Alt sorgusuz karsiligi: array_to_string. Sade bir fonksiyon cagrisi, CHECK
+-- icinde gecerli. Tek tek olcmek yerine toplami sinirliyor; amac zaten
+-- "etiket alani bir metin deposuna donmesin" idi, o amac karsilaniyor.
+-- 6 etiket x ~24 karakter + ayraclar ~= 160.
+alter table public.articles
+  drop constraint if exists articles_tags_sane;
+alter table public.articles
+  add constraint articles_tags_sane
+  check (
+    array_length(tags, 1) is null
+    or (array_length(tags, 1) <= 6
+        and char_length(array_to_string(tags, ',')) <= 160)
+  );
+
+-- Akis sorgusu: tur + yayim durumu + tarih. Mevcut
+-- articles_status_published_at_idx tur suzmesini kapsamiyor.
+create index if not exists articles_kind_status_published_at_idx
+  on public.articles (kind, status, published_at desc);
+
+-- Etiket filtresi icin GIN; tags text[] uzerinde && ve @> kullanilacak.
+create index if not exists articles_tags_idx
+  on public.articles using gin (tags);
+
+
+-- ============================================================
+-- 8/8  2026-07-20-social-chat.sql
 -- En buyugu: 5 tablo, RLS ve RPC. En sona konur, digerlerine dayanmaz.
 -- ============================================================
 
@@ -871,4 +952,20 @@ union all select 'rpc: collect_pulse',
 union all select 'rpc: dream_stats',
        case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
               where n.nspname='public' and p.proname='dream_stats')
+            then 'VAR' else 'YOK' end
+union all select 'kolon: articles.kind',
+       case when exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='articles' and column_name='kind')
+            then 'VAR' else 'YOK' end
+union all select 'kolon: articles.tags',
+       case when exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='articles' and column_name='tags')
+            then 'VAR' else 'YOK' end
+union all select 'kisit: articles_kind_check',
+       case when exists (select 1 from pg_constraint
+              where conname='articles_kind_check' and conrelid='public.articles'::regclass)
+            then 'VAR' else 'YOK' end
+union all select 'kisit: articles_tags_sane',
+       case when exists (select 1 from pg_constraint
+              where conname='articles_tags_sane' and conrelid='public.articles'::regclass)
             then 'VAR' else 'YOK' end;

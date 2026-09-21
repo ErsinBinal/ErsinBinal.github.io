@@ -1,0 +1,32 @@
+{
+  "v": 1,
+  "kaynak": "supabase-eski-sema",
+  "sayim": {
+    "toplam": 2,
+    "makale": 2,
+    "not": 0
+  },
+  "etiketler": [],
+  "kayitlar": [
+    {
+      "tur": "makale",
+      "slug": "fiyatin-otesinde-gelir-yonetiminin-gizli-diliyle-stratejiyi-ogren-hatirla-ve",
+      "baslik": "Fiyatın Ötesinde: Gelir Yönetiminin Gizli Diliyle Stratejiyi Öğren, Hatırla ve Uygula (2. Kısım)",
+      "ozet": "Fiyatın Ötesinde: Gelir Yönetiminin Gizli Diliyle Stratejiyi Öğren, Hatırla ve Uygula (2. Kısım) Meşhur Olaylar Işığında Pazarlamada Fiyatlandırmanın Gelişimi Pazarlamada fiyatlandırma kavramı, ticaretin başlangıcından bu yana işletmelerin ve ekonomilerin merk",
+      "tarih": "2026-06-12T15:41:00+00:00",
+      "etiketler": [],
+      "yol": "/y/fiyatin-otesinde-gelir-yonetiminin-gizli-diliyle-stratejiyi-ogren-hatirla-ve.html",
+      "sure": 20
+    },
+    {
+      "tur": "makale",
+      "slug": "fiyatin-o-tesinde-gelir-yo-netiminin-gizli-diliyle-stratejiyi-o-g-ren-hatirla",
+      "baslik": "Fiyatın Ötesinde: Gelir Yönetiminin Gizli Diliyle Stratejiyi Öğren, Hatırla ve Uygula (Giriş)",
+      "ozet": "Fiyatlandırmanın takas çağlarından yapay zekâya uzanan evrimini ele alan bu yazı dizisi, profesyonellere iş modellerinde fark yaratacak yenilikçi gelir stratejileri kurgulamaları için ilham vermeyi amaçlıyor.",
+      "tarih": "2026-06-11T15:38:00+00:00",
+      "etiketler": [],
+      "yol": "/y/fiyatin-o-tesinde-gelir-yo-netiminin-gizli-diliyle-stratejiyi-o-g-ren-hatirla.html",
+      "sure": 6
+    }
+  ]
+}

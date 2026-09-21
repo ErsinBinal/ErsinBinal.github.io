@@ -97,11 +97,15 @@
 
     .frame {
       position: relative; aspect-ratio: 1 / 1; overflow: hidden;
-      background:
+      --zemin:
         radial-gradient(120% 120% at 50% 30%, rgba(0,255,102,0.07), transparent 62%),
         repeating-linear-gradient(0deg, rgba(0,255,102,0.05) 0 1px, transparent 1px 22px),
-        repeating-linear-gradient(90deg, rgba(0,255,102,0.05) 0 1px, transparent 1px 22px),
-        #071108;
+        repeating-linear-gradient(90deg, rgba(0,255,102,0.05) 0 1px, transparent 1px 22px);
+      background-color: #071108;
+      background-image: var(--kenar-ayrac-katman), var(--zemin);
+      background-repeat: no-repeat;
+      background-size: var(--kenar-ayrac-boy), auto, auto, auto;
+      background-position: var(--kenar-ayrac-yer), center, center, center;
       border-bottom: 1px solid var(--line);
       display: grid; place-items: center;
     }

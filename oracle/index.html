@@ -36,7 +36,7 @@
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7"></script>
   <script src="/assets/js/supabase-config.js"></script>
-  <script src="/assets/js/supabase-client.js?v=43"></script>
+  <script src="/assets/js/supabase-client.js?v=44"></script>
   <script src="/assets/js/auth-gate.js?v=23" data-auth-mode="open" data-item-key="oracle" data-item-type="app" data-item-title="The Oracle"></script>
   <style>
     :root {
@@ -195,7 +195,11 @@
       position: relative;
       min-width: 0;
       border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(14, 14, 12, 0.88), rgba(5, 5, 5, 0.86));
+      --zemin: linear-gradient(180deg, rgba(14, 14, 12, 0.88), rgba(5, 5, 5, 0.86));
+      background-image: var(--kenar-ayrac-katman), var(--zemin);
+      background-repeat: no-repeat;
+      background-size: var(--kenar-ayrac-boy), auto;
+      background-position: var(--kenar-ayrac-yer), center;
       box-shadow: 0 24px 80px var(--shadow);
       overflow: hidden;
     }
@@ -441,9 +445,13 @@
       flex: 1;
       min-height: 260px;
       border: 1px solid rgba(242, 239, 228, 0.14);
-      background:
+      --zemin:
         radial-gradient(circle at center, rgba(242,239,228,0.08), transparent 28%),
         linear-gradient(145deg, rgba(108,255,155,0.06), rgba(125,233,255,0.03));
+      background-image: var(--kenar-ayrac-katman), var(--zemin);
+      background-repeat: no-repeat;
+      background-size: var(--kenar-ayrac-boy), auto, auto;
+      background-position: var(--kenar-ayrac-yer), center, center;
       overflow: hidden;
       isolation: isolate;
     }

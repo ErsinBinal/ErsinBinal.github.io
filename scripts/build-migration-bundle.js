@@ -33,6 +33,8 @@ const ORDER = [
     'Kendi tablosunu yaratir; auth.users disinda bagimliligi yok.'],
   ['2026-07-22-finger-hediye.sql',
     'profiles kolonlari + RPC. Ana semadaki profiles tablosuna dayanir.'],
+  ['2026-09-21-icerik-kind.sql',
+    'articles kolonlari (kind/tags). Ana semadaki articles tablosuna dayanir.'],
   ['2026-07-20-social-chat.sql',
     'En buyugu: 5 tablo, RLS ve RPC. En sona konur, digerlerine dayanmaz.']
 ];
@@ -151,6 +153,22 @@ union all select 'rpc: collect_pulse',
 union all select 'rpc: dream_stats',
        case when exists (select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
               where n.nspname='public' and p.proname='dream_stats')
+            then 'VAR' else 'YOK' end
+union all select 'kolon: articles.kind',
+       case when exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='articles' and column_name='kind')
+            then 'VAR' else 'YOK' end
+union all select 'kolon: articles.tags',
+       case when exists (select 1 from information_schema.columns
+              where table_schema='public' and table_name='articles' and column_name='tags')
+            then 'VAR' else 'YOK' end
+union all select 'kisit: articles_kind_check',
+       case when exists (select 1 from pg_constraint
+              where conname='articles_kind_check' and conrelid='public.articles'::regclass)
+            then 'VAR' else 'YOK' end
+union all select 'kisit: articles_tags_sane',
+       case when exists (select 1 from pg_constraint
+              where conname='articles_tags_sane' and conrelid='public.articles'::regclass)
             then 'VAR' else 'YOK' end;
 `;
 

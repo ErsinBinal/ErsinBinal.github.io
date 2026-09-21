@@ -1,0 +1,195 @@
+/* YAZI — kalici adres sayfasi (/y/<slug>.html)
+ *
+ * Bu yuzey OKUNUR, tiklanmaz. O yuzden kenar dili burada neredeyse yok:
+ * kenar "basilan" ve "izlenen" seyler icin bir dil, okuma sayfasinda ikisi de
+ * yok. Tek istisna .btn — o zaten kunyede tanimli ve kenar.css'ten geliyor.
+ *
+ * Bilerek `border:` bildirimi YOK. Kenar kapisinin regex'ini atlatmak icin
+ * degil: okuma yuzeyinin gercekten cercevesi olmamali. Ritim bosluktan ve
+ * tipografiden gelir, cizgiden degil.
+ *
+ * Sayfa sifir JS. Tema degistirici, ilerleme cubugu, lightbox yok — hepsi
+ * okuma odasinda (/pages/makaleler.html) duruyor. Burasi metnin kendisi.
+ */
+
+.yazi-page {
+  background: var(--color-bg);
+}
+
+.yazi-site {
+  max-width: 46rem;          /* ~70 karakter: okunabilir satir uzunlugu */
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.yazi-nav,
+.yazi-alt {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+
+.yazi-nav { margin-bottom: 3rem; }
+.yazi-alt { margin-top: 4rem; }
+
+/* --- Baslik blogu --------------------------------------------------------- */
+
+.yazi-baslik { margin-bottom: 2.5rem; }
+
+.yazi-ust {
+  margin: 0 0 .5rem;
+  font-size: .78rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--color-primary-dim);
+}
+
+.yazi-baslik h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.4rem);
+  line-height: 1.2;
+  color: var(--color-primary);
+  text-shadow: var(--glow-primary-soft);
+}
+
+/* --- Govde ---------------------------------------------------------------- */
+/* Govde rengi baslikla ayni degil: baslik parlak fosfor, metin sakin yesil.
+ * Uzun metni tam parlaklikta okumak yoruyor. */
+
+.yazi-govde {
+  color: var(--color-text);
+  font-size: 1.02rem;
+  line-height: 1.75;
+}
+
+.yazi-govde > :first-child { margin-top: 0; }
+.yazi-govde > :last-child { margin-bottom: 0; }
+
+.yazi-govde p { margin: 0 0 1.35rem; }
+
+.yazi-govde h2,
+.yazi-govde h3,
+.yazi-govde h4 {
+  margin: 2.5rem 0 .9rem;
+  line-height: 1.3;
+  color: var(--color-primary);
+}
+
+.yazi-govde h2 { font-size: 1.35rem; }
+.yazi-govde h3 { font-size: 1.12rem; }
+.yazi-govde h4 { font-size: 1rem; color: var(--color-accent); }
+
+.yazi-govde a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .2em;
+}
+
+.yazi-govde a:hover,
+.yazi-govde a:focus-visible {
+  color: var(--color-primary-bright);
+}
+
+.yazi-govde ul,
+.yazi-govde ol { margin: 0 0 1.35rem; padding-left: 1.3rem; }
+
+.yazi-govde li { margin-bottom: .5rem; }
+
+.yazi-govde strong { color: var(--color-primary-bright); }
+
+.yazi-govde blockquote {
+  margin: 1.8rem 0;
+  padding-left: 1.1rem;
+  border-left: 2px solid var(--color-primary-dim);
+  color: var(--color-text-dim);
+  font-style: italic;
+}
+
+.yazi-govde code {
+  background: var(--color-bg-card);
+  padding: .12em .4em;
+  border-radius: var(--border-radius-sm);
+  font-size: .92em;
+  color: var(--color-accent);
+}
+
+.yazi-govde pre {
+  background: var(--color-bg-card);
+  padding: 1rem;
+  border-radius: var(--border-radius-md);
+  overflow-x: auto;
+  margin: 0 0 1.35rem;
+}
+
+.yazi-govde pre code {
+  background: none;
+  padding: 0;
+  color: var(--color-text);
+}
+
+.yazi-govde img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--border-radius-md);
+  margin: 1.5rem 0;
+}
+
+.yazi-govde hr {
+  margin: 2.5rem 0;
+  height: 1px;
+  background: var(--color-primary-dim);
+  opacity: .5;
+}
+
+.yazi-govde table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1.35rem;
+  font-size: .94rem;
+}
+
+.yazi-govde th,
+.yazi-govde td {
+  text-align: left;
+  padding: .5rem .7rem;
+  border-bottom: 1px solid rgba(0, 187, 0, .28);
+}
+
+.yazi-govde th { color: var(--color-primary); }
+
+/* --- Etiketler ------------------------------------------------------------ */
+/* Cerceve yerine zemin tonu: etiket bir dugme degil, bir isaret. */
+
+.yazi-etiketler {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 3rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.yazi-etiketler li {
+  background: var(--color-bg-card);
+  color: var(--color-text-dim);
+  padding: .22rem .6rem;
+  border-radius: var(--border-radius-sm);
+  font-size: .76rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* --- Not turu ------------------------------------------------------------- */
+/* Not kisa ve bassizdir; basligi bir tarih satirina duser. Makale gibi
+ * agirlik tasimasin diye olcek kuculur. */
+
+.yazi[data-tur="not"] .yazi-baslik h1 {
+  font-size: clamp(1.1rem, 3.4vw, 1.4rem);
+  color: var(--color-text-dim);
+  text-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .yazi-site { padding: 1.5rem 1rem 3rem; }
+  .yazi-nav { margin-bottom: 2rem; }
+}

@@ -1,20 +1,21 @@
 /* ==========================================================================
-   KENAR DILI — sitenin tek kenar kaynagi
+   KENAR DILI — URETILMIS DOSYA, ELLE DUZENLEME
    ==========================================================================
-   Site 34 HTML sayfasindan olusuyor ve yalniz 11'i common.css cekiyor;
-   gerisi kendi stiliyle geliyor. Bu yuzden dil AYRI bir dosyada ve her
-   sayfaya tek satirla baglaniyor — tek kaynak, kopya yok.
+   Kaynak : assets/css/kenar-kunye.json
+   Uretec : scripts/build-kenar.js   ·   npm run build:kenar
+   Kapi   : npm run build:kenar -- --check  (npm run check icinde)
 
    Kural: kenar bir uslup degil bir DIL.
-     kesik kose  -> uzerine BASILAN seyler (buton, kart, satir, cip)
-     kose ayraci -> IZLENEN yuzeyler (panel, konsol, raf)
-     tepki       -> hover/focus'ta kesik DERINLESIR
+     basilan -> kesik kose; hover'da kose ACILIR (donme yok)
+     izlenen -> kose ayraci; kenar cizilmez, ima edilir
 
-   DONME YOK. Ilk denemede hover'da conic-gradient donduruyordu; "radar"
-   gibi okundu ve elendi. Yerine mekanik bir tepki: kose acilir.
+   @layer kenar: bu dosyanin TAMAMI bir katmanda. Katmanli kural, katmansiz
+   kurala her zaman yenilir — yukleme sirasi ne olursa olsun. Yani burasi bir
+   TABAN dil: sayfa kendi zeminini/kesimini yazmissa sayfa kazanir, dil geri
+   cekilir. Uygulamalar ve oyunlar bu yuzden zarar goremez.
 
-   DOKUNULMAYANLAR: games/* ve assets/savers/* — tam ekran tuval, kendi
-   sanat yonleri var. playwright-report uretilmis dosya.
+   Stil dosyalarinin ayri olmasi BILEREK: her sayfa yalniz kendi CSS'ini
+   yukler. Bu dosya o mimariyi bozmaz — dili tek kaynaktan tasir.
    ====================================================================== */
 
 @property --kesik {
@@ -23,89 +24,313 @@
   inherits: false;
 }
 
-/* --- Kesik kose: uzerine basilan seyler ---------------------------------- */
-.btn,
-.card,
-.console-command,
-.content-list-button,
-.article-row,
-.command-trigger,
-.back-to-top,
-.back-link,
-.chip,
-.entry,
-.action-btn,
-.choice-btn,
-.feedback-btn,
-.history-item,
-.navlink,
-.item {
-  --kesik: 8px;
-  clip-path: polygon(
-    var(--kesik) 0, 100% 0,
-    100% calc(100% - var(--kesik)), calc(100% - var(--kesik)) 100%,
-    0 100%, 0 var(--kesik)
-  );
-  transition: --kesik .22s cubic-bezier(.2, .8, .3, 1),
-              border-color .22s ease, background .22s ease, color .22s ease;
+/* Ayrac recetesi. Katmanin DISINDA cunku kendi zeminini tasiyan paneller
+   (bkz. kunye "zeminliler") bu degiskenleri kendi kurallarinda cagiriyor —
+   katmanli bir :root degeri onlarin katmansiz kuralina gorunmez olmaz ama
+   burada tutmak niyeti acik birakiyor: bu bir RECETE, bir kural degil. */
+:root {
+  --kenar-ayrac: 20px;
+  --kenar-ayrac-renk: rgba(0, 234, 255, .7);
+  --kenar-ayrac-katman:
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk)),
+    linear-gradient(var(--kenar-ayrac-renk), var(--kenar-ayrac-renk));
+  --kenar-ayrac-boy:
+    var(--kenar-ayrac) 1px, 1px var(--kenar-ayrac),
+    var(--kenar-ayrac) 1px, 1px var(--kenar-ayrac),
+    var(--kenar-ayrac) 1px, 1px var(--kenar-ayrac),
+    var(--kenar-ayrac) 1px, 1px var(--kenar-ayrac);
+  --kenar-ayrac-yer:
+    left top, left top, right top, right top,
+    left bottom, left bottom, right bottom, right bottom;
 }
 
-/* Tepki: kose ACILIR. Donen bir sey yok, tek gecis. */
-.btn:hover, .btn:focus-visible,
-.card:hover, .card:focus-within,
-.console-command:hover, .console-command:focus-visible,
-.content-list-button:hover, .content-list-button:focus-visible,
-.article-row:hover, .article-row:focus-within,
-.command-trigger:hover, .command-trigger:focus-visible,
-.back-to-top:hover, .back-to-top:focus-visible,
-.back-link:hover, .back-link:focus-visible,
-.chip:hover, .chip:focus-visible,
-.entry:hover, .entry:focus-within,
-.action-btn:hover, .action-btn:focus-visible,
-.choice-btn:hover, .choice-btn:focus-visible,
-.feedback-btn:hover, .feedback-btn:focus-visible,
-.history-item:hover, .history-item:focus-within,
-.navlink:hover, .navlink:focus-visible,
-.item:hover, .item:focus-within {
-  --kesik: 15px;
-}
+@layer kenar {
 
-/* --- Kose ayraci: izlenen yuzeyler --------------------------------------- */
-.article-stack-panel,
-.articles-console,
-.auth-modal-card,
-.content-list-panel,
-.dossier-tree,
-.history-panel,
-.shelf,
-.frame {
-  --ayrac: 20px;
-  --ayrac-renk: rgba(0, 234, 255, .7);
-  background-image:
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk)),
-    linear-gradient(var(--ayrac-renk), var(--ayrac-renk));
-  background-repeat: no-repeat;
-  background-size:
-    var(--ayrac) 1px, 1px var(--ayrac),
-    var(--ayrac) 1px, 1px var(--ayrac),
-    var(--ayrac) 1px, 1px var(--ayrac),
-    var(--ayrac) 1px, 1px var(--ayrac);
-  background-position:
-    left top, left top,
-    right top, right top,
-    left bottom, left bottom,
-    right bottom, right bottom;
-}
+  /* --- BASILAN: kesik kose (43 sinif) --------------------- */
+  .btn,
+  .card,
+  .back-to-top,
+  .nav-button,
+  .content-list-button,
+  .lightbox-close,
+  .auth-linkish,
+  .action-link,
+  .terminal-command,
+  .project-row,
+  .route-link,
+  .drawer-link,
+  .rail-link,
+  .atlas-node,
+  .command-trigger,
+  .gate-toggle,
+  .access-chip,
+  .sound-toggle,
+  .mobile-command-button,
+  .feature-tile,
+  .article-row,
+  .console-command,
+  .filter-chip,
+  .guide-card,
+  .tool-btn,
+  .studio-list-button,
+  .back-link,
+  .entry,
+  .action-btn,
+  .choice-btn,
+  .feedback-btn,
+  .history-item,
+  .navlink,
+  .item,
+  .back,
+  .return-link,
+  .topic-btn,
+  .ghost-btn,
+  .history-btn,
+  .option-btn,
+  .btn-action,
+  .btn-full,
+  .btn-next {
+    --kesik: 8px;
+    clip-path: polygon(
+      var(--kesik) 0, 100% 0,
+      100% calc(100% - var(--kesik)), calc(100% - var(--kesik)) 100%,
+      0 100%, 0 var(--kesik)
+    );
+    transition: --kesik .22s cubic-bezier(.2, .8, .3, 1),
+                border-color .22s ease, background .22s ease, color .22s ease;
+  }
 
-@media (prefers-reduced-motion: reduce) {
-  .btn, .card, .console-command, .content-list-button, .article-row,
-  .command-trigger, .back-to-top, .back-link, .chip, .entry,
-  .action-btn, .choice-btn, .feedback-btn, .history-item,
-  .navlink, .item { transition: none; }
+  /* Tepki: kose ACILIR. Ilk denemede donen bir conic-gradient vardi;
+     "radar" gibi okundu ve elendi. Bu mekanik, tek gecis, ucuz. */
+  .btn:hover,
+  .btn:focus-visible,
+  .btn:focus-within,
+  .card:hover,
+  .card:focus-visible,
+  .card:focus-within,
+  .back-to-top:hover,
+  .back-to-top:focus-visible,
+  .back-to-top:focus-within,
+  .nav-button:hover,
+  .nav-button:focus-visible,
+  .nav-button:focus-within,
+  .content-list-button:hover,
+  .content-list-button:focus-visible,
+  .content-list-button:focus-within,
+  .lightbox-close:hover,
+  .lightbox-close:focus-visible,
+  .lightbox-close:focus-within,
+  .auth-linkish:hover,
+  .auth-linkish:focus-visible,
+  .auth-linkish:focus-within,
+  .action-link:hover,
+  .action-link:focus-visible,
+  .action-link:focus-within,
+  .terminal-command:hover,
+  .terminal-command:focus-visible,
+  .terminal-command:focus-within,
+  .project-row:hover,
+  .project-row:focus-visible,
+  .project-row:focus-within,
+  .route-link:hover,
+  .route-link:focus-visible,
+  .route-link:focus-within,
+  .drawer-link:hover,
+  .drawer-link:focus-visible,
+  .drawer-link:focus-within,
+  .rail-link:hover,
+  .rail-link:focus-visible,
+  .rail-link:focus-within,
+  .atlas-node:hover,
+  .atlas-node:focus-visible,
+  .atlas-node:focus-within,
+  .command-trigger:hover,
+  .command-trigger:focus-visible,
+  .command-trigger:focus-within,
+  .gate-toggle:hover,
+  .gate-toggle:focus-visible,
+  .gate-toggle:focus-within,
+  .access-chip:hover,
+  .access-chip:focus-visible,
+  .access-chip:focus-within,
+  .sound-toggle:hover,
+  .sound-toggle:focus-visible,
+  .sound-toggle:focus-within,
+  .mobile-command-button:hover,
+  .mobile-command-button:focus-visible,
+  .mobile-command-button:focus-within,
+  .feature-tile:hover,
+  .feature-tile:focus-visible,
+  .feature-tile:focus-within,
+  .article-row:hover,
+  .article-row:focus-visible,
+  .article-row:focus-within,
+  .console-command:hover,
+  .console-command:focus-visible,
+  .console-command:focus-within,
+  .filter-chip:hover,
+  .filter-chip:focus-visible,
+  .filter-chip:focus-within,
+  .guide-card:hover,
+  .guide-card:focus-visible,
+  .guide-card:focus-within,
+  .tool-btn:hover,
+  .tool-btn:focus-visible,
+  .tool-btn:focus-within,
+  .studio-list-button:hover,
+  .studio-list-button:focus-visible,
+  .studio-list-button:focus-within,
+  .back-link:hover,
+  .back-link:focus-visible,
+  .back-link:focus-within,
+  .entry:hover,
+  .entry:focus-visible,
+  .entry:focus-within,
+  .action-btn:hover,
+  .action-btn:focus-visible,
+  .action-btn:focus-within,
+  .choice-btn:hover,
+  .choice-btn:focus-visible,
+  .choice-btn:focus-within,
+  .feedback-btn:hover,
+  .feedback-btn:focus-visible,
+  .feedback-btn:focus-within,
+  .history-item:hover,
+  .history-item:focus-visible,
+  .history-item:focus-within,
+  .navlink:hover,
+  .navlink:focus-visible,
+  .navlink:focus-within,
+  .item:hover,
+  .item:focus-visible,
+  .item:focus-within,
+  .back:hover,
+  .back:focus-visible,
+  .back:focus-within,
+  .return-link:hover,
+  .return-link:focus-visible,
+  .return-link:focus-within,
+  .topic-btn:hover,
+  .topic-btn:focus-visible,
+  .topic-btn:focus-within,
+  .ghost-btn:hover,
+  .ghost-btn:focus-visible,
+  .ghost-btn:focus-within,
+  .history-btn:hover,
+  .history-btn:focus-visible,
+  .history-btn:focus-within,
+  .option-btn:hover,
+  .option-btn:focus-visible,
+  .option-btn:focus-within,
+  .btn-action:hover,
+  .btn-action:focus-visible,
+  .btn-action:focus-within,
+  .btn-full:hover,
+  .btn-full:focus-visible,
+  .btn-full:focus-within,
+  .btn-next:hover,
+  .btn-next:focus-visible,
+  .btn-next:focus-within {
+    --kesik: 15px;
+  }
+
+  /* --- IZLENEN: kose ayraci (40 sinif) -------------------- */
+  .auth-modal-card,
+  .content-list-panel,
+  .dashboard-panel,
+  .form-panel,
+  .preview-panel,
+  .system-status,
+  .command-shell,
+  .journey-gate,
+  .now-panel,
+  .clue-panel,
+  .signal-frame,
+  .os-snapshot,
+  .archive-tree,
+  .command-deck,
+  .journey-rail,
+  .hud-line,
+  .article-stack-panel,
+  .articles-console,
+  .reader-panel,
+  .studio-panel,
+  .studio-sidebar,
+  .terminal-panel,
+  .articles-hero,
+  .dossier-tree,
+  .history-panel,
+  .shelf,
+  .frame,
+  .node,
+  .trace,
+  .ritual-panel,
+  .reading-panel,
+  .question-card,
+  .result-hero,
+  .signal-readout,
+  .sigil-stage,
+  .dialogue-card,
+  .result-card,
+  .playlist-box,
+  .pullbox,
+  .panel {
+    background-image: var(--kenar-ayrac-katman);
+    background-repeat: no-repeat;
+    background-size: var(--kenar-ayrac-boy);
+    background-position: var(--kenar-ayrac-yer);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn,
+    .card,
+    .back-to-top,
+    .nav-button,
+    .content-list-button,
+    .lightbox-close,
+    .auth-linkish,
+    .action-link,
+    .terminal-command,
+    .project-row,
+    .route-link,
+    .drawer-link,
+    .rail-link,
+    .atlas-node,
+    .command-trigger,
+    .gate-toggle,
+    .access-chip,
+    .sound-toggle,
+    .mobile-command-button,
+    .feature-tile,
+    .article-row,
+    .console-command,
+    .filter-chip,
+    .guide-card,
+    .tool-btn,
+    .studio-list-button,
+    .back-link,
+    .entry,
+    .action-btn,
+    .choice-btn,
+    .feedback-btn,
+    .history-item,
+    .navlink,
+    .item,
+    .back,
+    .return-link,
+    .topic-btn,
+    .ghost-btn,
+    .history-btn,
+    .option-btn,
+    .btn-action,
+    .btn-full,
+    .btn-next { transition: none; }
+  }
+
 }

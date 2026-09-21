@@ -80,16 +80,23 @@
     return error.message || String(error);
   }
 
+  // Turkce harfler NFD-guvenli cevrilir.
+  //
+  // Eski hali yalniz BIRLESIK harfi taniyordu: .replace(/ö/g, 'o'). macOS'tan
+  // yapistirilan metin ise genelde AYRISIK gelir — "o" + birlesen umlaut.
+  // O zaman kural eslesmiyor, umlaut de [^a-z0-9] suzgecinden tireye donuyordu:
+  // "Otesinde" -> "o-tesinde". Kelime ortadan ikiye boluyordu.
+  //
+  // Dogru sira: once ayrismayan Turkce harfleri esle (ı, İ), sonra NFD ile
+  // ayristir ve birlesen isaretleri at. Boylece ö/ü/ç/ş/ğ iki yazimda da calisir.
   function slugify(value) {
     return String(value || '')
       .trim()
-      .toLowerCase()
-      .replace(/ğ/g, 'g')
-      .replace(/ü/g, 'u')
-      .replace(/ş/g, 's')
       .replace(/ı/g, 'i')
-      .replace(/ö/g, 'o')
-      .replace(/ç/g, 'c')
+      .replace(/İ/g, 'i')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 96);

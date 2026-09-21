@@ -808,13 +808,16 @@
     }
 
     .signal-frame {
+      --zemin: radial-gradient(circle, rgba(0, 255, 102, 0.12), transparent 54%);
       width: 138px;
       aspect-ratio: 1;
       border-radius: 2px;
       border: 1px solid rgba(0, 234, 255, 0.58);
-      background:
-        radial-gradient(circle, rgba(0, 255, 102, 0.12), transparent 54%),
-        #000;
+      background-color: #000;
+      background-image: var(--kenar-ayrac-katman), var(--zemin);
+      background-repeat: no-repeat;
+      background-size: var(--kenar-ayrac-boy), auto;
+      background-position: var(--kenar-ayrac-yer), center;
       box-shadow: 0 0 24px rgba(0, 234, 255, 0.18);
     }
 
@@ -4929,27 +4932,16 @@ body.command-shell-open .bugy-onboard {
 /* --- A · KOSE AYRACI ------------------------------------------------------
    Kenar cizilmez, IMA edilir. Izlenen yuzeylere: terminal penceresi ve HUD.
    Sozde-eleman kullanilmaz (kabukta ikisi de dolu); dort kose gradient ile. */
+/* Kendi zemini olan panel: kenar.css'in katmanli kurali buna yenilir, o
+   yuzden ayraci BURADA cagiriyor. Olculer yine tek kaynaktan gelir
+   (assets/css/kenar-kunye.json); kapi bu cagriyi zorunlu tutar. */
 .command-shell {
+  --zemin: linear-gradient(180deg, rgba(0, 234, 255, 0.06), rgba(4, 10, 8, 0.97));
   border-color: rgba(0, 234, 255, .16);   /* cerceve geri cekilir */
-  background-image:
-    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
-    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
-    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
-    linear-gradient(#00eaff, #00eaff), linear-gradient(#00eaff, #00eaff),
-    linear-gradient(180deg, rgba(0, 234, 255, 0.06), rgba(4, 10, 8, 0.97));
+  background-image: var(--kenar-ayrac-katman), var(--zemin);
   background-repeat: no-repeat;
-  background-size:
-    22px 1px, 1px 22px,   /* sol ust  */
-    22px 1px, 1px 22px,   /* sag ust  */
-    22px 1px, 1px 22px,   /* sol alt  */
-    22px 1px, 1px 22px,   /* sag alt  */
-    auto;
-  background-position:
-    left top, left top,
-    right top, right top,
-    left bottom, left bottom,
-    right bottom, right bottom,
-    center;
+  background-size: var(--kenar-ayrac-boy), auto;
+  background-position: var(--kenar-ayrac-yer), center;
 }
 
 /* HUD satirlari TEKRARLI: tam ayrac yerine iki kose — yarim murekkep,
