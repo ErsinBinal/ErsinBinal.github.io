@@ -291,6 +291,7 @@
   ];
 
   const state = {
+    kind: 'all',
     all: [],
     filtered: [],
     activeSlug: '',
@@ -430,20 +431,45 @@
     return `~${Math.max(1, Math.ceil(words / 200))} dk`;
   }
 
+  // --- Icerik turleri --------------------------------------------------------
+  // Dort tur, TEK omurga. Menu bu listeden uretilir; sira ekrandaki sira.
+  // 'sira' ile isaretli olan kronolojik akis ister (karalama), digerleri
+  // baslik listesi.
+  const KINDS = [
+    { anahtar: 'all',    ad: 'Tumu' },
+    { anahtar: 'makale', ad: 'Makaleler' },
+    { anahtar: 'kitap',  ad: 'Kitaplar' },
+    { anahtar: 'film',   ad: 'Filmler' },
+    { anahtar: 'not',    ad: 'Karalamalar', akis: true }
+  ];
+  const KIND_KEYS = new Set(KINDS.map((k) => k.anahtar).filter((k) => k !== 'all'));
+
+  function kindLabel(anahtar) {
+    const k = KINDS.find((x) => x.anahtar === anahtar);
+    return k ? k.ad : 'Makaleler';
+  }
+
   function normalize(article, index) {
     const content = article.content || article.content_html || '';
-    const title = article.title || `Makale ${index + 1}`;
-    const slug = article.slug || slugify(title) || `makale-${index + 1}`;
+    const kind = KIND_KEYS.has(article.kind) ? article.kind : 'makale';
+    // Karalamanin basligi olmayabilir — uydurmuyoruz, tarihe birakiyoruz.
+    const title = article.title || (kind === 'not' ? '' : `Makale ${index + 1}`);
+    const slug = article.slug || slugify(title) || `${kind}-${index + 1}`;
     const topic = inferTopic({ ...article, content });
     return {
       id: article.id || slug,
       slug,
+      kind,
+      meta: (article.meta && typeof article.meta === 'object') ? article.meta : {},
+      tags: Array.isArray(article.tags) ? article.tags : [],
       title,
       date: article.date || String(article.published_at || article.created_at || '').slice(0, 10) || '',
       summary: article.summary || stripHtml(content).slice(0, 180),
       content,
       topic,
-      readTime: readTime(content)
+      readTime: readTime(content),
+      // Kalici adres: omurganin urettigi statik sayfa.
+      yol: `/y/${slug}.html`
     };
   }
 
@@ -582,10 +608,49 @@
     return box.innerHTML;
   }
 
+  // Menu yalniz DOLU turleri gosterir. Bos "Filmler" sekmesi bir vaat degil,
+  // bir hayal kirikligi — icerik gelince kendiliginden belirir.
+  function renderKindMenu() {
+    const mount = qs('#kindMenu');
+    if (!mount) return;
+    const sayim = {};
+    state.all.forEach((a) => { sayim[a.kind] = (sayim[a.kind] || 0) + 1; });
+
+    mount.innerHTML = '';
+    KINDS.filter((k) => k.anahtar === 'all' || sayim[k.anahtar])
+      .forEach((k) => {
+        const adet = k.anahtar === 'all' ? state.all.length : sayim[k.anahtar];
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'kind-tab';
+        button.setAttribute('aria-pressed', String(state.kind === k.anahtar));
+        button.innerHTML = `<span class="kind-tab-ad"></span><span class="kind-tab-adet"></span>`;
+        button.querySelector('.kind-tab-ad').textContent = k.ad;
+        button.querySelector('.kind-tab-adet').textContent = String(adet);
+        button.addEventListener('click', () => {
+          if (state.kind === k.anahtar) return;
+          state.kind = k.anahtar;
+          state.topic = 'all';   // tur degisince konu suzgeci sifirlanir
+          applyFilters();
+        });
+        mount.appendChild(button);
+      });
+  }
+
+  function currentKindMeta() {
+    return KINDS.find((k) => k.anahtar === state.kind) || KINDS[0];
+  }
+
   function renderFilters() {
     const mount = qs('#topicFilters');
     if (!mount) return;
-    const topics = ['all', ...new Set(state.all.map((article) => article.topic))];
+    // Konu cipleri SECILI TUR icinde uretilir: kitaplara bakarken makale
+    // konularini gostermek yanlis bir harita cizer.
+    const havuz = state.kind === 'all'
+      ? state.all
+      : state.all.filter((a) => a.kind === state.kind);
+    const topics = ['all', ...new Set(havuz.map((article) => article.topic))];
+    mount.hidden = topics.length <= 2;   // tek konu varsa cip gurultu
     mount.innerHTML = '';
     topics.forEach((topic) => {
       const button = document.createElement('button');
@@ -604,11 +669,15 @@
   function applyFilters() {
     const query = state.query.trim().toLowerCase();
     state.filtered = state.all.filter((article) => {
+      const kindOk = state.kind === 'all' || article.kind === state.kind;
       const topicOk = state.topic === 'all' || article.topic === state.topic;
-      const queryOk = !query || `${article.title} ${article.summary} ${stripHtml(article.content)}`.toLowerCase().includes(query);
-      return topicOk && queryOk;
+      const havuz = `${article.title} ${article.summary} ${stripHtml(article.content)} `
+        + `${article.tags.join(' ')} ${Object.values(article.meta).join(' ')}`;
+      const queryOk = !query || havuz.toLowerCase().includes(query);
+      return kindOk && topicOk && queryOk;
     });
 
+    renderKindMenu();
     renderFilters();
     renderList();
 
@@ -623,6 +692,10 @@
     if (!container || !template) return;
 
     setText('visibleCount', state.filtered.length);
+    // Panel basligi ne baktigini soylesin: karalamalara bakarken "YAZILAR"
+    // yanlis bir harita cizer.
+    setText('stackHeading',
+      state.kind === 'all' ? 'KAYITLAR' : kindLabel(state.kind).toUpperCase());
     renderPanel();
     container.innerHTML = '';
 
@@ -634,18 +707,83 @@
       return;
     }
 
+    // Karalamalar kronolojik AKIS ister: basligi yok, ozeti yok, govdesi kisa.
+    // Onlari baslik listesi gibi dizmek yanlis olur — okunacak sey metnin
+    // kendisi, bir baslik degil.
+    if (currentKindMeta().akis) {
+      container.dataset.gorunum = 'akis';
+      state.filtered.forEach((article) => container.appendChild(notKarti(article)));
+      return;
+    }
+    container.dataset.gorunum = 'liste';
+
     state.filtered.forEach((article, index) => {
       const node = template.content.cloneNode(true);
       const button = node.querySelector('.article-row');
       button.dataset.slug = article.slug;
+      button.dataset.tur = article.kind;
       button.classList.toggle('is-active', article.slug === state.activeSlug);
       node.querySelector('.article-row-index').textContent = String(index + 1).padStart(2, '0');
       node.querySelector('.article-row-title').textContent = article.title;
       node.querySelector('.article-row-summary').textContent = article.summary;
-      node.querySelector('.article-row-meta').textContent = `${article.date || 'Tarihsiz'} / ${article.readTime} / ${topicLabel(article.topic)}`;
+
+      // Kitap/film satirinda konu degil KUNYE okunur: eseri yazan kim, kac puan.
+      const kunye = satirKunyesi(article);
+      node.querySelector('.article-row-meta').textContent = kunye
+        || `${article.date || 'Tarihsiz'} / ${article.readTime} / ${topicLabel(article.topic)}`;
+
       button.addEventListener('click', () => renderReader(article));
       container.appendChild(node);
     });
+  }
+
+  // Kitap/film satir ozeti: "Ozdemir Asaf · 1978 · 9/10"
+  function satirKunyesi(article) {
+    if (article.kind !== 'kitap' && article.kind !== 'film') return '';
+    const m = article.meta || {};
+    const parcalar = [
+      m.yazar || m.yonetmen,
+      m.yil,
+      Number.isFinite(Number(m.puan)) && m.puan !== '' ? `${m.puan}/10` : null
+    ].filter(Boolean);
+    return parcalar.join(' / ');
+  }
+
+  function notKarti(article) {
+    const kart = document.createElement('article');
+    kart.className = 'not-karti';
+    kart.dataset.slug = article.slug;
+
+    const govde = document.createElement('div');
+    govde.className = 'not-govde';
+    govde.innerHTML = sanitizeHtml(article.content);
+
+    const alt = document.createElement('div');
+    alt.className = 'not-alt';
+
+    const zaman = document.createElement('time');
+    if (article.date) zaman.dateTime = article.date;
+    zaman.textContent = article.date || 'Tarihsiz';
+    alt.appendChild(zaman);
+
+    if (article.tags.length) {
+      const etiketler = document.createElement('span');
+      etiketler.className = 'not-etiketler';
+      etiketler.textContent = article.tags.map((t) => `#${t}`).join(' ');
+      alt.appendChild(etiketler);
+    }
+
+    // Kalici adres: notun da kendi sayfasi var, paylasilabilir.
+    const bag = document.createElement('a');
+    bag.className = 'not-bag';
+    bag.href = article.yol;
+    bag.textContent = 'bag';
+    bag.setAttribute('aria-label', 'Bu karalamanin kalici adresi');
+    alt.appendChild(bag);
+
+    kart.appendChild(govde);
+    kart.appendChild(alt);
+    return kart;
   }
 
   function renderReader(article, options = {}) {
@@ -671,9 +809,13 @@
     const currentIndex = state.filtered.findIndex((item) => item.slug === article.slug);
     const previous = state.filtered[currentIndex - 1];
     const next = state.filtered[currentIndex + 1];
-    const related = state.all
-      .filter((item) => item.slug !== article.slug && item.topic === article.topic)
-      .slice(0, 3);
+    // Devam rotalari once AYNI TURDEN: bir karalamanin ardindan film onermek
+    // okuma akisini bozar. Ayni turde yetmezse konu benzerligiyle tamamlanir.
+    const digerleri = state.all.filter((item) => item.slug !== article.slug);
+    const ayniTur = digerleri.filter((item) => item.kind === article.kind);
+    const ayniKonu = digerleri.filter(
+      (item) => item.kind !== article.kind && item.topic === article.topic);
+    const related = [...ayniTur, ...ayniKonu].slice(0, 3);
 
     const mediaHtml = media.image
       ? `<figure class="reader-media"><img class="responsive" src="${escapeHtml(media.image.src)}" alt="${escapeHtml(media.image.alt || article.title)}" loading="lazy" decoding="async"></figure>`
@@ -683,14 +825,16 @@
       <header class="reader-head">
         <div class="reader-meta">
           <span>${escapeHtml(article.date || 'Tarihsiz')}</span>
-          <span>${escapeHtml(article.readTime)} okuma</span>
-          <span class="reader-topic">${escapeHtml(topicLabel(article.topic))}</span>
+          ${article.kind === 'not' ? '' : `<span>${escapeHtml(article.readTime)} okuma</span>`}
+          <span class="reader-topic">${escapeHtml(kindLabel(article.kind))}</span>
         </div>
-        <h2 class="reader-title">${escapeHtml(article.title)}</h2>
-        <p class="reader-summary">${escapeHtml(article.summary)}</p>
+        ${article.title ? `<h2 class="reader-title">${escapeHtml(article.title)}</h2>` : ''}
+        ${article.kind === 'not' ? '' : `<p class="reader-summary">${escapeHtml(article.summary)}</p>`}
+        ${okuyucuKunyesi(article)}
         <div class="reader-actions">
           <button class="btn" type="button" data-reader-jump="prev" ${previous ? '' : 'disabled'}>Onceki</button>
           <button class="btn btn-primary" type="button" data-reader-jump="next" ${next ? '' : 'disabled'}>Sonraki</button>
+          <a class="btn" href="${escapeHtml(article.yol)}">Kalici adres</a>
           <button class="btn" type="button" data-reader-copy>Link</button>
         </div>
       </header>
@@ -701,7 +845,8 @@
     reader.querySelector('[data-reader-jump="prev"]')?.addEventListener('click', () => renderReader(previous));
     reader.querySelector('[data-reader-jump="next"]')?.addEventListener('click', () => renderReader(next));
     reader.querySelector('[data-reader-copy]')?.addEventListener('click', async (event) => {
-      const url = `${window.location.origin}${window.location.pathname}#${article.slug}`;
+      // Paylasilan sey artik sayfa-ici capa degil, yazinin kendi adresi.
+      const url = `${window.location.origin}${article.yol}`;
       try {
         await navigator.clipboard.writeText(url);
         event.currentTarget.textContent = 'Kopyalandi';
@@ -756,6 +901,40 @@
       document.head.appendChild(node);
     }
     node.textContent = JSON.stringify(data).replace(/</g, '\\u003c');
+  }
+
+  // Kitap/film okuyucusunda kunye: eserin kendisi hakkinda ne biliyoruz.
+  const OKUYUCU_META = {
+    yazar: 'Yazar', cevirmen: 'Ceviri', yonetmen: 'Yonetmen',
+    yil: 'Yil', sayfa: 'Sayfa', sure: 'Sure', ulke: 'Ulke'
+  };
+
+  function okuyucuKunyesi(article) {
+    if (article.kind !== 'kitap' && article.kind !== 'film') return '';
+    const m = article.meta || {};
+    const satirlar = Object.entries(OKUYUCU_META)
+      .filter(([alan]) => m[alan] != null && m[alan] !== '')
+      .map(([alan, etiket]) =>
+        `<div class="yazi-kunye-satir"><dt>${escapeHtml(etiket)}</dt>`
+        + `<dd>${escapeHtml(String(m[alan]))}</dd></div>`);
+
+    const puan = Number(m.puan);
+    const puanBlok = Number.isFinite(puan) && puan > 0 && puan <= 10
+      ? `<p class="yazi-puan" aria-label="Puan: ${puan} / 10">`
+        + `<span class="yazi-puan-sayi">${puan}</span>`
+        + `<span class="yazi-puan-bar"><span style="width:${Math.round(puan * 10)}%"></span></span>`
+        + `<span class="yazi-puan-max">/ 10</span></p>`
+      : '';
+
+    if (!satirlar.length && !puanBlok) return '';
+    const gorsel = m.kapak || m.afis;
+    const gorselHtml = gorsel && isSafeUrl(gorsel, true)
+      ? `<img class="yazi-kunye-gorsel" src="${escapeHtml(gorsel)}" alt="" loading="lazy">`
+      : '';
+    return '<aside class="yazi-kunye">' + gorselHtml
+      + '<div class="yazi-kunye-govde">'
+      + (satirlar.length ? `<dl class="yazi-kunye-liste">${satirlar.join('')}</dl>` : '')
+      + puanBlok + '</div></aside>';
   }
 
   function renderRelated(related) {
@@ -823,6 +1002,7 @@
       applyFilters();
     });
 
+    renderKindMenu();
     renderFilters();
     renderList();
 

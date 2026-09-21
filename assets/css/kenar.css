@@ -52,7 +52,7 @@
 
 @layer kenar {
 
-  /* --- BASILAN: kesik kose (43 sinif) --------------------- */
+  /* --- BASILAN: kesik kose (44 sinif) --------------------- */
   .btn,
   .card,
   .back-to-top,
@@ -76,6 +76,7 @@
   .article-row,
   .console-command,
   .filter-chip,
+  .kind-tab,
   .guide-card,
   .tool-btn,
   .studio-list-button,
@@ -177,6 +178,9 @@
   .filter-chip:hover,
   .filter-chip:focus-visible,
   .filter-chip:focus-within,
+  .kind-tab:hover,
+  .kind-tab:focus-visible,
+  .kind-tab:focus-within,
   .guide-card:hover,
   .guide-card:focus-visible,
   .guide-card:focus-within,
@@ -311,6 +315,7 @@
     .article-row,
     .console-command,
     .filter-chip,
+    .kind-tab,
     .guide-card,
     .tool-btn,
     .studio-list-button,

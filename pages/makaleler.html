@@ -13,7 +13,7 @@
 <meta name="x-convivium-origin" content="ersinbinal.github.io#CVM-28386996">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Makaleler - Convivium</title>
+  <title>Okuma Odasi - Convivium</title>
   <meta name="description" content="Convivium makale merkezi. Teknoloji, pazarlama, gelir modelleri ve dijital donusum uzerine okunabilir, gorsel ve terminal estetikli notlar.">
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/pages/makaleler.html">
@@ -21,14 +21,14 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
 
   <meta property="og:site_name" content="Convivium">
-  <meta property="og:title" content="Makaleler - Convivium">
+  <meta property="og:title" content="Okuma Odasi - Convivium">
   <meta property="og:description" content="Terminal estetikli modern makale merkezi.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ersinbinal.github.io/pages/makaleler.html">
   <meta property="og:locale" content="tr_TR">
   <meta property="og:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Makaleler - Convivium">
+  <meta name="twitter:title" content="Okuma Odasi - Convivium">
   <meta name="twitter:description" content="Teknoloji, pazarlama ve dijital donusum uzerine makaleler.">
   <meta name="twitter:image" content="https://ersinbinal.github.io/assets/icons/og-image.png">
 
@@ -40,7 +40,8 @@
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
   <link rel="stylesheet" href="/assets/css/components.css?v=37">
-  <link rel="stylesheet" href="/assets/css/articles.css?v=6">
+  <link rel="stylesheet" href="/assets/css/articles.css?v=7">
+  <link rel="stylesheet" href="/assets/css/yazi.css">
   <link rel="stylesheet" href="/assets/css/bugy-v4.css?v=7">
   <link rel="stylesheet" href="/assets/css/bugy-cinema.css?v=3">
   <link rel="stylesheet" href="/assets/css/bugy-pet.css?v=8">
@@ -71,22 +72,23 @@
       <div class="terminal-hero-grid">
         <div class="terminal-hero-copy">
           <p class="terminal-kicker">CONVIVIUM / READING ROOM</p>
-          <h1>Makaleler</h1>
+          <h1>Okuma Odasi</h1>
           <p>Gelir modelleri, yapay zeka, platform mantigi ve dijital donusum uzerine okunabilir, gorsel ve sakin bir arastirma arsivi.</p>
         </div>
         <div class="terminal-panel" aria-label="Makale merkezi ozeti">
           <div class="terminal-panel-row"><span>Durum</span><strong id="articleSource">Hazirlaniyor</strong></div>
-          <div class="terminal-panel-row"><span>Yazi</span><strong id="articleCount">0</strong></div>
+          <div class="terminal-panel-row"><span>Kayit</span><strong id="articleCount">0</strong></div>
           <div class="terminal-panel-row"><span>Okuma</span><strong id="readingState">hazir</strong></div>
         </div>
       </div>
     </header>
 
     <main id="content" class="articles-workspace" role="main">
-      <section class="articles-console" aria-label="Makale arama ve filtreleme">
+      <section class="articles-console" aria-label="Icerik menusu, arama ve filtreleme">
+        <nav class="kind-menu" id="kindMenu" aria-label="Icerik turu"></nav>
         <div class="console-command">
           <span>&gt;</span>
-          <input id="search" type="search" autocomplete="off" placeholder="Baslik, konu veya icerikte ara" aria-label="Makale ara">
+          <input id="search" type="search" autocomplete="off" placeholder="Baslik, konu veya icerikte ara" aria-label="Icerikte ara">
         </div>
         <div class="console-filters" id="topicFilters" aria-label="Konu filtreleri"></div>
         <p id="contentSourceStatus" class="content-source-status" aria-live="polite">Arsiv hazirlaniyor...</p>
@@ -95,7 +97,7 @@
       <section class="reader-shell" aria-label="Makale okuyucu">
         <aside class="article-stack-panel">
           <div class="stack-heading">
-            <span>YAZILAR</span>
+            <span id="stackHeading">YAZILAR</span>
             <strong id="visibleCount">0</strong>
           </div>
           <div id="articles" class="article-stack" aria-live="polite"></div>
@@ -129,7 +131,7 @@
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=45" defer></script>
   <script src="/assets/js/guide-kilavuz.js?v=1" defer></script>
-  <script src="/assets/js/articles.js?v=9" defer></script>
+  <script src="/assets/js/articles.js?v=10" defer></script>
 
   <script src="/assets/js/service-worker-register.js?v=4" defer></script>
 

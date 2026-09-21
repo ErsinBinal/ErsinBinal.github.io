@@ -1380,3 +1380,108 @@ figcaption {
   text-transform: uppercase;
   color: var(--color-primary-dim);
 }
+
+/* Tek konu varsa cip satiri gurultu: JS `hidden` koyuyor ama .console-filters
+ * display:flex tasidigi icin hidden eziliyordu. Ozel kural sart. */
+.console-filters[hidden] { display: none; }
+
+/* --- Okuma odasi: kategori menusu ------------------------------------------ */
+/* Menu sayfanin ust satiri: once NE okudugunu secersin, sonra ararsin.
+ * Sekmede sayi var cunku bu sitede hicbir sey sadece etiket degil — olculur. */
+
+.kind-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  margin-bottom: .9rem;
+}
+
+.kind-tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45rem;
+  padding: .4rem .9rem;
+  background: var(--color-bg-card);
+  color: var(--color-text-dim);
+  font-family: inherit;
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.kind-tab:hover { color: var(--color-primary); }
+
+.kind-tab[aria-pressed="true"] {
+  background: var(--color-primary-dim);
+  color: var(--color-bg);
+}
+
+.kind-tab-adet {
+  font-size: .7rem;
+  opacity: .75;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Karalama akisi -------------------------------------------------------- */
+/* X yapisi: baslik yok, ozet yok, okunacak sey metnin kendisi. Kartlar
+ * kronolojik akar; tiklanacak bir satir degil, okunacak bir govde. */
+
+.article-stack[data-gorunum="akis"] {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+}
+
+.not-karti {
+  padding: .9rem 1rem;
+  background: var(--color-bg-card);
+  border-radius: var(--border-radius-md);
+}
+
+.not-govde {
+  color: var(--color-text);
+  font-size: .94rem;
+  line-height: 1.65;
+}
+
+.not-govde > :first-child { margin-top: 0; }
+.not-govde > :last-child { margin-bottom: 0; }
+.not-govde p { margin: 0 0 .7rem; }
+.not-govde a { color: var(--color-accent); }
+
+.not-alt {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin-top: .7rem;
+  font-size: .72rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--color-primary-dim);
+}
+
+.not-etiketler { color: var(--color-text-dim); }
+
+.not-bag {
+  margin-left: auto;
+  color: var(--color-primary-dim);
+  text-decoration: none;
+}
+
+.not-bag:hover,
+.not-bag:focus-visible { color: var(--color-accent); }
+
+/* Kitap/film satirinda kunye okunur: eseri yazan kim, kac puan. */
+.article-row[data-tur="kitap"] .article-row-meta,
+.article-row[data-tur="film"] .article-row-meta {
+  color: var(--color-accent);
+}
+
+/* Okuyucu kunyesi yazi.css'te tanimli; okuma odasinda ust bosluk ister. */
+.reader-head .yazi-kunye { margin: 1rem 0 0; }
+
+@media (max-width: 640px) {
+  .kind-tab { padding: .34rem .7rem; font-size: .76rem; }
+}
