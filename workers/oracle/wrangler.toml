@@ -18,6 +18,10 @@ ENRICH_RATE_WINDOW_SECONDS = "3600"
 ENRICH_AUTH_RATE_LIMIT = "20"
 ENRICH_AUTH_RATE_WINDOW_SECONDS = "60"
 BEACON_RATE_LIMIT = "4"
+# Sizmis sifre kontrolu: kayit formunda yazarken tetiklenir, o yuzden beacon'dan
+# cok daha yuksek. Dakikada 30 = yazma hizinda bile rahat, kotuye kullanimda dar.
+PWNED_RATE_LIMIT = "30"
+PWNED_RATE_WINDOW_SECONDS = "60"
 BEACON_RATE_WINDOW_SECONDS = "3600"
 SUPABASE_URL = "https://airmhxfgtslsgrdhvfin.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_S7saLZ-v0bXJTwd7kdE5Aw_IJyU3y4Q"

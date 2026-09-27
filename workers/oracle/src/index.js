@@ -114,6 +114,7 @@ const PROFILE_FROM_SNIPPETS_PROMPT = [
 const DEFAULT_RATE_LIMIT = 12;
 const DEFAULT_ENRICH_RATE_LIMIT = 4;
 const DEFAULT_BEACON_RATE_LIMIT = 4;
+const DEFAULT_PWNED_RATE_LIMIT = 30;
 const DEFAULT_ENRICH_AUTH_RATE_LIMIT = 20;
 const MAX_JSON_BODY_BYTES = 4096;
 const MAX_BEACON_URL_LENGTH = 2048;
@@ -818,6 +819,83 @@ const healthResponse = (request, env) => {
     : new Response(JSON.stringify(body), { status: 200, headers });
 };
 
+// --- Sizmis sifre kontrolu (HaveIBeenPwned Pwned Passwords) ----------------
+//
+// NEDEN BU VAR
+//   Supabase'in "leaked password protection" ozelligi Pro plana kilitli.
+//   Ayni korumayi HIBP'nin UCRETSIZ Pwned Passwords API'siyle kendimiz
+//   kuruyoruz.
+//
+// SIFRE HICBIR YERE GITMEZ — k-ANONIMLIK
+//   Tarayici sifrenin SHA-1 ozetini KENDI hesaplar ve yalnizca ilk 5 hex
+//   karakterini gonderir. 5 karakter = 1.048.576 kovadan biri; icinde yaklasik
+//   800 ozet var. Hangisi oldugu anlasilmaz. Tam ozet de, sifre de tarayiciyi
+//   terk etmez. Eslestirme istemcide yapilir.
+//
+// NEDEN WORKER UZERINDEN, DOGRUDAN DEGIL
+//   Dogrudan cagrilsa ziyaretcinin IP'si ucuncu bir tarafa gider. Sitenin bir
+//   KVKK aydinlatma metni var; ucuncu tarafa giden her istek oraya yazilmasi
+//   gereken bir islemedir. Worker araya girince HIBP yalnizca Worker'in
+//   IP'sini gorur, ziyaretcininkini degil. Tarayicinin CSP'sine de ucuncu bir
+//   host eklemek gerekmez.
+//
+// Add-Padding: HIBP yaniti rastgele sayida sahte satirla doldurur. Padding
+// olmadan yanit BOYUTU tek basina bilgi sizdirir (hangi kova cekildigi
+// daraltilabilir). Bu baslik olmadan cagirmak k-anonimligi zayiflatir.
+const handlePwned = async (request, env, ctx) => {
+  const url = new URL(request.url);
+  const prefix = String(url.searchParams.get('prefix') || '').toUpperCase();
+
+  // Girdi beyaz listeli: istemci ne gonderirse gondersin yalniz 5 hex karakter
+  // disariya cikar. Acik proxy'ye donusmesini bu satir engelliyor.
+  if (!/^[0-9A-F]{5}$/.test(prefix)) {
+    return new Response('invalid prefix', {
+      status: 400,
+      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  const cacheKey = new Request(`https://pwned.cache/${prefix}`, { method: 'GET' });
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  let upstream;
+  try {
+    upstream = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`, {
+      headers: { 'Add-Padding': 'true', 'User-Agent': 'Convivium-Auth-Check' },
+      cf: { cacheTtl: 86_400, cacheEverything: true }
+    });
+  } catch (error) {
+    logEvent('warn', 'pwned_upstream_error', { message: String(error && error.message) });
+    return new Response('upstream unavailable', {
+      status: 503,
+      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  if (!upstream.ok) {
+    logEvent('warn', 'pwned_upstream_status', { status: upstream.status });
+    return new Response('upstream error', {
+      status: 502,
+      headers: { 'Content-Type': 'text/plain', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+
+  // Sifre listesi gunde bir kez degisir; 24 saat onbellek fazlasiyla yeterli.
+  const cevap = new Response(upstream.body, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*',
+      'X-Convivium-Source': 'hibp'
+    }
+  });
+  ctx.waitUntil(cache.put(cacheKey, cevap.clone()));
+  return cevap;
+};
+
 const handleRequest = async (request, env, ctx) => {
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
@@ -846,6 +924,25 @@ const handleRequest = async (request, env, ctx) => {
       { 'Access-Control-Allow-Origin': '*' }
     );
     return limitResponse || handleBeacon(request, env, ctx);
+  }
+
+  if (pathname === '/pwned') {
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return json({ error: 'method not allowed' }, 405, {
+        Allow: 'GET, HEAD',
+        'Access-Control-Allow-Origin': '*'
+      });
+    }
+    const limitResponse = await applyRateLimit(
+      request,
+      env,
+      clientIp(request),
+      'pwned',
+      positiveInteger(env.PWNED_RATE_LIMIT, DEFAULT_PWNED_RATE_LIMIT, 1000),
+      positiveInteger(env.PWNED_RATE_WINDOW_SECONDS, 60),
+      { 'Access-Control-Allow-Origin': '*' }
+    );
+    return limitResponse || handlePwned(request, env, ctx);
   }
 
   if (pathname !== '/' && pathname !== '/enrich-profile') {

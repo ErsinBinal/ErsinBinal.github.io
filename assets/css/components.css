@@ -1438,3 +1438,23 @@ img.responsive:hover {
 }
 .auth-consent-item em { opacity: 0.7; font-style: normal; }
 .auth-consent-item a { text-decoration: underline; }
+
+/* --- Sizmis sifre uyarisi --------------------------------------------------- */
+/* Supabase'in leaked-password korumasi Pro plana kilitli; ayni isi HIBP'nin
+ * ucretsiz API'siyle k-anonimlik uzerinden yapiyoruz. Uc durum var ve ucu de
+ * farkli konusur: kotu (engeller), iyi (rahatlatir), yok (sessiz).
+ * Cerceve yok — bu bir panel degil, bir cumle. */
+
+.auth-sizinti {
+  margin: .5rem 0 0;
+  font-size: .78rem;
+  line-height: 1.5;
+}
+
+.auth-sizinti[data-durum="kotu"] { color: var(--color-accent-red); }
+.auth-sizinti[data-durum="iyi"] { color: var(--color-primary-dim); }
+
+.auth-sizinti[data-durum="kotu"]::before {
+  content: "! ";
+  font-weight: 700;
+}

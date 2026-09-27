@@ -16,6 +16,13 @@
     <atom:link href="https://ersinbinal.github.io/signals.xml" rel="self" type="application/rss+xml"/>
 
     <item>
+      <title>Sizmis sifre kontrolu</title>
+      <link>https://ersinbinal.github.io/account/auth.html</link>
+      <guid isPermaLink="false">cvm-signal-2026-09-27-sizmis-sifre-kontrolu</guid>
+      <pubDate>Sun, 27 Sep 2026 06:46:49 +0000</pubDate>
+      <description>Supabase'in leaked-password korumasi Pro plana kilitli. Ayni isi HaveIBeenPwned'in ucretsiz Pwned Passwords API'siyle kendimiz yapiyoruz. Sifre hicbir yere gitmiyor: tarayici SHA-1 ozetini KENDI hesapliyor ve yalnizca ilk 5 hex karakterini gonderiyor. Bes karakter 1.048.576 kovadan biri demek; icinde yaklasik 800 ozet var, hangisi oldugu anlasilmiyor. Eslestirme yine tarayicida yapiliyor. Ne sifre ne tam ozet disari cikiyor — bir test bunu dogruluyor: giden her istekte yalniz bes hex karakter var. Istek HIBP'ye DOGRUDAN degil Cloudflare Worker uzerinden gidiyor; boylece ziyaretcinin IP'si ucuncu tarafa ulasmiyor ve tarayicinin CSP'sine ucuncu bir host eklemek gerekmiyor. Worker yaniti Add-Padding ile istiyor: padding olmadan yanit BOYUTU tek basina bilgi sizdirir. Kontrol arizada ACIK kalir — Worker kapaliysa, baglanti yoksa veya zaman asimina ugrarsa kayit ENGELLENMEZ; bu bir ek katman, kapinin kendisi degil. Yazarken 700 ms sessizlikten sonra uyariyor, gonderirken engelliyor; politika kurallari saglanmadan ag istegi hic atilmiyor. Ilginc olan su: bes politika kurali da yesil olan bir sifre yine de milyonlarca kez sizmis olabiliyor — kurallarin yakalayamadigi sey tam olarak bu.</description>
+    </item>
+    <item>
       <title>Yorumlar acildi</title>
       <link>https://ersinbinal.github.io/pages/makaleler.html</link>
       <guid isPermaLink="false">cvm-signal-2026-09-21-yorumlar-acildi</guid>

@@ -48,6 +48,59 @@
     symbol: { test: (v) => /[^A-Za-z0-9]/.test(v), label: 'ozel karakter (!, ?, - gibi)' }
   };
 
+  // --- Sizmis sifre kontrolu -------------------------------------------------
+  // Supabase'in leaked-password korumasi Pro plana kilitli; ayni iss HIBP'nin
+  // ucretsiz API'siyle k-anonimlik uzerinden yapiliyor (assets/js/sifre-sizinti.js).
+  //
+  // ARIZADA ACIK: kontrol calismazsa kayit ENGELLENMEZ. Worker'in kapali
+  // olmasi insanlarin uye olmasini durdurmamali — bu bir ek katman, kapi degil.
+  const sizinti = () => window.ConviviumSifreSizinti || null;
+
+  function sizintiKutusu(form) {
+    return form === signUpForm
+      ? document.getElementById('signUpSizinti')
+      : document.getElementById('recoverySizinti');
+  }
+
+  function sizintiYaz(form, durum, metin) {
+    const kutu = sizintiKutusu(form);
+    if (!kutu) return;
+    if (!metin) { kutu.hidden = true; kutu.textContent = ''; return; }
+    kutu.hidden = false;
+    kutu.dataset.durum = durum;          // 'kotu' | 'iyi' | 'bilinmiyor'
+    kutu.textContent = metin;
+  }
+
+  // Yazarken: uyar ama engelleme. Gonderirken: engelle.
+  async function sizintiDenetle(form, sifre, { sessiz = false } = {}) {
+    const modul = sizinti();
+    if (!modul || !sifre) { if (!sessiz) sizintiYaz(form, '', ''); return { engelle: false }; }
+
+    const sayi = await modul.kacKezSizmis(sifre);
+    if (sayi === null) {
+      // Kontrol yapilamadi. Sessizce gec: kullaniciya anlatacak bir sey yok,
+      // yapabilecegi bir sey de yok.
+      sizintiYaz(form, '', '');
+      return { engelle: false };
+    }
+    if (sayi === 0) {
+      sizintiYaz(form, 'iyi', 'Bu sifre bilinen veri sizintilarinda gorunmuyor.');
+      return { engelle: false };
+    }
+    sizintiYaz(form, 'kotu',
+      `Bu sifre bilinen veri sizintilarinda ${modul.sayiYaz(sayi)} kez gorulmus. `
+      + 'Baska bir sifre sec.');
+    return { engelle: true, sayi };
+  }
+
+  function gecikmeli(fn, ms) {
+    let sayac = null;
+    return (...arg) => {
+      clearTimeout(sayac);
+      sayac = setTimeout(() => fn(...arg), ms);
+    };
+  }
+
   function passwordPolicyError(value) {
     const missing = Object.values(PASSWORD_RULES)
       .filter((rule) => !rule.test(value))
@@ -77,10 +130,16 @@
     return Math.min(score, 100);
   }
 
+  const signUpSizintiGecikmeli = gecikmeli((deger) => {
+    if (passwordPolicyError(deger)) { sizintiYaz(signUpForm, '', ''); return; }
+    sizintiDenetle(signUpForm, deger);
+  }, 700);
+
   function updatePasswordStrength() {
     if (!signUpPassword) return;
     if (strengthMeter) strengthMeter.style.setProperty('--strength', `${passwordStrength(signUpPassword.value)}%`);
     updatePasswordRules(signUpPassword.value);
+    signUpSizintiGecikmeli(signUpPassword.value);
   }
 
   async function refreshSession() {
@@ -139,6 +198,13 @@
     const policyError = passwordPolicyError(data.password || '');
     if (policyError) {
       setStatus(policyError, 'error');
+      return;
+    }
+
+    setStatus('Sifre kontrol ediliyor...', 'info');
+    const sizintiSonuc = await sizintiDenetle(signUpForm, data.password || '');
+    if (sizintiSonuc.engelle) {
+      setStatus('Bu sifre bilinen veri sizintilarinda yer aliyor. Baska bir sifre sec.', 'error');
       return;
     }
 
@@ -203,6 +269,12 @@
       setStatus(policyError, 'error');
       return;
     }
+    setStatus('Sifre kontrol ediliyor...', 'info');
+    const yenileSizinti = await sizintiDenetle(recoveryForm, password);
+    if (yenileSizinti.engelle) {
+      setStatus('Bu sifre bilinen veri sizintilarinda yer aliyor. Baska bir sifre sec.', 'error');
+      return;
+    }
     setStatus('Sifre guncelleniyor...', 'info');
     setFormBusy(recoveryForm, true);
     try {
@@ -218,8 +290,17 @@
     }
   });
 
+  // Yazarken kontrol: 700 ms sessizlikten sonra. Her tusa basista sorgu
+  // atmak hem gereksiz hem hiz sinirini yakar. Politika saglanmadan da
+  // sormuyoruz — zaten reddedilecek bir sifre icin ag istegi israf.
+  const recoverySizintiGecikmeli = gecikmeli((deger) => {
+    if (passwordPolicyError(deger)) { sizintiYaz(recoveryForm, '', ''); return; }
+    sizintiDenetle(recoveryForm, deger);
+  }, 700);
+
   recoveryForm.elements.password.addEventListener('input', () => {
     updateRuleList(recoveryForm, recoveryForm.elements.password.value);
+    recoverySizintiGecikmeli(recoveryForm.elements.password.value);
   });
 
   // Sifirlama baglantisiyla donuste Supabase PASSWORD_RECOVERY olayini yayar.

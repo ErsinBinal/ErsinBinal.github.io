@@ -137,6 +137,51 @@ describe('Oracle Worker HTTP boundary', () => {
     expect(unknown.headers.get('Content-Type')).toBe('image/gif');
   });
 
+  // --- Sizmis sifre kontrolu (k-anonimlik) ---------------------------------
+  // Bu uc nokta bir PROXY. Beyaz liste olmazsa acik proxy'ye doner; testler
+  // once onu zorluyor, sonra davranisi dogruluyor.
+
+  it('sizmis sifre ucu yalniz 5 hex karakterlik onek kabul eder', async () => {
+    const kotu = [
+      '/pwned',                       // onek yok
+      '/pwned?prefix=ABC',            // kisa
+      '/pwned?prefix=ABCDEF',         // uzun
+      '/pwned?prefix=GGGGG',          // hex degil
+      '/pwned?prefix=../../etc',      // yol kacisi
+      '/pwned?prefix=ABCD%20'         // bosluk
+    ];
+    for (const yol of kotu) {
+      const cevap = await workerFetch(yol, { headers: apiHeaders() });
+      expect(cevap.status, yol).toBe(400);
+    }
+  });
+
+  it('sizmis sifre ucu yalniz guvenli metotlara izin verir', async () => {
+    const cevap = await workerFetch('/pwned?prefix=ABCDE', {
+      method: 'POST',
+      headers: apiHeaders()
+    });
+    expect(cevap.status).toBe(405);
+    expect(cevap.headers.get('Allow')).toBe('GET, HEAD');
+  });
+
+  it('gecerli onekte HIBP kovasini metin olarak doner', async () => {
+    const cevap = await workerFetch('/pwned?prefix=5BAA6', { headers: apiHeaders() });
+    // Ag yoksa 503 doner; o da kabul — istemci arizada ACIK kaliyor.
+    expect([200, 503]).toContain(cevap.status);
+    if (cevap.status === 200) {
+      const metin = await cevap.text();
+      expect(cevap.headers.get('Content-Type')).toMatch(/text\/plain/);
+      // Kova "SUFFIX:SAYI" satirlarindan olusur.
+      expect(metin).toMatch(/^[0-9A-F]{35}:\d+/m);
+    }
+  });
+
+  it('sizmis sifre ucu her kokene acik (CORS) — sir tasimiyor', async () => {
+    const cevap = await workerFetch('/pwned?prefix=ZZZZZ', { headers: apiHeaders() });
+    expect(cevap.headers.get('Access-Control-Allow-Origin')).toBe('*');
+  });
+
   it('returns 404 for unknown routes', async () => {
     const response = await workerFetch('/unknown');
     expect(response.status).toBe(404);

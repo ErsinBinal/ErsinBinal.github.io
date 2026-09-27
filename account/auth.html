@@ -18,13 +18,13 @@
   <meta name="author" content="Ersin Binal">
   <link rel="canonical" href="https://ersinbinal.github.io/account/auth.html">
   <meta name="robots" content="noindex, nofollow">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; object-src 'none'; base-uri 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.workers.dev;">
   <meta name="theme-color" content="#00ff00">
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" type="image/svg+xml" href="/assets/icons/icon.svg">
   <link rel="stylesheet" href="/assets/css/common.css">
   <link rel="stylesheet" href="/assets/css/animations.css">
-  <link rel="stylesheet" href="/assets/css/components.css?v=37">
+  <link rel="stylesheet" href="/assets/css/components.css?v=38">
   <link rel="stylesheet" href="/assets/css/kenar.css">
 </head>
 <body class="auth-page">
@@ -113,6 +113,7 @@
             <li data-rule="digit">En az bir rakam (0-9)</li>
             <li data-rule="symbol">En az bir ozel karakter (! ? - . gibi)</li>
           </ul>
+          <p class="auth-sizinti" id="signUpSizinti" hidden role="status" aria-live="polite"></p>
 
           <fieldset class="auth-consent">
             <legend>Onaylar</legend>
@@ -153,6 +154,7 @@
           <li data-rule="digit">En az bir rakam (0-9)</li>
           <li data-rule="symbol">En az bir özel karakter (! ? - . gibi)</li>
         </ul>
+          <p class="auth-sizinti" id="recoverySizinti" hidden role="status" aria-live="polite"></p>
         <button class="btn btn-primary" type="submit">Şifreyi Güncelle</button>
       </form>
     </div>
@@ -161,7 +163,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.7" defer></script>
   <script src="/assets/js/supabase-config.js" defer></script>
   <script src="/assets/js/supabase-client.js?v=45" defer></script>
-  <script src="/assets/js/auth.js?v=6" defer></script>
+  <script src="/assets/js/sifre-sizinti.js" defer></script>
+  <script src="/assets/js/auth.js?v=7" defer></script>
   <script src="/assets/js/sfx.js?v=19" defer></script>
 <i data-cvm aria-hidden="true">⁠​‌​​​‌​‌​‌​​​​‌​​‌‌‌‌‌​​​‌​​​​‌‌​‌​‌​‌‌​​‌​​‌‌​‌​​‌​‌‌​‌​‌​​​‌​‌​‌​​​​​‌​​‌‌​‌‌​​‌​​​‌‌​​​‌‌​​‌​​‌​​​‌​‌​‌​​​‌​‌​​‌‌​‌‌‌​‌‌‌‌‌​​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌‌​​‌‌​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​‌​​‌‌​‌​​‌​‌‌​‌‌‌​​‌‌​​​​‌​‌‌​‌‌​​​​‌​‌‌‌​​‌‌​​‌‌‌​‌‌​‌​​‌​‌‌‌​‌​​​‌‌​‌​​​​‌‌‌​‌​‌​‌‌​​​‌​​​‌​‌‌‌​​‌‌​‌​​‌​‌‌​‌‌‌‌⁠</i>
   <script src="/assets/js/theme.js" defer></script>
